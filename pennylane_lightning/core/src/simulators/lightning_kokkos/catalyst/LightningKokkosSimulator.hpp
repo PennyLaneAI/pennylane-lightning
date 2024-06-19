@@ -52,37 +52,39 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningKokkosObsManager<double> obs_manager{};
 
-    inline auto isValidQubit(QubitIdType wire) -> bool
-    {
+    inline auto isValidQubit(QubitIdType wire) -> bool {
         return this->qubit_manager.isValidQubitId(wire);
     }
 
-    inline auto isValidQubits(const std::vector<QubitIdType> &wires) -> bool
-    {
-        return std::all_of(wires.begin(), wires.end(),
-                           [this](QubitIdType w) { return this->isValidQubit(w); });
+    inline auto isValidQubits(const std::vector<QubitIdType> &wires) -> bool {
+        return std::all_of(wires.begin(), wires.end(), [this](QubitIdType w) {
+            return this->isValidQubit(w);
+        });
     }
 
-    inline auto isValidQubits(size_t numWires, const QubitIdType *wires) -> bool
-    {
-        return std::all_of(wires, wires + numWires,
-                           [this](QubitIdType w) { return this->isValidQubit(w); });
+    inline auto isValidQubits(size_t numWires, const QubitIdType *wires)
+        -> bool {
+        return std::all_of(wires, wires + numWires, [this](QubitIdType w) {
+            return this->isValidQubit(w);
+        });
     }
 
-    inline auto getDeviceWires(const std::vector<QubitIdType> &wires) -> std::vector<size_t>
-    {
+    inline auto getDeviceWires(const std::vector<QubitIdType> &wires)
+        -> std::vector<size_t> {
         std::vector<size_t> res;
         res.reserve(wires.size());
-        std::transform(wires.begin(), wires.end(), std::back_inserter(res),
-                       [this](auto w) { return this->qubit_manager.getDeviceId(w); });
+        std::transform(
+            wires.begin(), wires.end(), std::back_inserter(res),
+            [this](auto w) { return this->qubit_manager.getDeviceId(w); });
         return res;
     }
 
   public:
-    explicit LightningKokkosSimulator(const std::string &kwargs = "{}")
-    {
+    explicit LightningKokkosSimulator(const std::string &kwargs = "{}") {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots") ? static_cast<size_t>(std::stoll(args["shots"])) : 0;
+        device_shots = args.contains("shots")
+                           ? static_cast<size_t>(std::stoll(args["shots"]))
+                           : 0;
     }
     ~LightningKokkosSimulator() = default;
 
@@ -92,6 +94,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     QUANTUM_DEVICE_QIS_DECLARATIONS;
 
     auto CacheManagerInfo()
-        -> std::tuple<size_t, size_t, size_t, std::vector<std::string>, std::vector<ObsIdType>>;
+        -> std::tuple<size_t, size_t, size_t, std::vector<std::string>,
+                      std::vector<ObsIdType>>;
 };
 } // namespace Catalyst::Runtime::Simulator

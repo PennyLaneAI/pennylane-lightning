@@ -19,8 +19,7 @@
 
 namespace Catalyst::Runtime::Simulator {
 
-auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType
-{
+auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType {
     const size_t num_qubits = this->device_sv->getNumQubits();
 
     if (!num_qubits) {
@@ -28,7 +27,8 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType
         return this->qubit_manager.Allocate(num_qubits);
     }
 
-    std::vector<Kokkos::complex<double>> data = this->device_sv->getDataVector();
+    std::vector<Kokkos::complex<double>> data =
+        this->device_sv->getDataVector();
     const size_t dsize = data.size();
     data.resize(dsize << 1UL);
 
@@ -45,8 +45,8 @@ auto LightningKokkosSimulator::AllocateQubit() -> QubitIdType
     return this->qubit_manager.Allocate(num_qubits);
 }
 
-auto LightningKokkosSimulator::AllocateQubits(size_t num_qubits) -> std::vector<QubitIdType>
-{
+auto LightningKokkosSimulator::AllocateQubits(size_t num_qubits)
+    -> std::vector<QubitIdType> {
     if (!num_qubits) {
         return {};
     }
@@ -58,60 +58,67 @@ auto LightningKokkosSimulator::AllocateQubits(size_t num_qubits) -> std::vector<
     }
 
     std::vector<QubitIdType> result(num_qubits);
-    std::generate_n(result.begin(), num_qubits, [this]() { return AllocateQubit(); });
+    std::generate_n(result.begin(), num_qubits,
+                    [this]() { return AllocateQubit(); });
     return result;
 }
 
-void LightningKokkosSimulator::ReleaseQubit(QubitIdType q) { this->qubit_manager.Release(q); }
+void LightningKokkosSimulator::ReleaseQubit(QubitIdType q) {
+    this->qubit_manager.Release(q);
+}
 
-void LightningKokkosSimulator::ReleaseAllQubits()
-{
+void LightningKokkosSimulator::ReleaseAllQubits() {
     this->qubit_manager.ReleaseAll();
     this->device_sv = std::make_unique<StateVectorT>(0); // reset the device
 }
 
-auto LightningKokkosSimulator::GetNumQubits() const -> size_t
-{
+auto LightningKokkosSimulator::GetNumQubits() const -> size_t {
     return this->device_sv->getNumQubits();
 }
 
-void LightningKokkosSimulator::StartTapeRecording()
-{
+void LightningKokkosSimulator::StartTapeRecording() {
     RT_FAIL_IF(this->tape_recording, "Cannot re-activate the cache manager");
     this->tape_recording = true;
     this->cache_manager.Reset();
 }
 
-void LightningKokkosSimulator::StopTapeRecording()
-{
-    RT_FAIL_IF(!this->tape_recording, "Cannot stop an already stopped cache manager");
+void LightningKokkosSimulator::StopTapeRecording() {
+    RT_FAIL_IF(!this->tape_recording,
+               "Cannot stop an already stopped cache manager");
     this->tape_recording = false;
 }
 
 auto LightningKokkosSimulator::CacheManagerInfo()
-    -> std::tuple<size_t, size_t, size_t, std::vector<std::string>, std::vector<ObsIdType>>
-{
-    return {this->cache_manager.getNumOperations(), this->cache_manager.getNumObservables(),
-            this->cache_manager.getNumParams(), this->cache_manager.getOperationsNames(),
+    -> std::tuple<size_t, size_t, size_t, std::vector<std::string>,
+                  std::vector<ObsIdType>> {
+    return {this->cache_manager.getNumOperations(),
+            this->cache_manager.getNumObservables(),
+            this->cache_manager.getNumParams(),
+            this->cache_manager.getOperationsNames(),
             this->cache_manager.getObservablesKeys()};
 }
 
-void LightningKokkosSimulator::SetDeviceShots(size_t shots) { this->device_shots = shots; }
+void LightningKokkosSimulator::SetDeviceShots(size_t shots) {
+    this->device_shots = shots;
+}
 
-auto LightningKokkosSimulator::GetDeviceShots() const -> size_t { return this->device_shots; }
+auto LightningKokkosSimulator::GetDeviceShots() const -> size_t {
+    return this->device_shots;
+}
 
-void LightningKokkosSimulator::PrintState()
-{
+void LightningKokkosSimulator::PrintState() {
     using std::cout;
     using std::endl;
-    using UnmanagedComplexHostView = Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
-                                                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using UnmanagedComplexHostView =
+        Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
     const size_t num_qubits = this->device_sv->getNumQubits();
     const size_t size = Pennylane::Util::exp2(num_qubits);
 
     std::vector<std::complex<double>> state(size, {0.0, 0.0});
-    auto *state_kptr = reinterpret_cast<Kokkos::complex<double> *>(state.data());
+    auto *state_kptr =
+        reinterpret_cast<Kokkos::complex<double> *>(state.data());
     auto device_data = this->device_sv->getView();
     Kokkos::deep_copy(UnmanagedComplexHostView(state_kptr, size), device_data);
 
@@ -124,28 +131,26 @@ void LightningKokkosSimulator::PrintState()
     cout << state[idx] << "]" << endl;
 }
 
-auto LightningKokkosSimulator::Zero() const -> Result
-{
+auto LightningKokkosSimulator::Zero() const -> Result {
     return const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
 }
 
-auto LightningKokkosSimulator::One() const -> Result
-{
+auto LightningKokkosSimulator::One() const -> Result {
     return const_cast<Result>(&GLOBAL_RESULT_TRUE_CONST);
 }
 
-void LightningKokkosSimulator::NamedOperation(const std::string &name,
-                                              const std::vector<double> &params,
-                                              const std::vector<QubitIdType> &wires, bool inverse,
-                                              const std::vector<QubitIdType> &controlled_wires,
-                                              const std::vector<bool> &controlled_values)
-{
+void LightningKokkosSimulator::NamedOperation(
+    const std::string &name, const std::vector<double> &params,
+    const std::vector<QubitIdType> &wires, bool inverse,
+    const std::vector<QubitIdType> &controlled_wires,
+    const std::vector<bool> &controlled_values) {
     RT_FAIL_IF(!controlled_wires.empty() || !controlled_values.empty(),
                "LightningKokkos does not support native quantum control.");
 
     // Check the validity of number of qubits and parameters
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
-    RT_FAIL_IF(!isValidQubits(controlled_wires), "Given controlled wires do not refer to qubits");
+    RT_FAIL_IF(!isValidQubits(controlled_wires),
+               "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
@@ -156,48 +161,56 @@ void LightningKokkosSimulator::NamedOperation(const std::string &name,
     // Update tape caching if required
     if (this->tape_recording) {
         this->cache_manager.addOperation(name, params, dev_wires, inverse, {},
-                                         {/*controlled_wires*/}, {/*controlled_values*/});
+                                         {/*controlled_wires*/},
+                                         {/*controlled_values*/});
     }
 }
 
-void LightningKokkosSimulator::MatrixOperation(const std::vector<std::complex<double>> &matrix,
-                                               const std::vector<QubitIdType> &wires, bool inverse,
-                                               const std::vector<QubitIdType> &controlled_wires,
-                                               const std::vector<bool> &controlled_values)
-{
-    using UnmanagedComplexHostView = Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
-                                                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+void LightningKokkosSimulator::MatrixOperation(
+    const std::vector<std::complex<double>> &matrix,
+    const std::vector<QubitIdType> &wires, bool inverse,
+    const std::vector<QubitIdType> &controlled_wires,
+    const std::vector<bool> &controlled_values) {
+    using UnmanagedComplexHostView =
+        Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
     // TODO: Remove when controlled wires API is supported
-    RT_FAIL_IF(!controlled_wires.empty() || !controlled_values.empty(),
-               "LightningKokkos device does not support native quantum control.");
+    RT_FAIL_IF(
+        !controlled_wires.empty() || !controlled_values.empty(),
+        "LightningKokkos device does not support native quantum control.");
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
-    RT_FAIL_IF(!isValidQubits(controlled_wires), "Given controlled wires do not refer to qubits");
+    RT_FAIL_IF(!isValidQubits(controlled_wires),
+               "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
 
     std::vector<Kokkos::complex<double>> matrix_kok;
     matrix_kok.resize(matrix.size());
-    std::transform(matrix.begin(), matrix.end(), matrix_kok.begin(),
-                   [](auto c) { return static_cast<Kokkos::complex<double>>(c); });
+    std::transform(
+        matrix.begin(), matrix.end(), matrix_kok.begin(),
+        [](auto c) { return static_cast<Kokkos::complex<double>>(c); });
 
-    Kokkos::View<Kokkos::complex<double> *> gate_matrix("gate_matrix", matrix_kok.size());
-    Kokkos::deep_copy(gate_matrix, UnmanagedComplexHostView(matrix_kok.data(), matrix_kok.size()));
+    Kokkos::View<Kokkos::complex<double> *> gate_matrix("gate_matrix",
+                                                        matrix_kok.size());
+    Kokkos::deep_copy(gate_matrix, UnmanagedComplexHostView(matrix_kok.data(),
+                                                            matrix_kok.size()));
 
     // Update the state-vector
     this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
 
     // Update tape caching if required
     if (this->tape_recording) {
-        this->cache_manager.addOperation("QubitUnitary", {}, dev_wires, inverse, matrix_kok,
-                                         {/*controlled_wires*/}, {/*controlled_values*/});
+        this->cache_manager.addOperation("QubitUnitary", {}, dev_wires, inverse,
+                                         matrix_kok, {/*controlled_wires*/},
+                                         {/*controlled_values*/});
     }
 }
 
-auto LightningKokkosSimulator::Observable(ObsId id, const std::vector<std::complex<double>> &matrix,
-                                          const std::vector<QubitIdType> &wires) -> ObsIdType
-{
+auto LightningKokkosSimulator::Observable(
+    ObsId id, const std::vector<std::complex<double>> &matrix,
+    const std::vector<QubitIdType> &wires) -> ObsIdType {
     RT_FAIL_IF(wires.size() > this->GetNumQubits(), "Invalid number of wires");
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires");
 
@@ -210,19 +223,18 @@ auto LightningKokkosSimulator::Observable(ObsId id, const std::vector<std::compl
     return this->obs_manager.createNamedObs(id, dev_wires);
 }
 
-auto LightningKokkosSimulator::TensorObservable(const std::vector<ObsIdType> &obs) -> ObsIdType
-{
+auto LightningKokkosSimulator::TensorObservable(
+    const std::vector<ObsIdType> &obs) -> ObsIdType {
     return this->obs_manager.createTensorProdObs(obs);
 }
 
-auto LightningKokkosSimulator::HamiltonianObservable(const std::vector<double> &coeffs,
-                                                     const std::vector<ObsIdType> &obs) -> ObsIdType
-{
+auto LightningKokkosSimulator::HamiltonianObservable(
+    const std::vector<double> &coeffs, const std::vector<ObsIdType> &obs)
+    -> ObsIdType {
     return this->obs_manager.createHamiltonianObs(coeffs, obs);
 }
 
-auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double
-{
+auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
     RT_FAIL_IF(!this->obs_manager.isValidObservables({obsKey}),
                "Invalid key for cached observables");
 
@@ -233,13 +245,13 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 
     return device_shots ? m.expval(*obs, device_shots, {}) : m.expval(*obs);
 }
 
-auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double
-{
+auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
     RT_FAIL_IF(!this->obs_manager.isValidObservables({obsKey}),
                "Invalid key for cached observables");
 
@@ -250,23 +262,26 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double
 
     auto &&obs = this->obs_manager.getObservable(obsKey);
 
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 
     return device_shots ? m.var(*obs, device_shots) : m.var(*obs);
 }
 
-void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state)
-{
-    using UnmanagedComplexHostView = Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
-                                                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
+    using UnmanagedComplexHostView =
+        Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
     const size_t num_qubits = this->device_sv->getNumQubits();
     const size_t size = Pennylane::Util::exp2(num_qubits);
-    RT_FAIL_IF(state.size() != size, "Invalid size for the pre-allocated state vector");
+    RT_FAIL_IF(state.size() != size,
+               "Invalid size for the pre-allocated state vector");
 
     // create a temporary buffer to copy the underlying state-vector to
     std::vector<std::complex<double>> buffer(size);
-    auto *state_kptr = reinterpret_cast<Kokkos::complex<double> *>(buffer.data());
+    auto *state_kptr =
+        reinterpret_cast<Kokkos::complex<double> *>(buffer.data());
 
     // copy data from device to host
     auto device_data = this->device_sv->getView();
@@ -276,19 +291,19 @@ void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state)
     std::move(buffer.begin(), buffer.end(), state.begin());
 }
 
-void LightningKokkosSimulator::Probs(DataView<double, 1> &probs)
-{
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
     auto &&dv_probs = device_shots ? m.probs(device_shots) : m.probs();
 
-    RT_FAIL_IF(probs.size() != dv_probs.size(), "Invalid size for the pre-allocated probabilities");
+    RT_FAIL_IF(probs.size() != dv_probs.size(),
+               "Invalid size for the pre-allocated probabilities");
 
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-void LightningKokkosSimulator::PartialProbs(DataView<double, 1> &probs,
-                                            const std::vector<QubitIdType> &wires)
-{
+void LightningKokkosSimulator::PartialProbs(
+    DataView<double, 1> &probs, const std::vector<QubitIdType> &wires) {
     const size_t numWires = wires.size();
     const size_t numQubits = this->GetNumQubits();
 
@@ -296,8 +311,10 @@ void LightningKokkosSimulator::PartialProbs(DataView<double, 1> &probs,
     RT_FAIL_IF(!isValidQubits(wires), "Invalid given wires to measure");
 
     auto dev_wires = getDeviceWires(wires);
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
-    auto &&dv_probs = device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
+    auto &&dv_probs =
+        device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
 
     RT_FAIL_IF(probs.size() != dv_probs.size(),
                "Invalid size for the pre-allocated partial-probabilities");
@@ -305,14 +322,16 @@ void LightningKokkosSimulator::PartialProbs(DataView<double, 1> &probs,
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-void LightningKokkosSimulator::Sample(DataView<double, 2> &samples, size_t shots)
-{
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
+                                      size_t shots) {
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
     auto li_samples = m.generate_samples(shots);
 
-    RT_FAIL_IF(samples.size() != li_samples.size(), "Invalid size for the pre-allocated samples");
+    RT_FAIL_IF(samples.size() != li_samples.size(),
+               "Invalid size for the pre-allocated samples");
 
     const size_t numQubits = this->GetNumQubits();
 
@@ -323,13 +342,14 @@ void LightningKokkosSimulator::Sample(DataView<double, 2> &samples, size_t shots
     auto samplesIter = samples.begin();
     for (size_t shot = 0; shot < shots; shot++) {
         for (size_t wire = 0; wire < numQubits; wire++) {
-            *(samplesIter++) = static_cast<double>(li_samples[shot * numQubits + wire]);
+            *(samplesIter++) =
+                static_cast<double>(li_samples[shot * numQubits + wire]);
         }
     }
 }
-void LightningKokkosSimulator::PartialSample(DataView<double, 2> &samples,
-                                             const std::vector<QubitIdType> &wires, size_t shots)
-{
+void LightningKokkosSimulator::PartialSample(
+    DataView<double, 2> &samples, const std::vector<QubitIdType> &wires,
+    size_t shots) {
     const size_t numWires = wires.size();
     const size_t numQubits = this->GetNumQubits();
 
@@ -342,7 +362,8 @@ void LightningKokkosSimulator::PartialSample(DataView<double, 2> &samples,
     auto &&dev_wires = getDeviceWires(wires);
 
     // generate_samples is a member function of the MeasuresKokkos class.
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
@@ -355,14 +376,15 @@ void LightningKokkosSimulator::PartialSample(DataView<double, 2> &samples,
     auto samplesIter = samples.begin();
     for (size_t shot = 0; shot < shots; shot++) {
         for (auto wire : dev_wires) {
-            *(samplesIter++) = static_cast<double>(li_samples[shot * numQubits + wire]);
+            *(samplesIter++) =
+                static_cast<double>(li_samples[shot * numQubits + wire]);
         }
     }
 }
 
-void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
-                                      size_t shots)
-{
+void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
+                                      DataView<int64_t, 1> &counts,
+                                      size_t shots) {
     const size_t numQubits = this->GetNumQubits();
     const size_t numElements = 1U << numQubits;
 
@@ -370,7 +392,8 @@ void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals, DataView<int
                "Invalid size for the pre-allocated counts");
 
     // generate_samples is a member function of the MeasuresKokkos class.
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
@@ -397,10 +420,9 @@ void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals, DataView<int
     }
 }
 
-void LightningKokkosSimulator::PartialCounts(DataView<double, 1> &eigvals,
-                                             DataView<int64_t, 1> &counts,
-                                             const std::vector<QubitIdType> &wires, size_t shots)
-{
+void LightningKokkosSimulator::PartialCounts(
+    DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
+    const std::vector<QubitIdType> &wires, size_t shots) {
     const size_t numWires = wires.size();
     const size_t numQubits = this->GetNumQubits();
     const size_t numElements = 1U << numWires;
@@ -414,7 +436,8 @@ void LightningKokkosSimulator::PartialCounts(DataView<double, 1> &eigvals,
     auto &&dev_wires = getDeviceWires(wires);
 
     // generate_samples is a member function of the MeasuresKokkos class.
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{*(this->device_sv)};
+    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
+        *(this->device_sv)};
 
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
@@ -441,9 +464,9 @@ void LightningKokkosSimulator::PartialCounts(DataView<double, 1> &eigvals,
     }
 }
 
-auto LightningKokkosSimulator::Measure(QubitIdType wire, std::optional<int32_t> postselect)
-    -> Result
-{
+auto LightningKokkosSimulator::Measure(QubitIdType wire,
+                                       std::optional<int32_t> postselect)
+    -> Result {
     // get a measurement
     std::vector<QubitIdType> wires = {reinterpret_cast<QubitIdType>(wire)};
 
@@ -461,28 +484,31 @@ auto LightningKokkosSimulator::Measure(QubitIdType wire, std::optional<int32_t> 
     return mres ? this->One() : this->Zero();
 }
 
-void LightningKokkosSimulator::Gradient(std::vector<DataView<double, 1>> &gradients,
-                                        const std::vector<size_t> &trainParams)
-{
+void LightningKokkosSimulator::Gradient(
+    std::vector<DataView<double, 1>> &gradients,
+    const std::vector<size_t> &trainParams) {
     const bool tp_empty = trainParams.empty();
     const size_t num_observables = this->cache_manager.getNumObservables();
     const size_t num_params = this->cache_manager.getNumParams();
     const size_t num_train_params = tp_empty ? num_params : trainParams.size();
-    const size_t jac_size = num_train_params * this->cache_manager.getNumObservables();
+    const size_t jac_size =
+        num_train_params * this->cache_manager.getNumObservables();
 
     if (!jac_size) {
         return;
     }
 
-    RT_FAIL_IF(gradients.size() != num_observables, "Invalid number of pre-allocated gradients");
+    RT_FAIL_IF(gradients.size() != num_observables,
+               "Invalid number of pre-allocated gradients");
 
     auto &&obs_callees = this->cache_manager.getObservablesCallees();
     bool is_valid_measurements =
         std::all_of(obs_callees.begin(), obs_callees.end(),
                     [](const auto &m) { return m == MeasurementsT::Expval; });
-    RT_FAIL_IF(!is_valid_measurements,
-               "Unsupported measurements to compute gradient; "
-               "Adjoint differentiation method only supports expectation return type");
+    RT_FAIL_IF(
+        !is_valid_measurements,
+        "Unsupported measurements to compute gradient; "
+        "Adjoint differentiation method only supports expectation return type");
 
     // Create OpsData
     auto &&ops_names = this->cache_manager.getOperationsNames();
@@ -490,16 +516,20 @@ void LightningKokkosSimulator::Gradient(std::vector<DataView<double, 1>> &gradie
     auto &&ops_wires = this->cache_manager.getOperationsWires();
     auto &&ops_inverses = this->cache_manager.getOperationsInverses();
     auto &&ops_matrices = this->cache_manager.getOperationsMatrices();
-    auto &&ops_controlled_wires = this->cache_manager.getOperationsControlledWires();
-    auto &&ops_controlled_values = this->cache_manager.getOperationsControlledValues();
+    auto &&ops_controlled_wires =
+        this->cache_manager.getOperationsControlledWires();
+    auto &&ops_controlled_values =
+        this->cache_manager.getOperationsControlledValues();
 
     const auto &&ops = Pennylane::Algorithms::OpsData<StateVectorT>(
-        ops_names, ops_params, ops_wires, ops_inverses, ops_matrices, ops_controlled_wires,
-        ops_controlled_values);
+        ops_names, ops_params, ops_wires, ops_inverses, ops_matrices,
+        ops_controlled_wires, ops_controlled_values);
 
     // Create the vector of observables
     auto &&obs_keys = this->cache_manager.getObservablesKeys();
-    std::vector<std::shared_ptr<Pennylane::Observables::Observable<StateVectorT>>> obs_vec;
+    std::vector<
+        std::shared_ptr<Pennylane::Observables::Observable<StateVectorT>>>
+        obs_vec;
     obs_vec.reserve(obs_keys.size());
     for (auto idx : obs_keys) {
         obs_vec.emplace_back(this->obs_manager.getObservable(idx));
@@ -517,7 +547,8 @@ void LightningKokkosSimulator::Gradient(std::vector<DataView<double, 1>> &gradie
 
     // construct the Jacobian data
     Pennylane::Algorithms::JacobianData<StateVectorT> tape{
-        num_params, state.size(), state.data(), obs_vec, ops, tp_empty ? all_params : trainParams};
+        num_params, state.size(), state.data(),
+        obs_vec,    ops,          tp_empty ? all_params : trainParams};
 
     Pennylane::LightningKokkos::Algorithms::AdjointJacobian<StateVectorT> adj;
     std::vector<double> jacobian(jac_size, 0);
@@ -530,8 +561,10 @@ void LightningKokkosSimulator::Gradient(std::vector<DataView<double, 1>> &gradie
     for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
         RT_ASSERT(begin_loc_iter != jacobian.end());
         RT_ASSERT(num_train_params <= gradients[obs_idx].size());
-        std::move(begin_loc_iter, begin_loc_iter + num_train_params, cur_buffer.begin());
-        std::move(cur_buffer.begin(), cur_buffer.end(), gradients[obs_idx].begin());
+        std::move(begin_loc_iter, begin_loc_iter + num_train_params,
+                  cur_buffer.begin());
+        std::move(cur_buffer.begin(), cur_buffer.end(),
+                  gradients[obs_idx].begin());
         begin_loc_iter += num_train_params;
     }
 }
