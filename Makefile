@@ -150,7 +150,7 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := v0.35.0
+    VERSION := v0.36.0
 endif
 
 docker-build:
