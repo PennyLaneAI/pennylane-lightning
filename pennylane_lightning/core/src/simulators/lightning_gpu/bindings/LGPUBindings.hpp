@@ -388,16 +388,16 @@ void registerBackendSpecificInfo(py::module_ &m) {
         .def_static("getTotalDevices", &DevicePool<int>::getTotalDevices)
         .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
         .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx);
-    .def(py::pickle(
-        [](const DevicePool<int> &self) { // __getstate__
-            return py::make_tuple();
-        },
-        [](py::tuple &t) { // __setstate__
-            if (t.size() != 0) {
-                throw std::runtime_error("Invalid state!");
-            }
-            return DevicePool<int>{};
-        }));
+        .def(py::pickle(
+            [](const DevicePool<int> &self) { // __getstate__
+                return py::make_tuple();
+            },
+            [](py::tuple &t) { // __setstate__
+                if (t.size() != 0) {
+                    throw std::runtime_error("Invalid state!");
+                }
+                return DevicePool<int>{};
+            }));
 
     py::class_<DevTag<int>>(m, "DevTag")
         .def(py::init<>())
