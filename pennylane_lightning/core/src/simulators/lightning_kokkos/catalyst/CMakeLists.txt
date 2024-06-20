@@ -22,8 +22,8 @@ if(CATALYST_SRC_PATH)
     )
     message(INFO " Building against local Catalyst - path: ${CATALYST_SRC_PATH} - GIT TAG: ${CATALYST_GIT_TAG}")
 
-    target_include_directories(lightning_kokkos_catalyst PRIVATE ${CATALYST_SRC_PATH}/runtime/lib/backend/common)
-    target_include_directories(lightning_kokkos_catalyst PRIVATE ${CATALYST_SRC_PATH}/runtime/include)
+    target_include_directories(lightning_kokkos_catalyst PUBLIC ${CATALYST_SRC_PATH}/runtime/lib/backend/common)
+    target_include_directories(lightning_kokkos_catalyst PUBLIC ${CATALYST_SRC_PATH}/runtime/include)
 
 else()
     if(NOT CATALYST_GIT_TAG)
@@ -69,10 +69,11 @@ else()
         FetchContent_MakeAvailable(${HEADER_NAME})
     endforeach()
 
-    target_include_directories(lightning_kokkos_catalyst PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
+    target_include_directories(lightning_kokkos_catalyst PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
 
 endif()
 
+target_include_directories(lightning_kokkos_catalyst INTERFACE  ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_kokkos_catalyst PUBLIC  lightning_compile_options
                                                         lightning_external_libs
                                                         lightning_base
@@ -85,7 +86,7 @@ target_link_libraries(lightning_kokkos_catalyst PUBLIC  lightning_compile_option
                                                         lightning_kokkos_utils
 )
 
-# if (BUILD_TESTS)
-#     enable_testing()
-#     add_subdirectory("tests")
-# endif()
+if (BUILD_TESTS)
+    enable_testing()
+    add_subdirectory("tests")
+endif()
