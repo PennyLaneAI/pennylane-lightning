@@ -16,17 +16,19 @@
 # Define build arguments
 # Create and activate runtime virtual environment
 FROM ubuntu:jammy AS base-runtime
-ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_ARCH=AMPERE80
+ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
+ARG DEBIAN_FRONTEND=noninteractive
 ARG GCC_VERSION=11
-ARG KOKKOS_VERSION=4.3.01
 ARG LIGHTNING_VERSION=v0.36.0
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
+ARG PENNYLANE_VERSION=v0.36.0
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.1.1/ubuntu/jammy/amdgpu-install_6.1.60101-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
     ca-certificates \
+    git \
     libgomp1 \
     python3 \
     python3-pip \
@@ -47,7 +49,6 @@ RUN apt-get update \
     ccache \
     cmake \
     curl \
-    git \
     ninja-build \
     python3-dev \
     gcc-${GCC_VERSION} g++-${GCC_VERSION} cpp-${GCC_VERSION} \
@@ -70,9 +71,7 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN rm -rf tmp && git clone --depth 1 --branch ${LIGHTNING_VERSION} https://github.com/PennyLaneAI/pennylane-lightning.git tmp\
     && mv tmp/* /opt/pennylane-lightning && rm -rf tmp
-RUN pip install --no-cache-dir wheel
-RUN pip install --no-cache-dir -r requirements-dev.txt
-RUN pip install --no-cache-dir -r doc/requirements.txt
+RUN pip install --no-cache-dir cmake ninja pybind11 wheel
 
 # Download Lightning release and build lightning-qubit backend
 FROM base-build-python AS build-wheel-lightning-qubit
@@ -85,44 +84,22 @@ RUN python setup.py bdist_wheel
 FROM base-runtime AS wheel-lightning-qubit
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir -U pennylane
-
-# Download Kokkos release and build OpenMP backend
-FROM base-build as build-kokkos-openmp
-WORKDIR /opt/kokkos-${KOKKOS_VERSION}
-RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
-RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
-RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
-    -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
-    -DBUILD_SHARED_LIBS:BOOL=ON \
-    -DBUILD_TESTING:BOOL=OFF \
-    -DKokkos_ENABLE_SERIAL:BOOL=ON \
-    -DKokkos_ENABLE_OPENMP:BOOL=ON \
-    -DCMAKE_CXX_STANDARD=20 \
-    -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
-    -DKokkos_ENABLE_TESTS:BOOL=OFF \
-    -DKokkos_ENABLE_LIBDL:BOOL=OFF
-RUN cmake --build /opt/kokkos-${KOKKOS_VERSION}/build
-RUN cmake --install /opt/kokkos-${KOKKOS_VERSION}/build
+RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
 
 # Download Lightning release and build lightning-kokkos backend with Kokkos-OpenMP
 FROM base-build-python AS build-wheel-lightning-kokkos-openmp
 WORKDIR /opt/pennylane-lightning
-COPY --from=build-kokkos-openmp /opt/kokkos /opt/kokkos
-ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
+ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
-RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
-RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
+RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON"
+RUN python setup.py bdist_wheel
 
 # Install lightning-kokkos OpenMP backend
 FROM base-runtime AS wheel-lightning-kokkos-openmp
-COPY --from=build-kokkos-openmp /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-openmp /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir -U pennylane
+RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
 
 # Install CUDA-12 in build venv image
 FROM base-build-python as base-build-cuda
@@ -133,45 +110,23 @@ RUN ./cuda-install.run --silent --toolkit --toolkitpath=/usr/local/cuda-$(echo $
 ENV PATH=/usr/local/cuda/bin:${PATH}
 ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
 
-# Download Kokkos release and build CUDA backend
-FROM base-build-cuda as build-kokkos-cuda
-WORKDIR /opt/kokkos-${KOKKOS_VERSION}
-# RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
-# RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
-RUN git clone --branch lightning https://github.com/vincentmr/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
-RUN cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
-    -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
-    -DBUILD_SHARED_LIBS:BOOL=ON \
-    -DBUILD_TESTING:BOOL=OFF \
-    -DKokkos_ENABLE_SERIAL:BOOL=ON \
-    -DKokkos_ENABLE_OPENMP:BOOL=ON \
-    -DCMAKE_CXX_STANDARD=20 \
-    -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
-    -DKokkos_ENABLE_TESTS:BOOL=OFF \
-    -DKokkos_ENABLE_LIBDL:BOOL=OFF \
-    -DKokkos_ENABLE_CUDA:BOOL=ON \
-    -DKokkos_ARCH_${CUDA_ARCH}=ON
-RUN cmake --build /opt/kokkos-${KOKKOS_VERSION}/build
-RUN cmake --install /opt/kokkos-${KOKKOS_VERSION}/build
-
 # Download Lightning release and build lightning-kokkos backend with Kokkos-CUDA
 FROM base-build-cuda AS build-wheel-lightning-kokkos-cuda
 WORKDIR /opt/pennylane-lightning
-COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
-ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
+ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
 RUN echo >> cmake/support_kokkos.cmake && echo "find_package(CUDAToolkit REQUIRED)" >> cmake/support_kokkos.cmake
-RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
-RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
+RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_CUDA:BOOL=ON;Kokkos_ARCH_${CUDA_ARCH}=ON"
+RUN python setup.py bdist_wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
+ARG PENNYLANE_VERSION=v0.36.0
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libgomp1 \
+    git \
     python3 \
     python3-pip \
     python3-venv \
@@ -180,11 +135,10 @@ RUN apt-get update \
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-COPY --from=build-kokkos-cuda /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-cuda /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir -U pennylane
+RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
 
 # Download and build Lightning-GPU release
 FROM base-build-cuda AS build-wheel-lightning-gpu
@@ -192,13 +146,15 @@ WORKDIR /opt/pennylane-lightning
 RUN pip install --no-cache-dir wheel custatevec-cu12
 RUN pip uninstall -y pennylane-lightning
 RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')") PL_BACKEND=lightning_gpu python setup.py build_ext
-RUN PL_BACKEND=lightning_gpu python setup.py bdist_wheel
+RUN python setup.py bdist_wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-gpu
+ARG PENNYLANE_VERSION=v0.36.0
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
+    git \
     libgomp1 \
     python3 \
     python3-pip \
@@ -213,7 +169,7 @@ ENV LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.10/site-packages/cuquantum/lib:$LD
 COPY --from=build-wheel-lightning-gpu /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --no-cache-dir --force-reinstall PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir -U pennylane
+RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
 
 # Install ROCm in build venv image
 FROM base-build-python as base-build-rocm
@@ -226,44 +182,22 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 RUN amdgpu-install -y --accept-eula --usecase=rocm,hiplibsdk --no-dkms
 
-# Download Kokkos release and build HIP backend
-FROM base-build-rocm as build-kokkos-rocm
-WORKDIR /opt/kokkos-${KOKKOS_VERSION}
-ENV LD_LIBRARY_PATH=/opt/rocm/lib:$LD_LIBRARY_PATH
-# RUN wget --progress=dot:giga https://github.com/kokkos/kokkos/archive/refs/tags/${KOKKOS_VERSION}.tar.gz
-# RUN tar -zxf ${KOKKOS_VERSION}.tar.gz && mv /opt/kokkos-${KOKKOS_VERSION}/kokkos-${KOKKOS_VERSION}/* /opt/kokkos-${KOKKOS_VERSION}
-RUN git clone --branch fix-rtld-deepbind https://github.com/cz4rs/kokkos.git /opt/kokkos-${KOKKOS_VERSION}
-RUN CXX=hipcc cmake -S /opt/kokkos-${KOKKOS_VERSION} -B /opt/kokkos-${KOKKOS_VERSION}/build \
-    -G Ninja \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=/opt/kokkos \
-    -DBUILD_SHARED_LIBS:BOOL=ON \
-    -DBUILD_TESTING:BOOL=OFF \
-    -DKokkos_ENABLE_SERIAL:BOOL=ON \
-    -DKokkos_ENABLE_OPENMP:BOOL=ON \
-    -DCMAKE_CXX_STANDARD=20 \
-    -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
-    -DKokkos_ENABLE_TESTS:BOOL=OFF \
-    -DKokkos_ENABLE_LIBDL:BOOL=OFF \
-    -DKokkos_ENABLE_HIP:BOOL=ON \
-    -DKokkos_ARCH_${AMD_ARCH}=ON
-RUN cmake --build /opt/kokkos-${KOKKOS_VERSION}/build
-RUN cmake --install /opt/kokkos-${KOKKOS_VERSION}/build
-
 # Download Lightning release and build lightning-kokkos backend with Kokkos-ROCm
 FROM base-build-rocm AS build-wheel-lightning-kokkos-rocm
 WORKDIR /opt/pennylane-lightning
-COPY --from=build-kokkos-rocm /opt/kokkos /opt/kokkos
+ENV CMAKE_PREFIX_PATH=/opt/rocm:$CMAKE_PREFIX_PATH
 ENV CXX=hipcc
-ENV CMAKE_PREFIX_PATH=/opt/kokkos:$CMAKE_PREFIX_PATH
+ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
-RUN PL_BACKEND=lightning_kokkos python setup.py build_ext
-RUN PL_BACKEND=lightning_kokkos python setup.py bdist_wheel
+RUN python setup.py build_ext -i --define="PL_BACKEND=lightning_kokkos;Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_HIP:BOOL=ON;Kokkos_ARCH_${AMD_ARCH}=ON"
+RUN python setup.py bdist_wheel
 
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:5.7 AS wheel-lightning-kokkos-rocm
+ARG PENNYLANE_VERSION=v0.36.0
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
+    git \
     libgomp1 \
     python3 \
     python3-pip \
@@ -273,8 +207,7 @@ RUN apt-get update \
 ENV VIRTUAL_ENV=/opt/venv
 RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-COPY --from=build-kokkos-rocm /opt/kokkos /opt/kokkos
 COPY --from=build-wheel-lightning-kokkos-rocm /opt/pennylane-lightning/dist/ /
 COPY --from=build-wheel-lightning-qubit /opt/pennylane-lightning/dist/ /
 RUN pip install --force-reinstall --no-cache-dir PennyLane_Lightning*.whl && rm PennyLane_Lightning*.whl
-RUN pip install --no-cache-dir -U pennylane
+RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}

@@ -38,6 +38,9 @@
 
 ### Improvements
 
+* Release candidate branches are automatically switched over to using the new large GitHub runner pool.
+  [(#769)](https://github.com/PennyLaneAI/pennylane-lightning/pull/769)
+
 * LightningKokkos dev wheels for MacOS (x86_64, ARM64) and Linux (aarch64) are uploaded to TestPyPI upon PR merge.
   [(#765)](https://github.com/PennyLaneAI/pennylane-lightning/pull/765)
 
