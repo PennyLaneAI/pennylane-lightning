@@ -14,6 +14,7 @@
 """
 Unit tests for Lightning devices creation.
 """
+import pickle as pkl
 import sys
 
 import numpy as np
@@ -65,6 +66,18 @@ def test_create_device_with_unsupported_mpi_buf_size():
             dev._mpi_init_helper(1)
     except:
         pass
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.gpu",
+    reason="Check if the method is pickleable throught the cpp layer",
+)
+def test_devpool_is_pickleable():
+    dev = qml.device(device_name, wires=2)
+    try:
+        _ = pkl.dumps(dev._dp)
+    except Exception:
+        pytest.fail("DevPool should be Pickleable")
 
 
 @pytest.mark.skipif(

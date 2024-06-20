@@ -28,7 +28,19 @@ namespace Pennylane::LightningGPU {
  */
 template <typename DeviceIndexType = int> class DevicePool {
   public:
-    DevicePool() {
+    DevicePool() { refresh(); }
+
+    DevicePool(DevicePool &&dp) { refresh(); }
+
+    /**
+     * @brief Dynamically refresh the available pool devices.
+     *
+     */
+    void refresh() {
+        std::lock_guard<std::mutex> lg(m_);
+        available_devices_.clear();
+        active_devices_.clear();
+
         for (std::size_t i = 0; i < DevicePool::getTotalDevices(); i++) {
             available_devices_.push(static_cast<DeviceIndexType>(i));
         }
