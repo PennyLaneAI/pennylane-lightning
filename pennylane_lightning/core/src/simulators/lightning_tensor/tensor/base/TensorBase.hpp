@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <functional>
 #include <vector>
 
 #include "Error.hpp"
@@ -28,7 +29,7 @@ namespace Pennylane::LightningTensor {
 /**
  * @brief CRTP-enabled base class for tensor.
  *
- * @tparam Precision Floating point precision.
+ * @tparam PrecisionT Floating point precision.
  * @tparam Derived Derived class to instantiate using CRTP.
  */
 template <class PrecisionT, class Derived> class TensorBase {
@@ -44,8 +45,19 @@ template <class PrecisionT, class Derived> class TensorBase {
         : rank_(rank), modes_(modes), extents_(extents) {
         PL_ABORT_IF_NOT(rank_ == extents_.size(),
                         "Please check if rank or extents are set correctly.");
-        length_ = 1;
         length_ = std::accumulate(extents.begin(), extents.end(),
+                                  std::size_t{1}, std::multiplies<>());
+    }
+    /**
+     * @brief Construct a tensor object with given extents.
+     *
+     * @param extents Extents of a tensor object.
+     */
+    explicit TensorBase(const std::vector<std::size_t> &extents)
+        : rank_(extents.size()),
+          modes_(std::move(std::vector(rank_, std::size_t{0}))),
+          extents_(std::move(extents)) {
+        length_ = std::accumulate(extents_.begin(), extents_.end(),
                                   std::size_t{1}, std::multiplies<>());
     }
 
@@ -79,7 +91,7 @@ template <class PrecisionT, class Derived> class TensorBase {
     /**
      * @brief Return the number of elements of a tensor object.
      *
-     * @return std::vector<std::size_t> Number of elements of a tensor object.
+     * @return std::size_t Number of elements of a tensor object.
      */
     [[nodiscard]] std::size_t getLength() const { return length_; }
 };

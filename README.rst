@@ -49,26 +49,27 @@ PennyLane-Lightning high performance simulators include the following backends:
 * ``lightning.qubit``: is a fast state-vector simulator written in C++.
 * ``lightning.gpu``: is a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on MPI.
 * ``lightning.kokkos``: is a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html>`_ programming models.
+* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). This device is designed to simulate large-scale quantum circuits using tensor networks. For small circuits, state-vector simulator plugins may be more suitable. The supported method is Matrix Product State (MPS). This device does not currently support finite shots. Currently, the supported measurement types are expectation values and the supported differentiation methods are ``parameter-shift`` and ``finite-diff``. Note that only 1,2-wire gates and gates that can be decomposed by PennyLane into 1,2-wire gates are supported.
 
 .. header-end-inclusion-marker-do-not-remove
 
 The following table summarizes the supported platforms and the primary installation mode:
 
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+
-|           | L-Qubit | L-GPU  | L-GPU (MPI) | L-Kokkos (OMP) | L-Kokkos (CUDA) | L-Kokkos (HIP) |
-+===========+=========+========+=============+================+=================+================+
-| Linux x86 | pip     | pip    | source      | pip            | source          | source         |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+
-| Linux ARM | pip     | source |             | pip            | source          | source         |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+
-| Linux PPC | pip     | source |             | pip            | source          | source         |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+
-| MacOS x86 | pip     |        |             | pip            |                 |                |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+
-| MacOS ARM | pip     |        |             | pip            |                 |                |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+
-| Windows   | pip     |        |             |                |                 |                |
-+-----------+---------+--------+-------------+----------------+-----------------+----------------+
++-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
+|           | L-Qubit | L-GPU  | L-GPU (MPI) | L-Kokkos (OMP) | L-Kokkos (CUDA) | L-Kokkos (HIP) |    L-Tensor    |
++===========+=========+========+=============+================+=================+================+================+
+| Linux x86 | pip     | pip    | source      | pip            | source          | source         |     source     |
++-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
+| Linux ARM | pip     | source |             | pip            | source          | source         |                |
++-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
+| Linux PPC | pip     | source |             | pip            | source          | source         |                |
++-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
+| MacOS x86 | pip     |        |             | pip            |                 |                |                |
++-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
+| MacOS ARM | pip     |        |             | pip            |                 |                |                |
++-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
+| Windows   | pip     |        |             |                |                 |                |                |
++-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 
 
 .. installation_LQubit-start-inclusion-marker-do-not-remove
@@ -361,6 +362,41 @@ Note that ``THREADS`` backend is not recommended since `Kokkos does not guarante
 
 .. installation_LKokkos-end-inclusion-marker-do-not-remove
 
+.. installation_LTensor-start-inclusion-marker-do-not-remove
+
+Lightning-Tensor installation
+*****************************
+Lightning-Tensor requires CUDA 12 and the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`_ library is required).
+The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
+Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
+
+Install Lightning-Tensor from source
+====================================
+Lightning-Qubit should be installed before Lightning-Tensor:
+
+.. code-block:: console
+
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    pip install -r requirements.txt
+    PL_BACKEND="lightning_qubit" pip install .
+
+Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable. 
+
+.. code-block:: console
+
+    pip install cutensornet-cu12
+    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+
+The Lightning-Tensor can then be installed with ``pip``:
+
+.. code-block:: console
+
+    PL_BACKEND="lightning_tensor" pip install -e .
+
+.. installation_LTensor-end-inclusion-marker-do-not-remove
+
+
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
@@ -441,7 +477,7 @@ License
 
 The Lightning plugins are **free** and **open source**, released under
 the `Apache License, Version 2.0 <https://www.apache.org/licenses/LICENSE-2.0>`_.
-The Lightning-GPU plugin makes use of the NVIDIA cuQuantum SDK headers to
+The Lightning-GPU and Lightning-Tensor plugins make use of the NVIDIA cuQuantum SDK headers to
 enable the device bindings to PennyLane, which are held to their own respective license.
 
 .. license-end-inclusion-marker-do-not-remove

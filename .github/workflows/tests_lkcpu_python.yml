@@ -17,6 +17,8 @@ on:
       - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/core/src/simulators/lightning_tensor/**
+      - pennylane_lightning/lightning_tensor/**
       - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/lightning_qubit/**
   push:
@@ -246,7 +248,7 @@ jobs:
           python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            PL_DEVICE=${DEVICENAME} python -m pytest tests/ --exitfirst $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
               --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
             mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append

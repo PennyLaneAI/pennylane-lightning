@@ -250,33 +250,45 @@ class LightningStateVector:
                 False,
             )
 
-    def _apply_lightning_midmeasure(self, operation: MidMeasureMP, mid_measurements: dict):
+    def _apply_lightning_midmeasure(
+        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
+    ):
         """Execute a MidMeasureMP operation and return the sample in mid_measurements.
+
         Args:
             operation (~pennylane.operation.Operation): mid-circuit measurement
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots.
+
         Returns:
             None
         """
         wires = self.wires.indices(operation.wires)
         wire = list(wires)[0]
         circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
-        sample = LightningMeasurements(self).measure_final_state(circuit)
-        sample = np.squeeze(sample)
-        if operation.postselect is not None and sample != operation.postselect:
-            mid_measurements[operation] = -1
-            return
+        if postselect_mode == "fill-shots" and operation.postselect is not None:
+            sample = operation.postselect
+        else:
+            sample = LightningMeasurements(self).measure_final_state(circuit)
+            sample = np.squeeze(sample)
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
-    def _apply_lightning(self, operations, mid_measurements: dict = None):
+    def _apply_lightning(
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None
+    ):
         """Apply a list of operations to the state tensor.
 
         Args:
             operations (list[~pennylane.operation.Operation]): operations to apply
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
 
         Returns:
             None
@@ -299,9 +311,11 @@ class LightningStateVector:
 
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
-                    self._apply_lightning([operation.then_op])
+                    self._apply_lightning([operation.base])
             elif isinstance(operation, MidMeasureMP):
-                self._apply_lightning_midmeasure(operation, mid_measurements)
+                self._apply_lightning_midmeasure(
+                    operation, mid_measurements, postselect_mode=postselect_mode
+                )
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
@@ -317,7 +331,9 @@ class LightningStateVector:
                     # To support older versions of PL
                     method(operation.matrix, wires, False)
 
-    def apply_operations(self, operations, mid_measurements: dict = None):
+    def apply_operations(
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None
+    ):
         """Applies operations to the state vector."""
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
@@ -328,9 +344,16 @@ class LightningStateVector:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
-        self._apply_lightning(operations, mid_measurements=mid_measurements)
+        self._apply_lightning(
+            operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+        )
 
-    def get_final_state(self, circuit: QuantumScript, mid_measurements: dict = None):
+    def get_final_state(
+        self,
+        circuit: QuantumScript,
+        mid_measurements: dict = None,
+        postselect_mode: str = None,
+    ):
         """
         Get the final state that results from executing the given quantum script.
 
@@ -339,11 +362,16 @@ class LightningStateVector:
         Args:
             circuit (QuantumScript): The single circuit to simulate
             mid_measurements (None, dict): Dictionary of mid-circuit measurements
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
 
         Returns:
             LightningStateVector: Lightning final state class.
 
         """
-        self.apply_operations(circuit.operations, mid_measurements=mid_measurements)
+        self.apply_operations(
+            circuit.operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+        )
 
         return self

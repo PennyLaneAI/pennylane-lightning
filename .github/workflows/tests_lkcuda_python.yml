@@ -17,8 +17,10 @@ on:
       - pennylane_lightning/core/_version.py
       - pennylane_lightning/core/src/simulators/lightning_gpu/**
       - pennylane_lightning/core/src/simulators/lightning_qubit/**
+      - pennylane_lightning/core/src/simulators/lightning_tensor/**
       - pennylane_lightning/lightning_gpu/**
       - pennylane_lightning/lightning_qubit/**
+      - pennylane_lightning/lightning_tensor/**
   push:
     branches:
       - master
@@ -102,6 +104,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          retention-days: 1
 
   pythontestswithKokkos:
     needs: [builddeps]

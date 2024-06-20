@@ -15,6 +15,7 @@ on:
       - .github/workflows/tests_linux_cpp.yml
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
 
   push:
     branches:
@@ -46,12 +47,12 @@ jobs:
       matrix:
         pl_backend: ["lightning_qubit"]
         enable_kernel_omp: ["OFF", "ON"]
-        enable_kernel_avx_stream: ["OFF", "ON"]
+        enable_kernel_avx_streaming: ["OFF", "ON"]
         exclude:
         - enable_kernel_omp: OFF
-          enable_kernel_avx_stream: ON
+          enable_kernel_avx_streaming: ON
     timeout-minutes: 60
-    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAM=${{ matrix.enable_kernel_avx_stream }})
+    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -77,7 +78,7 @@ jobs:
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
-              -DLQ_ENABLE_KERNEL_AVX_STREAM=${{ matrix.enable_kernel_avx_stream }} \
+              -DLQ_ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }} \
               -DLQ_ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}
 
             cmake --build ./Build
@@ -87,13 +88,13 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_stream }}-${{ matrix.enable_kernel_omp }}.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_stream }}-${{ matrix.enable_kernel_omp }}
+          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
           path: |
             ./Build/tests/results/
 
@@ -102,8 +103,8 @@ jobs:
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
-          name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_stream }}-${{ matrix.enable_kernel_omp }}
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_stream }}-${{ matrix.enable_kernel_omp }}.info
+          name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
           if-no-files-found: error
 
   cpptestswithOpenBLAS:

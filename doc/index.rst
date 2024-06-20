@@ -33,6 +33,11 @@ The Lightning ecosystem provides the following devices:
     :description: A heterogeneous backend state-vector simulator with Kokkos library support.
     :link: lightning_kokkos/device.html
 
+.. title-card::
+    :name: 'lightning.tensor'
+    :description: A heterogeneous backend tensor network simulator with NVIDIA cuQuantum library support.
+    :link: lightning_tensor/device.html
+
 .. raw:: html
 
     <div style='clear:both'></div>
@@ -55,6 +60,7 @@ The Lightning ecosystem provides the following devices:
    lightning_qubit/device
    lightning_gpu/device
    lightning_kokkos/device
+   lightning_tensor/device
 
 .. toctree::
    :maxdepth: 2
