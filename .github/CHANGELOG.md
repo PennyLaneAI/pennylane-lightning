@@ -35,6 +35,7 @@
 
 ### Improvements
 
+
 * Release candidate branches are automatically switched over to using the new large GitHub runner pool.
   [(#769)](https://github.com/PennyLaneAI/pennylane-lightning/pull/769)
 
