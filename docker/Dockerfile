@@ -91,7 +91,7 @@ FROM base-build-python AS build-wheel-lightning-kokkos-openmp
 WORKDIR /opt/pennylane-lightning
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
-RUN python setup.py build_ext -i --define="PL_BACKEND=lightning_kokkos;Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON"
+RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON"
 RUN python setup.py bdist_wheel
 
 # Install lightning-kokkos OpenMP backend
@@ -116,7 +116,7 @@ WORKDIR /opt/pennylane-lightning
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
 RUN echo >> cmake/support_kokkos.cmake && echo "find_package(CUDAToolkit REQUIRED)" >> cmake/support_kokkos.cmake
-RUN python setup.py build_ext -i --define="PL_BACKEND=lightning_kokkos;Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_CUDA:BOOL=ON;Kokkos_ARCH_${CUDA_ARCH}=ON"
+RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_CUDA:BOOL=ON;Kokkos_ARCH_${CUDA_ARCH}=ON"
 RUN python setup.py bdist_wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
