@@ -644,7 +644,8 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state[3] == PLApproxComplex(c1).epsilon(1e-5));
 
         std::tuple<size_t, size_t, size_t, std::vector<std::string>,
-                  std::vector<intptr_t>> expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
+                   std::vector<intptr_t>>
+            expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
 }
