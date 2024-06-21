@@ -28,6 +28,7 @@ target_sources(lightning_kokkos_catalyst_tests INTERFACE runner_lightning_kokkos
 ################################################################################
 set(TEST_SOURCES    Test_LightningKokkosSimulator.cpp
                     Test_LightningKokkosMeasures.cpp
+                    Test_LightningKokkosGradient.cpp
 )
 
 add_executable(lightning_kokkos_catalyst_tests_runner ${TEST_SOURCES})
