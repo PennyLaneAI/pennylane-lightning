@@ -79,11 +79,11 @@ def test_devpool_is_pickleable():
         un_pickled_devpool = pkl.loads(pickled_devpool)
 
         from pennylane_lightning.lightning_gpu_ops import DevPool
+
         d = DevPool()
 
         assert isinstance(un_pickled_devpool, DevPool)
         assert un_pickled_devpool.getTotalDevices() == d.getTotalDevices()
-
 
     except Exception:
         pytest.fail("DevPool should be Pickleable")
