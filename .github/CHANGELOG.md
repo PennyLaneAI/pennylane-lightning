@@ -98,6 +98,9 @@
 
 ### Bug fixes
 
+* Fix regex matching issue with auto on-boarding of release candidate branch to using the large runner queue.
+  [(#774)](https://github.com/PennyLaneAI/pennylane-lightning/pull/774)
+
 * Fix random CI failures for `lightning.tensor` python unit tests and ignore `lightning_tensor` paths.
   [(#761)](https://github.com/PennyLaneAI/pennylane-lightning/pull/761)
 
