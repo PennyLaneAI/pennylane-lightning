@@ -35,7 +35,6 @@
 
 ### Improvements
 
-
 * Release candidate branches are automatically switched over to using the new large GitHub runner pool.
   [(#769)](https://github.com/PennyLaneAI/pennylane-lightning/pull/769)
 
@@ -98,6 +97,9 @@
   [(#756)](https://github.com/PennyLaneAI/pennylane-lightning/pull/756)
 
 ### Bug fixes
+
+* Fix regex matching issue with auto on-boarding of release candidate branch to using the large runner queue
+  [(#774)](https://github.com/PennyLaneAI/pennylane-lightning/pull/774)
 
 * Fix random CI failures for `lightning.tensor` python unit tests and ignore `lightning_tensor` paths.
   [(#761)](https://github.com/PennyLaneAI/pennylane-lightning/pull/761)
