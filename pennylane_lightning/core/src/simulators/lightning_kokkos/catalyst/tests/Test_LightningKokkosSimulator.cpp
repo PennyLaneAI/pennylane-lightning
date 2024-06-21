@@ -39,12 +39,42 @@ using LKSimulator = LightningKokkosSimulator;
  * @brief Tests the LightningKokkosSimulator class.
  *
  */
-TEST_CASE("LightningKokkosSimulator", "[constructibility]") {
+TEST_CASE("LightningKokkosSimulator::constructor", "[constructibility]") {
     SECTION("LightningKokkosSimulator") {
         REQUIRE(std::is_constructible<LKSimulator>::value);
     }
     SECTION("LightningKokkosSimulator(string))") {
         REQUIRE(std::is_constructible<LKSimulator, std::string>::value);
+    }
+}
+
+TEST_CASE("LightningKokkosSimulator::unit_tests", "[unit tests]") {
+    SECTION("Managing Qubits") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(0);
+        REQUIRE(LKsim->GetNumQubits() == 0);
+        LKsim->AllocateQubits(4);
+        REQUIRE(LKsim->GetNumQubits() == 4);
+        LKsim->ReleaseQubit(0);
+        REQUIRE(
+            LKsim->GetNumQubits() ==
+            4); // releasing only one qubit does not change the total number.
+        LKsim->ReleaseAllQubits();
+        REQUIRE(LKsim->GetNumQubits() ==
+                0); // releasing all qubits resets the simulator.
+    }
+    SECTION("Tape recording") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(1);
+        REQUIRE_NOTHROW(LKsim->StartTapeRecording());
+        REQUIRE_THROWS_WITH(
+            LKsim->StartTapeRecording(),
+            Catch::Matchers::Contains("Cannot re-activate the cache manager"));
+        REQUIRE_NOTHROW(LKsim->StopTapeRecording());
+        REQUIRE_THROWS_WITH(
+            LKsim->StopTapeRecording(),
+            Catch::Matchers::Contains(
+                "Cannot stop an already stopped cache manager"));
     }
 }
 
@@ -227,7 +257,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state.at(15) == std::complex<double>{0, 0});
     }
 
-    SECTION("Hadamard, RX, PhaseShift") {
+    SECTION("Hadamard, RX, PhaseShift with cache manager") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
         constexpr size_t n_qubits = 2;
@@ -237,9 +267,11 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         Qs[0] = LKsim->AllocateQubit();
         Qs[1] = LKsim->AllocateQubit();
 
+        LKsim->StartTapeRecording();
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
         LKsim->NamedOperation("RX", {0.123}, {Qs[1]}, false);
         LKsim->NamedOperation("PhaseShift", {0.456}, {Qs[0]}, false);
+        LKsim->StopTapeRecording();
 
         std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
@@ -256,6 +288,11 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state[3] ==
               PLApproxComplex(std::complex<double>{0.01913791, -0.039019})
                   .epsilon(1e-5));
+
+        std::tuple<size_t, size_t, size_t, std::vector<std::string>,
+                   std::vector<intptr_t>>
+            expected{3, 0, 2, {"Hadamard", "RX", "PhaseShift"}, {}};
+        REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
 
     // ============= 2-qubit operations =============
@@ -582,15 +619,17 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
                   .epsilon(1e-5));
     }
 
-    SECTION("Hadamard and IsingZZ") {
+    SECTION("Hadamard and IsingZZ and cache manager") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
         constexpr size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
+        LKsim->StartTapeRecording();
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
         LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
         LKsim->NamedOperation("IsingZZ", {M_PI_4}, {Qs[0], Qs[1]}, false);
+        LKsim->StopTapeRecording();
 
         std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
@@ -603,5 +642,9 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
         CHECK(state[2] == PLApproxComplex(c2).epsilon(1e-5));
         CHECK(state[3] == PLApproxComplex(c1).epsilon(1e-5));
+
+        std::tuple<size_t, size_t, size_t, std::vector<std::string>,
+                  std::vector<intptr_t>> expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
+        REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
 }
