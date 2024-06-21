@@ -26,7 +26,9 @@ target_sources(lightning_kokkos_catalyst_tests INTERFACE runner_lightning_kokkos
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_LightningKokkosSimulator.cpp)
+set(TEST_SOURCES    Test_LightningKokkosSimulator.cpp
+                    Test_LightningKokkosMeasures.cpp
+)
 
 add_executable(lightning_kokkos_catalyst_tests_runner ${TEST_SOURCES})
 target_link_libraries(lightning_kokkos_catalyst_tests_runner PRIVATE  lightning_kokkos_catalyst_tests)
