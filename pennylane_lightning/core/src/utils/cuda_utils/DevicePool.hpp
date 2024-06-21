@@ -30,11 +30,10 @@ template <typename DeviceIndexType = int> class DevicePool {
   public:
     DevicePool() { refresh(); }
 
-    DevicePool(DevicePool &&dp) { refresh(); }
+    DevicePool([[maybe_unused]] DevicePool &&dp) { refresh(); }
 
     /**
      * @brief Dynamically refresh the available pool devices.
-     *
      */
     void refresh() {
         std::lock_guard<std::mutex> lg(m_);
