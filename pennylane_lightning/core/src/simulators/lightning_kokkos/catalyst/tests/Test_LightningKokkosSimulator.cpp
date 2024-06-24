@@ -82,14 +82,14 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Identity gate") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 10;
+        constexpr std::size_t n_qubits = 10;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             Qs[ind] = LKsim->AllocateQubit();
         }
 
-        for (size_t ind = 0; ind < n_qubits; ind += 2) {
+        for (std::size_t ind = 0; ind < n_qubits; ind += 2) {
             LKsim->NamedOperation("Identity", {}, {Qs[ind]}, false);
         }
 
@@ -100,7 +100,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state.at(0) == std::complex<double>{1, 0});
 
         std::complex<double> sum{0, 0};
-        for (size_t ind = 1; ind < state.size(); ind++) {
+        for (std::size_t ind = 1; ind < state.size(); ind++) {
             sum += state[ind];
         }
 
@@ -110,17 +110,17 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("PauliX gate") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 3;
+        constexpr std::size_t n_qubits = 3;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             Qs[ind] = LKsim->AllocateQubit();
         }
 
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             LKsim->NamedOperation("PauliX", {}, {Qs[ind]}, false);
         }
-        for (size_t ind = n_qubits; ind > 0; ind--) {
+        for (std::size_t ind = n_qubits; ind > 0; ind--) {
             LKsim->NamedOperation("PauliX", {}, {Qs[ind - 1]}, false);
         }
 
@@ -131,7 +131,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state.at(0) == std::complex<double>{1, 0});
 
         std::complex<double> sum{0, 0};
-        for (size_t ind = 1; ind < state.size(); ind++) {
+        for (std::size_t ind = 1; ind < state.size(); ind++) {
             sum += state[ind];
         }
 
@@ -141,14 +141,14 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("PauliY gate") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             Qs[ind] = LKsim->AllocateQubit();
         }
 
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             LKsim->NamedOperation("PauliY", {}, {Qs[ind]}, false);
         }
 
@@ -165,10 +165,10 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("PauliY and PauliZ gates") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             Qs[ind] = LKsim->AllocateQubit();
         }
 
@@ -188,14 +188,14 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard gate") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             Qs[ind] = LKsim->AllocateQubit();
         }
 
-        for (size_t ind = 0; ind < n_qubits; ind++) {
+        for (std::size_t ind = 0; ind < n_qubits; ind++) {
             LKsim->NamedOperation("Hadamard", {}, {Qs[ind]}, false);
         }
 
@@ -213,7 +213,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("R(X, Y, Z) and PauliX gates") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 4;
+        constexpr std::size_t n_qubits = 4;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("PauliX", {}, {Qs[0]}, false);
@@ -260,7 +260,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard, RX, PhaseShift with cache manager") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
 
@@ -289,8 +289,8 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
               PLApproxComplex(std::complex<double>{0.01913791, -0.039019})
                   .epsilon(1e-5));
 
-        std::tuple<size_t, size_t, size_t, std::vector<std::string>,
-                   std::vector<intptr_t>>
+        std::tuple<std::size_t, std::size_t, std::size_t,
+                   std::vector<std::string>, std::vector<intptr_t>>
             expected{3, 0, 2, {"Hadamard", "RX", "PhaseShift"}, {}};
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
@@ -300,11 +300,11 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("PauliX and CNOT") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
 
-        for (size_t i = 0; i < n_qubits; i++) {
+        for (std::size_t i = 0; i < n_qubits; i++) {
             Qs[i] = LKsim->AllocateQubit();
         }
 
@@ -324,7 +324,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard and CR(X, Y, Z)") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 4;
+        constexpr std::size_t n_qubits = 4;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -372,7 +372,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard and CRot") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -401,7 +401,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard, PauliZ, IsingXY, SWAP") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -427,7 +427,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard, PauliX and Toffoli") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 3;
+        constexpr std::size_t n_qubits = 3;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -455,7 +455,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("RX, Hadamard and MultiRZ") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("RX", {M_PI}, {Qs[1]}, false);
@@ -476,7 +476,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard, CNOT and Matrix") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -512,7 +512,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard, CR(X, Y, Z) and Matrix") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 4;
+        constexpr std::size_t n_qubits = 4;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -622,7 +622,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
     SECTION("Hadamard and IsingZZ and cache manager") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
-        constexpr size_t n_qubits = 2;
+        constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
 
         LKsim->StartTapeRecording();
@@ -643,8 +643,8 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state[2] == PLApproxComplex(c2).epsilon(1e-5));
         CHECK(state[3] == PLApproxComplex(c1).epsilon(1e-5));
 
-        std::tuple<size_t, size_t, size_t, std::vector<std::string>,
-                   std::vector<intptr_t>>
+        std::tuple<std::size_t, std::size_t, std::size_t,
+                   std::vector<std::string>, std::vector<intptr_t>>
             expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
