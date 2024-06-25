@@ -106,8 +106,7 @@ if(ENABLE_LAPACK)
         message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
     endif()
 
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h.in
-        ${CMAKE_CURRENT_SOURCE_DIR}/pennylane_lightning/core/src/utils/config.h)
+    add_compile_definitions(SCIPY_LIBS_PATH="${SCIPYLIBS}")
 
     message(STATUS "Python scipy-lib path: ${SCIPYLIBS}")
 endif()
