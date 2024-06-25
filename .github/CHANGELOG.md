@@ -137,6 +137,9 @@
 * Remove `pennylane.ops.op_math.controlled_decompositions.ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
   [(#757)](https://github.com/PennyLaneAI/pennylane-lightning/pull/757)
 
+* Add support for Scipy v1.14.
+  [(#776)](https://github.com/PennyLaneAI/pennylane-lightning/pull/776)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
