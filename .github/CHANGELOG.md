@@ -48,6 +48,9 @@
 * Change the type of tensor network objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` classes from `StateTensorT` to `TensorNetT`.
   [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759)
 
+* Silence `NDPermuter` linting warnings.
+  [(#750)](https://github.com/PennyLaneAI/pennylane-lightning/pull/750)
+
 * Rationalize MCM tests, removing most end-to-end tests from the native MCM test file, but keeping one that validates multiple mid-circuit measurements with any allowed return.
   [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
 
@@ -101,6 +104,15 @@
 
 ### Bug fixes
 
+* Don't route `probs(wires=[])` to `probs(all_wires)` in Lightning-Kokkos.
+  [(#762)](https://github.com/PennyLaneAI/pennylane-lightning/pull/762)
+
+* `ControlledQubitUnitary` is present in the Python device but not the TOML files. It is added to the decomposition gates since it can be implemented in its alternate form of `C(QubitUnitary)`.
+  [(#767)](https://github.com/PennyLaneAI/pennylane-lightning/pull/767)
+
+* Update the Lightning TOML files to indicate that non-commuting observables are supported.
+  [(#764)](https://github.com/PennyLaneAI/pennylane-lightning/pull/764)
+
 * Fix regex matching issue with auto on-boarding of release candidate branch to using the large runner queue.
   [(#774)](https://github.com/PennyLaneAI/pennylane-lightning/pull/774)
 
@@ -144,7 +156,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Lillian Frederiksen, Pietropaolo Frisoni, David Ittah, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
@@ -299,13 +311,13 @@ Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Lee James 
 * Refactor of dev prerelease auto-update-version workflow.
   [(#685)](https://github.com/PennyLaneAI/pennylane-lightning/pull/685)
 
-* Remove gates unsupported by catalyst from toml file.
+* Remove gates unsupported by catalyst from TOML file.
   [(#698)](https://github.com/PennyLaneAI/pennylane-lightning/pull/698)
 
 * Increase tolerance for a flaky test.
   [(#703)](https://github.com/PennyLaneAI/pennylane-lightning/pull/703)
 
-* Remove `ControlledQubitUnitary` in favour of `C(QubitUnitary)` from the list of supported operations and the device toml file. The `stopping_condition` method guarantees the consistency of decompositions.
+* Remove `ControlledQubitUnitary` in favour of `C(QubitUnitary)` from the list of supported operations and the device TOML file. The `stopping_condition` method guarantees the consistency of decompositions.
   [(#758)](https://github.com/PennyLaneAI/pennylane-lightning/pull/758)
 
 * Raise a clear error message with initialization of `lightning.kokkos` with zero-qubit on Windows.
