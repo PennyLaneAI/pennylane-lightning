@@ -75,7 +75,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: |
           matrix.pl_backend == 'lightning_qubit' &&
-          (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
+          (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: main/dist/*.whl
@@ -90,7 +90,7 @@ jobs:
           SKIP_COMPILATION: True
 
       - uses: actions/upload-artifact@v3
-        if: ${{ matrix.pl_backend != 'lightning_qubit' && (github.event_name == 'release' || github.ref == 'refs/heads/master') }}
+        if: ${{ matrix.pl_backend != 'lightning_qubit' && (github.event_name == 'pull_request' || github.ref == 'refs/heads/master') }}
         with:
           name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
           path: main/dist/*.tar.gz
@@ -106,13 +106,13 @@ jobs:
       - uses: actions/download-artifact@v3
         if: |
           matrix.pl_backend == 'lightning_qubit' &&
-          github.event_name == 'release'
+          github.event_name == 'pull_request'
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
-        if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release' }}
+        if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'pull_request' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
@@ -120,7 +120,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
       - uses: actions/download-artifact@v3
-        if: ${{ matrix.pl_backend != 'lightning_qubit' && github.event_name == 'release' }}
+        if: ${{ matrix.pl_backend != 'lightning_qubit' && github.event_name == 'pull_request' }}
         with:
           name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
           path: dist
