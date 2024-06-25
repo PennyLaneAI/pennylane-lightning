@@ -24,12 +24,12 @@
 /// @cond DEV
 namespace {
 // MemRef type definition (Helper)
-template <typename T, size_t R> struct MemRefT {
+template <typename T, std::size_t R> struct MemRefT {
     T *data_allocated;
     T *data_aligned;
-    size_t offset;
-    size_t sizes[R];
-    size_t strides[R];
+    std::size_t offset;
+    std::size_t sizes[R];
+    std::size_t strides[R];
 };
 using namespace Catalyst::Runtime::Simulator;
 using LKSimulator = LightningKokkosSimulator;
@@ -79,7 +79,7 @@ TEST_CASE("Check an unsupported observable", "[Measures]") {
 TEST_CASE("Measurement collapse test with 2 wires", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -106,7 +106,7 @@ TEST_CASE("Measurement collapse concrete logical qubit difference",
           "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
-    constexpr size_t n = 1;
+    constexpr std::size_t n = 1;
     // The first time an array is allocated, logical and concrete qubits
     // are the same.
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
@@ -201,10 +201,10 @@ TEST_CASE("Expval(NamedObs) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -226,10 +226,10 @@ TEST_CASE("Expval(NamedObs) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -241,7 +241,7 @@ TEST_CASE("Expval(NamedObs) shots test", "[Measures]") {
     ObsIdType py = sim->Observable(ObsId::PauliY, {}, {Qs[1]});
     ObsIdType pz = sim->Observable(ObsId::PauliZ, {}, {Qs[1]});
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     CHECK(sim->Expval(px) == Approx(0.0).margin(5e-2));
@@ -253,10 +253,10 @@ TEST_CASE("Expval(HermitianObs) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -278,14 +278,14 @@ TEST_CASE("Expval(HermitianObs) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -309,14 +309,14 @@ TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -339,10 +339,10 @@ TEST_CASE("Expval(TensorProd(NamedObs)) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -367,10 +367,10 @@ TEST_CASE("Expval(TensorProd(NamedObs)) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -386,7 +386,7 @@ TEST_CASE("Expval(TensorProd(NamedObs)) shots test", "[Measures]") {
     ObsIdType tpy = sim->TensorObservable({py});
     ObsIdType tpz = sim->TensorObservable({pz});
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     CHECK(sim->Expval(tpx) == Approx(1.0).margin(5e-2));
@@ -398,10 +398,10 @@ TEST_CASE("Expval(TensorProd(NamedObs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -429,15 +429,15 @@ TEST_CASE("Expval(TensorProd(NamedObs[])) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim0 = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
         Qs.push_back(sim0->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("PauliX", {}, {Qs[0]}, false);
@@ -463,10 +463,10 @@ TEST_CASE("Expval(TensorProd(HermitianObs))", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -490,10 +490,10 @@ TEST_CASE("Expval(TensorProd(HermitianObs[]))", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -515,10 +515,10 @@ TEST_CASE("Expval(TensorProd(Obs[]))", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -544,10 +544,10 @@ TEST_CASE("Expval(Tensor(Hamiltonian(NamedObs[]), NamedObs)) test",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -569,7 +569,7 @@ TEST_CASE("Expval(Tensor(HermitianObs, Hamiltonian()) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 3;
+    constexpr std::size_t n = 3;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
     sim->NamedOperation("PauliX", {}, {Qs[0]}, false);
@@ -592,10 +592,10 @@ TEST_CASE("Expval(Hamiltonian(NamedObs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -616,10 +616,10 @@ TEST_CASE("Expval(Hamiltonian(NamedObs[])) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -633,7 +633,7 @@ TEST_CASE("Expval(Hamiltonian(NamedObs[])) shots test", "[Measures]") {
     ObsIdType pz = sim->Observable(ObsId::PauliZ, {}, {Qs[1]});
     ObsIdType hxyz = sim->HamiltonianObservable({0.4, 0.8, 0.2}, {px, py, pz});
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     CHECK(sim->Expval(hxyz) == Approx(0.2).margin(5e-2));
@@ -643,10 +643,10 @@ TEST_CASE("Expval(Hamiltonian(TensorObs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -669,10 +669,10 @@ TEST_CASE("Expval(Hamiltonian(Hermitian[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -696,10 +696,10 @@ TEST_CASE("Expval(Hamiltonian({TensorProd, Hermitian}[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -725,10 +725,10 @@ TEST_CASE("Expval(Hamiltonian({Hamiltonian, Hermitian}[])) test",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -754,10 +754,10 @@ TEST_CASE("Expval(Hamiltonian({Hamiltonian(Hamiltonian), Hermitian}[])) test",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -783,10 +783,10 @@ TEST_CASE("Var(NamedObs) test with numWires=4", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -808,14 +808,14 @@ TEST_CASE("Var(NamedObs) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 5000;
+    constexpr std::size_t num_shots = 5000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -830,10 +830,10 @@ TEST_CASE("Var(HermitianObs) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -855,10 +855,10 @@ TEST_CASE("Var(TensorProd(NamedObs)) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -883,14 +883,14 @@ TEST_CASE("Var(TensorProd(NamedObs)) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("PauliX", {}, {Qs[0]}, false);
@@ -911,10 +911,10 @@ TEST_CASE("Var(TensorProd(NamedObs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -937,10 +937,10 @@ TEST_CASE("Var(TensorProd(HermitianObs)) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -964,10 +964,10 @@ TEST_CASE("Var(TensorProd(HermitianObs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 2;
+    constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -989,10 +989,10 @@ TEST_CASE("Var(TensorProd(Obs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1017,10 +1017,10 @@ TEST_CASE("Var(Tensor(Hamiltonian(NamedObs[]), NamedObs)) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1042,14 +1042,14 @@ TEST_CASE("Var(Tensor(NamedObs[])) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 5000;
+    constexpr std::size_t num_shots = 5000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("PauliX", {}, {Qs[0]}, false);
@@ -1070,14 +1070,14 @@ TEST_CASE("Var(Tensor(NamedObs[])) shots test without gates "
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 3;
+    constexpr std::size_t n = 3;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 5000;
+    constexpr std::size_t num_shots = 5000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("PauliX", {}, {Qs[0]}, false);
@@ -1096,7 +1096,7 @@ TEST_CASE("Var(Tensor(HermitianObs, Hamiltonian()) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 3;
+    constexpr std::size_t n = 3;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -1118,10 +1118,10 @@ TEST_CASE("Var(Tensor(HermitianObs, Hamiltonian()) shots test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 3;
+    constexpr std::size_t n = 3;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
-    constexpr size_t num_shots = 5000;
+    constexpr std::size_t num_shots = 5000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -1138,10 +1138,10 @@ TEST_CASE("Var(Hamiltonian(NamedObs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1162,10 +1162,10 @@ TEST_CASE("Var(Hamiltonian(TensorObs[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1188,10 +1188,10 @@ TEST_CASE("Var(Hamiltonian(Hermitian[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1215,10 +1215,10 @@ TEST_CASE("Var(Hamiltonian({TensorProd, Hermitian}[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1243,10 +1243,10 @@ TEST_CASE("Var(Hamiltonian({Hamiltonian, Hermitian}[])) test", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1272,10 +1272,10 @@ TEST_CASE("Var(Hamiltonian({Hamiltonian(Hamiltonian), Hermitian}[])) test",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1301,7 +1301,7 @@ TEST_CASE("State test with incorrect size", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
     std::vector<std::complex<double>> state(1U << (n - 1));
@@ -1315,7 +1315,7 @@ TEST_CASE("State test with numWires=4", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -1327,7 +1327,7 @@ TEST_CASE("State test with numWires=4", "[Measures]") {
     DataView<std::complex<double>, 1> view(state);
     sim->State(view);
 
-    for (size_t i = 0; i < 16; i++) {
+    for (std::size_t i = 0; i < 16; i++) {
         if (i == 4 || i == 6 || i == 12 || i == 14) {
             CHECK(std::real(state[i]) == Approx(0.).margin(1e-5));
             CHECK(std::imag(state[i]) == Approx(0.5).margin(1e-5));
@@ -1343,10 +1343,10 @@ TEST_CASE("PartialProbs test with incorrect numWires and numAlloc",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1376,10 +1376,10 @@ TEST_CASE("Probs and PartialProbs tests with numWires=0-4", "[Measures]") {
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1412,14 +1412,14 @@ TEST_CASE("Probs and PartialProbs tests with numWires=0-4", "[Measures]") {
     CHECK(probs0[0] == Approx(1.0));
     CHECK(probs1[0] == Approx(0.5).margin(1e-5));
     CHECK(probs1[1] == Approx(0.5).margin(1e-5));
-    for (size_t i = 0; i < 4; i++) {
+    for (std::size_t i = 0; i < 4; i++) {
         if (i == 0 || i == 2) {
             CHECK(probs2[i] == Approx(0.5).margin(1e-5));
         } else {
             CHECK(probs2[i] == Approx(0.).margin(1e-5));
         }
     }
-    for (size_t i = 0; i < 16; i++) {
+    for (std::size_t i = 0; i < 16; i++) {
         if (i == 4 || i == 6 || i == 12 || i == 14) {
             CHECK(probs3[i] == Approx(0.25).margin(1e-5));
             CHECK(probs4[i] == Approx(0.25).margin(1e-5));
@@ -1435,14 +1435,14 @@ TEST_CASE("Probs and PartialProbs shots tests with numWires=0-4",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
-    constexpr size_t num_shots = 10000;
+    constexpr std::size_t num_shots = 10000;
     sim->SetDeviceShots(num_shots);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
@@ -1474,14 +1474,14 @@ TEST_CASE("Probs and PartialProbs shots tests with numWires=0-4",
     CHECK(probs0[0] == Approx(1.0).margin(5e-2));
     CHECK(probs1[0] == Approx(0.5).margin(5e-2));
     CHECK(probs1[1] == Approx(0.5).margin(5e-2));
-    for (size_t i = 0; i < 4; i++) {
+    for (std::size_t i = 0; i < 4; i++) {
         if (i == 0 || i == 2) {
             CHECK(probs2[i] == Approx(0.5).margin(5e-2));
         } else {
             CHECK(probs2[i] == Approx(0.).margin(5e-2));
         }
     }
-    for (size_t i = 0; i < 16; i++) {
+    for (std::size_t i = 0; i < 16; i++) {
         if (i == 4 || i == 6 || i == 12 || i == 14) {
             CHECK(probs3[i] == Approx(0.25).margin(5e-2));
             CHECK(probs4[i] == Approx(0.25).margin(5e-2));
@@ -1497,10 +1497,10 @@ TEST_CASE("PartialSample test with incorrect numWires and numAlloc",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1536,10 +1536,10 @@ TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1574,10 +1574,10 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1585,7 +1585,7 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
     sim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
     sim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
-    size_t shots = 100;
+    std::size_t shots = 100;
 
     std::vector<double> samples1(shots * 1);
     MemRefT<double, 2> buffer1{
@@ -1615,13 +1615,13 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
                               buffer4.sizes, buffer4.strides);
     sim->Sample(view4, shots);
 
-    for (size_t i = 0; i < shots * 1; i++)
+    for (std::size_t i = 0; i < shots * 1; i++)
         CHECK((samples1[i] == 0. || samples1[i] == 1.));
-    for (size_t i = 0; i < shots * 2; i++)
+    for (std::size_t i = 0; i < shots * 2; i++)
         CHECK((samples2[i] == 0. || samples2[i] == 1.));
-    for (size_t i = 0; i < shots * 4; i++)
+    for (std::size_t i = 0; i < shots * 4; i++)
         CHECK((samples3[i] == 0. || samples3[i] == 1.));
-    for (size_t i = 0; i < shots * 4; i++)
+    for (std::size_t i = 0; i < shots * 4; i++)
         CHECK((samples4[i] == 0. || samples4[i] == 1.));
 }
 
@@ -1632,10 +1632,10 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
         std::make_unique<LKSimulator>("{mcmc : True, num_burnin : 200}");
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs;
     Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
+    for (std::size_t i = 0; i < n; i++) {
         Qs.push_back(sim->AllocateQubit());
     }
 
@@ -1643,7 +1643,7 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
     sim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
     sim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
-    size_t shots = 100;
+    std::size_t shots = 100;
 
     std::vector<double> samples1(shots * 1);
     MemRefT<double, 2> buffer1{
@@ -1673,13 +1673,13 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
                               buffer4.sizes, buffer4.strides);
     sim->Sample(view4, shots);
 
-    for (size_t i = 0; i < shots * 1; i++)
+    for (std::size_t i = 0; i < shots * 1; i++)
         CHECK((samples1[i] == 0. || samples1[i] == 1.));
-    for (size_t i = 0; i < shots * 2; i++)
+    for (std::size_t i = 0; i < shots * 2; i++)
         CHECK((samples2[i] == 0. || samples2[i] == 1.));
-    for (size_t i = 0; i < shots * 4; i++)
+    for (std::size_t i = 0; i < shots * 4; i++)
         CHECK((samples3[i] == 0. || samples3[i] == 1.));
-    for (size_t i = 0; i < shots * 4; i++)
+    for (std::size_t i = 0; i < shots * 4; i++)
         CHECK((samples4[i] == 0. || samples4[i] == 1.));
 }
 
@@ -1688,14 +1688,14 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
     std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
 
     // state-vector with #qubits = n
-    constexpr size_t n = 4;
+    constexpr std::size_t n = 4;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
     sim->NamedOperation("RX", {0.5}, {Qs[0]}, false);
     sim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
     sim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
-    size_t shots = 100;
+    std::size_t shots = 100;
 
     std::vector<double> eigvals0(1);
     std::vector<int64_t> counts0(1);
@@ -1735,7 +1735,7 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
     CHECK((eigvals1[0] == 0. && eigvals1[1] == 1.));
     CHECK((eigvals2[0] == 0. && eigvals2[1] == 1. && eigvals2[2] == 2. &&
            eigvals2[3] == 3.));
-    for (size_t i = 0; i < 16; i++) {
+    for (std::size_t i = 0; i < 16; i++) {
         CHECK(eigvals3[i] == static_cast<double>(i));
         CHECK(eigvals4[i] == static_cast<double>(i));
     }
@@ -1743,8 +1743,8 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
     CHECK(counts1[0] + counts1[1] == static_cast<int64_t>(shots));
     CHECK(counts2[0] + counts2[1] + counts2[2] + counts2[3] ==
           static_cast<int64_t>(shots));
-    size_t sum3 = 0, sum4 = 0;
-    for (size_t i = 0; i < 16; i++) {
+    std::size_t sum3 = 0, sum4 = 0;
+    for (std::size_t i = 0; i < 16; i++) {
         sum3 += counts3[i];
         sum4 += counts4[i];
     }
