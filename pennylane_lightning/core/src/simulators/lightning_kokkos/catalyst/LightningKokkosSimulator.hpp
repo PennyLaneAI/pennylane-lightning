@@ -154,4 +154,5 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
         -> std::tuple<std::size_t, std::size_t, std::size_t,
                       std::vector<std::string>, std::vector<ObsIdType>>;
 };
+
 } // namespace Catalyst::Runtime::Simulator

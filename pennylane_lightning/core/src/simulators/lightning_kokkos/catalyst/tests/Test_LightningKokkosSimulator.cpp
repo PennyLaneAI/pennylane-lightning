@@ -24,7 +24,7 @@
 #include <catch2/catch.hpp>
 
 #include "LightningKokkosSimulator.hpp"
-#include "RuntimeCAPI.h"
+#include "QuantumDevice.hpp"
 #include "TestHelpers.hpp"
 
 /// @cond DEV
@@ -32,6 +32,10 @@ namespace {
 using namespace Catalyst::Runtime::Simulator;
 using namespace Pennylane::Util;
 using LKSimulator = LightningKokkosSimulator;
+using QDevice = Catalyst::Runtime::QuantumDevice;
+
+GENERATE_DEVICE_FACTORY(LightningKokkosSimulator,
+                        Catalyst::Runtime::Simulator::LightningKokkosSimulator);
 } // namespace
 /// @endcond
 
@@ -48,12 +52,19 @@ TEST_CASE("LightningKokkosSimulator::constructor", "[constructibility]") {
     }
 }
 
+TEST_CASE("Test the device factory method", "[constructibility]") {
+    std::unique_ptr<QDevice> LKsim(LightningKokkosSimulatorFactory(""));
+    REQUIRE(LKsim->GetNumQubits() == 0);
+}
+
 TEST_CASE("LightningKokkosSimulator::unit_tests", "[unit tests]") {
     SECTION("Managing Qubits") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
         std::vector<intptr_t> Qs = LKsim->AllocateQubits(0);
         REQUIRE(LKsim->GetNumQubits() == 0);
-        LKsim->AllocateQubits(4);
+        LKsim->AllocateQubits(2);
+        REQUIRE(LKsim->GetNumQubits() == 2);
+        LKsim->AllocateQubits(2);
         REQUIRE(LKsim->GetNumQubits() == 4);
         LKsim->ReleaseQubit(0);
         REQUIRE(

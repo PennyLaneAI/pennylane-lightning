@@ -15,7 +15,6 @@
 #include "CacheManager.hpp"
 #include "LightningKokkosSimulator.hpp"
 #include "QuantumDevice.hpp"
-#include "RuntimeCAPI.h"
 #include "Types.h"
 #include "Utils.hpp"
 #include "catch2/catch.hpp"

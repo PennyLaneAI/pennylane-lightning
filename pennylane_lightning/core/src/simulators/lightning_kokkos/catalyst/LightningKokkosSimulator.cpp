@@ -106,6 +106,7 @@ auto LightningKokkosSimulator::GetDeviceShots() const -> std::size_t {
     return this->device_shots;
 }
 
+/// LCOV_EXCL_START
 void LightningKokkosSimulator::PrintState() {
     using std::cout;
     using std::endl;
@@ -130,6 +131,7 @@ void LightningKokkosSimulator::PrintState() {
     }
     cout << state[idx] << "]" << endl;
 }
+/// LCOV_EXCL_STOP
 
 auto LightningKokkosSimulator::Zero() const -> Result {
     return const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
@@ -572,5 +574,7 @@ void LightningKokkosSimulator::Gradient(
 
 } // namespace Catalyst::Runtime::Simulator
 
+/// LCOV_EXCL_START
 GENERATE_DEVICE_FACTORY(LightningKokkosSimulator,
                         Catalyst::Runtime::Simulator::LightningKokkosSimulator);
+/// LCOV_EXCL_STOP
