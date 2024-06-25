@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install python3 python3-pip && python -m pip install pip~=24.0 && python3 -m pip install -r requirements-dev.txt
+        run: sudo apt update && sudo apt -y install python3 python3-pip && python -m pip install pip~=22.0 && python3 -m pip install -r requirements-dev.txt
 
       - name: Run formatter
         run: PATH=$PATH:/home/ubuntu/.local/bin/:$(dirname $(which python3))/ ./bin/format --check ./pennylane_lightning/core/src
