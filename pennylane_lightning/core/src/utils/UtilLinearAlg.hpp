@@ -32,8 +32,6 @@
 
 #include "SharedLibLoader.hpp"
 
-#include "config.h"
-
 /// @cond DEV
 namespace {
 // Declare heev function pointers to access corresponding functions in
