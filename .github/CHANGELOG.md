@@ -91,6 +91,9 @@
 * Remove the daily schedule from the "Compat Check w/PL - release/release" GitHub action.
   [(#746)](https://github.com/PennyLaneAI/pennylane-lightning/pull/746)
 
+* Remove the required `scipy` config file for LightningQubit. The support is now maintained by passing `SCIPY_LIBS_PATH` to the compiler.
+  [(#775)](https://github.com/PennyLaneAI/pennylane-lightning/pull/775)
+
 ### Documentation
 
 * Add installation instructions and documentation for `lightning.tensor`.
