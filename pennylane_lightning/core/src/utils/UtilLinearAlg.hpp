@@ -192,9 +192,19 @@ void compute_diagonalizing_gates(int n, int lda,
     std::vector<T> rwork(3 * n - 2);            // Real workspace array
     int info;
 
+    // Scipy packages `libopenblas` as `libscipy_openblas` starting v1.14.0, and
+    // OpenBlas symbols are now exposed with a prefix `scipy_`.
+    const auto scipy_openblas =
+        std::find_if(availableLibs.begin(), availableLibs.end(),
+                     [](const auto &lib) {
+                         return lib.find("scipy_openblas") != std::string::npos;
+                     }) != availableLibs.end()
+            ? true
+            : false;
+
     if constexpr (std::is_same<T, float>::value) {
-        cheevPtr cheev =
-            reinterpret_cast<cheevPtr>(blasLib->getSymbol("cheev_"));
+        cheevPtr cheev = reinterpret_cast<cheevPtr>(
+            blasLib->getSymbol(scipy_openblas ? "scipy_cheev_" : "cheev_"));
         // Query optimal workspace size
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
@@ -205,8 +215,8 @@ void compute_diagonalizing_gates(int n, int lda,
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
-        zheevPtr zheev =
-            reinterpret_cast<zheevPtr>(blasLib->getSymbol("zheev_"));
+        zheevPtr zheev = reinterpret_cast<zheevPtr>(
+            blasLib->getSymbol(scipy_openblas ? "scipy_zheev_" : "zheev_"));
         // Query optimal workspace size
         zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
