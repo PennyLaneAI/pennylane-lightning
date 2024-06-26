@@ -2,28 +2,28 @@ cmake_minimum_required(VERSION 3.20)
 
 project(lightning_kokkos_catalyst LANGUAGES CXX)
 
-set(CATALYST_FILES LightningKokkosSimulator.cpp CACHE INTERNAL "" FORCE)
-add_library(lightning_kokkos_catalyst SHARED ${CATALYST_FILES})
+set(LK_CATALYST_FILES LightningKokkosSimulator.cpp CACHE INTERNAL "")
+add_library(lightning_kokkos_catalyst SHARED ${LK_CATALYST_FILES})
 
 include(FetchContent)
 
-if(CATALYST_SRC_PATH)
-    if(NOT IS_ABSOLUTE ${CATALYST_SRC_PATH})
-        message(FATAL_ERROR " CATALYST_SRC_PATH=${CATALYST_SRC_PATH} must be set to an absolute path")
+if(LIGHTNING_CATALYST_SRC_PATH)
+    if(NOT IS_ABSOLUTE ${LIGHTNING_CATALYST_SRC_PATH})
+        message(FATAL_ERROR " LIGHTNING_CATALYST_SRC_PATH=${LIGHTNING_CATALYST_SRC_PATH} must be set to an absolute path")
     endif()
     if(CATALYST_GIT_TAG)
-        message(WARN " Setting `CATALYST_SRC_PATH=${CATALYST_SRC_PATH}` overrides `CATALYST_GIT_TAG=${CATALYST_GIT_TAG}`")
+        message(WARN " Setting `LIGHTNING_CATALYST_SRC_PATH=${LIGHTNING_CATALYST_SRC_PATH}` overrides `CATALYST_GIT_TAG=${CATALYST_GIT_TAG}`")
     endif()
 
     # Acquire local git hash and use for CATALYST_GIT_TAG
     execute_process(COMMAND git rev-parse --short HEAD
-        WORKING_DIRECTORY ${CATALYST_SRC_PATH}
+        WORKING_DIRECTORY ${LIGHTNING_CATALYST_SRC_PATH}
         OUTPUT_VARIABLE CATALYST_GIT_TAG
     )
-    message(INFO " Building against local Catalyst - path: ${CATALYST_SRC_PATH} - GIT TAG: ${CATALYST_GIT_TAG}")
+    message(INFO " Building against local Catalyst - path: ${LIGHTNING_CATALYST_SRC_PATH} - GIT TAG: ${CATALYST_GIT_TAG}")
 
-    target_include_directories(lightning_kokkos_catalyst PUBLIC ${CATALYST_SRC_PATH}/runtime/lib/backend/common)
-    target_include_directories(lightning_kokkos_catalyst PUBLIC ${CATALYST_SRC_PATH}/runtime/include)
+    target_include_directories(lightning_kokkos_catalyst PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/lib/backend/common)
+    target_include_directories(lightning_kokkos_catalyst PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/include)
 
 else()
     if(NOT CATALYST_GIT_TAG)
