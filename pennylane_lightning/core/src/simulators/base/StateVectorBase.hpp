@@ -58,6 +58,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @param num_qubits Number of qubits
      */
     explicit StateVectorBase(size_t num_qubits) : num_qubits_{num_qubits} {
+        LOGGER_DEBUG("num_qubits=" + std::to_string(num_qubits));
         set_logger_level_from_env();
     }
 
@@ -67,6 +68,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @return std::size_t
      */
     [[nodiscard]] auto getNumQubits() const -> std::size_t {
+        LOGGER_DEBUG("");
         return num_qubits_;
     }
 
@@ -76,6 +78,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @return std::size_t
      */
     [[nodiscard]] auto getTotalNumQubits() const -> std::size_t {
+        LOGGER_DEBUG("");
         return num_qubits_;
     }
 
@@ -85,6 +88,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      * @return The size of the statevector
      */
     [[nodiscard]] std::size_t getLength() const {
+        LOGGER_DEBUG("");
         return static_cast<std::size_t>(exp2(num_qubits_));
     }
 

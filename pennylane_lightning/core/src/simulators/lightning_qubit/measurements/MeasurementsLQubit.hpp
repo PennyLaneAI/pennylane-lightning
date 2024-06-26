@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "LinearAlgebra.hpp"
+#include "Logger.hpp"
 #include "MeasurementsBase.hpp"
 #include "NDPermuter.hpp"
 #include "Observables.hpp"
@@ -53,11 +54,11 @@ namespace Pennylane::LightningQubit::Measures {
 /**
  * @brief Observable's Measurement Class.
  *
- * This class couples with a statevector to performs measurements.
+ * This class couples with a state-vector to performs measurements.
  * Observables are defined by its operator(matrix), the observable class,
  * or through a string-based function dispatch.
  *
- * @tparam StateVectorT type of the statevector to be measured.
+ * @tparam StateVectorT type of the state-vector to be measured.
  */
 template <class StateVectorT>
 class Measurements final
@@ -68,8 +69,8 @@ class Measurements final
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
   public:
-    explicit Measurements(const StateVectorT &statevector)
-        : BaseType{statevector} {};
+    explicit Measurements(const StateVectorT &state - vector)
+        : BaseType{state - vector} {};
 
     /**
      * @brief Probabilities of each computational basis state.
@@ -78,11 +79,15 @@ class Measurements final
      * in lexicographic order.
      */
     auto probs() -> std::vector<PrecisionT> {
-        const ComplexT *arr_data = this->_statevector.getData();
-        std::vector<PrecisionT> basis_probs(this->_statevector.getLength(), 0);
+        LOGGER_INFO(
+            "Calculate probabilities of each computational basis state");
+        LOGGER_DEBUG("");
+        const ComplexT *arr_data = this->_state - vector.getData();
+        std::vector<PrecisionT> basis_probs(this->_state - vector.getLength(),
+                                            0);
 
         std::transform(
-            arr_data, arr_data + this->_statevector.getLength(),
+            arr_data, arr_data + this->_state - vector.getLength(),
             basis_probs.begin(),
             [](const ComplexT &z) -> PrecisionT { return std::norm(z); });
         return basis_probs;
@@ -100,6 +105,10 @@ class Measurements final
     probs(const std::vector<std::size_t> &wires,
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities for a subset (num_wires={}) of "
+                    "the full system",
+                    wires.size());
+        LOGGER_DEBUG("wires, device_wires");
         // Determining index that would sort the vector.
         // This information is needed later.
         const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
@@ -111,15 +120,15 @@ class Measurements final
         }
 
         // If all wires are requested, dispatch to `this->probs()`
-        if (wires.size() == this->_statevector.getNumQubits() &&
+        if (wires.size() == this->_state - vector.getNumQubits() &&
             wires == sorted_wires) {
             return this->probs();
         }
 
         // Determining probabilities for the sorted wires.
-        const ComplexT *arr_data = this->_statevector.getData();
+        const ComplexT *arr_data = this->_state - vector.getData();
 
-        std::size_t num_qubits = this->_statevector.getNumQubits();
+        std::size_t num_qubits = this->_state - vector.getNumQubits();
         const std::vector<std::size_t> all_indices =
             Gates::generateBitPatterns(sorted_wires, num_qubits);
         const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
@@ -173,6 +182,10 @@ class Measurements final
      */
     auto probs(const Observable<StateVectorT> &obs, std::size_t num_shots = 0)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities to measure rotated basis states "
+                    "with {} shots",
+                    num_shots);
+        LOGGER_DEBUG("obs, num_shots");
         return BaseType::probs(obs, num_shots);
     }
 
@@ -184,6 +197,8 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      */
     auto probs(size_t num_shots) -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities with {} shots", num_shots);
+        LOGGER_DEBUG("num_shots");
         return BaseType::probs(num_shots);
     }
 
@@ -199,6 +214,10 @@ class Measurements final
 
     auto probs(const std::vector<std::size_t> &wires, std::size_t num_shots)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities for a subset (num_wires={}) of "
+                    "the full system with {} shots",
+                    wires.size(), num_shots);
+        LOGGER_DEBUG("wires, num_shots");
         return BaseType::probs(wires, num_shots);
     }
 
@@ -211,16 +230,20 @@ class Measurements final
      */
     auto expval(const std::vector<ComplexT> &matrix,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a Hermitian matrix of "
+                    "size {}, on {} wires",
+                    matrix.size(), wires.size());
+        LOGGER_DEBUG("matrix, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+        StateVectorLQubitManaged<PrecisionT> operator_state -
+            vector(this->_state - vector);
 
-        operator_statevector.applyMatrix(matrix, wires);
+        operator_state - vector.applyMatrix(matrix, wires);
 
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
+        ComplexT expected_value = innerProdC(this->_state - vector.getData(),
+                                             operator_state - vector.getData(),
+                                             this->_state - vector.getLength());
         return std::real(expected_value);
     };
 
@@ -233,16 +256,18 @@ class Measurements final
      */
     auto expval(const std::string &operation,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of {}", operation);
+        LOGGER_DEBUG("operation, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+        StateVectorLQubitManaged<PrecisionT> operator_state -
+            vector(this->_state - vector);
 
-        operator_statevector.applyOperation(operation, wires);
+        operator_state - vector.applyOperation(operation, wires);
 
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
+        ComplexT expected_value = innerProdC(this->_state - vector.getData(),
+                                             operator_state - vector.getData(),
+                                             this->_state - vector.getLength());
         return std::real(expected_value);
     };
 
@@ -265,17 +290,20 @@ class Measurements final
     auto expval(const index_type *row_map_ptr, const index_type row_map_size,
                 const index_type *entries_ptr, const ComplexT *values_ptr,
                 const index_type numNNZ) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a Sparse Hamiltonian");
+        LOGGER_DEBUG(
+            "row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ");
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_state - vector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
-            this->_statevector.getData(),
-            static_cast<index_type>(this->_statevector.getLength()),
+            this->_state - vector.getData(),
+            static_cast<index_type>(this->_state - vector.getLength()),
             row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
         ComplexT expected_value =
-            innerProdC(this->_statevector.getData(), operator_vector.data(),
-                       this->_statevector.getLength());
+            innerProdC(this->_state - vector.getData(), operator_vector.data(),
+                       this->_state - vector.getLength());
         return std::real(expected_value);
     };
 
@@ -292,6 +320,10 @@ class Measurements final
     auto expval(const std::vector<op_type> &operations_list,
                 const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate the expectation value of a list of observables "
+                    "of size {}",
+                    operations_list.size());
+        LOGGER_DEBUG("operations_list, wires_list");
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -312,20 +344,23 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     auto expval(const Observable<StateVectorT> &obs) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a general Observable");
+        LOGGER_DEBUG("obs");
         PrecisionT result{};
 
         if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
                                      MemoryStorageLocation::Internal>) {
-            StateVectorT sv(this->_statevector);
-            result = calculateObsExpval(sv, obs, this->_statevector);
+            StateVectorT sv(this->_state - vector);
+            result = calculateObsExpval(sv, obs, this->_state - vector);
         } else if constexpr (std::is_same_v<
                                  typename StateVectorT::MemoryStorageT,
                                  MemoryStorageLocation::External>) {
-            std::vector<ComplexT> data_storage(
-                this->_statevector.getData(),
-                this->_statevector.getData() + this->_statevector.getLength());
+            std::vector<ComplexT> data_storage(this->_state - vector.getData(),
+                                               this->_state - vector.getData() +
+                                                   this->_state -
+                                                   vector.getLength());
             StateVectorT sv(data_storage.data(), data_storage.size());
-            result = calculateObsExpval(sv, obs, this->_statevector);
+            result = calculateObsExpval(sv, obs, this->_state - vector);
         } else {
             /// LCOV_EXCL_START
             PL_ABORT("Undefined memory storage location for StateVectorT.");
@@ -347,6 +382,10 @@ class Measurements final
     auto expval(const Observable<StateVectorT> &obs,
                 const std::size_t &num_shots,
                 const std::vector<std::size_t> &shot_range) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a general Observable "
+                    "with {} shots",
+                    num_shots);
+        LOGGER_DEBUG("obs, num_shots");
         return BaseType::expval(obs, num_shots, shot_range);
     }
 
@@ -361,6 +400,9 @@ class Measurements final
 
     auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
         -> PrecisionT {
+        LOGGER_INFO("Calculate variance of a general Observable with {} shots",
+                    num_shots);
+        LOGGER_DEBUG("obs, num_shots");
         return BaseType::var(obs, num_shots);
     }
 
@@ -371,20 +413,23 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     auto var(const Observable<StateVectorT> &obs) -> PrecisionT {
+        LOGGER_INFO("Calculate variance of a general Observable");
+        LOGGER_DEBUG("obs");
         PrecisionT result{};
         if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
                                      MemoryStorageLocation::Internal>) {
-            StateVectorT sv(this->_statevector);
-            result = calculateObsVar(sv, obs, this->_statevector);
+            StateVectorT sv(this->_state - vector);
+            result = calculateObsVar(sv, obs, this->_state - vector);
 
         } else if constexpr (std::is_same_v<
                                  typename StateVectorT::MemoryStorageT,
                                  MemoryStorageLocation::External>) {
-            std::vector<ComplexT> data_storage(
-                this->_statevector.getData(),
-                this->_statevector.getData() + this->_statevector.getLength());
+            std::vector<ComplexT> data_storage(this->_state - vector.getData(),
+                                               this->_state - vector.getData() +
+                                                   this->_state -
+                                                   vector.getLength());
             StateVectorT sv(data_storage.data(), data_storage.size());
-            result = calculateObsVar(sv, obs, this->_statevector);
+            result = calculateObsVar(sv, obs, this->_state - vector);
         } else {
             /// LCOV_EXCL_START
             PL_ABORT("Undefined memory storage location for StateVectorT.");
@@ -402,21 +447,23 @@ class Measurements final
      */
     auto var(const std::string &operation,
              const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO("Calculate variance of {}", operation);
+        LOGGER_DEBUG("operation, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+        StateVectorLQubitManaged<PrecisionT> operator_state -
+            vector(this->_state - vector);
 
-        operator_statevector.applyOperation(operation, wires);
+        operator_state - vector.applyOperation(operation, wires);
 
         const std::complex<PrecisionT> *opsv_data =
-            operator_statevector.getData();
-        std::size_t orgsv_len = this->_statevector.getLength();
+            operator_state - vector.getData();
+        std::size_t orgsv_len = this->_state - vector.getLength();
 
         PrecisionT mean_square =
             std::real(innerProdC(opsv_data, opsv_data, orgsv_len));
         PrecisionT squared_mean = std::real(
-            innerProdC(this->_statevector.getData(), opsv_data, orgsv_len));
+            innerProdC(this->_state - vector.getData(), opsv_data, orgsv_len));
         squared_mean = static_cast<PrecisionT>(std::pow(squared_mean, 2));
         return (mean_square - squared_mean);
     };
@@ -430,21 +477,25 @@ class Measurements final
      */
     auto var(const std::vector<ComplexT> &matrix,
              const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO(
+            "Calculate variance of a Hermitian matrix of size {}, on {} wires",
+            matrix.size(), wires.size());
+        LOGGER_DEBUG("matrix, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+        StateVectorLQubitManaged<PrecisionT> operator_state -
+            vector(this->_state - vector);
 
-        operator_statevector.applyMatrix(matrix, wires);
+        operator_state - vector.applyMatrix(matrix, wires);
 
         const std::complex<PrecisionT> *opsv_data =
-            operator_statevector.getData();
-        std::size_t orgsv_len = this->_statevector.getLength();
+            operator_state - vector.getData();
+        std::size_t orgsv_len = this->_state - vector.getLength();
 
         PrecisionT mean_square =
             std::real(innerProdC(opsv_data, opsv_data, orgsv_len));
         PrecisionT squared_mean = std::real(
-            innerProdC(this->_statevector.getData(), opsv_data, orgsv_len));
+            innerProdC(this->_state - vector.getData(), opsv_data, orgsv_len));
         squared_mean = static_cast<PrecisionT>(std::pow(squared_mean, 2));
         return (mean_square - squared_mean);
     };
@@ -463,6 +514,9 @@ class Measurements final
     auto var(const std::vector<op_type> &operations_list,
              const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate variance of a list of observables of size {}",
+                    operations_list.size());
+        LOGGER_DEBUG("operations_list, wires_list");
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -493,7 +547,11 @@ class Measurements final
     generate_samples_metropolis(const std::string &kernelname,
                                 std::size_t num_burnin,
                                 std::size_t num_samples) {
-        std::size_t num_qubits = this->_statevector.getNumQubits();
+        LOGGER_INFO("Generate samples using the Metropolis-Hastings method for "
+                    "num_samples={}",
+                    num_samples);
+        LOGGER_DEBUG("kernelname, num_burnin, num_samples");
+        std::size_t num_qubits = this->_state - vector.getNumQubits();
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<size_t, std::size_t> cache;
@@ -505,19 +563,19 @@ class Measurements final
         }
 
         auto tk =
-            kernel_factory(transition_kernel, this->_statevector.getData(),
-                           this->_statevector.getNumQubits());
+            kernel_factory(transition_kernel, this->_state - vector.getData(),
+                           this->_state - vector.getNumQubits());
         std::size_t idx = 0;
 
         // Burn In
         for (size_t i = 0; i < num_burnin; i++) {
-            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
+            idx = metropolis_step(this->_state - vector, tk, this->rng, distrib,
                                   idx); // Burn-in.
         }
 
         // Sample
         for (size_t i = 0; i < num_samples; i++) {
-            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
+            idx = metropolis_step(this->_state - vector, tk, this->rng, distrib,
                                   idx);
 
             if (cache.contains(idx)) {
@@ -558,12 +616,15 @@ class Measurements final
     PrecisionT var(const index_type *row_map_ptr, const index_type row_map_size,
                    const index_type *entries_ptr, const ComplexT *values_ptr,
                    const index_type numNNZ) {
+        LOGGER_INFO("Calculate variance of a Sparse Hamiltonian");
+        LOGGER_DEBUG(
+            "row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ");
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_state - vector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
-            this->_statevector.getData(),
-            static_cast<index_type>(this->_statevector.getLength()),
+            this->_state - vector.getData(),
+            static_cast<index_type>(this->_state - vector.getLength()),
             row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
         const PrecisionT mean_square =
@@ -571,7 +632,7 @@ class Measurements final
                                  operator_vector.size()));
         const auto squared_mean = static_cast<PrecisionT>(
             std::pow(std::real(innerProdC(operator_vector.data(),
-                                          this->_statevector.getData(),
+                                          this->_state - vector.getData(),
                                           operator_vector.size())),
                      2));
         return (mean_square - squared_mean);
@@ -586,7 +647,11 @@ class Measurements final
      * separated by a stride equal to the number of qubits.
      */
     std::vector<std::size_t> generate_samples(size_t num_samples) {
-        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        LOGGER_INFO(
+            "Generate samples using the alias method for num_samples={}",
+            num_samples);
+        LOGGER_DEBUG("num_samples");
+        const std::size_t num_qubits = this->_state - vector.getNumQubits();
         auto &&probabilities = probs();
 
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
@@ -668,15 +733,16 @@ class Measurements final
      * @brief Support function that calculates <bra|obs|ket> to obtain the
      * observable's expectation value.
      *
-     * @param bra Reference to the statevector where the observable will be
+     * @param bra Reference to the state-vector where the observable will be
      * applied, must be mutable.
      * @param obs Constant reference to an observable.
-     * @param ket Constant reference to the base statevector.
+     * @param ket Constant reference to the base state-vector.
      * @return PrecisionT
      */
     auto inline calculateObsExpval(StateVectorT &bra,
                                    const Observable<StateVectorT> &obs,
                                    const StateVectorT &ket) -> PrecisionT {
+        LOGGER_DEBUG("bra, obs, ket");
         obs.applyInPlace(bra);
         return std::real(
             innerProdC(bra.getData(), ket.getData(), ket.getLength()));
@@ -686,15 +752,16 @@ class Measurements final
      * @brief Support function that calculates <bra|obs^2|ket> and
      * (<bra|obs|ket>)^2 to obtain the observable's variance.
      *
-     * @param bra Reference to the statevector where the observable will be
+     * @param bra Reference to the state-vector where the observable will be
      * applied, must be mutable.
      * @param obs Constant reference to an observable.
-     * @param ket Constant reference to the base statevector.
+     * @param ket Constant reference to the base state-vector.
      * @return PrecisionT
      */
     auto inline calculateObsVar(StateVectorT &bra,
                                 const Observable<StateVectorT> &obs,
                                 const StateVectorT &ket) -> PrecisionT {
+        LOGGER_DEBUG("bra, obs, ket");
         obs.applyInPlace(bra);
         PrecisionT mean_square = std::real(
             innerProdC(bra.getData(), bra.getData(), bra.getLength()));
@@ -721,6 +788,7 @@ class Measurements final
                     std::mt19937 &gen,
                     std::uniform_real_distribution<PrecisionT> &distrib,
                     std::size_t init_idx) {
+        LOGGER_DEBUG("sv, tk, gen, distrib, init_idx");
         auto init_plog = std::log(
             (sv.getData()[init_idx] * std::conj(sv.getData()[init_idx]))
                 .real());
