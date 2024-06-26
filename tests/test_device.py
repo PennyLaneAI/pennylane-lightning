@@ -85,7 +85,7 @@ def test_devpool_is_pickleable():
         assert isinstance(un_pickled_devpool, DevPool)
         assert un_pickled_devpool.getTotalDevices() == d.getTotalDevices()
 
-    except Exception:
+    except TypeError:
         pytest.fail("DevPool should be Pickleable")
 
 
