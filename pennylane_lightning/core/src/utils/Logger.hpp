@@ -17,22 +17,47 @@
  */
 #pragma once
 
+#include <cstdlib>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <type_traits>
+
 #include <spdlog/spdlog.h>
 
-#define LOGGER_INFO(...) \
-    { spdlog::info("[{1}][Line: {2}][Function: {3}({0})]", __VA_ARGS__, __FILE__, __LINE__, __func__); }
+#define LOGGER_INFO(...)                                                       \
+    { spdlog::info(__VA_ARGS__); }
 
-#define LOGGER_DEBUG(...) \
-    { spdlog::debug("[{1}][Line: {2}][Function: {3}({0})]", __VA_ARGS__, __FILE__, __LINE__, __func__); }
+#define LOGGER_DEBUG(...)                                                      \
+    {                                                                          \
+        spdlog::debug("[{0}:{1}] Function: {2}({3})", __FILE__, __LINE__,      \
+                      __func__, __VA_ARGS__);                                  \
+    }
 
-#define LOGGER_WARN(...) \
-    { spdlog::warn("[{1}][Line: {2}][Function: {3}({0})]", __VA_ARGS__, __FILE__, __LINE__, __func__); }
+#define LOGGER_WARN(...)                                                       \
+    { spdlog::warn(__VA_ARGS__); }
 
-#define LOGGER_ERROR(...) \
-    { spdlog::error("[{1}][Line: {2}][Function: {3}({0})]", __VA_ARGS__, __FILE__, __LINE__, __func__); }
+#define LOGGER_TRACE(...)                                                      \
+    { spdlog::trace(__VA_ARGS__); }
 
-#define LOGGER_CRITICAL(...) \
-    { spdlog::critical("[{1}][Line: {2}][Function: {3}({0})]", __VA_ARGS__, __FILE__, __LINE__, __func__); }
-
-#define LOGGER_TRACE(...) \
-    { spdlog::trace("{3}({0}) [{1}:{2}]", __VA_ARGS__, __FILE__, __LINE__, __func__); }
+static inline void set_logger_level_from_env() {
+    const char *env_log_level = std::getenv("LOGGER_LEVEL");
+    if (env_log_level != nullptr) {
+        std::string level_str(env_log_level);
+        if (level_str == "info") {
+            spdlog::set_level(spdlog::level::info);
+        } else if (level_str == "debug") {
+            spdlog::set_level(spdlog::level::debug);
+        } else if (level_str == "warn") {
+            spdlog::set_level(spdlog::level::warn);
+        } else if (level_str == "trace") {
+            spdlog::set_level(spdlog::level::trace);
+        } else {
+            LOGGER_WARN(
+                "Invalid level set in SPDLOG_LEVEL; "
+                "supported levels are 'info', 'debug', 'warn', and 'trace'");
+        }
+    } else {
+        spdlog::set_level(spdlog::level::off);
+    }
+}

@@ -27,6 +27,8 @@
 
 #include <complex>
 
+#include "Logger.hpp"
+
 namespace Pennylane {
 /**
  * @brief State-vector base class.
@@ -55,7 +57,9 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      *
      * @param num_qubits Number of qubits
      */
-    explicit StateVectorBase(size_t num_qubits) : num_qubits_{num_qubits} {}
+    explicit StateVectorBase(size_t num_qubits) : num_qubits_{num_qubits} {
+        set_logger_level_from_env();
+    }
 
     /**
      * @brief Get the number of qubits represented by the statevector data.

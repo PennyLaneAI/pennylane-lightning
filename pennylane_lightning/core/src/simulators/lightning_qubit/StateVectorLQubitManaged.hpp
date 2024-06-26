@@ -27,11 +27,11 @@
 #include "CPUMemoryModel.hpp" // bestCPUMemoryModel
 #include "Error.hpp"
 #include "KernelType.hpp"
+#include "Logger.hpp"
 #include "Memory.hpp"
 #include "StateVectorLQubit.hpp"
 #include "Threading.hpp"
 #include "Util.hpp" // exp2
-#include "Logger.hpp"
 
 /// @cond DEV
 namespace {
@@ -78,10 +78,9 @@ class StateVectorLQubitManaged final
         : BaseType{num_qubits, threading, memory_model},
           data_{exp2(num_qubits), ComplexT{0.0, 0.0},
                 getAllocator<ComplexT>(this->memory_model_)} {
-        LOGGER_INFO(std::to_string(num_qubits));
-        LOGGER_TRACE(std::to_string(num_qubits));
-        LOGGER_WARN(std::to_string(num_qubits));
-        LOGGER_DEBUG(std::to_string(num_qubits));
+        LOGGER_INFO("Create a new statevector with {} qubits", num_qubits);
+        LOGGER_DEBUG("num_qubits" + std::to_string(num_qubits) +
+                     "threading, memory_model");
         setBasisState(0U);
     }
 
@@ -98,7 +97,10 @@ class StateVectorLQubitManaged final
         : BaseType(other.getNumQubits(), other.threading(),
                    other.memoryModel()),
           data_{other.getData(), other.getData() + other.getLength(),
-                getAllocator<ComplexT>(this->memory_model_)} {}
+                getAllocator<ComplexT>(this->memory_model_)} {
+        LOGGER_INFO("Construct a statevector from another statevector");
+        LOGGER_DEBUG("other");
+    }
 
     /**
      * @brief Construct a statevector from data pointer
@@ -114,6 +116,8 @@ class StateVectorLQubitManaged final
         : BaseType(log2PerfectPower(other_size), threading, memory_model),
           data_{other_data, other_data + other_size,
                 getAllocator<ComplexT>(this->memory_model_)} {
+        LOGGER_INFO("Construct a statevector from data pointer");
+        LOGGER_DEBUG("other_data, other_size=" + std::to_string(other_size));
         PL_ABORT_IF_NOT(isPerfectPowerOf2(other_size),
                         "The size of provided data must be a power of 2.");
     }
@@ -133,7 +137,10 @@ class StateVectorLQubitManaged final
         Threading threading = Threading::SingleThread,
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : StateVectorLQubitManaged(other.data(), other.size(), threading,
-                                   memory_model) {}
+                                   memory_model) {
+        LOGGER_INFO("Construct a statevector from a data vector");
+        LOGGER_DEBUG("other");
+    }
 
     StateVectorLQubitManaged(const StateVectorLQubitManaged &rhs) = default;
     StateVectorLQubitManaged(StateVectorLQubitManaged &&) noexcept = default;
@@ -146,11 +153,15 @@ class StateVectorLQubitManaged final
     ~StateVectorLQubitManaged() = default;
 
     /**
-     * @brief Prepares a single computational basis state.
+     * @brief Prepare a single computational basis state.
      *
      * @param index Index of the target element.
      */
     void setBasisState(const std::size_t index) {
+        LOGGER_INFO(
+            "Set the statevector to the computational basis-state at index {}",
+            index);
+        LOGGER_DEBUG(index);
         std::fill(data_.begin(), data_.end(), 0);
         data_[index] = {1, 0};
     }
@@ -163,6 +174,8 @@ class StateVectorLQubitManaged final
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
+        LOGGER_INFO("Set values for a batch of elements of the statevector");
+        LOGGER_DEBUG("indices, values");
         for (std::size_t n = 0; n < indices.size(); n++) {
             data_[indices[n]] = values[n];
         }
@@ -173,14 +186,22 @@ class StateVectorLQubitManaged final
      *
      */
     void resetStateVector() {
+        LOGGER_INFO("Reset the data back to the init statevector");
+        LOGGER_DEBUG("");
         if (this->getLength() > 0) {
             setBasisState(0U);
         }
     }
 
-    [[nodiscard]] auto getData() -> ComplexT * { return data_.data(); }
+    [[nodiscard]] auto getData() -> ComplexT * {
+        LOGGER_INFO("Get a pointer to the underlying statevector data");
+        LOGGER_DEBUG("");
+        return data_.data();
+    }
 
     [[nodiscard]] auto getData() const -> const ComplexT * {
+        LOGGER_INFO("Get a const pointer to the underlying statevector data");
+        LOGGER_DEBUG("");
         return data_.data();
     }
 
@@ -189,11 +210,15 @@ class StateVectorLQubitManaged final
      */
     [[nodiscard]] auto getDataVector()
         -> std::vector<ComplexT, AlignedAllocator<ComplexT>> & {
+        LOGGER_INFO("Get a reference to the underlying statevector");
+        LOGGER_DEBUG("");
         return data_;
     }
 
     [[nodiscard]] auto getDataVector() const
         -> const std::vector<ComplexT, AlignedAllocator<ComplexT>> & {
+        LOGGER_INFO("Get a const reference to the underlying statevector");
+        LOGGER_DEBUG("");
         return data_;
     }
 
@@ -204,6 +229,9 @@ class StateVectorLQubitManaged final
      * @param new_size size of underlying data storage.
      */
     void updateData(const ComplexT *new_data, std::size_t new_size) {
+        LOGGER_INFO("Update data of the class to new_data of size={}",
+                    new_size);
+        LOGGER_DEBUG("new_data, new_size=" + std::to_string(new_size));
         PL_ASSERT(data_.size() == new_size);
         std::copy(new_data, new_data + new_size, data_.data());
     }
@@ -216,10 +244,13 @@ class StateVectorLQubitManaged final
      */
     template <class Alloc>
     void updateData(const std::vector<ComplexT, Alloc> &new_data) {
+        LOGGER_DEBUG("new_data");
         updateData(new_data.data(), new_data.size());
     }
 
     AlignedAllocator<ComplexT> allocator() const {
+        LOGGER_INFO("Get the allocator");
+        LOGGER_DEBUG("");
         return data_.get_allocator();
     }
 };
