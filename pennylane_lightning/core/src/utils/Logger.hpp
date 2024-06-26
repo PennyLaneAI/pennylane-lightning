@@ -38,7 +38,10 @@
     { spdlog::warn(__VA_ARGS__); }
 
 #define LOGGER_TRACE(...)                                                      \
-    { spdlog::trace(__VA_ARGS__); }
+    {                                                                          \
+        spdlog::debug("[{0}:{1}] Function: {2}({3})", __FILE__, __LINE__,      \
+                      __func__, __VA_ARGS__);                                  \
+    }
 
 static inline void set_logger_level_from_env() {
     const char *env_log_level = std::getenv("LOGGER_LEVEL");
@@ -54,7 +57,7 @@ static inline void set_logger_level_from_env() {
             spdlog::set_level(spdlog::level::trace);
         } else {
             LOGGER_WARN(
-                "Invalid level set in SPDLOG_LEVEL; "
+                "Invalid level set in LOGGER_LEVEL; "
                 "supported levels are 'info', 'debug', 'warn', and 'trace'");
         }
     } else {
