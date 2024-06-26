@@ -88,7 +88,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Internal function to set kernels for all operations depending on
      * provided dispatch options.
      *
-     * @param num_qubits Number of qubits of the state-vector
+     * @param num_qubits Number of qubits of the statevector
      * @param threading Threading option
      * @param memory_model Memory model
      */
@@ -273,19 +273,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
   public:
     /**
-     * @brief Get the state-vector's memory model.
+     * @brief Get the statevector's memory model.
      */
     [[nodiscard]] inline CPUMemoryModel memoryModel() const {
-        LOGGER_INFO("Get the state-vector's memory model");
+        LOGGER_INFO("Get the statevector's memory model");
         LOGGER_DEBUG("");
         return memory_model_;
     }
 
     /**
-     * @brief Get the state-vector's threading mode.
+     * @brief Get the statevector's threading mode.
      */
     [[nodiscard]] inline Threading threading() const {
-        LOGGER_INFO("Get the state-vector's threading model");
+        LOGGER_INFO("Get the statevector's threading model");
         LOGGER_DEBUG("");
         return threading_;
     }
@@ -343,7 +343,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        LOGGER_INFO("Apply {} to the state-vector using the kernel type {}",
+        LOGGER_INFO("Apply {} to the statevector using the kernel type {}",
                     opName, static_cast<std::size_t>(kernel));
         LOGGER_DEBUG("kernel, opName, wires, inverse, params");
         auto *arr = this->getData();
@@ -363,7 +363,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        LOGGER_INFO("Apply {} to the state-vector", opName);
+        LOGGER_INFO("Apply {} to the statevector", opName);
         LOGGER_DEBUG("opName, wires, inverse, params");
         auto *arr = this->getData();
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -389,7 +389,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        LOGGER_INFO("Apply {} to the state-vector with {} controlled wires",
+        LOGGER_INFO("Apply {} to the statevector with {} controlled wires",
                     opName, controlled_wires.size());
         LOGGER_DEBUG("opName, controlled_wires, controlled_values, wires, "
                      "inverse, params");
@@ -476,7 +476,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         Pennylane::Gates::KernelType kernel, const std::string &opName,
         const std::vector<std::size_t> &wires, bool adj = false) -> PrecisionT {
         LOGGER_INFO(
-            "Apply the {} generator to the state-vector using kernel type {}",
+            "Apply the {} generator to the statevector using kernel type {}",
             opName, static_cast<std::size_t>(kernel));
         LOGGER_DEBUG("kernel, opName, wires, adj");
         auto *arr = this->getData();
@@ -494,7 +494,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] auto applyGenerator(const std::string &opName,
                                       const std::vector<std::size_t> &wires,
                                       bool adj = false) -> PrecisionT {
-        LOGGER_INFO("Apply the {} generator to the state-vector", opName);
+        LOGGER_INFO("Apply the {} generator to the statevector", opName);
         LOGGER_DEBUG("opName, wires, adj");
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
@@ -519,7 +519,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                    const std::vector<bool> &controlled_values,
                    const std::vector<std::size_t> &wires, bool adj = false)
         -> PrecisionT {
-        LOGGER_INFO("Apply the {} generator to the state-vector with {} "
+        LOGGER_INFO("Apply the {} generator to the statevector with {} "
                     "controlled wires",
                     opName, controlled_wires.size());
         LOGGER_DEBUG("opName, controlled_wires, controlled_values, wires, adj");
@@ -533,7 +533,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given controlled-matrix directly to the state-vector.
+     * @brief Apply a given controlled-matrix directly to the statevector.
      *
      * @param matrix Pointer to the array data (in row-major format).
      * @param controlled_wires Control wires.
@@ -547,7 +547,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                           const std::vector<bool> &controlled_values,
                           const std::vector<std::size_t> &wires,
                           bool inverse = false) {
-        LOGGER_INFO("Apply a controlled-matrix directly to the state-vector "
+        LOGGER_INFO("Apply a controlled-matrix directly to the statevector "
                     "with {} wires, and {} controlled wires",
                     wires.size(), controlled_wires.size());
         LOGGER_DEBUG(
@@ -577,9 +577,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given controlled-matrix directly to the state-vector.
+     * @brief Apply a given controlled-matrix directly to the statevector.
      *
-     * @param matrix Vector containing the state-vector data (in row-major
+     * @param matrix Vector containing the statevector data (in row-major
      * format).
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
@@ -597,7 +597,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given matrix directly to the state-vector using a given
+     * @brief Apply a given matrix directly to the statevector using a given
      * kernel.
      *
      * @param kernel Kernel to run the operation
@@ -609,7 +609,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                             const ComplexT *matrix,
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
-        LOGGER_INFO("Apply a matrix directly to the state-vector on {} wires, "
+        LOGGER_INFO("Apply a matrix directly to the statevector on {} wires, "
                     "using the kernel type {}",
                     wires.size(), static_cast<std::size_t>(kernel));
         LOGGER_DEBUG("kernel, matrix, wires, inverse");
@@ -623,7 +623,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given matrix directly to the state-vector using a given
+     * @brief Apply a given matrix directly to the statevector using a given
      * kernel.
      *
      * @param kernel Kernel to run the operation
@@ -643,7 +643,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given matrix directly to the state-vector using a
+     * @brief Apply a given matrix directly to the statevector using a
      * raw matrix pointer vector.
      *
      * @param matrix Pointer to the array data (in row-major format).
@@ -671,7 +671,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a given matrix directly to the state-vector.
+     * @brief Apply a given matrix directly to the statevector.
      *
      * @param matrix Matrix data (in row-major format).
      * @param wires Wires to apply gate to.
@@ -699,10 +699,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param branch Branch 0 or 1.
      */
     void collapse(const std::size_t wire, const bool branch) {
-        LOGGER_INFO(
-            "Collapse the state-vector as after having measured wire={} "
-            "on branch {}",
-            wire, branch);
+        LOGGER_INFO("Collapse the statevector as after having measured wire={} "
+                    "on branch {}",
+                    wire, branch);
         LOGGER_DEBUG("wire, branch");
         auto *arr = this->getData();
         const std::size_t stride = pow(2, this->num_qubits_ - (1 + wire));
@@ -730,7 +729,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Normalize vector (to have norm 1).
      */
     void normalize() {
-        LOGGER_INFO("Normalize the state-vector");
+        LOGGER_INFO("Normalize the statevector");
         LOGGER_DEBUG("");
         auto *arr = this->getData();
         PrecisionT norm = std::sqrt(squaredNorm(arr, this->getLength()));

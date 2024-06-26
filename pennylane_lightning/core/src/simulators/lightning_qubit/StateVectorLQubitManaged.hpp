@@ -66,11 +66,11 @@ class StateVectorLQubitManaged final
 
   public:
     /**
-     * @brief Create a new state-vector in the computational basis state |0...0>
+     * @brief Create a new statevector in the computational basis state |0...0>
      *
      * @param num_qubits Number of qubits
-     * @param threading Threading option the state-vector to use
-     * @param memory_model Memory model the state-vector will use
+     * @param threading Threading option the statevector to use
+     * @param memory_model Memory model the statevector will use
      */
     explicit StateVectorLQubitManaged(
         std::size_t num_qubits, Threading threading = Threading::SingleThread,
@@ -78,18 +78,18 @@ class StateVectorLQubitManaged final
         : BaseType{num_qubits, threading, memory_model},
           data_{exp2(num_qubits), ComplexT{0.0, 0.0},
                 getAllocator<ComplexT>(this->memory_model_)} {
-        LOGGER_INFO("Create a new state-vector with {} qubits", num_qubits);
+        LOGGER_INFO("Create a new statevector with {} qubits", num_qubits);
         LOGGER_DEBUG("num_qubits" + std::to_string(num_qubits) +
                      "threading, memory_model");
         setBasisState(0U);
     }
 
     /**
-     * @brief Construct a state-vector from another state-vector
+     * @brief Construct a statevector from another statevector
      *
      * @tparam OtherDerived A derived type of StateVectorLQubit to use for
      * construction.
-     * @param other Another state-vector to construct the state-vector from
+     * @param other Another statevector to construct the statevector from
      */
     template <class OtherDerived>
     explicit StateVectorLQubitManaged(
@@ -98,17 +98,17 @@ class StateVectorLQubitManaged final
                    other.memoryModel()),
           data_{other.getData(), other.getData() + other.getLength(),
                 getAllocator<ComplexT>(this->memory_model_)} {
-        LOGGER_INFO("Construct a state-vector from another state-vector");
+        LOGGER_INFO("Construct a statevector from another statevector");
         LOGGER_DEBUG("other");
     }
 
     /**
-     * @brief Construct a state-vector from data pointer
+     * @brief Construct a statevector from data pointer
      *
-     * @param other_data Data pointer to construct the state-vector from.
+     * @param other_data Data pointer to construct the statevector from.
      * @param other_size Size of the data
-     * @param threading Threading option the state-vector to use
-     * @param memory_model Memory model the state-vector will use
+     * @param threading Threading option the statevector to use
+     * @param memory_model Memory model the statevector will use
      */
     StateVectorLQubitManaged(const ComplexT *other_data, std::size_t other_size,
                              Threading threading = Threading::SingleThread,
@@ -116,20 +116,20 @@ class StateVectorLQubitManaged final
         : BaseType(log2PerfectPower(other_size), threading, memory_model),
           data_{other_data, other_data + other_size,
                 getAllocator<ComplexT>(this->memory_model_)} {
-        LOGGER_INFO("Construct a state-vector from data pointer");
+        LOGGER_INFO("Construct a statevector from data pointer");
         LOGGER_DEBUG("other_data, other_size=" + std::to_string(other_size));
         PL_ABORT_IF_NOT(isPerfectPowerOf2(other_size),
                         "The size of provided data must be a power of 2.");
     }
 
     /**
-     * @brief Construct a state-vector from a data vector
+     * @brief Construct a statevector from a data vector
      *
      * @tparam Alloc Allocator type of std::vector to use for constructing
-     * state-vector.
-     * @param other Data to construct the state-vector from
-     * @param threading Threading option the state-vector to use
-     * @param memory_model Memory model the state-vector will use
+     * statevector.
+     * @param other Data to construct the statevector from
+     * @param threading Threading option the statevector to use
+     * @param memory_model Memory model the statevector will use
      */
     template <class Alloc>
     explicit StateVectorLQubitManaged(
@@ -138,7 +138,7 @@ class StateVectorLQubitManaged final
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : StateVectorLQubitManaged(other.data(), other.size(), threading,
                                    memory_model) {
-        LOGGER_INFO("Construct a state-vector from a data vector");
+        LOGGER_INFO("Construct a statevector from a data vector");
         LOGGER_DEBUG("other");
     }
 
@@ -159,7 +159,7 @@ class StateVectorLQubitManaged final
      */
     void setBasisState(const std::size_t index) {
         LOGGER_INFO(
-            "Set the state-vector to the computational basis-state at index {}",
+            "Set the statevector to the computational basis-state at index {}",
             index);
         LOGGER_DEBUG(index);
         std::fill(data_.begin(), data_.end(), 0);
@@ -174,7 +174,7 @@ class StateVectorLQubitManaged final
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
-        LOGGER_INFO("Set values for a batch of elements of the state-vector");
+        LOGGER_INFO("Set values for a batch of elements of the statevector");
         LOGGER_DEBUG("indices, values");
         for (std::size_t n = 0; n < indices.size(); n++) {
             data_[indices[n]] = values[n];
@@ -186,7 +186,7 @@ class StateVectorLQubitManaged final
      *
      */
     void resetStateVector() {
-        LOGGER_INFO("Reset the data back to the init state-vector");
+        LOGGER_INFO("Reset the data back to the init statevector");
         LOGGER_DEBUG("");
         if (this->getLength() > 0) {
             setBasisState(0U);
