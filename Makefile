@@ -93,7 +93,7 @@ test-suite:
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
 
 test-cpp:
-	rm -rf ./BuildTests
+	# rm -rf ./BuildTests
 	cmake -BBuildTests -G Ninja \
 		  -DCMAKE_BUILD_TYPE=Debug \
 		  -DBUILD_TESTS=ON \

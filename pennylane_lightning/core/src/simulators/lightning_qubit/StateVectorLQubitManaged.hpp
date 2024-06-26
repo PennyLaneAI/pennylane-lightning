@@ -31,6 +31,7 @@
 #include "StateVectorLQubit.hpp"
 #include "Threading.hpp"
 #include "Util.hpp" // exp2
+#include "Logger.hpp"
 
 /// @cond DEV
 namespace {
@@ -77,6 +78,10 @@ class StateVectorLQubitManaged final
         : BaseType{num_qubits, threading, memory_model},
           data_{exp2(num_qubits), ComplexT{0.0, 0.0},
                 getAllocator<ComplexT>(this->memory_model_)} {
+        LOGGER_INFO(std::to_string(num_qubits));
+        LOGGER_TRACE(std::to_string(num_qubits));
+        LOGGER_WARN(std::to_string(num_qubits));
+        LOGGER_DEBUG(std::to_string(num_qubits));
         setBasisState(0U);
     }
 

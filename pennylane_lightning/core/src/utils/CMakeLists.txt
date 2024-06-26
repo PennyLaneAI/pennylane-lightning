@@ -28,6 +28,10 @@ target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs
                                                 )
 
+if(ENABLE_LOGGER)
+    target_link_libraries(lightning_utils INTERFACE spdlog::spdlog)
+endif()
+
 
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 

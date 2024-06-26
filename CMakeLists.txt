@@ -46,8 +46,8 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-
 option(ENABLE_LAPACK "Enable compilation with scipy/LAPACK" ON)
+option(ENABLE_LOGGER "Enable compilation with the 'spdlog' logging library" ON)
 
 # OpenMP
 find_package(OpenMP)
@@ -87,6 +87,20 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
+
+if(ENABLE_LOGGER)
+    message(STATUS "ENABLE_LOGGER: ${ENABLE_LOGGER}")
+    FetchContent_Declare(spdlog
+                        GIT_REPOSITORY https://github.com/gabime/spdlog.git
+                        GIT_TAG        v1.14.1
+                        GIT_SHALLOW    ON
+    )
+    set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+    FetchContent_MakeAvailable(spdlog)
+
+    # TODO: use system-installed version
+    #find_package(spdlog REQUIRED)
+endif()
 
 if(ENABLE_LAPACK)
     find_package(Python COMPONENTS Interpreter Development)
@@ -146,7 +160,7 @@ foreach(BACKEND ${PL_BACKEND})
                                                         "${BACKEND}_measurements"
                                                         )
 endforeach()
-                                                
+
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src;include>")
 
 #####################################################
@@ -174,7 +188,6 @@ if(ENABLE_PYTHON)
                                                         "${PL_BACKEND}_bindings"
                                                         "${PL_BACKEND}_measurements"
                                                         )
-
     if(NOT DEFINED PL_TENSOR)
         target_link_libraries("${PL_BACKEND}_ops" PRIVATE "${PL_BACKEND}_algorithms")
     endif()
