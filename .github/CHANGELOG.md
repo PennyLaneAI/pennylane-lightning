@@ -159,7 +159,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Lillian Frederiksen, Pietropaolo Frisoni, David Ittah, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Lillian Frederiksen, Pietropaolo Frisoni, David Ittah, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu, Jay Soni
 
 ---
 
