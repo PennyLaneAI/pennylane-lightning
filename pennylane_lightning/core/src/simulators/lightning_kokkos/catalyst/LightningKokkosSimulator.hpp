@@ -45,7 +45,8 @@ namespace Catalyst::Runtime::Simulator {
 /**
  * @brief  Kokkos state vector class wrapper for Catalyst.
  * This class inherits from the QuantumDevice class defined in Catalyst.
- * More info: https://github.com/PennyLaneAI/catalyst/blob/main/runtime/include/QuantumDevice.hpp
+ * More info:
+ * https://github.com/PennyLaneAI/catalyst/blob/main/runtime/include/QuantumDevice.hpp
  *
  */
 class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
