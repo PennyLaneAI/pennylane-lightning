@@ -162,7 +162,7 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         if: |
-          github.event_name == 'release' ||
+          github.event_name == 'pull_request' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master'
         with:
@@ -178,7 +178,7 @@ jobs:
     runs-on: ubuntu-latest
 
     if: |
-      github.event_name == 'release' ||
+      github.event_name == 'pull_request' ||
       github.ref == 'refs/heads/master'
     steps:
       - uses: actions/download-artifact@v3
