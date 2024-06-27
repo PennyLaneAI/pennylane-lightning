@@ -152,6 +152,9 @@
 * Add support for Scipy v1.14.
   [(#776)](https://github.com/PennyLaneAI/pennylane-lightning/pull/776)
 
+* Add pickle support for the `DevPool` object in `lightning.gpu`. 
+  [(#772)](https://github.com/PennyLaneAI/pennylane-lightning/pull/772)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
