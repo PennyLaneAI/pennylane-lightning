@@ -11,6 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
+/**
+ * @file LightningKokkosSimulator.hpp
+ */
+
 #pragma once
 
 #define __device_lightning_kokkos
@@ -37,6 +42,12 @@
 #include "Utils.hpp"
 
 namespace Catalyst::Runtime::Simulator {
+/**
+ * @brief  Kokkos state vector class wrapper for Catalyst.
+ * This class inherits from the QuantumDevice class defined in Catalyst.
+ * More info: https://github.com/PennyLaneAI/catalyst/blob/main/runtime/include/QuantumDevice.hpp
+ *
+ */
 class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
     using StateVectorT = Pennylane::LightningKokkos::StateVectorKokkos<double>;
