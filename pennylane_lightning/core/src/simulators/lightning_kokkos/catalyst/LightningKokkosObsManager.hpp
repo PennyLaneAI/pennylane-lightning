@@ -31,14 +31,12 @@ namespace Catalyst::Runtime::Simulator {
  * runtime and maps each one to a const unique index (`int64_t`) in the scope of
  * the global context manager.
  */
-template <typename PrecisionT> class LightningKokkosObsManager {
+template <typename PrecisionT> class LightningKokkosObsManager final {
   private:
-    using VectorStateT =
+    using StateVectorT =
         Pennylane::LightningKokkos::StateVectorKokkos<PrecisionT>;
-    using ObservableClassName =
-        Pennylane::Observables::Observable<VectorStateT>;
-    using ObservablePairType =
-        std::pair<std::shared_ptr<ObservableClassName>, ObsType>;
+    using ObservableT = Pennylane::Observables::Observable<StateVectorT>;
+    using ObservablePairType = std::pair<std::shared_ptr<ObservableT>, ObsType>;
     std::vector<ObservablePairType> observables_{};
 
   public:
@@ -74,10 +72,10 @@ template <typename PrecisionT> class LightningKokkosObsManager {
      * @brief Get the constructed observable instance.
      *
      * @param key The observable key
-     * @return std::shared_ptr<ObservableClassName>
+     * @return std::shared_ptr<ObservableT>
      */
     [[nodiscard]] auto getObservable(ObsIdType key)
-        -> std::shared_ptr<ObservableClassName> {
+        -> std::shared_ptr<ObservableT> {
         RT_FAIL_IF(!this->isValidObservables({key}), "Invalid observable key");
         return std::get<0>(this->observables_[key]);
     }
@@ -107,7 +105,7 @@ template <typename PrecisionT> class LightningKokkosObsManager {
 
         this->observables_.push_back(std::make_pair(
             std::make_shared<Pennylane::LightningKokkos::Observables::NamedObs<
-                VectorStateT>>(obs_str, wires),
+                StateVectorT>>(obs_str, wires),
             ObsType::Basic));
         return static_cast<ObsIdType>(this->observables_.size() - 1);
     }
@@ -130,9 +128,9 @@ template <typename PrecisionT> class LightningKokkosObsManager {
 
         this->observables_.push_back(std::make_pair(
             std::make_shared<Pennylane::LightningKokkos::Observables::
-                                 HermitianObs<VectorStateT>>(
+                                 HermitianObs<StateVectorT>>(
                 Pennylane::LightningKokkos::Observables::HermitianObs<
-                    VectorStateT>{matrix_k, wires}),
+                    StateVectorT>{matrix_k, wires}),
             ObsType::Basic));
 
         return static_cast<ObsIdType>(this->observables_.size() - 1);
@@ -149,7 +147,7 @@ template <typename PrecisionT> class LightningKokkosObsManager {
         const auto key_size = obsKeys.size();
         const auto obs_size = this->observables_.size();
 
-        std::vector<std::shared_ptr<ObservableClassName>> obs_vec;
+        std::vector<std::shared_ptr<ObservableT>> obs_vec;
         obs_vec.reserve(key_size);
 
         for (const auto &key : obsKeys) {
@@ -162,7 +160,7 @@ template <typename PrecisionT> class LightningKokkosObsManager {
 
         this->observables_.push_back(std::make_pair(
             Pennylane::LightningKokkos::Observables::TensorProdObs<
-                VectorStateT>::create(obs_vec),
+                StateVectorT>::create(obs_vec),
             ObsType::TensorProd));
 
         return static_cast<ObsIdType>(obs_size);
@@ -186,7 +184,7 @@ template <typename PrecisionT> class LightningKokkosObsManager {
             "Incompatible list of observables and coefficients; "
             "Number of observables and number of coefficients must be equal");
 
-        std::vector<std::shared_ptr<ObservableClassName>> obs_vec;
+        std::vector<std::shared_ptr<ObservableT>> obs_vec;
         obs_vec.reserve(key_size);
 
         for (auto key : obsKeys) {
@@ -199,9 +197,9 @@ template <typename PrecisionT> class LightningKokkosObsManager {
 
         this->observables_.push_back(std::make_pair(
             std::make_shared<Pennylane::LightningKokkos::Observables::
-                                 Hamiltonian<VectorStateT>>(
+                                 Hamiltonian<StateVectorT>>(
                 Pennylane::LightningKokkos::Observables::Hamiltonian<
-                    VectorStateT>(coeffs, std::move(obs_vec))),
+                    StateVectorT>(coeffs, std::move(obs_vec))),
             ObsType::Hamiltonian));
 
         return static_cast<ObsIdType>(obs_size);
