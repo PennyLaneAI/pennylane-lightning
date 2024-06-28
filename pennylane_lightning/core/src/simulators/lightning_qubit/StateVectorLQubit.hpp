@@ -28,6 +28,7 @@
 #include "GateOperation.hpp"
 #include "KernelMap.hpp"
 #include "KernelType.hpp"
+#include "Logger.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
 
@@ -94,6 +95,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     void setKernels(size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
         using KernelMap::OperationKernelMap;
+        LOGGER_DEBUG("num_qubits" + std::to_string(num_qubits) +
+                     ", threading, memory_model");
         kernel_for_gates_ =
             OperationKernelMap<GateOperation>::getInstance().getKernelMap(
                 num_qubits, threading, memory_model);
@@ -263,6 +266,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                CPUMemoryModel memory_model)
         : BaseType(num_qubits), threading_{threading},
           memory_model_{memory_model} {
+        LOGGER_DEBUG("num_qubits=" + std::to_string(num_qubits) +
+                     ", threading, memory_model");
         setKernels(num_qubits, threading, memory_model);
     }
 
@@ -271,13 +276,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Get the statevector's memory model.
      */
     [[nodiscard]] inline CPUMemoryModel memoryModel() const {
+        LOGGER_INFO("Get the statevector's memory model");
+        LOGGER_DEBUG("");
         return memory_model_;
     }
 
     /**
      * @brief Get the statevector's threading mode.
      */
-    [[nodiscard]] inline Threading threading() const { return threading_; }
+    [[nodiscard]] inline Threading threading() const {
+        LOGGER_INFO("Get the statevector's threading model");
+        LOGGER_DEBUG("");
+        return threading_;
+    }
 
     /**
      *  @brief Returns a tuple containing the gate, generator, and controlled
@@ -288,6 +299,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         const MatrixKernelMap &, const ControlledGateKernelMap &,
         const ControlledGeneratorKernelMap &,
         const ControlledMatrixKernelMap &> {
+        LOGGER_INFO("Get the list of supported gate, generator, and controlled "
+                    "matrix kernel maps");
+        LOGGER_DEBUG("");
         return {
             getGateKernelMap(),
             getGeneratorKernelMap(),
@@ -302,6 +316,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         GateKernelMap &&, GeneratorKernelMap &&, MatrixKernelMap &&,
         ControlledGateKernelMap &&, ControlledGeneratorKernelMap &&,
         ControlledMatrixKernelMap &&> {
+        LOGGER_INFO("Get the list of supported gate, generator, and controlled "
+                    "matrix kernel maps");
+        LOGGER_DEBUG("");
         return {
             getGateKernelMap(),
             getGeneratorKernelMap(),
@@ -326,6 +343,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
+        LOGGER_INFO("Apply {} to the statevector using the kernel type {}",
+                    opName, static_cast<std::size_t>(kernel));
+        LOGGER_DEBUG("kernel, opName, wires, inverse, params");
         auto *arr = this->getData();
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
             kernel, arr, this->getNumQubits(), opName, wires, inverse, params);
@@ -343,6 +363,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
+        LOGGER_INFO("Apply {} to the statevector", opName);
+        LOGGER_DEBUG("opName, wires, inverse, params");
         auto *arr = this->getData();
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToGateOp(opName);
@@ -367,6 +389,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
+        LOGGER_INFO("Apply {} to the statevector with {} controlled wires",
+                    opName, controlled_wires.size());
+        LOGGER_DEBUG("opName, controlled_wires, controlled_values, wires, "
+                     "inverse, params");
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
@@ -392,6 +418,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params,
                         const std::vector<ComplexT, Alloc> &matrix) {
+        LOGGER_DEBUG("opName, wires, inverse, params, matrix");
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         if (dispatcher.hasGateOp(opName)) {
             applyOperation(opName, wires, inverse, params);
@@ -418,6 +445,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params,
                         const std::vector<ComplexT, Alloc> &matrix) {
+        LOGGER_DEBUG("opName, controlled_wires, controlled_values, wires, "
+                     "inverse, params, matrix");
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
@@ -446,6 +475,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline auto applyGenerator(
         Pennylane::Gates::KernelType kernel, const std::string &opName,
         const std::vector<std::size_t> &wires, bool adj = false) -> PrecisionT {
+        LOGGER_INFO(
+            "Apply the {} generator to the statevector using kernel type {}",
+            opName, static_cast<std::size_t>(kernel));
+        LOGGER_DEBUG("kernel, opName, wires, adj");
         auto *arr = this->getData();
         return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
             kernel, arr, this->getNumQubits(), opName, wires, adj);
@@ -461,6 +494,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] auto applyGenerator(const std::string &opName,
                                       const std::vector<std::size_t> &wires,
                                       bool adj = false) -> PrecisionT {
+        LOGGER_INFO("Apply the {} generator to the statevector", opName);
+        LOGGER_DEBUG("opName, wires, adj");
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gen_op = dispatcher.strToGeneratorOp(opName);
@@ -484,6 +519,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                    const std::vector<bool> &controlled_values,
                    const std::vector<std::size_t> &wires, bool adj = false)
         -> PrecisionT {
+        LOGGER_INFO("Apply the {} generator to the statevector with {} "
+                    "controlled wires",
+                    opName, controlled_wires.size());
+        LOGGER_DEBUG("opName, controlled_wires, controlled_values, wires, adj");
         auto *arr = this->getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto generator_op = dispatcher.strToControlledGeneratorOp(opName);
@@ -508,6 +547,11 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                           const std::vector<bool> &controlled_values,
                           const std::vector<std::size_t> &wires,
                           bool inverse = false) {
+        LOGGER_INFO("Apply a controlled-matrix directly to the statevector "
+                    "with {} wires, and {} controlled wires",
+                    wires.size(), controlled_wires.size());
+        LOGGER_DEBUG(
+            "matrix, controlled_wires, controlled_values, wires, inverse");
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = this->getData();
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
@@ -565,6 +609,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                             const ComplexT *matrix,
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
+        LOGGER_INFO("Apply a matrix directly to the statevector on {} wires, "
+                    "using the kernel type {}",
+                    wires.size(), static_cast<std::size_t>(kernel));
+        LOGGER_DEBUG("kernel, matrix, wires, inverse");
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         auto *arr = this->getData();
 
@@ -606,7 +654,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         using Pennylane::Gates::MatrixOperation;
-
+        LOGGER_DEBUG("matrix, wires, inverse");
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
         const auto kernel = [n_wires = wires.size(), this]() {
@@ -633,6 +681,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     inline void applyMatrix(const std::vector<ComplexT, Alloc> &matrix,
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
+        LOGGER_DEBUG("matrix, wires, inverse");
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
@@ -650,6 +699,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param branch Branch 0 or 1.
      */
     void collapse(const std::size_t wire, const bool branch) {
+        LOGGER_INFO("Collapse the statevector as after having measured wire={} "
+                    "on branch {}",
+                    wire, branch);
+        LOGGER_DEBUG("wire, branch");
         auto *arr = this->getData();
         const std::size_t stride = pow(2, this->num_qubits_ - (1 + wire));
         const std::size_t vec_size = pow(2, this->num_qubits_);
@@ -676,6 +729,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Normalize vector (to have norm 1).
      */
     void normalize() {
+        LOGGER_INFO("Normalize the statevector");
+        LOGGER_DEBUG("");
         auto *arr = this->getData();
         PrecisionT norm = std::sqrt(squaredNorm(arr, this->getLength()));
 
