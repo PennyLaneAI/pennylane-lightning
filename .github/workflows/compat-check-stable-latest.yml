@@ -48,4 +48,3 @@ jobs:
       lightning-version: stable
       pennylane-version: latest
     secrets: inherit
-  
