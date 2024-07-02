@@ -34,7 +34,6 @@ env:
   GCC_VERSION: 11
 
 concurrency:
-  # TODO: Revert back to using event_name
   group: tests_lmps_tncuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
