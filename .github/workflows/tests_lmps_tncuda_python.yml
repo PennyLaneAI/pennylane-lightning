@@ -165,6 +165,8 @@ jobs:
   
       - name: Build and install package
         env:
+          Python_ROOT_DIR: ${{ steps.setup_venv.outputs.venv_name }}
+          Python3_ROOT_DIR: ${{ steps.setup_venv.outputs.venv_name }}
           PY_VENV_SITE_PACKAGES: ${{ steps.setup_venv.outputs.site_packages_dir }}
         run: |
           source ${{ steps.setup_venv.outputs.venv_name }}/bin/activate
