@@ -34,8 +34,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  # TODO: Testing github.event, revert back to event_name
-  group: tests_lgpu_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
