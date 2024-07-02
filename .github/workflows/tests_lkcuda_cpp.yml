@@ -153,6 +153,33 @@ jobs:
         with:
           python-version: '3.9'
 
+      # Since the self-hosted runner can be re-used. It is best to set up all package
+      # installations in a virtual environment that gets cleaned at the end of each workflow run
+      - name: Setup Python virtual environment
+        id: setup_venv
+        env:
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+        run: |
+          # Clear any pre-existing venvs
+          rm -rf venv_*
+
+          # Create new venv for this workflow_run
+          python --version
+          python -m venv ${{ env.VENV_NAME }}
+
+          # Add the venv to PATH for subsequent steps
+          echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
+
+          # Adding venv name as an output for subsequent steps to reference if needed
+          echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+
+
+          # Adding venv site-packages to output for subsequent step to referecen if needed
+          echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
+
+
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION  ninja-build gcovr lcov
 
