@@ -144,7 +144,7 @@ jobs:
           export PYTHONPATH="$VENV_SITE_PACKAGES:$PYTHONPATH"
           cd main
           cmake . -BBuild \
-            -DPython3_EXECUTABLE=$(which python) \
+            -DPython_SITELIB=$PY_VENV_SITE_PACKAGES \
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
