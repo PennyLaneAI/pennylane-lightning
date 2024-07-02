@@ -34,7 +34,7 @@ env:
   GCC_VERSION: 11
 
 concurrency:
-  group: tests_lmps_tncuda_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lmps_tncuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
