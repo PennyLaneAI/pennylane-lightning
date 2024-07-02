@@ -139,6 +139,7 @@ jobs:
         env:
           PY_VENV_SITE_PACKAGES: ${{ steps.setup_venv.outputs.site_packages_dir }}
         run: |
+          source ${{ steps.setup_venv.outputs.venv_name }}/bin/activate
           set -x
           export PYTHONPATH="$VENV_SITE_PACKAGES:$PYTHONPATH"
           cd main
