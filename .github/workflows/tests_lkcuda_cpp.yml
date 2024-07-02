@@ -29,8 +29,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  # TODO: Revert back to using event_name
-  group: tests_lkcuda_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lkcuda_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
