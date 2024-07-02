@@ -171,7 +171,7 @@ jobs:
           export PYTHONPATH="$VENV_SITE_PACKAGES:$PYTHONPATH"
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython3_EXECUTABLE=$(which python)" \
           python -m pip install . -vv
           rm -rf build
   
