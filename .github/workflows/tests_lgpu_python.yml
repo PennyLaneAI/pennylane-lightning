@@ -128,6 +128,11 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          
+                    
+          # Adding venv site-packages to output for subsequent step to referecen if needed
+          echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
+
 
       - name: Display Python-Path
         id: python_path

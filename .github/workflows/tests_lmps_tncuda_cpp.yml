@@ -32,7 +32,7 @@ env:
 
 concurrency:
   # TODO: Revert back to using event_name
-  group: tests_lmps_tncuda_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lmps_tncuda_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -116,6 +116,11 @@ jobs:
 
           # Adding venv name as an output for subsequent steps to reference if needed
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          
+                    
+          # Adding venv site-packages to output for subsequent step to referecen if needed
+          echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
+
 
       - name: Display Python-Path
         id: python_path
@@ -131,8 +136,11 @@ jobs:
         run: |
           python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
       - name: Build and run unit tests
+        env:
+          PY_VENV_SITE_PACKAGES: ${{ steps.setup_venv.outputs.site_packages_dir }}
         run: |
           set -x
+          export PYTHONPATH="$VENV_SITE_PACKAGES:$PYTHONPATH"
           cd main
           cmake . -BBuild \
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\

@@ -121,6 +121,10 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          
+          # Adding venv site-packages to output for subsequent step to referecen if needed
+          echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
+
 
       - name: Display Python-Path
         id: python_path
@@ -160,7 +164,10 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
   
       - name: Build and install package
+        env:
+          PY_VENV_SITE_PACKAGES: ${{ steps.setup_venv.outputs.site_packages_dir }}
         run: |
+          export PYTHONPATH="$VENV_SITE_PACKAGES:$PYTHONPATH"
           cd main
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
