@@ -24,7 +24,7 @@ env:
   OMP_PROC_BIND: "false"
 
 concurrency:
-  group: tests_lqcpu_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lqcpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:

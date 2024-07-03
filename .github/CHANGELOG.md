@@ -35,6 +35,9 @@
 
 ### Improvements
 
+* Updated concurrency labels for tests ensuring different workflows do not run under the same concurrency group label
+  [(#778)](https://github.com/PennyLaneAI/pennylane-lightning/pull/778)
+
 * Release candidate branches are automatically switched over to using the new large GitHub runner pool.
   [(#769)](https://github.com/PennyLaneAI/pennylane-lightning/pull/769)
 

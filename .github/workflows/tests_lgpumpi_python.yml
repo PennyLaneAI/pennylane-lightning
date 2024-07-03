@@ -30,7 +30,7 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: tests_lgpumpi_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpumpi_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -90,6 +90,8 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
 
       - name: Display Python-Path
