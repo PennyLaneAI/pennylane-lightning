@@ -84,7 +84,9 @@ jobs:
 
       - name: Downgrade Scipy (remove after release)
         if: inputs.lightning-version == 'stable'
-        run: pip install --force-reinstall "scipy<1.14"
+        run: |
+          # TODO: Remove this step with v0.37.0 release
+          python -m pip install --force-reinstall "scipy<1.14"
 
       - name: Create device wheel
         id: create_lq_wheel
