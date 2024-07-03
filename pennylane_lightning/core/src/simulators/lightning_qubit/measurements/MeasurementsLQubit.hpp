@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "LinearAlgebra.hpp"
+#include "Logger.hpp"
 #include "MeasurementsBase.hpp"
 #include "NDPermuter.hpp"
 #include "Observables.hpp"
@@ -78,6 +79,9 @@ class Measurements final
      * in lexicographic order.
      */
     auto probs() -> std::vector<PrecisionT> {
+        LOGGER_INFO(
+            "Calculate probabilities of each computational basis state");
+        LOGGER_DEBUG("");
         const ComplexT *arr_data = this->_statevector.getData();
         std::vector<PrecisionT> basis_probs(this->_statevector.getLength(), 0);
 
@@ -100,6 +104,10 @@ class Measurements final
     probs(const std::vector<std::size_t> &wires,
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities for a subset (num_wires={}) of "
+                    "the full system",
+                    wires.size());
+        LOGGER_DEBUG("wires, device_wires");
         // Determining index that would sort the vector.
         // This information is needed later.
         const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
@@ -173,6 +181,10 @@ class Measurements final
      */
     auto probs(const Observable<StateVectorT> &obs, std::size_t num_shots = 0)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities to measure rotated basis states "
+                    "with {} shots",
+                    num_shots);
+        LOGGER_DEBUG("obs, num_shots");
         return BaseType::probs(obs, num_shots);
     }
 
@@ -184,6 +196,8 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      */
     auto probs(size_t num_shots) -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities with {} shots", num_shots);
+        LOGGER_DEBUG("num_shots");
         return BaseType::probs(num_shots);
     }
 
@@ -199,6 +213,10 @@ class Measurements final
 
     auto probs(const std::vector<std::size_t> &wires, std::size_t num_shots)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate probabilities for a subset (num_wires={}) of "
+                    "the full system with {} shots",
+                    wires.size(), num_shots);
+        LOGGER_DEBUG("wires, num_shots");
         return BaseType::probs(wires, num_shots);
     }
 
@@ -211,6 +229,10 @@ class Measurements final
      */
     auto expval(const std::vector<ComplexT> &matrix,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a Hermitian matrix of "
+                    "size {}, on {} wires",
+                    matrix.size(), wires.size());
+        LOGGER_DEBUG("matrix, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -233,6 +255,8 @@ class Measurements final
      */
     auto expval(const std::string &operation,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of {}", operation);
+        LOGGER_DEBUG("operation, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -265,6 +289,9 @@ class Measurements final
     auto expval(const index_type *row_map_ptr, const index_type row_map_size,
                 const index_type *entries_ptr, const ComplexT *values_ptr,
                 const index_type numNNZ) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a Sparse Hamiltonian");
+        LOGGER_DEBUG(
+            "row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ");
         PL_ABORT_IF(
             (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
@@ -292,6 +319,10 @@ class Measurements final
     auto expval(const std::vector<op_type> &operations_list,
                 const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate the expectation value of a list of observables "
+                    "of size {}",
+                    operations_list.size());
+        LOGGER_DEBUG("operations_list, wires_list");
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -312,6 +343,8 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     auto expval(const Observable<StateVectorT> &obs) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a general Observable");
+        LOGGER_DEBUG("obs");
         PrecisionT result{};
 
         if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
@@ -347,6 +380,10 @@ class Measurements final
     auto expval(const Observable<StateVectorT> &obs,
                 const std::size_t &num_shots,
                 const std::vector<std::size_t> &shot_range) -> PrecisionT {
+        LOGGER_INFO("Calculate the expectation value of a general Observable "
+                    "with {} shots",
+                    num_shots);
+        LOGGER_DEBUG("obs, num_shots");
         return BaseType::expval(obs, num_shots, shot_range);
     }
 
@@ -361,6 +398,9 @@ class Measurements final
 
     auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
         -> PrecisionT {
+        LOGGER_INFO("Calculate variance of a general Observable with {} shots",
+                    num_shots);
+        LOGGER_DEBUG("obs, num_shots");
         return BaseType::var(obs, num_shots);
     }
 
@@ -371,6 +411,8 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     auto var(const Observable<StateVectorT> &obs) -> PrecisionT {
+        LOGGER_INFO("Calculate variance of a general Observable");
+        LOGGER_DEBUG("obs");
         PrecisionT result{};
         if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
                                      MemoryStorageLocation::Internal>) {
@@ -402,6 +444,8 @@ class Measurements final
      */
     auto var(const std::string &operation,
              const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO("Calculate variance of {}", operation);
+        LOGGER_DEBUG("operation, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -430,6 +474,10 @@ class Measurements final
      */
     auto var(const std::vector<ComplexT> &matrix,
              const std::vector<std::size_t> &wires) -> PrecisionT {
+        LOGGER_INFO(
+            "Calculate variance of a Hermitian matrix of size {}, on {} wires",
+            matrix.size(), wires.size());
+        LOGGER_DEBUG("matrix, wires");
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -463,6 +511,9 @@ class Measurements final
     auto var(const std::vector<op_type> &operations_list,
              const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
+        LOGGER_INFO("Calculate variance of a list of observables of size {}",
+                    operations_list.size());
+        LOGGER_DEBUG("operations_list, wires_list");
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -493,6 +544,10 @@ class Measurements final
     generate_samples_metropolis(const std::string &kernelname,
                                 std::size_t num_burnin,
                                 std::size_t num_samples) {
+        LOGGER_INFO("Generate samples using the Metropolis-Hastings method for "
+                    "num_samples={}",
+                    num_samples);
+        LOGGER_DEBUG("kernelname, num_burnin, num_samples");
         std::size_t num_qubits = this->_statevector.getNumQubits();
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
@@ -558,6 +613,9 @@ class Measurements final
     PrecisionT var(const index_type *row_map_ptr, const index_type row_map_size,
                    const index_type *entries_ptr, const ComplexT *values_ptr,
                    const index_type numNNZ) {
+        LOGGER_INFO("Calculate variance of a Sparse Hamiltonian");
+        LOGGER_DEBUG(
+            "row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ");
         PL_ABORT_IF(
             (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
@@ -586,6 +644,10 @@ class Measurements final
      * separated by a stride equal to the number of qubits.
      */
     std::vector<std::size_t> generate_samples(size_t num_samples) {
+        LOGGER_INFO(
+            "Generate samples using the alias method for num_samples={}",
+            num_samples);
+        LOGGER_DEBUG("num_samples");
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         auto &&probabilities = probs();
 
@@ -677,6 +739,7 @@ class Measurements final
     auto inline calculateObsExpval(StateVectorT &bra,
                                    const Observable<StateVectorT> &obs,
                                    const StateVectorT &ket) -> PrecisionT {
+        LOGGER_DEBUG("bra, obs, ket");
         obs.applyInPlace(bra);
         return std::real(
             innerProdC(bra.getData(), ket.getData(), ket.getLength()));
@@ -695,6 +758,7 @@ class Measurements final
     auto inline calculateObsVar(StateVectorT &bra,
                                 const Observable<StateVectorT> &obs,
                                 const StateVectorT &ket) -> PrecisionT {
+        LOGGER_DEBUG("bra, obs, ket");
         obs.applyInPlace(bra);
         PrecisionT mean_square = std::real(
             innerProdC(bra.getData(), bra.getData(), bra.getLength()));
@@ -721,6 +785,7 @@ class Measurements final
                     std::mt19937 &gen,
                     std::uniform_real_distribution<PrecisionT> &distrib,
                     std::size_t init_idx) {
+        LOGGER_DEBUG("sv, tk, gen, distrib, init_idx");
         auto init_plog = std::log(
             (sv.getData()[init_idx] * std::conj(sv.getData()[init_idx]))
                 .real());
