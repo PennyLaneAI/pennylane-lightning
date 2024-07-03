@@ -34,7 +34,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_lgpu_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -96,7 +96,7 @@ jobs:
         run: |
           cd main
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
@@ -128,6 +128,13 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          
+                    
+          # Adding venv site-packages to output for subsequent step to referecen if needed
+          echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
+
 
       - name: Display Python-Path
         id: python_path
@@ -158,7 +165,7 @@ jobs:
         run: |
           cd pennylane
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane

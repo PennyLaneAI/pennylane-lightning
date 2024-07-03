@@ -2,10 +2,10 @@
 
 ### New features since last release
 * Implement Python interface to the `lightning.tensor` device.
-  [(#748)](https://github.com/PennyLaneAI/pennylane-lightning/pull/748) 
+  [(#748)](https://github.com/PennyLaneAI/pennylane-lightning/pull/748)
 
 * Add `inverse` support for gate operations in `lightning.tensor` in the C++ layer.
-  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753)
 
 * Add `observable` and `expval` support to `cutensornet` backed `lightning.tensor` C++ layer.
   [(#728)](https://github.com/PennyLaneAI/pennylane-lightning/pull/728)
@@ -35,6 +35,9 @@
 
 ### Improvements
 
+* Updated concurrency labels for tests ensuring different workflows do not run under the same concurrency group label
+  [(#778)](https://github.com/PennyLaneAI/pennylane-lightning/pull/778)
+
 * Release candidate branches are automatically switched over to using the new large GitHub runner pool.
   [(#769)](https://github.com/PennyLaneAI/pennylane-lightning/pull/769)
 
@@ -45,17 +48,17 @@
   [(#763)](https://github.com/PennyLaneAI/pennylane-lightning/pull/763)
 
 * Change the type of tensor network objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` class from `StateTensorT` to `TensorNetT`.
-  [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759) 
-  
+  [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759)
+
 * Rationalize MCM tests, removing most end-to-end tests from the native MCM test file,
   but keeping one that validates multiple mid-circuit measurements with any allowed return.
   [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
 
 * Refactor C++ library names for `lightning.tensor`.
-  [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755) 
+  [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755)
 
 * Set `state_tensor` as `const` for the `MeasurementTNCuda` class.
-  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753) 
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753)
 
 * Updated Kokkos version and support to 4.3.01.
   [(#725)](https://github.com/PennyLaneAI/pennylane-lightning/pull/725)
@@ -140,8 +143,14 @@
 * Add support for Scipy v1.14.
   [(#776)](https://github.com/PennyLaneAI/pennylane-lightning/pull/776)
 
-* Add pickle support for the `DevPool` object in `lightning.gpu`. 
+* Add pickle support for the `DevPool` object in `lightning.gpu`.
   [(#772)](https://github.com/PennyLaneAI/pennylane-lightning/pull/772)
+
+* Downgrade Scipy on Lightning stable version tests.
+  [(#783)](https://github.com/PennyLaneAI/pennylane-lightning/pull/783)
+
+* Fix checkout command in test workflows for rc branches.
+  [(#777)](https://github.com/PennyLaneAI/pennylane-lightning/pull/777)
 
 ### Contributors
 
