@@ -149,6 +149,9 @@
 * Downgrade Scipy on Lightning stable version tests.
   [(#783)](https://github.com/PennyLaneAI/pennylane-lightning/pull/783)
 
+* Fix checkout command in test workflows for rc branches.
+  [(#777)](https://github.com/PennyLaneAI/pennylane-lightning/pull/777)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
