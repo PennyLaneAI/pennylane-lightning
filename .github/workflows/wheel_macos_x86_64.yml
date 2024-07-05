@@ -185,10 +185,10 @@ jobs:
         arch: [x86_64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
     runs-on: ubuntu-latest
-
     if: |
-      github.event_name == 'pull_request' ||
+      github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
+
     steps:
       - uses: actions/download-artifact@v3
         with:

@@ -101,18 +101,18 @@ jobs:
       matrix:
         pl_backend: ["lightning_gpu", "lightning_kokkos", "lightning_qubit"]
     runs-on: ubuntu-latest
+    if: |
+      matrix.pl_backend == 'lightning_qubit' &&
+      github.event_name == 'release'
 
     steps:
       - uses: actions/download-artifact@v3
-        if: |
-          matrix.pl_backend == 'lightning_qubit' &&
-          github.event_name == 'pull_request'
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
-        if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'pull_request' }}
+        if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
@@ -120,7 +120,7 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
       - uses: actions/download-artifact@v3
-        if: ${{ matrix.pl_backend != 'lightning_qubit' && github.event_name == 'pull_request' }}
+        if: ${{ matrix.pl_backend != 'lightning_qubit' && github.event_name == 'release' }}
         with:
           name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
           path: dist
