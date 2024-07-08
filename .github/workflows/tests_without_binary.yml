@@ -21,7 +21,7 @@ env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
 
 concurrency:
-  group: tests_without_binary-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_without_binary-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -53,7 +53,7 @@ jobs:
         run: |
           cd main
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
@@ -87,7 +87,7 @@ jobs:
         run: |
           cd pennylane
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
