@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Do not run GPU tests and Docker workflows on release.
+  [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
+
 ### Improvements
 
 ### Documentation
@@ -14,11 +17,14 @@
 
 This release contains contributions from (in alphabetical order):
 
+Vincent Michaud-Rioux
+
 ---
 
 # Release 0.37.0
 
 ### New features since last release
+
 * Implement Python interface to the `lightning.tensor` device.
   [(#748)](https://github.com/PennyLaneAI/pennylane-lightning/pull/748)
 
