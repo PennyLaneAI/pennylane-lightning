@@ -5,7 +5,7 @@
 ### Breaking changes
 
 ### Improvements
-* Add a Catalyst wrapper for the LightningKokkos simulator.
+* Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
 ### Documentation
@@ -40,9 +40,6 @@ Amintor Dusko
 
 * Add support for `C(BlockEncode)` to Lightning devices.
   [(#743)](https://github.com/PennyLaneAI/pennylane-lightning/pull/743)
-
-* Add a Catalyst-specific wrapping class for Lightning Kokkos.
-  [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
 ### Breaking changes
 
