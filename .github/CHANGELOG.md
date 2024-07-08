@@ -1,3 +1,29 @@
+# Release 0.38.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+### Documentation
+
+### Bug fixes
+
+* Downgrade Scipy on Lightning stable version tests.
+  [(#783)](https://github.com/PennyLaneAI/pennylane-lightning/pull/783)
+
+* Fix checkout command in test workflows for rc branches.
+  [(#777)](https://github.com/PennyLaneAI/pennylane-lightning/pull/777)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Vincent Michaud-Rioux
+
+---
+
 # Release 0.37.0
 
 ### New features since last release
@@ -152,7 +178,7 @@
 * Add support for Scipy v1.14.
   [(#776)](https://github.com/PennyLaneAI/pennylane-lightning/pull/776)
 
-* Add pickle support for the `DevPool` object in `lightning.gpu`. 
+* Add pickle support for the `DevPool` object in `lightning.gpu`.
   [(#772)](https://github.com/PennyLaneAI/pennylane-lightning/pull/772)
 
 ### Contributors

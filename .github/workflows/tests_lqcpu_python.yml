@@ -24,7 +24,7 @@ env:
   OMP_PROC_BIND: "false"
 
 concurrency:
-  group: tests_lqcpu_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lqcpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -81,6 +81,12 @@ jobs:
         run: |
           cd main
           python -m pip install -r requirements-dev.txt
+
+      - name: Downgrade Scipy (remove after release)
+        if: inputs.lightning-version == 'stable'
+        run: |
+          # TODO: Remove this step with v0.37.0 release
+          python -m pip install --force-reinstall "scipy<1.14"
 
       - name: Create device wheel
         id: create_lq_wheel

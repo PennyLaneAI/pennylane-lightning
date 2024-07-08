@@ -20,7 +20,7 @@ on:
       - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
 
 concurrency:
-  group: tests_windows_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_windows_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
