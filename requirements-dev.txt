@@ -15,7 +15,7 @@ clang-tidy~=16.0
 clang-format~=16.0
 isort==5.13.2
 click==8.0.4
-cmake
+cmake==3.29.6
 custatevec-cu12
 cutensornet-cu12
 pylint

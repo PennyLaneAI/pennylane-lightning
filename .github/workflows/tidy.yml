@@ -1,6 +1,6 @@
 name: Clang-tidy check
 on:
-  pull_request:
+  #pull_request:
     paths:
       - .github/workflows/tidy.yml
       - pennylane_lightning/core/src/**

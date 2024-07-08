@@ -1,3 +1,4 @@
+cmake==3.29.6
 pytest~=8.0.0
 pytest-benchmark
 pytest-cov

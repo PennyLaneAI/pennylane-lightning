@@ -14,7 +14,7 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  #pull_request:
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lgpumpi_python.yml'
