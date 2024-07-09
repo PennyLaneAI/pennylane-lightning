@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Do not run GPU tests and Docker workflows on release.
+  [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
+
 ### Improvements
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)

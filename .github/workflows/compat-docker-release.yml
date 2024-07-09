@@ -1,17 +1,15 @@
-name: Compat Check Docker - Lightning@latest
+name: Compat Check Docker - Lightning@release
 
 on:
-  schedule:
-    - cron: "0 4 * * 1-5"  # Run daily at 4am Mon-Fri
   workflow_dispatch:
 
 concurrency:
-  group: docker_linux_x86_64-latest
+  group: docker_linux_x86_64-release
   cancel-in-progress: true
 
 jobs:
-  docker_linux_x86_64_latest:
-    name: Docker latest - Linux::x86_64
+  docker_linux_x86_64_release:
+    name: Docker release - Linux::x86_64
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
       lightning-version: v0.37.0
