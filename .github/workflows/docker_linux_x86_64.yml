@@ -86,20 +86,7 @@ jobs:
           push: ${{ inputs.push-to-dockerhub }}
           context: .
           file: docker/Dockerfile
-          tags: pennylaneai/pennylane:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
-          target: wheel-${{ matrix.pl_backend }}
-          build-args: |
-            LIGHTNING_VERSION=${{ inputs.lightning-version }}
-            PENNYLANE_VERSION=${{ inputs.pennylane-version }}
-
-      - name: Build and push latest
-        uses: docker/build-push-action@v5
-        if: ${{ inputs.push-to-dockerhub }}
-        with:
-          push: ${{ inputs.push-to-dockerhub }}
-          context: .
-          file: docker/Dockerfile
-          tags: pennylaneai/pennylane:latest-${{ matrix.pl_backend }}
+          tags: pennylaneai/pennylane:${{ inputs.lightning-version }}-${{ matrix.pl_backend }},pennylaneai/pennylane:latest-${{ matrix.pl_backend }}
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ inputs.lightning-version }}
