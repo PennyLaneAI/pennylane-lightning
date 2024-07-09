@@ -12,6 +12,11 @@ on:
         type: string
         required: true
         description: The version of Lightning to use. This should be a valid git tag, e.g. v0.36.0.
+      pennylane-version:
+        type: string
+        required: false
+        default: master
+        description: The version of PennyLane to use. This should be a valid git tag, e.g. v0.36.0.
       push-to-dockerhub:
         type: boolean
         required: true
@@ -22,6 +27,11 @@ on:
         type: string
         required: true
         description: The version of Lightning to use. This should be a valid git tag, e.g. v0.36.0.
+      pennylane-version:
+        type: string
+        required: false
+        default: master
+        description: The version of PennyLane to use. This should be a valid git tag, e.g. v0.36.0.
       push-to-dockerhub:
         type: boolean
         required: true
@@ -64,6 +74,7 @@ jobs:
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ inputs.lightning-version }}
+            PENNYLANE_VERSION=${{ inputs.pennylane-version }}
 
       - name: Test
         run: |
@@ -79,6 +90,7 @@ jobs:
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ inputs.lightning-version }}
+            PENNYLANE_VERSION=${{ inputs.pennylane-version }}
 
       - name: Build and push latest
         uses: docker/build-push-action@v5
@@ -90,3 +102,4 @@ jobs:
           target: wheel-${{ matrix.pl_backend }}
           build-args: |
             LIGHTNING_VERSION=${{ inputs.lightning-version }}
+            PENNYLANE_VERSION=${{ inputs.pennylane-version }}

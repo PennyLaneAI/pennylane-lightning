@@ -23,7 +23,7 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG GCC_VERSION=11
 ARG LIGHTNING_VERSION=v0.36.0
 ARG PENNYLANE_VERSION=v0.36.0
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/6.1.1/ubuntu/jammy/amdgpu-install_6.1.60101-1_all.deb
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \

@@ -15,5 +15,6 @@ jobs:
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
       lightning-version: master
+      pennylane-version: master
       push-to-dockerhub: false
     secrets: inherit # pass all secrets

@@ -101,12 +101,12 @@ jobs:
       matrix:
         pl_backend: ["lightning_gpu", "lightning_kokkos", "lightning_qubit"]
     runs-on: ubuntu-latest
+    if: |
+      matrix.pl_backend == 'lightning_qubit' &&
+      github.event_name == 'release'
 
     steps:
       - uses: actions/download-artifact@v3
-        if: |
-          matrix.pl_backend == 'lightning_qubit' &&
-          github.event_name == 'release'
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist
