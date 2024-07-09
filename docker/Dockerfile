@@ -12,18 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Create basic runtime environment base on Ubuntu 22.04 (jammy)
 # Define build arguments
-# Create and activate runtime virtual environment
-FROM ubuntu:jammy AS base-runtime
 ARG CUDA_ARCH=AMPERE80
 ARG AMD_ARCH=AMD_GFX90A
 ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
 ARG DEBIAN_FRONTEND=noninteractive
 ARG GCC_VERSION=11
-ARG LIGHTNING_VERSION=v0.36.0
-ARG PENNYLANE_VERSION=v0.36.0
+ARG LIGHTNING_VERSION=master
+ARG PENNYLANE_VERSION=master
 ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
+
+# Create basic runtime environment base on Ubuntu 22.04 (jammy)
+# Create and activate runtime virtual environment
+FROM ubuntu:jammy AS base-runtime
+ARG CUDA_ARCH
+ARG AMD_ARCH
+ARG CUDA_INSTALLER
+ARG DEBIAN_FRONTEND
+ARG GCC_VERSION
+ARG LIGHTNING_VERSION
+ARG PENNYLANE_VERSION
+ARG ROCM_INSTALLER
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
@@ -122,7 +131,7 @@ RUN python setup.py bdist_wheel
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-base-ubuntu22.04 AS wheel-lightning-kokkos-cuda
-ARG PENNYLANE_VERSION=v0.36.0
+ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     libgomp1 \
@@ -143,15 +152,16 @@ RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@
 # Download and build Lightning-GPU release
 FROM base-build-cuda AS build-wheel-lightning-gpu
 WORKDIR /opt/pennylane-lightning
+ENV PL_BACKEND=lightning_gpu
 RUN pip install --no-cache-dir wheel custatevec-cu12
 RUN pip uninstall -y pennylane-lightning
-RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')") PL_BACKEND=lightning_gpu python setup.py build_ext
+RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')") python setup.py build_ext
 RUN python setup.py bdist_wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
 FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS wheel-lightning-gpu
-ARG PENNYLANE_VERSION=v0.36.0
+ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
@@ -189,12 +199,12 @@ ENV CMAKE_PREFIX_PATH=/opt/rocm:$CMAKE_PREFIX_PATH
 ENV CXX=hipcc
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
-RUN python setup.py build_ext -i --define="PL_BACKEND=lightning_kokkos;Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_HIP:BOOL=ON;Kokkos_ARCH_${AMD_ARCH}=ON"
+RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_HIP:BOOL=ON;Kokkos_ARCH_${AMD_ARCH}=ON"
 RUN python setup.py bdist_wheel
 
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:5.7 AS wheel-lightning-kokkos-rocm
-ARG PENNYLANE_VERSION=v0.36.0
+ARG PENNYLANE_VERSION
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     git \
