@@ -326,7 +326,7 @@ void registerBackendSpecificObservables(py::module_ &m) {
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
+            []([[maybe_unused]] const SparseHamiltonian<StateVectorT> &self,
                py::handle other) -> bool {
                 if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
                     return false;
@@ -389,7 +389,7 @@ void registerBackendSpecificInfo(py::module_ &m) {
         .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
         .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx)
         .def(py::pickle(
-            [](const DevicePool<int> &self) { // __getstate__
+            []([[maybe_unused]] const DevicePool<int> &self) { // __getstate__
                 return py::make_tuple();
             },
             [](py::tuple &t) { // __setstate__
