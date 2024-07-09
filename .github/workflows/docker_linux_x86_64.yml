@@ -5,7 +5,6 @@ name: Docker::Linux::x86_64
 # **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
 
 on:
-    types: [published]
   workflow_dispatch:
     inputs:
       lightning-version:
