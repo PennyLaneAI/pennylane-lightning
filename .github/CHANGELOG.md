@@ -8,6 +8,8 @@
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
 ### Improvements
+* Add a Catalyst-specific wrapping class for Lightning Kokkos.
+  [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
 ### Documentation
 
@@ -17,7 +19,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux
 
 ---
 
