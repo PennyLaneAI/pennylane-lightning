@@ -81,9 +81,9 @@ jobs:
 
       - name: Build and push version
         uses: docker/build-push-action@v5
-        if: ${{ inputs.push-to-dockerhub == 'true' }}
+        if: ${{ inputs.push-to-dockerhub }}
         with:
-          push: ${{ inputs.push-to-dockerhub }}
+          push: false
           context: .
           file: docker/Dockerfile
           tags: pennylaneai/pennylane:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
@@ -94,9 +94,9 @@ jobs:
 
       - name: Build and push latest
         uses: docker/build-push-action@v5
-        if: ${{ inputs.push-to-dockerhub == 'true' }}
+        if: ${{ inputs.push-to-dockerhub }}
         with:
-          push: ${{ inputs.push-to-dockerhub }}
+          push: false
           context: .
           file: docker/Dockerfile
           tags: pennylaneai/pennylane:latest-${{ matrix.pl_backend }}
