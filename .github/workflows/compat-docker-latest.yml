@@ -10,8 +10,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docker_linux_x86_64_develop:
-    name: Docker develop - Linux::x86_64
+  docker_linux_x86_64_latest:
+    name: Docker latest - Linux::x86_64
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
       lightning-version: latest
