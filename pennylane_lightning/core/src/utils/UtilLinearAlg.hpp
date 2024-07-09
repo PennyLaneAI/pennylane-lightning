@@ -110,6 +110,12 @@ void compute_diagonalizing_gates(int n, int lda,
             ah[j * n + i] = Ah[i * lda + j];
         }
     }
+
+    // Scipy packages `libopenblas` as `libscipy_openblas` on Linux
+    // starting v1.14, and OpenBlas symbols are now exposed with
+    // a prefix `scipy_`.
+    auto scipy_prefix = false;
+
 #ifdef __APPLE__
     // LCOV_EXCL_START
     const std::string libName =
@@ -145,6 +151,12 @@ void compute_diagonalizing_gates(int n, int lda,
             std::make_shared<SharedLibLoader>(libPath.string()));
     }
 
+    scipy_prefix =
+        std::find_if(availableLibs.begin(), availableLibs.end(),
+                     [](const auto &lib) {
+                         return lib.find("scipy_openblas") != std::string::npos;
+                     }) != availableLibs.end();
+
     blasLib = blasLibs.back();
 #endif
 
@@ -156,8 +168,8 @@ void compute_diagonalizing_gates(int n, int lda,
     int info;
 
     if constexpr (std::is_same<T, float>::value) {
-        cheevPtr cheev =
-            reinterpret_cast<cheevPtr>(blasLib->getSymbol("cheev_"));
+        auto cheev = reinterpret_cast<cheevPtr>(
+            blasLib->getSymbol(scipy_prefix ? "scipy_cheev_" : "cheev_"));
         // Query optimal workspace size
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
@@ -168,8 +180,8 @@ void compute_diagonalizing_gates(int n, int lda,
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
-        zheevPtr zheev =
-            reinterpret_cast<zheevPtr>(blasLib->getSymbol("zheev_"));
+        auto zheev = reinterpret_cast<zheevPtr>(
+            blasLib->getSymbol(scipy_prefix ? "scipy_zheev_" : "zheev_"));
         // Query optimal workspace size
         zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);

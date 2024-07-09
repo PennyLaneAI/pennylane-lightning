@@ -20,7 +20,7 @@ on:
       - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
 
 concurrency:
-  group: tests_windows_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_windows_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"4.2.00\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"4.3.01\"]" >> $GITHUB_OUTPUT
 
     outputs:
       exec_model: ${{ steps.exec_model.outputs.exec_model }}

@@ -36,6 +36,9 @@ I, X, Y, Z = (
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.tensor":
+    pytest.skip("lightning.tensor doesn't support adjoint jacobian.", allow_module_level=True)
+
 kokkos_args = [None]
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
@@ -865,12 +868,13 @@ class TestAdjointJacobianQNode:
             def circuit(p):
                 qml.StatePrep(init_state, wires=range(n_qubits))
                 if operation.num_params == 3:
+                    # Check against the first wire in `control_wires` as any
+                    # decomposition to `ctrl_decomp_zyz` works now with only
+                    # one single controlled wire.
                     qml.ctrl(
                         operation(*p, wires=range(n_qubits - num_wires, n_qubits)),
-                        control_wires,
-                        control_values=[
-                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                        ],
+                        control_wires[0],
+                        control_values=control_value,
                     )
                 else:
                     qml.RX(p[0], 0)

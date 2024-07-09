@@ -13,9 +13,11 @@ set(COMPONENT_SUBDIRS   algorithms
                         simulators
                         utils
 )
+
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
 endforeach()
+
 
 if (BUILD_TESTS)
     # Include macros supporting tests.

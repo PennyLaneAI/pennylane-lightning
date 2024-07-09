@@ -6,6 +6,7 @@ name: Wheel::Linux::ARM
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 on:
+  pull_request:
   push:
     branches:
       - master
@@ -19,6 +20,10 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+      github.event_name == 'workflow_dispatch'
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
@@ -174,12 +179,12 @@ jobs:
     strategy:
       matrix:
         arch: [aarch64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos"]
     runs-on: ubuntu-latest
-
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
+
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -190,5 +195,5 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          password: ${{ ( matrix.pl_backend == 'lightning_qubit' ) && secrets.TEST_PYPI_API_TOKEN || secrets.TEST_PYPI_LKOKKOS_TOKEN }}
           repository-url: https://test.pypi.org/legacy/

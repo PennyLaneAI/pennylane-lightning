@@ -211,10 +211,10 @@ jobs:
         arch: [AMD64]
         pl_backend: ["lightning_qubit"]
     runs-on: ubuntu-latest
-
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
+
     steps:
       - uses: actions/download-artifact@v3
         with:

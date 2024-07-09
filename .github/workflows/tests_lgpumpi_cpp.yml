@@ -10,7 +10,6 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
-  release:
   push:
     branches:
       - main
@@ -20,6 +19,7 @@ on:
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
       - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
 
 env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
@@ -28,7 +28,7 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: tests_lgpumpi_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpumpi_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -58,7 +58,7 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           git fetch tags --force
-          git checkout $(git tag | sort -V | tail -1)
+          git checkout latest_release
       - uses: actions/setup-python@v5
         id: setup_python
         name: Install Python
@@ -84,6 +84,8 @@ jobs:
 
           # Adding venv name as an output for subsequent steps to reference if needed
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
       - name: Display Python-Path
         id: python_path
@@ -191,4 +193,3 @@ jobs:
           rm -rf ${{ steps.setup_venv.outputs.venv_name }}
           rm -rf * .git .gitignore .github
           pip cache purge
-

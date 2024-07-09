@@ -174,6 +174,7 @@ allowed_operations = {
     "QFT",
     "ECR",
     "BlockEncode",
+    "C(BlockEncode)",
 }
 
 allowed_observables = {

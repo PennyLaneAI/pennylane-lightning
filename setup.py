@@ -21,7 +21,7 @@ from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
 default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu"}
+supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor"}
 supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
 
@@ -171,7 +171,7 @@ with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 requirements = [
-    "pennylane>=0.34",
+    "pennylane>=0.36",
     "scipy",
     "pybind11"
 ]
@@ -179,7 +179,7 @@ requirements = [
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
-    packages_list += ["pennylane_lightning.core", "pennylane_lightning.lightning_tensor"]
+    packages_list += ["pennylane_lightning.core"]
 else:
     requirements += ["pennylane_lightning==" + version]
 
@@ -189,10 +189,6 @@ if suffix == "gpu":
 suffix = suffix[0].upper() + suffix[1:]
 
 pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
-if suffix == "Qubit":
-    pennylane_plugins.append(
-        "default.tensor = pennylane_lightning.lightning_tensor:LightningTensor"
-    )
 
 pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
@@ -228,11 +224,7 @@ if backend == "lightning_qubit":
                 "pennylane_lightning.core": [
                     os.path.join("src", "*"),
                     os.path.join("src", "**", "*"),
-                ],
-                "pennylane_lightning.lightning_tensor": [
-                    os.path.join("backends", "*"),
-                    os.path.join("backends", "**", "*"),
-                ],
+                ]
             },
         }
     )
