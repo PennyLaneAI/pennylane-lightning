@@ -8,12 +8,16 @@
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
 ### Improvements
+
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
 ### Documentation
 
 ### Bug fixes
+
+* Fix conditions for skipping build & push steps in the Docker build workflows.
+  [(#790)](https://github.com/PennyLaneAI/pennylane-lightning/pull/790)
 
 * Downgrade Scipy on Lightning stable version tests.
   [(#783)](https://github.com/PennyLaneAI/pennylane-lightning/pull/783)
