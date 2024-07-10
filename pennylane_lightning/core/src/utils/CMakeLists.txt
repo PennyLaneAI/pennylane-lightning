@@ -28,8 +28,6 @@ target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 pybind11::embed
                                                 )
 
-target_link_libraries(lightning_utils PRIVATE Python::Python)
-
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if (BUILD_TESTS)
