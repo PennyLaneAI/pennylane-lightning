@@ -128,12 +128,12 @@ class Measurements final
 
         std::vector<PrecisionT> probabilities(all_indices.size(), 0);
 
-        std::size_t ind_probs = 0;
-        for (auto index : all_indices) {
-            for (auto offset : all_offsets) {
+        for (auto offset : all_offsets) {
+            std::size_t ind_probs = 0;
+            for (auto index : all_indices) {
                 probabilities[ind_probs] += std::norm(arr_data[index + offset]);
+                ind_probs++;
             }
-            ind_probs++;
         }
 
         // Permute the data according to the required wire ordering
