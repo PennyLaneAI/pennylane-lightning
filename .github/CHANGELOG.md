@@ -4,10 +4,16 @@
 
 ### Breaking changes
 
+* Remove temporary steps from the CI, such as downgrading Scipy to <1.14 and installing Kokkos v4.2 for `lightning-version == 'stable'`.
+  [(#792)](https://github.com/PennyLaneAI/pennylane-lightning/pull/792)
+
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
 ### Improvements
+
+* Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
+  [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
@@ -15,6 +21,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Set `PL_BACKEND` for the entire `build-wheel-lightning-gpu` Docker-build stage to properly build the Lightning-GPU wheel.
+  [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
 
 * Fix conditions for skipping build & push steps in the Docker build workflows.
   [(#790)](https://github.com/PennyLaneAI/pennylane-lightning/pull/790)
