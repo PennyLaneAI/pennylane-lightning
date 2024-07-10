@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Remove `NDpermuter.hpp` which is no longer required.
+  [(#794)](https://github.com/PennyLaneAI/pennylane-lightning/pull/794)
+
 * Remove temporary steps from the CI, such as downgrading Scipy to <1.14 and installing Kokkos v4.2 for `lightning-version == 'stable'`.
   [(#792)](https://github.com/PennyLaneAI/pennylane-lightning/pull/792)
 
@@ -11,6 +14,9 @@
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
 ### Improvements
+
+* Implement probs(wires) using a bit-shift implementation akin to the gate kernels in Lightning-Qubit.
+  [(#794)](https://github.com/PennyLaneAI/pennylane-lightning/pull/794)
 
 * Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
