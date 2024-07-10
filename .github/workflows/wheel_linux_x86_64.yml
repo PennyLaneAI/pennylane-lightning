@@ -135,7 +135,7 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install cibuildwheel
-        run: python3.9 -m pip install cibuildwheel~=2.16.0
+        run: python -m pip install cibuildwheel~=2.16.0
       
       - name: Find python.so files
         run: |
@@ -180,12 +180,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.9 -m cibuildwheel --output-dir wheelhouse
+        run: python -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.9 -m pip install twine
-          python3.9 -m twine check ./wheelhouse/*.whl
+          python -m pip install twine
+          python -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build

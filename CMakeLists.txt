@@ -89,7 +89,7 @@ include(FetchContent)
 find_package(pybind11 CONFIG)
 find_package(Python COMPONENTS Interpreter Development)
 
-message(STATUS "PATH-TO-PYTHON_LIBRARIES: ${PYTHON_LIBRARIES}")
+message(STATUS "PATH-TO-PYTHON_LIBRARIES: ${Python_LIBRARIES}")
 
 if (pybind11_FOUND)
     message(STATUS, "FOUND pybind11")
@@ -104,6 +104,9 @@ else()
     )
 
     FetchContent_MakeAvailable(pybind11)
+
+    message(STATUS "PATH-TO-PYTHON_LIBRARIES: ${Python_LIBRARIES}")
+
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
