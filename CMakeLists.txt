@@ -88,6 +88,9 @@ include(FetchContent)
 
 find_package(pybind11 CONFIG)
 find_package(Python COMPONENTS Interpreter Development)
+
+message(STATUS "PATH-TO-PYTHON_LIBRARIES: ${PYTHON_LIBRARIES}")
+
 if (pybind11_FOUND)
     message(STATUS, "FOUND pybind11")
 else()
