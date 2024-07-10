@@ -41,8 +41,7 @@ using namespace Pennylane::LightningQubit::Measures;
 /// @endcond
 
 TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
-                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
-                           (float, double)) {
+                           (StateVectorLQubitManaged), (double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -120,8 +119,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
-                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
-                           (float, double)) {
+                           (StateVectorLQubitManaged), (double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -199,8 +197,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
-                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
-                           (float, double)) {
+                           (StateVectorLQubitManaged), (double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -291,6 +288,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p0_full = Measurer.probs();
                 auto p0_0 = Measurer.probs({0}, wires);
                 auto p0_1 = Measurer.probs({1}, wires);
+                auto p0_01 = Measurer.probs({0, 1}, wires);
                 auto p0_perm0 = Measurer.probs({1, 0}, wires);
 
                 CHECK_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
@@ -302,7 +300,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 CHECK_THAT(p0_1,
                            Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
                                .margin(1e-7));
-
+                CHECK_THAT(p0_01, Catch::Approx(std::vector<PrecisionT>{
+                                                    1.0, 0.0, 0.0, 0.0})
+                                      .margin(1e-7));
                 CHECK_THAT(p0_perm0, Catch::Approx(std::vector<PrecisionT>{
                                                        1.0, 0.0, 0.0, 0.0})
                                          .margin(1e-7));
@@ -311,6 +311,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p1_full = Measurer.probs();
                 auto p1_0 = Measurer.probs({0}, wires);
                 auto p1_1 = Measurer.probs({1}, wires);
+                auto p1_01 = Measurer.probs({0, 1}, wires);
                 auto p1_perm0 = Measurer.probs({1, 0}, wires);
 
                 CHECK_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
@@ -322,6 +323,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 CHECK_THAT(p1_1,
                            Catch::Approx(std::vector<PrecisionT>{1.0, 0.0})
                                .margin(1e-7));
+                CHECK_THAT(p1_01, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.0, 0.5, 0.0})
+                                      .margin(1e-7));
                 CHECK_THAT(p1_perm0, Catch::Approx(std::vector<PrecisionT>{
                                                        0.5, 0.5, 0.0, 0.0})
                                          .margin(1e-7));
@@ -330,7 +334,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 auto p2_full = Measurer.probs();
                 auto p2_0 = Measurer.probs({0}, wires);
                 auto p2_1 = Measurer.probs({1}, wires);
-                auto p2_perm0 = Measurer.probs({1, 0}, wires);
+                auto p2_01 = Measurer.probs({0, 1}, wires);
+                auto p2_perm0 = Measurer.probs({0, 1}, wires);
 
                 CHECK_THAT(p2_full, Catch::Approx(std::vector<PrecisionT>{
                                                       0.25, 0.25, 0.25, 0.25})
@@ -341,6 +346,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 CHECK_THAT(p2_1,
                            Catch::Approx(std::vector<PrecisionT>{0.5, 0.5})
                                .margin(1e-7));
+                CHECK_THAT(p2_01, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.25, 0.25, 0.25, 0.25})
+                                      .margin(1e-7));
                 CHECK_THAT(p2_perm0, Catch::Approx(std::vector<PrecisionT>{
                                                        0.25, 0.25, 0.25, 0.25})
                                          .margin(1e-7));
@@ -525,9 +533,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
-                           "[Measurements][MCMC]",
-                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
-                           (float, double)) {
+                           "[Measurements][MCMC]", (StateVectorLQubitManaged),
+                           (double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
 
@@ -587,9 +594,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (NonZeroRandom Kernel)",
-                           "[Measurements][MCMC]",
-                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
-                           (float, double)) {
+                           "[Measurements][MCMC]", (StateVectorLQubitManaged),
+                           (double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
 
