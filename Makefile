@@ -150,28 +150,33 @@ endif
 ifdef version
     VERSION := $(version)
 else
-    VERSION := v0.36.0
+    VERSION := master
+endif
+ifdef pl_version
+    PL_VERSION := $(pl_version)
+else
+    PL_VERSION := master
 endif
 
 docker-build:
 	docker build -f docker/Dockerfile \
 		  --tag=pennylaneai/pennylane:$(VERSION)-$(TARGET) \
 		  --target wheel-$(TARGET) \
-		  --build-arg='LIGHTNING_VERSION=$(VERSION)' .
+		  --build-arg='LIGHTNING_VERSION=$(VERSION)' --build-arg='PENNYLANE_VERSION=$(PL_VERSION)' .
 docker-push:
 	docker push pennylaneai/pennylane:$(VERSION)-$(TARGET)
 docker-build-all:
-	$(MAKE) docker-build target=lightning-qubit
-	$(MAKE) docker-build target=lightning-gpu
-	$(MAKE) docker-build target=lightning-kokkos-openmp
-	$(MAKE) docker-build target=lightning-kokkos-cuda
-	$(MAKE) docker-build target=lightning-kokkos-rocm
+	$(MAKE) docker-build target=lightning-qubit 		pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-build target=lightning-gpu 			pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-build target=lightning-kokkos-openmp pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-build target=lightning-kokkos-cuda 	pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-build target=lightning-kokkos-rocm 	pl_version=$(PL_VERSION) version=$(VERSION)
 docker-push-all:
-	$(MAKE) docker-push target=lightning-qubit
-	$(MAKE) docker-push target=lightning-gpu
-	$(MAKE) docker-push target=lightning-kokkos-openmp
-	$(MAKE) docker-push target=lightning-kokkos-cuda
-	$(MAKE) docker-push target=lightning-kokkos-rocm
+	$(MAKE) docker-push target=lightning-qubit 			pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-push target=lightning-gpu 			pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-push target=lightning-kokkos-openmp 	pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-push target=lightning-kokkos-cuda 	pl_version=$(PL_VERSION) version=$(VERSION)
+	$(MAKE) docker-push target=lightning-kokkos-rocm 	pl_version=$(PL_VERSION) version=$(VERSION)
 docker-all:
 	$(MAKE) docker-build-all
 	$(MAKE) docker-push-all
