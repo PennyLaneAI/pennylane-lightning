@@ -112,10 +112,6 @@ jobs:
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
           PL_BACKEND=lightning_qubit python -m pip install . -vv
 
-      - name: Downgrade Scipy (remove after release)
-        if: inputs.lightning-version == 'stable'
-        run: pip install --force-reinstall "scipy<1.14"
-
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
         uses: actions/checkout@v4

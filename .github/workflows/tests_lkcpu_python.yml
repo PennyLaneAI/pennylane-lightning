@@ -50,7 +50,7 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
-      kokkos_version: ${{ inputs.lightning-version == 'stable' && '4.2.00' || '4.3.01' }} #To be updated next Release.
+      kokkos_version: "4.3.01"
 
   build_lightning_kokkos_wheels:
     needs: [determine_runner, build_and_cache_Kokkos]
@@ -244,8 +244,6 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          # TODO: Remove installing pytest-xdist with release v0.36.0
-          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
