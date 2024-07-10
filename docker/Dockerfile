@@ -12,27 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Define build arguments
-ARG CUDA_ARCH=AMPERE80
-ARG AMD_ARCH=AMD_GFX90A
-ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
-ARG DEBIAN_FRONTEND=noninteractive
-ARG GCC_VERSION=11
-ARG LIGHTNING_VERSION=master
+# Define global build defaults
 ARG PENNYLANE_VERSION=master
-ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
 
 # Create basic runtime environment base on Ubuntu 22.04 (jammy)
 # Create and activate runtime virtual environment
 FROM ubuntu:jammy AS base-runtime
-ARG CUDA_ARCH
-ARG AMD_ARCH
-ARG CUDA_INSTALLER
-ARG DEBIAN_FRONTEND
-ARG GCC_VERSION
-ARG LIGHTNING_VERSION
+ARG AMD_ARCH=AMD_GFX90A
+ARG CUDA_ARCH=AMPERE80
+ARG CUDA_INSTALLER=https://developer.download.nvidia.com/compute/cuda/12.2.2/local_installers/cuda_12.2.2_535.104.05_linux.run
+ARG DEBIAN_FRONTEND=noninteractive
+ARG GCC_VERSION=11
+ARG LIGHTNING_VERSION=master
 ARG PENNYLANE_VERSION
-ARG ROCM_INSTALLER
+ARG ROCM_INSTALLER=https://repo.radeon.com/amdgpu-install/5.7/ubuntu/jammy/amdgpu-install_5.7.50700-1_all.deb
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
     apt-utils \
