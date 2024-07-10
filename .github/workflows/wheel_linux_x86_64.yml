@@ -158,6 +158,7 @@ jobs:
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
+            LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/libpython${{matrix.cibw_build}}.so \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
