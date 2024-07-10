@@ -100,65 +100,66 @@ class Measurements final
     probs(const std::vector<std::size_t> &wires,
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
+        constexpr std::size_t one{1};
+
         // Determining index that would sort the vector.
         // This information is needed later.
-        const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
-
-        // Sorting wires.
-        std::vector<std::size_t> sorted_wires(wires.size());
-        for (size_t pos = 0; pos < wires.size(); pos++) {
-            sorted_wires[pos] = wires[sorted_ind_wires[pos]];
-        }
+        const std::size_t n_wires = wires.size();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
 
         // If all wires are requested, dispatch to `this->probs()`
-        if (wires.size() == this->_statevector.getNumQubits() &&
-            wires == sorted_wires) {
+        bool is_all_wires = n_wires == num_qubits;
+        for (std::size_t k = 0; k < n_wires; k++) {
+            if (!is_all_wires) {
+                break;
+            }
+            is_all_wires = wires[k] == k;
+        }
+        if (is_all_wires) {
             return this->probs();
         }
 
         // Determining probabilities for the sorted wires.
+        std::vector<std::size_t> rev_wires(n_wires);
+        std::vector<std::size_t> rev_wire_shifts(n_wires);
+        for (std::size_t k = 0; k < n_wires; k++) {
+            rev_wires[k] = (num_qubits - 1) - wires[k];
+            rev_wire_shifts[k] = one << rev_wires[k];
+        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
         const ComplexT *arr_data = this->_statevector.getData();
-
-        std::size_t num_qubits = this->_statevector.getNumQubits();
-        const std::vector<std::size_t> all_indices =
-            Gates::generateBitPatterns(sorted_wires, num_qubits);
-        const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
-            Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
-            num_qubits);
-
-        std::vector<PrecisionT> probabilities(all_indices.size(), 0);
-
-        std::size_t ind_probs = 0;
-        for (auto index : all_indices) {
-            for (auto offset : all_offsets) {
-                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
+        std::vector<PrecisionT> probabilities(PUtil::exp2(n_wires), 0);
+        for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
+            const auto indices = parity2indices(k, parity, rev_wire_shifts);
+            for (std::size_t i = 0; i < probabilities.size(); i++) {
+                probabilities[i] += std::norm(arr_data[indices[i]]);
             }
-            ind_probs++;
         }
-
-        // Permute the data according to the required wire ordering
-        if (wires != sorted_wires) {
-            static constexpr std::size_t CACHE_SIZE = 8;
-            PUtil::Permuter<PUtil::DefaultPermuter<CACHE_SIZE>> p{};
-            std::vector<std::size_t> shape(wires.size(), 2);
-            std::vector<std::string> wire_labels_old(sorted_wires.size(), "");
-            std::vector<std::string> wire_labels_new(wires.size(), "");
-
-            std::transform(sorted_wires.begin(), sorted_wires.end(),
-                           wire_labels_old.begin(), [](std::size_t index) {
-                               return std::to_string(index);
-                           });
-            std::transform(
-                wires.begin(), wires.end(), wire_labels_new.begin(),
-                [](std::size_t index) { return std::to_string(index); });
-
-            auto probs_sorted = probabilities;
-            p.Transpose(probabilities, shape, probs_sorted, wire_labels_old,
-                        wire_labels_new);
-            return probs_sorted;
-        }
-
         return probabilities;
+    }
+
+    auto parity2indices(const std::size_t k, std::vector<std::size_t> parity,
+                        std::vector<std::size_t> rev_wire_shifts)
+        -> std::vector<std::size_t> {
+        constexpr std::size_t one{1};
+        const std::size_t dim = one << rev_wire_shifts.size();
+        std::vector<std::size_t> indices(dim);
+        std::size_t idx = (k & parity[0]);
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            idx |= ((k << i) & parity[i]);
+        }
+        indices[0] = idx;
+        for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+            idx = indices[0];
+            for (std::size_t i = 0; i < rev_wire_shifts.size(); i++) {
+                if ((inner_idx & (one << i)) != 0) {
+                    idx |= rev_wire_shifts[i];
+                }
+            }
+            indices[inner_idx] = idx;
+        }
+        return indices;
     }
 
     /**
