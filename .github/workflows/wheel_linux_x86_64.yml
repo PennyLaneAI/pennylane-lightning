@@ -6,7 +6,7 @@ name: Wheel::Linux::x86_64
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 env:
-  GCC_VERSION: 13
+  GCC_VERSION: 12
 
 on:
   pull_request:
