@@ -82,12 +82,6 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
 
-      - name: Downgrade Scipy (remove after release)
-        if: inputs.lightning-version == 'stable'
-        run: |
-          # TODO: Remove this step with v0.37.0 release
-          python -m pip install --force-reinstall "scipy<1.14"
-
       - name: Create device wheel
         id: create_lq_wheel
         run: |
@@ -196,8 +190,6 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          # TODO: Remove installing pytest-xdist with release v0.36.0
-          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" \
