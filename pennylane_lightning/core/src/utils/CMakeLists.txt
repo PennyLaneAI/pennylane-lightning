@@ -26,6 +26,7 @@ target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs
                                                 pybind11::headers
                                                 pybind11::embed
+                                                Python::Python
                                                 )
 
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)

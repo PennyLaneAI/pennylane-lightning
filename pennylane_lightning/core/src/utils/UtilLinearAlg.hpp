@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <Python.h>
 #include <algorithm>
 #include <array>
 #include <complex>
