@@ -529,6 +529,42 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                                        .margin(1e-7));
             }
         }
+        SECTION("5 qubits") {
+            constexpr std::size_t num_qubits = 5;
+            auto statevector_data =
+                std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+            const std::vector<std::size_t> wires{0, 1, 2, 3, 4};
+            statevector_data[0] = {1.0, 0.0};
+
+            StateVectorT statevector(statevector_data.data(),
+                                     statevector_data.size());
+            for (std::size_t t = 0; t < num_qubits; t++) {
+                statevector.applyOperation("Hadamard", {t}, false);
+            }
+            Measurements<StateVectorT> Measurer(statevector);
+            auto probs = Measurer.probs({0, 1, 2, 3}, wires);
+            CHECK_THAT(probs,
+                       Catch::Approx(std::vector<PrecisionT>(16, 1.0 / 16.))
+                           .margin(1e-7));
+        }
+        SECTION("6 qubits") {
+            constexpr std::size_t num_qubits = 6;
+            auto statevector_data =
+                std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+            const std::vector<std::size_t> wires{0, 1, 2, 3, 4, 5};
+            statevector_data[0] = {1.0, 0.0};
+
+            StateVectorT statevector(statevector_data.data(),
+                                     statevector_data.size());
+            for (std::size_t t = 0; t < num_qubits; t++) {
+                statevector.applyOperation("Hadamard", {t}, false);
+            }
+            Measurements<StateVectorT> Measurer(statevector);
+            auto probs = Measurer.probs({0, 1, 2, 3, 4}, wires);
+            CHECK_THAT(probs,
+                       Catch::Approx(std::vector<PrecisionT>(32, 1.0 / 32.))
+                           .margin(1e-7));
+        }
     }
 }
 
