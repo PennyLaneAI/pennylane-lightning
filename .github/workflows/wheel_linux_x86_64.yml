@@ -67,7 +67,7 @@ jobs:
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          dnf update -y && dnf install -y cmake ninja-build
+          dnf update -y && dnf install -y cmake ninja-build python3-devel
           echo "COMPILER=g++-12" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
