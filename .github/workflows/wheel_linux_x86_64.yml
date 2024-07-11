@@ -132,16 +132,10 @@ jobs:
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
-          dnf update -y && dnf install -y podman python3-devel
+          dnf update -y && dnf install -y podman
 
       - name: Install cibuildwheel
         run: python3.9 -m pip install cibuildwheel~=2.16.0
-      
-      - name: Find python.so files
-        run: |
-          echo "Finding python.so files..."
-          find / -name "python*.so" > result.txt
-          cat result.txt
 
       - name: Build wheels
         env:
@@ -155,9 +149,8 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            find /usr/lib/ -name "libpython*.so"
             cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
-            python -m pip install ninja cmake~=3.24.0 scipy pybind11
+            python -m pip install ninja cmake~=3.24.0 scipy
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
@@ -165,7 +158,6 @@ jobs:
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
-            LD_LIBRARY_PATH="$LD_LIBRARY_PATH:/usr/lib64/:/usr/lib/" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
