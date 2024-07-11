@@ -114,7 +114,7 @@ jobs:
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel~=2.16.0 wheel
+        run: python -m pip install cibuildwheel~=2.16.0 wheel scipy
 
       - name: Build wheels
         env:
@@ -124,7 +124,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install pybind11 cmake~=3.24.0 build
+            python -m pip install pybind11 cmake~=3.24.0 build scipy
 
           CIBW_ENVIRONMENT: |
             PL_BACKEND="${{ matrix.pl_backend }}"
