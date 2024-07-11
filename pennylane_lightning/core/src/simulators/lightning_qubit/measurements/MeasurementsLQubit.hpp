@@ -30,6 +30,7 @@
 #include <vector>
 
 #include "LinearAlgebra.hpp"
+#include "MeasurementKernels.hpp"
 #include "MeasurementsBase.hpp"
 #include "Observables.hpp"
 #include "SparseLinAlg.hpp"
@@ -41,6 +42,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Measures;
+using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
@@ -99,7 +101,6 @@ class Measurements final
     probs(const std::vector<std::size_t> &wires,
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
-        constexpr std::size_t zero{0};
         constexpr std::size_t one{1};
 
         // Determining index that would sort the vector.
@@ -125,22 +126,10 @@ class Measurements final
             rev_wires[k] = (num_qubits - 1) - wires[k];
         }
         const ComplexT *arr_data = this->_statevector.getData();
-        if (n_wires == 1) {
-            return probs_core<1>(exp2(num_qubits), arr_data, rev_wires);
-        }
-        if (n_wires == 2) {
-            return probs_core<2>(exp2(num_qubits), arr_data, rev_wires);
-        }
-        if (n_wires == 3) {
-            return probs_core<3>(exp2(num_qubits), arr_data, rev_wires);
-        }
-        if (n_wires == 4) {
-            return probs_core<4>(exp2(num_qubits), arr_data, rev_wires);
-        }
+        PROBS_SPECIAL_CASES
         std::vector<PrecisionT> probabilities(PUtil::exp2(n_wires), 0);
-        std::size_t pindex{0};
         for (std::size_t svindex = 0; svindex < exp2(num_qubits); svindex++) {
-            pindex = zero;
+            std::size_t pindex{0U};
             for (std::size_t k = 0; k < n_wires; k++) {
                 pindex |= ((svindex & (one << rev_wires[k])) >> rev_wires[k])
                           << (n_wires - 1 - k);
@@ -148,46 +137,6 @@ class Measurements final
             probabilities[pindex] += std::norm(arr_data[svindex]);
         }
         return probabilities;
-    }
-
-    template <std::size_t n_wires>
-    auto probs_core(const std::size_t num_data, const ComplexT *arr_data,
-                    const std::vector<std::size_t> &rev_wires)
-        -> std::vector<PrecisionT> {
-        constexpr std::size_t one{1};
-        std::array<PrecisionT, one << n_wires> probs = {};
-        const std::size_t rev_wires0 = rev_wires[0];
-        [[maybe_unused]] std::size_t rev_wires1;
-        [[maybe_unused]] std::size_t rev_wires2;
-        [[maybe_unused]] std::size_t rev_wires3;
-        if constexpr (n_wires > 1) {
-            rev_wires1 = rev_wires[1];
-        }
-        if constexpr (n_wires > 2) {
-            rev_wires2 = rev_wires[2];
-        }
-        if constexpr (n_wires > 3) {
-            rev_wires3 = rev_wires[3];
-        }
-        for (std::size_t svindex = 0; svindex < num_data; svindex++) {
-            std::size_t pindex =
-                ((svindex & (one << rev_wires0)) >> rev_wires0);
-            if constexpr (n_wires > 1) {
-                pindex <<= (n_wires - 1);
-                pindex |= ((svindex & (one << rev_wires1)) >> rev_wires1)
-                          << (n_wires - 1 - 1);
-            }
-            if constexpr (n_wires > 2) {
-                pindex |= ((svindex & (one << rev_wires2)) >> rev_wires2)
-                          << (n_wires - 1 - 2);
-            }
-            if constexpr (n_wires > 3) {
-                pindex |= ((svindex & (one << rev_wires3)) >> rev_wires3)
-                          << (n_wires - 1 - 3);
-            }
-            probs[pindex] += std::norm(arr_data[svindex]);
-        }
-        return std::vector<PrecisionT>(probs.begin(), probs.end());
     }
 
     /**
