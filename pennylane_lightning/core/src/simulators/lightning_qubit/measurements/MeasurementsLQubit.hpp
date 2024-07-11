@@ -123,6 +123,9 @@ class Measurements final
         if (n_wires == 1) {
             return probs_core<1>(arr_data, num_qubits, wires);
         }
+        if (n_wires == 2) {
+            return probs_core<2>(arr_data, num_qubits, wires);
+        }
 
         // Determining probabilities for the sorted wires.
         std::vector<std::size_t> rev_wires(n_wires);
@@ -172,18 +175,48 @@ class Measurements final
                     const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
         constexpr std::size_t one{1};
-        const std::size_t rev_wire = num_qubits - wires[0] - 1;
-        const std::size_t rev_wire_shift = (one << rev_wire);
-        const auto parity = Pennylane::Util::revWireParity(
-            std::array<std::size_t, 1>{rev_wire});
-        const auto parity_high = parity[1];
-        const auto parity_low = parity[0];
+        [[maybe_unused]] std::size_t rev_wire;
+        [[maybe_unused]] std::size_t rev_wire0;
+        [[maybe_unused]] std::size_t rev_wire1;
+        [[maybe_unused]] std::size_t parity_0;
+        [[maybe_unused]] std::size_t parity_1;
+        [[maybe_unused]] std::size_t parity_2;
+        if constexpr (n_wires == 1) {
+            rev_wire = num_qubits - wires[0] - 1;
+            const auto parity = Pennylane::Util::revWireParity(
+                std::array<std::size_t, n_wires>{rev_wire});
+            parity_0 = parity[0];
+            parity_1 = parity[1];
+        }
+        if constexpr (n_wires == 2) {
+            rev_wire0 = num_qubits - wires[0] - 1;
+            rev_wire1 = num_qubits - wires[1] - 1;
+            const auto parity = Pennylane::Util::revWireParity(
+                std::array<std::size_t, n_wires>{rev_wire0, rev_wire1});
+            parity_0 = parity[0];
+            parity_1 = parity[1];
+            parity_2 = parity[2];
+        }
         std::vector<PrecisionT> probs(PUtil::exp2(n_wires), 0);
         for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
-            const std::size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
-            const std::size_t i1 = i0 | rev_wire_shift;
-            probs[0] += std::norm(arr[i0]);
-            probs[1] += std::norm(arr[i1]);
+            if constexpr (n_wires == 1) {
+                const std::size_t i0 = ((k << 1U) & parity_1) | (parity_0 & k);
+                probs[0] += std::norm(arr[i0]);
+                const std::size_t i1 = i0 | (one << rev_wire);
+                probs[1] += std::norm(arr[i1]);
+            }
+            if constexpr (n_wires == 2) {
+                const std::size_t i00 = ((k << 2U) & parity_2) |
+                                        ((k << 1U) & parity_1) | (k & parity_0);
+                probs[0] += std::norm(arr[i00]);
+                const std::size_t i01 = i00 | (one << rev_wire0);
+                probs[1] += std::norm(arr[i01]);
+                const std::size_t i10 = i00 | (one << rev_wire1);
+                probs[2] += std::norm(arr[i10]);
+                const std::size_t i11 =
+                    i00 | (one << rev_wire0) | (one << rev_wire1);
+                probs[3] += std::norm(arr[i11]);
+            }
         }
         return probs;
     }
