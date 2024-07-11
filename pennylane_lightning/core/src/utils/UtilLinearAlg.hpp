@@ -163,11 +163,11 @@ void compute_diagonalizing_gates(int n, int lda,
     // LCOV_EXCL_START
     if (!std::filesystem::exists(scipyPathStr)) {
         std::string currentPathStr(getPath());
-        #ifdef _MSC_VER
-            std::string site_packages_str("site-packages\\");
-        #else
-            std::string site_packages_str("site-packages/");
-        #endif
+#ifdef _MSC_VER
+        std::string site_packages_str("site-packages\\");
+#else
+        std::string site_packages_str("site-packages/");
+#endif
 
         std::size_t str_pos = currentPathStr.find(site_packages_str);
         if (str_pos != std::string::npos) {
@@ -188,11 +188,11 @@ void compute_diagonalizing_gates(int n, int lda,
             }
         } else {
             try {
-                #ifdef _MSC_VER
-                    scipyPathStr = currentPathStr + "..\\..\\scipy.libs\\";
-                #else
-                    scipyPathStr = currentPathStr + "../../scipy.libs/";
-                #endif
+#ifdef _MSC_VER
+                scipyPathStr = currentPathStr + "..\\..\\scipy.libs\\";
+#else
+                scipyPathStr = currentPathStr + "../../scipy.libs/";
+#endif
                 // convert the relative path to absolute path
                 scipyPathStr =
                     std::filesystem::canonical(scipyPathStr).string();
