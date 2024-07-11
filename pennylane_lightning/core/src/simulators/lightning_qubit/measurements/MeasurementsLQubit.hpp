@@ -126,14 +126,18 @@ class Measurements final
             Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
             num_qubits);
 
+        if (wires.size() == 1) {
+            return probs_core<1>(all_indices, all_offsets, arr_data);
+        }
+
         std::vector<PrecisionT> probabilities(all_indices.size(), 0);
 
-        std::size_t ind_probs = 0;
-        for (auto index : all_indices) {
-            for (auto offset : all_offsets) {
+        for (auto offset : all_offsets) {
+            std::size_t ind_probs = 0;
+            for (auto index : all_indices) {
                 probabilities[ind_probs] += std::norm(arr_data[index + offset]);
+                ind_probs++;
             }
-            ind_probs++;
         }
 
         // Permute the data according to the required wire ordering
@@ -161,6 +165,19 @@ class Measurements final
         return probabilities;
     }
 
+    template <std::size_t n_wires>
+    auto probs_core(const std::vector<std::size_t> &all_indices,
+                    const std::vector<std::size_t> &all_offsets,
+                    const ComplexT *arr_data) -> std::vector<PrecisionT> {
+        std::vector<PrecisionT> probabilities(all_indices.size(), 0);
+        const auto index0 = all_indices[0];
+        const auto index1 = all_indices[1];
+        for (auto offset : all_offsets) {
+            probabilities[0] += std::norm(arr_data[index0 + offset]);
+            probabilities[1] += std::norm(arr_data[index1 + offset]);
+        }
+        return probabilities;
+    }
     /**
      * @brief Probabilities to measure rotated basis states.
      *
