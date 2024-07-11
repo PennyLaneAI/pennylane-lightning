@@ -96,7 +96,13 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
     #if(EXISTS ${SCIPYLIBS}/scipy.libs)
     #    set(SCIPYLIBS ${SCIPYLIBS}/scipy.libs)
     #else()
-    message(STATUS "Checking for path to scipy.libs ...")
+    #message(STATUS "Checking for path to scipy.libs ...")
+    execute_process(
+        COMMAND ${Python_EXECUTABLE} -m pip install scipy
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE PIP_RESULT
+    )
+
     execute_process(
         COMMAND "${Python_EXECUTABLE}"
         -c "import site, os; print(next((os.path.join(path, 'scipy.libs') for path in site.getsitepackages() if os.path.exists(os.path.join(path, 'scipy.libs'))), ''))"
@@ -117,7 +123,7 @@ elseif(CMAKE_SYSTEM_NAME MATCHES "Linux" OR CMAKE_SYSTEM_NAME MATCHES "Windows")
 
     set(SCIPYLIBS "${SCIPY_LIBS_DIR}")
 
-    message(STATUS "found (${SCIPY_LIBS_DIR}++)")
+    message(STATUS "found (${SCIPY_LIBS_DIR})")
 else()
     message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
