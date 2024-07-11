@@ -119,6 +119,11 @@ class Measurements final
             return this->probs();
         }
 
+        const ComplexT *arr_data = this->_statevector.getData();
+        if (n_wires == 1) {
+            return probs_core<1>(arr_data, num_qubits, wires);
+        }
+
         // Determining probabilities for the sorted wires.
         std::vector<std::size_t> rev_wires(n_wires);
         std::vector<std::size_t> rev_wire_shifts(n_wires);
@@ -128,7 +133,6 @@ class Measurements final
         }
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
-        const ComplexT *arr_data = this->_statevector.getData();
         std::vector<PrecisionT> probabilities(PUtil::exp2(n_wires), 0);
         for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
             const auto indices = parity2indices(k, parity, rev_wire_shifts);
@@ -160,6 +164,28 @@ class Measurements final
             indices[inner_idx] = idx;
         }
         return indices;
+    }
+
+    template <std::size_t n_wires>
+    auto probs_core(const std::complex<PrecisionT> *arr,
+                    const std::size_t num_qubits,
+                    const std::vector<std::size_t> &wires)
+        -> std::vector<PrecisionT> {
+        constexpr std::size_t one{1};
+        const std::size_t rev_wire = num_qubits - wires[0] - 1;
+        const std::size_t rev_wire_shift = (one << rev_wire);
+        const auto parity = Pennylane::Util::revWireParity(
+            std::array<std::size_t, 1>{rev_wire});
+        const auto parity_high = parity[1];
+        const auto parity_low = parity[0];
+        std::vector<PrecisionT> probs(PUtil::exp2(n_wires), 0);
+        for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
+            const std::size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
+            const std::size_t i1 = i0 | rev_wire_shift;
+            probs[0] += std::norm(arr[i0]);
+            probs[1] += std::norm(arr[i1]);
+        }
+        return probs;
     }
 
     /**
