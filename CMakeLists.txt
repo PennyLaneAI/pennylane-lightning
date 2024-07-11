@@ -126,8 +126,9 @@ else()
             message(STATUS "not found (install via 'pip install scipy')")
             return()
         endif()
+
         if (CMAKE_SYSTEM_NAME MATCHES "Windows")
-            string(REPLACE "/" "\\" SCIPY_LIBS_DIR "${SCIPY_LIBS_DIR}")
+            string(REPLACE "\\" "/" SCIPY_LIBS_DIR "${SCIPY_LIBS_DIR}")
         endif()
 
         set(SCIPYLIBS "${SCIPY_LIBS_DIR}")
