@@ -61,13 +61,13 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git python3-dev
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
           echo "COMPILER=g++-12" >> $GITHUB_ENV
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          dnf update -y && dnf install -y cmake ninja-build python3-devel
+          dnf update -y && dnf install -y cmake ninja-build
           echo "COMPILER=g++-12" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
@@ -132,7 +132,7 @@ jobs:
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
-          dnf update -y && dnf install -y podman
+          dnf update -y && dnf install -y podman python3-devel
 
       - name: Install cibuildwheel
         run: python3.9 -m pip install cibuildwheel~=2.16.0
