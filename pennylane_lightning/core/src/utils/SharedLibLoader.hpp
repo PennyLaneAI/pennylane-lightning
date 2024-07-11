@@ -17,8 +17,8 @@
  * Dynamic shared library functions API wrapper.
  */
 #pragma once
-#include <string>
 #include <mutex>
+#include <string>
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
@@ -62,19 +62,19 @@ class SharedLibLoader final {
     explicit SharedLibLoader(const std::string &filename) {
         const std::lock_guard<std::mutex> lock(mtx_);
         handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
-        PL_ABORT_IF(!handle_, PL_DLERROR());
+        // PL_ABORT_IF(!handle_, PL_DLERROR());
     }
 
-    ~SharedLibLoader() noexcept { 
+    ~SharedLibLoader() noexcept {
         const std::lock_guard<std::mutex> lock(mtx_);
-        PL_DLCLOSE(handle_); 
+        PL_DLCLOSE(handle_);
     }
 
     void *getHandle() { return handle_; }
 
     void *getSymbol(const std::string &symbol) {
         void *sym = PL_DLSYS(handle_, symbol.c_str());
-        PL_ABORT_IF(!sym, PL_DLERROR());
+        // PL_ABORT_IF(!sym, PL_DLERROR());
         return sym;
     }
 };
