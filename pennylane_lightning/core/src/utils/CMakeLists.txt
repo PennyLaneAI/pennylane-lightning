@@ -23,10 +23,7 @@ endforeach()
 
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
-                                                lightning_external_libs
-                                                pybind11::headers
-                                                pybind11::embed
-                                                )
+                                                lightning_external_libs)
 
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 

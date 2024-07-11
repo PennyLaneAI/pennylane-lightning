@@ -25,8 +25,6 @@
 #include <cstdlib>
 #include <filesystem>
 #include <memory>
-#include <pybind11/embed.h>
-#include <pybind11/pybind11.h>
 #include <string>
 #include <vector>
 
@@ -48,7 +46,7 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
 // Priority table used to sort openblas and its dependencies
 std::array<std::string, 5> priority_lib{"stdc", "gcc.", "quadmath", "gfortran",
                                         "openblas"};
-
+/*
 std::string get_scipylibs_path_worker() {
     pybind11::object avail_site_packages =
         pybind11::module::import("site").attr("getsitepackages")();
@@ -76,6 +74,33 @@ std::string get_scipylibs_path() {
     pybind11::scoped_interpreter scope_guard{};
     return get_scipylibs_path_worker();
 }
+*/
+
+// Exclusively for python calls and tested in the python layer
+// LCOV_EXCL_START
+#ifdef __linux__
+/**
+ * @brief Get the path to the current shared library object.
+ *
+ * @return const char*
+ */
+inline const char *getPath() {
+    Dl_info dl_info;
+    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
+                "Can't get the path to the shared library.");
+    return dl_info.dli_fname;
+}
+// TODO add windows support
+#elif defined(_MSC_VER)
+inline std::string getPath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
+    std::string fullPath(buffer);
+    std::size_t pos = fullPath.find_last_of("\\/");
+    return fullPath.substr(0, pos);
+}
+#endif
+// LCOV_EXCL_STOP
 } // namespace
 /// @endcond
 
@@ -128,7 +153,51 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-    std::filesystem::path scipyLibsPath(get_scipylibs_path());
+#ifdef SCIPY_LIBS_PATH
+    std::string scipyPathStr(SCIPY_LIBS_PATH);
+#else
+    std::string scipyPathStr;
+#endif
+
+    // Exclusively for python calls
+    // LCOV_EXCL_START
+    if (!std::filesystem::exists(scipyPathStr)) {
+        std::string currentPathStr(getPath());
+        std::string site_packages_str("site-packages/");
+
+        std::size_t str_pos = currentPathStr.find(site_packages_str);
+        if (str_pos != std::string::npos) {
+            scipyPathStr =
+                currentPathStr.substr(0, str_pos + site_packages_str.size());
+            scipyPathStr += "scipy.libs";
+        }
+
+        if (std::filesystem::exists(scipyPathStr)) {
+            try {
+                // convert the relative path to absolute path
+                scipyPathStr =
+                    std::filesystem::canonical(scipyPathStr).string();
+            } catch (const std::exception &err) {
+                std::cerr << "Canonical path for scipy.libs"
+                          << " threw exception:\n"
+                          << err.what() << '\n';
+            }
+        } else {
+            try {
+                scipyPathStr = currentPathStr + "../../scipy.libs/";
+                // convert the relative path to absolute path
+                scipyPathStr =
+                    std::filesystem::canonical(scipyPathStr).string();
+            } catch (const std::exception &err) {
+                std::cerr << "Canonical path for scipy.libs"
+                          << " threw exception:\n"
+                          << err.what() << '\n';
+            }
+        }
+    }
+    // LCOV_EXCL_STOP
+
+    std::filesystem::path scipyLibsPath(scipyPathStr);
 
     std::vector<std::string> availableLibs;
     availableLibs.reserve(priority_lib.size());
