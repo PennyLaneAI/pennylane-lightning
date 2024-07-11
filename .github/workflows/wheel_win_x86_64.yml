@@ -97,6 +97,17 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+      - name: Determine Python version
+        id: pyvs
+        shell: bash
+        run: |
+          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ steps.pyvs.outputs.version }}
+          
       - name: Restoring cached dependencies
         id: kokkos-cache
         uses: actions/cache@v4
@@ -154,17 +165,6 @@ jobs:
             Remove-Item $dirName -Recurse
           }
           cd ..
-
-      - name: Determine Python version
-        id: pyvs
-        shell: bash
-        run: |
-          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
-
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: ${{ steps.pyvs.outputs.version }}
 
       - name: Test wheels
         run: |
