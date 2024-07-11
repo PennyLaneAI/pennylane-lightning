@@ -43,9 +43,9 @@ template <typename IntegerType> class IntegerInterval {
         return (min_ <= test_val) && (test_val < max_);
     }
 
-    [[nodiscard]] IntegerType min() const { return min_; }
+    IntegerType min() const { return min_; }
 
-    [[nodiscard]] IntegerType max() const { return max_; }
+    IntegerType max() const { return max_; }
 };
 
 /**
