@@ -150,7 +150,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
-            python -m pip install ninja cmake~=3.24.0 scipy
+            python -m pip install ninja cmake~=3.24.0 scipy pybind11
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
