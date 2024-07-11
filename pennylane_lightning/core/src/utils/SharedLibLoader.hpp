@@ -29,8 +29,8 @@
 #else
 #include <windows.h>
 #define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
-#define PL_DLERROR() "Library loading errors"
-#define PL_DLCLOSE(NAME) (NAME)
+#define PL_DLERROR() GetLastError()
+#define PL_DLCLOSE(NAME) FreeLibrary(NAME)
 #define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
 #endif
 
