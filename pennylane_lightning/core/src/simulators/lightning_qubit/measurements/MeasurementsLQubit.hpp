@@ -126,7 +126,9 @@ class Measurements final
         if (n_wires == 2) {
             return probs_core<2>(arr_data, num_qubits, wires);
         }
-
+        if (n_wires == 3) {
+            return probs_core<3>(arr_data, num_qubits, wires);
+        }
         // Determining probabilities for the sorted wires.
         std::vector<std::size_t> rev_wires(n_wires);
         std::vector<std::size_t> rev_wire_shifts(n_wires);
@@ -169,54 +171,103 @@ class Measurements final
         return indices;
     }
 
+#define PROBS_CORE_DECLARE_NW(n)                                               \
+    std::size_t rev_wires_##n;                                                 \
+    if constexpr (n_wires > n) {                                               \
+        rev_wires_##n = rev_wires[n];                                          \
+    }
+#define PROBS_CORE_DECLARE_P(n)                                                \
+    std::size_t parity_##n;                                                    \
+    if constexpr (n_wires >= n) {                                              \
+        parity_##n = parity[n];                                                \
+    }
+
+#define PROBS_CORE_DEF_I0 ((k << 0U) & parity_0) | ((k << 1U) & parity_1)
+#define PROBS_CORE_DEF_I00 PROBS_CORE_DEF_I0 | ((k << 2U) & parity_2)
+#define PROBS_CORE_DEF_I000 PROBS_CORE_DEF_I00 | ((k << 3U) & parity_3)
+
+#define PROBS_CORE_DEF_IF1(var, x)                                             \
+    if constexpr (x == 1) {                                                    \
+        var##x |= (one << rev_wires_0);                                        \
+    }
+#define PROBS_CORE_DEF_IF2(var, x, y)                                          \
+    if constexpr (x == 1) {                                                    \
+        var##x##y |= (one << rev_wires_1);                                     \
+    }                                                                          \
+    PROBS_CORE_DEF_IF1(var##x, y)
+#define PROBS_CORE_DEF_IF3(var, x, y, z)                                       \
+    if constexpr (x == 1) {                                                    \
+        var##x##y##z |= (one << rev_wires_2);                                  \
+    }                                                                          \
+    PROBS_CORE_DEF_IF2(var##x, y, z)
+
+#define PROBS_CORE_DEF_Ix(x)                                                   \
+    {                                                                          \
+        std::size_t j##x = i0;                                                 \
+        PROBS_CORE_DEF_IF1(j, x)                                               \
+        probs[0B##x] += std::norm(arr[j##x]);                                  \
+    }
+#define PROBS_CORE_DEF_Ixy(x, y)                                               \
+    {                                                                          \
+        std::size_t j##x##y = i0;                                              \
+        PROBS_CORE_DEF_IF2(j, x, y)                                            \
+        probs[0B##x##y] += std::norm(arr[j##x##y]);                            \
+    }
+#define PROBS_CORE_DEF_Ixyz(x, y, z)                                           \
+    {                                                                          \
+        std::size_t j##x##y##z = i0;                                           \
+        PROBS_CORE_DEF_IF3(j, x, y, z)                                         \
+        probs[0B##x##y##z] += std::norm(arr[j##x##y##z]);                      \
+    }
+
+#define PROBS_CORE_SUM_1                                                       \
+    if constexpr (n_wires == 1) {                                              \
+        i0 = PROBS_CORE_DEF_I0;                                                \
+        PROBS_CORE_DEF_Ix(0);                                                  \
+        PROBS_CORE_DEF_Ix(1);                                                  \
+    }
+#define PROBS_CORE_SUM_2_2(x) PROBS_CORE_DEF_Ixy(0, x) PROBS_CORE_DEF_Ixy(1, x)
+#define PROBS_CORE_SUM_2                                                       \
+    if constexpr (n_wires == 2) {                                              \
+        i0 = PROBS_CORE_DEF_I00;                                               \
+        PROBS_CORE_SUM_2_2(0);                                                 \
+        PROBS_CORE_SUM_2_2(1)                                                  \
+    }
+#define PROBS_CORE_SUM_3_2(x, y)                                               \
+    PROBS_CORE_DEF_Ixyz(0, x, y) PROBS_CORE_DEF_Ixyz(1, x, y)
+#define PROBS_CORE_SUM_3_4(y) PROBS_CORE_SUM_3_2(0, y) PROBS_CORE_SUM_3_2(1, y)
+#define PROBS_CORE_SUM_3                                                       \
+    if constexpr (n_wires == 3) {                                              \
+        i0 = PROBS_CORE_DEF_I000;                                              \
+        PROBS_CORE_SUM_3_4(0);                                                 \
+        PROBS_CORE_SUM_3_4(1)                                                  \
+    }
+
     template <std::size_t n_wires>
     auto probs_core(const std::complex<PrecisionT> *arr,
                     const std::size_t num_qubits,
                     const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
         constexpr std::size_t one{1};
-        [[maybe_unused]] std::size_t rev_wire;
-        [[maybe_unused]] std::size_t rev_wire0;
-        [[maybe_unused]] std::size_t rev_wire1;
-        [[maybe_unused]] std::size_t parity_0;
-        [[maybe_unused]] std::size_t parity_1;
-        [[maybe_unused]] std::size_t parity_2;
-        if constexpr (n_wires == 1) {
-            rev_wire = num_qubits - wires[0] - 1;
-            const auto parity = Pennylane::Util::revWireParity(
-                std::array<std::size_t, n_wires>{rev_wire});
-            parity_0 = parity[0];
-            parity_1 = parity[1];
+        std::vector<std::size_t> rev_wires(n_wires);
+        for (std::size_t k = 0; k < n_wires; k++) {
+            rev_wires[n_wires - 1 - k] = (num_qubits - 1) - wires[k];
         }
-        if constexpr (n_wires == 2) {
-            rev_wire0 = num_qubits - wires[0] - 1;
-            rev_wire1 = num_qubits - wires[1] - 1;
-            const auto parity = Pennylane::Util::revWireParity(
-                std::array<std::size_t, n_wires>{rev_wire0, rev_wire1});
-            parity_0 = parity[0];
-            parity_1 = parity[1];
-            parity_2 = parity[2];
-        }
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+        PROBS_CORE_DECLARE_NW(0)
+        PROBS_CORE_DECLARE_NW(1)
+        PROBS_CORE_DECLARE_NW(2)
+        const std::size_t parity_0 = parity[0];
+        PROBS_CORE_DECLARE_P(1)
+        PROBS_CORE_DECLARE_P(2)
+        PROBS_CORE_DECLARE_P(3)
         std::vector<PrecisionT> probs(PUtil::exp2(n_wires), 0);
         for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
-            if constexpr (n_wires == 1) {
-                const std::size_t i0 = ((k << 1U) & parity_1) | (parity_0 & k);
-                probs[0] += std::norm(arr[i0]);
-                const std::size_t i1 = i0 | (one << rev_wire);
-                probs[1] += std::norm(arr[i1]);
-            }
-            if constexpr (n_wires == 2) {
-                const std::size_t i00 = ((k << 2U) & parity_2) |
-                                        ((k << 1U) & parity_1) | (k & parity_0);
-                probs[0] += std::norm(arr[i00]);
-                const std::size_t i01 = i00 | (one << rev_wire0);
-                probs[1] += std::norm(arr[i01]);
-                const std::size_t i10 = i00 | (one << rev_wire1);
-                probs[2] += std::norm(arr[i10]);
-                const std::size_t i11 =
-                    i00 | (one << rev_wire0) | (one << rev_wire1);
-                probs[3] += std::norm(arr[i11]);
-            }
+            std::size_t i0;
+            PROBS_CORE_SUM_1
+            PROBS_CORE_SUM_2
+            PROBS_CORE_SUM_3
         }
         return probs;
     }
