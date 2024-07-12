@@ -133,6 +133,12 @@ jobs:
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
           dnf update -y && dnf install -y podman
+      
+      - name: Verify Python installation
+        run: |
+          python --version
+          which python
+          ls -l /usr/lib/python*  # Check for python.so or relevant directories
 
       - name: Install cibuildwheel
         run: python3.9 -m pip install cibuildwheel~=2.16.0
