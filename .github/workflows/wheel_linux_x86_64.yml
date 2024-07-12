@@ -61,13 +61,13 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git python-dev
           echo "COMPILER=g++-12" >> $GITHUB_ENV
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          dnf update -y && dnf install -y cmake ninja-build
+          dnf update -y && dnf install -y cmake ninja-build python-devel
           echo "COMPILER=g++-12" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
