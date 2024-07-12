@@ -143,7 +143,7 @@ jobs:
       - name: Install cibuildwheel
         run: |
           python3.11 -m pip install cibuildwheel~=2.16.0
-          python3.11 -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'))"
+          python3.11 -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
 
       - name: Build wheels
         env:
