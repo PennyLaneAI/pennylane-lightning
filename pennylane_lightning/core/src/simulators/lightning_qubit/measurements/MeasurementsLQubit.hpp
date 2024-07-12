@@ -121,47 +121,32 @@ class Measurements final
         }
 
         const ComplexT *arr_data = this->_statevector.getData();
-        PROBS_SPECIAL_CASES
+        // PROBS_SPECIAL_CASES
         // Determining probabilities for the sorted wires.
         std::vector<std::size_t> rev_wires(n_wires);
-        std::vector<std::size_t> rev_wire_shifts(n_wires);
         for (std::size_t k = 0; k < n_wires; k++) {
-            rev_wires[k] = (num_qubits - 1) - wires[k];
-            rev_wire_shifts[k] = one << rev_wires[k];
+            rev_wires[n_wires - 1 - k] = (num_qubits - 1) - wires[k];
         }
+        const std::size_t dim = one << n_wires;
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
         std::vector<PrecisionT> probabilities(PUtil::exp2(n_wires), 0);
         for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
-            const auto indices = parity2indices(k, parity, rev_wire_shifts);
-            for (std::size_t i = 0; i < probabilities.size(); i++) {
-                probabilities[i] += std::norm(arr_data[indices[i]]);
+            std::size_t idx = (k & parity[0]);
+            for (std::size_t i = 1; i < n_wires + 1; i++) {
+                idx |= ((k << i) & parity[i]);
+            }
+            probabilities[0] += std::norm(arr_data[idx]);
+            const std::size_t i0 = idx;
+            for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
+                idx = i0;
+                for (std::size_t i = 0; i < n_wires; i++) {
+                    idx |= ((inner_idx & (one << i)) >> i) << rev_wires[i];
+                }
+                probabilities[inner_idx] += std::norm(arr_data[idx]);
             }
         }
         return probabilities;
-    }
-
-    auto parity2indices(const std::size_t k, std::vector<std::size_t> parity,
-                        std::vector<std::size_t> rev_wire_shifts)
-        -> std::vector<std::size_t> {
-        constexpr std::size_t one{1};
-        const std::size_t dim = one << rev_wire_shifts.size();
-        std::vector<std::size_t> indices(dim);
-        std::size_t idx = (k & parity[0]);
-        for (std::size_t i = 1; i < parity.size(); i++) {
-            idx |= ((k << i) & parity[i]);
-        }
-        indices[0] = idx;
-        for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
-            idx = indices[0];
-            for (std::size_t i = 0; i < rev_wire_shifts.size(); i++) {
-                if ((inner_idx & (one << i)) != 0) {
-                    idx |= rev_wire_shifts[i];
-                }
-            }
-            indices[inner_idx] = idx;
-        }
-        return indices;
     }
 
     /**
