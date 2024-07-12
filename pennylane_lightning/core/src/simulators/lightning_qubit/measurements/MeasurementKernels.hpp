@@ -303,6 +303,7 @@ auto probs_bitshift_generic(const std::complex<PrecisionT> *arr,
     return probabilities;
 }
 
+// NOLINTBEGIN(hicpp-function-size,readability-function-size)
 template <class PrecisionT, std::size_t n_wires>
 auto probs_bitshift(const std::complex<PrecisionT> *arr,
                     const std::size_t num_qubits,
@@ -346,5 +347,5 @@ auto probs_bitshift(const std::complex<PrecisionT> *arr,
     }
     return probs;
 }
-
+// NOLINTEND(hicpp-function-size,readability-function-size)
 } // namespace Pennylane::LightningQubit::Measures

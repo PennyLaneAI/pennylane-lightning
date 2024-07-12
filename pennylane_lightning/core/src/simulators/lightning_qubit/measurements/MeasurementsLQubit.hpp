@@ -721,5 +721,5 @@ class Measurements final
         }
         return init_idx;
     }
-}; // namespace Pennylane::LightningQubit::Measures
+}; // class Measurements
 } // namespace Pennylane::LightningQubit::Measures
