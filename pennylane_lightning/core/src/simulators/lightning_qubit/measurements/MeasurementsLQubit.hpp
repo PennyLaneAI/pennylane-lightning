@@ -102,65 +102,55 @@ class Measurements final
         -> std::vector<PrecisionT> {
         // Determining index that would sort the vector.
         // This information is needed later.
-        const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
-
-        // Sorting wires.
-        std::vector<std::size_t> sorted_wires(wires.size());
-        for (size_t pos = 0; pos < wires.size(); pos++) {
-            sorted_wires[pos] = wires[sorted_ind_wires[pos]];
-        }
+        const std::size_t n_wires = wires.size();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
 
         // If all wires are requested, dispatch to `this->probs()`
-        if (wires.size() == this->_statevector.getNumQubits() &&
-            wires == sorted_wires) {
+        bool is_all_wires = n_wires == num_qubits;
+        for (std::size_t k = 0; k < n_wires; k++) {
+            if (!is_all_wires) {
+                break;
+            }
+            is_all_wires = wires[k] == k;
+        }
+        if (is_all_wires) {
             return this->probs();
         }
 
         // Determining probabilities for the sorted wires.
         const ComplexT *arr_data = this->_statevector.getData();
 
-        std::size_t num_qubits = this->_statevector.getNumQubits();
         const std::vector<std::size_t> all_indices =
-            Gates::generateBitPatterns(sorted_wires, num_qubits);
+            Gates::generateBitPatterns(wires, num_qubits);
         const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
-            Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
-            num_qubits);
+            Gates::getIndicesAfterExclusion(wires, num_qubits), num_qubits);
 
-        if (wires.size() == 1) {
-            return probs_core<1>(all_indices, all_offsets, arr_data);
-        }
+        // if (wires.size() == 1) {
+        //     return probs_core<1>(all_indices, all_offsets, arr_data);
+        // }
 
         std::vector<PrecisionT> probabilities(all_indices.size(), 0);
 
-        for (auto offset : all_offsets) {
-            std::size_t ind_probs = 0;
-            for (auto index : all_indices) {
-                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
-                ind_probs++;
+        auto *off_ptr = all_offsets.data();
+        for (std::size_t j = 0; j < all_offsets.size(); j++) {
+            auto *probs_ptr = probabilities.data();
+            auto *ind_ptr = all_indices.data();
+            auto *arr_ptr = arr_data + *(off_ptr);
+            for (std::size_t i = 0; i < all_indices.size(); i++) {
+                *probs_ptr += std::norm(*(arr_ptr + *(ind_ptr)));
+                ind_ptr++;
+                probs_ptr++;
             }
+            off_ptr++;
         }
 
-        // Permute the data according to the required wire ordering
-        if (wires != sorted_wires) {
-            static constexpr std::size_t CACHE_SIZE = 8;
-            PUtil::Permuter<PUtil::DefaultPermuter<CACHE_SIZE>> p{};
-            std::vector<std::size_t> shape(wires.size(), 2);
-            std::vector<std::string> wire_labels_old(sorted_wires.size(), "");
-            std::vector<std::string> wire_labels_new(wires.size(), "");
-
-            std::transform(sorted_wires.begin(), sorted_wires.end(),
-                           wire_labels_old.begin(), [](std::size_t index) {
-                               return std::to_string(index);
-                           });
-            std::transform(
-                wires.begin(), wires.end(), wire_labels_new.begin(),
-                [](std::size_t index) { return std::to_string(index); });
-
-            auto probs_sorted = probabilities;
-            p.Transpose(probabilities, shape, probs_sorted, wire_labels_old,
-                        wire_labels_new);
-            return probs_sorted;
-        }
+        // for (auto offset : all_offsets) {
+        //     std::size_t ind_probs = 0;
+        //     for (auto index : all_indices) {
+        //         probabilities[ind_probs] += std::norm(arr_data[index +
+        //         offset]); ind_probs++;
+        //     }
+        // }
 
         return probabilities;
     }
