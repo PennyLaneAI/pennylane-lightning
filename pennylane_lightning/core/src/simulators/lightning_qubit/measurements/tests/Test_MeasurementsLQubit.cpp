@@ -521,6 +521,84 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                                        .margin(1e-7));
             }
         }
+        SECTION("5 qubits") {
+            constexpr std::size_t num_qubits = 5;
+            auto statevector_data =
+                std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+            const std::vector<std::size_t> wires{0, 1, 2, 3, 4};
+            statevector_data[0] = {1.0, 0.0};
+            StateVectorT statevector(statevector_data.data(),
+                                     statevector_data.size());
+            Measurements<StateVectorT> Measurer(statevector);
+            SECTION("1 target") {
+                std::size_t target = GENERATE(0, 1, 2, 3, 4);
+                statevector.applyOperation("Hadamard", {target}, false);
+                auto probs = Measurer.probs({target}, wires);
+                CHECK_THAT(probs,
+                           Catch::Approx(std::vector<PrecisionT>(2, 1.0 / 2))
+                               .margin(1e-7));
+            }
+            SECTION("2 targets") {
+                std::size_t target0 = GENERATE(0, 1, 2, 3, 4);
+                std::size_t target1 = GENERATE(0, 1, 2, 3, 4);
+                if (target0 != target1) {
+                    statevector.applyOperation("Hadamard", {target0}, false);
+                    auto probs = Measurer.probs({target0, target1}, wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.0, 0.5, 0.0})
+                                          .margin(1e-7));
+                    probs = Measurer.probs({target1, target0}, wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.5, 0.0, 0.0})
+                                          .margin(1e-7));
+                    statevector.applyOperation("Hadamard", {target1}, false);
+                    probs = Measurer.probs({target0, target1}, wires);
+                    CHECK_THAT(probs, Catch::Approx(
+                                          std::vector<PrecisionT>(4, 1.0 / 4.0))
+                                          .margin(1e-7));
+                    probs = Measurer.probs({target1, target0}, wires);
+                    CHECK_THAT(probs, Catch::Approx(
+                                          std::vector<PrecisionT>(4, 1.0 / 4.0))
+                                          .margin(1e-7));
+                    statevector.applyOperation("Hadamard", {target0}, false);
+                    probs = Measurer.probs({target0, target1}, wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.5, 0.0, 0.0})
+                                          .margin(1e-7));
+                    probs = Measurer.probs({target1, target0}, wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.0, 0.5, 0.0})
+                                          .margin(1e-7));
+                }
+            }
+            SECTION("Many targets Hadamard(n)") {
+                const std::size_t target = GENERATE(0, 1, 2, 3, 4);
+                statevector.applyOperation("Hadamard", {target}, false);
+                std::vector<std::size_t> targets(num_qubits);
+                std::iota(targets.begin(), targets.end(), 0);
+                if (target != 4) {
+                    std::swap(targets[target], targets[4]);
+                }
+                auto probs = Measurer.probs(targets, wires);
+                std::vector<PrecisionT> ref(1UL << num_qubits, 0.0);
+                ref[0] = 0.5;
+                ref[1] = 0.5;
+                CHECK_THAT(probs, Catch::Approx(ref).margin(1e-7));
+            }
+            SECTION("Many targets Hadamard(all)") {
+                for (std::size_t t = 0; t < num_qubits; t++) {
+                    statevector.applyOperation("Hadamard", {t}, false);
+                }
+                const std::size_t ntarget = GENERATE(1, 2, 3, 4, 5);
+                std::vector<std::size_t> targets(ntarget);
+                std::iota(targets.begin(), targets.end(), 0);
+                auto probs = Measurer.probs(targets, wires);
+                CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>(
+                                                    (1UL << ntarget),
+                                                    1.0 / (1UL << ntarget)))
+                                      .margin(1e-7));
+            }
+        }
     }
 }
 

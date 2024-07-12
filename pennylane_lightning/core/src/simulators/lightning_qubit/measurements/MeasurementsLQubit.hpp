@@ -101,7 +101,6 @@ class Measurements final
     probs(const std::vector<std::size_t> &wires,
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
-        constexpr std::size_t one{1};
         const std::size_t n_wires = wires.size();
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         bool is_all_wires = n_wires == num_qubits;
@@ -116,28 +115,25 @@ class Measurements final
         }
 
         const ComplexT *arr_data = this->_statevector.getData();
-        std::vector<std::size_t> rev_wires(n_wires);
-        for (std::size_t k = 0; k < n_wires; k++) {
-            rev_wires[n_wires - 1 - k] = (num_qubits - 1) - wires[k];
-        }
-        const std::vector<std::size_t> parity =
-            Pennylane::Util::revWireParity(rev_wires);
+
+        // Templated 1-4 qubit cases
+        PROBS_SPECIAL_CASE(1);
+        PROBS_SPECIAL_CASE(2);
+        PROBS_SPECIAL_CASE(3);
+        PROBS_SPECIAL_CASE(4);
+
+        const std::vector<std::size_t> all_indices =
+            Gates::generateBitPatterns(wires, num_qubits);
+        const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
+            Gates::getIndicesAfterExclusion(wires, num_qubits), num_qubits);
         const std::size_t n_probs = PUtil::exp2(n_wires);
         std::vector<PrecisionT> probabilities(n_probs, 0);
-        for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
-            std::size_t idx = (k & parity[0]);
-            for (std::size_t i = 1; i < n_wires + 1; i++) {
-                idx |= ((k << i) & parity[i]);
+        std::size_t ind_probs = 0;
+        for (auto index : all_indices) {
+            for (auto offset : all_offsets) {
+                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
             }
-            probabilities[0] += std::norm(arr_data[idx]);
-            const std::size_t i0 = idx;
-            for (std::size_t inner_idx = 1; inner_idx < n_probs; inner_idx++) {
-                idx = i0;
-                for (std::size_t i = 0; i < n_wires; i++) {
-                    idx |= ((inner_idx & (one << i)) >> i) << rev_wires[i];
-                }
-                probabilities[inner_idx] += std::norm(arr_data[idx]);
-            }
+            ind_probs++;
         }
         return probabilities;
     }

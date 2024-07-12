@@ -12,19 +12,10 @@ namespace PUtil = Pennylane::Util;
 
 #define PROBS_SPECIAL_CASE(n)                                                  \
     if (n_wires == n) {                                                        \
-        return Pennylane::LightningQubit::Measures::probs_core<PrecisionT, n>( \
+        return Pennylane::LightningQubit::Measures::probs_bitshift<PrecisionT, \
+                                                                   n>(         \
             arr_data, num_qubits, wires);                                      \
     }
-
-#define PROBS_SPECIAL_CASES                                                    \
-    PROBS_SPECIAL_CASE(1)                                                      \
-    PROBS_SPECIAL_CASE(2)                                                      \
-    PROBS_SPECIAL_CASE(3)                                                      \
-    PROBS_SPECIAL_CASE(4)                                                      \
-    PROBS_SPECIAL_CASE(5)                                                      \
-    PROBS_SPECIAL_CASE(6)                                                      \
-    PROBS_SPECIAL_CASE(7)                                                      \
-    PROBS_SPECIAL_CASE(8)
 
 #define PROBS_CORE_DECLARE_NW(n)                                               \
     std::size_t rev_wires_##n;                                                 \
@@ -280,10 +271,42 @@ namespace PUtil = Pennylane::Util;
 
 namespace Pennylane::LightningQubit::Measures {
 
+template <class PrecisionT>
+auto probs_bitshift_generic(const std::complex<PrecisionT> *arr,
+                            const std::size_t num_qubits,
+                            const std::vector<std::size_t> &wires) {
+    constexpr std::size_t one{1};
+    const std::size_t n_wires = wires.size();
+    std::vector<std::size_t> rev_wires(n_wires);
+    for (std::size_t k = 0; k < n_wires; k++) {
+        rev_wires[n_wires - 1 - k] = (num_qubits - 1) - wires[k];
+    }
+    const std::vector<std::size_t> parity =
+        Pennylane::Util::revWireParity(rev_wires);
+    const std::size_t n_probs = PUtil::exp2(n_wires);
+    std::vector<PrecisionT> probabilities(n_probs, 0);
+    for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
+        std::size_t idx = (k & parity[0]);
+        for (std::size_t i = 1; i < n_wires + 1; i++) {
+            idx |= ((k << i) & parity[i]);
+        }
+        probabilities[0] += std::norm(arr[idx]);
+        const std::size_t i0 = idx;
+        for (std::size_t inner_idx = 1; inner_idx < n_probs; inner_idx++) {
+            idx = i0;
+            for (std::size_t i = 0; i < n_wires; i++) {
+                idx |= ((inner_idx & (one << i)) >> i) << rev_wires[i];
+            }
+            probabilities[inner_idx] += std::norm(arr[idx]);
+        }
+    }
+    return probabilities;
+}
+
 template <class PrecisionT, std::size_t n_wires>
-auto probs_core(const std::complex<PrecisionT> *arr,
-                const std::size_t num_qubits,
-                const std::vector<std::size_t> &wires)
+auto probs_bitshift(const std::complex<PrecisionT> *arr,
+                    const std::size_t num_qubits,
+                    const std::vector<std::size_t> &wires)
     -> std::vector<PrecisionT> {
     constexpr std::size_t one{1};
     std::vector<std::size_t> rev_wires(n_wires);
@@ -300,8 +323,6 @@ auto probs_core(const std::complex<PrecisionT> *arr,
     PROBS_CORE_DECLARE_NW(5)
     PROBS_CORE_DECLARE_NW(6)
     PROBS_CORE_DECLARE_NW(7)
-    PROBS_CORE_DECLARE_NW(8)
-    PROBS_CORE_DECLARE_NW(9)
     const std::size_t parity_0 = parity[0];
     PROBS_CORE_DECLARE_P(1)
     PROBS_CORE_DECLARE_P(2)
@@ -311,8 +332,6 @@ auto probs_core(const std::complex<PrecisionT> *arr,
     PROBS_CORE_DECLARE_P(6)
     PROBS_CORE_DECLARE_P(7)
     PROBS_CORE_DECLARE_P(8)
-    PROBS_CORE_DECLARE_P(9)
-    PROBS_CORE_DECLARE_P(10)
     std::vector<PrecisionT> probs(PUtil::exp2(n_wires), 0);
     for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
         std::size_t i0;
