@@ -30,7 +30,7 @@ target_include_directories(lightning_utils INTERFACE  ${Python_INCLUDE_DIRS})
 target_link_libraries(lightning_utils INTERFACE pybind11::module
                                               pybind11::pybind11
                                               pybind11::embed
-                                              ${Python_LIBRARY})
+                                              ${Python_LIBRARIES})
 
 #message(STATUS "Python Include Dir: ${Python::Python}")
 
