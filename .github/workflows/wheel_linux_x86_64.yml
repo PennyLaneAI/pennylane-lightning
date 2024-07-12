@@ -170,6 +170,7 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
             LD_LIBRARY_PATH="/opt/python/cp39-cp39/lib:$LD_LIBRARY_PATH" \
             Python_LIBRARY=$(python -c 'import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)') \
+            CMAKE_ARGS="-DPython_LIBRARY=$(python -c 'import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)')"
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
