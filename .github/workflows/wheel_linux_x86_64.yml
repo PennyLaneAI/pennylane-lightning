@@ -136,8 +136,8 @@ jobs:
       
       - name: Verify Python installation
         run: |
-          python --version
-          which python
+          python3 --version
+          which python3
           ls -l /usr/lib/python*  # Check for python.so or relevant directories
 
       - name: Install cibuildwheel
