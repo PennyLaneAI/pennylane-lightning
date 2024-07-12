@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Update dynamic linking to LAPACK/OpenBlas shared objects in `scipy.libs` with `pybind11` APIs for C++ layer.
+  [(#701)](https://github.com/PennyLaneAI/pennylane-lightning/pull/701)
+
 * Remove temporary steps from the CI, such as downgrading Scipy to <1.14 and installing Kokkos v4.2 for `lightning-version == 'stable'`.
   [(#792)](https://github.com/PennyLaneAI/pennylane-lightning/pull/792)
 

@@ -577,7 +577,6 @@ TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifdef PL_USE_LAPACK
 template <typename TypeList> void testHermitianObsExpvalShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -680,7 +679,6 @@ TEST_CASE("Expval Shot - HermitianObs ", "[MeasurementsBase][Observables]") {
         testHermitianObsExpvalShot<TestStateVectorBackends>();
     }
 }
-#endif
 
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -846,7 +844,6 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
             std::size_t num_shots = 80000;
@@ -867,7 +864,6 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
                                      expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         testTensorProdObsExpvalShot<typename TypeList::Next>();
     }
@@ -1018,7 +1014,6 @@ TEST_CASE("Var - HermitianObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifdef PL_USE_LAPACK
 template <typename TypeList> void testHermitianObsShotVar() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -1103,7 +1098,6 @@ TEST_CASE("Var - HermitianObs Shot", "[MeasurementsBase][Observables]") {
         testHermitianObsShotVar<TestStateVectorBackends>();
     }
 }
-#endif
 
 template <typename TypeList> void testTensorProdObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -1154,7 +1148,6 @@ template <typename TypeList> void testTensorProdObsVarShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("With Hermitian and NameObs"
                         << StateVectorToName<StateVectorT>::name) {
             using MatrixT = std::vector<ComplexT>;
@@ -1204,7 +1197,6 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
                                      expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         DYNAMIC_SECTION(" full wires with apply operations"
                         << StateVectorToName<StateVectorT>::name) {
@@ -1562,7 +1554,6 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliY", std::vector<std::size_t>{0});
@@ -1583,7 +1574,6 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         testHamiltonianObsExpvalShot<typename TypeList::Next>();
     }
@@ -1643,7 +1633,6 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
                                   expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             using ComplexT = typename StateVectorT::ComplexT;
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -1672,7 +1661,6 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         testHamiltonianObsVarShot<typename TypeList::Next>();
     }
