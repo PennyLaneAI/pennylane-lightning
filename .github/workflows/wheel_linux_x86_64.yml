@@ -164,7 +164,7 @@ jobs:
             source /opt/rh/gcc-toolset-13/enable -y
             LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:/usr/bin:$PATH"
-            ls -l /opt/python/cp39-cp39/lib
+            python -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
