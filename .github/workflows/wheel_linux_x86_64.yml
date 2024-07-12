@@ -161,7 +161,7 @@ jobs:
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
             LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
