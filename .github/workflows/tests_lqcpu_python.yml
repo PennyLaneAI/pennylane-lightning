@@ -11,14 +11,6 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
-    paths-ignore:
-      - .github/**
-      - '!.github/workflows/tests_lqcpu_python.yml'
-      - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_gpu/**
-      - pennylane_lightning/lightning_gpu/**
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
-      - pennylane_lightning/lightning_kokkos/**
   push:
     branches:
       - master
@@ -32,7 +24,7 @@ env:
   OMP_PROC_BIND: "false"
 
 concurrency:
-  group: tests_lqcpu_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lqcpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -69,7 +61,7 @@ jobs:
         run: |
           cd main
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
@@ -172,7 +164,7 @@ jobs:
         run: |
           cd pennylane
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
@@ -198,8 +190,6 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          # TODO: Remove installing pytest-xdist with release v0.36.0
-          python -m pip install pytest-xdist
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" \

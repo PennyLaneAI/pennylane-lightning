@@ -10,13 +10,13 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
-  release:
   pull_request:
     paths:
       - .github/workflows/tests_lgpu_cpp.yml
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
       - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
   push:
     branches:
       - master
@@ -29,7 +29,7 @@ env:
   TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_lgpu_cpp-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpu_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -107,6 +107,11 @@ jobs:
 
           # Adding venv name as an output for subsequent steps to reference if needed
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          
+          # Adding venv site-packages to output for subsequent step to referecen if needed
+          echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
 
       - name: Display Python-Path
         id: python_path
@@ -115,14 +120,14 @@ jobs:
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
           
-          pip_path=$(which python)
+          pip_path=$(which pip)
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }}
-          sudo apt-get -y -q install liblapack-dev
+          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} scipy
+          sudo apt-get -y -q install liblapack-dev black
 
       - name: Build and run unit tests
         run: |

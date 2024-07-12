@@ -1,4 +1,4 @@
-// Copyright 2018-2024 Xanadu Quantum Technologies Inc.
+// Copyright 2024 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,13 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/**
- * @file
- * Config file for the path to scipy.libs at compile time.
- */
+#include "ObservablesTNCudaOperator.hpp"
+#include "MPSTNCuda.hpp"
 
+using namespace Pennylane::LightningTensor::TNCuda;
 
-#ifndef CONFIG_H
-#define CONFIG_H
-#define SCIPY_LIBS_PATH "${SCIPYLIBS}"
-#endif
+template class Observables::ObservableTNCudaOperator<MPSTNCuda<float>>;
+template class Observables::ObservableTNCudaOperator<MPSTNCuda<double>>;

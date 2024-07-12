@@ -21,7 +21,7 @@ env:
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
 
 concurrency:
-  group: tests_without_binary-${{ github.ref }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_without_binary-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -37,7 +37,7 @@ jobs:
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     strategy:
       matrix:
-        pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos", "lightning_gpu", "lightning_tensor"]
 
     name: Python Tests without Binary (${{ matrix.pl_backend }})
 
@@ -53,7 +53,7 @@ jobs:
         run: |
           cd main
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
@@ -87,7 +87,7 @@ jobs:
         run: |
           cd pennylane
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Install Stable PennyLane
@@ -97,12 +97,14 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning package
-        if: ${{ matrix.pl_backend == 'lightning_kokkos' || matrix.pl_backend == 'lightning_gpu'}}
+        if: ${{ contains(fromJson('["lightning_kokkos", "lightning_gpu", "lightning_tensor"]'), matrix.pl_backend) }}
         run: |
           cd main
           SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
 
       - name: Install backend device
+        # FIXME: Remove this condition with v0.37.0 release
+        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
@@ -110,13 +112,17 @@ jobs:
           cd main
           python -m pip install . -vv
 
-      - name: Run PennyLane-Lightning unit tests
+      - name: Run PennyLane-Lightning unit tests for all backends
+        # FIXME: Remove this condition with v0.37.0 release
+        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
 
       - name: Upload coverage to Codecov
+        # FIXME: Remove this condition with v0.37.0 release
+        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         uses: codecov/codecov-action@v4
         with:
           files: ./main/coverage.xml

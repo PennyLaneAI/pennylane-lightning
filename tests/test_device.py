@@ -14,6 +14,9 @@
 """
 Unit tests for Lightning devices creation.
 """
+import pickle as pkl
+import sys
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -63,3 +66,44 @@ def test_create_device_with_unsupported_mpi_buf_size():
             dev._mpi_init_helper(1)
     except:
         pass
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.gpu",
+    reason="Check if the method is pickleable throught the cpp layer",
+)
+def test_devpool_is_pickleable():
+    dev = qml.device(device_name, wires=2)
+    try:
+        pickled_devpool = pkl.dumps(dev._dp)
+        un_pickled_devpool = pkl.loads(pickled_devpool)
+
+        from pennylane_lightning.lightning_gpu_ops import DevPool
+
+        d = DevPool()
+
+        assert isinstance(un_pickled_devpool, DevPool)
+        assert un_pickled_devpool.getTotalDevices() == d.getTotalDevices()
+
+    except TypeError:
+        pytest.fail("DevPool should be Pickleable")
+
+
+@pytest.mark.skipif(
+    (device_name == "lightning.kokkos" and sys.platform == "win32"),
+    reason="lightning.kokkos doesn't support 0 wires on Windows.",
+)
+@pytest.mark.skipif(
+    device_name in ["lightning.gpu", "lightning.tensor"],
+    reason=device_name + " doesn't support 0 wires.",
+)
+def test_device_init_zero_qubit():
+    """Test the device initialization with zero-qubit."""
+
+    dev = qml.device(device_name, wires=0)
+
+    @qml.qnode(dev)
+    def circuit():
+        return qml.state()
+
+    assert np.allclose(circuit(), np.array([1.0]))

@@ -10,7 +10,6 @@ on:
         type: string
         required: true
         description: The version of PennyLane to use. Valid values are either 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
-  release:
   push:
     branches:
       - main
@@ -30,7 +29,7 @@ env:
   CI_CUDA_ARCH: 86
 
 concurrency:
-  group: tests_lgpumpi_python-${{ github.ref }}-${{ github.event }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_lgpumpi_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
@@ -61,7 +60,7 @@ jobs:
         if: inputs.lightning-version == 'release'
         run: |
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
@@ -90,6 +89,8 @@ jobs:
           # Adding venv name as an output for subsequent steps to reference if needed
           source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
+          echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
+          echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
 
       - name: Display Python-Path
@@ -107,6 +108,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           python -m pip install -r requirements-dev.txt
+
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
           PL_BACKEND=lightning_qubit python -m pip install . -vv
 
@@ -122,7 +124,7 @@ jobs:
         run: |
           cd pennylane
           git fetch --all
-          git checkout $(git branch -a --list "origin/v*rc*" | tail -1)
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Build and install package

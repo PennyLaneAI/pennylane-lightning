@@ -27,6 +27,12 @@ from conftest import device_name
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.tensor":
+    pytest.skip(
+        "lightning.tensor doesn't support qml.state() used across this module.",
+        allow_module_level=True,
+    )
+
 
 @pytest.fixture
 def op(op_name):

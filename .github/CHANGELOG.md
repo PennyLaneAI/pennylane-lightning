@@ -1,13 +1,75 @@
-# Release 0.37.0-dev
+# Release 0.38.0-dev
 
 ### New features since last release
 
-* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+### Breaking changes
+
+* Remove temporary steps from the CI, such as downgrading Scipy to <1.14 and installing Kokkos v4.2 for `lightning-version == 'stable'`.
+  [(#792)](https://github.com/PennyLaneAI/pennylane-lightning/pull/792)
+
+* Do not run GPU tests and Docker workflows on release.
+  [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
+
+### Improvements
+
+* Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
+  [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
+
+* Add a Catalyst-specific wrapping class for Lightning Kokkos.
+  [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
+  
+* `SX` and `C(SX)` gates are natively supported with `lightning.qubit`.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+
+### Documentation
+
+### Bug fixes
+
+* Set `PL_BACKEND` for the entire `build-wheel-lightning-gpu` Docker-build stage to properly build the Lightning-GPU wheel.
+  [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
+
+* Fix conditions for skipping build & push steps in the Docker build workflows.
+  [(#790)](https://github.com/PennyLaneAI/pennylane-lightning/pull/790)
+
+* Downgrade Scipy on Lightning stable version tests.
+  [(#783)](https://github.com/PennyLaneAI/pennylane-lightning/pull/783)
+
+* Fix checkout command in test workflows for rc branches.
+  [(#777)](https://github.com/PennyLaneAI/pennylane-lightning/pull/777)
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux
+
+---
+
+# Release 0.37.0
+
+### New features since last release
+
+* Implement Python interface to the `lightning.tensor` device.
+  [(#748)](https://github.com/PennyLaneAI/pennylane-lightning/pull/748)
+
+* Add `inverse` support for gate operations in `lightning.tensor` in the C++ layer.
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753)
+
+* Add `observable` and `expval` support to the `cutensornet`-backed `lightning.tensor` C++ layer.
+  [(#728)](https://github.com/PennyLaneAI/pennylane-lightning/pull/728)
+
+* Add gate support to `cutensornet`-backed `lightning.tensor` C++ layer.
+  [(#718)](https://github.com/PennyLaneAI/pennylane-lightning/pull/718)
+
+* Add `cutensornet`-backed `MPS` C++ layer to `lightning.tensor`.
   [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
+
+* Add support for `C(BlockEncode)` to Lightning devices.
+  [(#743)](https://github.com/PennyLaneAI/pennylane-lightning/pull/743)
 
 ### Breaking changes
 
-* Removed the `QuimbMPS` class and the corresponding interface/backend from `lightning.tensor`.
+* Removed the `QuimbMPS` class and the corresponding backend from `lightning.tensor`.
   [(#737)](https://github.com/PennyLaneAI/pennylane-lightning/pull/737)
 
 * Changed the name of `default.tensor` to `lightning.tensor` with the `quimb` backend.
@@ -20,6 +82,30 @@
   [(#720)](https://github.com/PennyLaneAI/pennylane-lightning/pull/720)
 
 ### Improvements
+
+* Release candidate branches automatically use the new large GitHub runner pool.
+  [(#769)](https://github.com/PennyLaneAI/pennylane-lightning/pull/769)
+
+* Lightning-Kokkos dev wheels for MacOS (x86_64, ARM64) and Linux (aarch64) are uploaded to TestPyPI upon merging a pull request.
+  [(#765)](https://github.com/PennyLaneAI/pennylane-lightning/pull/765)
+
+* Lightning-Kokkos Linux (x86_64) dev wheels are pushed to [Test PyPI](https://test.pypi.org/project/PennyLane-Lightning-Kokkos/) upon merging a pull request.
+  [(#763)](https://github.com/PennyLaneAI/pennylane-lightning/pull/763)
+
+* Change the type of tensor network objects passed to `ObservablesTNCuda` and `MeasurementsTNCuda` classes from `StateTensorT` to `TensorNetT`.
+  [(#759)](https://github.com/PennyLaneAI/pennylane-lightning/pull/759)
+
+* Silence `NDPermuter` linting warnings.
+  [(#750)](https://github.com/PennyLaneAI/pennylane-lightning/pull/750)
+
+* Rationalize MCM tests, removing most end-to-end tests from the native MCM test file, but keeping one that validates multiple mid-circuit measurements with any allowed return.
+  [(#754)](https://github.com/PennyLaneAI/pennylane/pull/754)
+
+* Rename `lightning.tensor` C++ libraries.
+  [(#755)](https://github.com/PennyLaneAI/pennylane-lightning/pull/755)
+
+* Set `state_tensor` as `const` for the `MeasurementTNCuda` class.
+  [(#753)](https://github.com/PennyLaneAI/pennylane-lightning/pull/753)
 
 * Updated Kokkos version and support to 4.3.01.
   [(#725)](https://github.com/PennyLaneAI/pennylane-lightning/pull/725)
@@ -44,18 +130,58 @@
 
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
+  
+* `lightning.qubit` and `lightning.kokkos` adhere to user-specified mid-circuit measurement configuration options.
+  [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
 
-* `SX` and `C(SX)` gates are natively supported with `lightning.qubit`.
-  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+* Patch the C++ `Measurements.probs(wires)` method in Lightning-Qubit and Lightning-Kokkos to `Measurements.probs()` when called with all wires.
+  This will trigger a more optimized implementation for calculating the probabilities of the entire system.
+  [(#744)](https://github.com/PennyLaneAI/pennylane-lightning/pull/744)
+
+* Remove the daily schedule from the "Compat Check w/PL - release/release" GitHub action.
+  [(#746)](https://github.com/PennyLaneAI/pennylane-lightning/pull/746)
+
+* Remove the required `scipy` config file for LightningQubit. The support is now maintained by passing `SCIPY_LIBS_PATH` to the compiler.
+  [(#775)](https://github.com/PennyLaneAI/pennylane-lightning/pull/775)
 
 ### Documentation
 
+* Add installation instructions and documentation for `lightning.tensor`.
+  [(#756)](https://github.com/PennyLaneAI/pennylane-lightning/pull/756)
+
 ### Bug fixes
 
-* The `.github/workflows/tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
+* Don't route `probs(wires=[])` to `probs(all_wires)` in Lightning-Kokkos.
+  [(#762)](https://github.com/PennyLaneAI/pennylane-lightning/pull/762)
+
+* `ControlledQubitUnitary` is present in the Python device but not the TOML files. It is added to the decomposition gates since it can be implemented in its alternate form of `C(QubitUnitary)`.
+  [(#767)](https://github.com/PennyLaneAI/pennylane-lightning/pull/767)
+
+* Update the Lightning TOML files to indicate that non-commuting observables are supported.
+  [(#764)](https://github.com/PennyLaneAI/pennylane-lightning/pull/764)
+
+* Fix regex matching issue with auto on-boarding of release candidate branch to using the large runner queue.
+  [(#774)](https://github.com/PennyLaneAI/pennylane-lightning/pull/774)
+
+* Fix random CI failures for `lightning.tensor` Python unit tests and ignore `lightning_tensor` paths.
+  [(#761)](https://github.com/PennyLaneAI/pennylane-lightning/pull/761)
+
+* `lightning.qubit` and `lightning.kokkos` use `qml.ops.Conditional.base` instead of `qml.ops.Conditional.then_op`.
+  [(#752)](https://github.com/PennyLaneAI/pennylane-lightning/pull/752)
+
+* The preprocessing step in `lightning.qubit` now uses interface information to properly support the hardware-like postselection for mid-circuit measurements.
+  [(#760)](https://github.com/PennyLaneAI/pennylane-lightning/pull/760)
+
+* Fix AVX streaming operation support with newer GCC.
+  [(#729)](https://github.com/PennyLaneAI/pennylane-lightning/pull/729)
+
+* Revert changes calling the templated `IMAG`, `ONE`, `ZERO` functions in Kokkos kernels since they are incompatible with device execution.
+  [(#733)](https://github.com/PennyLaneAI/pennylane-lightning/pull/733)
+
+* The `tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
 
-* Fix PennyLane LightningKokkos and LightningQubit tests for stable/stable configuration.
+* Fix PennyLane Lightning-Kokkos and LightningQubit tests for stable/stable configuration.
   [(#734)](https://github.com/PennyLaneAI/pennylane-lightning/pull/734)
 
 * Remove the Autoray dependency from requirement files.
@@ -64,11 +190,23 @@
 * Fix the `cuda-runtime-12-0` dependency issue on RHEL8.
   [(#739)](https://github.com/PennyLaneAI/pennylane-lightning/pull/739)
 
+* Fix the memory segmentation fault when initializing zero-wire Lightning-Kokkos.
+  [(#757)](https://github.com/PennyLaneAI/pennylane-lightning/pull/757)
+
+* Remove `pennylane.ops.op_math.controlled_decompositions.ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#757)](https://github.com/PennyLaneAI/pennylane-lightning/pull/757)
+
+* Add support for Scipy v1.14.
+  [(#776)](https://github.com/PennyLaneAI/pennylane-lightning/pull/776)
+
+* Add pickle support for the `DevPool` object in `lightning.gpu`.
+  [(#772)](https://github.com/PennyLaneAI/pennylane-lightning/pull/772)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Luis Alfredo Nuñez Meneses, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Lillian Frederiksen, Pietropaolo Frisoni, David Ittah, Vincent Michaud-Rioux, Lee James O'Riordan, Mudit Pandey, Shuli Shu, Jay Soni
 
 ---
 
@@ -76,7 +214,7 @@ Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Luis Alfre
 
 ### New features since last release
 
-* Add `cutensornet` backed `MPS` C++ layer to `lightning.tensor`.
+* Add `cutensornet`-backed `MPS` C++ layer to `lightning.tensor`.
   [(#704)](https://github.com/PennyLaneAI/pennylane-lightning/pull/704)
 
 * Add Python class for the `lightning.tensor` device which uses the new device API and the interface for `quimb` based on the MPS method.
@@ -100,7 +238,7 @@ Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Luis Alfre
 * Add `collapse` and `normalize` methods to the `StateVectorLQubit` classes, enabling "branching" of the wavefunction. Add methods to create and seed an RNG in the `Measurements` modules.
   [(#645)](https://github.com/PennyLaneAI/pennylane-lightning/pull/645)
 
-* Add two new python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
+* Add two new Python classes (LightningStateVector and LightningMeasurements) to support `lightning.qubit2`.
   [(#613)](https://github.com/PennyLaneAI/pennylane-lightning/pull/613)
 
 * Add analytic-mode `qml.probs` and `qml.var` support in `lightning.qubit2`.
@@ -223,11 +361,18 @@ Ali Asadi, Amintor Dusko, Pietropaolo Frisoni, Vincent Michaud-Rioux, Luis Alfre
 * Refactor of dev prerelease auto-update-version workflow.
   [(#685)](https://github.com/PennyLaneAI/pennylane-lightning/pull/685)
 
-* Remove gates unsupported by catalyst from toml file.
+* Remove gates unsupported by catalyst from TOML file.
   [(#698)](https://github.com/PennyLaneAI/pennylane-lightning/pull/698)
 
 * Increase tolerance for a flaky test.
   [(#703)](https://github.com/PennyLaneAI/pennylane-lightning/pull/703)
+
+* Remove `ControlledQubitUnitary` in favour of `C(QubitUnitary)` from the list of supported operations and the device TOML file. The `stopping_condition` method guarantees the consistency of decompositions.
+  [(#758)](https://github.com/PennyLaneAI/pennylane-lightning/pull/758)
+
+* Raise a clear error message with initialization of `lightning.kokkos` with zero-qubit on Windows.
+  [(#758)](https://github.com/PennyLaneAI/pennylane-lightning/pull/758)
+
 
 ### Contributors
 
@@ -504,7 +649,7 @@ Lee J. O'Riordan
 * Add `SparseHamiltonian` support for Lightning-Kokkos.
   [(#527)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/527)
 
-* Integrate python/pybind layer of distributed Lightning-GPU into the Lightning monorepo with python unit tests.
+* Integrate python/pybind layer of distributed Lightning-GPU into the Lightning monorepo with Python unit tests.
   [(#518)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/518)
 
 * Integrate the distributed C++ backend of Lightning-GPU into the Lightning monorepo.
@@ -893,7 +1038,7 @@ Amintor Dusko, Lee J. O'Riordan
 
 ### New features since last release
 
-* Enable building of python 3.11 wheels and upgrade python on CI/CD workflows to 3.8.
+* Enable building of Python 3.11 wheels and upgrade Python on CI/CD workflows to 3.8.
   [(#381)](https://github.com/PennyLaneAI/pennylane-lightning/pull/381)
 
 ### Breaking changes

@@ -15,35 +15,31 @@
 Unit tests for the LightningTensor class.
 """
 
-
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice  # tested device
+from conftest import LightningDevice, device_name  # tested device
 from pennylane.wires import Wires
 
-from pennylane_lightning.lightning_tensor import LightningTensor
+if device_name != "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
+else:
+    from pennylane_lightning.lightning_tensor import LightningTensor
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
-
-if LightningDevice._CPP_BINARY_AVAILABLE:
+if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
 
-@pytest.mark.parametrize("num_wires", [None, 4])
+@pytest.mark.parametrize("num_wires", [3, 4, 5])
 @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
 def test_device_name_and_init(num_wires, c_dtype):
     """Test the class initialization and returned properties."""
     wires = Wires(range(num_wires)) if num_wires else None
-    dev = LightningTensor(wires=wires, c_dtype=c_dtype)
+    dev = LightningTensor(wires=wires, max_bond_dim=10, c_dtype=c_dtype)
     assert dev.name == "lightning.tensor"
     assert dev.c_dtype == c_dtype
     assert dev.wires == wires
-    if num_wires is None:
-        assert dev.num_wires == 0
-    else:
-        assert dev.num_wires == num_wires
+    assert dev.num_wires == num_wires
 
 
 def test_device_available_as_plugin():
@@ -56,7 +52,7 @@ def test_device_available_as_plugin():
 def test_invalid_backend(backend):
     """Test an invalid backend."""
     with pytest.raises(ValueError, match=f"Unsupported backend: {backend}"):
-        LightningTensor(backend=backend)
+        LightningTensor(wires=1, backend=backend)
 
 
 @pytest.mark.parametrize("method", ["fake_method"])
@@ -66,27 +62,33 @@ def test_invalid_method(method):
         LightningTensor(method=method)
 
 
-def test_invalid_keyword_arg():
-    """Test an invalid keyword argument."""
-    with pytest.raises(TypeError):
-        LightningTensor(fake_arg=None)
-
-
-def test_invalid_shots():
-    """Test that an error is raised if finite number of shots are requestd."""
+def test_invalid_bonddims():
+    """Test that an error is raised if bond dimensions are less than 1."""
     with pytest.raises(ValueError):
-        LightningTensor(shots=5)
+        LightningTensor(wires=5, max_bond_dim=0)
+
+
+def test_invalid_wires_none():
+    """Test that an error is raised if wires are none."""
+    with pytest.raises(ValueError):
+        LightningTensor(wires=None)
+
+
+def test_invalid_cutoff_mode():
+    """Test that an error is raised if an invalid cutoff mode is provided."""
+    with pytest.raises(ValueError):
+        LightningTensor(wires=2, cutoff_mode="invalid_mode")
 
 
 def test_support_derivatives():
     """Test that the device does not support derivatives yet."""
-    dev = LightningTensor()
+    dev = LightningTensor(wires=2)
     assert not dev.supports_derivatives()
 
 
 def test_compute_derivatives():
     """Test that an error is raised if the `compute_derivatives` method is called."""
-    dev = LightningTensor()
+    dev = LightningTensor(wires=2)
     with pytest.raises(
         NotImplementedError,
         match="The computation of derivatives has yet to be implemented for the lightning.tensor device.",
@@ -96,7 +98,7 @@ def test_compute_derivatives():
 
 def test_execute_and_compute_derivatives():
     """Test that an error is raised if `execute_and_compute_derivative` method is called."""
-    dev = LightningTensor()
+    dev = LightningTensor(wires=2)
     with pytest.raises(
         NotImplementedError,
         match="The computation of derivatives has yet to be implemented for the lightning.tensor device.",
@@ -106,13 +108,13 @@ def test_execute_and_compute_derivatives():
 
 def test_supports_vjp():
     """Test that the device does not support VJP yet."""
-    dev = LightningTensor()
+    dev = LightningTensor(wires=2)
     assert not dev.supports_vjp()
 
 
 def test_compute_vjp():
     """Test that an error is raised if `compute_vjp` method is called."""
-    dev = LightningTensor()
+    dev = LightningTensor(wires=2)
     with pytest.raises(
         NotImplementedError,
         match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",
@@ -122,7 +124,7 @@ def test_compute_vjp():
 
 def test_execute_and_compute_vjp():
     """Test that an error is raised if `execute_and_compute_vjp` method is called."""
-    dev = LightningTensor()
+    dev = LightningTensor(wires=2)
     with pytest.raises(
         NotImplementedError,
         match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",

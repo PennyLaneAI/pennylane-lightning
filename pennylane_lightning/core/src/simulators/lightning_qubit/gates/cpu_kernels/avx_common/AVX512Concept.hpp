@@ -47,6 +47,17 @@ template <typename T> struct AVX512Concept {
     PL_FORCE_INLINE
     static auto load(std::complex<PrecisionT> *p) -> IntrinsicType {
         if constexpr (std::is_same_v<PrecisionT, float>) {
+            return _mm512_load_ps(reinterpret_cast<PrecisionT *>(p));
+        } else if (std::is_same_v<PrecisionT, double>) {
+            return _mm512_load_pd(reinterpret_cast<PrecisionT *>(p));
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+    PL_FORCE_INLINE
+    static auto load(PrecisionT *p) -> IntrinsicType {
+        if constexpr (std::is_same_v<PrecisionT, float>) {
             return _mm512_load_ps(p);
         } else if (std::is_same_v<PrecisionT, double>) {
             return _mm512_load_pd(p);
@@ -59,9 +70,9 @@ template <typename T> struct AVX512Concept {
     PL_FORCE_INLINE
     static auto loadu(std::complex<PrecisionT> *p) -> IntrinsicType {
         if constexpr (std::is_same_v<PrecisionT, float>) {
-            return _mm512_loadu_ps(p);
+            return _mm512_loadu_ps(reinterpret_cast<PrecisionT *>(p));
         } else if (std::is_same_v<PrecisionT, double>) {
-            return _mm512_loadu_pd(p);
+            return _mm512_loadu_pd(reinterpret_cast<PrecisionT *>(p));
         } else {
             static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>);
@@ -83,6 +94,18 @@ template <typename T> struct AVX512Concept {
     PL_FORCE_INLINE
     static void store_(std::complex<PrecisionT> *p, IntrinsicType value) {
         if constexpr (std::is_same_v<PrecisionT, float>) {
+            _mm512_store_ps(reinterpret_cast<PrecisionT *>(p), value);
+        } else if (std::is_same_v<PrecisionT, double>) {
+            _mm512_store_pd(reinterpret_cast<PrecisionT *>(p), value);
+        } else {
+            static_assert(std::is_same_v<PrecisionT, float> ||
+                          std::is_same_v<PrecisionT, double>);
+        }
+    }
+
+    PL_FORCE_INLINE
+    static void store_(PrecisionT *p, IntrinsicType value) {
+        if constexpr (std::is_same_v<PrecisionT, float>) {
             _mm512_store_ps(p, value);
         } else if (std::is_same_v<PrecisionT, double>) {
             _mm512_store_pd(p, value);
@@ -95,9 +118,9 @@ template <typename T> struct AVX512Concept {
     PL_FORCE_INLINE
     static void stream_(std::complex<PrecisionT> *p, IntrinsicType value) {
         if constexpr (std::is_same_v<PrecisionT, float>) {
-            _mm512_stream_ps(p, value);
+            _mm512_stream_ps(reinterpret_cast<PrecisionT *>(p), value);
         } else if (std::is_same_v<PrecisionT, double>) {
-            _mm512_stream_pd(p, value);
+            _mm512_stream_pd(reinterpret_cast<PrecisionT *>(p), value);
         } else {
             static_assert(std::is_same_v<PrecisionT, float> ||
                           std::is_same_v<PrecisionT, double>);
@@ -118,15 +141,19 @@ template <typename T> struct AVX512Concept {
 
     PL_FORCE_INLINE
     static void store(std::complex<PrecisionT> *p, IntrinsicType value) {
-        store(reinterpret_cast<PrecisionT *>(p), value);
+#ifdef PL_LQ_KERNEL_AVX_STREAMING
+        stream_(reinterpret_cast<PrecisionT *>(p), value);
+#else
+        store_(reinterpret_cast<PrecisionT *>(p), value);
+#endif
     }
 
     PL_FORCE_INLINE
     static void store(PrecisionT *p, IntrinsicType value) {
 #ifdef PL_LQ_KERNEL_AVX_STREAMING
-        store_(p, value);
-#else
         stream_(p, value);
+#else
+        store_(p, value);
 #endif
     }
 
