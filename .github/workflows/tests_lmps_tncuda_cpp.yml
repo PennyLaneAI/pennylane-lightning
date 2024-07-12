@@ -135,7 +135,7 @@ jobs:
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
+          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }} pybind11
       - name: Build and run unit tests
         run: |
           set -x

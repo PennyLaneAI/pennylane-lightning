@@ -118,7 +118,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja scipy
+          python -m pip install cmake build ninja scipy pybind11
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
