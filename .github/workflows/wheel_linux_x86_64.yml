@@ -141,7 +141,7 @@ jobs:
           ls -l /usr/lib/python*  # Check for python.so or relevant directories
 
       - name: Install cibuildwheel
-        run: python3.9 -m pip install cibuildwheel~=2.16.0
+        run: python3.11 -m pip install cibuildwheel~=2.16.0
 
       - name: Build wheels
         env:
@@ -160,6 +160,7 @@ jobs:
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
+            LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
@@ -178,12 +179,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.9 -m cibuildwheel --output-dir wheelhouse
+        run: python3.11 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.9 -m pip install twine
-          python3.9 -m twine check ./wheelhouse/*.whl
+          python3.11 -m pip install twine
+          python3.11 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
