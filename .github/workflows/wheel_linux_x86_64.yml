@@ -162,9 +162,11 @@ jobs:
             source /opt/rh/gcc-toolset-13/enable -y
             LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:/usr/bin:$PATH"
+            ls -l /opt/python/cp39-cp39/lib
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
+            LD_LIBRARY_PATH="/opt/python/cp39-cp39/lib:$LD_LIBRARY_PATH" \
             PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
