@@ -66,6 +66,9 @@ class LightningStateVector:
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
+        
+        self._kokkos_config = {}
+        
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -197,7 +200,7 @@ class LightningStateVector:
         """
         self._kokkos_state.DeviceToHost(state_vector.ravel(order="C"))
     
-    def _kokkos_configuration():
+    def _kokkos_configuration(self):
         """Set the default configuration of the kokkos device.
         Returns: kokkos configuration
         """
