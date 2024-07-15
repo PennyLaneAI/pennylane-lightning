@@ -103,14 +103,14 @@ class Measurements final
         -> std::vector<PrecisionT> {
         const std::size_t n_wires = wires.size();
         const std::size_t num_qubits = this->_statevector.getNumQubits();
-        bool is_all_wires = n_wires == num_qubits;
+        bool is_equal_to_all_wires = n_wires == num_qubits;
         for (std::size_t k = 0; k < n_wires; k++) {
-            if (!is_all_wires) {
+            if (!is_equal_to_all_wires) {
                 break;
             }
-            is_all_wires = wires[k] == k;
+            is_equal_to_all_wires = wires[k] == k;
         }
-        if (is_all_wires) {
+        if (is_equal_to_all_wires) {
             return this->probs();
         }
 

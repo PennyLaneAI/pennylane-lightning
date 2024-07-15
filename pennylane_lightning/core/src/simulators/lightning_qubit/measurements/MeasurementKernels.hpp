@@ -13,7 +13,8 @@
 // limitations under the License.
 /**
  * @file MeasurementsKernels.hpp
- * Defines macros and methods to support Lightning-Qubit's probs(wires) using bitshift implementation.
+ * Defines macros and methods to support Lightning-Qubit's probs(wires) using
+ * bitshift implementation.
  */
 #pragma once
 
@@ -29,6 +30,10 @@ namespace PUtil = Pennylane::Util;
 } // namespace
 /// @endcond
 
+/**
+ * @brief Call bitshift `probs` implementation templated on the number of wires
+ * and return.
+ */
 #define PROBS_SPECIAL_CASE(n)                                                  \
     if (n_wires == n) {                                                        \
         return Pennylane::LightningQubit::Measures::probs_bitshift<PrecisionT, \
@@ -36,17 +41,29 @@ namespace PUtil = Pennylane::Util;
             arr_data, num_qubits, wires);                                      \
     }
 
+/**
+ * @brief Declare and initialize a reverse-endianness variable if the number of
+ * wires is smaller than `n`.
+ */
 #define PROBS_CORE_DECLARE_NW(n)                                               \
     std::size_t rev_wires_##n;                                                 \
     if constexpr (n_wires > n) {                                               \
         rev_wires_##n = rev_wires[n];                                          \
     }
+/**
+ * @brief Declare and initialize a bit-parity variable if the number of wires is
+ * smaller or equal to `n`.
+ */
 #define PROBS_CORE_DECLARE_P(n)                                                \
     std::size_t parity_##n;                                                    \
     if constexpr (n_wires >= n) {                                              \
         parity_##n = parity[n];                                                \
     }
 
+/**
+ * @brief Declare and initialize the base index (`SV[i00..00]` corresponding to
+ * `probs[0]`).
+ */
 #define PROBS_CORE_DEF_I0 ((k << 0U) & parity_0) | ((k << 1U) & parity_1)
 #define PROBS_CORE_DEF_I00 PROBS_CORE_DEF_I0 | ((k << 2U) & parity_2)
 #define PROBS_CORE_DEF_I000 PROBS_CORE_DEF_I00 | ((k << 3U) & parity_3)
@@ -56,11 +73,11 @@ namespace PUtil = Pennylane::Util;
 #define PROBS_CORE_DEF_I0000000 PROBS_CORE_DEF_I000000 | ((k << 7U) & parity_7)
 #define PROBS_CORE_DEF_I00000000                                               \
     PROBS_CORE_DEF_I0000000 | ((k << 8U) & parity_8)
-#define PROBS_CORE_DEF_I000000000                                              \
-    PROBS_CORE_DEF_I00000000 | ((k << 9U) & parity_9)
-#define PROBS_CORE_DEF_I0000000000                                             \
-    PROBS_CORE_DEF_I000000000 | ((k << 10U) & parity_10)
 
+/**
+ * @brief Declare and initialize an index variable such as `i101` (`SV[i101]`
+ * corresponds to `probs[5]`).
+ */
 #define PROBS_CORE_DEF_IF1(var, x0)                                            \
     if constexpr (x0 == 1) {                                                   \
         var##x0 |= (one << rev_wires_0);                                       \
@@ -100,17 +117,11 @@ namespace PUtil = Pennylane::Util;
         var##x0##x1##x2##x3##x4##x5##x6##x7 |= (one << rev_wires_7);           \
     }                                                                          \
     PROBS_CORE_DEF_IF7(var##x0, x1, x2, x3, x4, x5, x6, x7)
-#define PROBS_CORE_DEF_IF9(var, x0, x1, x2, x3, x4, x5, x6, x7, x8)            \
-    if constexpr (x0 == 1) {                                                   \
-        var##x0##x1##x2##x3##x4##x5##x6##x7##x8 |= (one << rev_wires_8);       \
-    }                                                                          \
-    PROBS_CORE_DEF_IF8(var##x0, x1, x2, x3, x4, x5, x6, x7, x8)
-#define PROBS_CORE_DEF_IF10(var, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)       \
-    if constexpr (x0 == 1) {                                                   \
-        var##x0##x1##x2##x3##x4##x5##x6##x7##x8##x9 |= (one << rev_wires_9);   \
-    }                                                                          \
-    PROBS_CORE_DEF_IF9(var##x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)
 
+/**
+ * @brief Declare and initialize an index variable such as `i101` (`SV[i101]`
+ * corresponds to `probs[5]`) and accumulate the state vector norm into `probs`.
+ */
 #define PROBS_CORE_DEF_Ix(x0)                                                  \
     {                                                                          \
         std::size_t j##x0 = i0;                                                \
@@ -163,21 +174,15 @@ namespace PUtil = Pennylane::Util;
         probs[0B##x0##x1##x2##x3##x4##x5##x6##x7] +=                           \
             std::norm(arr[j##x0##x1##x2##x3##x4##x5##x6##x7]);                 \
     }
-#define PROBS_CORE_DEF_Ixy9(x0, x1, x2, x3, x4, x5, x6, x7, x8)                \
-    {                                                                          \
-        std::size_t j##x0##x1##x2##x3##x4##x5##x6##x7##x8 = i0;                \
-        PROBS_CORE_DEF_IF9(j, x0, x1, x2, x3, x4, x5, x6, x7, x8)              \
-        probs[0B##x0##x1##x2##x3##x4##x5##x6##x7##x8] +=                       \
-            std::norm(arr[j##x0##x1##x2##x3##x4##x5##x6##x7##x8]);             \
-    }
-#define PROBS_CORE_DEF_Ixy10(x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)           \
-    {                                                                          \
-        std::size_t j##x0##x1##x2##x3##x4##x5##x6##x7##x8##x9 = i0;            \
-        PROBS_CORE_DEF_IF10(j, x0, x1, x2, x3, x4, x5, x6, x7, x8, x9)         \
-        probs[0B##x0##x1##x2##x3##x4##x5##x6##x7##x8##x9] +=                   \
-            std::norm(arr[j##x0##x1##x2##x3##x4##x5##x6##x7##x8##x9]);         \
-    }
 
+/**
+ * @brief Declare and initialize the base index `i0` and accumulate the state
+ * vector norm into all `probs` elements.
+ *
+ * We start calling the `PROBS_CORE_DEF_IxyN` macro for `0` and `1` in a base
+ * case, and call it recursively changing each bit to `0` and `1` such that
+ * enumerating all elements of `probs` takes `log2(probs.size())` macros.
+ */
 #define PROBS_CORE_SUM_1                                                       \
     if constexpr (n_wires == 1) {                                              \
         i0 = PROBS_CORE_DEF_I0;                                                \
@@ -290,6 +295,16 @@ namespace PUtil = Pennylane::Util;
 
 namespace Pennylane::LightningQubit::Measures {
 
+/**
+ * @brief Probabilities for a subset of the full system.
+ *
+ * @tparam PrecisionT State vector precision.
+ * @param arr Pointer to the state vector data.
+ * @param num_qubits Number of qubits.
+ * @param wires Wires will restrict probabilities to a subset
+ * of the full system.
+ * @return Floating point std::vector with probabilities.
+ */
 template <class PrecisionT>
 auto probs_bitshift_generic(const std::complex<PrecisionT> *arr,
                             const std::size_t num_qubits,
@@ -323,12 +338,26 @@ auto probs_bitshift_generic(const std::complex<PrecisionT> *arr,
 }
 
 // NOLINTBEGIN(hicpp-function-size,readability-function-size)
+/**
+ * @brief Probabilities for a subset of the full system.
+ *
+ * @tparam PrecisionT State vector precision.
+ * @tparam n_wires Number of wires in the `wires` vector.
+ * @param arr Pointer to the state vector data.
+ * @param num_qubits Number of qubits.
+ * @param wires Wires will restrict probabilities to a subset
+ * of the full system.
+ * @return Floating point std::vector with probabilities.
+ */
 template <class PrecisionT, std::size_t n_wires>
 auto probs_bitshift(const std::complex<PrecisionT> *arr,
                     const std::size_t num_qubits,
                     const std::vector<std::size_t> &wires)
     -> std::vector<PrecisionT> {
     constexpr std::size_t one{1};
+    if constexpr (n_wires < 1 || n_wires > 8) {
+        PL_ABORT("probs_bitshift is implemented for 1-8 wires.");
+    }
     std::vector<std::size_t> rev_wires(n_wires);
     for (std::size_t k = 0; k < n_wires; k++) {
         rev_wires[n_wires - 1 - k] = (num_qubits - 1) - wires[k];
