@@ -76,7 +76,7 @@ namespace PUtil = Pennylane::Util;
 
 /**
  * @brief Declare and initialize an index variable such as `i101` (`SV[i101]`
- * corresponds to `probs[5]`).
+ * corresponds to `probs[0B101]` or `probs[5]`).
  */
 #define PROBS_CORE_DEF_IF1(var, x0)                                            \
     if constexpr (x0 == 1) {                                                   \
@@ -120,7 +120,7 @@ namespace PUtil = Pennylane::Util;
 
 /**
  * @brief Declare and initialize an index variable such as `i101` (`SV[i101]`
- * corresponds to `probs[5]`) and accumulate the state vector norm into `probs`.
+ * corresponds to `probs[0B101]` or `probs[5]`) and accumulate the state vector norm into `probs`.
  */
 #define PROBS_CORE_DEF_Ix(x0)                                                  \
     {                                                                          \
