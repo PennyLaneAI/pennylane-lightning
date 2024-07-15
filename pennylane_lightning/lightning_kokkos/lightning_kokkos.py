@@ -34,6 +34,9 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_
 from pennylane_lightning.core._version import __version__
 from pennylane_lightning.core.lightning_base import LightningBase, _chunk_iterable
 
+print("Kokkos load state vector")
+from ._state_vector import LightningStateVector
+
 try:
     # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_kokkos_ops import (
