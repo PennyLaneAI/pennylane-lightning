@@ -531,6 +531,11 @@ class Measurements final
         if (is_equal_to_all_wires) {
             return this->probs();
         }
+        if (n_wires == 1) {
+            return probs_bitshift_generic(this->_statevector.getView(),
+                                          num_qubits, wires);
+        }
+
         std::vector<std::size_t> all_indices =
             Pennylane::Util::generateBitsPatterns(wires, num_qubits);
         Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
@@ -563,6 +568,72 @@ class Measurements final
                 },
                 d_probabilities(i));
         }
+        std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
+        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
+                                                     probabilities.size()),
+                          d_probabilities);
+        return probabilities;
+    }
+
+    auto probs_bitshift_generic(const Kokkos::View<ComplexT *> arr,
+                                const std::size_t num_qubits,
+                                const std::vector<std::size_t> &wires)
+        -> std::vector<PrecisionT> {
+        // constexpr std::size_t one{1};
+        const std::size_t n_wires = wires.size();
+        std::vector<std::size_t> rev_wires(n_wires);
+        for (std::size_t k = 0; k < n_wires; k++) {
+            rev_wires[n_wires - 1 - k] = (num_qubits - 1) - wires[k];
+        }
+        Kokkos::View<std::size_t *> d_rev_wires("d_rev_wires",
+                                                rev_wires.size());
+        Kokkos::deep_copy(d_rev_wires, UnmanagedSizeTHostView(
+                                           rev_wires.data(), rev_wires.size()));
+        std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+        Kokkos::View<std::size_t *> d_parity("d_parity", parity.size());
+        Kokkos::deep_copy(d_parity,
+                          UnmanagedSizeTHostView(parity.data(), parity.size()));
+        const std::size_t n_probs = Pennylane::Util::exp2(n_wires);
+        Kokkos::View<PrecisionT *> d_probabilities("d_probabilities", n_probs);
+        Kokkos::deep_copy(d_probabilities, 0.0);
+        // if (n_wires == 1) {
+        Kokkos::parallel_reduce(
+            exp2(num_qubits - n_wires),
+            RuntimeReduceFunctor<PrecisionT>(arr, num_qubits, wires),
+            d_probabilities);
+        // } else {
+        //     Kokkos::parallel_for(
+        //         exp2(num_qubits - n_wires), KOKKOS_LAMBDA(const std::size_t
+        //         k) {
+        //             std::size_t idx = (k & d_parity[0]);
+        //             for (std::size_t i = 1; i < n_wires + 1; i++) {
+        //                 idx |= ((k << i) & d_parity[i]);
+        //             }
+        //             {
+        //                 const PrecisionT rsv = arr(idx).real();
+        //                 const PrecisionT isv = arr(idx).imag();
+        //                 const PrecisionT value = rsv * rsv + isv * isv;
+        //                 Kokkos::atomic_add(&d_probabilities(0), value);
+        //             }
+        //             const std::size_t i0 = idx;
+        //             for (std::size_t inner_idx = 1; inner_idx < n_probs;
+        //                  inner_idx++) {
+        //                 idx = i0;
+        //                 for (std::size_t i = 0; i < n_wires; i++) {
+        //                     idx |= ((inner_idx & (one << i)) >> i)
+        //                            << d_rev_wires[i];
+        //                 }
+        //                 {
+        //                     const PrecisionT rsv = arr(idx).real();
+        //                     const PrecisionT isv = arr(idx).imag();
+        //                     const PrecisionT value = rsv * rsv + isv * isv;
+        //                     Kokkos::atomic_add(&d_probabilities(inner_idx),
+        //                                        value);
+        //                 }
+        //             }
+        //         });
+        // }
         std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
         Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
                                                      probabilities.size()),

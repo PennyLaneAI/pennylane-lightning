@@ -273,6 +273,120 @@ template <class PrecisionT> struct getExpectationValueSparseFunctor {
     }
 };
 
+template <class PrecisionT> class RuntimeReduceFunctor {
+  public:
+    // Required for functor:
+    using value_type = PrecisionT[];
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosVector = Kokkos::View<PrecisionT *>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+    const unsigned value_count;
+
+    KokkosComplexVector arr;
+    const std::size_t n_wires = 1;
+    const std::size_t dim = one << n_wires;
+    std::size_t num_qubits;
+    std::size_t rev_wire;
+    std::size_t rev_wire_shift;
+    std::size_t wire_parity;
+    std::size_t wire_parity_inv;
+
+    RuntimeReduceFunctor(
+        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
+        [[maybe_unused]] const std::vector<std::size_t> &wires_)
+        : value_count{2} {
+        arr = arr_;
+        num_qubits = num_qubits_;
+        rev_wire = num_qubits - wires_[0] - 1;
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        wire_parity = fillTrailingOnes(rev_wire);
+        wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void init(PrecisionT dst[]) const {
+        for (unsigned i = 0; i < dim; ++i)
+            dst[i] = 0;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(PrecisionT dst[], const PrecisionT src[]) const {
+        for (unsigned i = 0; i < dim; ++i)
+            dst[i] += src[i];
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(std::size_t k, PrecisionT dst[]) const {
+        const std::size_t i0 =
+            ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+        const std::size_t i1 = i0 | rev_wire_shift;
+        PrecisionT rsv = real(arr(i0));
+        PrecisionT isv = imag(arr(i0));
+        dst[0] += rsv * rsv + isv * isv;
+        rsv = real(arr(i1));
+        isv = imag(arr(i1));
+        dst[1] += rsv * rsv + isv * isv;
+
+        // const std::size_t tmp[3] = {1, iwork + 1, nwork - iwork};
+
+        // for (std::size_t i = 0; i < static_cast<std::size_t>(dim);
+        //      ++i) {
+        //     dst[i] += tmp[i % 3];
+        // }
+    }
+};
+
+template <class PrecisionT> struct getProbs1QubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosVector = Kokkos::View<PrecisionT *>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    const std::size_t n_wires = 1;
+
+    const std::size_t dim = one << n_wires;
+    std::size_t num_qubits;
+    std::size_t rev_wire;
+    std::size_t rev_wire_shift;
+    std::size_t wire_parity;
+    std::size_t wire_parity_inv;
+
+    getProbs1QubitOpFunctor(
+        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
+        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+        arr = arr_;
+        num_qubits = num_qubits_;
+        rev_wire = num_qubits - wires_[0] - 1;
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        wire_parity = fillTrailingOnes(rev_wire);
+        wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void init(KokkosVector dst) const { Kokkos::deep_copy(dst, 0.0); }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(KokkosVector dst, const KokkosVector src) const {
+        for (std::size_t i = 0; i < dim; ++i)
+            dst(i) += src(i);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k, KokkosVector probs) const {
+        const std::size_t i0 =
+            ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+        const std::size_t i1 = i0 | rev_wire_shift;
+        PrecisionT rsv = real(arr(i0));
+        PrecisionT isv = imag(arr(i0));
+        probs[0] += rsv * rsv + isv * isv;
+        rsv = real(arr(i1));
+        isv = imag(arr(i1));
+        probs[1] += rsv * rsv + isv * isv;
+    }
+};
+
 template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
