@@ -75,7 +75,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         auto expectation_squared_obs =
             expval_(tnObs2Operator.getTNOperator(), numHyperSamples);
 
-        return expectation_squared_obs - expectation_val*expectation_val;
+        return expectation_squared_obs - expectation_val * expectation_val;
     }
 
     /**

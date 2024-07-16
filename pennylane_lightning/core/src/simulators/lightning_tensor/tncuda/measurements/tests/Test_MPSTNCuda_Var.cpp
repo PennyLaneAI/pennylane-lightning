@@ -81,12 +81,11 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("Test variance of HermitianObs",
-                   "[MPSTNCuda_Var]", float, double) {
+TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[MPSTNCuda_Var]", float,
+                   double) {
     using TensorNetT = MPSTNCuda<TestType>;
     using ComplexT = typename TensorNetT::ComplexT;
     using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
-
 
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
@@ -121,12 +120,12 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs",
     }
 }
 
-TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
-                   "[MPSTNCuda_Var]", float, double) {
+TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[MPSTNCuda_Var]", float,
+                   double) {
     using TensorNetT = MPSTNCuda<TestType>;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
     using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
-    
+
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
     std::size_t maxBondDim = bondDim;
@@ -140,10 +139,10 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 
-        auto X0 = std::make_shared<NamedObsT>(
-            "PauliX", std::vector<std::size_t>{0});
-        auto Z1 = std::make_shared<NamedObsT>(
-            "PauliZ", std::vector<std::size_t>{1});
+        auto X0 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto Z1 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
 
         auto ob = TensorProdObsT::create({X0, Z1});
         auto res = measure.var(*ob);
