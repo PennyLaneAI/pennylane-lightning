@@ -49,7 +49,10 @@ else()
 endif()
 
 if(LQ_ENABLE_KERNEL_OMP)
-    add_definitions("-DPL_LQ_KERNEL_OMP")
+    message(STATUS "OpenMP-parallelized kernels: ON.")
+    add_definitions("-DPL_LQ_KERNEL_OMP=1")
+else()
+    message(STATUS "OpenMP-parallelized kernels: OFF.")
 endif()
 
 if(LQ_ENABLE_KERNEL_AVX_STREAMING)

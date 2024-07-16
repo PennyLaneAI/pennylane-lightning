@@ -382,8 +382,9 @@ auto probs_bitshift(const std::complex<PrecisionT> *arr,
     PROBS_CORE_DECLARE_P(6)
     PROBS_CORE_DECLARE_P(7)
     PROBS_CORE_DECLARE_P(8)
-    const std::size_t n_probs = PUtil::exp2(n_wires);
-    PrecisionT probs[n_probs]{};
+    constexpr std::size_t n_probs = one << n_wires;
+    std::vector<PrecisionT> probabilities(n_probs, 0);
+    auto *probs = probabilities.data();
 #if defined PL_LQ_KERNEL_OMP && defined _OPENMP
 #pragma omp parallel for reduction(+ : probs[ : n_probs])
 #endif
@@ -398,7 +399,7 @@ auto probs_bitshift(const std::complex<PrecisionT> *arr,
         PROBS_CORE_SUM_7
         PROBS_CORE_SUM_8
     }
-    return std::vector<PrecisionT>(probs, probs + n_probs);
+    return probabilities;
 }
 // NOLINTEND(hicpp-function-size,readability-function-size)
 } // namespace Pennylane::LightningQubit::Measures
