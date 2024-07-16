@@ -551,21 +551,18 @@ class Measurements final
                                                    all_indices.size());
         Kokkos::deep_copy(d_probabilities, 0.0);
         Kokkos::View<ComplexT *> sv = this->_statevector.getView();
-        Kokkos::parallel_for(
-            Kokkos::TeamPolicy<>(all_indices.size(), Kokkos::AUTO),
-            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type &teamMember) {
-                const std::size_t i = teamMember.league_rank();
-                Kokkos::parallel_reduce(
-                    Kokkos::TeamThreadRange(teamMember, all_offsets.size()),
-                    KOKKOS_LAMBDA(const std::size_t j, PrecisionT &probs) {
-                        const std::size_t index =
-                            d_all_indices(i) + d_all_offsets(j);
-                        const PrecisionT rsv = sv(index).real();
-                        const PrecisionT isv = sv(index).imag();
-                        probs += rsv * rsv + isv * isv;
-                    },
-                    d_probabilities(i));
-            });
+        for (std::size_t i = 0; i < all_indices.size(); i++) {
+            Kokkos::parallel_reduce(
+                all_offsets.size(),
+                KOKKOS_LAMBDA(const std::size_t j, PrecisionT &probs) {
+                    const std::size_t index =
+                        d_all_indices(i) + d_all_offsets(j);
+                    const PrecisionT rsv = sv(index).real();
+                    const PrecisionT isv = sv(index).imag();
+                    probs += rsv * rsv + isv * isv;
+                },
+                d_probabilities(i));
+        }
         std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
         Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
                                                      probabilities.size()),
