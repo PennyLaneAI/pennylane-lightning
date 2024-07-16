@@ -55,7 +55,6 @@ class Measurements final
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-
     using KokkosExecSpace = typename StateVectorT::KokkosExecSpace;
     using KokkosVector = typename StateVectorT::KokkosVector;
     using KokkosSizeTVector = typename StateVectorT::KokkosSizeTVector;
@@ -600,7 +599,8 @@ class Measurements final
         // if (n_wires == 1) {
         Kokkos::parallel_reduce(
             exp2(num_qubits - n_wires),
-            RuntimeReduceFunctor<PrecisionT>(arr, num_qubits, wires),
+            getProbs1QubitOpFunctor<PrecisionT, KokkosExecSpace>(
+                arr, num_qubits, wires),
             d_probabilities);
         // } else {
         //     Kokkos::parallel_for(
