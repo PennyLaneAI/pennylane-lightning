@@ -59,6 +59,26 @@ template <class TensorNetT> class MeasurementsTNCuda {
         : tensor_network_(tensor_network){};
 
     /**
+     * @brief Calculate var value for a general Observable.
+     *
+     * @param obs An Observable object.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     */
+    auto var(ObservableTNCuda<TensorNetT> &obs,
+             const int32_t numHyperSamples = 1) -> PrecisionT {
+        auto expectation_val = expval(obs, numHyperSamples);
+
+        const bool val_cal = true;
+        auto tnObs2Operator =
+            ObservableTNCudaOperator<TensorNetT>(tensor_network_, obs, val_cal);
+        auto expectation_squared_obs =
+            expval_(tnObs2Operator.getTNOperator(), numHyperSamples);
+
+        return expectation_squared_obs - expectation_val*expectation_val;
+    }
+
+    /**
      * @brief Calculate expectation value for a general Observable.
      *
      * @param obs An Observable object.
@@ -72,6 +92,24 @@ template <class TensorNetT> class MeasurementsTNCuda {
         auto tnoperator =
             ObservableTNCudaOperator<TensorNetT>(tensor_network_, obs);
 
+        return expval_(tnoperator.getTNOperator(), numHyperSamples);
+    }
+
+  private:
+    /**
+     * @brief Calculate expectation value for a general ObservableTNCudaOperator
+     * object.
+     *
+     * @param obs An ObservableTNCudaOperator object.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
+     * @return Expectation value with respect to the given
+     * ObservableTNCudaOperator object.
+     */
+
+    auto expval_(cutensornetNetworkOperator_t tnoperator,
+                 const int32_t numHyperSamples) -> PrecisionT {
         ComplexT expectation_val{0.0, 0.0};
         ComplexT state_norm2{0.0, 0.0};
 
@@ -80,7 +118,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetState_t */ tensor_network_.getQuantumState(),
-            /* cutensornetNetworkOperator_t */ tnoperator.getTNOperator(),
+            /* cutensornetNetworkOperator_t */ tnoperator,
             /* cutensornetStateExpectation_t * */ &expectation));
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(

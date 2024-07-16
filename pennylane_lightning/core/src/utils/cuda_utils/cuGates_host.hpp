@@ -1542,7 +1542,17 @@ template <class PrecisionT> class DynamicGateDataAccess {
         {"CY", []() -> std::vector<CFP_t> { return cuGates::getCY<CFP_t>(); }},
         {"CZ", []() -> std::vector<CFP_t> { return cuGates::getCZ<CFP_t>(); }},
         {"CSWAP",
-         []() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }}};
+         []() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }},
+        {"Identity_squared",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"PauliX_squared",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"PauliY_squared",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"PauliZ_squared",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"Hadamard_squared",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }}};
 
     // TODO: Need changes to support to the controlled gate tensor API once the
     // API is finalized in cutensornet lib.
