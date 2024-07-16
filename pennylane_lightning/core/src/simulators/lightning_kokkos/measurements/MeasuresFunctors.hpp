@@ -17,27 +17,6 @@
 #include <Kokkos_StdAlgorithms.hpp>
 
 namespace Pennylane::LightningKokkos::Functors {
-/**
- * @brief Compute probability distribution from StateVector.
- *
- * @param arr_ StateVector data.
- * @param probabilities_ Discrete probability distribution.
- */
-template <class PrecisionT> struct getProbFunctor {
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
-    Kokkos::View<PrecisionT *> probability;
-
-    getProbFunctor(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                   Kokkos::View<PrecisionT *> probability_)
-        : arr(arr_), probability(probability_) {}
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
-        const PrecisionT REAL = arr(k).real();
-        const PrecisionT IMAG = arr(k).imag();
-        probability(k) = REAL * REAL + IMAG * IMAG;
-    }
-};
 
 /**
  *@brief Sampling using Random_XorShift64_Pool

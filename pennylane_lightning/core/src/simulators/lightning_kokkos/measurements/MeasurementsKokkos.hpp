@@ -13,6 +13,7 @@
 // limitations under the License.
 #pragma once
 #include <chrono>
+#include <cstdint>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -477,26 +478,35 @@ class Measurements final
     /**
      * @brief Probabilities to measure rotated basis states.
      *
+     * @return Kokkos::View with probabilities
+     * in lexicographic order.
+     */
+    auto probs_core() -> Kokkos::View<PrecisionT *> {
+        const std::size_t N = this->_statevector.getLength();
+        auto sv = this->_statevector.getView();
+        Kokkos::View<PrecisionT *> d_probs("d_probs", N);
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<KokkosExecSpace>(0, N),
+            KOKKOS_LAMBDA(const std::size_t k) {
+                const PrecisionT rsv = sv(k).real();
+                const PrecisionT isv = sv(k).imag();
+                d_probs(k) = rsv * rsv + isv * isv;
+            });
+        return d_probs;
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
+     *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
     auto probs() -> std::vector<PrecisionT> {
-        const std::size_t N = this->_statevector.getLength();
-
-        Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        Kokkos::View<PrecisionT *> d_probability("d_probability", N);
-
-        // Compute probability distribution from StateVector
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<KokkosExecSpace>(0, N),
-            getProbFunctor<PrecisionT>(arr_data, d_probability));
-
-        std::vector<PrecisionT> probabilities(N, 0);
-
-        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                     probabilities.size()),
-                          d_probability);
-        return probabilities;
+        std::vector<PrecisionT> probs(this->_statevector.getLength(), 0);
+        Kokkos::deep_copy(
+            UnmanagedPrecisionHostView(probs.data(), probs.size()),
+            probs_core());
+        return probs;
     }
 
     /**
@@ -509,117 +519,58 @@ class Measurements final
      */
     auto probs(const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
-        PL_ABORT_IF_NOT(
-            std::is_sorted(wires.cbegin(), wires.cend()),
-            "LightningKokkos does not currently support out-of-order wire "
-            "indices with probability calculations");
-
-        // If all wires are requested, dispatch to `this->probs()`
-        if (wires.size() == this->_statevector.getNumQubits()) {
+        const std::size_t n_wires = wires.size();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        bool is_equal_to_all_wires = n_wires == num_qubits;
+        for (std::size_t k = 0; k < n_wires; k++) {
+            if (!is_equal_to_all_wires) {
+                break;
+            }
+            is_equal_to_all_wires = wires[k] == k;
+        }
+        if (is_equal_to_all_wires) {
             return this->probs();
         }
-
-        using MDPolicyType_2D =
-            Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
-
-        //  Determining probabilities for the sorted wires.
-        const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        const std::size_t num_qubits = this->_statevector.getNumQubits();
-
-        std::vector<std::size_t> sorted_ind_wires(wires);
-        const bool is_sorted_wires =
-            std::is_sorted(sorted_ind_wires.begin(), sorted_ind_wires.end());
-        std::vector<std::size_t> sorted_wires(wires);
-
-        if (!is_sorted_wires) {
-            sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
-            for (std::size_t pos = 0; pos < wires.size(); pos++)
-                sorted_wires[pos] = wires[sorted_ind_wires[pos]];
-        }
-
         std::vector<std::size_t> all_indices =
-            Pennylane::Util::generateBitsPatterns(sorted_wires, num_qubits);
-
-        std::vector<std::size_t> all_offsets =
-            Pennylane::Util::generateBitsPatterns(
-                Pennylane::Util::getIndicesAfterExclusion(sorted_wires,
-                                                          num_qubits),
-                num_qubits);
-
-        Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
-                                                   all_indices.size());
-
-        Kokkos::View<std::size_t *> d_sorted_ind_wires("d_sorted_ind_wires",
-                                                       sorted_ind_wires.size());
+            Pennylane::Util::generateBitsPatterns(wires, num_qubits);
         Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
                                                   all_indices.size());
-        Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
-                                                  all_offsets.size());
-
         Kokkos::deep_copy(
             d_all_indices,
             UnmanagedSizeTHostView(all_indices.data(), all_indices.size()));
+        std::vector<std::size_t> all_offsets =
+            Pennylane::Util::generateBitsPatterns(
+                Pennylane::Util::getIndicesAfterExclusion(wires, num_qubits),
+                num_qubits);
+        Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
+                                                  all_offsets.size());
         Kokkos::deep_copy(
             d_all_offsets,
             UnmanagedSizeTHostView(all_offsets.data(), all_offsets.size()));
-        Kokkos::deep_copy(d_sorted_ind_wires,
-                          UnmanagedSizeTHostView(sorted_ind_wires.data(),
-                                                 sorted_ind_wires.size()));
-
-        const int num_all_indices =
-            all_indices.size(); // int is required by Kokkos::MDRangePolicy
-        const int num_all_offsets = all_offsets.size();
-
-        MDPolicyType_2D mdpolicy_2d0({{0, 0}},
-                                     {{num_all_indices, num_all_offsets}});
-
+        Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
+                                                   all_indices.size());
+        Kokkos::deep_copy(d_probabilities, 0.0);
+        Kokkos::View<ComplexT *> sv = this->_statevector.getView();
         Kokkos::parallel_for(
-            "Set_Prob", mdpolicy_2d0,
-            KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
-                const std::size_t index = d_all_indices(i) + d_all_offsets(j);
-                const PrecisionT REAL = arr_data(index).real();
-                const PrecisionT IMAG = arr_data(index).imag();
-                const PrecisionT value = REAL * REAL + IMAG * IMAG;
-                Kokkos::atomic_add(&d_probabilities(i), value);
+            Kokkos::TeamPolicy<>(all_indices.size(), Kokkos::AUTO),
+            KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type &teamMember) {
+                const std::size_t i = teamMember.league_rank();
+                Kokkos::parallel_reduce(
+                    Kokkos::TeamThreadRange(teamMember, all_offsets.size()),
+                    KOKKOS_LAMBDA(const std::size_t j, PrecisionT &probs) {
+                        const std::size_t index =
+                            d_all_indices(i) + d_all_offsets(j);
+                        const PrecisionT rsv = sv(index).real();
+                        const PrecisionT isv = sv(index).imag();
+                        probs += rsv * rsv + isv * isv;
+                    },
+                    d_probabilities(i));
             });
-
-        std::vector<PrecisionT> probabilities(all_indices.size(), 0);
-
-        if (is_sorted_wires) {
-            Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                         probabilities.size()),
-                              d_probabilities);
-            return probabilities;
-        } else {
-            Kokkos::View<PrecisionT *> transposed_tensor("transposed_tensor",
-                                                         all_indices.size());
-
-            Kokkos::View<std::size_t *> d_trans_index("d_trans_index",
-                                                      all_indices.size());
-
-            const int num_trans_tensor = transposed_tensor.size();
-            const int num_sorted_ind_wires = sorted_ind_wires.size();
-
-            MDPolicyType_2D mdpolicy_2d1(
-                {{0, 0}}, {{num_trans_tensor, num_sorted_ind_wires}});
-
-            Kokkos::parallel_for(
-                "TransIndex", mdpolicy_2d1,
-                getTransposedIndexFunctor(d_sorted_ind_wires, d_trans_index,
-                                          num_sorted_ind_wires));
-
-            Kokkos::parallel_for(
-                "Transpose",
-                Kokkos::RangePolicy<KokkosExecSpace>(0, num_trans_tensor),
-                getTransposedFunctor<PrecisionT>(
-                    transposed_tensor, d_probabilities, d_trans_index));
-
-            Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                         probabilities.size()),
-                              transposed_tensor);
-
-            return probabilities;
-        }
+        std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
+        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
+                                                     probabilities.size()),
+                          d_probabilities);
+        return probabilities;
     }
 
     /**
@@ -680,19 +631,16 @@ class Measurements final
      * number between 0 and num_samples-1.
      */
     auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
+        using UnmanagedSize_tHostView =
+            Kokkos::View<std::size_t *, Kokkos::HostSpace,
+                         Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const std::size_t N = this->_statevector.getLength();
-
-        Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        Kokkos::View<PrecisionT *> probability("probability", N);
         Kokkos::View<std::size_t *> samples("num_samples",
                                             num_samples * num_qubits);
 
-        // Compute probability distribution from StateVector
-        Kokkos::parallel_for(Kokkos::RangePolicy<KokkosExecSpace>(0, N),
-                             getProbFunctor<PrecisionT>(arr_data, probability));
-
         // Convert probability distribution to cumulative distribution
+        auto probability = probs_core();
         Kokkos::parallel_scan(
             Kokkos::RangePolicy<KokkosExecSpace>(0, N),
             KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
@@ -715,15 +663,9 @@ class Measurements final
                 samples, probability, rand_pool, num_qubits, N));
 
         std::vector<std::size_t> samples_h(num_samples * num_qubits);
-
-        using UnmanagedSize_tHostView =
-            Kokkos::View<std::size_t *, Kokkos::HostSpace,
-                         Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-
         Kokkos::deep_copy(
             UnmanagedSize_tHostView(samples_h.data(), samples_h.size()),
             samples);
-
         return samples_h;
     }
 
