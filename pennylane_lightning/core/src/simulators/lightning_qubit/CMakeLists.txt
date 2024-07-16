@@ -49,14 +49,21 @@ else()
 endif()
 
 if(LQ_ENABLE_KERNEL_OMP)
+    message(STATUS "OpenMP-parallelized kernels: ON.")
     add_definitions("-DPL_LQ_KERNEL_OMP")
+    target_compile_definitions(lightning_qubit PUBLIC -DPL_LQ_KERNEL_OMP)
+else()
+    message(STATUS "OpenMP-parallelized kernels: OFF.")
 endif()
 
 if(LQ_ENABLE_KERNEL_AVX_STREAMING)
     if(NOT LQ_ENABLE_KERNEL_OMP)
         message(WARNING "AVX streaming operations require `LQ_ENABLE_KERNEL_OMP` to be enabled.")
     endif()
+    message(STATUS "AVX streaming operations: ON.")
     add_definitions("-DPL_LQ_KERNEL_AVX_STREAMING")
+else()
+    message(STATUS "AVX streaming operations: OFF.")
 endif()
 
 target_link_libraries(lightning_qubit PUBLIC    lightning_compile_options

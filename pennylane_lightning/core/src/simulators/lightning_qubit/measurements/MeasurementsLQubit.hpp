@@ -80,13 +80,16 @@ class Measurements final
      */
     auto probs() -> std::vector<PrecisionT> {
         const ComplexT *arr_data = this->_statevector.getData();
-        std::vector<PrecisionT> basis_probs(this->_statevector.getLength(), 0);
-
-        std::transform(
-            arr_data, arr_data + this->_statevector.getLength(),
-            basis_probs.begin(),
-            [](const ComplexT &z) -> PrecisionT { return std::norm(z); });
-        return basis_probs;
+        const std::size_t n_probs = this->_statevector.getLength();
+        std::vector<PrecisionT> probabilities(n_probs, 0);
+        auto *probs = probabilities.data();
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for
+#endif
+        for (std::size_t k = 0; k < n_probs; k++) {
+            probs[k] = std::norm(arr_data[k]);
+        }
+        return probabilities;
     };
 
     /**
@@ -128,10 +131,14 @@ class Measurements final
             Gates::getIndicesAfterExclusion(wires, num_qubits), num_qubits);
         const std::size_t n_probs = PUtil::exp2(n_wires);
         std::vector<PrecisionT> probabilities(n_probs, 0);
+        auto *probs = probabilities.data();
         std::size_t ind_probs = 0;
         for (auto index : all_indices) {
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for reduction(+ : probs[ : n_probs])
+#endif
             for (auto offset : all_offsets) {
-                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
+                probs[ind_probs] += std::norm(arr_data[index + offset]);
             }
             ind_probs++;
         }
