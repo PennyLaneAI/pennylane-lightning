@@ -23,6 +23,9 @@
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
+  
+* `SX` and `C(SX)` gates are natively supported with `lightning.qubit`.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
 ### Documentation
 
@@ -44,7 +47,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux
 
 ---
 
@@ -133,7 +136,7 @@ Amintor Dusko, Vincent Michaud-Rioux
 
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
-
+  
 * `lightning.qubit` and `lightning.kokkos` adhere to user-specified mid-circuit measurement configuration options.
   [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
 
