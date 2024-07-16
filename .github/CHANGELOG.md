@@ -12,6 +12,9 @@
 
 ### Improvements
 
+* Refactor CUDA utils Python bindings to a separate module.
+  [(#801)](https://github.com/PennyLaneAI/pennylane-lightning/pull/801)
+
 * Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
 
@@ -38,7 +41,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
