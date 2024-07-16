@@ -530,10 +530,10 @@ class Measurements final
         if (is_equal_to_all_wires) {
             return this->probs();
         }
-        if (n_wires == 1) {
-            return probs_bitshift_generic(this->_statevector.getView(),
-                                          num_qubits, wires);
-        }
+        // if (n_wires == 1) {
+        //     return probs_bitshift_generic(this->_statevector.getView(),
+        //                                   num_qubits, wires);
+        // }
 
         std::vector<std::size_t> all_indices =
             Pennylane::Util::generateBitsPatterns(wires, num_qubits);
@@ -555,18 +555,17 @@ class Measurements final
                                                    all_indices.size());
         Kokkos::deep_copy(d_probabilities, 0.0);
         Kokkos::View<ComplexT *> sv = this->_statevector.getView();
-        for (std::size_t i = 0; i < all_indices.size(); i++) {
-            Kokkos::parallel_reduce(
-                all_offsets.size(),
-                KOKKOS_LAMBDA(const std::size_t j, PrecisionT &probs) {
-                    const std::size_t index =
-                        d_all_indices(i) + d_all_offsets(j);
-                    const PrecisionT rsv = sv(index).real();
-                    const PrecisionT isv = sv(index).imag();
-                    probs += rsv * rsv + isv * isv;
-                },
-                d_probabilities(i));
-        }
+
+        using MDPolicyType_2D =
+            Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
+        auto md_policy = MDPolicyType_2D(
+            {{0, 0}}, {{static_cast<int64_t>(all_indices.size()),
+                        static_cast<int64_t>(all_offsets.size())}});
+        Kokkos::parallel_reduce(md_policy,
+                                getProbsFunctor<PrecisionT, KokkosExecSpace>(
+                                    sv, wires, d_all_indices, d_all_offsets),
+                                d_probabilities);
+
         std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
         Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
                                                      probabilities.size()),

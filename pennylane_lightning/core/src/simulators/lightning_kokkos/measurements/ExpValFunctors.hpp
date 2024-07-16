@@ -273,6 +273,45 @@ template <class PrecisionT> struct getExpectationValueSparseFunctor {
     }
 };
 
+template <class PrecisionT, class DeviceType> class getProbsFunctor {
+  public:
+    // Required for functor:
+    using execution_space = DeviceType;
+    using value_type = PrecisionT[];
+    const unsigned value_count;
+
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    Kokkos::View<ComplexT *> arr;
+    Kokkos::View<std::size_t *> all_indices;
+    Kokkos::View<std::size_t *> all_offsets;
+    getProbsFunctor(const Kokkos::View<ComplexT *> &arr_,
+                    [[maybe_unused]] const std::vector<std::size_t> &wires_,
+                    const Kokkos::View<std::size_t *> all_indices_,
+                    const Kokkos::View<std::size_t *> all_offsets_)
+        : value_count{1U << wires_.size()}, arr{arr_},
+          all_indices{all_indices_}, all_offsets{all_offsets_} {}
+
+    KOKKOS_INLINE_FUNCTION
+    void init(PrecisionT dst[]) const {
+        for (unsigned i = 0; i < value_count; ++i)
+            dst[i] = 0;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(PrecisionT dst[], const PrecisionT src[]) const {
+        for (unsigned i = 0; i < value_count; ++i)
+            dst[i] += src[i];
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(std::size_t i, std::size_t j, PrecisionT dst[]) const {
+        const std::size_t index = all_indices(i) + all_offsets(j);
+        const PrecisionT rsv = arr(index).real();
+        const PrecisionT isv = arr(index).imag();
+        dst[i] += rsv * rsv + isv * isv;
+    }
+};
+
 template <class PrecisionT, class DeviceType> class getProbs1QubitOpFunctor {
   public:
     // Required for functor:
