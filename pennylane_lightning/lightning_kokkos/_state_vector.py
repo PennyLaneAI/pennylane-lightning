@@ -44,7 +44,7 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-# from ._measurements import LightningMeasurements
+from ._measurements import LightningMeasurements
 
 
 class LightningStateVector:
@@ -68,7 +68,6 @@ class LightningStateVector:
         self._dtype = dtype
         
         self._kokkos_config = {}
-        
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -304,7 +303,7 @@ class LightningStateVector:
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
-            self.sync_h2d(self._reshape(state, output_shape))
+            self.sync_h2d(np.reshape(state, output_shape))
             return
 
         self._kokkos_state.setStateVector(ravelled_indices, state)  # this operation on device        
@@ -342,6 +341,10 @@ class LightningStateVector:
         if method is not None:  # apply n-controlled specialized gate
             inv = False
             param = operation.parameters
+            # HELP 
+            # The args of the functions are incompatibles. From kokkos request:
+            # arg0: List[int], arg1: bool, arg2: List[float]
+            # method(control_wires, inv, target_wires)
             method(control_wires, control_values, target_wires, inv, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
@@ -374,8 +377,8 @@ class LightningStateVector:
         if postselect_mode == "fill-shots" and operation.postselect is not None:
             sample = operation.postselect
         else:
-            # TODO Implement the Measurement method
-            # sample = LightningMeasurements(self).measure_final_stat>e(circuit)
+            # HELP: what is this code doing? specially the >e 
+            sample = LightningMeasurements(self).measure_final_stat>e(circuit)
             sample = np.squeeze(sample)
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
