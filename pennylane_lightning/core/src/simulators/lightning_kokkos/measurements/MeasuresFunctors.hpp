@@ -119,9 +119,9 @@ class getProbsNQubitOpFunctor {
     std::size_t parity_8;
     std::size_t parity_9;
 
-    getProbsNQubitOpFunctor(
-        const Kokkos::View<ComplexT *> &arr_, const std::size_t num_qubits_,
-        const std::vector<std::size_t> &wires_)
+    getProbsNQubitOpFunctor(const Kokkos::View<ComplexT *> &arr_,
+                            const std::size_t num_qubits_,
+                            const std::vector<std::size_t> &wires_)
         : value_count{1U << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
         PL_ABORT_IF(num_wires != 0 && num_wires != n_wires,
                     "num_wires must be equal to n_wires.");

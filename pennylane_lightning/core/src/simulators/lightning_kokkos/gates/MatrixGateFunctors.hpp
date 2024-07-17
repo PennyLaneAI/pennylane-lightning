@@ -119,10 +119,9 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     std::size_t wire_parity;
     std::size_t wire_parity_inv;
 
-    apply1QubitOpFunctor(
-        KokkosComplexVector arr_, std::size_t num_qubits_,
-        const KokkosComplexVector &matrix_,
-        const std::vector<std::size_t> &wires_) {
+    apply1QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+                         const KokkosComplexVector &matrix_,
+                         const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -166,10 +165,9 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     std::size_t parity_high;
     std::size_t parity_middle;
 
-    apply2QubitOpFunctor(
-        KokkosComplexVector arr_, std::size_t num_qubits_,
-        const KokkosComplexVector &matrix_,
-        const std::vector<std::size_t> &wires_) {
+    apply2QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+                         const KokkosComplexVector &matrix_,
+                         const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;

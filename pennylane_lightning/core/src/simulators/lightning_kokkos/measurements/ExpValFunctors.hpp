@@ -286,10 +286,10 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     std::size_t wire_parity;
     std::size_t wire_parity_inv;
 
-    getExpVal1QubitOpFunctor(
-        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
-        const KokkosComplexVector &matrix_,
-        const std::vector<std::size_t> &wires_) {
+    getExpVal1QubitOpFunctor(const KokkosComplexVector &arr_,
+                             const std::size_t num_qubits_,
+                             const KokkosComplexVector &matrix_,
+                             const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -340,10 +340,10 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     std::size_t parity_high;
     std::size_t parity_middle;
 
-    getExpVal2QubitOpFunctor(
-        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
-        const KokkosComplexVector &matrix_,
-        const std::vector<std::size_t> &wires_) {
+    getExpVal2QubitOpFunctor(const KokkosComplexVector &arr_,
+                             const std::size_t num_qubits_,
+                             const KokkosComplexVector &matrix_,
+                             const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
