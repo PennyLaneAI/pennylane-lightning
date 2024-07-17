@@ -305,7 +305,7 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(std::size_t i, std::size_t j, PrecisionT dst[]) const {
+    void operator()(const std::size_t i, const std::size_t j, PrecisionT dst[]) const {
         const std::size_t index = all_indices(i) + all_offsets(j);
         const PrecisionT rsv = arr(index).real();
         const PrecisionT isv = arr(index).imag();
@@ -501,61 +501,6 @@ class getProbsNQubitOpFunctor {
             apply4(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3,
                    rev_wire_4, 0, dst);
         }
-    }
-};
-
-template <class PrecisionT, class DeviceType> class getProbs1QubitOpFunctor {
-  public:
-    // Required for functor:
-    using execution_space = DeviceType;
-    using value_type = PrecisionT[];
-    const unsigned value_count;
-
-    using ComplexT = Kokkos::complex<PrecisionT>;
-    using KokkosComplexVector = Kokkos::View<ComplexT *>;
-    KokkosComplexVector arr;
-    std::size_t rev_wire_0;
-    std::size_t parity_0;
-    std::size_t parity_1;
-
-    getProbs1QubitOpFunctor(
-        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_)
-        : value_count{1U << wires_.size()}, arr{arr_} {
-        const std::size_t n_wires = wires_.size();
-        std::vector<std::size_t> rev_wires(n_wires);
-        for (std::size_t k = 0; k < n_wires; k++) {
-            rev_wires[n_wires - 1 - k] = (num_qubits_ - 1) - wires_[k];
-        }
-        const std::vector<std::size_t> parity =
-            Pennylane::Util::revWireParity(rev_wires);
-        rev_wire_0 = rev_wires[0];
-        parity_0 = parity[0];
-        parity_1 = parity[1];
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void init(PrecisionT dst[]) const {
-        for (unsigned i = 0; i < value_count; ++i)
-            dst[i] = 0.0;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void join(PrecisionT dst[], const PrecisionT src[]) const {
-        for (unsigned i = 0; i < value_count; ++i)
-            dst[i] += src[i];
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(std::size_t k, PrecisionT dst[]) const {
-        const std::size_t i0 = ((k << 1U) & parity_1) | ((k << 0U) & parity_0);
-        const std::size_t i1 = i0 | (1U << rev_wire_0);
-        PrecisionT rsv = real(arr(i0));
-        PrecisionT isv = imag(arr(i0));
-        dst[0] += rsv * rsv + isv * isv;
-        rsv = real(arr(i1));
-        isv = imag(arr(i1));
-        dst[1] += rsv * rsv + isv * isv;
     }
 };
 

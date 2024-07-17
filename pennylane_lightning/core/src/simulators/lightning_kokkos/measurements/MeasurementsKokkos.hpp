@@ -559,7 +559,8 @@ class Measurements final
         Kokkos::View<ComplexT *> sv = this->_statevector.getView();
 
         // Reducing over `d_probabilities` requires too much L0 scratch memory
-        // on GPUs
+        // on GPUs. If n_wires >= 20, this also requires quite a bit of memory
+        // on CPUs, so we fallback to the next implementation
         if (n_wires < 20 && std::is_same_v<KokkosExecSpace, HostExecSpace>) {
             using MDPolicyType_2D =
                 Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
