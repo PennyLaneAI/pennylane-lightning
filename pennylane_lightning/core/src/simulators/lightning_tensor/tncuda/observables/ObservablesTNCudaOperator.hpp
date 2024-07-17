@@ -18,6 +18,7 @@
 #include <tuple>
 #include <vector>
 
+#include "LinearAlg.hpp"
 #include "ObservablesTNCuda.hpp"
 #include "TensorCuda.hpp"
 #include "Util.hpp"
@@ -65,6 +66,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         std::tuple<std::string, std::vector<PrecisionT>, std::size_t>;
 
   private:
+    SharedCublasCaller cublascaller_;
     cutensornetNetworkOperator_t obsOperator_{
         nullptr}; // cutensornetNetworkOperator operator
 
@@ -86,6 +88,8 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         tensorDataPtr_; // pointers for each tensor data in each term
 
     std::vector<int64_t> ids_; // ids for each term in the graph
+
+    const bool var_cal_ = false;
 
   private:
     /**
@@ -243,8 +247,108 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
             tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
 
-            appendTNOperator_(coeff, numTensors, numModes_.back().data(),
-                              modesPtr_.back().data(),
+            appendTNOperator_(obsOperator_, coeff, numTensors,
+                              numModes_.back().data(), modesPtr_.back().data(),
+                              tensorDataPtr_.back().data());
+        }
+    }
+
+    ObservableTNCudaOperator(const TensorNetT &tensor_network,
+                             ObservableTNCuda<TensorNetT> &obs,
+                             const bool var_cal)
+        : cublascaller_(make_shared_cublas_caller()),
+          tensor_network_{tensor_network},
+          numObsTerms_(obs.getNumTensors().size()), var_cal_{var_cal} {
+        PL_ABORT_IF(var_cal == false,
+                    "var_cal should be true for this constructor");
+        PL_ABORT_IF_NOT(
+            numObsTerms_ == 1,
+            "Only one observable term is allowed for variance calculation");
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
+            /* const cutensornetHandle_t */ tensor_network.getTNCudaHandle(),
+            /* int32_t */ static_cast<int32_t>(tensor_network.getNumQubits()),
+            /* const int64_t stateModeExtents */
+            reinterpret_cast<int64_t *>(const_cast<std::size_t *>(
+                tensor_network.getQubitDims().data())),
+            /* cudaDataType_t */ tensor_network.getCudaDataType(),
+            /* cutensornetNetworkOperator_t */ &obsOperator_));
+
+        numTensors_ = obs.getNumTensors(); // number of tensors in each term
+
+        for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
+            auto coeff = cuDoubleComplex{
+                static_cast<double>(obs.getCoeffs()[term_idx]*obs.getCoeffs()[term_idx]), 0.0};
+            auto numTensors = numTensors_[term_idx];
+
+            coeffs_.emplace_back(coeff);
+
+            // number of state modes of each tensor in each term
+            numModes_.emplace_back(cast_vector<std::size_t, int32_t>(
+                obs.getNumStateModes()[term_idx]));
+
+            // modes initialization
+            vector2D<int32_t> modes_per_term;
+            for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
+                 tensor_idx++) {
+                modes_per_term.emplace_back(
+                    cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                        obs.getStateModes()[term_idx][tensor_idx],
+                        tensor_network.getNumQubits()));
+            }
+            modes_.emplace_back(modes_per_term);
+
+            // modes pointer initialization
+            vector1D<const int32_t *> modesPtrPerTerm;
+            for (std::size_t tensor_idx = 0; tensor_idx < modes_.back().size();
+                 tensor_idx++) {
+                modesPtrPerTerm.emplace_back(modes_.back()[tensor_idx].data());
+            }
+            modesPtr_.emplace_back(modesPtrPerTerm);
+
+            // tensor data initialization
+            vector1D<const void *> tensorDataPtrPerTerm_;
+            for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
+                 tensor_idx++) {
+                auto metaData = obs.getMetaData()[term_idx][tensor_idx];
+
+                auto obsName = std::get<0>(metaData);
+                auto param = std::get<1>(metaData);
+                auto hermitianMatrix = std::get<2>(metaData);
+                std::size_t hash_val = 0;
+
+                if (!hermitianMatrix.empty()) {
+                    hash_val = MatrixHasher()(hermitianMatrix);
+                }
+                auto obs2Name = obsName + "_squared";
+                auto obs2Key = std::make_tuple(obs2Name, param, hash_val);
+                if (device_obs_cache_.find(obs2Key) ==
+                    device_obs_cache_.end()) {
+                    if (hermitianMatrix.empty()) {
+                        add_obs_(obs2Name, param);
+                    } else {
+                        auto hermitianMatrix_cu =
+                            cuUtil::complexToCu<ComplexT>(hermitianMatrix);
+
+                        add_obs_(obs2Key, hermitianMatrix_cu);
+
+                        square_matrix_CUDA_device(
+                            const_cast<CFP_t *>(get_obs_device_ptr_(obs2Key)),
+                            Pennylane::Util::log2(hermitianMatrix_cu.size()),
+                            Pennylane::Util::log2(hermitianMatrix_cu.size()),
+                            tensor_network_.getDevTag().getDeviceID(),
+                            tensor_network_.getDevTag().getStreamID(),
+                            *cublascaller_);
+                    }
+                }
+                tensorDataPtrPerTerm_.emplace_back(
+                    get_obs_device_ptr_(obs2Key));
+            }
+
+            tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
+
+            appendTNOperator_(obsOperator_, coeff, numTensors,
+                              numModes_.back().data(), modesPtr_.back().data(),
                               tensorDataPtr_.back().data());
         }
     }
@@ -273,7 +377,8 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      * @param stateModes State modes of each tensor in the product.
      * @param tensorDataPtr Pointer to the data of each tensor in the product.
      */
-    void appendTNOperator_(const cuDoubleComplex &coeff,
+    void appendTNOperator_(cutensornetNetworkOperator_t &tnOperator,
+                           const cuDoubleComplex &coeff,
                            const std::size_t numTensors,
                            const int32_t *numStateModes,
                            const int32_t **stateModes,
@@ -281,7 +386,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         int64_t id;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
-            /* cutensornetNetworkOperator_t */ getTNOperator(),
+            /* cutensornetNetworkOperator_t */ tnOperator,
             /* cuDoubleComplex coefficient*/ coeff,
             /* int32_t numTensors */ static_cast<int32_t>(numTensors),
             /* const int32_t numStateModes[] */ numStateModes,
