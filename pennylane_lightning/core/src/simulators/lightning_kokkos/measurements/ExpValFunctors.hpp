@@ -336,11 +336,13 @@ class getProbsNQubitOpFunctor {
     std::size_t rev_wire_1;
     std::size_t rev_wire_2;
     std::size_t rev_wire_3;
+    std::size_t rev_wire_4;
     std::size_t parity_0;
     std::size_t parity_1;
     std::size_t parity_2;
     std::size_t parity_3;
     std::size_t parity_4;
+    std::size_t parity_5;
 
     getProbsNQubitOpFunctor(
         const Kokkos::View<ComplexT *> &arr_, const std::size_t num_qubits_,
@@ -380,6 +382,10 @@ class getProbsNQubitOpFunctor {
         if constexpr (num_wires > 3) {
             rev_wire_3 = rev_wires_[3];
             parity_4 = parity_[4];
+        }
+        if constexpr (num_wires > 4) {
+            rev_wire_4 = rev_wires_[4];
+            parity_5 = parity_[5];
         }
     }
 
@@ -521,7 +527,6 @@ class getProbsNQubitOpFunctor {
             rsv = real(arr(i1));
             isv = imag(arr(i1));
             dst[8] += rsv * rsv + isv * isv;
-
             i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_0);
             rsv = real(arr(i1));
             isv = imag(arr(i1));
@@ -554,6 +559,157 @@ class getProbsNQubitOpFunctor {
             rsv = real(arr(i1));
             isv = imag(arr(i1));
             dst[15] += rsv * rsv + isv * isv;
+        }
+        if constexpr (num_wires == 5) {
+            const std::size_t i0 = ((k << 4U) & parity_4) |
+                                   ((k << 3U) & parity_3) |
+                                   ((k << 2U) & parity_2) |
+                                   ((k << 1U) & parity_1) | (k & parity_0);
+            PrecisionT rsv = real(arr(i0));
+            PrecisionT isv = imag(arr(i0));
+            dst[0] += rsv * rsv + isv * isv;
+            std::size_t i1 = i0 | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[1] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[2] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[3] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[4] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[5] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[6] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_1) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[7] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[8] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[9] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[10] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_1) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[11] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[12] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[13] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[14] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[15] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[16] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[17] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[18] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_1) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[19] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_2);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[20] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_2) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[21] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[22] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[23] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_2) | (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[24] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[25] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[26] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[27] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_2);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[28] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_2) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[29] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_2) | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[30] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_4) | (1U << rev_wire_3) |
+                 (1U << rev_wire_2) | (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[31] += rsv * rsv + isv * isv;
         }
     }
 };

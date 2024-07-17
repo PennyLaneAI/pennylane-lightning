@@ -533,7 +533,7 @@ class Measurements final
         if (is_equal_to_all_wires) {
             return this->probs();
         }
-        if (n_wires < 11) {
+        if (n_wires < 9) {
             return probs_bitshift_generic(this->_statevector.getView(),
                                           num_qubits, wires);
         }
@@ -607,6 +607,13 @@ class Measurements final
             Kokkos::parallel_reduce(
                 exp2(num_qubits - n_wires),
                 getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 4>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        case 5UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 5>(
                     arr, num_qubits, wires),
                 d_probabilities);
             break;
