@@ -15,7 +15,7 @@
 
 ### Improvements
 
-* Add GPU device compute capability check for Lightning-Tensor
+* Add GPU device compute capability check for Lightning-Tensor.
   [(#803)](https://github.com/PennyLaneAI/pennylane-lightning/pull/803)
 
 * Refactor CUDA utils Python bindings to a separate module.
