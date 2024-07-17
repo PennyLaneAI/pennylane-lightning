@@ -361,24 +361,24 @@ template <class PrecisionT, class DeviceType> class getProbsNQubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(std::size_t k, PrecisionT dst[]) const {
-        std::size_t idx = (k & parity[0]);
+    void operator()(const Kokkos::TeamPolicy<>::member_type &teamMember,
+                    PrecisionT dst[]) const {
+        const std::size_t k = teamMember.league_rank();
+        std::size_t i0 = (k & parity[0]);
         for (std::size_t i = 1; i < n_wires + 1; i++) {
-            idx |= ((k << i) & parity[i]);
+            i0 |= ((k << i) & parity[i]);
         }
-        PrecisionT rsv = real(arr(idx));
-        PrecisionT isv = imag(arr(idx));
-        dst[0] += rsv * rsv + isv * isv;
-        const std::size_t i0 = idx;
-        for (std::size_t inner_idx = 1; inner_idx < value_count; inner_idx++) {
-            idx = i0;
-            for (std::size_t i = 0; i < n_wires; i++) {
-                idx |= ((inner_idx & (one << i)) >> i) << rev_wires[i];
-            }
-            rsv = real(arr(idx));
-            isv = imag(arr(idx));
-            dst[inner_idx] += rsv * rsv + isv * isv;
-        }
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, value_count),
+            KOKKOS_LAMBDA(const std::size_t inner_idx) {
+                std::size_t idx = i0;
+                for (std::size_t i = 0; i < n_wires; i++) {
+                    idx |= ((inner_idx & (one << i)) >> i) << rev_wires[i];
+                }
+                PrecisionT rsv = real(arr(idx));
+                PrecisionT isv = imag(arr(idx));
+                Kokkos::atomic_add(&dst[inner_idx], rsv * rsv + isv * isv);
+            });
     }
 };
 

@@ -530,46 +530,45 @@ class Measurements final
         if (is_equal_to_all_wires) {
             return this->probs();
         }
-        if (n_wires < 100) {
-            return probs_bitshift_generic(this->_statevector.getView(),
-                                          num_qubits, wires);
-        }
-        std::vector<std::size_t> all_indices =
-            Pennylane::Util::generateBitsPatterns(wires, num_qubits);
-        Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
-                                                  all_indices.size());
-        Kokkos::deep_copy(
-            d_all_indices,
-            UnmanagedSizeTHostView(all_indices.data(), all_indices.size()));
-        std::vector<std::size_t> all_offsets =
-            Pennylane::Util::generateBitsPatterns(
-                Pennylane::Util::getIndicesAfterExclusion(wires, num_qubits),
-                num_qubits);
-        Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
-                                                  all_offsets.size());
-        Kokkos::deep_copy(
-            d_all_offsets,
-            UnmanagedSizeTHostView(all_offsets.data(), all_offsets.size()));
-        Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
-                                                   all_indices.size());
-        Kokkos::deep_copy(d_probabilities, 0.0);
-        Kokkos::View<ComplexT *> sv = this->_statevector.getView();
+        return probs_bitshift_generic(this->_statevector.getView(), num_qubits,
+                                      wires);
 
-        using MDPolicyType_2D =
-            Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
-        auto md_policy = MDPolicyType_2D(
-            {{0, 0}}, {{static_cast<int64_t>(all_indices.size()),
-                        static_cast<int64_t>(all_offsets.size())}});
-        Kokkos::parallel_reduce(md_policy,
-                                getProbsFunctor<PrecisionT, KokkosExecSpace>(
-                                    sv, wires, d_all_indices, d_all_offsets),
-                                d_probabilities);
+        // std::vector<std::size_t> all_indices =
+        //     Pennylane::Util::generateBitsPatterns(wires, num_qubits);
+        // Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
+        //                                           all_indices.size());
+        // Kokkos::deep_copy(
+        //     d_all_indices,
+        //     UnmanagedSizeTHostView(all_indices.data(), all_indices.size()));
+        // std::vector<std::size_t> all_offsets =
+        //     Pennylane::Util::generateBitsPatterns(
+        //         Pennylane::Util::getIndicesAfterExclusion(wires, num_qubits),
+        //         num_qubits);
+        // Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
+        //                                           all_offsets.size());
+        // Kokkos::deep_copy(
+        //     d_all_offsets,
+        //     UnmanagedSizeTHostView(all_offsets.data(), all_offsets.size()));
+        // Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
+        //                                            all_indices.size());
+        // Kokkos::deep_copy(d_probabilities, 0.0);
+        // Kokkos::View<ComplexT *> sv = this->_statevector.getView();
 
-        std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
-        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                     probabilities.size()),
-                          d_probabilities);
-        return probabilities;
+        // using MDPolicyType_2D =
+        //     Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
+        // auto md_policy = MDPolicyType_2D(
+        //     {{0, 0}}, {{static_cast<int64_t>(all_indices.size()),
+        //                 static_cast<int64_t>(all_offsets.size())}});
+        // Kokkos::parallel_reduce(md_policy,
+        //                         getProbsFunctor<PrecisionT, KokkosExecSpace>(
+        //                             sv, wires, d_all_indices, d_all_offsets),
+        //                         d_probabilities);
+
+        // std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
+        // Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
+        //                                              probabilities.size()),
+        //                   d_probabilities);
+        // return probabilities;
     }
 
     auto probs_bitshift_generic(const Kokkos::View<ComplexT *> arr,
@@ -596,7 +595,7 @@ class Measurements final
         Kokkos::deep_copy(d_probabilities, 0.0);
         // if (n_wires == 1) {
         Kokkos::parallel_reduce(
-            exp2(num_qubits - n_wires),
+            Kokkos::TeamPolicy<>(exp2(num_qubits - n_wires), Kokkos::AUTO),
             getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace>(
                 arr, num_qubits, wires),
             d_probabilities);
