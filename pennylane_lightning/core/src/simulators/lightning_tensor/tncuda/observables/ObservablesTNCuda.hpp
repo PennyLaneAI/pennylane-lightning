@@ -241,7 +241,8 @@ class HermitianObsTNCuda : public ObservableTNCuda<TensorNetT> {
      */
     HermitianObsTNCuda(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
-        //PL_ABORT_IF(wires_.size() != 1, "Number of Hermitian target wires must be 1.");
+        // PL_ABORT_IF(wires_.size() != 1, "Number of Hermitian target wires
+        // must be 1.");
         PL_ASSERT(matrix_.size() == Pennylane::Util::exp2(2 * wires_.size()));
         BaseType::coeffs_.emplace_back(PrecisionT{1.0});
         BaseType::numTensors_.emplace_back(std::size_t{1});

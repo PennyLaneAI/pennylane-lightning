@@ -96,23 +96,22 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[MPSTNCuda_Var]", float,
     auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
 
     mps_state.applyOperations(
-            {{"RX"}, {"RY"}, {"RX"}, {"RY"}, {"RX"}, {"RY"}},
-            {{0}, {0}, {1}, {1}, {2}, {2}},
-            {{false}, {false}, {false}, {false}, {false}, {false}},
-            {{0.7}, {0.7}, {0.5}, {0.5}, {0.3}, {0.3}});
+        {{"RX"}, {"RY"}, {"RX"}, {"RY"}, {"RX"}, {"RY"}},
+        {{0}, {0}, {1}, {1}, {2}, {2}},
+        {{false}, {false}, {false}, {false}, {false}, {false}},
+        {{0.7}, {0.7}, {0.5}, {0.5}, {0.3}, {0.3}});
     mps_state.append_mps_final_state();
 
     SECTION("Target at 1 wire") {
-        std::vector<ComplexT> matrix= {
+        std::vector<ComplexT> matrix = {
             {2.5, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {3.8, 0.0}};
 
         auto ob = HermitianObsT(matrix, {0});
         auto res = measure.var(ob);
-        auto expected = TestType(0.2779180584);//from default.qubit
+        auto expected = TestType(0.2779180584); // from default.qubit
         CHECK(res == Approx(expected));
     }
 }
-
 
 TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[MPSTNCuda_Var]", float,
                    double) {
@@ -132,7 +131,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[MPSTNCuda_Var]", float,
         mps_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
-        
+
         mps_state.append_mps_final_state();
 
         auto X0 =
@@ -147,8 +146,8 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[MPSTNCuda_Var]", float,
     }
 }
 
-TEMPLATE_TEST_CASE("Test var value of HamiltonianObs",
-                   "[MPSTNCuda_Var]", float, double) {
+TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
+                   double) {
     using TensorNetT = MPSTNCuda<TestType>;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
     using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
@@ -175,6 +174,6 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs",
 
         auto ob = HamiltonianObsT::create({TestType{0.5}}, {ob_term});
         auto res = m.var(*ob);
-        CHECK(res == Approx(0.836679*0.25));
+        CHECK(res == Approx(0.836679 * 0.25));
     }
 }

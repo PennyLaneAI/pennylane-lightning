@@ -277,8 +277,10 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
-            auto coeff = cuDoubleComplex{
-                static_cast<double>(obs.getCoeffs()[term_idx]*obs.getCoeffs()[term_idx]), 0.0};
+            auto coeff =
+                cuDoubleComplex{static_cast<double>(obs.getCoeffs()[term_idx] *
+                                                    obs.getCoeffs()[term_idx]),
+                                0.0};
             auto numTensors = numTensors_[term_idx];
 
             coeffs_.emplace_back(coeff);
