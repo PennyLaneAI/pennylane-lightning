@@ -239,7 +239,7 @@ class TestProbs:
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize("n_qubits", range(4, 25, 4))
-    @pytest.mark.parametrize("n_targets", range(1, 25, 4))
+    @pytest.mark.parametrize("n_targets", list(range(1, 9)) + list(range(9, 25, 4)))
     def test_probs_many_wires(self, n_qubits, n_targets, tol):
         """Test probs measuring many wires of a random quantum state."""
         if n_targets >= n_qubits:

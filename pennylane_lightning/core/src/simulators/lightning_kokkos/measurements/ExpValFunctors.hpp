@@ -305,7 +305,8 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t i, const std::size_t j, PrecisionT dst[]) const {
+    void operator()(const std::size_t i, const std::size_t j,
+                    PrecisionT dst[]) const {
         const std::size_t index = all_indices(i) + all_offsets(j);
         const PrecisionT rsv = arr(index).real();
         const PrecisionT isv = arr(index).imag();
