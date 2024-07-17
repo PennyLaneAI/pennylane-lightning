@@ -289,7 +289,7 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     getExpVal1QubitOpFunctor(
         const KokkosComplexVector &arr_, const std::size_t num_qubits_,
         const KokkosComplexVector &matrix_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+        const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -343,7 +343,7 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     getExpVal2QubitOpFunctor(
         const KokkosComplexVector &arr_, const std::size_t num_qubits_,
         const KokkosComplexVector &matrix_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+        const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;

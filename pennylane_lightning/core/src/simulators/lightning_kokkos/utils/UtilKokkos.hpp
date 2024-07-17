@@ -32,6 +32,13 @@ namespace Pennylane::LightningKokkos::Util {
 
 constexpr std::size_t one{1};
 
+/**
+ * @brief Copy the content of a Kokkos view to an `std::vector`.
+ *
+ * @tparam T View data type.
+ * @param view Kokkos view.
+ * @return `std::vector<T>` containing a copy of the view.
+ */
 template <typename T>
 inline auto view2vector(const Kokkos::View<T *> view) -> std::vector<T> {
     using UnmanagedHostView =
@@ -42,6 +49,13 @@ inline auto view2vector(const Kokkos::View<T *> view) -> std::vector<T> {
     return vec;
 }
 
+/**
+ * @brief Copy the content of an `std::vector` to a Kokkos view.
+ *
+ * @tparam T Vector data type.
+ * @param vec Vector.
+ * @return Kokkos view pointing to a copy of the vector.
+ */
 template <typename T>
 inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
     using UnmanagedView = Kokkos::View<const T *, Kokkos::HostSpace,

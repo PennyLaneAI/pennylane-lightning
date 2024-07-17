@@ -20,6 +20,16 @@
 
 namespace Pennylane::LightningKokkos::Functors {
 
+/**
+ * @brief Compute probability distribution from StateVector.
+ *
+ * @tparam PrecisionT StateVector precision.
+ * @tparam DeviceType Kokkos execution space.
+ * @param arr_ StateVector data.
+ * @param wires_ Wires for which the probability is computed.
+ * @param all_indices_ Base indices.
+ * @param all_offsets_ Offset indices.
+ */
 template <class PrecisionT, class DeviceType> class getProbsFunctor {
   public:
     // Required for functor:
@@ -32,7 +42,7 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     Kokkos::View<std::size_t *> all_indices;
     Kokkos::View<std::size_t *> all_offsets;
     getProbsFunctor(const Kokkos::View<ComplexT *> &arr_,
-                    [[maybe_unused]] const std::vector<std::size_t> &wires_,
+                    const std::vector<std::size_t> &wires_,
                     const Kokkos::View<std::size_t *> all_indices_,
                     const Kokkos::View<std::size_t *> all_offsets_)
         : value_count{1U << wires_.size()}, arr{arr_},
@@ -60,6 +70,16 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     }
 };
 
+/**
+ * @brief Compute probability distribution from StateVector.
+ *
+ * @tparam PrecisionT StateVector precision.
+ * @tparam DeviceType Kokkos execution space.
+ * @tparam num_wires Number of wires (0 is used for a dynamic number of wires).
+ * @param arr_ StateVector data.
+ * @param num_qubits_ Number of qubits.
+ * @param wires_ Wires for which the probability is computed.
+ */
 template <class PrecisionT, class DeviceType, std::size_t num_wires>
 class getProbsNQubitOpFunctor {
   public:
@@ -101,7 +121,7 @@ class getProbsNQubitOpFunctor {
 
     getProbsNQubitOpFunctor(
         const Kokkos::View<ComplexT *> &arr_, const std::size_t num_qubits_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_)
+        const std::vector<std::size_t> &wires_)
         : value_count{1U << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
         PL_ABORT_IF(num_wires != 0 && num_wires != n_wires,
                     "num_wires must be equal to n_wires.");
@@ -362,6 +382,15 @@ class getProbsNQubitOpFunctor {
     }
 };
 
+/**
+ * @brief Compute probability distribution from StateVector.
+ *
+ * @tparam DeviceType Kokkos execution space.
+ * @tparam PrecisionT StateVector precision.
+ * @param arr StateVector data.
+ * @param num_qubits Number of qubits.
+ * @param wires Wires for which the probability is computed.
+ */
 template <class DeviceType, class PrecisionT>
 auto probs_bitshift_generic(
     const Kokkos::View<Kokkos::complex<PrecisionT> *> arr,

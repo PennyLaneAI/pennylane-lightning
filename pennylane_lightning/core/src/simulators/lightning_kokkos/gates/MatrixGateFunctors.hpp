@@ -122,7 +122,7 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     apply1QubitOpFunctor(
         KokkosComplexVector arr_, std::size_t num_qubits_,
         const KokkosComplexVector &matrix_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+        const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -169,7 +169,7 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     apply2QubitOpFunctor(
         KokkosComplexVector arr_, std::size_t num_qubits_,
         const KokkosComplexVector &matrix_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+        const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
