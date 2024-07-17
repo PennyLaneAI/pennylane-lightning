@@ -635,6 +635,27 @@ class Measurements final
                     arr, num_qubits, wires),
                 d_probabilities);
             break;
+        case 6UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 6>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        case 7UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 7>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        case 8UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 8>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
         default:
             Kokkos::parallel_reduce(
                 exp2(num_qubits - n_wires),

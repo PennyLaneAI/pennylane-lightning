@@ -338,12 +338,18 @@ class getProbsNQubitOpFunctor {
     std::size_t rev_wire_2;
     std::size_t rev_wire_3;
     std::size_t rev_wire_4;
+    std::size_t rev_wire_5;
+    std::size_t rev_wire_6;
+    std::size_t rev_wire_7;
     std::size_t parity_0;
     std::size_t parity_1;
     std::size_t parity_2;
     std::size_t parity_3;
     std::size_t parity_4;
     std::size_t parity_5;
+    std::size_t parity_6;
+    std::size_t parity_7;
+    std::size_t parity_8;
 
     getProbsNQubitOpFunctor(
         const Kokkos::View<ComplexT *> &arr_, const std::size_t num_qubits_,
@@ -387,6 +393,18 @@ class getProbsNQubitOpFunctor {
         if constexpr (num_wires > 4) {
             rev_wire_4 = rev_wires_[4];
             parity_5 = parity_[5];
+        }
+        if constexpr (num_wires > 5) {
+            rev_wire_5 = rev_wires_[5];
+            parity_6 = parity_[6];
+        }
+        if constexpr (num_wires > 6) {
+            rev_wire_6 = rev_wires_[6];
+            parity_7 = parity_[7];
+        }
+        if constexpr (num_wires > 7) {
+            rev_wire_7 = rev_wires_[7];
+            parity_8 = parity_[8];
         }
     }
 
@@ -455,6 +473,44 @@ class getProbsNQubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
+    void apply5(const std::size_t i0, const std::size_t rev_wire_0,
+                const std::size_t rev_wire_1, const std::size_t rev_wire_2,
+                const std::size_t rev_wire_3, const std::size_t rev_wire_4,
+                const std::size_t rev_wire_5, const std::size_t offset,
+                PrecisionT dst[]) const {
+        apply4(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
+               0 + offset, dst);
+        apply4(i0 | (1U << rev_wire_5), rev_wire_0, rev_wire_1, rev_wire_2,
+               rev_wire_3, rev_wire_4, 32 + offset, dst);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void apply6(const std::size_t i0, const std::size_t rev_wire_0,
+                const std::size_t rev_wire_1, const std::size_t rev_wire_2,
+                const std::size_t rev_wire_3, const std::size_t rev_wire_4,
+                const std::size_t rev_wire_5, const std::size_t rev_wire_6,
+                const std::size_t offset, PrecisionT dst[]) const {
+        apply5(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
+               rev_wire_5, 0 + offset, dst);
+        apply5(i0 | (1U << rev_wire_6), rev_wire_0, rev_wire_1, rev_wire_2,
+               rev_wire_3, rev_wire_4, rev_wire_5, 64 + offset, dst);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void apply7(const std::size_t i0, const std::size_t rev_wire_0,
+                const std::size_t rev_wire_1, const std::size_t rev_wire_2,
+                const std::size_t rev_wire_3, const std::size_t rev_wire_4,
+                const std::size_t rev_wire_5, const std::size_t rev_wire_6,
+                const std::size_t rev_wire_7, const std::size_t offset,
+                PrecisionT dst[]) const {
+        apply6(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, rev_wire_4,
+               rev_wire_5, rev_wire_6, 0 + offset, dst);
+        apply6(i0 | (1U << rev_wire_7), rev_wire_0, rev_wire_1, rev_wire_2,
+               rev_wire_3, rev_wire_4, rev_wire_5, rev_wire_6, 128 + offset,
+               dst);
+    }
+
+    KOKKOS_INLINE_FUNCTION
     void operator()(std::size_t k, PrecisionT dst[]) const {
         if constexpr (num_wires == 0) {
             std::size_t i0 = (k & parity[0]);
@@ -495,12 +551,40 @@ class getProbsNQubitOpFunctor {
             apply3(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3, 0, dst);
         }
         if constexpr (num_wires == 5) {
-            const std::size_t i0 = ((k << 4U) & parity_4) |
-                                   ((k << 3U) & parity_3) |
-                                   ((k << 2U) & parity_2) |
-                                   ((k << 1U) & parity_1) | (k & parity_0);
+            const std::size_t i0 =
+                ((k << 4U) & parity_5) | ((k << 4U) & parity_4) |
+                ((k << 3U) & parity_3) | ((k << 2U) & parity_2) |
+                ((k << 1U) & parity_1) | (k & parity_0);
             apply4(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3,
                    rev_wire_4, 0, dst);
+        }
+        if constexpr (num_wires == 6) {
+            const std::size_t i0 =
+                ((k << 6U) & parity_6) | ((k << 5U) & parity_5) |
+                ((k << 4U) & parity_4) | ((k << 3U) & parity_3) |
+                ((k << 2U) & parity_2) | ((k << 1U) & parity_1) |
+                (k & parity_0);
+            apply5(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3,
+                   rev_wire_4, rev_wire_5, 0, dst);
+        }
+        if constexpr (num_wires == 7) {
+            const std::size_t i0 =
+                ((k << 7U) & parity_7) | ((k << 6U) & parity_6) |
+                ((k << 5U) & parity_5) | ((k << 4U) & parity_4) |
+                ((k << 3U) & parity_3) | ((k << 2U) & parity_2) |
+                ((k << 1U) & parity_1) | (k & parity_0);
+            apply6(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3,
+                   rev_wire_4, rev_wire_5, rev_wire_6, 0, dst);
+        }
+        if constexpr (num_wires == 8) {
+            const std::size_t i0 =
+                ((k << 8U) & parity_8) | ((k << 7U) & parity_7) |
+                ((k << 6U) & parity_6) | ((k << 5U) & parity_5) |
+                ((k << 4U) & parity_4) | ((k << 3U) & parity_3) |
+                ((k << 2U) & parity_2) | ((k << 1U) & parity_1) |
+                (k & parity_0);
+            apply7(i0, rev_wire_0, rev_wire_1, rev_wire_2, rev_wire_3,
+                   rev_wire_4, rev_wire_5, rev_wire_6, rev_wire_7, 0, dst);
         }
     }
 };
