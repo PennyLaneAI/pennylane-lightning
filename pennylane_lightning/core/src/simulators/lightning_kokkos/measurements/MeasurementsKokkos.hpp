@@ -530,11 +530,10 @@ class Measurements final
         if (is_equal_to_all_wires) {
             return this->probs();
         }
-        // if (n_wires == 1) {
-        //     return probs_bitshift_generic(this->_statevector.getView(),
-        //                                   num_qubits, wires);
-        // }
-
+        if (n_wires < 100) {
+            return probs_bitshift_generic(this->_statevector.getView(),
+                                          num_qubits, wires);
+        }
         std::vector<std::size_t> all_indices =
             Pennylane::Util::generateBitsPatterns(wires, num_qubits);
         Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
@@ -598,7 +597,7 @@ class Measurements final
         // if (n_wires == 1) {
         Kokkos::parallel_reduce(
             exp2(num_qubits - n_wires),
-            getProbs1QubitOpFunctor<PrecisionT, KokkosExecSpace>(
+            getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace>(
                 arr, num_qubits, wires),
             d_probabilities);
         // } else {

@@ -312,6 +312,76 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     }
 };
 
+template <class PrecisionT, class DeviceType> class getProbsNQubitOpFunctor {
+  public:
+    // Required for functor:
+    using execution_space = DeviceType;
+    using value_type = PrecisionT[];
+    const unsigned value_count;
+
+    using UnmanagedSizeTHostView =
+        Kokkos::View<std::size_t *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    Kokkos::View<ComplexT *> arr;
+    const std::size_t n_wires;
+    Kokkos::View<std::size_t *> rev_wires;
+    Kokkos::View<std::size_t *> parity;
+
+    getProbsNQubitOpFunctor(
+        const Kokkos::View<ComplexT *> &arr_, const std::size_t num_qubits_,
+        [[maybe_unused]] const std::vector<std::size_t> &wires_)
+        : value_count{1U << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
+        const std::size_t n_wires = wires_.size();
+        std::vector<std::size_t> rev_wires_(n_wires);
+        for (std::size_t k = 0; k < n_wires; k++) {
+            rev_wires_[n_wires - 1 - k] = (num_qubits_ - 1) - wires_[k];
+        }
+        std::vector<std::size_t> parity_ =
+            Pennylane::Util::revWireParity(rev_wires_);
+        Kokkos::resize(rev_wires, rev_wires_.size());
+        Kokkos::deep_copy(rev_wires, UnmanagedSizeTHostView(rev_wires_.data(),
+                                                            rev_wires_.size()));
+        Kokkos::resize(parity, parity_.size());
+        Kokkos::deep_copy(
+            parity, UnmanagedSizeTHostView(parity_.data(), parity_.size()));
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void init(PrecisionT dst[]) const {
+        for (unsigned i = 0; i < value_count; ++i)
+            dst[i] = 0;
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void join(PrecisionT dst[], const PrecisionT src[]) const {
+        for (unsigned i = 0; i < value_count; ++i)
+            dst[i] += src[i];
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(std::size_t k, PrecisionT dst[]) const {
+        std::size_t idx = (k & parity[0]);
+        for (std::size_t i = 1; i < n_wires + 1; i++) {
+            idx |= ((k << i) & parity[i]);
+        }
+        PrecisionT rsv = real(arr(idx));
+        PrecisionT isv = imag(arr(idx));
+        dst[0] += rsv * rsv + isv * isv;
+        const std::size_t i0 = idx;
+        for (std::size_t inner_idx = 1; inner_idx < value_count; inner_idx++) {
+            idx = i0;
+            for (std::size_t i = 0; i < n_wires; i++) {
+                idx |= ((inner_idx & (one << i)) >> i) << rev_wires[i];
+            }
+            rsv = real(arr(idx));
+            isv = imag(arr(idx));
+            dst[inner_idx] += rsv * rsv + isv * isv;
+        }
+    }
+};
+
 template <class PrecisionT, class DeviceType> class getProbs1QubitOpFunctor {
   public:
     // Required for functor:
@@ -321,7 +391,6 @@ template <class PrecisionT, class DeviceType> class getProbs1QubitOpFunctor {
 
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
-    const std::size_t n_wires;
     KokkosComplexVector arr;
     std::size_t rev_wire_0;
     std::size_t parity_0;
@@ -330,8 +399,8 @@ template <class PrecisionT, class DeviceType> class getProbs1QubitOpFunctor {
     getProbs1QubitOpFunctor(
         const KokkosComplexVector &arr_, const std::size_t num_qubits_,
         [[maybe_unused]] const std::vector<std::size_t> &wires_)
-        : value_count{1U << wires_.size()}, n_wires{wires_.size()} {
-        arr = arr_;
+        : value_count{1U << wires_.size()}, arr{arr_} {
+        const std::size_t n_wires = wires_.size();
         std::vector<std::size_t> rev_wires(n_wires);
         for (std::size_t k = 0; k < n_wires; k++) {
             rev_wires[n_wires - 1 - k] = (num_qubits_ - 1) - wires_[k];
