@@ -17,7 +17,7 @@
 #include <Kokkos_StdAlgorithms.hpp>
 
 #include "BitUtil.hpp"
-#include "BitUtilKokkos.hpp"
+#include "UtilKokkos.hpp"
 
 /// @cond DEV
 namespace {

@@ -32,6 +32,16 @@ namespace Pennylane::LightningKokkos::Util {
 
 constexpr std::size_t one{1};
 
+template <typename T>
+inline auto view2vector(const Kokkos::View<T *> view) -> std::vector<T> {
+    using UnmanagedHostView =
+        Kokkos::View<T *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    std::vector<T> vec(view.size());
+    Kokkos::deep_copy(UnmanagedHostView(vec.data(), vec.size()), view);
+    return vec;
+}
+
 /**
  * @brief Compute the parities and shifts for multi-qubit operations.
  *

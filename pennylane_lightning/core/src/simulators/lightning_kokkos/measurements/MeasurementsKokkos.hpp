@@ -29,11 +29,13 @@
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::LightningKokkos::Functors;
 using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
+using Pennylane::LightningKokkos::Util::view2vector;
 using Pennylane::Util::exp2;
 enum class ExpValFunc : uint32_t {
     BEGIN = 1,
@@ -65,8 +67,6 @@ class Measurements final
         typename StateVectorT::UnmanagedConstComplexHostView;
     using UnmanagedConstSizeTHostView =
         typename StateVectorT::UnmanagedConstSizeTHostView;
-    using UnmanagedPrecisionHostView =
-        typename StateVectorT::UnmanagedPrecisionHostView;
     using ScratchViewComplex = typename StateVectorT::ScratchViewComplex;
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
@@ -502,11 +502,7 @@ class Measurements final
      * in lexicographic order.
      */
     auto probs() -> std::vector<PrecisionT> {
-        std::vector<PrecisionT> probs(this->_statevector.getLength());
-        Kokkos::deep_copy(
-            UnmanagedPrecisionHostView(probs.data(), probs.size()),
-            probs_core());
-        return probs;
+        return view2vector(probs_core());
     }
 
     /**
@@ -536,9 +532,10 @@ class Measurements final
         }
         const bool is_gpu_scratch_limited =
             n_wires > 7 && !std::is_same_v<KokkosExecSpace, HostExecSpace>;
-        if (num_qubits - n_wires > 10 && !is_gpu_scratch_limited) {
-            return probs_bitshift_generic(this->_statevector.getView(),
-                                          num_qubits, wires);
+        if (num_qubits - n_wires > 10 && n_wires < 9 &&
+            !is_gpu_scratch_limited) {
+            return probs_bitshift_generic<KokkosExecSpace>(
+                this->_statevector.getView(), num_qubits, wires);
         }
         std::vector<std::size_t> all_indices =
             Pennylane::Util::generateBitsPatterns(wires, num_qubits);
@@ -587,90 +584,7 @@ class Measurements final
                 });
         }
 
-        std::vector<PrecisionT> probabilities(d_probabilities.size());
-        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                     probabilities.size()),
-                          d_probabilities);
-        return probabilities;
-    }
-
-    auto probs_bitshift_generic(const Kokkos::View<ComplexT *> arr,
-                                const std::size_t num_qubits,
-                                const std::vector<std::size_t> &wires)
-        -> std::vector<PrecisionT> {
-        const std::size_t n_wires = wires.size();
-        const std::size_t n_probs = Pennylane::Util::exp2(n_wires);
-        Kokkos::View<PrecisionT *> d_probabilities("d_probabilities", n_probs);
-        switch (n_wires) {
-        case 1UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 1>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        case 2UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 2>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        case 3UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 3>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        case 4UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 4>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        case 5UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 5>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        case 6UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 6>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        case 7UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 7>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        case 8UL:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 8>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        default:
-            Kokkos::parallel_reduce(
-                exp2(num_qubits - n_wires),
-                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 0>(
-                    arr, num_qubits, wires),
-                d_probabilities);
-            break;
-        }
-        std::vector<PrecisionT> probabilities(d_probabilities.size());
-        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                     probabilities.size()),
-                          d_probabilities);
-        return probabilities;
+        return view2vector(d_probabilities);
     }
 
     /**
@@ -731,9 +645,6 @@ class Measurements final
      * number between 0 and num_samples-1.
      */
     auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
-        using UnmanagedSize_tHostView =
-            Kokkos::View<std::size_t *, Kokkos::HostSpace,
-                         Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const std::size_t N = this->_statevector.getLength();
         Kokkos::View<std::size_t *> samples("num_samples",
@@ -762,11 +673,7 @@ class Measurements final
             Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                 samples, probability, rand_pool, num_qubits, N));
 
-        std::vector<std::size_t> samples_h(num_samples * num_qubits);
-        Kokkos::deep_copy(
-            UnmanagedSize_tHostView(samples_h.data(), samples_h.size()),
-            samples);
-        return samples_h;
+        return view2vector(samples);
     }
 
   private:
