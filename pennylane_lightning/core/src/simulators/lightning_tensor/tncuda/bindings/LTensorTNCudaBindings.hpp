@@ -24,6 +24,7 @@
 #include "cuda.h"
 
 #include "BindingsBase.hpp"
+#include "BindingsCudaUtils.hpp"
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
 #include "Error.hpp"
@@ -35,6 +36,7 @@
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
+using namespace Pennylane::LightningGPU::Util;
 using Pennylane::LightningTensor::TNCuda::MPSTNCuda;
 } // namespace
 /// @endcond
@@ -88,54 +90,9 @@ auto getBackendInfo() -> py::dict {
  *
  * @param m Pybind11 module.
  */
-// TODO Move this method to a separate module for both LGPU and LTensor usage.
 void registerBackendSpecificInfo(py::module_ &m) {
     m.def("backend_info", &getBackendInfo, "Backend-specific information.");
-    m.def("device_reset", &deviceReset, "Reset all GPU devices and contexts.");
-    m.def("allToAllAccess", []() {
-        for (int i = 0; i < static_cast<int>(getGPUCount()); i++) {
-            cudaDeviceEnablePeerAccess(i, 0);
-        }
-    });
-
-    m.def("is_gpu_supported", &isCuQuantumSupported,
-          py::arg("device_number") = 0,
-          "Checks if the given GPU device meets the minimum architecture "
-          "support for the PennyLane-Lightning-Tensor device.");
-
-    m.def("get_gpu_arch", &getGPUArch, py::arg("device_number") = 0,
-          "Returns the given GPU major and minor GPU support.");
-    py::class_<DevicePool<int>>(m, "DevPool")
-        .def(py::init<>())
-        .def("getActiveDevices", &DevicePool<int>::getActiveDevices)
-        .def("isActive", &DevicePool<int>::isActive)
-        .def("isInactive", &DevicePool<int>::isInactive)
-        .def("acquireDevice", &DevicePool<int>::acquireDevice)
-        .def("releaseDevice", &DevicePool<int>::releaseDevice)
-        .def("syncDevice", &DevicePool<int>::syncDevice)
-        .def_static("getTotalDevices", &DevicePool<int>::getTotalDevices)
-        .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
-        .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx);
-
-    py::class_<DevTag<int>>(m, "DevTag")
-        .def(py::init<>())
-        .def(py::init<int>())
-        .def(py::init([](int device_id, void *stream_id) {
-            // Note, streams must be handled externally for now.
-            // Binding support provided through void* conversion to cudaStream_t
-            return new DevTag<int>(device_id,
-                                   static_cast<cudaStream_t>(stream_id));
-        }))
-        .def(py::init<const DevTag<int> &>())
-        .def("getDeviceID", &DevTag<int>::getDeviceID)
-        .def("getStreamID",
-             [](DevTag<int> &dev_tag) {
-                 // default stream points to nullptr, so just return void* as
-                 // type
-                 return static_cast<void *>(dev_tag.getStreamID());
-             })
-        .def("refresh", &DevTag<int>::refresh);
+    registerCudaUtils(m);
 }
 
 } // namespace Pennylane::LightningTensor::TNCuda
-  /// @endcond
