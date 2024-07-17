@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Optimize `probs(wires)` of Lightning-Kokkos using various kernels. Which kernel is to be used depends on the device, number of qubits and number of target wires.
+  [(#802)](https://github.com/PennyLaneAI/pennylane-lightning/pull/802)
+
 * Add GPU device compute capability check for Lightning-Tensor.
   [(#803)](https://github.com/PennyLaneAI/pennylane-lightning/pull/803)
 
