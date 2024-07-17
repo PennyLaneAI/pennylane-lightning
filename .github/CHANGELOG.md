@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Refactor CUDA utils Python bindings to a separate module.
+  [(#801)](https://github.com/PennyLaneAI/pennylane-lightning/pull/801)
+
 * Parallelize Lightning-Qubit `probs` with OpenMP when using the `-DLQ_ENABLE_KERNEL_OMP=1` CMake argument.
   [(#800)](https://github.com/PennyLaneAI/pennylane-lightning/pull/800)
 
@@ -47,7 +50,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
