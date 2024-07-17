@@ -22,6 +22,7 @@
 namespace {
 using namespace Pennylane::Util;
 using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::wires2Parity;
 } // namespace
 /// @endcond
@@ -187,12 +188,7 @@ template <class PrecisionT> struct getExpValMultiQubitOpFunctor {
                                  std::size_t num_qubits_,
                                  const KokkosComplexVector &matrix_,
                                  const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
-
+        wires = vector2view(wires_);
         dim = one << wires_.size();
         num_qubits = num_qubits_;
         arr = arr_;
@@ -408,12 +404,7 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
-
+        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -479,11 +470,7 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
+        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -578,11 +565,7 @@ template <class PrecisionT> struct getExpVal5QubitOpFunctor {
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
+        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;

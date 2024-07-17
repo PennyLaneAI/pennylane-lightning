@@ -42,6 +42,16 @@ inline auto view2vector(const Kokkos::View<T *> view) -> std::vector<T> {
     return vec;
 }
 
+template <typename T>
+inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
+    using UnmanagedView = Kokkos::View<const T *, Kokkos::HostSpace,
+                                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    Kokkos::View<T *> view("vec", vec.size());
+    const auto view_ = UnmanagedView(vec.data(), vec.size());
+    Kokkos::deep_copy(view, view_);
+    return view;
+}
+
 /**
  * @brief Compute the parities and shifts for multi-qubit operations.
  *

@@ -113,13 +113,9 @@ class getProbsNQubitOpFunctor {
         std::vector<std::size_t> parity_ =
             Pennylane::Util::revWireParity(rev_wires_);
         if constexpr (num_wires == 0) {
-            Kokkos::resize(rev_wires, rev_wires_.size());
-            Kokkos::deep_copy(
-                rev_wires,
-                UnmanagedSizeTHostView(rev_wires_.data(), rev_wires_.size()));
-            Kokkos::resize(parity, parity_.size());
-            Kokkos::deep_copy(
-                parity, UnmanagedSizeTHostView(parity_.data(), parity_.size()));
+            rev_wires =
+                Pennylane::LightningKokkos::Util::vector2view(rev_wires_);
+            parity = Pennylane::LightningKokkos::Util::vector2view(parity_);
         }
         if constexpr (num_wires > 0) {
             rev_wire_0 = rev_wires_[0];

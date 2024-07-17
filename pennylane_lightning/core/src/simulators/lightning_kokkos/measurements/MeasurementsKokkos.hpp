@@ -35,6 +35,7 @@ using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
+using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::view2vector;
 using Pennylane::Util::exp2;
 enum class ExpValFunc : uint32_t {
@@ -214,10 +215,7 @@ class Measurements final
         PL_ABORT_IF(matrix_.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
-        KokkosVector matrix("matrix_", matrix_.size());
-        Kokkos::deep_copy(matrix, UnmanagedConstComplexHostView(
-                                      matrix_.data(), matrix_.size()));
-        return getExpValMatrix(matrix, wires);
+        return getExpValMatrix(vector2view(matrix_), wires);
     };
 
     /**
@@ -539,20 +537,12 @@ class Measurements final
         }
         std::vector<std::size_t> all_indices =
             Pennylane::Util::generateBitsPatterns(wires, num_qubits);
-        Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
-                                                  all_indices.size());
-        Kokkos::deep_copy(
-            d_all_indices,
-            UnmanagedSizeTHostView(all_indices.data(), all_indices.size()));
+        Kokkos::View<std::size_t *> d_all_indices = vector2view(all_indices);
         std::vector<std::size_t> all_offsets =
             Pennylane::Util::generateBitsPatterns(
                 Pennylane::Util::getIndicesAfterExclusion(wires, num_qubits),
                 num_qubits);
-        Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
-                                                  all_offsets.size());
-        Kokkos::deep_copy(
-            d_all_offsets,
-            UnmanagedSizeTHostView(all_offsets.data(), all_offsets.size()));
+        Kokkos::View<std::size_t *> d_all_offsets = vector2view(all_offsets);
         Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
                                                    all_indices.size());
         Kokkos::View<ComplexT *> sv = this->_statevector.getView();
