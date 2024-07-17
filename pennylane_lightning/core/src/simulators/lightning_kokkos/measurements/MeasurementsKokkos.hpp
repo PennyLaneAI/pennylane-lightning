@@ -501,7 +501,7 @@ class Measurements final
      * in lexicographic order.
      */
     auto probs() -> std::vector<PrecisionT> {
-        std::vector<PrecisionT> probs(this->_statevector.getLength(), 0);
+        std::vector<PrecisionT> probs(this->_statevector.getLength());
         Kokkos::deep_copy(
             UnmanagedPrecisionHostView(probs.data(), probs.size()),
             probs_core());
@@ -519,6 +519,9 @@ class Measurements final
     auto probs(const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
         const std::size_t n_wires = wires.size();
+        if (n_wires == 0) {
+            return {1.0};
+        }
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         bool is_equal_to_all_wires = n_wires == num_qubits;
         for (std::size_t k = 0; k < n_wires; k++) {
@@ -530,108 +533,92 @@ class Measurements final
         if (is_equal_to_all_wires) {
             return this->probs();
         }
-        return probs_bitshift_generic(this->_statevector.getView(), num_qubits,
-                                      wires);
+        if (n_wires < 11) {
+            return probs_bitshift_generic(this->_statevector.getView(),
+                                          num_qubits, wires);
+        }
+        std::vector<std::size_t> all_indices =
+            Pennylane::Util::generateBitsPatterns(wires, num_qubits);
+        Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
+                                                  all_indices.size());
+        Kokkos::deep_copy(
+            d_all_indices,
+            UnmanagedSizeTHostView(all_indices.data(), all_indices.size()));
+        std::vector<std::size_t> all_offsets =
+            Pennylane::Util::generateBitsPatterns(
+                Pennylane::Util::getIndicesAfterExclusion(wires, num_qubits),
+                num_qubits);
+        Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
+                                                  all_offsets.size());
+        Kokkos::deep_copy(
+            d_all_offsets,
+            UnmanagedSizeTHostView(all_offsets.data(), all_offsets.size()));
+        Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
+                                                   all_indices.size());
+        Kokkos::View<ComplexT *> sv = this->_statevector.getView();
 
-        // std::vector<std::size_t> all_indices =
-        //     Pennylane::Util::generateBitsPatterns(wires, num_qubits);
-        // Kokkos::View<std::size_t *> d_all_indices("d_all_indices",
-        //                                           all_indices.size());
-        // Kokkos::deep_copy(
-        //     d_all_indices,
-        //     UnmanagedSizeTHostView(all_indices.data(), all_indices.size()));
-        // std::vector<std::size_t> all_offsets =
-        //     Pennylane::Util::generateBitsPatterns(
-        //         Pennylane::Util::getIndicesAfterExclusion(wires, num_qubits),
-        //         num_qubits);
-        // Kokkos::View<std::size_t *> d_all_offsets("d_all_offsets",
-        //                                           all_offsets.size());
-        // Kokkos::deep_copy(
-        //     d_all_offsets,
-        //     UnmanagedSizeTHostView(all_offsets.data(), all_offsets.size()));
-        // Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
-        //                                            all_indices.size());
-        // Kokkos::deep_copy(d_probabilities, 0.0);
-        // Kokkos::View<ComplexT *> sv = this->_statevector.getView();
+        using MDPolicyType_2D =
+            Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
+        auto md_policy = MDPolicyType_2D(
+            {{0, 0}}, {{static_cast<int64_t>(all_indices.size()),
+                        static_cast<int64_t>(all_offsets.size())}});
+        Kokkos::parallel_reduce(md_policy,
+                                getProbsFunctor<PrecisionT, KokkosExecSpace>(
+                                    sv, wires, d_all_indices, d_all_offsets),
+                                d_probabilities);
 
-        // using MDPolicyType_2D =
-        //     Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
-        // auto md_policy = MDPolicyType_2D(
-        //     {{0, 0}}, {{static_cast<int64_t>(all_indices.size()),
-        //                 static_cast<int64_t>(all_offsets.size())}});
-        // Kokkos::parallel_reduce(md_policy,
-        //                         getProbsFunctor<PrecisionT, KokkosExecSpace>(
-        //                             sv, wires, d_all_indices, d_all_offsets),
-        //                         d_probabilities);
-
-        // std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
-        // Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-        //                                              probabilities.size()),
-        //                   d_probabilities);
-        // return probabilities;
+        std::vector<PrecisionT> probabilities(d_probabilities.size());
+        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
+                                                     probabilities.size()),
+                          d_probabilities);
+        return probabilities;
     }
 
     auto probs_bitshift_generic(const Kokkos::View<ComplexT *> arr,
                                 const std::size_t num_qubits,
                                 const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
-        // constexpr std::size_t one{1};
         const std::size_t n_wires = wires.size();
-        std::vector<std::size_t> rev_wires(n_wires);
-        for (std::size_t k = 0; k < n_wires; k++) {
-            rev_wires[n_wires - 1 - k] = (num_qubits - 1) - wires[k];
-        }
-        Kokkos::View<std::size_t *> d_rev_wires("d_rev_wires",
-                                                rev_wires.size());
-        Kokkos::deep_copy(d_rev_wires, UnmanagedSizeTHostView(
-                                           rev_wires.data(), rev_wires.size()));
-        std::vector<std::size_t> parity =
-            Pennylane::Util::revWireParity(rev_wires);
-        Kokkos::View<std::size_t *> d_parity("d_parity", parity.size());
-        Kokkos::deep_copy(d_parity,
-                          UnmanagedSizeTHostView(parity.data(), parity.size()));
         const std::size_t n_probs = Pennylane::Util::exp2(n_wires);
         Kokkos::View<PrecisionT *> d_probabilities("d_probabilities", n_probs);
-        Kokkos::deep_copy(d_probabilities, 0.0);
-        // if (n_wires == 1) {
-        Kokkos::parallel_reduce(
-            Kokkos::TeamPolicy<>(exp2(num_qubits - n_wires), Kokkos::AUTO),
-            getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace>(
-                arr, num_qubits, wires),
-            d_probabilities);
-        // } else {
-        //     Kokkos::parallel_for(
-        //         exp2(num_qubits - n_wires), KOKKOS_LAMBDA(const std::size_t
-        //         k) {
-        //             std::size_t idx = (k & d_parity[0]);
-        //             for (std::size_t i = 1; i < n_wires + 1; i++) {
-        //                 idx |= ((k << i) & d_parity[i]);
-        //             }
-        //             {
-        //                 const PrecisionT rsv = arr(idx).real();
-        //                 const PrecisionT isv = arr(idx).imag();
-        //                 const PrecisionT value = rsv * rsv + isv * isv;
-        //                 Kokkos::atomic_add(&d_probabilities(0), value);
-        //             }
-        //             const std::size_t i0 = idx;
-        //             for (std::size_t inner_idx = 1; inner_idx < n_probs;
-        //                  inner_idx++) {
-        //                 idx = i0;
-        //                 for (std::size_t i = 0; i < n_wires; i++) {
-        //                     idx |= ((inner_idx & (one << i)) >> i)
-        //                            << d_rev_wires[i];
-        //                 }
-        //                 {
-        //                     const PrecisionT rsv = arr(idx).real();
-        //                     const PrecisionT isv = arr(idx).imag();
-        //                     const PrecisionT value = rsv * rsv + isv * isv;
-        //                     Kokkos::atomic_add(&d_probabilities(inner_idx),
-        //                                        value);
-        //                 }
-        //             }
-        //         });
-        // }
-        std::vector<PrecisionT> probabilities(d_probabilities.size(), 0);
+        switch (n_wires) {
+        case 1UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 1>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        case 2UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 2>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        case 3UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 3>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        case 4UL:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 4>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        default:
+            Kokkos::parallel_reduce(
+                exp2(num_qubits - n_wires),
+                getProbsNQubitOpFunctor<PrecisionT, KokkosExecSpace, 0>(
+                    arr, num_qubits, wires),
+                d_probabilities);
+            break;
+        }
+        std::vector<PrecisionT> probabilities(d_probabilities.size());
         Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
                                                      probabilities.size()),
                           d_probabilities);

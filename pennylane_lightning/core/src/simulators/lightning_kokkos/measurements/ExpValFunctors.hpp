@@ -16,6 +16,7 @@
 
 #include "BitUtil.hpp"
 #include "BitUtilKokkos.hpp"
+#include "Error.hpp"
 
 /// @cond DEV
 namespace {
@@ -294,7 +295,7 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     KOKKOS_INLINE_FUNCTION
     void init(PrecisionT dst[]) const {
         for (unsigned i = 0; i < value_count; ++i)
-            dst[i] = 0;
+            dst[i] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -312,7 +313,8 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     }
 };
 
-template <class PrecisionT, class DeviceType> class getProbsNQubitOpFunctor {
+template <class PrecisionT, class DeviceType, std::size_t num_wires>
+class getProbsNQubitOpFunctor {
   public:
     // Required for functor:
     using execution_space = DeviceType;
@@ -326,13 +328,26 @@ template <class PrecisionT, class DeviceType> class getProbsNQubitOpFunctor {
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
     Kokkos::View<ComplexT *> arr;
     const std::size_t n_wires;
-    Kokkos::View<std::size_t *> rev_wires;
+
     Kokkos::View<std::size_t *> parity;
+    Kokkos::View<std::size_t *> rev_wires;
+
+    std::size_t rev_wire_0;
+    std::size_t rev_wire_1;
+    std::size_t rev_wire_2;
+    std::size_t rev_wire_3;
+    std::size_t parity_0;
+    std::size_t parity_1;
+    std::size_t parity_2;
+    std::size_t parity_3;
+    std::size_t parity_4;
 
     getProbsNQubitOpFunctor(
         const Kokkos::View<ComplexT *> &arr_, const std::size_t num_qubits_,
         [[maybe_unused]] const std::vector<std::size_t> &wires_)
         : value_count{1U << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
+        PL_ABORT_IF(num_wires != 0 && num_wires != n_wires,
+                    "num_wires must be equal to n_wires.");
         const std::size_t n_wires = wires_.size();
         std::vector<std::size_t> rev_wires_(n_wires);
         for (std::size_t k = 0; k < n_wires; k++) {
@@ -340,18 +355,38 @@ template <class PrecisionT, class DeviceType> class getProbsNQubitOpFunctor {
         }
         std::vector<std::size_t> parity_ =
             Pennylane::Util::revWireParity(rev_wires_);
-        Kokkos::resize(rev_wires, rev_wires_.size());
-        Kokkos::deep_copy(rev_wires, UnmanagedSizeTHostView(rev_wires_.data(),
-                                                            rev_wires_.size()));
-        Kokkos::resize(parity, parity_.size());
-        Kokkos::deep_copy(
-            parity, UnmanagedSizeTHostView(parity_.data(), parity_.size()));
+        if constexpr (num_wires == 0) {
+            Kokkos::resize(rev_wires, rev_wires_.size());
+            Kokkos::deep_copy(
+                rev_wires,
+                UnmanagedSizeTHostView(rev_wires_.data(), rev_wires_.size()));
+            Kokkos::resize(parity, parity_.size());
+            Kokkos::deep_copy(
+                parity, UnmanagedSizeTHostView(parity_.data(), parity_.size()));
+        }
+        if constexpr (num_wires > 0) {
+            rev_wire_0 = rev_wires_[0];
+            parity_0 = parity_[0];
+            parity_1 = parity_[1];
+        }
+        if constexpr (num_wires > 1) {
+            rev_wire_1 = rev_wires_[1];
+            parity_2 = parity_[2];
+        }
+        if constexpr (num_wires > 2) {
+            rev_wire_2 = rev_wires_[2];
+            parity_3 = parity_[3];
+        }
+        if constexpr (num_wires > 3) {
+            rev_wire_3 = rev_wires_[3];
+            parity_4 = parity_[4];
+        }
     }
 
     KOKKOS_INLINE_FUNCTION
     void init(PrecisionT dst[]) const {
         for (unsigned i = 0; i < value_count; ++i)
-            dst[i] = 0;
+            dst[i] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -361,24 +396,165 @@ template <class PrecisionT, class DeviceType> class getProbsNQubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const Kokkos::TeamPolicy<>::member_type &teamMember,
-                    PrecisionT dst[]) const {
-        const std::size_t k = teamMember.league_rank();
-        std::size_t i0 = (k & parity[0]);
-        for (std::size_t i = 1; i < n_wires + 1; i++) {
-            i0 |= ((k << i) & parity[i]);
-        }
-        Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(teamMember, value_count),
-            KOKKOS_LAMBDA(const std::size_t inner_idx) {
+    void operator()(std::size_t k, PrecisionT dst[]) const {
+        if constexpr (num_wires == 0) {
+            std::size_t i0 = (k & parity[0]);
+            for (std::size_t i = 1; i < n_wires + 1; i++) {
+                i0 |= ((k << i) & parity[i]);
+            }
+            for (std::size_t inner_idx = 0; inner_idx < value_count;
+                 inner_idx++) {
                 std::size_t idx = i0;
                 for (std::size_t i = 0; i < n_wires; i++) {
                     idx |= ((inner_idx & (one << i)) >> i) << rev_wires[i];
                 }
-                PrecisionT rsv = real(arr(idx));
-                PrecisionT isv = imag(arr(idx));
-                Kokkos::atomic_add(&dst[inner_idx], rsv * rsv + isv * isv);
-            });
+                const PrecisionT rsv = real(arr(idx));
+                const PrecisionT isv = imag(arr(idx));
+                dst[inner_idx] += rsv * rsv + isv * isv;
+            }
+        }
+        if constexpr (num_wires == 1) {
+            const std::size_t i0 = ((k << 1U) & parity_1) | (k & parity_0);
+            PrecisionT rsv = real(arr(i0));
+            PrecisionT isv = imag(arr(i0));
+            dst[0] += rsv * rsv + isv * isv;
+            const std::size_t i1 = i0 | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[1] += rsv * rsv + isv * isv;
+        }
+        if constexpr (num_wires == 2) {
+            const std::size_t i0 = ((k << 2U) & parity_2) |
+                                   ((k << 1U) & parity_1) | (k & parity_0);
+            PrecisionT rsv = real(arr(i0));
+            PrecisionT isv = imag(arr(i0));
+            dst[0] += rsv * rsv + isv * isv;
+            std::size_t i1 = i0 | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[1] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[2] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[3] += rsv * rsv + isv * isv;
+        }
+        if constexpr (num_wires == 3) {
+            const std::size_t i0 = ((k << 3U) & parity_3) |
+                                   ((k << 2U) & parity_2) |
+                                   ((k << 1U) & parity_1) | (k & parity_0);
+            PrecisionT rsv = real(arr(i0));
+            PrecisionT isv = imag(arr(i0));
+            dst[0] += rsv * rsv + isv * isv;
+            std::size_t i1 = i0 | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[1] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[2] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[3] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[4] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[5] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[6] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_1) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[7] += rsv * rsv + isv * isv;
+        }
+        if constexpr (num_wires == 4) {
+            const std::size_t i0 = ((k << 4U) & parity_4) |
+                                   ((k << 3U) & parity_3) |
+                                   ((k << 2U) & parity_2) |
+                                   ((k << 1U) & parity_1) | (k & parity_0);
+            PrecisionT rsv = real(arr(i0));
+            PrecisionT isv = imag(arr(i0));
+            dst[0] += rsv * rsv + isv * isv;
+            std::size_t i1 = i0 | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[1] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[2] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[3] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[4] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[5] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[6] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_2) | (1U << rev_wire_1) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[7] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[8] += rsv * rsv + isv * isv;
+
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[9] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[10] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_1) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[11] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[12] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[13] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[14] += rsv * rsv + isv * isv;
+            i1 = i0 | (1U << rev_wire_3) | (1U << rev_wire_2) |
+                 (1U << rev_wire_1) | (1U << rev_wire_0);
+            rsv = real(arr(i1));
+            isv = imag(arr(i1));
+            dst[15] += rsv * rsv + isv * isv;
+        }
     }
 };
 
@@ -415,7 +591,7 @@ template <class PrecisionT, class DeviceType> class getProbs1QubitOpFunctor {
     KOKKOS_INLINE_FUNCTION
     void init(PrecisionT dst[]) const {
         for (unsigned i = 0; i < value_count; ++i)
-            dst[i] = 0;
+            dst[i] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION
