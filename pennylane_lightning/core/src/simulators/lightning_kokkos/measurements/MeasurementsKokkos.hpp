@@ -534,7 +534,9 @@ class Measurements final
         if (is_equal_to_all_wires) {
             return this->probs();
         }
-        if (n_wires < 9) {
+        const bool is_gpu_scratch_limited =
+            n_wires > 7 && !std::is_same_v<KokkosExecSpace, HostExecSpace>;
+        if (num_qubits - n_wires > 10 && !is_gpu_scratch_limited) {
             return probs_bitshift_generic(this->_statevector.getView(),
                                           num_qubits, wires);
         }
@@ -561,7 +563,7 @@ class Measurements final
         // Reducing over `d_probabilities` requires too much L0 scratch memory
         // on GPUs. If n_wires >= 20, this also requires quite a bit of memory
         // on CPUs, so we fallback to the next implementation
-        if (n_wires < 20 && std::is_same_v<KokkosExecSpace, HostExecSpace>) {
+        if (n_wires < 20 && !is_gpu_scratch_limited) {
             using MDPolicyType_2D =
                 Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
             auto md_policy = MDPolicyType_2D(
