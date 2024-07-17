@@ -4,6 +4,9 @@
 
 ### Breaking changes
 
+* Remove `NDpermuter.hpp` which is no longer required.
+  [(#795)](https://github.com/PennyLaneAI/pennylane-lightning/pull/795)
+
 * Remove temporary steps from the CI, such as downgrading Scipy to <1.14 and installing Kokkos v4.2 for `lightning-version == 'stable'`.
   [(#792)](https://github.com/PennyLaneAI/pennylane-lightning/pull/792)
 
@@ -11,6 +14,15 @@
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
 ### Improvements
+
+* Refactor CUDA utils Python bindings to a separate module.
+  [(#801)](https://github.com/PennyLaneAI/pennylane-lightning/pull/801)
+
+* Parallelize Lightning-Qubit `probs` with OpenMP when using the `-DLQ_ENABLE_KERNEL_OMP=1` CMake argument.
+  [(#800)](https://github.com/PennyLaneAI/pennylane-lightning/pull/800)
+
+* Implement `probs(wires)` using a bit-shift implementation akin to the gate kernels in Lightning-Qubit.
+  [(#795)](https://github.com/PennyLaneAI/pennylane-lightning/pull/795)
 
 * Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
@@ -38,7 +50,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
@@ -443,7 +455,7 @@ Vincent Michaud-Rioux
 * The `BlockEncode` operation from PennyLane is now supported on all Lightning devices.
   [(#599)](https://github.com/PennyLaneAI/pennylane-lightning/pull/599)
 
-* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the `-DLQ_ENABLE_KERNEL_OMP=1` CMake argument.
   [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
 
 * Enable building Docker images for any branch or tag. Set the Docker build cron job to build images for the latest release and `master`.
