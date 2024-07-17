@@ -39,7 +39,14 @@ from ._tensornet import LightningTensorNet
 
 try:
     # pylint: disable=import-error, unused-import
-    from pennylane_lightning.lightning_tensor_ops import backend_info
+    from pennylane_lightning.lightning_tensor_ops import (
+        backend_info,
+        get_gpu_arch,
+        is_gpu_supported,
+    )
+
+    if not is_gpu_supported():  # pragma: no cover
+        raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LT_CPP_BINARY_AVAILABLE = True
 except ImportError:
