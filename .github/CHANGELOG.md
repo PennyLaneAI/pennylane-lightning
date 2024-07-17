@@ -37,6 +37,9 @@
 
 ### Bug fixes
 
+* Add check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of cuTensorNet-24.03.0.
+  [(#806)](https://github.com/PennyLaneAI/pennylane-lightning/pull/806)
+
 * Set `PL_BACKEND` for the entire `build-wheel-lightning-gpu` Docker-build stage to properly build the Lightning-GPU wheel.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
 
