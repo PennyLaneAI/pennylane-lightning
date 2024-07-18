@@ -61,13 +61,19 @@ template <class TensorNetT> class MeasurementsTNCuda {
     /**
      * @brief Calculate var value for a general Observable.
      *
+     * Current implementation ensure that only one cutensornetNetworkOperator_t
+     * object is attached to the circuit.
+     *
      * @param obs An Observable object.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is default as 1.
      */
     auto var(ObservableTNCuda<TensorNetT> &obs,
              const int32_t numHyperSamples = 1) -> PrecisionT {
-        auto expectation_val = expval(obs, numHyperSamples);
+        auto expectation_val =
+            expval(obs, numHyperSamples); // The cutensornetNetworkOperator_t
+                                          // object created in expval() will be
+                                          // released after the function call.
 
         const bool val_cal = true;
         auto tnObs2Operator =

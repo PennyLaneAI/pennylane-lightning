@@ -253,6 +253,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         }
     }
 
+    // ObservableTNCudaOperator ctor specifically for variance calculation.
     ObservableTNCudaOperator(const TensorNetT &tensor_network,
                              ObservableTNCuda<TensorNetT> &obs,
                              const bool var_cal)
