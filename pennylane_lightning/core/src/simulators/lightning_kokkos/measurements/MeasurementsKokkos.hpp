@@ -511,7 +511,9 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    auto probs(const std::vector<std::size_t> &wires)
+    auto
+    probs(const std::vector<std::size_t> &wires,
+          [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
         constexpr std::size_t GPU_SHARED_NWIRES_MAX = 7;
         constexpr std::size_t BITSHIFT_FREE_WIRES_MIN = 10;
