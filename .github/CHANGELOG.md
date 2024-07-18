@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `var` support to `lightning.tensor`.
+  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804) 
+
 ### Breaking changes
 
 * Remove `NDpermuter.hpp` which is no longer required.
