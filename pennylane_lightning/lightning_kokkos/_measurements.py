@@ -17,9 +17,9 @@ Class implementation for state vector measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
-    pass
+    pass # HELP: Should be a complaint when kokkos_ops module is not available.
 
 from typing import Callable, List, Union
 
@@ -67,14 +67,14 @@ class LightningMeasurements:
 
     def __init__(
         self,
-        qubit_state,
+        kokkos_state,
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,
     ) -> None:
-        self._qubit_state = qubit_state
-        self._dtype = qubit_state.dtype
-        self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
+        self._qubit_state = kokkos_state
+        self._dtype = kokkos_state.dtype
+        self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)
         self._mcmc = mcmc
         self._kernel_name = kernel_name
         self._num_burnin = num_burnin
@@ -166,7 +166,7 @@ class LightningMeasurements:
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        results = self._measurement_lightning.probs(measurementprocess.wires)
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
@@ -252,7 +252,7 @@ class LightningMeasurements:
         """
         Perform the measurements required by the circuit on the provided state.
 
-        This is an internal function that will be called by the successor to ``lightning.qubit``.
+        This is an internal function that will be called by the successor to ``lightning.kokkos``.
 
         Args:
             circuit (QuantumScript): The single circuit to simulate

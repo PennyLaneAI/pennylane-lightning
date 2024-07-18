@@ -25,16 +25,27 @@ from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
-    pass
+if device_name == "lightning.qubit":
+    try:
+        from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
+    except ImportError:
+        pass
+    
+    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
+    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+if device_name == "lightning.kokkos":
+    try:
+        from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
+    except ImportError:
+        pass
 
-if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+    from pennylane_lightning.lightning_kokkos._measurements import LightningMeasurements
+    from pennylane_lightning.lightning_kokkos._state_vector import LightningStateVector
+
+
+if device_name != "lightning.qubit" and device_name != "lightning.kokkos":
+    pytest.skip("Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -425,7 +436,9 @@ class TestMeasurements:
         (
             [0],
             [1, 2],
-            [1, 0],
+            pytest.param(
+                [1, 0], 
+                marks=pytest.mark.skipif(device_name == 'lightning.kokkos', reason="lightning.kokkos does not supported for unsorted wires")),  
             qml.PauliX(0),
             qml.PauliY(1),
             qml.PauliZ(2),
@@ -574,6 +587,7 @@ class TestMeasurements:
         for r, e in zip(result, expected):
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
+    @pytest.mark.skipif(device_name == 'lightning.kokkos', reason="RuntimeError: Lightning kokkos does not currently support out-of-order indices for probabilities")
     @pytest.mark.parametrize(
         "cases",
         [
@@ -609,6 +623,10 @@ class TestControlledOps:
         results = dev.execute(tapes)
         return transf_fn(results)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
     @pytest.mark.parametrize(
         "operation",
         [
@@ -692,6 +710,10 @@ class TestControlledOps:
 
                 assert np.allclose(result, expected, tol * 10)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
         n_qubits = 10
         par = 0.1234
@@ -713,6 +735,10 @@ class TestControlledOps:
 
         assert np.allclose(result, expected, tol)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
     @pytest.mark.parametrize("control_wires", range(4))
     @pytest.mark.parametrize("target_wires", range(4))
     def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv):

@@ -44,6 +44,8 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
+from pennylane_lightning.core._serialize import global_phase_diagonal
+
 from ._measurements import LightningMeasurements
 
 
@@ -139,7 +141,6 @@ class LightningStateVector:
 
     @staticmethod
     def _asarray(arr, dtype=None):
-        # HELP: I am no sure if this function should remain here.
         arr = np.asarray(arr)  # arr is not copied
 
         if arr.dtype.kind not in ["f", "c"]:
@@ -297,8 +298,6 @@ class LightningStateVector:
         ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
 
         # translate to wire labels used by device
-        # HELP
-        # device_wires = self.map_wires(device_wires) # Why in not longer needed?
         output_shape = [2] * self._num_wires
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
@@ -337,24 +336,41 @@ class LightningStateVector:
         method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
-        target_wires = list(operation.target_wires)
+        #  ----------------------------------------
+        # Original:
+        # target_wires = list(operation.target_wires)
+        
+        # Specific for Kokkos:            
+        name = operation.name
+        #  ----------------------------------------
         if method is not None:  # apply n-controlled specialized gate
             inv = False
-            param = operation.parameters
-            # HELP 
-            # The args of the functions are incompatibles. From kokkos request:
-            # arg0: List[int], arg1: bool, arg2: List[float]
-            # method(control_wires, inv, target_wires)
-            method(control_wires, control_values, target_wires, inv, param)
+            #  ----------------------------------------
+            # Original:
+            # param = operation.parameters
+            # method(control_wires, control_values, target_wires, inv, param)
+
+            # Specific for Kokkos:            
+            param = operation.parameters[0]
+            wires = self.wires.indices(operation.wires)
+            matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
+            state.apply(name, wires, inv, [[param]], matrix)
+            #  ----------------------------------------
+            
         else:  # apply gate as an n-controlled matrix
-            method = getattr(state, "applyControlledMatrix")
-            method(
-                qml.matrix(operation.base),
-                control_wires,
-                control_values,
-                target_wires,
-                False,
-            )
+            #  ----------------------------------------
+            # Original:
+            # method = getattr(state, "applyControlledMatrix")
+            # method(
+            #     qml.matrix(operation.base),
+            #     control_wires,
+            #     control_values,
+            #     target_wires,
+            #     False,
+            # )
+
+            # Specific for Kokkos:            
+            raise ValueError(f"Unsupported apply Controlled Matrix")
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -377,8 +393,7 @@ class LightningStateVector:
         if postselect_mode == "fill-shots" and operation.postselect is not None:
             sample = operation.postselect
         else:
-            # HELP: what is this code doing? specially the >e 
-            sample = LightningMeasurements(self).measure_final_stat>e(circuit)
+            sample = LightningMeasurements(self).measure_final_state(circuit)
             sample = np.squeeze(sample)
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
@@ -426,7 +441,11 @@ class LightningStateVector:
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
+            elif ( isinstance(operation, qml.ops.Controlled) 
+                   and isinstance(operation.base, qml.GlobalPhase) 
+                   # Specific for Kokkos: 
+                   # Kokkos do not support the controlled gates except for GlobalPhase
+            ): # apply n-controlled gate
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
