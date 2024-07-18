@@ -97,3 +97,57 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
         }
     }
 }
+
+TEMPLATE_TEST_CASE("Linear Algebra::square_matrix_CUDA_device",
+                   "[Linear Algebra]", float, double) {
+    using ComplexT = std::complex<TestType>;
+
+    using CFP_t =
+        typename std::conditional<std::is_same<TestType, float>::value,
+                                  cuFloatComplex, cuDoubleComplex>::type;
+
+    std::size_t row_size = 2;
+
+    std::vector<ComplexT> matrix = {{0.2, 0.2},
+                                    {0.3, 0.3},
+                                    {0.3, 0.4},
+                                    {0.4, 0.5}}; // from numpy calculation
+
+    std::vector<CFP_t> matrix_cu;
+
+    std::transform(matrix.begin(), matrix.end(), std::back_inserter(matrix_cu),
+                   [](ComplexT x) { return complexToCu<ComplexT>(x); });
+
+    const std::vector<ComplexT> result_refs = {
+        {-0.03, 0.29}, {-0.03, 0.39}, {-0.1, 0.45}, {-0.12, 0.61}};
+
+    DataBuffer<CFP_t> mat(matrix_cu.size());
+
+    mat.CopyHostDataToGpu(matrix_cu.data(), matrix_cu.size());
+
+    SECTION("Testing square matrix multiplication:") {
+        std::vector<CFP_t> result(matrix_cu.size());
+        auto cublas_caller = make_shared_cublas_caller();
+
+        square_matrix_CUDA_device<CFP_t>(mat.getData(), row_size, row_size,
+                                         mat.getDevice(), mat.getStream(),
+                                         *cublas_caller);
+
+        mat.CopyGpuDataToHost(result.data(), result.size());
+
+        for (std::size_t j = 0; j < matrix_cu.size(); j++) {
+            CHECK(result[j].x == Approx(real(result_refs[j])));
+            CHECK(result[j].y == Approx(imag(result_refs[j])));
+        }
+    }
+
+    SECTION("Throwing exception for non-square matrix multiplication:") {
+        std::vector<CFP_t> result(matrix_cu.size());
+        auto cublas_caller = make_shared_cublas_caller();
+
+        CHECK_THROWS_WITH(square_matrix_CUDA_device<CFP_t>(
+                              mat.getData(), row_size, row_size + 1,
+                              mat.getDevice(), mat.getStream(), *cublas_caller),
+                          Catch::Contains("Matrix must be square."));
+    }
+}

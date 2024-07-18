@@ -96,16 +96,18 @@ inline void square_matrix_CUDA_device(T *mat, const int row_size,
                                       const int col_size, DevTypeID dev_id,
                                       cudaStream_t stream_id,
                                       const CublasCaller &cublas) {
+    PL_ABORT_IF(row_size != col_size, "Matrix must be square.");
     const T alpha{1.0, 0.0};
     const T beta{0.0, 0.0};
+    int m = row_size;
+    int n = row_size;
+    int k = col_size;
     if constexpr (std::is_same_v<T, cuFloatComplex>) {
-        cublas.call(cublasCgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N,
-                    row_size, row_size, col_size, &alpha, mat, row_size, mat,
-                    col_size, &beta, mat, row_size);
+        cublas.call(cublasCgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N, m,
+                    n, k, &alpha, mat, m, mat, n, &beta, mat, m);
     } else if constexpr (std::is_same_v<T, cuDoubleComplex>) {
-        cublas.call(cublasZgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N,
-                    row_size, row_size, col_size, &alpha, mat, row_size, mat,
-                    col_size, &beta, mat, row_size);
+        cublas.call(cublasZgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N, m,
+                    n, k, &alpha, mat, m, mat, n, &beta, mat, m);
     }
 }
 
