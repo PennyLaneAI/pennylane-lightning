@@ -121,8 +121,6 @@ class LightningTensorMeasurements:
                 return self.expval
 
             if isinstance(measurementprocess, VarianceMP):
-                # if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
-                #    return self.state_diagonalizing_gates
                 return self.var
 
         raise NotImplementedError(
