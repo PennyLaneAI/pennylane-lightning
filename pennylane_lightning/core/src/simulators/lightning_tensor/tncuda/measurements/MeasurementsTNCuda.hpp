@@ -106,7 +106,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
      * @brief Calculate expectation value for a general ObservableTNCudaOperator
      * object.
      *
-     * @param obs An ObservableTNCudaOperator object.
+     * @param tnoperator An ObservableTNCudaOperator object.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is default as 1.
      *

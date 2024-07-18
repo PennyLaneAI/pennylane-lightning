@@ -273,8 +273,8 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
             tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
 
-            appendTNOperator_(obsOperator_, coeff, numTensors,
-                              numModes_.back().data(), modesPtr_.back().data(),
+            appendTNOperator_(coeff, numTensors, numModes_.back().data(),
+                              modesPtr_.back().data(),
                               tensorDataPtr_.back().data());
         }
     }
@@ -303,8 +303,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      * @param stateModes State modes of each tensor in the product.
      * @param tensorDataPtr Pointer to the data of each tensor in the product.
      */
-    void appendTNOperator_(cutensornetNetworkOperator_t &tnOperator,
-                           const cuDoubleComplex &coeff,
+    void appendTNOperator_(const cuDoubleComplex &coeff,
                            const std::size_t numTensors,
                            const int32_t *numStateModes,
                            const int32_t **stateModes,
@@ -312,7 +311,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         int64_t id;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendProduct(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
-            /* cutensornetNetworkOperator_t */ tnOperator,
+            /* cutensornetNetworkOperator_t */ getTNOperator(),
             /* cuDoubleComplex coefficient*/ coeff,
             /* int32_t numTensors */ static_cast<int32_t>(numTensors),
             /* const int32_t numStateModes[] */ numStateModes,
