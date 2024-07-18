@@ -163,7 +163,7 @@ class TestExpval:
         circ_def = qml.QNode(circuit, dev_def)
         assert np.allclose(circ(), circ_def(), tol)
 
-    @pytest.mark.parametrize("n_wires", range(1, 7 if device_name != "lightning.tensor" else 5))
+    @pytest.mark.parametrize("n_wires", range(1, 7))
     def test_hermitian_expectation(self, n_wires, theta, phi, qubit_device, tol):
         """Test that Hermitian expectation value is correct"""
         n_qubits = 7
@@ -185,14 +185,26 @@ class TestExpval:
             def circuit():
                 if device_name != "lightning.tensor":
                     qml.StatePrep(init_state, wires=range(n_qubits))
-                qml.RY(theta, wires=[0])
+                qml.RX(theta, wires=[0])
                 qml.RY(phi, wires=[1])
+                qml.RX(theta, wires=[2])
+                qml.RY(phi, wires=[3])
+                qml.RX(theta, wires=[4])
+                qml.RY(phi, wires=[5])
+                qml.RX(theta, wires=[6])
                 qml.CNOT(wires=[0, 1])
                 return qml.expval(obs)
 
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
-            assert np.allclose(circ(), circ_def(), tol)
+            if device_name == "lightning.tensor" and n_wires > 1:
+                with pytest.raises(
+                    ValueError,
+                    match="The number of Hermitian observables target wires should be 1.",
+                ):
+                    assert np.allclose(circ(), circ_def(), tol)
+            else:
+                assert np.allclose(circ(), circ_def(), tol)
 
 
 @pytest.mark.parametrize(

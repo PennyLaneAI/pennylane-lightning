@@ -74,6 +74,10 @@ class LightningTensorMeasurements:
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
             raise NotImplementedError("Sparse Hamiltonians are not supported.")
 
+        if isinstance(measurementprocess.obs, qml.Hermitian):
+            if len(measurementprocess.obs.wires) > 1:
+                raise ValueError("The number of Hermitian observables target wires should be 1.")
+
         ob_serialized = QuantumScriptSerializer(
             self._tensornet.device_name, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
