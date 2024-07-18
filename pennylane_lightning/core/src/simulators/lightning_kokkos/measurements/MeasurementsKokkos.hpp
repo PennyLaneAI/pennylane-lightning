@@ -513,11 +513,17 @@ class Measurements final
      */
     auto probs(const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
+        constexpr std::size_t GPU_SHARED_NWIRES_MAX = 7;
+        constexpr std::size_t BITSHIFT_FREE_WIRES_MIN = 10;
+        constexpr std::size_t BITSHIFT_NWIRES_MAX = 9;
+        constexpr std::size_t MDRANGE_NWIRES_MAX = 20;
         const std::size_t n_wires = wires.size();
         if (n_wires == 0) {
             return {1.0};
         }
         const std::size_t num_qubits = this->_statevector.getNumQubits();
+        // is_equal_to_all_wires is True if `wires` includes all wires in order
+        // and false otherwise
         bool is_equal_to_all_wires = n_wires == num_qubits;
         for (std::size_t k = 0; k < n_wires; k++) {
             if (!is_equal_to_all_wires) {
@@ -529,9 +535,10 @@ class Measurements final
             return this->probs();
         }
         const bool is_gpu_scratch_limited =
-            n_wires > 7 && !std::is_same_v<KokkosExecSpace, HostExecSpace>;
-        if (num_qubits - n_wires > 10 && n_wires < 9 &&
-            !is_gpu_scratch_limited) {
+            n_wires > GPU_SHARED_NWIRES_MAX &&
+            !std::is_same_v<KokkosExecSpace, HostExecSpace>;
+        if (num_qubits - n_wires > BITSHIFT_FREE_WIRES_MIN &&
+            n_wires < BITSHIFT_NWIRES_MAX && !is_gpu_scratch_limited) {
             return probs_bitshift_generic<KokkosExecSpace>(
                 this->_statevector.getView(), num_qubits, wires);
         }
@@ -550,7 +557,7 @@ class Measurements final
         // Reducing over `d_probabilities` requires too much L0 scratch memory
         // on GPUs. If n_wires >= 20, this also requires quite a bit of memory
         // on CPUs, so we fallback to the next implementation
-        if (n_wires < 20 && !is_gpu_scratch_limited) {
+        if (n_wires < MDRANGE_NWIRES_MAX && !is_gpu_scratch_limited) {
             using MDPolicyType_2D =
                 Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
             auto md_policy = MDPolicyType_2D(

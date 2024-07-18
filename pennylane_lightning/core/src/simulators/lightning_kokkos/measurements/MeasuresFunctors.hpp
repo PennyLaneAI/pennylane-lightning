@@ -50,13 +50,13 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
 
     KOKKOS_INLINE_FUNCTION
     void init(PrecisionT dst[]) const {
-        for (unsigned i = 0; i < value_count; ++i)
+        for (unsigned i = 0; i < value_count; i++)
             dst[i] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION
     void join(PrecisionT dst[], const PrecisionT src[]) const {
-        for (unsigned i = 0; i < value_count; ++i)
+        for (unsigned i = 0; i < value_count; i++)
             dst[i] += src[i];
     }
 
@@ -125,7 +125,6 @@ class getProbsNQubitOpFunctor {
         : value_count{1U << wires_.size()}, arr{arr_}, n_wires{wires_.size()} {
         PL_ABORT_IF(num_wires != 0 && num_wires != n_wires,
                     "num_wires must be equal to n_wires.");
-        const std::size_t n_wires = wires_.size();
         std::vector<std::size_t> rev_wires_(n_wires);
         for (std::size_t k = 0; k < n_wires; k++) {
             rev_wires_[n_wires - 1 - k] = (num_qubits_ - 1) - wires_[k];
@@ -178,13 +177,13 @@ class getProbsNQubitOpFunctor {
 
     KOKKOS_INLINE_FUNCTION
     void init(PrecisionT dst[]) const {
-        for (unsigned i = 0; i < value_count; ++i)
+        for (unsigned i = 0; i < value_count; i++)
             dst[i] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION
     void join(PrecisionT dst[], const PrecisionT src[]) const {
-        for (unsigned i = 0; i < value_count; ++i)
+        for (unsigned i = 0; i < value_count; i++)
             dst[i] += src[i];
     }
 
