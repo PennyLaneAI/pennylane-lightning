@@ -239,8 +239,8 @@ class TestSparseHExpval:
         with pytest.raises(DeviceError):
             circuit_expval()
 
-    def test_expval_sparseH(self):
-        """Test that expval is chosen for a variety of different expectation values."""
+    def test_measurement_sparseH_not_supported(self):
+        """Test that expval/var of SparseH is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
@@ -249,6 +249,29 @@ class TestSparseHExpval:
 
         with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
             m.expval(q.queue[0])
+
+        with pytest.raises(
+            NotImplementedError, match="Sparse Hamiltonian Observables are not supported."
+        ):
+            m.var(q.queue[0])
+
+    def test_measurement_hermitian_not_supported(self):
+        """Test that expval/var of Hermitian with 1+ wires is not supported."""
+        with qml.queuing.AnnotatedQueue() as q:
+            qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
+
+        tensornet = LightningTensorNet(4, 10)
+        m = LightningTensorMeasurements(tensornet)
+
+        with pytest.raises(
+            ValueError, match="The number of Hermitian observables target wires should be 1."
+        ):
+            m.expval(q.queue[0])
+
+        with pytest.raises(
+            ValueError, match="The number of Hermitian observables target wires should be 1."
+        ):
+            m.var(q.queue[0])
 
     def test_measurement_shot_not_supported(self):
         """Test shots measurement error for measure_tensor_network."""
