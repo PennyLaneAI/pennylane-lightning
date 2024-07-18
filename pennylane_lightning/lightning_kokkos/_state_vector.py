@@ -52,9 +52,9 @@ class LightningStateVector:
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): state vector device name. Options: ["lightning.kokkos"]
-        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
+        kokkos_args(InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
-        sync (bool): immediately sync with host-sv after applying operations
+        sync(bool): immediately sync with host-sv after applying operations
     """
 
     def __init__(
