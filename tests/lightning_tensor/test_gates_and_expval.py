@@ -241,24 +241,30 @@ class TestSparseHExpval:
 
     def test_measurement_sparseH_not_supported(self):
         """Test that expval/var of SparseH is not supported."""
-        with qml.queuing.AnnotatedQueue() as q:
+        with qml.queuing.AnnotatedQueue() as q0:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
+
+        with qml.queuing.AnnotatedQueue() as q1:
+            qml.var(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
         tensornet = LightningTensorNet(4, 10)
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
-            m.expval(q.queue[0])
+            m.expval(q0.queue[0])
 
         with pytest.raises(
             NotImplementedError, match="Sparse Hamiltonian Observables are not supported."
         ):
-            m.var(q.queue[0])
+            m.var(q1.queue[0])
 
     def test_measurement_hermitian_not_supported(self):
         """Test that expval/var of Hermitian with 1+ wires is not supported."""
-        with qml.queuing.AnnotatedQueue() as q:
+        with qml.queuing.AnnotatedQueue() as q0:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
+
+        with qml.queuing.AnnotatedQueue() as q1:
+            qml.var(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
         tensornet = LightningTensorNet(4, 10)
         m = LightningTensorMeasurements(tensornet)
@@ -266,12 +272,12 @@ class TestSparseHExpval:
         with pytest.raises(
             ValueError, match="The number of Hermitian observables target wires should be 1."
         ):
-            m.expval(q.queue[0])
+            m.expval(q0.queue[0])
 
         with pytest.raises(
             ValueError, match="The number of Hermitian observables target wires should be 1."
         ):
-            m.var(q.queue[0])
+            m.var(q1.queue[0])
 
     def test_measurement_shot_not_supported(self):
         """Test shots measurement error for measure_tensor_network."""

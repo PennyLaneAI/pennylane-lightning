@@ -47,6 +47,17 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
 
     auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
 
+    SECTION("var(Identity[0])") {
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
+        mps_state.append_mps_final_state();
+        auto ob = NamedObsT("Identity", {0});
+        auto res = measure.var(ob);
+        auto expected = TestType(0);
+        CHECK(res == Approx(expected).margin(1e-7));
+    }
+
     SECTION("var(PauliX[0])") {
         mps_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
@@ -69,7 +80,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
         CHECK(res == Approx(expected));
     }
 
-    SECTION("var(PauliZ[0])") {
+    SECTION("var(PauliZ[1])") {
         mps_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
@@ -77,6 +88,17 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
         auto ob = NamedObsT("PauliZ", {1});
         auto res = measure.var(ob);
         auto expected = TestType(0.4068672016);
+        CHECK(res == Approx(expected));
+    }
+
+    SECTION("var(Hadamard[1])") {
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
+        mps_state.append_mps_final_state();
+        auto ob = NamedObsT("Hadamard", {1});
+        auto res = measure.var(ob);
+        auto expected = TestType(0.2908944989);
         CHECK(res == Approx(expected));
     }
 }
