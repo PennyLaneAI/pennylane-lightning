@@ -25,7 +25,7 @@ from typing import Callable
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 
@@ -83,6 +83,28 @@ class LightningTensorMeasurements:
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
 
+    def var(self, measurementprocess: MeasurementProcess):
+        """Variance of the supplied observable contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Variance of the observable
+        """
+
+        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
+            raise NotImplementedError("Sparse Hamiltonian Observables are not supported.")
+
+        if isinstance(measurementprocess.obs, qml.Hermitian):
+            if len(measurementprocess.obs.wires) > 1:
+                raise ValueError("The number of Hermitian observables target wires should be 1.")
+
+        ob_serialized = QuantumScriptSerializer(
+            self._tensornet.device_name, self.dtype == np.complex64
+        )._ob(measurementprocess.obs)
+        return self._measurement_lightning.var(ob_serialized)
+
     def get_measurement_function(
         self, measurementprocess: MeasurementProcess
     ) -> Callable[[MeasurementProcess, TensorLike], TensorLike]:
@@ -97,6 +119,11 @@ class LightningTensorMeasurements:
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
                 return self.expval
+
+            if isinstance(measurementprocess, VarianceMP):
+                # if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
+                #    return self.state_diagonalizing_gates
+                return self.var
 
         raise NotImplementedError(
             "Does not support current measurement. Only ExpectationMP measurements are supported."

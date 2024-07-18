@@ -387,10 +387,6 @@ class TestExpval:
         circuit()
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support var()",
-)
 class TestVar:
     """Tests for the var function"""
 
