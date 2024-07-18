@@ -662,10 +662,6 @@ class TestSample:
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.var()",
-)
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
 
