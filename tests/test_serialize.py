@@ -121,6 +121,8 @@ def test_wrong_device_name():
                 qml.Hermitian(np.eye(2), wires=0)
                 @ qml.Hermitian(np.eye(2), wires=1)
                 @ qml.Projector([0], wires=1)
+                if device_name != "lightning.tensor"
+                else qml.Hermitian(np.eye(2), wires=0)
             ),
             HermitianObsC128,
         ),
@@ -192,12 +194,19 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         c_dtype = np.complex64 if use_csingle else np.complex128
         mat = obs.matrix().ravel().astype(c_dtype)
-
-        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, wires_map
-        )
-        s_expected = hermitian_obs(mat, [0, 1, 2])
-        assert s[0] == s_expected
+        if device_name == "lightning.tensor":
+            with pytest.raises(
+                ValueError, match="The number of Hermitian observables target wires should be 1."
+            ):
+                s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+                    tape, wires_map
+                )
+        else:
+            s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+                tape, wires_map
+            )
+            s_expected = hermitian_obs(mat, [0, 1, 2])
+            assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -209,24 +218,55 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
-            tape, wires_map
-        )
-        s_expected = hermitian_obs(
-            np.array(
-                [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
-                dtype=c_dtype,
-            ),
-            [0, 1],
-        )
-        assert s[0] == s_expected
+        if device_name == "lightning.tensor":
+            with pytest.raises(
+                ValueError, match="The number of Hermitian observables target wires should be 1."
+            ):
+                s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+                    tape, wires_map
+                )
+        else:
+            s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
+                tape, wires_map
+            )
+            s_expected = hermitian_obs(
+                np.array(
+                    [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0,
+                    ],
+                    dtype=c_dtype,
+                ),
+                [0, 1],
+            )
+            assert s[0] == s_expected
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_hermitian_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.Hermitian(np.eye(2), wires=[2]))
+            qml.expval(
+                qml.Hermitian(
+                    np.eye(2 if device_name == "lightning.tensor" else 4),
+                    wires=[1] if device_name == "lightning.tensor" else [0, 1],
+                )
+                @ qml.Hermitian(np.eye(2), wires=[2])
+            )
 
         c_dtype = np.complex64 if use_csingle else np.complex128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
@@ -237,7 +277,10 @@ class TestSerializeObs:
 
         s_expected = tensor_prod_obs(
             [
-                hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                hermitian_obs(
+                    np.eye(2 if device_name == "lightning.tensor" else 4, dtype=c_dtype).ravel(),
+                    [1] if device_name == "lightning.tensor" else [0, 1],
+                ),
                 hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [2]),
             ]
         )
@@ -249,7 +292,13 @@ class TestSerializeObs:
     def test_mixed_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
         with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2))
+            qml.expval(
+                qml.Hermitian(
+                    np.eye(2 if device_name == "lightning.tensor" else 4),
+                    wires=[0] if device_name == "lightning.tensor" else [0, 1],
+                )
+                @ qml.PauliY(2)
+            )
 
         c_dtype = np.complex64 if use_csingle else np.complex128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
@@ -261,22 +310,48 @@ class TestSerializeObs:
         )
 
         s_expected = tensor_prod_obs(
-            [hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]), named_obs("PauliY", [2])]
+            [
+                hermitian_obs(
+                    np.eye(2 if device_name == "lightning.tensor" else 4, dtype=c_dtype).ravel(),
+                    [0] if device_name == "lightning.tensor" else [0, 1],
+                ),
+                named_obs("PauliY", [2]),
+            ]
         )
 
         assert s[0] == s_expected
 
+    @pytest.mark.parametrize(
+        "test_hermobs0",
+        [
+            (
+                qml.Hermitian(np.eye(4), wires=[0, 1])
+                if device_name != "lightning.tensor"
+                else qml.Hermitian(np.eye(2), wires=[0])
+            )
+        ],
+    )
+    @pytest.mark.parametrize(
+        "test_hermobs1",
+        [
+            (
+                qml.Hermitian(np.ones((8, 8)), wires=range(3))
+                if device_name != "lightning.tensor"
+                else qml.Hermitian(np.ones((2, 2)), wires=[0])
+            )
+        ],
+    )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
-    def test_hamiltonian_return(self, use_csingle, wires_map):
+    def test_hamiltonian_return(self, test_hermobs0, test_hermobs1, use_csingle, wires_map):
         """Test expected serialization for a Hamiltonian return"""
 
         ham = qml.Hamiltonian(
             [0.3, 0.5, 0.4],
             [
-                qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2),
+                (test_hermobs0 @ qml.PauliY(2)),
                 qml.PauliX(0) @ qml.PauliY(2),
-                qml.Hermitian(np.ones((8, 8)), wires=range(3)),
+                (test_hermobs1),
             ],
         )
 
@@ -299,29 +374,57 @@ class TestSerializeObs:
             [
                 tensor_prod_obs(
                     [
-                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        (
+                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])
+                            if device_name != "lightning.tensor"
+                            else hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [0])
+                        ),
                         named_obs("PauliY", [2]),
                     ]
                 ),
                 tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
-                hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+                (
+                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])
+                    if device_name != "lightning.tensor"
+                    else hermitian_obs(np.ones(4, dtype=c_dtype), [0])
+                ),
             ],
         )
 
         assert s[0] == s_expected
 
+    @pytest.mark.parametrize(
+        "test_hermobs0",
+        [
+            (
+                qml.Hermitian(np.eye(4), wires=[0, 1])
+                if device_name != "lightning.tensor"
+                else qml.Hermitian(np.eye(2), wires=[0])
+            )
+        ],
+    )
+    @pytest.mark.parametrize(
+        "test_hermobs1",
+        [
+            (
+                qml.Hermitian(np.ones((8, 8)), wires=range(3))
+                if device_name != "lightning.tensor"
+                else qml.Hermitian(np.ones((2, 2)), wires=[0])
+            )
+        ],
+    )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
-    def test_hamiltonian_tensor_return(self, use_csingle, wires_map):
+    def test_hamiltonian_tensor_return(self, test_hermobs0, test_hermobs1, use_csingle, wires_map):
         """Test expected serialization for a tensor Hamiltonian return"""
 
         with qml.tape.QuantumTape() as tape:
             ham = qml.Hamiltonian(
                 [0.3, 0.5, 0.4],
                 [
-                    qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2),
+                    (test_hermobs0 @ qml.PauliY(2)),
                     qml.PauliX(0) @ qml.PauliY(2),
-                    qml.Hermitian(np.ones((8, 8)), wires=range(3)),
+                    (test_hermobs1),
                 ],
             )
             qml.expval(ham @ qml.PauliZ(3))
@@ -345,7 +448,11 @@ class TestSerializeObs:
             [
                 tensor_prod_obs(
                     [
-                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        (
+                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])
+                            if device_name != "lightning.tensor"
+                            else hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [0])
+                        ),
                         named_obs("PauliY", [2]),
                         named_obs("PauliZ", [3]),
                     ]
@@ -359,7 +466,11 @@ class TestSerializeObs:
                 ),
                 tensor_prod_obs(
                     [
-                        hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+                        (
+                            hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])
+                            if device_name != "lightning.tensor"
+                            else hermitian_obs(np.ones(4, dtype=c_dtype), [0])
+                        ),
                         named_obs("PauliZ", [3]),
                     ]
                 ),
@@ -368,22 +479,49 @@ class TestSerializeObs:
 
         assert s[0] == s_expected
 
+    @pytest.mark.parametrize(
+        "test_hermobs0",
+        [
+            (
+                qml.Hermitian(np.eye(4), wires=[0, 1])
+                if device_name != "lightning.tensor"
+                else qml.Hermitian(np.eye(2), wires=[0])
+            )
+        ],
+    )
+    @pytest.mark.parametrize(
+        "test_hermobs1",
+        [
+            (
+                qml.Hermitian(np.ones((8, 8)), wires=range(3))
+                if device_name != "lightning.tensor"
+                else qml.Hermitian(np.ones((2, 2)), wires=[0])
+            )
+        ],
+    )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
-    def test_hamiltonian_mix_return(self, use_csingle, wires_map):
+    def test_hamiltonian_mix_return(self, test_hermobs0, test_hermobs1, use_csingle, wires_map):
         """Test expected serialization for a Hamiltonian return"""
 
         ham1 = qml.Hamiltonian(
             [0.3, 0.5, 0.4],
             [
-                qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2),
+                (test_hermobs0 @ qml.PauliY(2)),
                 qml.PauliX(0) @ qml.PauliY(2),
-                qml.Hermitian(np.ones((8, 8)), wires=range(3)),
+                (test_hermobs1),
             ],
         )
         ham2 = qml.Hamiltonian(
             [0.7, 0.3],
-            [qml.PauliX(0) @ qml.Hermitian(np.eye(4), wires=[1, 2]), qml.PauliY(0) @ qml.PauliX(2)],
+            [
+                (
+                    qml.PauliX(0) @ qml.Hermitian(np.eye(4), wires=[1, 2])
+                    if device_name != "lightning.tensor"
+                    else qml.PauliX(0) @ qml.Hermitian(np.eye(2), wires=[1])
+                ),
+                qml.PauliY(0) @ qml.PauliX(2),
+            ],
         )
 
         with qml.tape.QuantumTape() as tape:
@@ -405,12 +543,20 @@ class TestSerializeObs:
             [
                 tensor_prod_obs(
                     [
-                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
+                        (
+                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])
+                            if device_name != "lightning.tensor"
+                            else hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [0])
+                        ),
                         named_obs("PauliY", [2]),
                     ]
                 ),
                 tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
-                hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2]),
+                (
+                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])
+                    if device_name != "lightning.tensor"
+                    else hermitian_obs(np.ones(4, dtype=c_dtype), [0])
+                ),
             ],
         )
         s_expected2 = hamiltonian_obs(
@@ -419,7 +565,11 @@ class TestSerializeObs:
                 tensor_prod_obs(
                     [
                         named_obs("PauliX", [0]),
-                        hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2]),
+                        (
+                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2])
+                            if device_name != "lightning.tensor"
+                            else hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [1])
+                        ),
                     ]
                 ),
                 tensor_prod_obs([named_obs("PauliY", [0]), named_obs("PauliX", [2])]),
