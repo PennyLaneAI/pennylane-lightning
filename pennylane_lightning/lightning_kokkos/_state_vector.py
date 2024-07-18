@@ -17,13 +17,7 @@ Class implementation for state-vector manipulation for lightning kokkos.
 
 try:
     from pennylane_lightning.lightning_kokkos_ops import (
-        # StateVectorC64,
-        # StateVectorC128,
-        # allocate_aligned_array,
-        # ----------------------------------------------------------------
         InitializationSettings,
-        # MeasurementsC64,
-        # MeasurementsC128,
         StateVectorC64,
         StateVectorC128,
         allocate_aligned_array,
@@ -31,7 +25,7 @@ try:
         print_configuration,
     )
 except ImportError:
-    pass # Should be a complaint when kokkos_ops module is not available.
+    pass  # Should be a complaint when kokkos_ops module is not available.
 
 from itertools import product
 
@@ -64,21 +58,28 @@ class LightningStateVector:
         sync (bool): immediately sync with host-sv after applying operations
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.kokkos", kokkos_args=None, sync=True):
+    def __init__(
+        self,
+        num_wires,
+        dtype=np.complex128,
+        device_name="lightning.kokkos",
+        kokkos_args=None,
+        sync=True,
+    ):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
-        
+
         self._kokkos_config = {}
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
 
-        if device_name != "lightning.kokkos":  
+        if device_name != "lightning.kokkos":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._device_name = device_name
-        
+
         # self._qubit_state = self._state_dtype()(self._num_wires)
         if kokkos_args is None:
             self._kokkos_state = self._state_dtype()(self.num_wires)
@@ -93,7 +94,6 @@ class LightningStateVector:
 
         if not self._kokkos_config:
             self._kokkos_config = self._kokkos_configuration()
-
 
     @property
     def dtype(self):
@@ -158,7 +158,7 @@ class LightningStateVector:
             np.copyto(new_arr, arr)
             arr = new_arr
         return arr
-    
+
     def sync_h2d(self, state_vector):
         """Copy the state vector data on host provided by the user to the state
         vector on the device
@@ -199,7 +199,7 @@ class LightningStateVector:
         [0.+0.j 1.+0.j]
         """
         self._kokkos_state.DeviceToHost(state_vector.ravel(order="C"))
-    
+
     def _kokkos_configuration(self):
         """Set the default configuration of the kokkos device.
         Returns: kokkos configuration
@@ -305,7 +305,7 @@ class LightningStateVector:
             self.sync_h2d(np.reshape(state, output_shape))
             return
 
-        self._kokkos_state.setStateVector(ravelled_indices, state)  # this operation on device        
+        self._kokkos_state.setStateVector(ravelled_indices, state)  # this operation on device
 
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
@@ -339,8 +339,8 @@ class LightningStateVector:
         #  ----------------------------------------
         # Original:
         # target_wires = list(operation.target_wires)
-        
-        # Specific for Kokkos:            
+
+        # Specific for Kokkos:
         name = operation.name
         #  ----------------------------------------
         if method is not None:  # apply n-controlled specialized gate
@@ -350,13 +350,13 @@ class LightningStateVector:
             # param = operation.parameters
             # method(control_wires, control_values, target_wires, inv, param)
 
-            # Specific for Kokkos:            
+            # Specific for Kokkos:
             param = operation.parameters[0]
             wires = self.wires.indices(operation.wires)
             matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
             state.apply(name, wires, inv, [[param]], matrix)
             #  ----------------------------------------
-            
+
         else:  # apply gate as an n-controlled matrix
             #  ----------------------------------------
             # Original:
@@ -369,7 +369,7 @@ class LightningStateVector:
             #     False,
             # )
 
-            # Specific for Kokkos:            
+            # Specific for Kokkos:
             raise ValueError(f"Unsupported apply Controlled Matrix")
 
     def _apply_lightning_midmeasure(
@@ -441,11 +441,12 @@ class LightningStateVector:
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif ( isinstance(operation, qml.ops.Controlled) 
-                   and isinstance(operation.base, qml.GlobalPhase) 
-                   # Specific for Kokkos: 
-                   # Kokkos do not support the controlled gates except for GlobalPhase
-            ): # apply n-controlled gate
+            elif (
+                isinstance(operation, qml.ops.Controlled)
+                and isinstance(operation.base, qml.GlobalPhase)
+                # Specific for Kokkos:
+                # Kokkos do not support the controlled gates except for GlobalPhase
+            ):  # apply n-controlled gate
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in

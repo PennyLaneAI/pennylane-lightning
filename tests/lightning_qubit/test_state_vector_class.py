@@ -26,12 +26,15 @@ from pennylane.wires import Wires
 
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-    
+
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos._state_vector import LightningStateVector
 
 if device_name != "lightning.qubit" and device_name != "lightning.kokkos":
-    pytest.skip("Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.", allow_module_level=True)
+    pytest.skip(
+        "Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.",
+        allow_module_level=True,
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

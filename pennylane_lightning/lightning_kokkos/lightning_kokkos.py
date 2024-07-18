@@ -28,14 +28,14 @@ from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StateP
 from pennylane.measurements import Expectation, MidMeasureMP, State
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
+from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.typing import Result, ResultBatch
 from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 from pennylane_lightning.core._version import __version__
 from pennylane_lightning.core.lightning_base import LightningBase, _chunk_iterable
 
-from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.typing import Result, ResultBatch
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
 
@@ -74,6 +74,7 @@ def _kokkos_dtype(dtype):
 
 def _kokkos_configuration():
     return print_configuration()
+
 
 def simulate(
     circuit: QuantumScript,

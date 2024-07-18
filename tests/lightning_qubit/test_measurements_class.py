@@ -30,7 +30,7 @@ if device_name == "lightning.qubit":
         from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
     except ImportError:
         pass
-    
+
     from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
@@ -45,7 +45,10 @@ if device_name == "lightning.kokkos":
 
 
 if device_name != "lightning.qubit" and device_name != "lightning.kokkos":
-    pytest.skip("Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.", allow_module_level=True)
+    pytest.skip(
+        "Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.",
+        allow_module_level=True,
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -437,8 +440,12 @@ class TestMeasurements:
             [0],
             [1, 2],
             pytest.param(
-                [1, 0], 
-                marks=pytest.mark.skipif(device_name == 'lightning.kokkos', reason="lightning.kokkos does not supported for unsorted wires")),  
+                [1, 0],
+                marks=pytest.mark.skipif(
+                    device_name == "lightning.kokkos",
+                    reason="lightning.kokkos does not supported for unsorted wires",
+                ),
+            ),
             qml.PauliX(0),
             qml.PauliY(1),
             qml.PauliZ(2),
@@ -587,7 +594,10 @@ class TestMeasurements:
         for r, e in zip(result, expected):
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
-    @pytest.mark.skipif(device_name == 'lightning.kokkos', reason="RuntimeError: Lightning kokkos does not currently support out-of-order indices for probabilities")
+    @pytest.mark.skipif(
+        device_name == "lightning.kokkos",
+        reason="RuntimeError: Lightning kokkos does not currently support out-of-order indices for probabilities",
+    )
     @pytest.mark.parametrize(
         "cases",
         [

@@ -19,7 +19,7 @@ Class implementation for state vector measurements.
 try:
     from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
 except ImportError:
-    pass # HELP: Should be a complaint when kokkos_ops module is not available.
+    pass  # HELP: Should be a complaint when kokkos_ops module is not available.
 
 from typing import Callable, List, Union
 
