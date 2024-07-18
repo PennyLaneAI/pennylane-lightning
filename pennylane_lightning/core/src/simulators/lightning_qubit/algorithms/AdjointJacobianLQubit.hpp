@@ -71,10 +71,17 @@ class AdjointJacobian final
     updateJacobian(std::vector<StateVectorT> &states, OtherStateVectorT &sv,
                    std::span<PrecisionT> &jac, PrecisionT scaling_coeff,
                    std::size_t obs_idx, std::size_t mat_row_idx) {
+#if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
+        // Turn off threading in `innerProdC` setting `STD_CROSSOVER` to maxint
+        constexpr std::size_t STD_CROSSOVER = 0xFFFFFFFFFFFFFFFF;
+#else
+        // Turn on threading in `innerProdC` setting `STD_CROSSOVER` to 0
+        constexpr std::size_t STD_CROSSOVER = 0x0000000000000000;
+#endif
         jac[mat_row_idx + obs_idx] =
             -2 * scaling_coeff *
-            std::imag(innerProdC(states[obs_idx].getData(), sv.getData(),
-                                 sv.getLength()));
+            std::imag(innerProdC<PrecisionT, STD_CROSSOVER>(
+                states[obs_idx].getData(), sv.getData(), sv.getLength()));
     }
 
     /**
@@ -102,7 +109,7 @@ class AdjointJacobian final
              * */
             // clang-format off
 
-            #if defined(_OPENMP)
+            #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
                 #pragma omp parallel default(none)                                 \
                 shared(states, reference_state, observables, ex, num_observables)
             {
@@ -114,16 +121,16 @@ class AdjointJacobian final
                                                reference_state.getLength());
                         BaseType::applyObservable(states[h_i], *observables[h_i]);
                     } catch (...) {
-                        #if defined(_OPENMP)
+                        #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
                             #pragma omp critical
                         #endif
                         ex = std::current_exception();
-                        #if defined(_OPENMP)
+                        #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
                             #pragma omp cancel for
                         #endif
                     }
                 }
-            #if defined(_OPENMP)
+            #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
                 if (ex) {
                     #pragma omp cancel parallel
                 }
@@ -158,7 +165,7 @@ class AdjointJacobian final
         // https://www.openmp.org/wp-content/uploads/openmp-examples-4.5.0.pdf
         std::exception_ptr ex = nullptr;
         std::size_t num_states = states.size();
-        #if defined(_OPENMP)
+        #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
             #pragma omp parallel default(none)                                 \
                 shared(states, operations, op_idx, ex, num_states)
         {
@@ -168,16 +175,16 @@ class AdjointJacobian final
                 try {
                     BaseType::applyOperationAdj(states[st_idx], operations, op_idx);
                 } catch (...) {
-                    #if defined(_OPENMP)
+                    #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
                         #pragma omp critical
                     #endif
                     ex = std::current_exception();
-                    #if defined(_OPENMP)
+                    #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
                         #pragma omp cancel for
                     #endif
                 }
             }
-        #if defined(_OPENMP)
+        #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
             if (ex) {
                 #pragma omp cancel parallel
             }
@@ -327,7 +334,7 @@ class AdjointJacobian final
 
                     // clang-format off
 
-                #if defined(_OPENMP)
+                #if !defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
                 #pragma omp parallel for default(none)                         \
                     shared(H_lambda, jac, mu, scalingFactor, mat_row_idx,      \
                             num_observables)

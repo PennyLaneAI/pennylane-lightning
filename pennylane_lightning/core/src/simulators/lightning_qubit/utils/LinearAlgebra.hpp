@@ -25,6 +25,10 @@
 #include <span>
 #include <vector>
 
+#if defined _OPENMP
+#include <omp.h>
+#endif
+
 #include "Macros.hpp"
 #include "TypeTraits.hpp" // remove_complex_t
 #include "Util.hpp"       // ConstSum, ConstMult, ConstMultConj
@@ -54,6 +58,19 @@ using CBLAS_LAYOUT = enum CBLAS_LAYOUT {
 
 namespace {
 using namespace Pennylane::Util;
+
+#if defined(_OPENMP)
+/**
+ * @brief Return the total number of OpenMP threads
+ * (https://stackoverflow.com/a/76866890/4150822).
+ */
+int get_total_omp_num_threads(void) {
+    int num_threads = 0;
+#pragma omp parallel reduction(+ : num_threads)
+    num_threads += 1;
+    return num_threads;
+}
+#endif
 } // namespace
 
 /// @endcond
@@ -91,6 +108,8 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
     if (nthreads < 1) {
         nthreads = 1;
     }
+    auto num_threads = get_total_omp_num_threads();
+    nthreads = (num_threads > nthreads) ? nthreads : num_threads;
 
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
     shared(v1, v2, data_size) reduction(sm : result)
@@ -156,16 +175,15 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 #pragma omp declare reduction(sm : std::complex<T> : omp_out =                 \
                                   ConstSum(omp_out, omp_in))                   \
     initializer(omp_priv = std::complex<T>{0, 0})
-#endif
 
-#if defined(_OPENMP)
     std::size_t nthreads = data_size / NTERMS;
     if (nthreads < 1) {
         nthreads = 1;
     }
-#endif
+    auto num_threads = get_total_omp_num_threads();
+    nthreads = (num_threads > nthreads) ? nthreads : num_threads;
+    printf("nthreads = %lu\n", nthreads);
 
-#if defined(_OPENMP)
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
     shared(v1, v2, data_size) reduction(sm : result)
 #endif

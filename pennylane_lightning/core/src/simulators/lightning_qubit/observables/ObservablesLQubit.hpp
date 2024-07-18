@@ -194,7 +194,7 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
     }
 };
 
-#if defined(_OPENMP)
+#if defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
 template <class PrecisionT>
 struct HamiltonianApplyInPlace<StateVectorLQubitManaged<PrecisionT>, true> {
     using ComplexT = std::complex<PrecisionT>;

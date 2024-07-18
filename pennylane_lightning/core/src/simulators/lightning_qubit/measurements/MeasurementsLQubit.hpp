@@ -83,7 +83,7 @@ class Measurements final
         const std::size_t n_probs = this->_statevector.getLength();
         std::vector<PrecisionT> probabilities(n_probs, 0);
         auto *probs = probabilities.data();
-#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#if defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
 #pragma omp parallel for
 #endif
         for (std::size_t k = 0; k < n_probs; k++) {
@@ -124,7 +124,7 @@ class Measurements final
 
         const ComplexT *arr_data = this->_statevector.getData();
 
-        // Templated 1-4 wire cases; return probs 
+        // Templated 1-4 wire cases; return probs
         PROBS_SPECIAL_CASE(1);
         PROBS_SPECIAL_CASE(2);
         PROBS_SPECIAL_CASE(3);
@@ -141,7 +141,7 @@ class Measurements final
         // parallelize over This scheme was found most favorable in terms of
         // memory accesses and it prevents the stack overflow caused by
         // `reduction(+ : probs[ : n_probs])` when n_probs approaches 2**20
-#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#if defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
 #pragma omp parallel for collapse(1)
 #endif
         for (std::size_t ind_probs = 0; ind_probs < n_probs; ind_probs++) {

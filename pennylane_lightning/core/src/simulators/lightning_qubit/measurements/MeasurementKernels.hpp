@@ -385,7 +385,7 @@ auto probs_bitshift(const std::complex<PrecisionT> *arr,
     constexpr std::size_t n_probs = one << n_wires;
     std::vector<PrecisionT> probabilities(n_probs, 0);
     auto *probs = probabilities.data();
-#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#if defined(PL_LQ_KERNEL_OMP) && defined(_OPENMP)
 #pragma omp parallel for reduction(+ : probs[ : n_probs])
 #endif
     for (std::size_t k = 0; k < exp2(num_qubits - n_wires); k++) {
