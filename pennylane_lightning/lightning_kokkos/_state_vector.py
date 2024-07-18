@@ -21,7 +21,6 @@ try:
         StateVectorC64,
         StateVectorC128,
         allocate_aligned_array,
-        backend_info,
         print_configuration,
     )
 except ImportError:
@@ -370,7 +369,7 @@ class LightningStateVector:
             # )
 
             # Specific for Kokkos:
-            raise ValueError(f"Unsupported apply Controlled Matrix")
+            raise ValueError("Unsupported apply Controlled Matrix")
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str

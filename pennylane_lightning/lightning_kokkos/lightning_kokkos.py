@@ -28,8 +28,8 @@ from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StateP
 from pennylane.measurements import Expectation, MidMeasureMP, State
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
-from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.typing import Result, ResultBatch
+from pennylane.tape import QuantumScript
+from pennylane.typing import Result
 from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
