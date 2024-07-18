@@ -104,11 +104,11 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[MPSTNCuda_Var]", float,
 
     SECTION("Target at 1 wire") {
         std::vector<ComplexT> matrix = {
-            {2.5, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {3.8, 0.0}};
+            {2.5, 0.0}, {1.0, 1.0}, {1.0, -1.0}, {3.8, 0.0}};
 
         auto ob = HermitianObsT(matrix, {0});
         auto res = measure.var(ob);
-        auto expected = TestType(0.2779180584); // from default.qubit
+        auto expected = TestType(1.8499002205); // from default.qubit
         CHECK(res == Approx(expected));
     }
 }
