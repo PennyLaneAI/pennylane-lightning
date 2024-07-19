@@ -15,17 +15,6 @@
 Class implementation for state-vector manipulation for lightning kokkos.
 """
 
-try:
-    from pennylane_lightning.lightning_kokkos_ops import (
-        InitializationSettings,
-        StateVectorC64,
-        StateVectorC128,
-        allocate_aligned_array,
-        print_configuration,
-    )
-except ImportError:
-    pass  # Should be a complaint when kokkos_ops module is not available.
-
 from itertools import product
 
 import numpy as np
@@ -36,6 +25,17 @@ from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
+
+try:
+    from pennylane_lightning.lightning_kokkos_ops import (
+        InitializationSettings,
+        StateVectorC64,
+        StateVectorC128,
+        allocate_aligned_array,
+        print_configuration,
+    )
+except ImportError:
+    pass  # Should be a complaint when kokkos_ops module is not available.
 
 from pennylane_lightning.core._serialize import global_phase_diagonal
 
@@ -64,7 +64,7 @@ class LightningStateVector:
         device_name="lightning.kokkos",
         kokkos_args=None,
         sync=True,
-    ):
+    ): # pylint: disable=too-many-arguments
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
