@@ -39,7 +39,8 @@ if device_name != "lightning.qubit" and device_name != "lightning.kokkos":
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-# TODO: Create a test for _apply_lightning_midmeasure function 
+# TODO: Create a test for _apply_lightning_midmeasure function
+
 
 @pytest.mark.parametrize("num_wires", range(4))
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])

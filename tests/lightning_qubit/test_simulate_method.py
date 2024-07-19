@@ -19,9 +19,9 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import THETA, PHI, LightningDevice, device_name  # tested device
+from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from flaky import flaky
-from pennylane.devices import DefaultQubit, DefaultExecutionConfig
+from pennylane.devices import DefaultExecutionConfig, DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
@@ -47,7 +47,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 # General LightningStateVector fixture, for any number of wires.
 @pytest.fixture(
-    scope='module',
+    scope="module",
     params=[np.complex64, np.complex128],
 )
 def lightning_sv(request):
@@ -56,9 +56,10 @@ def lightning_sv(request):
 
     return _statevector
 
+
 class TestSimulate:
     """Tests for the simulate method."""
-    
+
     @staticmethod
     def calculate_reference(tape):
         dev = DefaultQubit(max_workers=1)
@@ -70,38 +71,35 @@ class TestSimulate:
     def test_simple_circuit(self, lightning_sv, tol):
         """Tests the simulate method for a simple circuit."""
         tape = qml.tape.QuantumScript(
-            [qml.RX(THETA[0], wires=0), 
-             qml.RY(PHI[0], wires=1)],
+            [qml.RX(THETA[0], wires=0), qml.RY(PHI[0], wires=1)],
             [qml.expval(qml.PauliX(0))],
-            shots=None
+            shots=None,
         )
         statevector = lightning_sv(num_wires=2)
         result = simulate(circuit=tape, state=statevector)
         reference = self.calculate_reference(tape)
-        
+
         assert np.allclose(result, reference, tol)
-        
+
     test_data_no_parameters = [
         (100, qml.PauliZ(wires=[0]), 100),
         (110, qml.PauliZ(wires=[1]), 110),
         (120, qml.PauliX(0) @ qml.PauliZ(1), 120),
     ]
-    
+
     @pytest.mark.parametrize("num_shots,operation,shape", test_data_no_parameters)
     def test_sample_dimensions(self, lightning_sv, num_shots, operation, shape):
-        """Tests if the samples returned by simulate have the correct dimensions
-        """
+        """Tests if the samples returned by simulate have the correct dimensions"""
         ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=operation)], shots=num_shots)
 
         statevector = lightning_sv(num_wires=2)
         result = simulate(circuit=tape, state=statevector)
-        
+
         assert np.array_equal(result.shape, (shape,))
-        
+
     def test_sample_values(self, lightning_sv, tol):
-        """Tests if the samples returned by simulate have the correct values
-        """
+        """Tests if the samples returned by simulate have the correct values"""
         ops = [qml.RX(1.5708, wires=[0])]
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
 
@@ -111,14 +109,14 @@ class TestSimulate:
 
         assert np.allclose(result**2, 1, atol=tol, rtol=0)
 
-
-    @pytest.mark.skipif(device_name == "lightning.kokkos", 
-                        reason=f"Device {device_name} does not have an mcmc option.")
+    @pytest.mark.skipif(
+        device_name == "lightning.kokkos",
+        reason=f"Device {device_name} does not have an mcmc option.",
+    )
     @pytest.mark.parametrize("mcmc", [True, False])
     @pytest.mark.parametrize("kernel", ["Local", "NonZeroRandom"])
     def test_sample_values_with_mcmc(self, lightning_sv, tol, mcmc, kernel):
-        """Tests if the samples returned by simulate have the correct values
-        """
+        """Tests if the samples returned by simulate have the correct values"""
         ops = [qml.RX(1.5708, wires=[0])]
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
 
@@ -132,6 +130,8 @@ class TestSimulate:
 
         execution_config = DefaultExecutionConfig
 
-        result = simulate(circuit=tape, state=statevector, mcmc=mcmc_param, postselect_mode=execution_config)
+        result = simulate(
+            circuit=tape, state=statevector, mcmc=mcmc_param, postselect_mode=execution_config
+        )
 
         assert np.allclose(result**2, 1, atol=tol, rtol=0)
