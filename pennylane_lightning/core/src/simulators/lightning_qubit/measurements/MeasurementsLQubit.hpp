@@ -105,7 +105,12 @@ class Measurements final
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
         const std::size_t n_wires = wires.size();
+        if (n_wires == 0) {
+            return {1.0};
+        }
         const std::size_t num_qubits = this->_statevector.getNumQubits();
+        // is_equal_to_all_wires is True if `wires` includes all wires in order
+        // and false otherwise
         bool is_equal_to_all_wires = n_wires == num_qubits;
         for (std::size_t k = 0; k < n_wires; k++) {
             if (!is_equal_to_all_wires) {
@@ -119,7 +124,7 @@ class Measurements final
 
         const ComplexT *arr_data = this->_statevector.getData();
 
-        // Templated 1-4 qubit cases
+        // Templated 1-4 wire cases; return probs 
         PROBS_SPECIAL_CASE(1);
         PROBS_SPECIAL_CASE(2);
         PROBS_SPECIAL_CASE(3);
@@ -132,15 +137,18 @@ class Measurements final
         const std::size_t n_probs = PUtil::exp2(n_wires);
         std::vector<PrecisionT> probabilities(n_probs, 0);
         auto *probs = probabilities.data();
-        std::size_t ind_probs = 0;
-        for (auto index : all_indices) {
+        // For 5 wires and more, there are at least 32 probs entries to
+        // parallelize over This scheme was found most favorable in terms of
+        // memory accesses and it prevents the stack overflow caused by
+        // `reduction(+ : probs[ : n_probs])` when n_probs approaches 2**20
 #if defined PL_LQ_KERNEL_OMP && defined _OPENMP
-#pragma omp parallel for reduction(+ : probs[ : n_probs])
+#pragma omp parallel for
 #endif
+        for (std::size_t ind_probs = 0; ind_probs < n_probs; ind_probs++) {
             for (auto offset : all_offsets) {
-                probs[ind_probs] += std::norm(arr_data[index + offset]);
+                probs[ind_probs] +=
+                    std::norm(arr_data[all_indices[ind_probs] + offset]);
             }
-            ind_probs++;
         }
         return probabilities;
     }

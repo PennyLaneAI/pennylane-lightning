@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Optimize the OpenMP parallelization of Lightning-Qubit's `probs` for all number of targets.
+  [(#807)](https://github.com/PennyLaneAI/pennylane-lightning/pull/807)
+
 * Optimize `probs(wires)` of Lightning-Kokkos using various kernels. Which kernel is to be used depends on the device, number of qubits and number of target wires.
   [(#802)](https://github.com/PennyLaneAI/pennylane-lightning/pull/802)
 
