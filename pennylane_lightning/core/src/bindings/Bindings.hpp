@@ -189,7 +189,7 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, std::size_t size,
  * @param size Size of the array to create
  * @param dt Pybind11's datatype object
  */
-auto allocateAlignedArray(size_t size, const py::dtype &dt,
+auto allocateAlignedArray(std::size_t size, const py::dtype &dt,
                           bool zeroInit = false) -> py::array {
     // TODO: Move memset operations to here to reduce zeroInit pass-throughs.
     auto memory_model = bestCPUMemoryModel();
@@ -474,13 +474,33 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
                 return M.var(*ob);
             },
             "Variance of an observable object.")
+        .def("generate_samples",
+             [](Measurements<StateVectorT> &M, std::size_t num_wires,
+                std::size_t num_shots) {
+                 auto &&result = M.generate_samples(num_shots);
+                 const std::size_t ndim = 2;
+                 const std::vector<std::size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(std::size_t);
+                 const std::vector<std::size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<std::size_t>::format(), /* data type
+                                                                    */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
         .def("generate_samples", [](Measurements<StateVectorT> &M,
-                                    std::size_t num_wires,
-                                    std::size_t num_shots) {
-            auto &&result = M.generate_samples(num_shots);
+                                    const std::vector<std::size_t> &wires,
+                                    const std::size_t num_shots) {
+            const std::size_t num_wires = wires.size();
+            auto &&result = M.generate_samples(wires, num_shots);
             const std::size_t ndim = 2;
             const std::vector<std::size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(size_t);
+            constexpr auto sz = sizeof(std::size_t);
             const std::vector<std::size_t> strides{sz * num_wires, sz};
             // return 2-D NumPy array
             return py::array(py::buffer_info(
@@ -559,7 +579,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
         .def("__repr__", [](const OpsData<StateVectorT> &ops) {
             using namespace Pennylane::Util;
             std::ostringstream ops_stream;
-            for (size_t op = 0; op < ops.getSize(); op++) {
+            for (std::size_t op = 0; op < ops.getSize(); op++) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
                 ops_stream << ", 'params': " << ops.getOpsParams()[op];
                 ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
@@ -591,7 +611,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
            const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
-            for (size_t op = 0; op < ops_name.size(); op++) {
+            for (std::size_t op = 0; op < ops_name.size(); op++) {
                 const auto m_buffer = ops_matrices[op].request();
                 if (m_buffer.size) {
                     const auto m_ptr =

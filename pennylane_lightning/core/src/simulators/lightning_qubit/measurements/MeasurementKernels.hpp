@@ -18,7 +18,13 @@
  */
 #pragma once
 
+// #include <algorithm>
+// #include <functional>
+// #include <limits>
+// #include <random>
+
 #include <complex>
+#include <stack>
 #include <vector>
 
 #include "BitUtil.hpp"
@@ -295,6 +301,86 @@ namespace PUtil = Pennylane::Util;
     }
 
 namespace Pennylane::LightningQubit::Measures {
+
+/**
+ * @brief Generate samples using the alias method.
+ *
+ * @tparam PrecisionT Precision data type
+ */
+template <typename PrecisionT> class discrete_random_variable {
+  private:
+    const std::vector<std::pair<double, std::size_t>> bucket_partners_;
+    std::mt19937 &gen_;
+    const std::size_t n_probs;
+    mutable std::uniform_real_distribution<PrecisionT> distribution{0.0, 1.0};
+
+  public:
+    /**
+     * @brief Create a discrete_random_variable object.
+     *
+     * @param gen Random number generator reference.
+     * @param probs Probabilities for values 0 up to N - 1, where N =
+     * probs.size().
+     */
+    discrete_random_variable(std::mt19937 &gen,
+                             const std::vector<PrecisionT> &probs)
+        : bucket_partners_(init_bucket_partners_(probs)), gen_{gen},
+          n_probs{probs.size()} {}
+
+    /**
+     * @brief Return a discrete random value.
+     */
+    std::size_t operator()() const {
+        const std::size_t idx =
+            static_cast<std::size_t>(distribution(gen_) * n_probs);
+        if (distribution(gen_) >= bucket_partners_[idx].first and
+            bucket_partners_[idx].second !=
+                std::numeric_limits<std::size_t>::max()) {
+            return bucket_partners_[idx].second;
+        } else {
+            return idx;
+        }
+    }
+
+  private:
+    /**
+     * @brief Initialize the probability table of the alias method.
+     */
+    std::vector<std::pair<double, std::size_t>>
+    init_bucket_partners_(const std::vector<PrecisionT> &probs) {
+        const std::size_t n_probs = probs.size();
+        std::vector<std::pair<double, std::size_t>> bucket_partners(
+            n_probs, {0.0, std::numeric_limits<std::size_t>::max()});
+        std::stack<std::size_t> underfull_bucket_ids;
+        std::stack<std::size_t> overfull_bucket_ids;
+
+        for (std::size_t i = 0; i != n_probs; ++i) {
+            bucket_partners[i].first = n_probs * probs[i];
+            if (bucket_partners[i].first < 1.0) {
+                underfull_bucket_ids.push(i);
+            } else {
+                overfull_bucket_ids.push(i);
+            }
+        }
+
+        while (not(underfull_bucket_ids.empty()) and
+               not(overfull_bucket_ids.empty())) {
+            auto i = overfull_bucket_ids.top();
+            auto j = underfull_bucket_ids.top();
+            underfull_bucket_ids.pop(), overfull_bucket_ids.pop();
+            bucket_partners[j].second = i;
+            bucket_partners[i].first -= (1.0 - bucket_partners[j].first);
+
+            if (bucket_partners[i].first < 1.0) {
+                underfull_bucket_ids.push(i);
+            } else {
+                overfull_bucket_ids.push(i);
+            }
+        }
+
+        return bucket_partners;
+    }
+};
 
 /**
  * @brief Probabilities for a subset of the full system.
