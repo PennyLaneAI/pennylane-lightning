@@ -142,7 +142,7 @@ class Measurements final
         // memory accesses and it prevents the stack overflow caused by
         // `reduction(+ : probs[ : n_probs])` when n_probs approaches 2**20
 #if defined PL_LQ_KERNEL_OMP && defined _OPENMP
-#pragma omp parallel for collapse(1)
+#pragma omp parallel for
 #endif
         for (std::size_t ind_probs = 0; ind_probs < n_probs; ind_probs++) {
             for (auto offset : all_offsets) {
