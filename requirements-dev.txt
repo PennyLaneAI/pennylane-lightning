@@ -17,7 +17,6 @@ isort==5.13.2
 click==8.0.4
 cmake
 custatevec-cu12
+cutensornet-cu12
 pylint
-scipy~=1.12.0
-autoray<0.6.10
-quimb==1.8.1
+scipy

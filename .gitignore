@@ -31,7 +31,6 @@ doc/code/api/
 kokkos/
 PennyLane_Lightning_Kokkos.egg-info/
 PennyLane_Lightning.egg-info/
-pennylane_lightning/core/src/utils/config.h
 prototypes/
 tests/__pycache__/
 venv/

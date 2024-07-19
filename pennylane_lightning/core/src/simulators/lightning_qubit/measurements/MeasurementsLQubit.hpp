@@ -30,8 +30,8 @@
 #include <vector>
 
 #include "LinearAlgebra.hpp"
+#include "MeasurementKernels.hpp"
 #include "MeasurementsBase.hpp"
-#include "NDPermuter.hpp"
 #include "Observables.hpp"
 #include "SparseLinAlg.hpp"
 #include "StateVectorLQubitManaged.hpp"
@@ -42,6 +42,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Measures;
+using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
@@ -77,15 +78,18 @@ class Measurements final
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
-    std::vector<PrecisionT> probs() {
+    auto probs() -> std::vector<PrecisionT> {
         const ComplexT *arr_data = this->_statevector.getData();
-        std::vector<PrecisionT> basis_probs(this->_statevector.getLength(), 0);
-
-        std::transform(
-            arr_data, arr_data + this->_statevector.getLength(),
-            basis_probs.begin(),
-            [](const ComplexT &z) -> PrecisionT { return std::norm(z); });
-        return basis_probs;
+        const std::size_t n_probs = this->_statevector.getLength();
+        std::vector<PrecisionT> probabilities(n_probs, 0);
+        auto *probs = probabilities.data();
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for
+#endif
+        for (std::size_t k = 0; k < n_probs; k++) {
+            probs[k] = std::norm(arr_data[k]);
+        }
+        return probabilities;
     };
 
     /**
@@ -96,61 +100,56 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    std::vector<PrecisionT>
+    auto
     probs(const std::vector<std::size_t> &wires,
-          [[maybe_unused]] const std::vector<std::size_t> &device_wires = {}) {
-        // Determining index that would sort the vector.
-        // This information is needed later.
-        const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
-
-        // Sorting wires.
-        std::vector<std::size_t> sorted_wires(wires.size());
-        for (size_t pos = 0; pos < wires.size(); pos++) {
-            sorted_wires[pos] = wires[sorted_ind_wires[pos]];
+          [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
+        -> std::vector<PrecisionT> {
+        const std::size_t n_wires = wires.size();
+        if (n_wires == 0) {
+            return {1.0};
+        }
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        // is_equal_to_all_wires is True if `wires` includes all wires in order
+        // and false otherwise
+        bool is_equal_to_all_wires = n_wires == num_qubits;
+        for (std::size_t k = 0; k < n_wires; k++) {
+            if (!is_equal_to_all_wires) {
+                break;
+            }
+            is_equal_to_all_wires = wires[k] == k;
+        }
+        if (is_equal_to_all_wires) {
+            return this->probs();
         }
 
-        // Determining probabilities for the sorted wires.
         const ComplexT *arr_data = this->_statevector.getData();
 
-        std::size_t num_qubits = this->_statevector.getNumQubits();
+        // Templated 1-4 wire cases; return probs 
+        PROBS_SPECIAL_CASE(1);
+        PROBS_SPECIAL_CASE(2);
+        PROBS_SPECIAL_CASE(3);
+        PROBS_SPECIAL_CASE(4);
+
         const std::vector<std::size_t> all_indices =
-            Gates::generateBitPatterns(sorted_wires, num_qubits);
+            Gates::generateBitPatterns(wires, num_qubits);
         const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
-            Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
-            num_qubits);
-
-        std::vector<PrecisionT> probabilities(all_indices.size(), 0);
-
-        std::size_t ind_probs = 0;
-        for (auto index : all_indices) {
+            Gates::getIndicesAfterExclusion(wires, num_qubits), num_qubits);
+        const std::size_t n_probs = PUtil::exp2(n_wires);
+        std::vector<PrecisionT> probabilities(n_probs, 0);
+        auto *probs = probabilities.data();
+        // For 5 wires and more, there are at least 32 probs entries to
+        // parallelize over This scheme was found most favorable in terms of
+        // memory accesses and it prevents the stack overflow caused by
+        // `reduction(+ : probs[ : n_probs])` when n_probs approaches 2**20
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for
+#endif
+        for (std::size_t ind_probs = 0; ind_probs < n_probs; ind_probs++) {
             for (auto offset : all_offsets) {
-                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
+                probs[ind_probs] +=
+                    std::norm(arr_data[all_indices[ind_probs] + offset]);
             }
-            ind_probs++;
         }
-
-        // Permute the data according to the required wire ordering
-        if (wires != sorted_wires) {
-            static constexpr std::size_t CACHE_SIZE = 8;
-            PUtil::Permuter<PUtil::DefaultPermuter<CACHE_SIZE>> p{};
-            std::vector<std::size_t> shape(wires.size(), 2);
-            std::vector<std::string> wire_labels_old(sorted_wires.size(), "");
-            std::vector<std::string> wire_labels_new(wires.size(), "");
-
-            std::transform(sorted_wires.begin(), sorted_wires.end(),
-                           wire_labels_old.begin(), [](std::size_t index) {
-                               return std::to_string(index);
-                           });
-            std::transform(
-                wires.begin(), wires.end(), wire_labels_new.begin(),
-                [](std::size_t index) { return std::to_string(index); });
-
-            auto probs_sorted = probabilities;
-            p.Transpose(probabilities, shape, probs_sorted, wire_labels_old,
-                        wire_labels_new);
-            return probs_sorted;
-        }
-
         return probabilities;
     }
 
@@ -164,8 +163,8 @@ class Measurements final
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
-    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
-                                  std::size_t num_shots = 0) {
+    auto probs(const Observable<StateVectorT> &obs, std::size_t num_shots = 0)
+        -> std::vector<PrecisionT> {
         return BaseType::probs(obs, num_shots);
     }
 
@@ -176,22 +175,22 @@ class Measurements final
      *
      * @return Floating point std::vector with probabilities.
      */
-    std::vector<PrecisionT> probs(size_t num_shots) {
+    auto probs(size_t num_shots) -> std::vector<PrecisionT> {
         return BaseType::probs(num_shots);
     }
 
     /**
      * @brief Probabilities with shot-noise for a subset of the full system.
      *
-     * @param num_shots Number of shots.
      * @param wires Wires will restrict probabilities to a subset
+     * @param num_shots Number of shots.
      * of the full system.
      *
      * @return Floating point std::vector with probabilities.
      */
 
-    std::vector<PrecisionT> probs(const std::vector<std::size_t> &wires,
-                                  std::size_t num_shots) {
+    auto probs(const std::vector<std::size_t> &wires, std::size_t num_shots)
+        -> std::vector<PrecisionT> {
         return BaseType::probs(wires, num_shots);
     }
 
@@ -202,8 +201,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    PrecisionT expval(const std::vector<ComplexT> &matrix,
-                      const std::vector<std::size_t> &wires) {
+    auto expval(const std::vector<ComplexT> &matrix,
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -224,8 +223,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    PrecisionT expval(const std::string &operation,
-                      const std::vector<std::size_t> &wires) {
+    auto expval(const std::string &operation,
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -255,10 +254,9 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     template <class index_type>
-    PrecisionT expval(const index_type *row_map_ptr,
-                      const index_type row_map_size,
-                      const index_type *entries_ptr, const ComplexT *values_ptr,
-                      const index_type numNNZ) {
+    auto expval(const index_type *row_map_ptr, const index_type row_map_size,
+                const index_type *entries_ptr, const ComplexT *values_ptr,
+                const index_type numNNZ) -> PrecisionT {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
@@ -283,9 +281,9 @@ class Measurements final
      * observables.
      */
     template <typename op_type>
-    std::vector<PrecisionT>
-    expval(const std::vector<op_type> &operations_list,
-           const std::vector<std::vector<std::size_t>> &wires_list) {
+    auto expval(const std::vector<op_type> &operations_list,
+                const std::vector<std::vector<std::size_t>> &wires_list)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
@@ -302,16 +300,16 @@ class Measurements final
     /**
      * @brief Expectation value for a general Observable
      *
-     * @param ob Observable
+     * @param obs An observable object.
      * @return Floating point expected value of the observable.
      */
-    auto expval(const Observable<StateVectorT> &ob) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs) -> PrecisionT {
         PrecisionT result{};
 
         if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
                                      MemoryStorageLocation::Internal>) {
             StateVectorT sv(this->_statevector);
-            result = calculateObsExpval(sv, ob, this->_statevector);
+            result = calculateObsExpval(sv, obs, this->_statevector);
         } else if constexpr (std::is_same_v<
                                  typename StateVectorT::MemoryStorageT,
                                  MemoryStorageLocation::External>) {
@@ -319,7 +317,7 @@ class Measurements final
                 this->_statevector.getData(),
                 this->_statevector.getData() + this->_statevector.getLength());
             StateVectorT sv(data_storage.data(), data_storage.size());
-            result = calculateObsExpval(sv, ob, this->_statevector);
+            result = calculateObsExpval(sv, obs, this->_statevector);
         } else {
             /// LCOV_EXCL_START
             PL_ABORT("Undefined memory storage location for StateVectorT.");
@@ -332,9 +330,9 @@ class Measurements final
     /**
      * @brief Expectation value for a Observable with shots
      *
-     * @param obs Observable
+     * @param obs An observable object.
      * @param num_shots Number of shots.
-     * @param shots_range Vector of shot number to measurement
+     * @param shot_range Vector of shot number to measurement
      * @return Floating point expected value of the observable.
      */
 
@@ -361,15 +359,15 @@ class Measurements final
     /**
      * @brief Variance value for a general Observable
      *
-     * @param ob Observable
+     * @param obs An observable object.
      * @return Floating point with the variance of the observable.
      */
-    auto var(const Observable<StateVectorT> &ob) -> PrecisionT {
+    auto var(const Observable<StateVectorT> &obs) -> PrecisionT {
         PrecisionT result{};
         if constexpr (std::is_same_v<typename StateVectorT::MemoryStorageT,
                                      MemoryStorageLocation::Internal>) {
             StateVectorT sv(this->_statevector);
-            result = calculateObsVar(sv, ob, this->_statevector);
+            result = calculateObsVar(sv, obs, this->_statevector);
 
         } else if constexpr (std::is_same_v<
                                  typename StateVectorT::MemoryStorageT,
@@ -378,7 +376,7 @@ class Measurements final
                 this->_statevector.getData(),
                 this->_statevector.getData() + this->_statevector.getLength());
             StateVectorT sv(data_storage.data(), data_storage.size());
-            result = calculateObsVar(sv, ob, this->_statevector);
+            result = calculateObsVar(sv, obs, this->_statevector);
         } else {
             /// LCOV_EXCL_START
             PL_ABORT("Undefined memory storage location for StateVectorT.");
@@ -394,8 +392,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observable.
      */
-    PrecisionT var(const std::string &operation,
-                   const std::vector<std::size_t> &wires) {
+    auto var(const std::string &operation,
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -416,14 +414,14 @@ class Measurements final
     };
 
     /**
-     * @brief Variance of an observable.
+     * @brief Variance of a Hermitian matrix.
      *
      * @param matrix Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observable.
      */
-    PrecisionT var(const std::vector<ComplexT> &matrix,
-                   const std::vector<std::size_t> &wires) {
+    auto var(const std::vector<ComplexT> &matrix,
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         // Copying the original state vector, for the application of the
         // observable operator.
         StateVectorLQubitManaged<PrecisionT> operator_statevector(
@@ -454,9 +452,9 @@ class Measurements final
      observables.
      */
     template <typename op_type>
-    std::vector<PrecisionT>
-    var(const std::vector<op_type> &operations_list,
-        const std::vector<std::vector<std::size_t>> &wires_list) {
+    auto var(const std::vector<op_type> &operations_list,
+             const std::vector<std::vector<std::size_t>> &wires_list)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");

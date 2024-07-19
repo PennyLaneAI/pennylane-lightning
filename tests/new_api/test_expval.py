@@ -18,7 +18,7 @@ Tests for process and execute (expval calculation).
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice
+from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane.devices import DefaultQubit
 
 if not LightningDevice._new_API:
@@ -200,6 +200,10 @@ class TestExpval:
 
         assert np.allclose(calculated_val, reference_val, tol)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support sparse Hamiltonians",
+    )
     def test_sparse_hamiltonian_expectation(self, theta, phi, tol, dev):
         """Tests a Hamiltonian."""
 

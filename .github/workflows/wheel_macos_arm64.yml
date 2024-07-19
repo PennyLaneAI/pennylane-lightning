@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11]
+        os: [macos-12]
         arch: [arm64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
@@ -128,12 +128,12 @@ jobs:
     strategy:
       matrix:
         arch: [arm64]
-        pl_backend: ["lightning_qubit"]
+        pl_backend: ["lightning_qubit", "lightning_kokkos"]
     runs-on: ubuntu-latest
-
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
+
     steps:
       - uses: actions/download-artifact@v3
         with:
@@ -144,5 +144,5 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          password: ${{ ( matrix.pl_backend == 'lightning_qubit' ) && secrets.TEST_PYPI_API_TOKEN || secrets.TEST_PYPI_LKOKKOS_TOKEN }}
           repository-url: https://test.pypi.org/legacy/

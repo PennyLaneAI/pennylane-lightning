@@ -11,7 +11,7 @@ if("${PL_TENSOR_BACKEND}" STREQUAL "cutensornet" AND NOT TNCUDA_UTILS_ADDED)
     add_subdirectory(tncuda)
     target_include_directories(${PL_BACKEND}_tensor INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/tncuda)
     target_link_libraries(${PL_BACKEND}_tensor INTERFACE tensor_cuda)
-    set(CUDA_UTILS_ADDED TRUE)
+    set(TNCUDA_UTILS_ADDED TRUE)
 endif()
 
 target_include_directories(${PL_BACKEND}_tensor INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/base)

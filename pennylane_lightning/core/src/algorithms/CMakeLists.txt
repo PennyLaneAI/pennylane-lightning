@@ -15,7 +15,7 @@ target_link_libraries(lightning_algorithms INTERFACE    lightning_compile_option
                                                         lightning_observables
                                                         )
 
-if (BUILD_TESTS)
+if (BUILD_TESTS AND NOT DEFINED PL_TENSOR)
     enable_testing()
     add_subdirectory("tests")
 endif()

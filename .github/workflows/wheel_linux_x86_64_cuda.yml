@@ -87,7 +87,7 @@ jobs:
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
             yum-config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo -y
-            dnf -y install cuda-${{ matrix.cuda_version }}-0 git openssh wget
+            dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git openssh wget
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
@@ -132,11 +132,11 @@ jobs:
         arch: [x86_64]
         pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
-
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
+
     steps:
       - uses: actions/download-artifact@v3
         with:

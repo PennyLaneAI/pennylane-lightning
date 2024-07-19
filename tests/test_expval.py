@@ -21,6 +21,7 @@ import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI
 from conftest import LightningDevice as ld
+from conftest import device_name
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -134,6 +135,10 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support qml.Projector()",
+    )
     def test_projector_expectation(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
@@ -178,18 +183,43 @@ class TestExpval:
             obs = qml.Hermitian(U, wires=perm)
 
             def circuit():
-                qml.StatePrep(init_state, wires=range(n_qubits))
-                qml.RY(theta, wires=[0])
+                if device_name != "lightning.tensor":
+                    qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.RX(theta, wires=[0])
                 qml.RY(phi, wires=[1])
+                qml.RX(theta, wires=[2])
+                qml.RY(phi, wires=[3])
+                qml.RX(theta, wires=[4])
+                qml.RY(phi, wires=[5])
+                qml.RX(theta, wires=[6])
                 qml.CNOT(wires=[0, 1])
                 return qml.expval(obs)
 
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
-            assert np.allclose(circ(), circ_def(), tol)
+            if device_name == "lightning.tensor" and n_wires > 1:
+                with pytest.raises(
+                    ValueError,
+                    match="The number of Hermitian observables target wires should be 1.",
+                ):
+                    assert np.allclose(circ(), circ_def(), tol)
+            else:
+                assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
+@pytest.mark.parametrize(
+    "diff_method",
+    [
+        "parameter-shift",
+        pytest.param(
+            "adjoint",
+            marks=pytest.mark.skipif(
+                device_name == "lightning.tensor",
+                reason="lightning.tensor does not support the adjoint method",
+            ),
+        ),
+    ],
+)
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""
 

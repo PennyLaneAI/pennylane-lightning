@@ -68,7 +68,7 @@ inline auto axpy_Kokkos(Kokkos::complex<PrecisionT> alpha,
  */
 template <class PrecisionT> struct SparseMV_KokkosFunctor {
     using KokkosVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
-    using KokkosSizeTVector = Kokkos::View<size_t *>;
+    using KokkosSizeTVector = Kokkos::View<std::size_t *>;
 
     KokkosVector x;
     KokkosVector y;
@@ -90,7 +90,7 @@ template <class PrecisionT> struct SparseMV_KokkosFunctor {
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t row) const {
         Kokkos::complex<PrecisionT> tmp = {0.0, 0.0};
-        for (size_t j = indptr[row]; j < indptr[row + 1]; j++) {
+        for (std::size_t j = indptr[row]; j < indptr[row + 1]; j++) {
             tmp += data[j] * x[indices[j]];
         }
         y[row] = tmp;
@@ -124,7 +124,7 @@ void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
     using ConstSizeTHostView =
         Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using KokkosSizeTVector = Kokkos::View<size_t *>;
+    using KokkosSizeTVector = Kokkos::View<std::size_t *>;
     using KokkosVector = Kokkos::View<ComplexT *>;
 
     KokkosVector kok_data("kokkos_sparese_matrix_vals", numNNZ);

@@ -92,4 +92,12 @@ template <typename T> class TSQueue {
         std::lock_guard<std::mutex> lk(m);
         return q.empty();
     }
+    /**
+     * @brief Clear the queue of all items using a mutual exclusion lock
+     * to handle multiple threads.
+     */
+    void clear() {
+        std::lock_guard<std::mutex> lk(m);
+        q = {};
+    }
 };

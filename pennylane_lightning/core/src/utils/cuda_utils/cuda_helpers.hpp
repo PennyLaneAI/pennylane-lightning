@@ -138,17 +138,33 @@ inline static constexpr auto cuToComplex(CFP_t a)
 /**
  * @brief Utility to convert std::complex types to cuComplex types
  *
- * @tparam CFP_t std::complex types.
+ * @tparam ComplexT std::complex types.
  * @param a A std::complex type.
  * @return cuComplex converted a
  */
-template <class CFP_t = std::complex<double>>
-inline static constexpr auto complexToCu(CFP_t a) {
-    if constexpr (std::is_same_v<CFP_t, std::complex<double>>) {
+template <class ComplexT = std::complex<double>>
+inline static constexpr auto complexToCu(ComplexT a) {
+    if constexpr (std::is_same_v<ComplexT, std::complex<double>>) {
         return make_cuDoubleComplex(a.real(), a.imag());
     } else {
         return make_cuFloatComplex(a.real(), a.imag());
     }
+}
+
+/**
+ * @brief Utility to convert a vector of std::complex types to cuComplex types
+ *
+ * @tparam ComplexT std::complex types.
+ * @param vec A std::vector<std::complex> type.
+ * @return a vector of cuComplex converted vec
+ */
+template <class ComplexT = std::complex<double>>
+inline auto complexToCu(const std::vector<ComplexT> &vec) {
+    using cuCFP_t = decltype(complexToCu(ComplexT{}));
+    std::vector<cuCFP_t> cast_vector(vec.size());
+    std::transform(vec.begin(), vec.end(), cast_vector.begin(),
+                   [&](ComplexT x) { return complexToCu<ComplexT>(x); });
+    return cast_vector;
 }
 
 /**
@@ -364,5 +380,25 @@ struct MatrixHasher {
         return hash_val;
     }
 };
+
+/**
+ * @brief Normalize/Cast the index ordering to match PennyLane.
+ *
+ * @tparam IndexTypeIn Integer value type.
+ * @tparam IndexTypeOut Integer value type.
+ * @param indices Given indices to transform.
+ * @param num_qubits Number of qubits.
+ */
+template <typename IndexTypeIn, typename IndexTypeOut>
+inline auto NormalizeCastIndices(const std::vector<IndexTypeIn> &indices,
+                                 const std::size_t &num_qubits)
+    -> std::vector<IndexTypeOut> {
+    std::vector<IndexTypeOut> t_indices(indices.size());
+    std::transform(indices.begin(), indices.end(), t_indices.begin(),
+                   [&](IndexTypeIn i) {
+                       return static_cast<IndexTypeOut>(num_qubits - 1 - i);
+                   });
+    return t_indices;
+}
 
 } // namespace Pennylane::LightningGPU::Util

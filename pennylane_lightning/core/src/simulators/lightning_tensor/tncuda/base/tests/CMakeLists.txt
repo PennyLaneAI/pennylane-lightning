@@ -20,7 +20,7 @@ target_link_libraries(tensornet_base_tests INTERFACE  Catch2::Catch2)
 ProcessTestOptions(tensornet_base_tests)
 
 # Create dependency on the dynamically defined simulator/backend target.
-target_link_libraries(tensornet_base_tests INTERFACE ${PL_TENSOR} ${PL_TENSOR}_utils)
+target_link_libraries(tensornet_base_tests INTERFACE ${PL_BACKEND} ${PL_BACKEND}_tncuda_utils)
 
 target_sources(tensornet_base_tests INTERFACE runner_lightning_tensor_tensornetBase.cpp)
 
