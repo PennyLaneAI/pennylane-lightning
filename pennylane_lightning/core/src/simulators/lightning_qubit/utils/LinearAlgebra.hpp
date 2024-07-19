@@ -108,7 +108,7 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
     if (nthreads < 1) {
         nthreads = 1;
     }
-    auto num_threads = get_total_omp_num_threads();
+    const auto num_threads = get_total_omp_num_threads();
     nthreads = (num_threads > nthreads) ? nthreads : num_threads;
 
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
@@ -180,9 +180,8 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
     if (nthreads < 1) {
         nthreads = 1;
     }
-    auto num_threads = get_total_omp_num_threads();
+    const auto num_threads = get_total_omp_num_threads();
     nthreads = (num_threads > nthreads) ? nthreads : num_threads;
-    printf("nthreads = %lu\n", nthreads);
 
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
     shared(v1, v2, data_size) reduction(sm : result)
