@@ -64,7 +64,7 @@ class LightningStateVector:
         device_name="lightning.kokkos",
         kokkos_args=None,
         sync=True,
-    ): # pylint: disable=too-many-arguments
+    ):  # pylint: disable=too-many-arguments
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
