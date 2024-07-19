@@ -309,6 +309,8 @@ namespace Pennylane::LightningQubit::Measures {
  */
 template <typename PrecisionT> class discrete_random_variable {
   private:
+    static constexpr std::size_t default_index =
+        std::numeric_limits<std::size_t>::max();
     const std::vector<std::pair<double, std::size_t>> bucket_partners_;
     std::mt19937 &gen_;
     const std::size_t n_probs;
@@ -331,15 +333,12 @@ template <typename PrecisionT> class discrete_random_variable {
      * @brief Return a discrete random value.
      */
     std::size_t operator()() const {
-        const std::size_t idx =
-            static_cast<std::size_t>(distribution(gen_) * n_probs);
+        const auto idx = static_cast<std::size_t>(distribution(gen_) * n_probs);
         if (distribution(gen_) >= bucket_partners_[idx].first and
-            bucket_partners_[idx].second !=
-                std::numeric_limits<std::size_t>::max()) {
+            bucket_partners_[idx].second != default_index) {
             return bucket_partners_[idx].second;
-        } else {
-            return idx;
         }
+        return idx;
     }
 
   private:
@@ -350,7 +349,7 @@ template <typename PrecisionT> class discrete_random_variable {
     init_bucket_partners_(const std::vector<PrecisionT> &probs) {
         const std::size_t n_probs = probs.size();
         std::vector<std::pair<double, std::size_t>> bucket_partners(
-            n_probs, {0.0, std::numeric_limits<std::size_t>::max()});
+            n_probs, {0.0, default_index});
         std::stack<std::size_t> underfull_bucket_ids;
         std::stack<std::size_t> overfull_bucket_ids;
 

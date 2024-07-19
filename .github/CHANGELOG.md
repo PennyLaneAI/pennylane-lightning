@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Add `sample(wires)` support in LightningQubit.
+  [(#809)](https://github.com/PennyLaneAI/pennylane-lightning/pull/809)
+
 * Add GPU device compute capability check for Lightning-Tensor.
   [(#803)](https://github.com/PennyLaneAI/pennylane-lightning/pull/803)
 

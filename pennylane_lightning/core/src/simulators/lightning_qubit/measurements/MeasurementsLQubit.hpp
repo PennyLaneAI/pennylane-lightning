@@ -588,11 +588,23 @@ class Measurements final
     generate_samples(const std::vector<std::size_t> &wires,
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
+        const std::size_t n_counts = PUtil::exp2(n_wires);
+        std::vector<std::size_t> samples(num_samples * n_wires);
+        if (n_counts > num_samples) {
+            this->setRandomSeed();
+            discrete_random_variable<PrecisionT> drv{this->rng, probs(wires)};
+            for (std::size_t s = 0; s < num_samples; s++) {
+                const std::size_t idx = drv();
+                for (std::size_t j = 0; j < n_wires; j++) {
+                    samples[s * n_wires + (n_wires - 1 - j)] = (idx >> j) & 1U;
+                }
+            }
+            return samples;
+        }
         const std::vector<std::size_t> counts =
             generate_counts(wires, num_samples);
-        std::vector<std::size_t> samples(num_samples * n_wires);
         std::size_t cum_count{0};
-        for (std::size_t idx = 0; idx < counts.size(); idx++) {
+        for (std::size_t idx = 0; idx < n_counts; idx++) {
             const std::size_t count = counts[idx];
             if (count == 0) {
                 continue;
