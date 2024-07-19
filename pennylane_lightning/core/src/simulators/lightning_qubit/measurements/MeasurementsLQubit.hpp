@@ -587,19 +587,43 @@ class Measurements final
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
                      const std::size_t num_samples) {
-        const std::size_t num_wires = wires.size();
-        const std::vector<PrecisionT> probabilities = probs(wires);
-        this->setRandomSeed();
-        discrete_random_variable<PrecisionT> drv{this->rng, probabilities};
-
-        std::vector<std::size_t> samples(num_samples * num_wires, 0);
-        for (std::size_t i = 0; i < num_samples; i++) {
-            const auto idx = drv();
-            for (std::size_t j = 0; j < num_wires; j++) {
-                samples[i * num_wires + (num_wires - 1 - j)] = (idx >> j) & 1U;
+        const std::size_t n_wires = wires.size();
+        const std::vector<std::size_t> counts =
+            generate_counts(wires, num_samples);
+        std::vector<std::size_t> samples(num_samples * n_wires);
+        std::size_t cum_count{0};
+        for (std::size_t idx = 0; idx < counts.size(); idx++) {
+            const std::size_t count = counts[idx];
+            if (count == 0) {
+                continue;
+            }
+            for (std::size_t j = 0; j < n_wires; j++) {
+                samples[cum_count * n_wires + (n_wires - 1 - j)] =
+                    (idx >> j) & 1U;
+            }
+            const auto iterator = samples.begin() + cum_count * n_wires;
+            cum_count += 1;
+            for (std::size_t c = 1; c < count; c++) {
+                std::copy(iterator, iterator + n_wires,
+                          samples.begin() + cum_count * n_wires);
+                cum_count += 1;
             }
         }
         return samples;
+    }
+
+    std::vector<std::size_t>
+    generate_counts(const std::vector<std::size_t> &wires,
+                    const std::size_t num_samples) {
+        const std::size_t n_wires = wires.size();
+        this->setRandomSeed();
+        discrete_random_variable<PrecisionT> drv{this->rng, probs(wires)};
+
+        std::vector<std::size_t> counts(PUtil::exp2(n_wires), 0UL);
+        for (std::size_t i = 0; i < num_samples; i++) {
+            counts[drv()] += 1;
+        }
+        return counts;
     }
 
   private:
