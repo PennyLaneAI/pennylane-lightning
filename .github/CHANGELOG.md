@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Add GPU device compute capability check for Lightning-Tensor.
+  [(#803)](https://github.com/PennyLaneAI/pennylane-lightning/pull/803)
+
 * Refactor CUDA utils Python bindings to a separate module.
   [(#801)](https://github.com/PennyLaneAI/pennylane-lightning/pull/801)
 
@@ -33,6 +36,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of `cuTensorNet-v24.03.0`.
+  [(#806)](https://github.com/PennyLaneAI/pennylane-lightning/pull/806)
 
 * Set `PL_BACKEND` for the entire `build-wheel-lightning-gpu` Docker-build stage to properly build the Lightning-GPU wheel.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
