@@ -18,6 +18,8 @@
 #include <functional>
 #include <vector>
 
+#include <iostream>
+
 #include "cuda_helpers.hpp"
 
 /// @cond DEV
@@ -1472,6 +1474,74 @@ static constexpr auto getP1111_CU() -> std::vector<CFP_t> {
             cuUtil::ONE<CFP_t>()};
 }
 
+/**
+ * @brief Create a matrix representation of the PauliX gate data in row-major
+ * format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliX data.
+ */
+template <class CFP_t> static constexpr auto getXY() -> std::vector<CFP_t> {
+    return {cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+            -cuUtil::IMAG<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getXZ() -> std::vector<CFP_t> {
+    return {cuUtil::ZERO<CFP_t>(), -cuUtil::ONE<CFP_t>(), cuUtil::ONE<CFP_t>(),
+            cuUtil::ZERO<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getXH() -> std::vector<CFP_t> {
+    return {cuUtil::INVSQRT2<CFP_t>(), -cuUtil::INVSQRT2<CFP_t>(),
+            cuUtil::INVSQRT2<CFP_t>(), cuUtil::INVSQRT2<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getYX() -> std::vector<CFP_t> {
+    return {-cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+            cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getYZ() -> std::vector<CFP_t> {
+    return {cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>(), cuUtil::IMAG<CFP_t>(),
+            cuUtil::ZERO<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getYH() -> std::vector<CFP_t> {
+    return {-cuUtil::INVSQRT2I<CFP_t>(), cuUtil::INVSQRT2I<CFP_t>(),
+            cuUtil::INVSQRT2I<CFP_t>(), cuUtil::INVSQRT2I<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getZX() -> std::vector<CFP_t> {
+    return {cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(), -cuUtil::ONE<CFP_t>(),
+            cuUtil::ZERO<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getZY() -> std::vector<CFP_t> {
+    return {cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
+            -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getZH() -> std::vector<CFP_t> {
+    return {cuUtil::INVSQRT2<CFP_t>(), cuUtil::INVSQRT2<CFP_t>(),
+            -cuUtil::INVSQRT2<CFP_t>(), cuUtil::INVSQRT2<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getHX() -> std::vector<CFP_t> {
+    return {cuUtil::INVSQRT2<CFP_t>(), cuUtil::INVSQRT2<CFP_t>(),
+            -cuUtil::INVSQRT2<CFP_t>(), cuUtil::INVSQRT2<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getHY() -> std::vector<CFP_t> {
+    return {cuUtil::INVSQRT2I<CFP_t>(), -cuUtil::INVSQRT2I<CFP_t>(),
+            -cuUtil::INVSQRT2I<CFP_t>(), -cuUtil::INVSQRT2I<CFP_t>()};
+}
+
+template <class CFP_t> static constexpr auto getHZ() -> std::vector<CFP_t> {
+    return {cuUtil::INVSQRT2<CFP_t>(), -cuUtil::INVSQRT2<CFP_t>(),
+            cuUtil::INVSQRT2<CFP_t>(), cuUtil::INVSQRT2<CFP_t>()};
+}
+
 /*
  * @brief Dyanmical access the gate data based on the gate name and parameters.
  *
@@ -1541,15 +1611,43 @@ template <class PrecisionT> class DynamicGateDataAccess {
          []() -> std::vector<CFP_t> { return cuGates::getToffoli<CFP_t>(); }},
         {"CY", []() -> std::vector<CFP_t> { return cuGates::getCY<CFP_t>(); }},
         {"CZ", []() -> std::vector<CFP_t> { return cuGates::getCZ<CFP_t>(); }},
-        {"Identity_squared",
+        {"I@I",
          []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
-        {"PauliX_squared",
+        {"I@X",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliX<CFP_t>(); }},
+        {"I@Y",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliY<CFP_t>(); }},
+        {"I@Z",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
+        {"I@H",
+         []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
+        {"X@I",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliX<CFP_t>(); }},
+        {"X@X",
          []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
-        {"PauliY_squared",
+        {"X@Y", []() -> std::vector<CFP_t> { return cuGates::getXY<CFP_t>(); }},
+        {"X@Z", []() -> std::vector<CFP_t> { return cuGates::getXZ<CFP_t>(); }},
+        {"X@H", []() -> std::vector<CFP_t> { return cuGates::getXH<CFP_t>(); }},
+        {"Y@I",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliY<CFP_t>(); }},
+        {"Y@X", []() -> std::vector<CFP_t> { return cuGates::getYX<CFP_t>(); }},
+        {"Y@Y",
          []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
-        {"PauliZ_squared",
+        {"Y@Z", []() -> std::vector<CFP_t> { return cuGates::getYZ<CFP_t>(); }},
+        {"Y@H", []() -> std::vector<CFP_t> { return cuGates::getYH<CFP_t>(); }},
+        {"Z@I",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
+        {"Z@X", []() -> std::vector<CFP_t> { return cuGates::getZX<CFP_t>(); }},
+        {"Z@Y", []() -> std::vector<CFP_t> { return cuGates::getZY<CFP_t>(); }},
+        {"Z@Z",
          []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
-        {"Hadamard_squared",
+        {"Z@H", []() -> std::vector<CFP_t> { return cuGates::getZH<CFP_t>(); }},
+        {"H@I",
+         []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
+        {"H@X", []() -> std::vector<CFP_t> { return cuGates::getHX<CFP_t>(); }},
+        {"H@Y", []() -> std::vector<CFP_t> { return cuGates::getHY<CFP_t>(); }},
+        {"H@Z", []() -> std::vector<CFP_t> { return cuGates::getHZ<CFP_t>(); }},
+        {"H@H",
          []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
         {"CSWAP",
          []() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }}};

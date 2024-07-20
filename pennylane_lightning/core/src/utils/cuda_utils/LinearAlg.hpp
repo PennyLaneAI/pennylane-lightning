@@ -112,6 +112,31 @@ inline void square_matrix_CUDA_device(T *mat, const int row_size,
 }
 
 /**
+ * @brief cuBLAS backed square the matrix for GPU data.
+ *
+ * @tparam T Complex data-type. Accepts cuFloatComplex and cuDoubleComplex
+ * @param mat Device data pointer.
+ * @param row_size Size of the matrix row.
+ * @param col_size Size of the matrix column.
+ * @param dev_id the device on which the function should be executed.
+ * @param stream_id the CUDA stream on which the operation should be executed.
+ * @param cublas the CublasCaller object that manages the cuBLAS handle.
+ */
+template <class T = cuDoubleComplex, class DevTypeID = int>
+inline void MM_CUDA_device(T *A, T *B, T *C, const int m, const int k,
+                           const int n, DevTypeID dev_id,
+                           cudaStream_t stream_id, const CublasCaller &cublas) {
+    const T alpha{1.0, 0.0};
+    const T beta{0.0, 0.0};
+    if constexpr (std::is_same_v<T, cuFloatComplex>) {
+        cublas.call(cublasCgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N, m,
+                    n, k, &alpha, A, m, B, n, &beta, C, m);
+    } else if constexpr (std::is_same_v<T, cuDoubleComplex>) {
+        cublas.call(cublasZgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N, m,
+                    n, k, &alpha, A, m, B, n, &beta, C, m);
+    }
+}
+/**
  * @brief cuBLAS backed inner product for GPU data.
  *
  * @tparam T Complex data-type. Accepts cuFloatComplex and cuDoubleComplex

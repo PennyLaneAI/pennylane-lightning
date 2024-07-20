@@ -272,6 +272,21 @@ template <class CFP_t> inline static constexpr auto INVSQRT2() -> CFP_t {
 }
 
 /**
+ * @brief Returns inverse sqrt(2)i as a compile-time constant.
+ *
+ * @tparam T Precision of result. `double`, `float` are accepted values.
+ * @return constexpr T 1/sqrt(2)i
+ */
+template <class CFP_t> inline static constexpr auto INVSQRT2I() -> CFP_t {
+    if constexpr (std::is_same_v<CFP_t, std::complex<float>> ||
+                  std::is_same_v<CFP_t, std::complex<double>>) {
+        return CFP_t(0, 1 / M_SQRT2);
+    } else {
+        return Div(CFP_t{0, 1}, SQRT2<CFP_t>());
+    }
+}
+
+/**
  * If T is a supported data type for gates, this expression will
  * evaluate to `true`. Otherwise, it will evaluate to `false`.
  *

@@ -194,8 +194,10 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
 
         auto ob_term = TensorProdObsT::create({X0, Z1});
 
-        auto ob = HamiltonianObsT::create({TestType{0.5}}, {ob_term});
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {X0, Z1});
+
         auto res = m.var(*ob);
-        CHECK(res == Approx(0.836679 * 0.25));
+        CHECK(res == Approx(0.093413));
     }
 }
