@@ -36,6 +36,9 @@
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
+* Start the migration for Lightning Kokkos to the new device API. Added the state vector and measurement classes.
+  [(#805)](https://github.com/PennyLaneAI/pennylane-lightning/pull/805)
+
 ### Documentation
 
 ### Bug fixes
@@ -59,7 +62,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
+Amintor Dusko, Vincent Michaud-Rioux, Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
