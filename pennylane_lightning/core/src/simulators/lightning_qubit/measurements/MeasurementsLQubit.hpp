@@ -611,20 +611,6 @@ class Measurements final
         return samples;
     }
 
-    std::vector<std::size_t>
-    generate_counts(const std::vector<std::size_t> &wires,
-                    const std::size_t num_samples) {
-        const std::size_t n_wires = wires.size();
-        this->setRandomSeed();
-        discrete_random_variable<PrecisionT> drv{this->rng, probs(wires)};
-
-        std::vector<std::size_t> counts(PUtil::exp2(n_wires), 0UL);
-        for (std::size_t i = 0; i < num_samples; i++) {
-            counts[drv()] += 1;
-        }
-        return counts;
-    }
-
   private:
     /**
      * @brief Support function that calculates <bra|obs|ket> to obtain the
