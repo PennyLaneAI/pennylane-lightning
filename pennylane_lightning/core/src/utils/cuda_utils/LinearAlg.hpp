@@ -81,7 +81,7 @@ class CublasCaller {
 };
 
 /**
- * @brief cuBLAS backed square the matrix for GPU data.
+ * @brief cuBLAS backed matrix-matrix multiply for GPU data.
  *
  * @tparam T Complex data-type. Accepts cuFloatComplex and cuDoubleComplex
  * @param A Device data pointer of matrix A.
