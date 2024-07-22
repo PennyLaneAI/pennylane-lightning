@@ -183,7 +183,7 @@ def test_integration_for_all_supported_gates(returns):
     j_ltensor = qnode_ltensor(params)
     j_default = qnode_default(params)
 
-    assert np.allclose(j_ltensor, j_default, rtol=1e-1)
+    assert np.allclose(j_ltensor, j_default, rtol=1e-6)
 
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))

@@ -101,7 +101,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
     std::vector<int64_t> ids_; // ids for each term in the graph
 
-    /*--------------------Var Support Below------------------------*/
     std::size_t numObsTerms2_;          // number of observable terms
     vector1D<cuDoubleComplex> coeffs2_; // coefficients for each term
     vector1D<std::size_t> numTensors2_; // number of tensors in each term
@@ -116,7 +115,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
     vector2D<const void *>
         tensorDataPtr2_; // pointers for each tensor data in each term
-    /*--------------------Var Support Above------------------------*/
+
     const bool var_cal_ = false;
 
   private:
@@ -188,6 +187,37 @@ template <class TensorNetT> class ObservableTNCudaOperator {
     }
 
     /**
+     * @brief Add metadata of observable.
+     *
+     * @param metaData Metadata of the observable.
+     * @return obs_key The key of observable tensor operator.
+     */
+    auto add_meta_data_(const MetaDataT &metaData) -> obs_key {
+        auto obsName = std::get<0>(metaData);
+        auto param = std::get<1>(metaData);
+        auto hermitianMatrix = std::get<2>(metaData);
+        std::size_t hash_val = 0;
+
+        if (!hermitianMatrix.empty()) {
+            hash_val = MatrixHasher()(hermitianMatrix);
+        }
+
+        auto obsKey = std::make_tuple(obsName, param, hash_val);
+
+        if (device_obs_cache_.find(obsKey) == device_obs_cache_.end()) {
+            if (hermitianMatrix.empty()) {
+                add_obs_(obsName, param);
+            } else {
+                auto hermitianMatrix_cu =
+                    cuUtil::complexToCu<ComplexT>(hermitianMatrix);
+                add_obs_(obsKey, hermitianMatrix_cu);
+            }
+        }
+
+        return obsKey;
+    }
+
+    /**
      * @brief Returns a pointer to the GPU device memory where the observable is
      * stored.
      *
@@ -204,21 +234,11 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                              const bool var_cal = false)
         : tensor_network_{tensor_network},
           numObsTerms_(obs.getNumTensors().size()), var_cal_{var_cal} {
-        if (var_cal) {
-            // PL_ABORT_IF_NOT(
-            //     numObsTerms_ == 1,
-            //     "Only one observable term is allowed for variance
-            //     calculation");
-            cublascaller_ = make_shared_cublas_caller();
-        }
 
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
             PrecisionT coeff_real = obs.getCoeffs()[term_idx];
-            // if (var_cal) {
-            //     coeff_real = coeff_real * coeff_real;
-            // }
             auto coeff = cuDoubleComplex{static_cast<double>(coeff_real), 0.0};
             auto numTensors = numTensors_[term_idx];
 
@@ -238,66 +258,39 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                         tensor_network.getNumQubits()));
             }
             modes_.emplace_back(modes_per_term);
-            // Not required for var calculation below
-            //  modes pointer initialization
-            vector1D<const int32_t *> modesPtrPerTerm;
-            for (std::size_t tensor_idx = 0; tensor_idx < modes_.back().size();
-                 tensor_idx++) {
-                modesPtrPerTerm.emplace_back(modes_.back()[tensor_idx].data());
-            }
-            modesPtr_.emplace_back(modesPtrPerTerm);
-
-            // tensor data initialization
-            vector1D<const void *> tensorDataPtrPerTerm_;
-            for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
-                 tensor_idx++) {
-                auto metaData = obs.getMetaData()[term_idx][tensor_idx];
-
-                auto obsName = std::get<0>(metaData);
-                // if (var_cal) {
-                //     obsName = obsName + "_squared";
-                // }
-                auto param = std::get<1>(metaData);
-                auto hermitianMatrix = std::get<2>(metaData);
-                std::size_t hash_val = 0;
-
-                if (!hermitianMatrix.empty()) {
-                    hash_val = MatrixHasher()(hermitianMatrix);
-                }
-
-                auto obsKey = std::make_tuple(obsName, param, hash_val);
-
-                if (device_obs_cache_.find(obsKey) == device_obs_cache_.end()) {
-                    if (hermitianMatrix.empty()) {
-                        add_obs_(obsName, param);
-                    } else {
-                        auto hermitianMatrix_cu =
-                            cuUtil::complexToCu<ComplexT>(hermitianMatrix);
-                        add_obs_(obsKey, hermitianMatrix_cu);
-                        /*
-                        if (var_cal) {
-                            square_matrix_CUDA_device(
-                                const_cast<CFP_t *>(
-                                    get_obs_device_ptr_(obsKey)),
-                                Pennylane::Util::log2(
-                                    hermitianMatrix_cu.size()),
-                                Pennylane::Util::log2(
-                                    hermitianMatrix_cu.size()),
-                                tensor_network_.getDevTag().getDeviceID(),
-                                tensor_network_.getDevTag().getStreamID(),
-                                *cublascaller_);
-                        }
-                        */
-                    }
-                }
-                tensorDataPtrPerTerm_.emplace_back(get_obs_device_ptr_(obsKey));
-            }
-
-            tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
-            // Not required for var calculation above
         }
 
-        if (var_cal) {
+        if (!var_cal) {
+            for (std::size_t term_idx = 0; term_idx < numObsTerms_;
+                 term_idx++) {
+                auto numTensors = numTensors_[term_idx];
+
+                // Not required for var calculation below
+                //  modes pointer initialization
+                vector1D<const int32_t *> modesPtrPerTerm;
+                for (std::size_t tensor_idx = 0;
+                     tensor_idx < modes_[term_idx].size(); tensor_idx++) {
+                    modesPtrPerTerm.emplace_back(
+                        modes_[term_idx][tensor_idx].data());
+                }
+                modesPtr_.emplace_back(modesPtrPerTerm);
+
+                // tensor data initialization
+                vector1D<const void *> tensorDataPtrPerTerm_;
+                for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
+                     tensor_idx++) {
+                    auto obsKey =
+                        add_meta_data_(obs.getMetaData()[term_idx][tensor_idx]);
+
+                    tensorDataPtrPerTerm_.emplace_back(
+                        get_obs_device_ptr_(obsKey));
+                }
+
+                tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
+            }
+        } else {
+            cublascaller_ = make_shared_cublas_caller();
+
             numObsTerms2_ = numObsTerms_ * numObsTerms_;
 
             for (std::size_t term_idx = 0; term_idx < numObsTerms_;
@@ -358,135 +351,55 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                             modes_per_term.back().size());
                         auto metaDataArr = tensors_info.second;
                         if (metaDataArr.size() == 1) {
-                            auto metaData = metaDataArr[0];
-                            auto obsName = std::get<0>(metaData);
-                            auto param = std::get<1>(metaData);
-                            auto hermitianMatrix = std::get<2>(metaData);
-                            std::size_t hash_val = 0;
-
-                            if (!hermitianMatrix.empty()) {
-                                hash_val = MatrixHasher()(hermitianMatrix);
-                            }
-
-                            auto obsKey =
-                                std::make_tuple(obsName, param, hash_val);
-
-                            if (device_obs_cache_.find(obsKey) ==
-                                device_obs_cache_.end()) {
-                                if (hermitianMatrix.empty()) {
-                                    add_obs_(obsName, param);
-                                } else {
-                                    auto hermitianMatrix_cu =
-                                        cuUtil::complexToCu<ComplexT>(
-                                            hermitianMatrix);
-                                    add_obs_(obsKey, hermitianMatrix_cu);
-                                }
-                            }
-
+                            auto obsKey = add_meta_data_(metaDataArr[0]);
                             tensorDataPtrPerTerm_.emplace_back(
                                 get_obs_device_ptr_(obsKey));
+                        } else if (metaDataArr.size() == 2) {
+                            auto obsName0 = std::get<0>(metaDataArr[0]);
+                            auto obsName1 = std::get<0>(metaDataArr[1]);
 
-                        } else {
-                            PL_ABORT_IF(metaDataArr.size() > 2,
-                                        "DEBUG PURPOSE ONLY");
-                            auto metaData0 = metaDataArr[0];
-                            auto metaData1 = metaDataArr[1];
+                            auto param0 = std::get<1>(metaDataArr[0]);
+                            auto param1 = std::get<1>(metaDataArr[1]);
 
-                            auto param0 = std::get<1>(metaData0);
-                            auto param1 = std::get<1>(metaData1);
+                            std::string obsName;
 
-                            auto obsName0 = std::get<0>(metaData0);
-                            auto obsName1 = std::get<0>(metaData1);
-
-                            std::string obsName = obsName0 + "@" + obsName1;
-
-                            // Branch for Pauli strings
                             if (pauli_map_.find(obsName0) != pauli_map_.end() &&
                                 pauli_map_.find(obsName1) != pauli_map_.end()) {
+                                // Branch for Pauli strings
                                 obsName0 = pauli_map_[obsName0];
                                 obsName1 = pauli_map_[obsName1];
                                 obsName = obsName0 + "@" + obsName1;
 
-                                auto obsKey = std::make_tuple(
-                                    obsName, std::vector<PrecisionT>{},
-                                    std::size_t{0});
-                                if (device_obs_cache_.find(obsKey) ==
-                                    device_obs_cache_.end()) {
-                                    add_obs_(obsName, param0);
-                                }
+                                MetaDataT metaData = {obsName, {}, {}};
+
+                                auto obsKey = add_meta_data_(metaData);
+
                                 tensorDataPtrPerTerm_.emplace_back(
                                     static_cast<const void *>(
                                         get_obs_device_ptr_(obsKey)));
-                            }
-                            // Hermitian below to be tidy up
-                            else {
+                            } else {
                                 // Branch for Hermtian involving Pauli strings
                                 // add both observables matrix to GPU cache
-                                auto hermitianMatrix0 =
-                                    std::get<2>(metaDataArr[0]);
-                                auto hermitianMatrix1 =
-                                    std::get<2>(metaDataArr[1]);
-                                std::size_t hash_val0 = 0;
-                                std::size_t hash_val1 = 0;
-                                if (!hermitianMatrix0.empty()) {
-                                    hash_val0 =
-                                        MatrixHasher()(hermitianMatrix0);
-                                }
-                                if (!hermitianMatrix1.empty()) {
-                                    hash_val1 =
-                                        MatrixHasher()(hermitianMatrix1);
-                                }
-                                auto obsKey0 = std::make_tuple(
-                                    obsName0, std::vector<PrecisionT>{},
-                                    hash_val0);
-                                auto obsKey1 = std::make_tuple(
-                                    obsName1, std::vector<PrecisionT>{},
-                                    hash_val1);
+                                auto obsKey0 = add_meta_data_(metaDataArr[0]);
+                                auto obsKey1 = add_meta_data_(metaDataArr[1]);
 
-                                if (device_obs_cache_.find(obsKey0) ==
-                                    device_obs_cache_.end()) {
-                                    if (hermitianMatrix0.empty()) {
-                                        add_obs_(obsName0, param0);
-                                    } else {
-                                        auto hermitianMatrix_cu =
-                                            cuUtil::complexToCu<ComplexT>(
-                                                hermitianMatrix0);
-                                        add_obs_(obsKey0, hermitianMatrix_cu);
-                                    }
-                                }
-
-                                if (device_obs_cache_.find(obsKey1) ==
-                                    device_obs_cache_.end()) {
-                                    if (hermitianMatrix1.empty()) {
-                                        add_obs_(obsName1, param1);
-                                    } else {
-                                        auto hermitianMatrix_cu =
-                                            cuUtil::complexToCu<ComplexT>(
-                                                hermitianMatrix1);
-                                        add_obs_(obsKey1, hermitianMatrix_cu);
-                                    }
-                                }
-
-                                // add the combined observable matrix together
                                 auto obsName = obsName0 + "@" + obsName1;
-
-                                PL_ABORT_IF(hermitianMatrix0.size() !=
-                                                hermitianMatrix1.size(),
-                                            "DEBUG PURPOSE ONLY");
 
                                 std::size_t hash_val = 0;
 
-                                auto hermitianMatrix = hermitianMatrix0;
-                                if (!hermitianMatrix1.empty()) {
+                                auto hermitianMatrix =
+                                    std::get<2>(metaDataArr[0]);
+
+                                if (!std::get<2>(metaDataArr[1]).empty()) {
                                     hermitianMatrix.insert(
                                         hermitianMatrix.end(),
-                                        hermitianMatrix1.begin(),
-                                        hermitianMatrix1.end());
+                                        std::get<2>(metaDataArr[1]).begin(),
+                                        std::get<2>(metaDataArr[1]).end());
                                 }
 
-                                if (!hermitianMatrix.empty()) {
-                                    hash_val = MatrixHasher()(hermitianMatrix);
-                                }
+                                // if (!hermitianMatrix.empty()) {
+                                hash_val = MatrixHasher()(hermitianMatrix);
+                                //}
 
                                 auto obsKey = std::make_tuple(
                                     obsName, std::vector<PrecisionT>{},
@@ -494,34 +407,41 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
                                 if (device_obs_cache_.find(obsKey) ==
                                     device_obs_cache_.end()) {
-
                                     auto hermitianMatrix_cu =
                                         cuUtil::complexToCu<ComplexT>(
-                                            hermitianMatrix0);
+                                            std::get<2>(metaDataArr[0]));
+
+                                    if (hermitianMatrix_cu.empty()) {
+                                        hermitianMatrix_cu =
+                                            cuUtil::complexToCu<ComplexT>(
+                                                std::get<2>(metaDataArr[1]));
+                                    }
+
                                     add_obs_(obsKey, hermitianMatrix_cu);
+
                                     // update the matrix data with MM operation
-                                    MM_CUDA_device(
-                                        const_cast<CFP_t *>(
-                                            get_obs_device_ptr_(obsKey0)),
-                                        const_cast<CFP_t *>(
-                                            get_obs_device_ptr_(obsKey1)),
-                                        const_cast<CFP_t *>(
-                                            get_obs_device_ptr_(obsKey)),
-                                        Pennylane::Util::log2(
-                                            hermitianMatrix_cu.size()),
-                                        Pennylane::Util::log2(
-                                            hermitianMatrix_cu.size()),
-                                        Pennylane::Util::log2(
-                                            hermitianMatrix_cu.size()),
-                                        tensor_network_.getDevTag()
-                                            .getDeviceID(),
-                                        tensor_network_.getDevTag()
-                                            .getStreamID(),
-                                        *cublascaller_);
+                                    CFP_t *mat0 = const_cast<CFP_t *>(
+                                        get_obs_device_ptr_(obsKey0));
+                                    CFP_t *mat1 = const_cast<CFP_t *>(
+                                        get_obs_device_ptr_(obsKey1));
+                                    CFP_t *res = const_cast<CFP_t *>(
+                                        get_obs_device_ptr_(obsKey));
+                                    std::size_t m = Pennylane::Util::log2(
+                                        hermitianMatrix_cu.size());
+
+                                    MM_CUDA_device(mat0, mat1, res, m, m, m,
+                                                   tensor_network_.getDevTag()
+                                                       .getDeviceID(),
+                                                   tensor_network_.getDevTag()
+                                                       .getStreamID(),
+                                                   *cublascaller_);
                                 }
                                 tensorDataPtrPerTerm_.emplace_back(
                                     get_obs_device_ptr_(obsKey));
                             }
+                        } else {
+                            PL_ABORT("Only one wire observables are supported "
+                                     "for cutensornet v24.03");
                         }
                         // Hermitian above
                     }

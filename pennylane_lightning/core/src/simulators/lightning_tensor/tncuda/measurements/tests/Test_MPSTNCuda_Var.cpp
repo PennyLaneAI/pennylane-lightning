@@ -171,7 +171,9 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[MPSTNCuda_Var]", float,
 TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
                    double) {
     using TensorNetT = MPSTNCuda<TestType>;
+    using ComplexT = typename TensorNetT::ComplexT;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
+    using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
     using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
     using HamiltonianObsT = HamiltonianTNCuda<TensorNetT>;
     SECTION("Using XZ") {
@@ -191,6 +193,266 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
         auto Z1 =
             std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {X0, Z1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.093413));
+    }
+
+    SECTION("Using XI") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto X0 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto I1 = std::make_shared<NamedObsT>("Identity",
+                                              std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {X0, I1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.07406834808884483));
+    }
+
+    SECTION("Using YI") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto Y0 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{0});
+        auto I1 = std::make_shared<NamedObsT>("Identity",
+                                              std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {Y0, I1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.06931360376406634));
+    }
+    SECTION("Using HI") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto H0 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{0});
+        auto I1 = std::make_shared<NamedObsT>("Identity",
+                                              std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {H0, I1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.02618050490800028));
+    }
+
+    SECTION("Using ZI") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto Z0 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0});
+        auto I1 = std::make_shared<NamedObsT>("Identity",
+                                              std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {Z0, I1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.03661804814708902));
+    }
+
+    SECTION("Using XY") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto X0 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto Y1 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {X0, Y1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.314201));
+    }
+
+    SECTION("Using XH") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto X0 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto H1 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {X0, H1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.15724601172876368));
+    }
+
+    SECTION("Using YH") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto H0 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{0});
+        auto Y1 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {H0, Y1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.26631312915836103));
+    }
+
+    SECTION("Using ZY") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        auto Z0 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0});
+        auto Y1 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {Z0, Y1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.27675067239744966));
+    }
+
+    SECTION("Using 1 Hermitian") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        std::vector<ComplexT> matrix = {
+            {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+
+        auto X0 = std::make_shared<HermitianObsT>(matrix,
+                                                  std::vector<std::size_t>{0});
+        auto Z1 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
+
+        auto ob_term = TensorProdObsT::create({X0, Z1});
+
+        auto ob =
+            HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {X0, Z1});
+
+        auto res = m.var(*ob);
+        CHECK(res == Approx(0.093413));
+    }
+
+    SECTION("Using 2 Hermitians") {
+        std::size_t bondDim = GENERATE(2);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
+            {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+
+        std::vector<ComplexT> matrix = {
+            {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+
+        std::vector<ComplexT> matrix_z = {
+            {1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {-1.0, 0.0}};
+
+        auto X0 = std::make_shared<HermitianObsT>(matrix,
+                                                  std::vector<std::size_t>{0});
+        auto Z1 = std::make_shared<HermitianObsT>(matrix_z,
+                                                  std::vector<std::size_t>{1});
 
         auto ob_term = TensorProdObsT::create({X0, Z1});
 
