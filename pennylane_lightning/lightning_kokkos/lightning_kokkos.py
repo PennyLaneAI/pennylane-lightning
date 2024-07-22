@@ -76,7 +76,7 @@ def _kokkos_configuration():
     return print_configuration()
 
 
-def simulate(
+def simulate(  # pylint: disable=unused-argument
     circuit: QuantumScript,
     state: LightningStateVector,
     mcmc: dict = None,
@@ -128,7 +128,9 @@ def simulate(
     # return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
-def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None):
+def jacobian(  # pylint: disable=unused-argument
+    circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
+):
     """Compute the Jacobian for a single quantum script.
 
     Args:
@@ -150,7 +152,7 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False,
     # return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
 
 
-def simulate_and_jacobian(
+def simulate_and_jacobian(  # pylint: disable=unused-argument
     circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
 ):
     """Simulate a single quantum script and compute its Jacobian.
@@ -176,7 +178,7 @@ def simulate_and_jacobian(
     # return res, jac
 
 
-def vjp(
+def vjp(  # pylint: disable=unused-argument
     circuit: QuantumTape,
     cotangents: Tuple[Number],
     state: LightningStateVector,
@@ -209,7 +211,7 @@ def vjp(
     # )
 
 
-def simulate_and_vjp(
+def simulate_and_vjp(  # pylint: disable=unused-argument
     circuit: QuantumTape,
     cotangents: Tuple[Number],
     state: LightningStateVector,

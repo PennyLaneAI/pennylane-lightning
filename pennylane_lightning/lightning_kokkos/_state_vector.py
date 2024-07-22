@@ -15,17 +15,6 @@
 Class implementation for state-vector manipulation.
 """
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import (
-        StateVectorC64,
-        StateVectorC128,
-        allocate_aligned_array,
-    )
-except ImportError:
-    pass
-
-from itertools import product
-
 
 class LightningStateVector:
     """Lightning state-vector class.
