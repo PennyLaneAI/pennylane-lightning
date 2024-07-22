@@ -284,7 +284,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                     tensorDataPtrPerTerm_.emplace_back(
                         get_obs_device_ptr_(obsKey));
                 }
-
                 tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
             }
         } else {
@@ -297,9 +296,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                 for (std::size_t term_idy = 0; term_idy < numObsTerms_;
                      term_idy++) {
                     auto coeff = cuDoubleComplex{
-                        static_cast<double>(obs.getCoeffs()[term_idx] *
-                                            obs.getCoeffs()[term_idy]),
-                        0.0};
+                        coeffs_[term_idx].x * coeffs_[term_idy].x, 0.0};
                     coeffs2_.emplace_back(coeff);
 
                     auto modes_termx = modes_[term_idx];
@@ -440,7 +437,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                             PL_ABORT("Only one wire observables are supported "
                                      "for cutensornet v24.03");
                         }
-                        // Hermitian above
                     }
                     modes2_.emplace_back(modes_per_term);
                     numModes2_.emplace_back(num_modes_per_term);
@@ -476,7 +472,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                   modesPtr2_[term_idx].data(),
                                   tensorDataPtr2_[term_idx].data());
             }
-
         } else {
             for (std::size_t term_idx = 0; term_idx < numObsTerms_;
                  term_idx++) {
