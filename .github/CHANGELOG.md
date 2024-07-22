@@ -18,6 +18,9 @@
 
 ### Improvements
 
+* Optimize the OpenMP parallelization of Lightning-Qubit's `probs` for all number of targets.
+  [(#807)](https://github.com/PennyLaneAI/pennylane-lightning/pull/807)
+
 * Add GPU device compute capability check for Lightning-Tensor.
   [(#803)](https://github.com/PennyLaneAI/pennylane-lightning/pull/803)
 
