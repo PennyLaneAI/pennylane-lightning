@@ -28,6 +28,9 @@ if device_name not in ("lightning.qubit", "lightning.kokkos"):
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+# TODO: remove this after the new device API implementation for Kokkos is implemented
+if device_name == 'lightning.kokkos':
+    pytest.skip("Native Kokkos device has compatible issues with the new device API. Skipping.", allow_module_level=True)
 
 def get_device(wires, **kwargs):
     kwargs.setdefault("shots", None)
