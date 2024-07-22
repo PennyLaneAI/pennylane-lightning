@@ -124,7 +124,7 @@ class Measurements final
 
         const ComplexT *arr_data = this->_statevector.getData();
 
-        // Templated 1-4 wire cases; return probs 
+        // Templated 1-4 wire cases; return probs
         PROBS_SPECIAL_CASE(1);
         PROBS_SPECIAL_CASE(2);
         PROBS_SPECIAL_CASE(3);
@@ -596,37 +596,13 @@ class Measurements final
     generate_samples(const std::vector<std::size_t> &wires,
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
-        const std::size_t n_counts = PUtil::exp2(n_wires);
         std::vector<std::size_t> samples(num_samples * n_wires);
-        if (n_counts > num_samples) {
-            this->setRandomSeed();
-            discrete_random_variable<PrecisionT> drv{this->rng, probs(wires)};
-            for (std::size_t s = 0; s < num_samples; s++) {
-                const std::size_t idx = drv();
-                for (std::size_t j = 0; j < n_wires; j++) {
-                    samples[s * n_wires + (n_wires - 1 - j)] = (idx >> j) & 1U;
-                }
-            }
-            return samples;
-        }
-        const std::vector<std::size_t> counts =
-            generate_counts(wires, num_samples);
-        std::size_t cum_count{0};
-        for (std::size_t idx = 0; idx < n_counts; idx++) {
-            const std::size_t count = counts[idx];
-            if (count == 0) {
-                continue;
-            }
+        this->setRandomSeed();
+        discrete_random_variable<PrecisionT> drv{this->rng, probs(wires)};
+        for (std::size_t s = 0; s < num_samples; s++) {
+            const std::size_t idx = drv();
             for (std::size_t j = 0; j < n_wires; j++) {
-                samples[cum_count * n_wires + (n_wires - 1 - j)] =
-                    (idx >> j) & 1U;
-            }
-            const auto iterator = samples.begin() + cum_count * n_wires;
-            cum_count += 1;
-            for (std::size_t c = 1; c < count; c++) {
-                std::copy(iterator, iterator + n_wires,
-                          samples.begin() + cum_count * n_wires);
-                cum_count += 1;
+                samples[s * n_wires + (n_wires - 1 - j)] = (idx >> j) & 1U;
             }
         }
         return samples;
