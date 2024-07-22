@@ -599,6 +599,9 @@ class Measurements final
         std::vector<std::size_t> samples(num_samples * n_wires);
         this->setRandomSeed();
         discrete_random_variable<PrecisionT> drv{this->rng, probs(wires)};
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for
+#endif
         for (std::size_t s = 0; s < num_samples; s++) {
             const std::size_t idx = drv();
             for (std::size_t j = 0; j < n_wires; j++) {
