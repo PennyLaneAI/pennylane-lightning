@@ -18,8 +18,6 @@
 #include <functional>
 #include <vector>
 
-#include <iostream>
-
 #include "cuda_helpers.hpp"
 
 /// @cond DEV

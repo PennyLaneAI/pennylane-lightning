@@ -234,7 +234,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                              const bool var_cal = false)
         : tensor_network_{tensor_network},
           numObsTerms_(obs.getNumTensors().size()), var_cal_{var_cal} {
-
         numTensors_ = obs.getNumTensors(); // number of tensors in each term
 
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
@@ -397,9 +396,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                         std::get<2>(metaDataArr[1]).end());
                                 }
 
-                                // if (!hermitianMatrix.empty()) {
                                 hash_val = MatrixHasher()(hermitianMatrix);
-                                //}
 
                                 auto obsKey = std::make_tuple(
                                     obsName, std::vector<PrecisionT>{},
@@ -429,12 +426,12 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                     std::size_t m = Pennylane::Util::log2(
                                         hermitianMatrix_cu.size());
 
-                                    MM_CUDA_device(mat0, mat1, res, m, m, m,
-                                                   tensor_network_.getDevTag()
-                                                       .getDeviceID(),
-                                                   tensor_network_.getDevTag()
-                                                       .getStreamID(),
-                                                   *cublascaller_);
+                                    GEMM_CUDA_device(mat0, mat1, res, m, m, m,
+                                                     tensor_network_.getDevTag()
+                                                         .getDeviceID(),
+                                                     tensor_network_.getDevTag()
+                                                         .getStreamID(),
+                                                     *cublascaller_);
                                 }
                                 tensorDataPtrPerTerm_.emplace_back(
                                     get_obs_device_ptr_(obsKey));
