@@ -127,6 +127,7 @@ def simulate(
     # final_state = state.get_final_state(circuit)
     # return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
+
 def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None):
     """Compute the Jacobian for a single quantum script.
 
