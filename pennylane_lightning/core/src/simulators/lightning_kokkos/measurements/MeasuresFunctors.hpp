@@ -35,7 +35,7 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
     // Required for functor:
     using execution_space = DeviceType;
     using value_type = PrecisionT[];
-    const unsigned value_count;
+    const std::size_t value_count;
 
     using ComplexT = Kokkos::complex<PrecisionT>;
     Kokkos::View<ComplexT *> arr;
@@ -50,13 +50,13 @@ template <class PrecisionT, class DeviceType> class getProbsFunctor {
 
     KOKKOS_INLINE_FUNCTION
     void init(PrecisionT dst[]) const {
-        for (unsigned i = 0; i < value_count; i++)
+        for (std::size_t i = 0; i < value_count; i++)
             dst[i] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION
     void join(PrecisionT dst[], const PrecisionT src[]) const {
-        for (unsigned i = 0; i < value_count; i++)
+        for (std::size_t i = 0; i < value_count; i++)
             dst[i] += src[i];
     }
 
@@ -86,7 +86,7 @@ class getProbsNQubitOpFunctor {
     // Required for functor:
     using execution_space = DeviceType;
     using value_type = PrecisionT[];
-    const unsigned value_count;
+    const std::size_t value_count;
 
     using UnmanagedSizeTHostView =
         Kokkos::View<std::size_t *, Kokkos::HostSpace,
@@ -177,13 +177,13 @@ class getProbsNQubitOpFunctor {
 
     KOKKOS_INLINE_FUNCTION
     void init(PrecisionT dst[]) const {
-        for (unsigned i = 0; i < value_count; i++)
+        for (std::size_t i = 0; i < value_count; i++)
             dst[i] = 0.0;
     }
 
     KOKKOS_INLINE_FUNCTION
     void join(PrecisionT dst[], const PrecisionT src[]) const {
-        for (unsigned i = 0; i < value_count; i++)
+        for (std::size_t i = 0; i < value_count; i++)
             dst[i] += src[i];
     }
 

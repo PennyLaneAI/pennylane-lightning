@@ -534,7 +534,7 @@ class Measurements final
             is_equal_to_all_wires = wires[k] == k;
         }
         if (is_equal_to_all_wires) {
-            return this->probs();
+            return probs();
         }
         const bool is_gpu_scratch_limited =
             n_wires > GPU_SHARED_NWIRES_MAX &&
