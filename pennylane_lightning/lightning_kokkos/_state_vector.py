@@ -16,7 +16,7 @@ Class implementation for state-vector manipulation.
 """
 
 
-class LightningStateVector: # pylint: disable=too-few-public-methods
+class LightningStateVector:  # pylint: disable=too-few-public-methods
     """Lightning state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
@@ -28,4 +28,4 @@ class LightningStateVector: # pylint: disable=too-few-public-methods
         device_name(string): state vector device name. Options: ["lightning.qubit"]
     """
 
-    pass # pylint: disable=unnecessary-pass
+    pass  # pylint: disable=unnecessary-pass
