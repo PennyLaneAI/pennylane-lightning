@@ -17,9 +17,10 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 
+from numbers import Number
 from os import getenv
 from pathlib import Path
-from typing import List
+from typing import List, Tuple
 from warnings import warn
 
 import numpy as np
@@ -28,11 +29,15 @@ from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StateP
 from pennylane.measurements import Expectation, MidMeasureMP, State
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
+from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.typing import Result
 from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 from pennylane_lightning.core._version import __version__
 from pennylane_lightning.core.lightning_base import LightningBase, _chunk_iterable
+
+from ._state_vector import LightningStateVector
 
 try:
     # pylint: disable=import-error, no-name-in-module
@@ -69,6 +74,170 @@ def _kokkos_dtype(dtype):
 
 def _kokkos_configuration():
     return print_configuration()
+
+
+def simulate(
+    circuit: QuantumScript,
+    state: LightningStateVector,
+    mcmc: dict = None,
+    postselect_mode: str = None,
+) -> Result:
+    """Simulate a single quantum script.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateVector): handle to Lightning state vector
+        mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
+            parameters: mcmc, kernel_name, num_burnin. Descriptions of
+            these fields are found in :class:`~.LightningQubit`.
+        postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+            postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+            keep the same number of shots. Default is ``None``.
+
+    Returns:
+        Tuple[TensorLike]: The results of the simulation
+
+    Note that this function can return measurements for non-commuting observables simultaneously.
+    """
+    return 0
+    # if mcmc is None:
+    #     mcmc = {}
+    # state.reset_state()
+    # has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+    # if circuit.shots and has_mcm:
+    #     results = []
+    #     aux_circ = qml.tape.QuantumScript(
+    #         circuit.operations,
+    #         circuit.measurements,
+    #         shots=[1],
+    #         trainable_params=circuit.trainable_params,
+    #     )
+    #     for _ in range(circuit.shots.total_shots):
+    #         state.reset_state()
+    #         mid_measurements = {}
+    #         final_state = state.get_final_state(
+    #             aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+    #         )
+    #         results.append(
+    #             LightningMeasurements(final_state, **mcmc).measure_final_state(
+    #                 aux_circ, mid_measurements=mid_measurements
+    #             )
+    #         )
+    #     return tuple(results)
+    # final_state = state.get_final_state(circuit)
+    # return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+
+def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None):
+    """Compute the Jacobian for a single quantum script.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateVector): handle to Lightning state vector
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning
+            qubit is built with OpenMP. Default is False.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+    Returns:
+        TensorLike: The Jacobian of the quantum script
+    """
+    return 0
+    # if wire_map is not None:
+    #     [circuit], _ = qml.map_wires(circuit, wire_map)
+    # state.reset_state()
+    # final_state = state.get_final_state(circuit)
+    # return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
+
+
+def simulate_and_jacobian(
+    circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
+):
+    """Simulate a single quantum script and compute its Jacobian.
+
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        state (LightningStateVector): handle to Lightning state vector
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning
+            qubit is built with OpenMP. Default is False.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+    Returns:
+        Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
+
+    Note that this function can return measurements for non-commuting observables simultaneously.
+    """
+    return 0
+    # if wire_map is not None:
+    #     [circuit], _ = qml.map_wires(circuit, wire_map)
+    # res = simulate(circuit, state)
+    # jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
+    # return res, jac
+
+
+def vjp(
+    circuit: QuantumTape,
+    cotangents: Tuple[Number],
+    state: LightningStateVector,
+    batch_obs=False,
+    wire_map=None,
+):
+    """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
+            have shape matching the output shape of the corresponding circuit. If
+            the circuit has a single output, ``cotangents`` may be a single number,
+            not an iterable of numbers.
+        state (LightningStateVector): handle to Lightning state vector
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the VJP. This value is only relevant when the lightning
+            qubit is built with OpenMP.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+    Returns:
+        TensorLike: The VJP of the quantum script
+    """
+    return 0
+    # if wire_map is not None:
+    #     [circuit], _ = qml.map_wires(circuit, wire_map)
+    # state.reset_state()
+    # final_state = state.get_final_state(circuit)
+    # return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
+    #     circuit, cotangents
+    # )
+
+
+def simulate_and_vjp(
+    circuit: QuantumTape,
+    cotangents: Tuple[Number],
+    state: LightningStateVector,
+    batch_obs=False,
+    wire_map=None,
+):
+    """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
+    Args:
+        circuit (QuantumTape): The single circuit to simulate
+        cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
+            have shape matching the output shape of the corresponding circuit. If
+            the circuit has a single output, ``cotangents`` may be a single number,
+            not an iterable of numbers.
+        state (LightningStateVector): handle to Lightning state vector
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning
+            qubit is built with OpenMP.
+        wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+    Returns:
+        Tuple[TensorLike]: The results of the simulation and the calculated VJP
+    Note that this function can return measurements for non-commuting observables simultaneously.
+    """
+    return 0
+    # if wire_map is not None:
+    #     [circuit], _ = qml.map_wires(circuit, wire_map)
+    # res = simulate(circuit, state)
+    # _vjp = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(circuit, cotangents)
+    # return res, _vjp
 
 
 allowed_operations = {
