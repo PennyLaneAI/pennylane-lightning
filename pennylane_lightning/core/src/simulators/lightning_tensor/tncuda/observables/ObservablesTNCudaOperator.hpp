@@ -187,7 +187,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
     }
 
     /**
-     * @brief Add metadata of observable.
+     * @brief Add metadata of an observable.
      *
      * @param metaData Metadata of the observable.
      * @return obs_key The key of observable tensor operator.

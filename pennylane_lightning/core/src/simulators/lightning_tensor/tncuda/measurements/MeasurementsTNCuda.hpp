@@ -59,7 +59,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         : tensor_network_(tensor_network){};
 
     /**
-     * @brief Calculate var value for a general Observable.
+     * @brief Calculate var value for a general ObservableTNCuda Observable.
      *
      * Current implementation ensure that only one cutensornetNetworkOperator_t
      * object is attached to the circuit.
@@ -85,7 +85,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
     }
 
     /**
-     * @brief Calculate expectation value for a general Observable.
+     * @brief Calculate expectation value for a general ObservableTNCuda
+     * Observable.
      *
      * @param obs An Observable object.
      * @param numHyperSamples Number of hyper samples to use in the calculation
@@ -103,15 +104,15 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
   private:
     /**
-     * @brief Calculate expectation value for a general ObservableTNCudaOperator
+     * @brief Calculate expectation value for a cutensornetNetworkOperator_t
      * object.
      *
-     * @param tnoperator An ObservableTNCudaOperator object.
+     * @param tnoperator A cutensornetNetworkOperator_t object.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is default as 1.
      *
      * @return Expectation value with respect to the given
-     * ObservableTNCudaOperator object.
+     * cutensornetNetworkOperator_t object.
      */
 
     auto expval_(cutensornetNetworkOperator_t tnoperator,
