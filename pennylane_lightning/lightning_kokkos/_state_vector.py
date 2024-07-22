@@ -26,8 +26,6 @@ except ImportError:
 
 from itertools import product
 
-from ._measurements import LightningMeasurements
-
 
 class LightningStateVector:
     """Lightning state-vector class.
