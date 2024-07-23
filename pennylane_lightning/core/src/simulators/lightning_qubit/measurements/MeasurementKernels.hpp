@@ -334,7 +334,7 @@ template <typename PrecisionT> class discrete_random_variable {
      */
     std::size_t operator()() const {
         const auto idx = static_cast<std::size_t>(distribution(gen_) * n_probs);
-        if (distribution(gen_) >= bucket_partners_[idx].first and
+        if (distribution(gen_) >= bucket_partners_[idx].first &&
             bucket_partners_[idx].second != default_index) {
             return bucket_partners_[idx].second;
         }
@@ -353,8 +353,14 @@ template <typename PrecisionT> class discrete_random_variable {
         std::stack<std::size_t> underfull_bucket_ids;
         std::stack<std::size_t> overfull_bucket_ids;
 
-        for (std::size_t i = 0; i != n_probs; ++i) {
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for
+#endif
+        for (std::size_t i = 0; i < n_probs; ++i) {
             bucket_partners[i].first = n_probs * probs[i];
+        }
+
+        for (std::size_t i = 0; i < n_probs; ++i) {
             if (bucket_partners[i].first < 1.0) {
                 underfull_bucket_ids.push(i);
             } else {
@@ -362,13 +368,14 @@ template <typename PrecisionT> class discrete_random_variable {
             }
         }
 
-        while (not(underfull_bucket_ids.empty()) and
-               not(overfull_bucket_ids.empty())) {
+        while (!underfull_bucket_ids.empty() && !overfull_bucket_ids.empty()) {
             auto i = overfull_bucket_ids.top();
+            overfull_bucket_ids.pop();
             auto j = underfull_bucket_ids.top();
-            underfull_bucket_ids.pop(), overfull_bucket_ids.pop();
+            underfull_bucket_ids.pop();
+
             bucket_partners[j].second = i;
-            bucket_partners[i].first -= (1.0 - bucket_partners[j].first);
+            bucket_partners[i].first += bucket_partners[j].first - 1.0;
 
             if (bucket_partners[i].first < 1.0) {
                 underfull_bucket_ids.push(i);
