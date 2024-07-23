@@ -502,4 +502,3 @@ class LightningStateVector:
         )
 
         return self
-    

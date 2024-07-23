@@ -23,7 +23,6 @@ from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
-
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -43,15 +42,12 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._state_vector import LightningStateVector
 from ._measurements import LightningMeasurements
+from ._state_vector import LightningStateVector
 
 try:
     # pylint: disable=import-error, no-name-in-module
-    from pennylane_lightning.lightning_kokkos_ops import (
-        backend_info,
-        print_configuration,
-    )
+    from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
 
     LK_CPP_BINARY_AVAILABLE = True
 except ImportError:
@@ -113,6 +109,7 @@ def simulate(  # pylint: disable=unused-argument
         return tuple(results)
     final_state = state.get_final_state(circuit)
     return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+
 
 def jacobian(  # pylint: disable=unused-argument
     circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
@@ -228,6 +225,7 @@ def simulate_and_vjp(  # pylint: disable=unused-argument
     # _vjp = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(circuit, cotangents)
     # return res, _vjp
 
+
 _operations = frozenset(
     {
         "Identity",
@@ -313,6 +311,7 @@ _observables = frozenset(
     }
 )
 # The set of supported observables.
+
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
@@ -411,6 +410,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
+
 def _kokkos_configuration():
     return print_configuration()
 
@@ -437,7 +437,7 @@ class LightningKokkos(Device):
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
     """
-    
+
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     _new_API = True
 
@@ -511,13 +511,12 @@ class LightningKokkos(Device):
         else:
             self._kernel_name = None
             self._num_burnin = 0
-            
+
         # Kokkos specific options
         self._kokkos_args = kokkos_args
         self._sync = sync
         if not LightningKokkos.kokkos_config:
             LightningKokkos.kokkos_config = _kokkos_configuration()
-
 
     @property
     def name(self):
