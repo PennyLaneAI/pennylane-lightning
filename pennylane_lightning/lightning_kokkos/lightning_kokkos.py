@@ -45,7 +45,6 @@ from pennylane.typing import Result, ResultBatch
 
 from ._state_vector import LightningStateVector
 from ._measurements import LightningMeasurements
-from ._state_vector import LightningStateVector
 
 try:
     # pylint: disable=import-error, no-name-in-module
@@ -88,34 +87,32 @@ def simulate(  # pylint: disable=unused-argument
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    return 0
-    # if mcmc is None:
-    #     mcmc = {}
-    # state.reset_state()
-    # has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
-    # if circuit.shots and has_mcm:
-    #     results = []
-    #     aux_circ = qml.tape.QuantumScript(
-    #         circuit.operations,
-    #         circuit.measurements,
-    #         shots=[1],
-    #         trainable_params=circuit.trainable_params,
-    #     )
-    #     for _ in range(circuit.shots.total_shots):
-    #         state.reset_state()
-    #         mid_measurements = {}
-    #         final_state = state.get_final_state(
-    #             aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-    #         )
-    #         results.append(
-    #             LightningMeasurements(final_state, **mcmc).measure_final_state(
-    #                 aux_circ, mid_measurements=mid_measurements
-    #             )
-    #         )
-    #     return tuple(results)
-    # final_state = state.get_final_state(circuit)
-    # return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
-
+    if mcmc is None:
+        mcmc = {}
+    state.reset_state()
+    has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+    if circuit.shots and has_mcm:
+        results = []
+        aux_circ = qml.tape.QuantumScript(
+            circuit.operations,
+            circuit.measurements,
+            shots=[1],
+            trainable_params=circuit.trainable_params,
+        )
+        for _ in range(circuit.shots.total_shots):
+            state.reset_state()
+            mid_measurements = {}
+            final_state = state.get_final_state(
+                aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+            )
+            results.append(
+                LightningMeasurements(final_state, **mcmc).measure_final_state(
+                    aux_circ, mid_measurements=mid_measurements
+                )
+            )
+        return tuple(results)
+    final_state = state.get_final_state(circuit)
+    return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 def jacobian(  # pylint: disable=unused-argument
     circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
@@ -417,56 +414,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 def _kokkos_configuration():
     return print_configuration()
 
-
-def simulate(
-    circuit: QuantumScript,
-    state: LightningStateVector,
-    mcmc: dict = None,
-    postselect_mode: str = None,
-) -> Result:
-    """Simulate a single quantum script.
-
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateVector): handle to Lightning state vector
-        mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
-            parameters: mcmc, kernel_name, num_burnin. Descriptions of
-            these fields are found in :class:`~.LightningQubit`.
-        postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-            postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-            keep the same number of shots. Default is ``None``.
-
-    Returns:
-        Tuple[TensorLike]: The results of the simulation
-
-    Note that this function can return measurements for non-commuting observables simultaneously.
-    """
-    if mcmc is None:
-        mcmc = {}
-    state.reset_state()
-    has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
-    if circuit.shots and has_mcm:
-        results = []
-        aux_circ = qml.tape.QuantumScript(
-            circuit.operations,
-            circuit.measurements,
-            shots=[1],
-            trainable_params=circuit.trainable_params,
-        )
-        for _ in range(circuit.shots.total_shots):
-            state.reset_state()
-            mid_measurements = {}
-            final_state = state.get_final_state(
-                aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-            )
-            results.append(
-                LightningMeasurements(final_state, **mcmc).measure_final_state(
-                    aux_circ, mid_measurements=mid_measurements
-                )
-            )
-        return tuple(results)
-    final_state = state.get_final_state(circuit)
-    return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 @simulator_tracking
 @single_tape_support
