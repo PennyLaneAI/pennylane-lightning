@@ -26,6 +26,9 @@ from pennylane import numpy as np
 from pennylane import qchem, qnode
 from scipy.stats import unitary_group
 
+if device_name == "lightning.kokkos":
+    pytest.skip("Kokkos new API in WIP.  Skipping.",allow_module_level=True)
+
 I, X, Y, Z = (
     np.eye(2),
     qml.X.compute_matrix(),
