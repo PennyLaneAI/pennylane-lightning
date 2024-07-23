@@ -306,10 +306,10 @@ template <typename PrecisionT> class DiscreteRandomVariable {
   private:
     static constexpr std::size_t default_index =
         std::numeric_limits<std::size_t>::max();
-    const std::vector<std::pair<double, std::size_t>> bucket_partners_;
     std::mt19937 &gen_;
-    const std::size_t _n_probs;
-    mutable std::uniform_real_distribution<PrecisionT> _distribution{0.0, 1.0};
+    const std::size_t n_probs_;
+    const std::vector<std::pair<double, std::size_t>> bucket_partners_;
+    mutable std::uniform_real_distribution<PrecisionT> distribution_{0.0, 1.0};
 
   public:
     /**
@@ -320,16 +320,17 @@ template <typename PrecisionT> class DiscreteRandomVariable {
      * probs.size().
      */
     DiscreteRandomVariable(std::mt19937 &gen,
-                             const std::vector<PrecisionT> &probs)
-        : bucket_partners_(init_bucket_partners_(probs)), gen_{gen},
-          n_probs{probs.size()} {}
+                           const std::vector<PrecisionT> &probs)
+        : gen_{gen}, n_probs_{probs.size()},
+          bucket_partners_(init_bucket_partners_(probs)) {}
 
     /**
      * @brief Return a discrete random value.
      */
     std::size_t operator()() const {
-        const auto idx = static_cast<std::size_t>(distribution(gen_) * n_probs);
-        if (distribution(gen_) >= bucket_partners_[idx].first &&
+        const auto idx =
+            static_cast<std::size_t>(distribution_(gen_) * n_probs_);
+        if (distribution_(gen_) >= bucket_partners_[idx].first &&
             bucket_partners_[idx].second != default_index) {
             return bucket_partners_[idx].second;
         }
@@ -342,14 +343,13 @@ template <typename PrecisionT> class DiscreteRandomVariable {
      */
     std::vector<std::pair<double, std::size_t>>
     init_bucket_partners_(const std::vector<PrecisionT> &probs) {
-        const std::size_t n_probs = probs.size();
         std::vector<std::pair<double, std::size_t>> bucket_partners(
-            n_probs, {0.0, default_index});
+            n_probs_, {0.0, default_index});
         std::stack<std::size_t> underfull_bucket_ids;
         std::stack<std::size_t> overfull_bucket_ids;
 
-        for (std::size_t i = 0; i < n_probs; i++) {
-            bucket_partners[i].first = n_probs * probs[i];
+        for (std::size_t i = 0; i < n_probs_; ++i) {
+            bucket_partners[i].first = n_probs_ * probs[i];
             if (bucket_partners[i].first < 1.0) {
                 underfull_bucket_ids.push(i);
             } else {
