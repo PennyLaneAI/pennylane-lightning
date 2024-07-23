@@ -15,7 +15,7 @@
 
 ### Improvements
 
-* Add `sample(wires)` support in LightningQubit.
+* Add `generate_samples(wires)` support in LightningQubit.
   [(#809)](https://github.com/PennyLaneAI/pennylane-lightning/pull/809)
   
 * Optimize the OpenMP parallelization of Lightning-Qubit's `probs` for all number of targets.

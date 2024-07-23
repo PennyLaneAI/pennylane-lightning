@@ -302,24 +302,24 @@ namespace Pennylane::LightningQubit::Measures {
  *
  * @tparam PrecisionT Precision data type
  */
-template <typename PrecisionT> class discrete_random_variable {
+template <typename PrecisionT> class DiscreteRandomVariable {
   private:
     static constexpr std::size_t default_index =
         std::numeric_limits<std::size_t>::max();
     const std::vector<std::pair<double, std::size_t>> bucket_partners_;
     std::mt19937 &gen_;
-    const std::size_t n_probs;
-    mutable std::uniform_real_distribution<PrecisionT> distribution{0.0, 1.0};
+    const std::size_t _n_probs;
+    mutable std::uniform_real_distribution<PrecisionT> _distribution{0.0, 1.0};
 
   public:
     /**
-     * @brief Create a discrete_random_variable object.
+     * @brief Create a DiscreteRandomVariable object.
      *
      * @param gen Random number generator reference.
      * @param probs Probabilities for values 0 up to N - 1, where N =
      * probs.size().
      */
-    discrete_random_variable(std::mt19937 &gen,
+    DiscreteRandomVariable(std::mt19937 &gen,
                              const std::vector<PrecisionT> &probs)
         : bucket_partners_(init_bucket_partners_(probs)), gen_{gen},
           n_probs{probs.size()} {}
@@ -348,7 +348,7 @@ template <typename PrecisionT> class discrete_random_variable {
         std::stack<std::size_t> underfull_bucket_ids;
         std::stack<std::size_t> overfull_bucket_ids;
 
-        for (std::size_t i = 0; i < n_probs; ++i) {
+        for (std::size_t i = 0; i < n_probs; i++) {
             bucket_partners[i].first = n_probs * probs[i];
             if (bucket_partners[i].first < 1.0) {
                 underfull_bucket_ids.push(i);
