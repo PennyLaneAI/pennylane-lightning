@@ -43,7 +43,7 @@ if device_name == "lightning.qubit":
     )
 
 if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.",allow_module_level=True)
+    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
         _supports_adjoint,

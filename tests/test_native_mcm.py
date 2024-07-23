@@ -23,7 +23,7 @@ from flaky import flaky
 from pennylane._device import DeviceError
 
 if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.",allow_module_level=True)
+    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)

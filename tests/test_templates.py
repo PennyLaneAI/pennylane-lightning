@@ -27,7 +27,8 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.",allow_module_level=True)
+    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
+
 
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
