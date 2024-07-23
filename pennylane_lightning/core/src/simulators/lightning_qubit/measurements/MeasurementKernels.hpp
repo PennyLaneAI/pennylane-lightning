@@ -18,11 +18,6 @@
  */
 #pragma once
 
-// #include <algorithm>
-// #include <functional>
-// #include <limits>
-// #include <random>
-
 #include <complex>
 #include <stack>
 #include <vector>
@@ -353,14 +348,8 @@ template <typename PrecisionT> class discrete_random_variable {
         std::stack<std::size_t> underfull_bucket_ids;
         std::stack<std::size_t> overfull_bucket_ids;
 
-#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
-#pragma omp parallel for
-#endif
         for (std::size_t i = 0; i < n_probs; ++i) {
             bucket_partners[i].first = n_probs * probs[i];
-        }
-
-        for (std::size_t i = 0; i < n_probs; ++i) {
             if (bucket_partners[i].first < 1.0) {
                 underfull_bucket_ids.push(i);
             } else {
