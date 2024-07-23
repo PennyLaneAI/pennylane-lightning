@@ -45,6 +45,7 @@ from ._measurements import LightningMeasurements
 class LightningStateVector:
     """Lightning state-vector class for lightning kokkos.
 
+
     Interfaces with C++ python binding methods for state-vector manipulation.
 
     Args:
@@ -501,3 +502,4 @@ class LightningStateVector:
         )
 
         return self
+    

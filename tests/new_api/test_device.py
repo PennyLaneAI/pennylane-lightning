@@ -42,6 +42,26 @@ if device_name == "lightning.qubit":
         validate_observables,
     )
 
+if device_name == "lightning.kokkos":
+    pytest.skip("Kokkos new API in WIP.  Skipping.",allow_module_level=True)
+    from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
+        _add_adjoint_transforms,
+        _supports_adjoint,
+        accepted_observables,
+        adjoint_measurements,
+        adjoint_observables,
+        decompose,
+        mid_circuit_measurements,
+        no_sampling,
+        stopping_condition,
+        stopping_condition_shots,
+        validate_adjoint_trainable_params,
+        validate_device_wires,
+        validate_measurements,
+        validate_observables,
+    )
+
+
 if device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor.lightning_tensor import (
         accepted_observables,
@@ -119,7 +139,7 @@ class TestHelpers:
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
         expected_program = qml.transforms.core.TransformProgram()
 
-        name = "adjoint + lightning.qubit"
+        name = f"adjoint + {device_name}"
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(
             decompose,

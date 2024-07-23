@@ -35,7 +35,7 @@ if device_name != "lightning.qubit" and device_name != "lightning.kokkos":
         "Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.",
         allow_module_level=True,
     )
-
+    
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 

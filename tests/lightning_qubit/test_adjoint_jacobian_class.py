@@ -26,6 +26,9 @@ from scipy.stats import unitary_group
 from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
 from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
+if device_name == "lightning.kokkos":
+    pytest.skip("Kokkos new API in WIP.  Skipping.",allow_module_level=True)
+
 if device_name != "lightning.qubit":
     pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
 
