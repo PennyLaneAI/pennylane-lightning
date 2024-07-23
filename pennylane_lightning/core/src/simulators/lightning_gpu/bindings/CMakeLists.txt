@@ -1,17 +1,17 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(${PL_BACKEND}_bindings LANGUAGES CXX)
+project(lightning_gpu_bindings LANGUAGES CXX)
 
-add_library(${PL_BACKEND}_bindings INTERFACE)
+add_library(lightning_gpu_bindings INTERFACE)
 
-target_include_directories(${PL_BACKEND}_bindings INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(lightning_gpu_bindings INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(${PL_BACKEND}_bindings INTERFACE  lightning_bindings
+target_link_libraries(lightning_gpu_bindings INTERFACE  lightning_bindings
                                                         lightning_utils
-                                                        ${PL_BACKEND}
-                                                        ${PL_BACKEND}_gates
-                                                        ${PL_BACKEND}_measurements
-                                                        ${PL_BACKEND}_utils
+                                                        lightning_gpu
+                                                        lightning_gpu_gates
+                                                        lightning_gpu_measurements
+                                                        lightning_gpu_utils
                                                         )
 
-set_property(TARGET ${PL_BACKEND}_bindings PROPERTY POSITION_INDEPENDENT_CODE ON)
+set_property(TARGET lightning_gpu_bindings PROPERTY POSITION_INDEPENDENT_CODE ON)
