@@ -115,7 +115,7 @@ def jacobian(  # pylint: disable=unused-argument
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningKokkosStateVector): handle to the Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
             kokkos is built with OpenMP. Default is False.
