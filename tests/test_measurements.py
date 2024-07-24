@@ -23,7 +23,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
-from pennylane.measurements import Expectation, Variance
+from pennylane.measurements import Expectation, Shots, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -774,3 +774,15 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     results2 = func2(*params)
 
     validate_measurements(measure_f, shots, results1, results2)
+
+
+@pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
+def test_shots_bins(shots, qubit_device):
+    """Tests that Lightning handles multiple shots."""
+
+    @qml.qnode(qubit_device(wires=1, shots=shots))
+    def circuit():
+        return qml.expval(qml.PauliZ(wires=0))
+
+    assert np.sum(shots) == circuit.device.shots.total_shots
+    assert np.allclose(circuit(), 1.0)

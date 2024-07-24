@@ -124,7 +124,7 @@ class Measurements final
 
         const ComplexT *arr_data = this->_statevector.getData();
 
-        // Templated 1-4 wire cases; return probs 
+        // Templated 1-4 wire cases; return probs
         PROBS_SPECIAL_CASE(1);
         PROBS_SPECIAL_CASE(2);
         PROBS_SPECIAL_CASE(3);

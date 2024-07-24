@@ -440,6 +440,29 @@ class LightningMeasurements:
 
         return _process_single_shot(samples)
 
+        # try:
+        #     if self._mcmc:
+        #         samples = self._measurement_lightning.generate_mcmc_samples(
+        #             len(wires), self._kernel_name, self._num_burnin, shots.total_shots
+        #         ).astype(int, copy=False)
+        #     else:
+        #         samples = self._measurement_lightning.generate_samples(
+        #             len(wires), shots.total_shots
+        #         ).astype(int, copy=False)
+        # except ValueError as e:
+        #     if str(e) != "probabilities contain NaN":
+        #         raise e
+        #     samples = qml.math.full((shots.total_shots, len(wires)), 0)
+
+        # self._apply_diagonalizing_gates(mps, adjoint=True)
+
+        # processed_samples = []
+        # for lower, upper in shots.bins():
+        #     shot = _process_single_shot(samples[..., lower:upper, :])
+        #     processed_samples.append(shot)
+
+        # return tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
+
     def _measure_hamiltonian_with_samples(
         self,
         mp: List[SampleMeasurement],
