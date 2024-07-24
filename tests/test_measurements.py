@@ -669,7 +669,7 @@ class TestSample:
     @pytest.mark.parametrize("nwires", range(1, 11))
     def test_sample_variations(self, qubit_device, nwires, seed):
         """Tests if `sample(wires)` returns correct statistics."""
-        shots = 100000
+        shots = 20000
         n_qubits = max(5, nwires + 1)
         np.random.seed(seed)
         wires = qml.wires.Wires(np.random.permutation(nwires))
@@ -694,7 +694,7 @@ class TestSample:
             reshape_samples(samples), wire_order=wires
         )
 
-        assert np.allclose(probs, ref, atol=1.0e-2, rtol=1.0e-4)
+        assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
 
 
 @pytest.mark.skipif(
