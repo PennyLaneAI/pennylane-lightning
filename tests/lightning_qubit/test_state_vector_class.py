@@ -31,7 +31,7 @@ if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos._state_vector import LightningStateVector
     
 
-if device_name != "lightning.qubit" and device_name != "lightning.kokkos":
+if not device_name in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip(
         "Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.",
         allow_module_level=True,
