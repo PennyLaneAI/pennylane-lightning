@@ -19,7 +19,9 @@
 #pragma once
 
 #include <complex>
+#include <random>
 #include <stack>
+#include <utility>
 #include <vector>
 
 #include "BitUtil.hpp"
@@ -348,7 +350,7 @@ template <typename PrecisionT> class DiscreteRandomVariable {
         std::stack<std::size_t> underfull_bucket_ids;
         std::stack<std::size_t> overfull_bucket_ids;
 
-        for (std::size_t i = 0; i < n_probs_; ++i) {
+        for (std::size_t i = 0; i < n_probs_; i++) {
             bucket_partners[i].first = n_probs_ * probs[i];
             if (bucket_partners[i].first < 1.0) {
                 underfull_bucket_ids.push(i);
