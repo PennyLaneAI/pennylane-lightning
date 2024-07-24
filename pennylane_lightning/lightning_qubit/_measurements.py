@@ -411,7 +411,7 @@ class LightningMeasurements:
                         ).astype(int, copy=False)
                     else:
                         samples = self._measurement_lightning.generate_samples(
-                            len(wires), s
+                            list(wires), s
                         ).astype(int, copy=False)
                 except ValueError as e:
                     if str(e) != "probabilities contain NaN":
@@ -429,7 +429,7 @@ class LightningMeasurements:
                 ).astype(int, copy=False)
             else:
                 samples = self._measurement_lightning.generate_samples(
-                    len(wires), shots.total_shots
+                    list(wires), shots.total_shots
                 ).astype(int, copy=False)
         except ValueError as e:
             if str(e) != "probabilities contain NaN":

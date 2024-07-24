@@ -24,7 +24,6 @@
 #include <complex>
 #include <cstdio>
 #include <random>
-#include <stack>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -124,7 +123,7 @@ class Measurements final
 
         const ComplexT *arr_data = this->_statevector.getData();
 
-        // Templated 1-4 wire cases; return probs 
+        // Templated 1-4 wire cases; return probs
         PROBS_SPECIAL_CASE(1);
         PROBS_SPECIAL_CASE(2);
         PROBS_SPECIAL_CASE(3);
@@ -175,7 +174,7 @@ class Measurements final
      *
      * @return Floating point std::vector with probabilities.
      */
-    auto probs(size_t num_shots) -> std::vector<PrecisionT> {
+    auto probs(std::size_t num_shots) -> std::vector<PrecisionT> {
         return BaseType::probs(num_shots);
     }
 
@@ -258,7 +257,7 @@ class Measurements final
                 const index_type *entries_ptr, const ComplexT *values_ptr,
                 const index_type numNNZ) -> PrecisionT {
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
@@ -289,7 +288,7 @@ class Measurements final
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
         }
@@ -461,7 +460,7 @@ class Measurements final
 
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -488,7 +487,7 @@ class Measurements final
         std::size_t num_qubits = this->_statevector.getNumQubits();
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
-        std::unordered_map<size_t, std::size_t> cache;
+        std::unordered_map<std::size_t, std::size_t> cache;
         this->setRandomSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
@@ -502,13 +501,13 @@ class Measurements final
         std::size_t idx = 0;
 
         // Burn In
-        for (size_t i = 0; i < num_burnin; i++) {
+        for (std::size_t i = 0; i < num_burnin; i++) {
             idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
                                   idx); // Burn-in.
         }
 
         // Sample
-        for (size_t i = 0; i < num_samples; i++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
             idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
                                   idx);
 
@@ -521,7 +520,7 @@ class Measurements final
 
             // If not cached, compute
             else {
-                for (size_t j = 0; j < num_qubits; j++) {
+                for (std::size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
                         (idx >> j) & 1U;
                 }
@@ -551,7 +550,7 @@ class Measurements final
                    const index_type *entries_ptr, const ComplexT *values_ptr,
                    const index_type numNNZ) {
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
@@ -577,79 +576,36 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(size_t num_samples) {
+    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
-        auto &&probabilities = probs();
+        std::vector<std::size_t> wires(num_qubits);
+        std::iota(wires.begin(), wires.end(), 0);
+        return generate_samples(wires, num_samples);
+    }
 
-        std::vector<std::size_t> samples(num_samples * num_qubits, 0);
-        std::uniform_real_distribution<PrecisionT> distribution(0.0, 1.0);
-        std::unordered_map<size_t, std::size_t> cache;
+    /**
+     * @brief Generate samples.
+     *
+     * @param wires Sample are generated for the specified wires.
+     * @param num_samples The number of samples to generate.
+     * @return 1-D vector of samples in binary, each sample is
+     * separated by a stride equal to the number of qubits.
+     */
+    std::vector<std::size_t>
+    generate_samples(const std::vector<std::size_t> &wires,
+                     const std::size_t num_samples) {
+        const std::size_t n_wires = wires.size();
+        std::vector<std::size_t> samples(num_samples * n_wires);
         this->setRandomSeed();
-
-        const std::size_t N = probabilities.size();
-        std::vector<double> bucket(N);
-        std::vector<std::size_t> bucket_partner(N);
-        std::stack<std::size_t> overfull_bucket_ids;
-        std::stack<std::size_t> underfull_bucket_ids;
-
-        for (size_t i = 0; i < N; i++) {
-            bucket[i] = N * probabilities[i];
-            bucket_partner[i] = i;
-            if (bucket[i] > 1.0) {
-                overfull_bucket_ids.push(i);
-            }
-            if (bucket[i] < 1.0) {
-                underfull_bucket_ids.push(i);
-            }
-        }
-
-        // Run alias algorithm
-        while (!underfull_bucket_ids.empty() && !overfull_bucket_ids.empty()) {
-            // get an overfull bucket
-            std::size_t i = overfull_bucket_ids.top();
-
-            // get an underfull bucket
-            std::size_t j = underfull_bucket_ids.top();
-            underfull_bucket_ids.pop();
-
-            // underfull bucket is partned with an overfull bucket
-            bucket_partner[j] = i;
-            bucket[i] = bucket[i] + bucket[j] - 1;
-
-            // if overfull bucket is now underfull
-            // put in underfull stack
-            if (bucket[i] < 1) {
-                overfull_bucket_ids.pop();
-                underfull_bucket_ids.push(i);
-            }
-
-            // if overfull bucket is full -> remove
-            else if (bucket[i] == 1.0) {
-                overfull_bucket_ids.pop();
-            }
-        }
-
-        // Pick samples
-        for (size_t i = 0; i < num_samples; i++) {
-            PrecisionT pct = distribution(this->rng) * N;
-            auto idx = static_cast<std::size_t>(pct);
-            if (pct - idx > bucket[idx]) {
-                idx = bucket_partner[idx];
-            }
-            // If cached, retrieve sample from cache
-            if (cache.contains(idx)) {
-                std::size_t cache_id = cache[idx];
-                auto it_temp = samples.begin() + cache_id * num_qubits;
-                std::copy(it_temp, it_temp + num_qubits,
-                          samples.begin() + i * num_qubits);
-            }
-            // If not cached, compute
-            else {
-                for (size_t j = 0; j < num_qubits; j++) {
-                    samples[i * num_qubits + (num_qubits - 1 - j)] =
-                        (idx >> j) & 1U;
-                }
-                cache[idx] = i;
+        DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
+        // The Python layer expects a 2D array with dimensions (n_samples x
+        // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -
+        // j)` `s` being the "slow" row index and `j` being the "fast" column
+        // index
+        for (std::size_t s = 0; s < num_samples; s++) {
+            const std::size_t idx = drv();
+            for (std::size_t j = 0; j < n_wires; j++) {
+                samples[s * n_wires + (n_wires - 1 - j)] = (idx >> j) & 1U;
             }
         }
         return samples;
