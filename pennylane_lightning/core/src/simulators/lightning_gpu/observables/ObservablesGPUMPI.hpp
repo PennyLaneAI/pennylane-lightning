@@ -192,9 +192,9 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
         auto mpi_manager = sv.getMPIManager();
-        using CFP_t = typename StateVectorT::CFP_t;
-        DataBuffer<CFP_t, int> buffer(sv.getDataBuffer().getLength(),
-                                      sv.getDataBuffer().getDevTag());
+        using ComplexT = typename StateVectorT::ComplexT;
+        DataBuffer<ComplexT, int> buffer(sv.getDataBuffer().getLength(),
+                                         sv.getDataBuffer().getDevTag());
         buffer.zeroInit();
 
         for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
@@ -283,7 +283,7 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
                 this->wires_.size() == sv.getTotalNumQubits(),
                 "SparseH wire count does not match state-vector size");
         }
-        using CFP_t = typename StateVectorT::CFP_t;
+        using ComplexT = typename StateVectorT::ComplexT;
 
         auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
         auto stream_id = sv.getDataBuffer().getDevTag().getStreamID();
@@ -291,17 +291,17 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
         const std::size_t length_local = std::size_t{1}
                                          << sv.getNumLocalQubits();
 
-        std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
-            std::make_unique<DataBuffer<CFP_t>>(length_local, device_id,
-                                                stream_id, true);
+        std::unique_ptr<DataBuffer<ComplexT>> d_sv_prime =
+            std::make_unique<DataBuffer<ComplexT>>(length_local, device_id,
+                                                   stream_id, true);
         d_sv_prime->zeroInit();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();
 
-        cuUtil::SparseMV_cuSparseMPI<IdxT, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparseMPI<IdxT, PrecisionT, ComplexT>(
             mpi_manager, length_local, this->offsets_.data(),
             static_cast<int64_t>(this->offsets_.size()), this->indices_.data(),
-            this->data_.data(), const_cast<CFP_t *>(sv.getData()),
+            this->data_.data(), const_cast<ComplexT *>(sv.getData()),
             d_sv_prime->getData(), device_id, stream_id,
             sv.getCusparseHandle());
 

@@ -73,7 +73,7 @@ class MeasurementsMPI final
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType =
         MeasurementsBase<StateVectorT, MeasurementsMPI<StateVectorT>>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using ComplexT = decltype(cuUtil::getCudaType(PrecisionT{}));
     cudaDataType_t data_type_;
     MPIManager mpi_manager_;
     GateCache<PrecisionT> gate_cache_;
@@ -82,8 +82,8 @@ class MeasurementsMPI final
     explicit MeasurementsMPI(StateVectorT &statevector)
         : BaseType{statevector}, mpi_manager_(statevector.getMPIManager()),
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type_ = CUDA_C_64F;
         } else {
             data_type_ = CUDA_C_32F;
@@ -159,8 +159,8 @@ class MeasurementsMPI final
             mpi_manager_.split(subCommGroupId, mpi_manager_.getRank());
 
         if (sub_mpi_manager0.getSize() == 1) {
-            if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                          std::is_same_v<CFP_t, double2>) {
+            if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                          std::is_same_v<ComplexT, double2>) {
                 return local_probabilities;
             } else {
                 std::vector<PrecisionT> local_probs(
@@ -182,8 +182,8 @@ class MeasurementsMPI final
             sub_mpi_manager0.Reduce<double>(local_probabilities,
                                             subgroup_probabilities, 0, "sum");
 
-            if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                          std::is_same_v<CFP_t, double2>) {
+            if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                          std::is_same_v<ComplexT, double2>) {
                 return subgroup_probabilities;
             } else {
                 std::vector<PrecisionT> local_probs(
@@ -438,15 +438,15 @@ class MeasurementsMPI final
 
         const std::size_t length_local =
             std::size_t{1} << this->_statevector.getNumLocalQubits();
-        DataBuffer<CFP_t, int> d_res_per_rowblock{length_local, device_id,
-                                                  stream_id, true};
+        DataBuffer<ComplexT, int> d_res_per_rowblock{length_local, device_id,
+                                                     stream_id, true};
         d_res_per_rowblock.zeroInit();
 
         // with new wrapper
-        cuUtil::SparseMV_cuSparseMPI<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparseMPI<index_type, PrecisionT, ComplexT>(
             mpi_manager_, length_local, csrOffsets_ptr, csrOffsets_size,
             columns_ptr, values_ptr,
-            const_cast<CFP_t *>(this->_statevector.getData()),
+            const_cast<ComplexT *>(this->_statevector.getData()),
             d_res_per_rowblock.getData(), device_id, stream_id,
             this->_statevector.getCusparseHandle());
 
@@ -474,7 +474,7 @@ class MeasurementsMPI final
     auto expval(const std::string &operation,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
         std::vector<PrecisionT> params = {0.0};
-        std::vector<CFP_t> gate_matrix = {};
+        std::vector<ComplexT> gate_matrix = {};
         auto expect =
             this->_statevector.expval(operation, wires, params, gate_matrix);
 
@@ -746,14 +746,14 @@ class MeasurementsMPI final
         const std::size_t length_local =
             std::size_t{1} << this->_statevector.getNumLocalQubits();
 
-        DataBuffer<CFP_t, int> d_res_per_rowblock{length_local, device_id,
-                                                  stream_id, true};
+        DataBuffer<ComplexT, int> d_res_per_rowblock{length_local, device_id,
+                                                     stream_id, true};
         d_res_per_rowblock.zeroInit();
 
-        cuUtil::SparseMV_cuSparseMPI<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparseMPI<index_type, PrecisionT, ComplexT>(
             mpi_manager_, length_local, csrOffsets_ptr, csrOffsets_size,
             columns_ptr, values_ptr,
-            const_cast<CFP_t *>(this->_statevector.getData()),
+            const_cast<ComplexT *>(this->_statevector.getData()),
             d_res_per_rowblock.getData(), device_id, stream_id,
             this->_statevector.getCusparseHandle());
 

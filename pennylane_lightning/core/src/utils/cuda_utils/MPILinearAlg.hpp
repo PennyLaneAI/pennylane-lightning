@@ -41,12 +41,13 @@ namespace Pennylane::LightningGPU::Util {
  * @param cudaStream_t Stream id.
  * @param handle cuSparse handle.
  */
-template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
+template <class index_type, class Precision, class ComplexT,
+          class DevTypeID = int>
 inline void SparseMV_cuSparseMPI(
     MPIManager &mpi_manager, const std::size_t &length_local,
     const index_type *csrOffsets_ptr, const int64_t csrOffsets_size,
     const index_type *columns_ptr, const std::complex<Precision> *values_ptr,
-    CFP_t *X, CFP_t *Y, DevTypeID device_id, cudaStream_t stream_id,
+    ComplexT *X, ComplexT *Y, DevTypeID device_id, cudaStream_t stream_id,
     cusparseHandle_t handle) {
     std::vector<std::vector<CSRMatrix<Precision, index_type>>> csrmatrix_blocks;
     if (mpi_manager.getRank() == 0) {
@@ -64,8 +65,8 @@ inline void SparseMV_cuSparseMPI(
     }
     mpi_manager.Barrier();
 
-    DataBuffer<CFP_t, int> d_res_per_block{length_local, device_id, stream_id,
-                                           true};
+    DataBuffer<ComplexT, int> d_res_per_block{length_local, device_id,
+                                              stream_id, true};
 
     for (size_t i = 0; i < mpi_manager.getSize(); i++) {
         // Need to investigate if non-blocking MPI operation can improve
@@ -76,7 +77,7 @@ inline void SparseMV_cuSparseMPI(
         if (localCSRMatrix.getValues().size() != 0) {
             d_res_per_block.zeroInit();
             color = 1;
-            SparseMV_cuSparse<index_type, Precision, CFP_t>(
+            SparseMV_cuSparse<index_type, Precision, ComplexT>(
                 localCSRMatrix.getCsrOffsets().data(),
                 static_cast<int64_t>(localCSRMatrix.getCsrOffsets().size()),
                 localCSRMatrix.getColumns().data(),
@@ -108,9 +109,9 @@ inline void SparseMV_cuSparseMPI(
         mpi_manager.Bcast<int>(reduce_root_rank, i);
 
         if (new_mpi_manager.getComm() != MPI_COMM_NULL) {
-            new_mpi_manager.Reduce<CFP_t>(d_res_per_block.getData(), Y,
-                                          length_local, reduce_root_rank,
-                                          "sum");
+            new_mpi_manager.Reduce<ComplexT>(d_res_per_block.getData(), Y,
+                                             length_local, reduce_root_rank,
+                                             "sum");
         }
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();

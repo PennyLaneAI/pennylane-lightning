@@ -96,11 +96,10 @@ class StateVectorCudaMPI final
     GateCache<Precision> gate_cache_;
 
   public:
-    using CFP_t =
+    using ComplexT =
         typename StateVectorCudaBase<Precision,
-                                     StateVectorCudaMPI<Precision>>::CFP_t;
+                                     StateVectorCudaMPI<Precision>>::ComplexT;
     using PrecisionT = Precision;
-    using ComplexT = std::complex<PrecisionT>;
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorCudaMPI() = delete;
@@ -115,7 +114,7 @@ class StateVectorCudaMPI final
           handle_(make_shared_cusv_handle()),
           cublascaller_(make_shared_cublas_caller()),
           localStream_(make_shared_local_stream()),
-          svSegSwapWorker_(make_shared_mpi_worker<CFP_t>(
+          svSegSwapWorker_(make_shared_mpi_worker<ComplexT>(
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
@@ -133,7 +132,7 @@ class StateVectorCudaMPI final
           handle_(make_shared_cusv_handle()),
           cublascaller_(make_shared_cublas_caller()),
           localStream_(make_shared_local_stream()),
-          svSegSwapWorker_(make_shared_mpi_worker<CFP_t>(
+          svSegSwapWorker_(make_shared_mpi_worker<ComplexT>(
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
@@ -151,7 +150,7 @@ class StateVectorCudaMPI final
           handle_(make_shared_cusv_handle()),
           cublascaller_(make_shared_cublas_caller()),
           localStream_(make_shared_local_stream()),
-          svSegSwapWorker_(make_shared_mpi_worker<CFP_t>(
+          svSegSwapWorker_(make_shared_mpi_worker<ComplexT>(
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
@@ -161,7 +160,7 @@ class StateVectorCudaMPI final
 
     StateVectorCudaMPI(const DevTag<int> &dev_tag,
                        std::size_t num_global_qubits,
-                       std::size_t num_local_qubits, const CFP_t *gpu_data)
+                       std::size_t num_local_qubits, const ComplexT *gpu_data)
         : StateVectorCudaBase<Precision, StateVectorCudaMPI<Precision>>(
               num_local_qubits, dev_tag, true),
           numGlobalQubits_(num_global_qubits),
@@ -169,7 +168,7 @@ class StateVectorCudaMPI final
           handle_(make_shared_cusv_handle()),
           cublascaller_(make_shared_cublas_caller()),
           localStream_(make_shared_local_stream()),
-          svSegSwapWorker_(make_shared_mpi_worker<CFP_t>(
+          svSegSwapWorker_(make_shared_mpi_worker<ComplexT>(
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
@@ -189,7 +188,7 @@ class StateVectorCudaMPI final
           handle_(make_shared_cusv_handle()),
           cublascaller_(make_shared_cublas_caller()),
           localStream_(make_shared_local_stream()),
-          svSegSwapWorker_(make_shared_mpi_worker<CFP_t>(
+          svSegSwapWorker_(make_shared_mpi_worker<ComplexT>(
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
@@ -208,7 +207,7 @@ class StateVectorCudaMPI final
           handle_(make_shared_cusv_handle()),
           cublascaller_(make_shared_cublas_caller()),
           localStream_(make_shared_local_stream()),
-          svSegSwapWorker_(make_shared_mpi_worker<CFP_t>(
+          svSegSwapWorker_(make_shared_mpi_worker<ComplexT>(
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               numLocalQubits_, localStream_.get())),
           gate_cache_(true, other.getDataBuffer().getDevTag()) {
@@ -269,7 +268,7 @@ class StateVectorCudaMPI final
             index;
         BaseType::getDataBuffer().zeroInit();
 
-        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+        ComplexT value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
         auto stream_id = localStream_.get();
 
         if (mpi_manager_.getRank() == rankId) {
@@ -324,8 +323,8 @@ class StateVectorCudaMPI final
         DataBuffer<index_type, int> d_indices{
             static_cast<std::size_t>(num_elements), device_id, stream_id, true};
 
-        DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
-                                        device_id, stream_id, true};
+        DataBuffer<ComplexT, int> d_values{
+            static_cast<std::size_t>(num_elements), device_id, stream_id, true};
 
         d_indices.CopyHostDataToGpu(indices_local.data(), d_indices.getLength(),
                                     async);
@@ -355,7 +354,7 @@ class StateVectorCudaMPI final
                         const std::vector<std::size_t> &wires, bool adjoint,
                         const std::vector<Precision> &params,
                         [[maybe_unused]] const std::vector<ComplexT> &matrix) {
-        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::vector<ComplexT> matrix_cu(matrix.size());
         std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
                        [](const std::complex<Precision> &x) {
                            return cuUtil::complexToCu<std::complex<Precision>>(
@@ -379,7 +378,7 @@ class StateVectorCudaMPI final
     void applyOperation(
         const std::string &opName, const std::vector<std::size_t> &wires,
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<CFP_t> &gate_matrix = {}) {
+        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
         const auto ctrl_offset = (BaseType::getCtrlMap().find(opName) !=
                                   BaseType::getCtrlMap().end())
                                      ? BaseType::getCtrlMap().at(opName)
@@ -397,11 +396,11 @@ class StateVectorCudaMPI final
         } else if (opName == "Rot" || opName == "CRot") {
             if (adjoint) {
                 auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
+                    cuGates::getRot<ComplexT>(params[2], params[1], params[0]);
                 applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, true);
             } else {
                 auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+                    cuGates::getRot<ComplexT>(params[0], params[1], params[2]);
                 applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
             }
         } else if (par_gates_.find(opName) != par_gates_.end()) {
@@ -487,7 +486,7 @@ class StateVectorCudaMPI final
         std::size_t n = std::size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
                                                            gate_matrix + n * n);
-        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::vector<ComplexT> matrix_cu(matrix.size());
         std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
                        [](const std::complex<Precision> &x) {
                            return cuUtil::complexToCu<std::complex<Precision>>(
@@ -603,7 +602,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key,
-                                 cuGates::getPhaseShift<CFP_t>(param));
+                                 cuGates::getPhaseShift<ComplexT>(param));
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key),
                               {wires.begin(), wires.end() - 1}, {wires.back()},
@@ -658,7 +657,8 @@ class StateVectorCudaMPI final
         static const std::string name{"IsingXY"};
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
-            gate_cache_.add_gate(gate_key, cuGates::getIsingXY<CFP_t>(param));
+            gate_cache_.add_gate(gate_key,
+                                 cuGates::getIsingXY<ComplexT>(param));
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -697,7 +697,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key,
-                                 cuGates::getSingleExcitation<CFP_t>(param));
+                                 cuGates::getSingleExcitation<ComplexT>(param));
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -709,7 +709,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getSingleExcitationMinus<CFP_t>(param));
+                gate_key, cuGates::getSingleExcitationMinus<ComplexT>(param));
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -720,7 +720,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getSingleExcitationPlus<CFP_t>(param));
+                gate_key, cuGates::getSingleExcitationPlus<ComplexT>(param));
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -747,18 +747,18 @@ class StateVectorCudaMPI final
     /* four-qubit gates */
     inline void applyDoubleExcitation(const std::vector<std::size_t> &wires,
                                       bool adjoint, Precision param) {
-        auto &&mat = cuGates::getDoubleExcitation<CFP_t>(param);
+        auto &&mat = cuGates::getDoubleExcitation<ComplexT>(param);
         applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
     }
     inline void
     applyDoubleExcitationMinus(const std::vector<std::size_t> &wires,
                                bool adjoint, Precision param) {
-        auto &&mat = cuGates::getDoubleExcitationMinus<CFP_t>(param);
+        auto &&mat = cuGates::getDoubleExcitationMinus<ComplexT>(param);
         applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
     }
     inline void applyDoubleExcitationPlus(const std::vector<std::size_t> &wires,
                                           bool adjoint, Precision param) {
-        auto &&mat = cuGates::getDoubleExcitationPlus<CFP_t>(param);
+        auto &&mat = cuGates::getDoubleExcitationPlus<ComplexT>(param);
         applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
     }
 
@@ -816,7 +816,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key,
-                                 cuGates::getGeneratorIsingXX<CFP_t>());
+                                 cuGates::getGeneratorIsingXX<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -829,7 +829,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key,
-                                 cuGates::getGeneratorIsingYY<CFP_t>());
+                                 cuGates::getGeneratorIsingYY<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -842,7 +842,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key,
-                                 cuGates::getGeneratorIsingZZ<CFP_t>());
+                                 cuGates::getGeneratorIsingZZ<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -856,7 +856,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key,
-                                 cuGates::getGeneratorIsingXY<CFP_t>());
+                                 cuGates::getGeneratorIsingXY<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -872,7 +872,8 @@ class StateVectorCudaMPI final
     inline PrecisionT
     applyGeneratorPhaseShift(const std::vector<std::size_t> &wires,
                              bool adj = false) {
-        applyOperation("P_11", wires, adj, {0.0}, cuGates::getP11_CU<CFP_t>());
+        applyOperation("P_11", wires, adj, {0.0},
+                       cuGates::getP11_CU<ComplexT>());
         return static_cast<PrecisionT>(1.0);
     }
 
@@ -886,7 +887,7 @@ class StateVectorCudaMPI final
     inline PrecisionT applyGeneratorCRX(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
-                       cuGates::getP11_CU<CFP_t>());
+                       cuGates::getP11_CU<ComplexT>());
         applyPauliX(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
@@ -901,7 +902,7 @@ class StateVectorCudaMPI final
     inline PrecisionT applyGeneratorCRY(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
-                       cuGates::getP11_CU<CFP_t>());
+                       cuGates::getP11_CU<ComplexT>());
         applyPauliY(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
@@ -916,7 +917,7 @@ class StateVectorCudaMPI final
     inline PrecisionT applyGeneratorCRZ(const std::vector<std::size_t> &wires,
                                         bool adj = false) {
         applyOperation("P_11", {wires.front()}, adj, {0.0},
-                       cuGates::getP11_CU<CFP_t>());
+                       cuGates::getP11_CU<ComplexT>());
         applyPauliZ(std::vector<std::size_t>{wires.back()}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
@@ -932,7 +933,7 @@ class StateVectorCudaMPI final
     applyGeneratorControlledPhaseShift(const std::vector<std::size_t> &wires,
                                        bool adj = false) {
         applyOperation("P_1111", {wires}, adj, {0.0},
-                       cuGates::getP1111_CU<CFP_t>());
+                       cuGates::getP1111_CU<ComplexT>());
         return static_cast<PrecisionT>(1.0);
     }
 
@@ -944,7 +945,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getGeneratorSingleExcitation<CFP_t>());
+                gate_key, cuGates::getGeneratorSingleExcitation<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -958,7 +959,8 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getGeneratorSingleExcitationMinus<CFP_t>());
+                gate_key,
+                cuGates::getGeneratorSingleExcitationMinus<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -972,7 +974,8 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getGeneratorSingleExcitationPlus<CFP_t>());
+                gate_key,
+                cuGates::getGeneratorSingleExcitationPlus<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -987,7 +990,7 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getGeneratorDoubleExcitation<CFP_t>());
+                gate_key, cuGates::getGeneratorDoubleExcitation<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -1001,7 +1004,8 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getGeneratorDoubleExcitationMinus<CFP_t>());
+                gate_key,
+                cuGates::getGeneratorDoubleExcitationMinus<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -1015,7 +1019,8 @@ class StateVectorCudaMPI final
         const auto gate_key = std::make_pair(name, param);
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(
-                gate_key, cuGates::getGeneratorDoubleExcitationPlus<CFP_t>());
+                gate_key,
+                cuGates::getGeneratorDoubleExcitationPlus<ComplexT>());
         }
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
@@ -1086,7 +1091,7 @@ class StateVectorCudaMPI final
     auto expval(const std::string &obsName,
                 const std::vector<std::size_t> &wires,
                 const std::vector<Precision> &params = {0.0},
-                const std::vector<CFP_t> &gate_matrix = {}) {
+                const std::vector<ComplexT> &gate_matrix = {}) {
         auto &&par = (params.empty()) ? std::vector<Precision>{0.0} : params;
         auto &&local_wires = wires;
 
@@ -1101,11 +1106,11 @@ class StateVectorCudaMPI final
     }
 
     /**
-     * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
+     * @brief See `expval(std::vector<ComplexT> &gate_matrix = {})`
      */
     auto expval(const std::vector<std::size_t> &wires,
                 const std::vector<std::complex<Precision>> &gate_matrix) {
-        std::vector<CFP_t> matrix_cu(gate_matrix.size());
+        std::vector<ComplexT> matrix_cu(gate_matrix.size());
 
         for (std::size_t i = 0; i < gate_matrix.size(); i++) {
             matrix_cu[i] =
@@ -1540,8 +1545,8 @@ class StateVectorCudaMPI final
         uint32_t nIndexBits = static_cast<uint32_t>(this->getNumLocalQubits());
         cudaDataType_t data_type;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
         } else {
             data_type = CUDA_C_32F;
@@ -1605,8 +1610,8 @@ class StateVectorCudaMPI final
 
         cudaDataType_t data_type;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
         } else {
             data_type = CUDA_C_32F;
@@ -1725,7 +1730,7 @@ class StateVectorCudaMPI final
      * @param tgts Target qubits.
      * @param use_adjoint Use adjoint of given gate.
      */
-    void applyCuSVDeviceMatrixGate(const CFP_t *matrix,
+    void applyCuSVDeviceMatrixGate(const ComplexT *matrix,
                                    const std::vector<int> &ctrls,
                                    const std::vector<int> &tgts,
                                    bool use_adjoint = false) {
@@ -1736,8 +1741,8 @@ class StateVectorCudaMPI final
         cudaDataType_t data_type;
         custatevecComputeType_t compute_type;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
             compute_type = CUSTATEVEC_COMPUTE_64F;
         } else {
@@ -1803,7 +1808,7 @@ class StateVectorCudaMPI final
      * @param tgts Target qubits.
      * @param use_adjoint Use adjoint of given gate.
      */
-    void applyDeviceMatrixGate(const CFP_t *matrix,
+    void applyDeviceMatrixGate(const ComplexT *matrix,
                                const std::vector<std::size_t> &ctrls,
                                const std::vector<std::size_t> &tgts,
                                bool use_adjoint = false) {
@@ -1880,9 +1885,9 @@ class StateVectorCudaMPI final
      * @param expect Local expectation value.
      * @return auto Expectation value.
      */
-    void getCuSVExpectationValueDeviceMatrix(const CFP_t *matrix,
+    void getCuSVExpectationValueDeviceMatrix(const ComplexT *matrix,
                                              const std::vector<int> &tgts,
-                                             CFP_t &expect) {
+                                             ComplexT &expect) {
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
 
@@ -1891,8 +1896,8 @@ class StateVectorCudaMPI final
         custatevecComputeType_t compute_type;
         cudaDataType_t expectationDataType = CUDA_C_64F;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
             compute_type = CUSTATEVEC_COMPUTE_64F;
         } else {
@@ -1952,7 +1957,7 @@ class StateVectorCudaMPI final
      * @param tgts Target qubits.
      * @return auto Expectation value.
      */
-    auto getExpectationValueDeviceMatrix(const CFP_t *matrix,
+    auto getExpectationValueDeviceMatrix(const ComplexT *matrix,
                                          const std::vector<std::size_t> &tgts) {
         std::vector<int> tgtsInt(tgts.size());
         std::transform(
@@ -1975,7 +1980,7 @@ class StateVectorCudaMPI final
 
         mpi_manager_.Barrier();
 
-        CFP_t local_expect;
+        ComplexT local_expect;
         if (!StatusGlobalWires) {
             getCuSVExpectationValueDeviceMatrix(matrix, tgtsInt, local_expect);
         } else {
@@ -1995,7 +2000,7 @@ class StateVectorCudaMPI final
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         }
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        auto expect = mpi_manager_.allreduce<CFP_t>(local_expect, "sum");
+        auto expect = mpi_manager_.allreduce<ComplexT>(local_expect, "sum");
         return expect;
     }
 
@@ -2017,8 +2022,8 @@ class StateVectorCudaMPI final
 
         cudaDataType_t svDataType;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             svDataType = CUDA_C_64F;
         } else {
             svDataType = CUDA_C_32F;

@@ -75,7 +75,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     std::vector<TensorCuda<Precision>> tensors_out_;
 
   public:
-    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;
     using PrecisionT = Precision;
 
@@ -145,10 +144,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     /**
      * @brief Get a vector of pointers to tensor data of each site.
      *
-     * @return std::vector<CFP_t *>
+     * @return std::vector<ComplexT *>
      */
-    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
-        std::vector<CFP_t *> tensorsOutDataPtr(BaseType::getNumQubits());
+    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<ComplexT *> {
+        std::vector<ComplexT *> tensorsOutDataPtr(BaseType::getNumQubits());
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
         }
@@ -182,7 +181,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                         "Please ensure all elements of a basis state should be "
                         "either 0 or 1.");
 
-        CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
+        ComplexT value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
@@ -196,9 +195,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                 target = basisState[idx] == 0 ? 0 : maxBondDim_;
             }
 
-            PL_CUDA_IS_SUCCESS(
-                cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
-                           &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+            PL_CUDA_IS_SUCCESS(cudaMemcpy(
+                &tensors_[i].getDataBuffer().getData()[target], &value_cu,
+                sizeof(ComplexT), cudaMemcpyHostToDevice));
         }
 
         if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {

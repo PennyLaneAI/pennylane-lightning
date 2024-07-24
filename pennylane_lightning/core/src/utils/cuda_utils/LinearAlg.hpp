@@ -134,7 +134,7 @@ inline auto innerProdC_CUDA(const T *v1, const T *v2, const int data_size,
 /**
  * @brief cuBLAS backed GPU C/ZAXPY.
  *
- * @tparam CFP_t Complex data-type. Accepts std::complex<float> and
+ * @tparam ComplexT Complex data-type. Accepts std::complex<float> and
  * std::complex<double>
  * @param a scaling factor
  * @param v1 Device data pointer 1 (data to be modified)
@@ -144,9 +144,9 @@ inline auto innerProdC_CUDA(const T *v1, const T *v2, const int data_size,
  * @param stream_id the CUDA stream on which the operation should be executed.
  * @param cublas the CublasCaller object that manages the cuBLAS handle.
  */
-template <class CFP_t = std::complex<double>, class T = cuDoubleComplex,
+template <class ComplexT = std::complex<double>, class T = cuDoubleComplex,
           class DevTypeID = int>
-inline auto scaleAndAddC_CUDA(const CFP_t a, const T *v1, T *v2,
+inline auto scaleAndAddC_CUDA(const ComplexT a, const T *v1, T *v2,
                               const int data_size, DevTypeID dev_id,
                               cudaStream_t stream_id,
                               const CublasCaller &cublas) {
@@ -164,7 +164,7 @@ inline auto scaleAndAddC_CUDA(const CFP_t a, const T *v1, T *v2,
 /**
  * @brief cuBLAS backed GPU data scaling.
  *
- * @tparam CFP_t Complex data-type. Accepts std::complex<float> and
+ * @tparam ComplexT Complex data-type. Accepts std::complex<float> and
  * std::complex<double>
  * @param a scaling factor
  * @param v1 Device data pointer
@@ -173,15 +173,15 @@ inline auto scaleAndAddC_CUDA(const CFP_t a, const T *v1, T *v2,
  * @param stream_id the CUDA stream on which the operation should be executed.
  * @param cublas the CublasCaller object that manages the cuBLAS handle.
  */
-template <class CFP_t = std::complex<double>, class T = cuDoubleComplex,
+template <class ComplexT = std::complex<double>, class T = cuDoubleComplex,
           class DevTypeID = int>
-inline auto scaleC_CUDA(const CFP_t a, T *v1, const int data_size,
+inline auto scaleC_CUDA(const ComplexT a, T *v1, const int data_size,
                         DevTypeID dev_id, cudaStream_t stream_id,
                         const CublasCaller &cublas) {
     cudaDataType_t data_type;
 
-    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                  std::is_same_v<CFP_t, double2>) {
+    if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                  std::is_same_v<ComplexT, double2>) {
         data_type = CUDA_C_64F;
     } else {
         data_type = CUDA_C_32F;
@@ -291,13 +291,15 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
  * @param cudaStream_t Stream id.
  * @param handle cuSparse handle.
  */
-template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
-inline void
-SparseMV_cuSparse(const index_type *csrOffsets_ptr,
-                  const int64_t csrOffsets_size, const index_type *columns_ptr,
-                  const std::complex<Precision> *values_ptr,
-                  const int64_t numNNZ, CFP_t *X, CFP_t *Y, DevTypeID device_id,
-                  cudaStream_t stream_id, cusparseHandle_t handle) {
+template <class index_type, class Precision, class ComplexT,
+          class DevTypeID = int>
+inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
+                              const int64_t csrOffsets_size,
+                              const index_type *columns_ptr,
+                              const std::complex<Precision> *values_ptr,
+                              const int64_t numNNZ, ComplexT *X, ComplexT *Y,
+                              DevTypeID device_id, cudaStream_t stream_id,
+                              cusparseHandle_t handle) {
     const int64_t num_rows =
         csrOffsets_size -
         1; // int64_t is required for num_rows by cusparseCreateCsr
@@ -306,15 +308,15 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     const int64_t nnz =
         numNNZ; // int64_t is required for nnz by cusparseCreateCsr
 
-    const CFP_t alpha = {1.0, 0.0};
-    const CFP_t beta = {0.0, 0.0};
+    const ComplexT alpha = {1.0, 0.0};
+    const ComplexT beta = {0.0, 0.0};
 
     DataBuffer<index_type, int> d_csrOffsets{
         static_cast<std::size_t>(csrOffsets_size), device_id, stream_id, true};
     DataBuffer<index_type, int> d_columns{static_cast<std::size_t>(numNNZ),
                                           device_id, stream_id, true};
-    DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(numNNZ), device_id,
-                                    stream_id, true};
+    DataBuffer<ComplexT, int> d_values{static_cast<std::size_t>(numNNZ),
+                                       device_id, stream_id, true};
 
     d_csrOffsets.CopyHostDataToGpu(csrOffsets_ptr, d_csrOffsets.getLength(),
                                    false);
@@ -324,8 +326,8 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     cudaDataType_t data_type;
     cusparseIndexType_t compute_type;
 
-    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                  std::is_same_v<CFP_t, double2>) {
+    if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                  std::is_same_v<ComplexT, double2>) {
         data_type = CUDA_C_64F;
         compute_type = CUSPARSE_INDEX_64I;
     } else {
@@ -380,7 +382,7 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
         /* cusparseSpMVAlg_t */ CUSPARSE_SPMV_ALG_DEFAULT,
         /* std::size_t* */ &bufferSize));
 
-    DataBuffer<CFP_t, int> dBuffer{bufferSize, device_id, stream_id, true};
+    DataBuffer<ComplexT, int> dBuffer{bufferSize, device_id, stream_id, true};
 
     // execute SpMV
     PL_CUSPARSE_IS_SUCCESS(cusparseSpMV(
@@ -422,14 +424,15 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
  * @param cudaStream_t Stream id.
  * @param handle cuSparse handle.
  */
-template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
+template <class index_type, class Precision, class ComplexT,
+          class DevTypeID = int>
 inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
                               const int64_t csrOffsets_size,
                               const index_type *columns_ptr,
                               const std::complex<Precision> *values_ptr,
-                              const int64_t numNNZ, const CFP_t *X, CFP_t *Y,
-                              DevTypeID device_id, cudaStream_t stream_id,
-                              cusparseHandle_t handle) {
+                              const int64_t numNNZ, const ComplexT *X,
+                              ComplexT *Y, DevTypeID device_id,
+                              cudaStream_t stream_id, cusparseHandle_t handle) {
     const int64_t num_rows =
         csrOffsets_size -
         1; // int64_t is required for num_rows by cusparseCreateCsr
@@ -438,15 +441,15 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     const int64_t nnz =
         numNNZ; // int64_t is required for nnz by cusparseCreateCsr
 
-    const CFP_t alpha = {1.0, 0.0};
-    const CFP_t beta = {0.0, 0.0};
+    const ComplexT alpha = {1.0, 0.0};
+    const ComplexT beta = {0.0, 0.0};
 
     DataBuffer<index_type, int> d_csrOffsets{
         static_cast<std::size_t>(csrOffsets_size), device_id, stream_id, true};
     DataBuffer<index_type, int> d_columns{static_cast<std::size_t>(numNNZ),
                                           device_id, stream_id, true};
-    DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(numNNZ), device_id,
-                                    stream_id, true};
+    DataBuffer<ComplexT, int> d_values{static_cast<std::size_t>(numNNZ),
+                                       device_id, stream_id, true};
 
     d_csrOffsets.CopyHostDataToGpu(csrOffsets_ptr, d_csrOffsets.getLength(),
                                    false);
@@ -456,8 +459,8 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     cudaDataType_t data_type;
     cusparseIndexType_t compute_type = CUSPARSE_INDEX_64I;
 
-    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                  std::is_same_v<CFP_t, double2>) {
+    if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                  std::is_same_v<ComplexT, double2>) {
         data_type = CUDA_C_64F;
     } else {
         data_type = CUDA_C_32F;

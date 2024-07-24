@@ -55,13 +55,13 @@ inline cuDoubleComplex operator-(const cuDoubleComplex &a) {
     return {-a.x, -a.y};
 }
 
-template <class CFP_t_T, class CFP_t_U = CFP_t_T>
-inline static auto Div(const CFP_t_T &a, const CFP_t_U &b) -> CFP_t_T {
-    if constexpr (std::is_same_v<CFP_t_T, cuComplex> ||
-                  std::is_same_v<CFP_t_T, float2>) {
+template <class ComplexT_T, class ComplexT_U = ComplexT_T>
+inline static auto Div(const ComplexT_T &a, const ComplexT_U &b) -> ComplexT_T {
+    if constexpr (std::is_same_v<ComplexT_T, cuComplex> ||
+                  std::is_same_v<ComplexT_T, float2>) {
         return cuCdivf(a, b);
-    } else if (std::is_same_v<CFP_t_T, cuDoubleComplex> ||
-               std::is_same_v<CFP_t_T, double2>) {
+    } else if (std::is_same_v<ComplexT_T, cuDoubleComplex> ||
+               std::is_same_v<ComplexT_T, double2>) {
         return cuCdiv(a, b);
     }
 }
@@ -69,15 +69,15 @@ inline static auto Div(const CFP_t_T &a, const CFP_t_U &b) -> CFP_t_T {
 /**
  * @brief Conjugate function for CXX & CUDA complex types
  *
- * @tparam CFP_t Complex data type. Supports std::complex<float>,
+ * @tparam ComplexT Complex data type. Supports std::complex<float>,
  * std::complex<double>, cuFloatComplex, cuDoubleComplex
  * @param a The given complex number
- * @return CFP_t The conjugated complex number
+ * @return ComplexT The conjugated complex number
  */
-template <class CFP_t>
-__host__ __device__ inline static constexpr auto Conj(CFP_t a) -> CFP_t {
-    if constexpr (std::is_same_v<CFP_t, cuComplex> ||
-                  std::is_same_v<CFP_t, float2>) {
+template <class ComplexT>
+__host__ __device__ inline static constexpr auto Conj(ComplexT a) -> ComplexT {
+    if constexpr (std::is_same_v<ComplexT, cuComplex> ||
+                  std::is_same_v<ComplexT, float2>) {
         return cuConjf(a);
     } else {
         return cuConj(a);
@@ -87,17 +87,17 @@ __host__ __device__ inline static constexpr auto Conj(CFP_t a) -> CFP_t {
 /**
  * @brief Multiplies two numbers for CXX & CUDA complex types
  *
- * @tparam CFP_t Complex data type. Supports std::complex<float>,
+ * @tparam ComplexT Complex data type. Supports std::complex<float>,
  * std::complex<double>, cuFloatComplex, cuDoubleComplex
  * @param a Complex number
  * @param b Complex number
- * @return CFP_t The multiplication result
+ * @return ComplexT The multiplication result
  */
-template <class CFP_t>
-__host__ __device__ inline static constexpr auto Cmul(CFP_t a, CFP_t b)
-    -> CFP_t {
-    if constexpr (std::is_same_v<CFP_t, cuComplex> ||
-                  std::is_same_v<CFP_t, float2>) {
+template <class ComplexT>
+__host__ __device__ inline static constexpr auto Cmul(ComplexT a, ComplexT b)
+    -> ComplexT {
+    if constexpr (std::is_same_v<ComplexT, cuComplex> ||
+                  std::is_same_v<ComplexT, float2>) {
         return cuCmulf(a, b);
     } else {
         return cuCmul(a, b);
@@ -113,9 +113,9 @@ __host__ __device__ inline static constexpr auto Cmul(CFP_t a, CFP_t b)
  * @param b Complex scalar value.
  * @return constexpr std::complex<T>
  */
-template <class Real_t, class CFP_t = cuDoubleComplex>
-inline static constexpr auto ConstMultSC(Real_t a, CFP_t b) -> CFP_t {
-    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex>) {
+template <class Real_t, class ComplexT = cuDoubleComplex>
+inline static constexpr auto ConstMultSC(Real_t a, ComplexT b) -> ComplexT {
+    if constexpr (std::is_same_v<ComplexT, cuDoubleComplex>) {
         return make_cuDoubleComplex(a * b.x, a * b.y);
     } else {
         return make_cuFloatComplex(a * b.x, a * b.y);
@@ -125,12 +125,12 @@ inline static constexpr auto ConstMultSC(Real_t a, CFP_t b) -> CFP_t {
 /**
  * @brief Utility to convert cuComplex types to std::complex types
  *
- * @tparam CFP_t cuFloatComplex or cuDoubleComplex types.
+ * @tparam ComplexT cuFloatComplex or cuDoubleComplex types.
  * @param a CUDA compatible complex type.
  * @return std::complex converted a
  */
-template <class CFP_t = cuDoubleComplex>
-inline static constexpr auto cuToComplex(CFP_t a)
+template <class ComplexT = cuDoubleComplex>
+inline static constexpr auto cuToComplex(ComplexT a)
     -> std::complex<decltype(a.x)> {
     return std::complex<decltype(a.x)>{a.x, a.y};
 }
@@ -160,8 +160,8 @@ inline static constexpr auto complexToCu(ComplexT a) {
  */
 template <class ComplexT = std::complex<double>>
 inline auto complexToCu(const std::vector<ComplexT> &vec) {
-    using cuCFP_t = decltype(complexToCu(ComplexT{}));
-    std::vector<cuCFP_t> cast_vector(vec.size());
+    using cuComplexT = decltype(complexToCu(ComplexT{}));
+    std::vector<cuComplexT> cast_vector(vec.size());
     std::transform(vec.begin(), vec.end(), cast_vector.begin(),
                    [&](ComplexT x) { return complexToCu<ComplexT>(x); });
     return cast_vector;
@@ -176,8 +176,9 @@ inline auto complexToCu(const std::vector<ComplexT> &vec) {
  * @param b Complex scalar value.
  * @return constexpr std::complex<T>
  */
-template <class CFP_t_T, class CFP_t_U = CFP_t_T>
-inline static constexpr auto ConstMult(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
+template <class ComplexT_T, class ComplexT_U = ComplexT_T>
+inline static constexpr auto ConstMult(ComplexT_T a, ComplexT_U b)
+    -> ComplexT_T {
     if constexpr (is_cxx_complex(b)) {
         return {a.real() * b.real() - a.imag() * b.imag(),
                 a.real() * b.imag() + a.imag() * b.real()};
@@ -195,10 +196,11 @@ inline static constexpr auto ConstMult(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
  * @param b Complex scalar value.
  * @return constexpr std::complex<T>
  */
-template <class CFP_t_T, class CFP_t_U = CFP_t_T>
-inline static constexpr auto ConstSum(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
-    if constexpr (std::is_same_v<CFP_t_T, cuComplex> ||
-                  std::is_same_v<CFP_t_T, float2>) {
+template <class ComplexT_T, class ComplexT_U = ComplexT_T>
+inline static constexpr auto ConstSum(ComplexT_T a, ComplexT_U b)
+    -> ComplexT_T {
+    if constexpr (std::is_same_v<ComplexT_T, cuComplex> ||
+                  std::is_same_v<ComplexT_T, float2>) {
         return cuCaddf(a, b);
     } else {
         return cuCadd(a, b);
@@ -211,7 +213,7 @@ inline static constexpr auto ConstSum(CFP_t_T a, CFP_t_U b) -> CFP_t_T {
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{1,0}
  */
-template <class CFP_t> inline static constexpr auto ONE() -> CFP_t {
+template <class ComplexT> inline static constexpr auto ONE() -> ComplexT {
     return {1, 0};
 }
 
@@ -221,7 +223,7 @@ template <class CFP_t> inline static constexpr auto ONE() -> CFP_t {
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{0,0}
  */
-template <class CFP_t> inline static constexpr auto ZERO() -> CFP_t {
+template <class ComplexT> inline static constexpr auto ZERO() -> ComplexT {
     return {0, 0};
 }
 
@@ -231,7 +233,7 @@ template <class CFP_t> inline static constexpr auto ZERO() -> CFP_t {
  * @tparam T Floating point precision type. Accepts `double` and `float`.
  * @return constexpr std::complex<T>{0,1}
  */
-template <class CFP_t> inline static constexpr auto IMAG() -> CFP_t {
+template <class ComplexT> inline static constexpr auto IMAG() -> ComplexT {
     return {0, 1};
 }
 
@@ -241,15 +243,15 @@ template <class CFP_t> inline static constexpr auto IMAG() -> CFP_t {
  * @tparam T Precision of result. `double`, `float` are accepted values.
  * @return constexpr T sqrt(2)
  */
-template <class CFP_t> inline static constexpr auto SQRT2() {
-    if constexpr (std::is_same_v<CFP_t, float2> ||
-                  std::is_same_v<CFP_t, cuFloatComplex>) {
-        return CFP_t{0x1.6a09e6p+0F, 0}; // NOLINT: To be replaced in C++20
-    } else if constexpr (std::is_same_v<CFP_t, double2> ||
-                         std::is_same_v<CFP_t, cuDoubleComplex>) {
-        return CFP_t{0x1.6a09e667f3bcdp+0,
-                     0}; // NOLINT: To be replaced in C++20
-    } else if constexpr (std::is_same_v<CFP_t, double>) {
+template <class ComplexT> inline static constexpr auto SQRT2() {
+    if constexpr (std::is_same_v<ComplexT, float2> ||
+                  std::is_same_v<ComplexT, cuFloatComplex>) {
+        return ComplexT{0x1.6a09e6p+0F, 0}; // NOLINT: To be replaced in C++20
+    } else if constexpr (std::is_same_v<ComplexT, double2> ||
+                         std::is_same_v<ComplexT, cuDoubleComplex>) {
+        return ComplexT{0x1.6a09e667f3bcdp+0,
+                        0}; // NOLINT: To be replaced in C++20
+    } else if constexpr (std::is_same_v<ComplexT, double>) {
         return 0x1.6a09e667f3bcdp+0; // NOLINT: To be replaced in C++20
     } else {
         return 0x1.6a09e6p+0F; // NOLINT: To be replaced in C++20
@@ -262,12 +264,12 @@ template <class CFP_t> inline static constexpr auto SQRT2() {
  * @tparam T Precision of result. `double`, `float` are accepted values.
  * @return constexpr T 1/sqrt(2)
  */
-template <class CFP_t> inline static constexpr auto INVSQRT2() -> CFP_t {
-    if constexpr (std::is_same_v<CFP_t, std::complex<float>> ||
-                  std::is_same_v<CFP_t, std::complex<double>>) {
-        return CFP_t(1 / M_SQRT2, 0);
+template <class ComplexT> inline static constexpr auto INVSQRT2() -> ComplexT {
+    if constexpr (std::is_same_v<ComplexT, std::complex<float>> ||
+                  std::is_same_v<ComplexT, std::complex<double>>) {
+        return ComplexT(1 / M_SQRT2, 0);
     } else {
-        return Div(CFP_t{1, 0}, SQRT2<CFP_t>());
+        return Div(ComplexT{1, 0}, SQRT2<ComplexT>());
     }
 }
 

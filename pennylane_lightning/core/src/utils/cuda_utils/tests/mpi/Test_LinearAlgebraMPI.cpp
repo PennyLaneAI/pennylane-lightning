@@ -40,8 +40,7 @@ using namespace Pennylane::Util;
 
 TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                    double) {
-    using ComplexT = std::complex<TestType>;
-    using CFP_t =
+    using ComplexT =
         typename std::conditional<std::is_same<TestType, float>::value,
                                   cuFloatComplex, cuDoubleComplex>::type;
     using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
@@ -56,7 +55,7 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                                    {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                    {0.3, 0.4}, {0.4, 0.5}};
 
-    std::vector<CFP_t> state_cu;
+    std::vector<ComplexT> state_cu;
 
     std::transform(state.begin(), state.end(), std::back_inserter(state_cu),
                    [](ComplexT x) { return complexToCu(x); });
@@ -88,7 +87,7 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                         subSvLength, 0);
     mpi_manager.Barrier();
 
-    std::vector<CFP_t> local_state_cu;
+    std::vector<ComplexT> local_state_cu;
 
     std::transform(local_state.begin(), local_state.end(),
                    std::back_inserter(local_state_cu),
@@ -103,15 +102,15 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
     mpi_manager.Barrier();
 
     SECTION("Testing sparse matrix vector product:") {
-        std::vector<CFP_t> local_result(local_state.size());
+        std::vector<ComplexT> local_result(local_state.size());
         auto cusparsehandle = make_shared_cusparse_handle();
 
-        DataBuffer<CFP_t> sv_x(local_state.size());
-        DataBuffer<CFP_t> sv_y(local_state.size());
+        DataBuffer<ComplexT> sv_x(local_state.size());
+        DataBuffer<ComplexT> sv_y(local_state.size());
 
         sv_x.CopyHostDataToGpu(local_state_cu.data(), local_state_cu.size());
 
-        SparseMV_cuSparseMPI<IdxT, TestType, CFP_t>(
+        SparseMV_cuSparseMPI<IdxT, TestType, ComplexT>(
             mpi_manager, sv_x.getLength(), indptr.data(),
             static_cast<int64_t>(indptr.size()), indices.data(), values.data(),
             sv_x.getData(), sv_y.getData(), sv_x.getDevice(), sv_x.getStream(),

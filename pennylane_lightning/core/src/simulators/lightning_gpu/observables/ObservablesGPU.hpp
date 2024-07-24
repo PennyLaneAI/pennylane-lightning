@@ -189,10 +189,10 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
 
     // to work with
     void applyInPlace(StateVectorT &sv) const override {
-        using CFP_t = typename StateVectorT::CFP_t;
-        std::unique_ptr<DataBuffer<CFP_t>> buffer =
-            std::make_unique<DataBuffer<CFP_t>>(sv.getDataBuffer().getLength(),
-                                                sv.getDataBuffer().getDevTag());
+        using ComplexT = typename StateVectorT::ComplexT;
+        std::unique_ptr<DataBuffer<ComplexT>> buffer =
+            std::make_unique<DataBuffer<ComplexT>>(
+                sv.getDataBuffer().getLength(), sv.getDataBuffer().getDevTag());
         buffer->zeroInit();
 
         for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
@@ -269,7 +269,7 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
     void applyInPlace(StateVectorT &sv) const override {
         PL_ABORT_IF_NOT(this->wires_.size() == sv.getNumQubits(),
                         "SparseH wire count does not match state-vector size");
-        using CFP_t = typename StateVectorT::CFP_t;
+        using ComplexT = typename StateVectorT::ComplexT;
 
         const std::size_t nIndexBits = sv.getNumQubits();
         const std::size_t length = std::size_t{1} << nIndexBits;
@@ -279,11 +279,11 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
 
         cusparseHandle_t handle = sv.getCusparseHandle();
 
-        std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
-            std::make_unique<DataBuffer<CFP_t>>(length, device_id, stream_id,
-                                                true);
+        std::unique_ptr<DataBuffer<ComplexT>> d_sv_prime =
+            std::make_unique<DataBuffer<ComplexT>>(length, device_id, stream_id,
+                                                   true);
 
-        SparseMV_cuSparse<IdxT, PrecisionT, CFP_t>(
+        SparseMV_cuSparse<IdxT, PrecisionT, ComplexT>(
             this->offsets_.data(), static_cast<int64_t>(this->offsets_.size()),
             this->indices_.data(), this->data_.data(),
             static_cast<int64_t>(this->data_.size()), sv.getData(),

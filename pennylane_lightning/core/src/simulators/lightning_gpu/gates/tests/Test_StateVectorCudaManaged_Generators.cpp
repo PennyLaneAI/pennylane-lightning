@@ -28,8 +28,9 @@ using namespace Pennylane::LightningGPU;
 
 TEST_CASE("Generators::applyGeneratorRX", "[GateGenerators]") {
     // grad(RX) = grad(e^{-i*0.5*PauliX*a}) => -i*0.5*PauliX
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
-        cuGates::getPauliX<typename StateVectorCudaManaged<double>::CFP_t>()};
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
+        cuGates::getPauliX<
+            typename StateVectorCudaManaged<double>::ComplexT>()};
     std::mt19937 re{1337U};
     for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
         for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
@@ -61,8 +62,9 @@ TEST_CASE("Generators::applyGeneratorRX", "[GateGenerators]") {
 
 TEST_CASE("Generators::applyGeneratorRY", "[GateGenerators]") {
     // grad(RY) = grad(e^{-i*0.5*PauliY*a}) => -i*0.5*PauliY
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
-        cuGates::getPauliY<typename StateVectorCudaManaged<double>::CFP_t>()};
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
+        cuGates::getPauliY<
+            typename StateVectorCudaManaged<double>::ComplexT>()};
     std::mt19937 re{1337U};
     for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
         for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
@@ -94,8 +96,9 @@ TEST_CASE("Generators::applyGeneratorRY", "[GateGenerators]") {
 
 TEST_CASE("Generators::applyGeneratorRZ", "[GateGenerators]") {
     // grad(RZ) = grad(e^{-i*0.5*PauliZ*a}) => -i*0.5*PauliZ
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
-        cuGates::getPauliZ<typename StateVectorCudaManaged<double>::CFP_t>()};
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
+        cuGates::getPauliZ<
+            typename StateVectorCudaManaged<double>::ComplexT>()};
     std::mt19937 re{1337U};
 
     for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
@@ -128,7 +131,7 @@ TEST_CASE("Generators::applyGeneratorRZ", "[GateGenerators]") {
 
 TEST_CASE("Generators::applyGeneratorPhaseShift", "[GateGenerators]") {
     // grad(PhaseShift) = grad(e^{i*0.5*a}*e^{-i*0.5*PauliZ*a}) => -i|1><1|
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {1.0, 0.0}};
     std::mt19937 re{1337U};
 
@@ -162,7 +165,7 @@ TEST_CASE("Generators::applyGeneratorPhaseShift", "[GateGenerators]") {
 
 TEST_CASE("Generators::applyGeneratorIsingXX", "[GateGenerators]") {
     // grad(IsingXX)() = e^{-i*0.5*a*(kron(X, X))}) => -0.5*i*(kron(X, X))
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {1.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {1.0, 0.0}, {0.0, 0.0},
@@ -239,7 +242,7 @@ TEST_CASE("Generators::applyGeneratorIsingXX", "[GateGenerators]") {
 }
 
 TEST_CASE("Generators::applyGeneratorIsingXY", "[GateGenerators]") {
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {1.0, 0.0}, {0.0, 0.0},
@@ -317,7 +320,7 @@ TEST_CASE("Generators::applyGeneratorIsingXY", "[GateGenerators]") {
 
 TEST_CASE("Generators::applyGeneratorIsingYY", "[GateGenerators]") {
     // grad(IsingXX)() = e^{-i*0.5*a*(kron(Y, Y))}) => -0.5*i*(kron(Y, Y))
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {-1.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {1.0, 0.0}, {0.0, 0.0},
@@ -395,7 +398,7 @@ TEST_CASE("Generators::applyGeneratorIsingYY", "[GateGenerators]") {
 
 TEST_CASE("Generators::applyGeneratorIsingZZ", "[GateGenerators]") {
     // grad(IsingXX)() = e^{-i*0.5*a*(kron(Z, Z))}) => -0.5*i*(kron(Z, Z))
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {-1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
@@ -474,7 +477,7 @@ TEST_CASE("Generators::applyGeneratorIsingZZ", "[GateGenerators]") {
 TEST_CASE("Generators::applyGeneratorCRX", "[GateGenerators]") {
     // grad(CRX) = grad(kron(|0><0|, I(2)) + kron(|1><1|,
     // e^{-i*0.5*(PauliX)*a})) => -i*0.5*kron(|1><1|, PauliX)
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
@@ -553,7 +556,7 @@ TEST_CASE("Generators::applyGeneratorCRX", "[GateGenerators]") {
 TEST_CASE("Generators::applyGeneratorCRY_GPU", "[GateGenerators]") {
     // grad(CRY) = grad(kron(|0><0|, I(2)) + kron(|1><1|,
     // e^{-i*0.5*(PauliY)*a})) => -i*0.5*kron(|1><1|, PauliY)
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
@@ -632,7 +635,7 @@ TEST_CASE("Generators::applyGeneratorCRY_GPU", "[GateGenerators]") {
 TEST_CASE("Generators::applyGeneratorCRZ", "[GateGenerators]") {
     // grad(CRZ) = grad(kron(|0><0|, I(2)) + kron(|1><1|,
     // e^{-i*0.5*(PauliZ)*a})) => -i*0.5*kron(|1><1|, PauliZ)
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
@@ -712,7 +715,7 @@ TEST_CASE("Generators::applyGeneratorControlledPhaseShift",
           "[GateGenerators]") {
     // grad(ControlledPhaseShift) = grad(kron(|0><0|, I(2)) +  kron(|1><1|,
     // e^{i*0.5*a}*e^{-i*0.5*PauliZ*a} )) => -i|11><11|
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
@@ -793,7 +796,7 @@ TEST_CASE("Generators::applyGeneratorControlledPhaseShift",
 }
 
 TEST_CASE("Generators::applyGeneratorSingleExcitation", "[GateGenerators]") {
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {0.0, -1.0}, {0.0, 0.0},
@@ -875,7 +878,7 @@ TEST_CASE("Generators::applyGeneratorSingleExcitation", "[GateGenerators]") {
 
 TEST_CASE("Generators::applyGeneratorSingleExcitationMinus",
           "[GateGenerators]") {
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {0.0,-1.0}, {0.0, 0.0},
@@ -957,7 +960,7 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationMinus",
 
 TEST_CASE("Generators::applyGeneratorSingleExcitationPlus",
           "[GateGenerators]") {
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {-1.0, 0.0},{0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {0.0, 0.0}, {0.0, 0.0}, {0.0,-1.0}, {0.0, 0.0},
@@ -1058,7 +1061,7 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitation_GPU",
     */
     // clang-format on
 
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
         {0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
@@ -1167,7 +1170,7 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitation_GPU",
 
 TEST_CASE("Generators::applyGeneratorDoubleExcitationMinus_GPU",
           "[GateGenerators]") {
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
         {0, 0},{1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
@@ -1276,7 +1279,7 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationMinus_GPU",
 
 TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
           "[GateGenerators]") {
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix{
         // clang-format off
         {-1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
         {0, 0},{-1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
@@ -1384,7 +1387,7 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
 }
 
 TEST_CASE("Generators::applyGeneratorMultiRZ", "[GateGenerators]") {
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix2{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix2{
         // clang-format off
         {1.0, 0},{0, 0},{0, 0},{0, 0},
         {0, 0},{-1.0, 0},{0, 0},{0, 0},
@@ -1393,7 +1396,7 @@ TEST_CASE("Generators::applyGeneratorMultiRZ", "[GateGenerators]") {
         // clang-format on
     };
 
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix3{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix3{
         // clang-format off
         {1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
         {0, 0},{-1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
@@ -1406,7 +1409,7 @@ TEST_CASE("Generators::applyGeneratorMultiRZ", "[GateGenerators]") {
         // clang-format on
     };
 
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix4{
+    std::vector<typename StateVectorCudaManaged<double>::ComplexT> matrix4{
         // clang-format off
         {1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},
         {0, 0},{-1.0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},{0, 0},

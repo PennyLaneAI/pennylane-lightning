@@ -56,7 +56,6 @@ class AdjointJacobianMPI final
   private:
     using ComplexT = typename StateVectorT::ComplexT;
     using PrecisionT = typename StateVectorT::PrecisionT;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobianMPI<StateVectorT>>;
 
@@ -84,13 +83,13 @@ class AdjointJacobianMPI final
         PL_ABORT_IF_NOT(sv1.getDataBuffer().getDevTag().getDeviceID() ==
                             sv2.getDataBuffer().getDevTag().getDeviceID(),
                         "Data exists on different GPUs. Aborting.");
-        CFP_t result;
+        ComplexT result;
         innerProdC_CUDA_device(sv1.getData(), sv2.getData(), sv1.getLength(),
                                sv1.getDataBuffer().getDevTag().getDeviceID(),
                                sv1.getDataBuffer().getDevTag().getStreamID(),
                                sv1.getCublasCaller(), &result);
         auto jac_single_param =
-            sv2.getMPIManager().template allreduce<CFP_t>(result, "sum");
+            sv2.getMPIManager().template allreduce<ComplexT>(result, "sum");
 
         std::size_t idx = param_index + obs_idx * tp_size;
         jac[idx] = -2 * scaling_coeff * jac_single_param.y;

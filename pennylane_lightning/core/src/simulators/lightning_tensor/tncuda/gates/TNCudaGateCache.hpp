@@ -51,7 +51,7 @@ namespace Pennylane::LightningTensor::TNCuda::Gates {
  */
 template <class PrecisionT> class TNCudaGateCache {
   public:
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using ComplexT = decltype(cuUtil::getCudaType(PrecisionT{}));
     using gate_key_info = std::pair<const std::string, std::vector<PrecisionT>>;
     using gate_info = std::pair<gate_key_info, TensorCuda<PrecisionT>>;
     TNCudaGateCache() = delete;
@@ -101,7 +101,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * is to be appended. The default is false.
      */
     void add_gate(const std::size_t gate_id, gate_key_info gate_key,
-                  const std::vector<CFP_t> &gate_data_host,
+                  const std::vector<ComplexT> &gate_data_host,
                   bool adjoint = false) {
         const std::size_t rank = Pennylane::Util::log2(gate_data_host.size());
         auto modes = std::vector<std::size_t>(rank, 0);
@@ -121,7 +121,7 @@ template <class PrecisionT> class TNCudaGateCache {
             // TODO: The implementation here can be optimized by generating the
             // data buffer directly on the device instead of performing the
             // transpose operation here
-            std::vector<CFP_t> data_host_transpose(gate_data_host.size());
+            std::vector<ComplexT> data_host_transpose(gate_data_host.size());
 
             const std::size_t col_size = 1 << (rank / 2);
             const std::size_t row_size = col_size;
@@ -143,7 +143,7 @@ template <class PrecisionT> class TNCudaGateCache {
                 gate_data_host.data(), gate_data_host.size());
         }
 
-        total_alloc_bytes_ += (sizeof(CFP_t) * gate_data_host.size());
+        total_alloc_bytes_ += (sizeof(ComplexT) * gate_data_host.size());
     }
 
     /**
@@ -151,9 +151,9 @@ template <class PrecisionT> class TNCudaGateCache {
      * stored.
      *
      * @param gate_id The id of gate tensor operator in the computate graph.
-     * @return const CFP_t* Pointer to gate values on device.
+     * @return const ComplexT* Pointer to gate values on device.
      */
-    CFP_t *get_gate_device_ptr(const std::size_t gate_id) {
+    ComplexT *get_gate_device_ptr(const std::size_t gate_id) {
         return device_gates_.at(gate_id).second.getDataBuffer().getData();
     }
 

@@ -260,10 +260,10 @@ template <class StateVectorT> class OpsData {
  */
 template <class StateVectorT> class JacobianData {
   private:
-    using CFP_t = typename StateVectorT::CFP_t;
+    using ComplexT = typename StateVectorT::ComplexT;
     std::size_t num_parameters; /**< Number of parameters in the tape */
     std::size_t num_elements;   /**< Length of the statevector data */
-    const CFP_t *psi;           /**< Pointer to the statevector data */
+    const ComplexT *psi;        /**< Pointer to the statevector data */
 
     /**
      * @var observables
@@ -306,7 +306,8 @@ template <class StateVectorT> class JacobianData {
      * (e.g. StatePrep) or Hamiltonian coefficients.
      * @endrst
      */
-    JacobianData(size_t num_params, std::size_t num_elem, const CFP_t *sv_ptr,
+    JacobianData(size_t num_params, std::size_t num_elem,
+                 const ComplexT *sv_ptr,
                  std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
                  OpsData<StateVectorT> ops, std::vector<std::size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(sv_ptr),
@@ -337,9 +338,11 @@ template <class StateVectorT> class JacobianData {
     /**
      * @brief Get the pointer to the statevector data.
      *
-     * @return CFP_t *
+     * @return ComplexT *
      */
-    [[nodiscard]] auto getPtrStateVec() const -> const CFP_t * { return psi; }
+    [[nodiscard]] auto getPtrStateVec() const -> const ComplexT * {
+        return psi;
+    }
 
     /**
      * @brief Get observables for which to calculate Jacobian.

@@ -69,7 +69,6 @@ class StateVectorKokkos final
   public:
     using PrecisionT = fp_t;
     using ComplexT = Kokkos::complex<fp_t>;
-    using CFP_t = ComplexT;
     using DoubleLoopRank = Kokkos::Rank<2>;
     using HostExecSpace = Kokkos::DefaultHostExecutionSpace;
     using KokkosExecSpace = Kokkos::DefaultExecutionSpace;

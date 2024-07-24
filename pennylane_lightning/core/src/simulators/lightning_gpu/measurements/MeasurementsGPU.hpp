@@ -67,7 +67,7 @@ class Measurements final
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using ComplexT = decltype(cuUtil::getCudaType(PrecisionT{}));
     cudaDataType_t data_type_;
 
     GateCache<PrecisionT> gate_cache_;
@@ -76,8 +76,8 @@ class Measurements final
     explicit Measurements(StateVectorT &statevector)
         : BaseType{statevector},
           gate_cache_(true, statevector.getDataBuffer().getDevTag()) {
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type_ = CUDA_C_64F;
         } else {
             data_type_ = CUDA_C_32F;
@@ -108,8 +108,8 @@ class Measurements final
 
         cudaDataType_t data_type;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
         } else {
             data_type = CUDA_C_32F;
@@ -136,8 +136,8 @@ class Measurements final
             /* const int32_t* */ maskOrdering,
             /* const uint32_t */ maskLen));
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             return probabilities;
         } else {
             std::vector<PrecisionT> probs(Pennylane::Util::exp2(wires.size()));
@@ -229,8 +229,8 @@ class Measurements final
 
         cudaDataType_t data_type;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
         } else {
             data_type = CUDA_C_32F;
@@ -324,11 +324,11 @@ class Measurements final
         auto stream_id =
             this->_statevector.getDataBuffer().getDevTag().getStreamID();
 
-        std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
-            std::make_unique<DataBuffer<CFP_t>>(length, device_id, stream_id,
-                                                true);
+        std::unique_ptr<DataBuffer<ComplexT>> d_sv_prime =
+            std::make_unique<DataBuffer<ComplexT>>(length, device_id, stream_id,
+                                                   true);
 
-        cuUtil::SparseMV_cuSparse<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparse<index_type, PrecisionT, ComplexT>(
             csrOffsets_ptr, csrOffsets_size, columns_ptr, values_ptr, numNNZ,
             this->_statevector.getData(), d_sv_prime->getData(), device_id,
             stream_id, this->_statevector.getCusparseHandle());
@@ -446,8 +446,8 @@ class Measurements final
             static_cast<uint32_t>(this->_statevector.getNumQubits());
         cudaDataType_t data_type;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
         } else {
             data_type = CUDA_C_32F;
@@ -666,7 +666,7 @@ class Measurements final
             this->_statevector.getDataBuffer().getDevTag().getStreamID();
         cusparseHandle_t handle = this->_statevector.getCusparseHandle();
 
-        cuUtil::SparseMV_cuSparse<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparse<index_type, PrecisionT, ComplexT>(
             csrOffsets_ptr, csrOffsets_size, columns_ptr, values_ptr, numNNZ,
             this->_statevector.getData(), ob_sv.getData(), device_id, stream_id,
             handle);
@@ -721,7 +721,7 @@ class Measurements final
 
         auto &&local_wires = wires;
 
-        std::vector<CFP_t> matrix_cu(gate_matrix.size());
+        std::vector<ComplexT> matrix_cu(gate_matrix.size());
         if (!gate_cache_.gateExists(obsName, par[0]) && gate_matrix.empty()) {
             std::string message =
                 "Currently unsupported observable: " + obsName;
@@ -731,12 +731,12 @@ class Measurements final
             gate_cache_.get_gate_device_ptr(obsName, par[0]), local_wires);
     }
     /**
-     * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
+     * @brief See `expval(std::vector<ComplexT> &gate_matrix = {})`
      */
     auto expval_(const std::vector<std::size_t> &wires,
                  const std::vector<std::complex<PrecisionT>> &gate_matrix)
         -> PrecisionT {
-        std::vector<CFP_t> matrix_cu(gate_matrix.size());
+        std::vector<ComplexT> matrix_cu(gate_matrix.size());
 
         for (std::size_t i = 0; i < gate_matrix.size(); i++) {
             matrix_cu[i] =
@@ -766,7 +766,7 @@ class Measurements final
      * @return auto Expectation value.
      */
     auto
-    getExpectationValueDeviceMatrix_(const CFP_t *matrix,
+    getExpectationValueDeviceMatrix_(const ComplexT *matrix,
                                      const std::vector<std::size_t> &tgts) {
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
@@ -784,8 +784,8 @@ class Measurements final
             CUDA_C_64F; // Requested by the custatevecComputeExpectation API
         custatevecComputeType_t compute_type;
 
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             data_type = CUDA_C_64F;
             compute_type = CUSTATEVEC_COMPUTE_64F;
         } else {

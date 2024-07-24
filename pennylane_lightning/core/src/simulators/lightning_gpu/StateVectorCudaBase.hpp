@@ -54,22 +54,24 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
     using scalar_type_t = Precision;
 
     /// Alias for complex floating point datatype supported by class
-    using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
+    using ComplexT = decltype(cuUtil::getCudaType(Precision{}));
 
     /**
      * @brief Return a pointer to the GPU data.
      *
-     * @return const CFP_t* Complex device pointer.
+     * @return const ComplexT* Complex device pointer.
      */
-    [[nodiscard]] auto getData() const -> const CFP_t * {
+    [[nodiscard]] auto getData() const -> const ComplexT * {
         return data_buffer_->getData();
     }
     /**
      * @brief Return a pointer to the GPU data.
      *
-     * @return CFP_t* Complex device pointer.
+     * @return ComplexT* Complex device pointer.
      */
-    [[nodiscard]] auto getData() -> CFP_t * { return data_buffer_->getData(); }
+    [[nodiscard]] auto getData() -> ComplexT * {
+        return data_buffer_->getData();
+    }
 
     /**
      * @brief Get the CUDA stream for the given object.
@@ -108,7 +110,7 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
      * @param host_sv Complex data pointer to array.
      * @param length Number of complex elements.
      */
-    inline void CopyGpuDataToGpuIn(const CFP_t *gpu_sv, std::size_t length,
+    inline void CopyGpuDataToGpuIn(const ComplexT *gpu_sv, std::size_t length,
                                    bool async = false) {
         PL_ABORT_IF_NOT(BaseType::getLength() == length,
                         "Sizes do not match for Host and GPU data");
@@ -144,7 +146,7 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
         PL_ABORT_IF_NOT(BaseType::getLength() == length,
                         "Sizes do not match for Host and GPU data");
         data_buffer_->CopyHostDataToGpu(
-            reinterpret_cast<const CFP_t *>(host_sv), length, async);
+            reinterpret_cast<const ComplexT *>(host_sv), length, async);
     }
 
     /**
@@ -173,11 +175,13 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
                                              data_buffer_->getLength(), async);
     }
 
-    const LightningGPU::DataBuffer<CFP_t> &getDataBuffer() const {
+    const LightningGPU::DataBuffer<ComplexT> &getDataBuffer() const {
         return *data_buffer_;
     }
 
-    LightningGPU::DataBuffer<CFP_t> &getDataBuffer() { return *data_buffer_; }
+    LightningGPU::DataBuffer<ComplexT> &getDataBuffer() {
+        return *data_buffer_;
+    }
 
     /**
      * @brief Update GPU device data from given derived object.
@@ -194,7 +198,8 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
      *
      * @param other Source data to copy from.
      */
-    void updateData(std::unique_ptr<LightningGPU::DataBuffer<CFP_t>> &&other) {
+    void
+    updateData(std::unique_ptr<LightningGPU::DataBuffer<ComplexT>> &&other) {
         data_buffer_ = std::move(other);
     }
 
@@ -216,14 +221,14 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
     StateVectorCudaBase(size_t num_qubits, int device_id = 0,
                         cudaStream_t stream_id = 0, bool device_alloc = true)
         : StateVectorBase<Precision, Derived>(num_qubits),
-          data_buffer_{std::make_unique<LightningGPU::DataBuffer<CFP_t>>(
+          data_buffer_{std::make_unique<LightningGPU::DataBuffer<ComplexT>>(
               Pennylane::Util::exp2(num_qubits), device_id, stream_id,
               device_alloc)} {}
 
     StateVectorCudaBase(size_t num_qubits, LightningGPU::DevTag<int> dev_tag,
                         bool device_alloc = true)
         : StateVectorBase<Precision, Derived>(num_qubits),
-          data_buffer_{std::make_unique<LightningGPU::DataBuffer<CFP_t>>(
+          data_buffer_{std::make_unique<LightningGPU::DataBuffer<ComplexT>>(
               Pennylane::Util::exp2(num_qubits), dev_tag, device_alloc)} {}
     StateVectorCudaBase() = delete;
     StateVectorCudaBase(const StateVectorCudaBase &other) = delete;
@@ -251,7 +256,7 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
     }
 
   private:
-    std::unique_ptr<LightningGPU::DataBuffer<CFP_t>> data_buffer_;
+    std::unique_ptr<LightningGPU::DataBuffer<ComplexT>> data_buffer_;
     const std::unordered_set<std::string> const_gates_{
         "Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "T",      "S",
         "CNOT",     "SWAP",   "CY",     "CZ",     "CSWAP",    "Toffoli"};

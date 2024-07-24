@@ -59,7 +59,6 @@ namespace Pennylane::LightningTensor::TNCuda::Observables {
 template <class TensorNetT> class ObservableTNCudaOperator {
   public:
     using PrecisionT = typename TensorNetT::PrecisionT;
-    using CFP_t = typename TensorNetT::CFP_t;
     using ComplexT = typename TensorNetT::ComplexT;
     using obs_key =
         std::tuple<std::string, std::vector<PrecisionT>, std::size_t>;
@@ -139,7 +138,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      * representing the observable data on host.
      */
     void add_obs_(const obs_key &obsKey,
-                  const std::vector<CFP_t> &obs_data_host) {
+                  const std::vector<ComplexT> &obs_data_host) {
         const std::size_t rank = Pennylane::Util::log2(obs_data_host.size());
         auto modes = std::vector<std::size_t>(rank, 0);
         auto extents = std::vector<std::size_t>(rank, 2);
@@ -160,9 +159,9 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      * stored.
      *
      * @param obsKey The key of observable tensor operator.
-     * @return const CFP_t* Pointer to gate values on device.
+     * @return const ComplexT* Pointer to gate values on device.
      */
-    const CFP_t *get_obs_device_ptr_(const obs_key &obsKey) {
+    const ComplexT *get_obs_device_ptr_(const obs_key &obsKey) {
         return device_obs_cache_.at(obsKey).getDataBuffer().getData();
     }
 

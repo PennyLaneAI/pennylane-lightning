@@ -99,10 +99,10 @@ inline SharedLocalStream make_shared_local_stream() {
  * @param numLocalQubits Number of local qubits.
  * @param localStream Local cuda stream.
  */
-template <typename CFP_t>
+template <typename ComplexT>
 SharedMPIWorker
 make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
-                       const std::size_t mpi_buf_size, CFP_t *sv,
+                       const std::size_t mpi_buf_size, ComplexT *sv,
                        const std::size_t numLocalQubits,
                        cudaStream_t localStream) {
     custatevecSVSwapWorkerDescriptor_t svSegSwapWorker = nullptr;
@@ -147,8 +147,8 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
     }
 
     cudaDataType_t svDataType;
-    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                  std::is_same_v<CFP_t, double2>) {
+    if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                  std::is_same_v<ComplexT, double2>) {
         svDataType = CUDA_C_64F;
     } else {
         svDataType = CUDA_C_32F;
@@ -216,8 +216,8 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
 
     if (mpi_buf_size == 0) {
         transferWorkspaceSize = std::size_t{1} << numLocalQubits;
-        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>) {
+        if constexpr (std::is_same_v<ComplexT, cuDoubleComplex> ||
+                      std::is_same_v<ComplexT, double2>) {
             transferWorkspaceSize = transferWorkspaceSize * sizeof(double) * 2;
         } else {
             transferWorkspaceSize = transferWorkspaceSize * sizeof(float) * 2;

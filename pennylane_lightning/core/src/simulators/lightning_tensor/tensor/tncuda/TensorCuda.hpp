@@ -46,7 +46,7 @@ template <class PrecisionT>
 class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
   public:
     using BaseType = TensorBase<PrecisionT, TensorCuda>;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using ComplexT = decltype(cuUtil::getCudaType(PrecisionT{}));
 
     /**
      * @brief Construct a new TensorCuda object.
@@ -62,7 +62,7 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
                         const std::vector<std::size_t> &extents,
                         const DevTag<int> &dev_tag, bool device_alloc = true)
         : TensorBase<PrecisionT, TensorCuda<PrecisionT>>(rank, modes, extents),
-          data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
+          data_buffer_{std::make_shared<DataBuffer<ComplexT>>(
               BaseType::getLength(), dev_tag, device_alloc)} {}
 
     /**
@@ -74,10 +74,10 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
      * @param device_alloc If true, allocate memory on device.
      */
     explicit TensorCuda(const std::vector<std::size_t> &extents,
-                        const std::vector<CFP_t> &host_tensor,
+                        const std::vector<ComplexT> &host_tensor,
                         const DevTag<int> &dev_tag, bool device_alloc = true)
         : TensorBase<PrecisionT, TensorCuda<PrecisionT>>(extents),
-          data_buffer_{std::make_shared<DataBuffer<CFP_t>>(
+          data_buffer_{std::make_shared<DataBuffer<ComplexT>>(
               BaseType::getLength(), dev_tag, device_alloc)} {
         data_buffer_->CopyHostDataToGpu(host_tensor.data(),
                                         BaseType::getLength());
@@ -103,9 +103,9 @@ class TensorCuda final : public TensorBase<PrecisionT, TensorCuda<PrecisionT>> {
         data_buffer_->CopyGpuDataToHost(host_tensor, length, async);
     }
 
-    DataBuffer<CFP_t> &getDataBuffer() { return *data_buffer_; }
+    DataBuffer<ComplexT> &getDataBuffer() { return *data_buffer_; }
 
   private:
-    std::shared_ptr<DataBuffer<CFP_t>> data_buffer_;
+    std::shared_ptr<DataBuffer<ComplexT>> data_buffer_;
 };
 } // namespace Pennylane::LightningTensor::TNCuda

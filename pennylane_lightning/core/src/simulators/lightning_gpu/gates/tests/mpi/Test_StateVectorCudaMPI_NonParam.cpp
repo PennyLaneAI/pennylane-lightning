@@ -80,7 +80,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::StateVectorCudaMPI",
                                       std::size_t>::value);
     }
     SECTION("StateVectorCudaMPI<TestType> {DevTag, std::size_t, std::size_t, "
-            "CFP_t}") {
+            "ComplexT}") {
         if (std::is_same_v<TestType, double>) {
             REQUIRE(std::is_constructible<StateVectorCudaMPI<TestType>,
                                           DevTag<int>, std::size_t, std::size_t,

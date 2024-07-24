@@ -1425,7 +1425,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
                    "[LightningGPU_Param]", float, double) {
-    using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
+    using cp_t = StateVectorCudaManaged<TestType>::ComplexT;
     const std::size_t num_qubits = 5;
 
     // Note: gates are defined as right-to-left order
@@ -1553,7 +1553,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
                    "[LightningGPU_Param]", float, double) {
-    using cp_t = StateVectorCudaManaged<TestType>::CFP_t;
+    using cp_t = StateVectorCudaManaged<TestType>::ComplexT;
     const std::size_t num_qubits = 3;
 
     StateVectorCudaManaged<TestType> sv_init{num_qubits};

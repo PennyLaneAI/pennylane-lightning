@@ -56,7 +56,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
                            "[General Constructibility]", (StateVectorCudaMPI),
                            (float, double)) {
     using StateVectorT = TestType;
-    using CFP_t = typename StateVectorT::CFP_t;
+    using ComplexT = typename StateVectorT::ComplexT;
 
     SECTION("StateVectorBackend<TestType>") {
         REQUIRE(!std::is_constructible_v<StateVectorT>);
@@ -78,9 +78,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
                                         std::size_t, std::size_t>);
     }
     SECTION("StateVectorBackend<TestType> {DevTag<int>, std::size_t, "
-            "std::size_t, CFP_t}") {
+            "std::size_t, ComplexT}") {
         REQUIRE(std::is_constructible_v<StateVectorT, DevTag<int>, std::size_t,
-                                        std::size_t, CFP_t *>);
+                                        std::size_t, ComplexT *>);
     }
     SECTION("StateVectorBackend<TestType> {DevTag<int>, std::size_t, "
             "std::size_t}") {

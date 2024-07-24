@@ -53,7 +53,7 @@ class AdjointJacobian final
   private:
     using ComplexT = typename StateVectorT::ComplexT;
     using PrecisionT = typename StateVectorT::PrecisionT;
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
+    using ComplexT = decltype(cuUtil::getCudaType(PrecisionT{}));
     using BaseType =
         AdjointJacobianBase<StateVectorT, AdjointJacobian<StateVectorT>>;
 
@@ -79,8 +79,8 @@ class AdjointJacobian final
                    const StateVectorT &sv2, std::span<PrecisionT> &jac,
                    PrecisionT scaling_coeff, std::size_t num_observables,
                    std::size_t param_index, std::size_t tp_size,
-                   DataBuffer<CFP_t, int> &device_buffer_jac_single_param,
-                   std::vector<CFP_t> &host_buffer_jac_single_param) {
+                   DataBuffer<ComplexT, int> &device_buffer_jac_single_param,
+                   std::vector<ComplexT> &host_buffer_jac_single_param) {
         host_buffer_jac_single_param.clear();
         for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
             const StateVectorT &sv1 = sv1s[obs_idx];
@@ -301,10 +301,10 @@ class AdjointJacobian final
         // single updateJacobian function call.
         // We create the buffers here instead of inside updateJacobian
         // to avoid expensive reallocations.
-        DataBuffer<CFP_t, int> device_buffer_jac_single_param{
+        DataBuffer<ComplexT, int> device_buffer_jac_single_param{
             static_cast<std::size_t>(num_observables), device_id, stream_id,
             true};
-        std::vector<CFP_t> host_buffer_jac_single_param;
+        std::vector<ComplexT> host_buffer_jac_single_param;
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {

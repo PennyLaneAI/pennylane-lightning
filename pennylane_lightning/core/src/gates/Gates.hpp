@@ -950,7 +950,7 @@ static auto getIsingXX(T angle) -> std::vector<ComplexT<T>> {
  * @tparam ComplexT Complex class.
  * @tparam T Required precision of gate (`float` or `double`).
  * @tparam T Required precision of parameter (`float` or `double`).
- * @return constexpr std::array<CFP_t>
+ * @return constexpr std::array<ComplexT>
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorPhaseShift() -> std::vector<ComplexT<T>> {
@@ -969,7 +969,7 @@ static constexpr auto getGeneratorPhaseShift() -> std::vector<ComplexT<T>> {
  * @tparam ComplexT Complex class.
  * @tparam T Required precision of gate (`float` or `double`).
  * @tparam T Required precision of parameter (`float` or `double`).
- * @return constexpr std::array<CFP_t>
+ * @return constexpr std::array<ComplexT>
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorControlledPhaseShift()
@@ -996,7 +996,7 @@ static constexpr auto getGeneratorControlledPhaseShift()
  * @tparam ComplexT Complex class.
  * @tparam T Required precision of gate (`float` or `double`).
  * @tparam T Required precision of parameter (`float` or `double`).
- * @return constexpr std::array<CFP_t>
+ * @return constexpr std::array<ComplexT>
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingXX() -> std::vector<ComplexT<T>> {
@@ -1059,7 +1059,7 @@ static auto getIsingXY(T angle) -> std::vector<ComplexT<T>> {
  * @tparam ComplexT Complex class.
  * @tparam T Required precision of gate (`float` or `double`).
  * @tparam T Required precision of parameter (`float` or `double`).
- * @return constexpr std::array<CFP_t>
+ * @return constexpr std::array<ComplexT>
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingXY() -> std::vector<ComplexT<T>> {
@@ -1120,7 +1120,7 @@ static auto getIsingYY(T angle) -> std::vector<ComplexT<T>> {
  * @tparam ComplexT Complex class.
  * @tparam T Required precision of gate (`float` or `double`).
  * @tparam T Required precision of parameter (`float` or `double`).
- * @return constexpr std::array<CFP_t>
+ * @return constexpr std::array<ComplexT>
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getGeneratorIsingYY() -> std::vector<ComplexT<T>> {

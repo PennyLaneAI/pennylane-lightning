@@ -55,7 +55,6 @@ namespace Pennylane::LightningTensor::TNCuda {
 template <class PrecisionT, class Derived>
 class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
   private:
-    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using ComplexT = std::complex<PrecisionT>;
     using BaseType = TensornetBase<PrecisionT, Derived>;
     SharedTNCudaHandle handle_;
@@ -275,7 +274,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* int64_t * */ &id));
         if (!gate_matrix.empty()) {
             auto gate_key = std::make_pair(opName, par);
-            std::vector<CFP_t> matrix_cu =
+            std::vector<ComplexT> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
                                   matrix_cu, adjoint);

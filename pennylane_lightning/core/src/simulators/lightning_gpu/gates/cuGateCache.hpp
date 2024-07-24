@@ -44,7 +44,7 @@ namespace Pennylane::LightningGPU {
  */
 template <class fp_t> class GateCache {
   public:
-    using CFP_t = decltype(cuUtil::getCudaType(fp_t{}));
+    using ComplexT = decltype(cuUtil::getCudaType(fp_t{}));
     using gate_id = std::pair<std::string, fp_t>;
 
     GateCache() = delete;
@@ -75,88 +75,89 @@ template <class fp_t> class GateCache {
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"Identity"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::ONE<ComplexT>()}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"PauliX"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ZERO<ComplexT>(), cuUtil::ONE<ComplexT>(),
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>()}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"PauliY"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
-                cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ZERO<ComplexT>(), -cuUtil::IMAG<ComplexT>(),
+                cuUtil::IMAG<ComplexT>(), cuUtil::ZERO<ComplexT>()}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"PauliZ"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), -cuUtil::ONE<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), -cuUtil::ONE<ComplexT>()}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"Hadamard"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::INVSQRT2<CFP_t>(), cuUtil::INVSQRT2<CFP_t>(),
-                cuUtil::INVSQRT2<CFP_t>(), -cuUtil::INVSQRT2<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::INVSQRT2<ComplexT>(), cuUtil::INVSQRT2<ComplexT>(),
+                cuUtil::INVSQRT2<ComplexT>(), -cuUtil::INVSQRT2<ComplexT>()}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"S"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::IMAG<ComplexT>()}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"T"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(),
-                cuUtil::ConstMultSC(cuUtil::SQRT2<fp_t>() / 2.0,
-                                    cuUtil::ConstSum(cuUtil::ONE<CFP_t>(),
-                                                     cuUtil::IMAG<CFP_t>()))}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(),
+                cuUtil::ConstMultSC(
+                    cuUtil::SQRT2<fp_t>() / 2.0,
+                    cuUtil::ConstSum(cuUtil::ONE<ComplexT>(),
+                                     cuUtil::IMAG<ComplexT>()))}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"SWAP"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::ONE<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), cuUtil::ONE<ComplexT>()}));
 
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"CNOT"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ZERO<ComplexT>(), cuUtil::ONE<ComplexT>(),
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>()}));
 
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"Toffoli"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ZERO<ComplexT>(), cuUtil::ONE<ComplexT>(),
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>()}));
 
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"CY"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
-                cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ZERO<ComplexT>(), -cuUtil::IMAG<ComplexT>(),
+                cuUtil::IMAG<ComplexT>(), cuUtil::ZERO<ComplexT>()}));
 
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"CZ"}, 0.0)),
-            std::forward_as_tuple(std::vector<CFP_t>{
-                cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-                cuUtil::ZERO<CFP_t>(), -cuUtil::ONE<CFP_t>()}));
+            std::forward_as_tuple(std::vector<ComplexT>{
+                cuUtil::ONE<ComplexT>(), cuUtil::ZERO<ComplexT>(),
+                cuUtil::ZERO<ComplexT>(), -cuUtil::ONE<ComplexT>()}));
 
         host_gates_.emplace(
             std::piecewise_construct,
@@ -170,7 +171,7 @@ template <class fp_t> class GateCache {
                 std::forward_as_tuple(h_gate_v.size(), device_tag_));
             device_gates_.at(h_gate_k).CopyHostDataToGpu(h_gate_v.data(),
                                                          h_gate_v.size());
-            total_alloc_bytes_ += (sizeof(CFP_t) * h_gate_v.size());
+            total_alloc_bytes_ += (sizeof(ComplexT) * h_gate_v.size());
         }
     }
 
@@ -209,7 +210,7 @@ template <class fp_t> class GateCache {
      * @param host_data Vector of the gate values in row-major order.
      */
     void add_gate(const std::string &gate_name, fp_t gate_param,
-                  std::vector<CFP_t> host_data) {
+                  std::vector<ComplexT> host_data) {
         const auto gate_key = std::make_pair(gate_name, gate_param);
         host_gates_[gate_key] = std::move(host_data);
         auto &gate = host_gates_[gate_key];
@@ -219,17 +220,17 @@ template <class fp_t> class GateCache {
                               std::forward_as_tuple(gate.size(), device_tag_));
         device_gates_.at(gate_key).CopyHostDataToGpu(gate.data(), gate.size());
 
-        this->total_alloc_bytes_ += (sizeof(CFP_t) * gate.size());
+        this->total_alloc_bytes_ += (sizeof(ComplexT) * gate.size());
     }
 
     /**
      * @brief see `void add_gate(const std::string &gate_name, fp_t gate_param,
-                  const std::vector<CFP_t> &host_data)`
+                  const std::vector<ComplexT> &host_data)`
      *
      * @param gate_key
      * @param host_data
      */
-    void add_gate(const gate_id &gate_key, std::vector<CFP_t> host_data) {
+    void add_gate(const gate_id &gate_key, std::vector<ComplexT> host_data) {
         host_gates_[gate_key] = std::move(host_data);
         auto &gate = host_gates_[gate_key];
 
@@ -238,7 +239,7 @@ template <class fp_t> class GateCache {
                               std::forward_as_tuple(gate.size(), device_tag_));
         device_gates_.at(gate_key).CopyHostDataToGpu(gate.data(), gate.size());
 
-        total_alloc_bytes_ += (sizeof(CFP_t) * gate.size());
+        total_alloc_bytes_ += (sizeof(ComplexT) * gate.size());
     }
 
     /**
@@ -247,14 +248,14 @@ template <class fp_t> class GateCache {
      *
      * @param gate_name String representing the name of the given gate.
      * @param gate_param Gate parameter value. `0.0` if non-parametric gate.
-     * @return const CFP_t* Pointer to gate values on device.
+     * @return const ComplexT* Pointer to gate values on device.
      */
-    const CFP_t *get_gate_device_ptr(const std::string &gate_name,
-                                     fp_t gate_param) {
+    const ComplexT *get_gate_device_ptr(const std::string &gate_name,
+                                        fp_t gate_param) {
         return device_gates_.at(std::make_pair(gate_name, gate_param))
             .getData();
     }
-    const CFP_t *get_gate_device_ptr(const gate_id &gate_key) {
+    const ComplexT *get_gate_device_ptr(const gate_id &gate_key) {
         return device_gates_.at(gate_key).getData();
     }
     auto get_gate_host(const std::string &gate_name, fp_t gate_param) {
@@ -275,7 +276,9 @@ template <class fp_t> class GateCache {
         }
     };
 
-    std::unordered_map<gate_id, DataBuffer<CFP_t>, gate_id_hash> device_gates_;
-    std::unordered_map<gate_id, std::vector<CFP_t>, gate_id_hash> host_gates_;
+    std::unordered_map<gate_id, DataBuffer<ComplexT>, gate_id_hash>
+        device_gates_;
+    std::unordered_map<gate_id, std::vector<ComplexT>, gate_id_hash>
+        host_gates_;
 };
 } // namespace Pennylane::LightningGPU

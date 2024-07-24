@@ -40,11 +40,10 @@ using namespace Pennylane::Util;
 
 TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                    double) {
-    using ComplexT = std::complex<TestType>;
     using IdxT = typename std::conditional<std::is_same<TestType, float>::value,
                                            int32_t, int64_t>::type;
 
-    using CFP_t =
+    using ComplexT =
         typename std::conditional<std::is_same<TestType, float>::value,
                                   cuFloatComplex, cuDoubleComplex>::type;
 
@@ -55,7 +54,7 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
                                      {0.1, 0.2}, {0.2, 0.2}, {0.3, 0.3},
                                      {0.3, 0.4}, {0.4, 0.5}};
 
-    std::vector<CFP_t> vectors_cu;
+    std::vector<ComplexT> vectors_cu;
 
     std::transform(vectors.begin(), vectors.end(),
                    std::back_inserter(vectors_cu),
@@ -74,16 +73,16 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
         {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
         {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0}};
 
-    DataBuffer<CFP_t> sv_x(data_size);
-    DataBuffer<CFP_t> sv_y(data_size);
+    DataBuffer<ComplexT> sv_x(data_size);
+    DataBuffer<ComplexT> sv_y(data_size);
 
     sv_x.CopyHostDataToGpu(vectors_cu.data(), vectors_cu.size());
 
     SECTION("Testing sparse matrix vector product:") {
-        std::vector<CFP_t> result(data_size);
+        std::vector<ComplexT> result(data_size);
         auto cusparsehandle = make_shared_cusparse_handle();
 
-        SparseMV_cuSparse<IdxT, TestType, CFP_t>(
+        SparseMV_cuSparse<IdxT, TestType, ComplexT>(
             indptr.data(), static_cast<int64_t>(indptr.size()), indices.data(),
             values.data(), static_cast<int64_t>(values.size()), sv_x.getData(),
             sv_y.getData(), sv_x.getDevice(), sv_x.getStream(),
