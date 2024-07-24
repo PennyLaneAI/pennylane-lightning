@@ -515,9 +515,21 @@ class Measurements final
     probs(const std::vector<std::size_t> &wires,
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
+        // GPU_SHARED_NWIRES_MAX is an upper bound for the size of the GPU array
+        // used to reduce the probs (max size = 2 ** 7)
         constexpr std::size_t GPU_SHARED_NWIRES_MAX = 7;
+        // BITSHIFT_FREE_WIRES_MIN is a lower bound for the size of the loop
+        // over which the probs computation is parallelized in
+        // `probs_bitshift_generic` The free wires are the wires which are
+        // summed over.
         constexpr std::size_t BITSHIFT_FREE_WIRES_MIN = 10;
+        // BITSHIFT_NWIRES_MAX is an upper bound for using
+        // `probs_bitshift_generic`, beyond that size the other implementation
+        // si more efficient
         constexpr std::size_t BITSHIFT_NWIRES_MAX = 9;
+        // MDRANGE_NWIRES_MAX is an upper bound for using `MDRangePolicy` to
+        // parallelize the probs computation. Beyond that size, parallelizing
+        // over the probs elements is more efficient.
         constexpr std::size_t MDRANGE_NWIRES_MAX = 20;
         const std::size_t n_wires = wires.size();
         if (n_wires == 0) {
