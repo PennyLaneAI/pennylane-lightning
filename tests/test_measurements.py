@@ -668,6 +668,37 @@ class TestSample:
         # they square to 1
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("seed", range(0, 10))
+    @pytest.mark.parametrize("nwires", range(1, 11))
+    def test_sample_variations(self, qubit_device, nwires, seed):
+        """Tests if `sample(wires)` returns correct statistics."""
+        shots = 20000
+        n_qubits = max(5, nwires + 1)
+        np.random.seed(seed)
+        wires = qml.wires.Wires(np.random.permutation(nwires))
+        state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        state[np.random.randint(0, 2**n_qubits, 1)] += state.size / 10
+        state /= np.linalg.norm(state)
+        ops = [qml.StatePrep(state, wires=range(n_qubits))]
+        tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
+
+        def reshape_samples(samples):
+            return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
+
+        dev = qubit_device(wires=n_qubits, shots=shots)
+        samples = dev.execute(tape)
+        probs = qml.measurements.ProbabilityMP(wires=wires).process_samples(
+            reshape_samples(samples), wire_order=wires
+        )
+
+        dev = qml.device("default.qubit", wires=n_qubits, shots=shots)
+        samples = dev.execute(tape)
+        ref = qml.measurements.ProbabilityMP(wires=wires).process_samples(
+            reshape_samples(samples), wire_order=wires
+        )
+
+        assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
+
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",

@@ -438,6 +438,8 @@ class LightningKokkos(Device):
             variances analytically.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     _new_API = True
 

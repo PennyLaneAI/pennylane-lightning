@@ -267,10 +267,10 @@ class LightningStateVector:
         """
         wires = self.wires.indices(operation.wires)
         wire = list(wires)[0]
-        circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
         if postselect_mode == "fill-shots" and operation.postselect is not None:
             sample = operation.postselect
         else:
+            circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
             sample = LightningMeasurements(self).measure_final_state(circuit)
             sample = np.squeeze(sample)
         mid_measurements[operation] = sample
