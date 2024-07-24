@@ -598,6 +598,10 @@ class Measurements final
         std::vector<std::size_t> samples(num_samples * n_wires);
         this->setRandomSeed();
         DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
+        // The Python layer expects a 2D array with dimensions (n_samples x
+        // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -
+        // j)` `s` being the "slow" row index and `j` being the "fast" column
+        // index
         for (std::size_t s = 0; s < num_samples; s++) {
             const std::size_t idx = drv();
             for (std::size_t j = 0; j < n_wires; j++) {

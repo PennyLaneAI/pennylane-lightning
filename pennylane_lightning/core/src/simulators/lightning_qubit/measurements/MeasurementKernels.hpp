@@ -19,7 +19,9 @@
 #pragma once
 
 #include <complex>
+#include <random>
 #include <stack>
+#include <utility>
 #include <vector>
 
 #include "BitUtil.hpp"
