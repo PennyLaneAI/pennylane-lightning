@@ -36,6 +36,7 @@
 #include "GateOperation.hpp"
 #include "StateVectorBase.hpp"
 #include "Util.hpp"
+#include "UtilKokkos.hpp"
 
 #include "CPUMemoryModel.hpp"
 
@@ -43,6 +44,7 @@
 namespace {
 using namespace Pennylane::Gates::Constant;
 using namespace Pennylane::LightningKokkos::Functors;
+using namespace Pennylane::LightningKokkos::Util;
 using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
 using Pennylane::Util::array_contains;
@@ -151,12 +153,8 @@ class StateVectorKokkos final
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
         initZeros();
-        KokkosSizeTVector d_indices("d_indices", indices.size());
-        KokkosVector d_values("d_values", values.size());
-        Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
-                                         indices.data(), indices.size()));
-        Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
-                                        values.data(), values.size()));
+        auto d_indices = vector2view(indices);
+        auto d_values = vector2view(values);
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
@@ -283,19 +281,13 @@ class StateVectorKokkos final
             PL_ABORT_IF(gate_matrix.empty(),
                         std::string("Operation does not exist for ") + opName +
                             std::string(" and no matrix provided."));
-            KokkosVector matrix("gate_matrix", gate_matrix.size());
-            Kokkos::deep_copy(
-                matrix, UnmanagedConstComplexHostView(gate_matrix.data(),
-                                                      gate_matrix.size()));
-            return applyMultiQubitOp(matrix, wires, inverse);
+            return applyMultiQubitOp(vector2view(gate_matrix), wires, inverse);
         }
     }
 
     template <bool inverse = false>
     void applyControlledGlobalPhase(const std::vector<ComplexT> &diagonal) {
-        KokkosVector diagonal_("diagonal_", diagonal.size());
-        Kokkos::deep_copy(diagonal_, UnmanagedConstComplexHostView(
-                                         diagonal.data(), diagonal.size()));
+        auto diagonal_ = vector2view(diagonal);
         auto two2N = BaseType::getLength();
         auto dataview = getView();
         Kokkos::parallel_for(
@@ -587,15 +579,11 @@ class StateVectorKokkos final
      * @brief Get underlying data vector
      */
     [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
+        return view2vector(getView());
     }
 
     [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
+        return view2vector(getView());
     }
 
     /**
