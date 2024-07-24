@@ -80,7 +80,7 @@ class Measurements final
     auto probs() -> std::vector<PrecisionT> {
         const ComplexT *arr_data = this->_statevector.getData();
         const std::size_t n_probs = this->_statevector.getLength();
-        std::vector<PrecisionT> probabilities(n_probs, 0);
+        std::vector<PrecisionT> probabilities(n_probs);
         auto *probs = probabilities.data();
 #if defined PL_LQ_KERNEL_OMP && defined _OPENMP
 #pragma omp parallel for
