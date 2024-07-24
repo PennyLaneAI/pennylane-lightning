@@ -61,8 +61,7 @@ inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
     using UnmanagedView = Kokkos::View<const T *, Kokkos::HostSpace,
                                        Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     Kokkos::View<T *> view("vec", vec.size());
-    const auto view_ = UnmanagedView(vec.data(), vec.size());
-    Kokkos::deep_copy(view, view_);
+    Kokkos::deep_copy(view, UnmanagedView(vec.data(), vec.size()));
     return view;
 }
 
