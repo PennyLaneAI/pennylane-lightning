@@ -494,7 +494,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
             const auto indices =
                 parity2indices(k, parity, rev_wire_shifts, n_contr, rev_wires);
-            std::vector<std::complex<PrecisionT>> coeffs_in(dim, 0.0);
+            std::vector<std::complex<PrecisionT>> coeffs_in(dim);
             for (std::size_t i = 0; i < dim; i++) {
                 coeffs_in[i] = arr[indices[i]];
             }

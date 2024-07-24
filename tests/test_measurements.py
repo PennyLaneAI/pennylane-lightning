@@ -240,6 +240,29 @@ class TestProbs:
         ):
             assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
+    @pytest.mark.parametrize("n_qubits", range(4, 25, 4))
+    @pytest.mark.parametrize("n_targets", list(range(1, 9)) + list(range(9, 25, 4)))
+    def test_probs_many_wires(self, n_qubits, n_targets, tol):
+        """Test probs measuring many wires of a random quantum state."""
+        if n_targets >= n_qubits:
+            pytest.skip("Number of targets cannot exceed the number of wires.")
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            return qml.probs(wires=range(0, n_targets))
+
+        res = qml.QNode(circuit, dev)()
+        ref = qml.QNode(circuit, dq)()
+
+        assert np.allclose(res, ref, atol=tol, rtol=0)
+
 
 class TestExpval:
     """Tests for the expval function"""
