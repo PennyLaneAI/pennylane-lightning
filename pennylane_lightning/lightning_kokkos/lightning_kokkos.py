@@ -16,7 +16,6 @@ r"""
 This module contains the :class:`~.LightningKokkos` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-from dataclasses import replace
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple, Union
@@ -24,25 +23,13 @@ from typing import Callable, Optional, Sequence, Tuple, Union
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.devices.preprocess import (
-    decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    validate_adjoint_trainable_params,
-    validate_device_wires,
-    validate_measurements,
-    validate_observables,
-)
-from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
-from pennylane.ops import Prod, SProd, Sum
+from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._state_vector import LightningStateVector
+from ._state_vector import LightningKokkosStateVector
 
 try:
     # pylint: disable=import-error, no-name-in-module
@@ -62,7 +49,6 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 def simulate(  # pylint: disable=unused-argument
     circuit: QuantumScript,
     state: LightningKokkosStateVector,
-    mcmc: dict = None,
     postselect_mode: str = None,
 ) -> Result:
     """Simulate a single quantum script.
@@ -80,32 +66,6 @@ def simulate(  # pylint: disable=unused-argument
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
     return 0
-    # if mcmc is None:
-    #     mcmc = {}
-    # state.reset_state()
-    # has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
-    # if circuit.shots and has_mcm:
-    #     results = []
-    #     aux_circ = qml.tape.QuantumScript(
-    #         circuit.operations,
-    #         circuit.measurements,
-    #         shots=[1],
-    #         trainable_params=circuit.trainable_params,
-    #     )
-    #     for _ in range(circuit.shots.total_shots):
-    #         state.reset_state()
-    #         mid_measurements = {}
-    #         final_state = state.get_final_state(
-    #             aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-    #         )
-    #         results.append(
-    #             LightningMeasurements(final_state, **mcmc).measure_final_state(
-    #                 aux_circ, mid_measurements=mid_measurements
-    #             )
-    #         )
-    #     return tuple(results)
-    # final_state = state.get_final_state(circuit)
-    # return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
 def jacobian(  # pylint: disable=unused-argument
@@ -125,11 +85,6 @@ def jacobian(  # pylint: disable=unused-argument
         TensorLike: The Jacobian of the quantum script
     """
     return 0
-    # if wire_map is not None:
-    #     [circuit], _ = qml.map_wires(circuit, wire_map)
-    # state.reset_state()
-    # final_state = state.get_final_state(circuit)
-    # return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
 
 
 def simulate_and_jacobian(  # pylint: disable=unused-argument
@@ -151,11 +106,6 @@ def simulate_and_jacobian(  # pylint: disable=unused-argument
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
     return 0
-    # if wire_map is not None:
-    #     [circuit], _ = qml.map_wires(circuit, wire_map)
-    # res = simulate(circuit, state)
-    # jac = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
-    # return res, jac
 
 
 def vjp(  # pylint: disable=unused-argument
@@ -182,13 +132,6 @@ def vjp(  # pylint: disable=unused-argument
         TensorLike: The VJP of the quantum script
     """
     return 0
-    # if wire_map is not None:
-    #     [circuit], _ = qml.map_wires(circuit, wire_map)
-    # state.reset_state()
-    # final_state = state.get_final_state(circuit)
-    # return LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
-    #     circuit, cotangents
-    # )
 
 
 def simulate_and_vjp(  # pylint: disable=unused-argument
@@ -216,11 +159,6 @@ def simulate_and_vjp(  # pylint: disable=unused-argument
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
     return 0
-    # if wire_map is not None:
-    #     [circuit], _ = qml.map_wires(circuit, wire_map)
-    # res = simulate(circuit, state)
-    # _vjp = LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(circuit, cotangents)
-    # return res, _vjp
 
 
 _operations = frozenset(
@@ -312,27 +250,13 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
-    # These thresholds are adapted from `lightning_base.py`
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
-    if isinstance(op, qml.QFT):
-        return len(op.wires) < 10
-    if isinstance(op, qml.GroverOperator):
-        return len(op.wires) < 13
-
-    # As ControlledQubitUnitary == C(QubitUnitrary),
-    # it can be removed from `_operations` to keep
-    # consistency with `lightning_kokkos.toml`
-    if isinstance(op, qml.ControlledQubitUnitary):
-        return True
-
-    return op.name in _operations
+    return 0
 
 
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``
     with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return 0
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -343,40 +267,16 @@ def accepted_observables(obs: Operator) -> bool:
 def adjoint_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.kokkos``
     when using the adjoint differentiation method."""
-    if isinstance(obs, qml.Projector):
-        return False
-
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
-
-    if isinstance(obs, SProd):
-        return adjoint_observables(obs.base)
-
-    if isinstance(obs, (Sum, Prod)):
-        return all(adjoint_observables(o) for o in obs)
-
-    return obs.name in _observables
+    return 0
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
-    return isinstance(mp, qml.measurements.ExpectationMP)
+    return 0
 
 
 def _supports_adjoint(circuit):
-    if circuit is None:
-        return True
-
-    prog = TransformProgram()
-    _add_adjoint_transforms(prog)
-
-    try:
-        prog((circuit,))
-    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
-        return False
-    return True
+    return 0
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
@@ -392,20 +292,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     """
 
     name = "adjoint + lightning.kokkos"
-    program.add_transform(no_sampling, name=name)
-    program.add_transform(
-        decompose,
-        stopping_condition=adjoint_ops,
-        stopping_condition_shots=stopping_condition_shots,
-        name=name,
-        skip_initial_state_prep=False,
-    )
-    program.add_transform(validate_observables, accepted_observables, name=name)
-    program.add_transform(
-        validate_measurements, analytic_measurements=adjoint_measurements, name=name
-    )
-    program.add_transform(qml.transforms.broadcast_expand)
-    program.add_transform(validate_adjoint_trainable_params)
+    return 0
 
 
 def _kokkos_configuration():
@@ -437,7 +324,7 @@ class LightningKokkos(Device):
 
     # pylint: disable=too-many-instance-attributes
 
-    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+    _device_options = ("rng", "c_dtype", "batch_obs", "kernel_name")
     _new_API = True
 
     # Device specific options
@@ -461,8 +348,6 @@ class LightningKokkos(Device):
         *,
         c_dtype=np.complex128,
         shots=None,
-        kernel_name="Local",
-        num_burnin=100,
         batch_obs=False,
         # Kokkos arguments
         sync=True,
@@ -482,7 +367,7 @@ class LightningKokkos(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
+        self._statevector = LightningKokkosStateVector(num_wires=len(self.wires), dtype=c_dtype)
 
         # TODO: Investigate usefulness of creating numpy random generator
         seed = np.random.randint(0, high=10000000) if seed == "global" else seed
@@ -490,24 +375,6 @@ class LightningKokkos(Device):
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
-        self._mcmc = mcmc
-        if self._mcmc:
-            if kernel_name not in [
-                "Local",
-                "NonZeroRandom",
-            ]:
-                raise NotImplementedError(
-                    f"The {kernel_name} is not supported and currently "
-                    "only 'Local' and 'NonZeroRandom' kernels are supported."
-                )
-            shots = shots if isinstance(shots, Sequence) else [shots]
-            if any(num_burnin >= s for s in shots):
-                raise ValueError("Shots should be greater than num_burnin.")
-            self._kernel_name = kernel_name
-            self._num_burnin = num_burnin
-        else:
-            self._kernel_name = None
-            self._num_burnin = 0
 
         # Kokkos specific options
         self._kokkos_args = kokkos_args
@@ -531,20 +398,7 @@ class LightningKokkos(Device):
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
-        updated_values = {}
-        if config.gradient_method == "best":
-            updated_values["gradient_method"] = "adjoint"
-        if config.use_device_gradient is None:
-            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
-        if config.grad_on_execution is None:
-            updated_values["grad_on_execution"] = True
-
-        new_device_options = dict(config.device_options)
-        for option in self._device_options:
-            if option not in new_device_options:
-                new_device_options[option] = getattr(self, f"_{option}", None)
-
-        return replace(config, **updated_values, device_options=new_device_options)
+        return 0
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
@@ -565,30 +419,7 @@ class LightningKokkos(Device):
         * Currently does not intrinsically support parameter broadcasting
 
         """
-        exec_config = self._setup_execution_config(execution_config)
-        program = TransformProgram()
-
-        program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
-        program.add_transform(
-            mid_circuit_measurements,
-            device=self,
-            mcm_config=exec_config.mcm_config,
-            interface=exec_config.interface,
-        )
-        program.add_transform(
-            decompose,
-            stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition_shots,
-            skip_initial_state_prep=True,
-            name=self.name,
-        )
-        program.add_transform(qml.transforms.broadcast_expand)
-
-        if exec_config.gradient_method == "adjoint":
-            _add_adjoint_transforms(program)
-        return program, exec_config
+        return 0
 
     # pylint: disable=unused-argument
     def execute(
@@ -605,25 +436,7 @@ class LightningKokkos(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        mcmc = {
-            "mcmc": self._mcmc,
-            "kernel_name": self._kernel_name,
-            "num_burnin": self._num_burnin,
-        }
-        results = []
-        for circuit in circuits:
-            if self._wire_map is not None:
-                [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(
-                simulate(
-                    circuit,
-                    self._statevector,
-                    mcmc=mcmc,
-                    postselect_mode=execution_config.mcm_config.postselect_mode,
-                )
-            )
-
-        return tuple(results)
+        return 0
 
     def supports_derivatives(
         self,
@@ -642,13 +455,7 @@ class LightningKokkos(Device):
             Bool: Whether or not a derivative can be calculated provided the given information
 
         """
-        if execution_config is None and circuit is None:
-            return True
-        if execution_config.gradient_method not in {"adjoint", "best"}:
-            return False
-        if circuit is None:
-            return True
-        return _supports_adjoint(circuit=circuit)
+        return 0
 
     def compute_derivatives(
         self,
@@ -664,12 +471,8 @@ class LightningKokkos(Device):
         Returns:
             Tuple: The jacobian for each trainable parameter
         """
-        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
-        return tuple(
-            jacobian(circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
-            for circuit in circuits
-        )
+        return 0
 
     def execute_and_compute_derivatives(
         self,
@@ -685,14 +488,7 @@ class LightningKokkos(Device):
         Returns:
             tuple: A numeric result of the computation and the gradient.
         """
-        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        results = tuple(
-            simulate_and_jacobian(
-                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
-            )
-            for c in circuits
-        )
-        return tuple(zip(*results))
+        return 0
 
     def supports_vjp(
         self,
@@ -707,7 +503,7 @@ class LightningKokkos(Device):
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
         """
-        return self.supports_derivatives(execution_config, circuit)
+        return 0
 
     def compute_vjp(
         self,
@@ -741,11 +537,7 @@ class LightningKokkos(Device):
         * For ``n`` expectation values, the cotangents must have shape ``(n, batch_size)``. If ``n = 1``,
           then the shape must be ``(batch_size,)``.
         """
-        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        return tuple(
-            vjp(circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
-            for circuit, cots in zip(circuits, cotangents)
-        )
+        return 0
 
     def execute_and_compute_vjp(
         self,
@@ -763,11 +555,4 @@ class LightningKokkos(Device):
         Returns:
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
         """
-        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        results = tuple(
-            simulate_and_vjp(
-                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
-            )
-            for circuit, cots in zip(circuits, cotangents)
-        )
-        return tuple(zip(*results))
+        return 0

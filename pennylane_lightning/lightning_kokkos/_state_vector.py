@@ -25,7 +25,7 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.qubit"]
+        device_name(string): state vector device name. Options: ["lightning.kokkos"]
     """
 
     pass  # pylint: disable=unnecessary-pass
