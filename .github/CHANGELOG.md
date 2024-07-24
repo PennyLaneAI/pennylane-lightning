@@ -40,6 +40,7 @@
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
 * Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
+  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
 
 ### Documentation
 
@@ -64,7 +65,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
+Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 
