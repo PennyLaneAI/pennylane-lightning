@@ -77,7 +77,7 @@ class StateVectorLQubitManaged final
         : BaseType{num_qubits, threading, memory_model},
           data_{exp2(num_qubits), ComplexT{0.0, 0.0},
                 getAllocator<ComplexT>(this->memory_model_)} {
-        setBasisState(0U);
+        data_[0U] = {1.0, 0.0};
     }
 
     /**
@@ -146,8 +146,8 @@ class StateVectorLQubitManaged final
      * @param index Index of the target element.
      */
     void setBasisState(const std::size_t index) {
-        std::fill(data_.begin(), data_.end(), 0);
-        data_[index] = {1, 0};
+        std::fill(data_.begin(), data_.end(), 0.0);
+        data_[index] = {1.0, 0.0};
     }
 
     /**

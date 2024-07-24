@@ -21,6 +21,7 @@ try:
 except ImportError:
     pass
 
+from functools import reduce
 from typing import Callable, List, Union
 
 import numpy as np
@@ -383,8 +384,11 @@ class LightningMeasurements:
         # apply diagonalizing gates
         self._apply_diagonalizing_gates(mps)
 
-        total_indices = self._qubit_state.num_wires
-        wires = qml.wires.Wires(range(total_indices))
+        if self._mcmc:
+            total_indices = self._qubit_state.num_wires
+            wires = qml.wires.Wires(range(total_indices))
+        else:
+            wires = reduce(sum, (mp.wires for mp in mps))
 
         def _process_single_shot(samples):
             processed = []
@@ -404,7 +408,7 @@ class LightningMeasurements:
                 ).astype(int, copy=False)
             else:
                 samples = self._measurement_lightning.generate_samples(
-                    len(wires), shots.total_shots
+                    list(wires), shots.total_shots
                 ).astype(int, copy=False)
         except ValueError as e:
             if str(e) != "probabilities contain NaN":

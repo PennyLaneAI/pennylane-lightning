@@ -237,6 +237,29 @@ class TestProbs:
         ):
             assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
+    @pytest.mark.parametrize("n_qubits", range(4, 25, 4))
+    @pytest.mark.parametrize("n_targets", list(range(1, 9)) + list(range(9, 25, 4)))
+    def test_probs_many_wires(self, n_qubits, n_targets, tol):
+        """Test probs measuring many wires of a random quantum state."""
+        if n_targets >= n_qubits:
+            pytest.skip("Number of targets cannot exceed the number of wires.")
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            return qml.probs(wires=range(0, n_targets))
+
+        res = qml.QNode(circuit, dev)()
+        ref = qml.QNode(circuit, dq)()
+
+        assert np.allclose(res, ref, atol=tol, rtol=0)
+
 
 class TestExpval:
     """Tests for the expval function"""
@@ -664,6 +687,37 @@ class TestSample:
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("seed", range(0, 10))
+    @pytest.mark.parametrize("nwires", range(1, 11))
+    def test_sample_variations(self, qubit_device, nwires, seed):
+        """Tests if `sample(wires)` returns correct statistics."""
+        shots = 20000
+        n_qubits = max(5, nwires + 1)
+        np.random.seed(seed)
+        wires = qml.wires.Wires(np.random.permutation(nwires))
+        state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        state[np.random.randint(0, 2**n_qubits, 1)] += state.size / 10
+        state /= np.linalg.norm(state)
+        ops = [qml.StatePrep(state, wires=range(n_qubits))]
+        tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
+
+        def reshape_samples(samples):
+            return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
+
+        dev = qubit_device(wires=n_qubits, shots=shots)
+        samples = dev.execute(tape)
+        probs = qml.measurements.ProbabilityMP(wires=wires).process_samples(
+            reshape_samples(samples), wire_order=wires
+        )
+
+        dev = qml.device("default.qubit", wires=n_qubits, shots=shots)
+        samples = dev.execute(tape)
+        ref = qml.measurements.ProbabilityMP(wires=wires).process_samples(
+            reshape_samples(samples), wire_order=wires
+        )
+
+        assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
 
 
 @pytest.mark.skipif(
