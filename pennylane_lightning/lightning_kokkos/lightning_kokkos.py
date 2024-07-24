@@ -24,9 +24,7 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
 from ._state_vector import LightningKokkosStateVector
@@ -246,53 +244,6 @@ _observables = frozenset(
     }
 )
 # The set of supported observables.
-
-
-def stopping_condition(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
-    return 0
-
-
-def stopping_condition_shots(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.kokkos``
-    with finite shots."""
-    return 0
-
-
-def accepted_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.kokkos``."""
-    return obs.name in _observables
-
-
-def adjoint_observables(obs: Operator) -> bool:
-    """A function that determines whether or not an observable is supported by ``lightning.kokkos``
-    when using the adjoint differentiation method."""
-    return 0
-
-
-def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
-    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
-    return 0
-
-
-def _supports_adjoint(circuit):
-    return 0
-
-
-def _add_adjoint_transforms(program: TransformProgram) -> None:
-    """Private helper function for ``preprocess`` that adds the transforms specific
-    for adjoint differentiation.
-
-    Args:
-        program (TransformProgram): where we will add the adjoint differentiation transforms
-
-    Side Effects:
-        Adds transforms to the input program.
-
-    """
-
-    name = "adjoint + lightning.kokkos"
-    return 0
 
 
 def _kokkos_configuration():
