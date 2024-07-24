@@ -17,6 +17,9 @@
 
 * LightningQubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
   [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
+
+* Avoid unnecessary memory reset in LightningQubit's state vector class constructor.
+  [(#811)](https://github.com/PennyLaneAI/pennylane-lightning/pull/811)
   
 * Add `generate_samples(wires)` support in LightningQubit.
   [(#809)](https://github.com/PennyLaneAI/pennylane-lightning/pull/809)
