@@ -61,7 +61,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 def simulate(  # pylint: disable=unused-argument
     circuit: QuantumScript,
-    state: LightningStateVector,
+    state: LightningKokkosStateVector,
     mcmc: dict = None,
     postselect_mode: str = None,
 ) -> Result:
@@ -70,9 +70,6 @@ def simulate(  # pylint: disable=unused-argument
     Args:
         circuit (QuantumTape): The single circuit to simulate
         state (LightningStateVector): handle to Lightning state vector
-        mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
-            parameters: mcmc, kernel_name, num_burnin. Descriptions of
-            these fields are found in :class:`~.LightningKokkos`.
         postselect_mode (str): Configuration for handling shots with mid-circuit measurement
             postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
             keep the same number of shots. Default is ``None``.
@@ -112,7 +109,7 @@ def simulate(  # pylint: disable=unused-argument
 
 
 def jacobian(  # pylint: disable=unused-argument
-    circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
+    circuit: QuantumTape, state: LightningKokkosStateVector, batch_obs=False, wire_map=None
 ):
     """Compute the Jacobian for a single quantum script.
 
@@ -136,13 +133,13 @@ def jacobian(  # pylint: disable=unused-argument
 
 
 def simulate_and_jacobian(  # pylint: disable=unused-argument
-    circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
+    circuit: QuantumTape, state: LightningKokkosStateVector, batch_obs=False, wire_map=None
 ):
     """Simulate a single quantum script and compute its Jacobian.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningKokkosStateVector): handle to the Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
             kokkos is built with OpenMP. Default is False.
@@ -164,7 +161,7 @@ def simulate_and_jacobian(  # pylint: disable=unused-argument
 def vjp(  # pylint: disable=unused-argument
     circuit: QuantumTape,
     cotangents: Tuple[Number],
-    state: LightningStateVector,
+    state: LightningKokkosStateVector,
     batch_obs=False,
     wire_map=None,
 ):
@@ -175,7 +172,7 @@ def vjp(  # pylint: disable=unused-argument
             have shape matching the output shape of the corresponding circuit. If
             the circuit has a single output, ``cotangents`` may be a single number,
             not an iterable of numbers.
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningKokkosStateVector): handle to the Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the VJP. This value is only relevant when the lightning
             kokkos is built with OpenMP.
@@ -197,7 +194,7 @@ def vjp(  # pylint: disable=unused-argument
 def simulate_and_vjp(  # pylint: disable=unused-argument
     circuit: QuantumTape,
     cotangents: Tuple[Number],
-    state: LightningStateVector,
+    state: LightningKokkosStateVector,
     batch_obs=False,
     wire_map=None,
 ):
@@ -208,7 +205,7 @@ def simulate_and_vjp(  # pylint: disable=unused-argument
             have shape matching the output shape of the corresponding circuit. If
             the circuit has a single output, ``cotangents`` may be a single number,
             not an iterable of numbers.
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningKokkosStateVector): handle to the Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning
             kokkos is built with OpenMP.
@@ -464,8 +461,6 @@ class LightningKokkos(Device):
         *,
         c_dtype=np.complex128,
         shots=None,
-        seed="global",
-        mcmc=False,
         kernel_name="Local",
         num_burnin=100,
         batch_obs=False,

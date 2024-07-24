@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state-vector manipulation.
+Class implementation for lightning_kokkos state-vector manipulation.
 """
 
 
-class LightningStateVector:  # pylint: disable=too-few-public-methods
-    """Lightning state-vector class.
+class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
+    """Lightning Kokkos state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
 
