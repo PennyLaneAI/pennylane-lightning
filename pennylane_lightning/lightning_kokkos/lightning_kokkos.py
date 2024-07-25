@@ -26,8 +26,10 @@ from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch
+from pennylane.measurements import MidMeasureMP
 
 from ._state_vector import LightningKokkosStateVector
+from ._measurements import LightningKokkosMeasurements
 
 try:
     # pylint: disable=import-error, no-name-in-module
@@ -44,9 +46,10 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(  # pylint: disable=unused-argument
+def simulate(
     circuit: QuantumScript,
     state: LightningKokkosStateVector,
+    # mcmc: dict = None, # L-Kokkos has no support for MCMC sampling
     postselect_mode: str = None,
 ) -> Result:
     """Simulate a single quantum script.
@@ -63,7 +66,33 @@ def simulate(  # pylint: disable=unused-argument
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    return 0
+    if mcmc is None:
+        mcmc = {}
+    state.reset_state()
+    has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+    if circuit.shots and has_mcm:
+        results = []
+        aux_circ = qml.tape.QuantumScript(
+            circuit.operations,
+            circuit.measurements,
+            shots=[1],
+            trainable_params=circuit.trainable_params,
+        )
+        for _ in range(circuit.shots.total_shots):
+            state.reset_state()
+            mid_measurements = {}
+            final_state = state.get_final_state(
+                aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+            )
+            results.append(
+                LightningKokkosMeasurements(final_state, **mcmc).measure_final_state(
+                    aux_circ, mid_measurements=mid_measurements
+                )
+            )
+        return tuple(results)
+    
+    final_state = state.get_final_state(circuit)
+    return LightningKokkosMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
 
 def jacobian(  # pylint: disable=unused-argument
@@ -320,9 +349,14 @@ class LightningKokkos(Device):
 
         self._statevector = LightningKokkosStateVector(num_wires=len(self.wires), dtype=c_dtype)
 
+        #  ----------------------------------------
+        # Original:
         # TODO: Investigate usefulness of creating numpy random generator
-        seed = np.random.randint(0, high=10000000) if seed == "global" else seed
-        self._rng = np.random.default_rng(seed)
+        # seed = np.random.randint(0, high=10000000) if seed == "global" else seed
+        # self._rng = np.random.default_rng(seed)
+        
+        # Specific for Kokkos:
+        #  ----------------------------------------        
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs

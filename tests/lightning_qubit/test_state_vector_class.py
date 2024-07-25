@@ -24,13 +24,15 @@ from conftest import LightningDevice, device_name  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+if device_name == 'lightning.qubit':
+    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+    
+if device_name == 'lightning.kokkos':
+    from pennylane_lightning.lightning_kokkos._state_vector import LightningKokkosStateVector as LightningStateVector
 
-if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
 
-if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if device_name not in ("lightning.qubit", "lightning.kokkos"):
+    pytest.skip("Exclusive tests for lightning.qubit or lightning.kokkos. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -38,7 +40,8 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 @pytest.mark.parametrize("num_wires", range(4))
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-@pytest.mark.parametrize("device_name", ["lightning.qubit"])
+# @pytest.mark.parametrize("device_name", ["lightning.qubit"])
+@pytest.mark.parametrize("device_name", [device_name])
 def test_device_name_and_init(num_wires, dtype, device_name):
     """Test the class initialization and returned properties."""
     state_vector = LightningStateVector(num_wires, dtype=dtype, device_name=device_name)
