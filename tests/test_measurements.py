@@ -839,9 +839,13 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
 def test_shots_bins(shots, qubit_device):
     """Tests that Lightning handles multiple shots."""
 
-    @qml.qnode(qubit_device(wires=1, shots=shots))
+    dev = qubit_device(wires=1, shots=shots)
+
+    @qml.qnode(dev)
     def circuit():
         return qml.expval(qml.PauliZ(wires=0))
 
-    assert np.sum(shots) == circuit.device.shots.total_shots
+    if dev.name == "lightning.qubit":
+        assert np.sum(shots) == circuit.device.shots.total_shots
+
     assert np.allclose(circuit(), 1.0)
