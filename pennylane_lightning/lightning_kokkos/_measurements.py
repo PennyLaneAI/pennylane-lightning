@@ -54,35 +54,15 @@ class LightningKokkosMeasurements:
 
     Args:
         qubit_state(LightningStateVector): Lightning state-vector class containing the state vector to be measured.
-        mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
-            sampling method when generating samples.
-        kernel_name (str): name of MCMC transition kernel. The current version supports
-            two kernels: ``"Local"`` and ``"NonZeroRandom"``.
-            The local kernel conducts a bit-flip local transition between states.
-            The local kernel generates a random qubit site and then generates a random
-            number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
-            randomly transits between states that have nonzero probability.
-        num_burnin (int): number of MCMC steps that will be dropped. Increasing this value will
-            result in a closer approximation but increased runtime.
     """
 
     def __init__(
         self,
         kokkos_state,
-        mcmc: bool = None,
-        kernel_name: str = None,
-        num_burnin: int = None,
     ) -> None:
         self._qubit_state = kokkos_state
         self._dtype = kokkos_state.dtype
         self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)
-        self._mcmc = mcmc
-        self._kernel_name = kernel_name
-        self._num_burnin = num_burnin
-        if self._mcmc and not self._kernel_name:
-            self._kernel_name = "Local"
-        if self._mcmc and not self._num_burnin:
-            self._num_burnin = 100
 
     @property
     def qubit_state(self):
@@ -384,18 +364,18 @@ class LightningKokkosMeasurements:
         # apply diagonalizing gates
         self._apply_diagonalizing_gates(mps)
 
-        if self._mcmc:
-            total_indices = self._qubit_state.num_wires
-            wires = qml.wires.Wires(range(total_indices))
-        else:
-            #  ----------------------------------------
-            # Original:
-            # wires = reduce(sum, (mp.wires for mp in mps))
-
-            # Specific for Kokkos:
-            total_indices = self._qubit_state.num_wires
-            wires = qml.wires.Wires(range(total_indices))
-            #  ----------------------------------------
+        #  ----------------------------------------
+        # Original:
+        # if self._mcmc:
+        #     total_indices = self._qubit_state.num_wires
+        #     wires = qml.wires.Wires(range(total_indices))
+        # else:
+        #     wires = reduce(sum, (mp.wires for mp in mps))
+            
+        # Specific for Kokkos:
+        total_indices = self._qubit_state.num_wires
+        wires = qml.wires.Wires(range(total_indices))
+        #  ----------------------------------------
 
         def _process_single_shot(samples):
             processed = []
@@ -416,14 +396,22 @@ class LightningKokkosMeasurements:
                 # better to call sample_state just once with total_shots, then use
                 # the shot_range keyword argument
                 try:
-                    if self._mcmc:
-                        samples = self._measurement_lightning.generate_mcmc_samples(
-                            len(wires), self._kernel_name, self._num_burnin, s
-                        ).astype(int, copy=False)
-                    else:
-                        samples = self._measurement_lightning.generate_samples(
-                            list(wires), s
-                        ).astype(int, copy=False)
+                    #  ----------------------------------------
+                    # Original:
+                    # if self._mcmc:
+                    #     samples = self._measurement_lightning.generate_mcmc_samples(
+                    #         len(wires), self._kernel_name, self._num_burnin, s
+                    #     ).astype(int, copy=False)
+                    # else:
+                    #     samples = self._measurement_lightning.generate_samples(
+                    #         list(wires), s
+                    #     ).astype(int, copy=False)
+                    
+                    # Specific for Kokkos:
+                    samples = self._measurement_lightning.generate_samples(
+                        len(wires), s
+                    ).astype(int, copy=False)
+                    #  ----------------------------------------
                 except ValueError as e:
                     if str(e) != "probabilities contain NaN":
                         raise e
@@ -434,23 +422,23 @@ class LightningKokkosMeasurements:
             return tuple(zip(*processed_samples))
 
         try:
-            if self._mcmc:
-                samples = self._measurement_lightning.generate_mcmc_samples(
-                    len(wires), self._kernel_name, self._num_burnin, shots.total_shots
-                ).astype(int, copy=False)
-            else:
-                #  ----------------------------------------
-                # Original:
-                # samples = self._measurement_lightning.generate_samples(
-                #     list(wires), shots.total_shots
-                # ).astype(int, copy=False)
-
-                # Specific for Kokkos:
-                samples = self._measurement_lightning.generate_samples(
-                    len(wires), shots.total_shots
-                ).astype(int, copy=False)
-                #  ----------------------------------------
-
+            #  ----------------------------------------
+            # Original:
+            # if self._mcmc:
+            #     samples = self._measurement_lightning.generate_mcmc_samples(
+            #         len(wires), self._kernel_name, self._num_burnin, shots.total_shots
+            #     ).astype(int, copy=False)
+            # else:
+            #     samples = self._measurement_lightning.generate_samples(
+            #         list(wires), shots.total_shots
+            #     ).astype(int, copy=False)
+                
+            # Specific for Kokkos:
+            samples = self._measurement_lightning.generate_samples(
+                len(wires), shots.total_shots
+            ).astype(int, copy=False)
+            #  ----------------------------------------
+                
         except ValueError as e:
             if str(e) != "probabilities contain NaN":
                 raise e

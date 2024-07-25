@@ -49,7 +49,6 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 def simulate(
     circuit: QuantumScript,
     state: LightningKokkosStateVector,
-    # mcmc: dict = None, # L-Kokkos has no support for MCMC sampling
     postselect_mode: str = None,
 ) -> Result:
     """Simulate a single quantum script.
@@ -66,8 +65,6 @@ def simulate(
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    if mcmc is None:
-        mcmc = {}
     state.reset_state()
     has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
     if circuit.shots and has_mcm:
@@ -85,14 +82,14 @@ def simulate(
                 aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
             )
             results.append(
-                LightningKokkosMeasurements(final_state, **mcmc).measure_final_state(
+                LightningKokkosMeasurements(final_state).measure_final_state(
                     aux_circ, mid_measurements=mid_measurements
                 )
             )
         return tuple(results)
 
     final_state = state.get_final_state(circuit)
-    return LightningKokkosMeasurements(final_state, **mcmc).measure_final_state(circuit)
+    return LightningKokkosMeasurements(final_state).measure_final_state(circuit)
 
 
 def jacobian(  # pylint: disable=unused-argument
@@ -328,10 +325,6 @@ class LightningKokkos(Device):
         *,
         c_dtype=np.complex128,
         shots=None,
-        # seed="global", Specific for LQubit
-        # mcmc=False, Specific for LQubit
-        # kernel_name="Local", Specific for LQubit
-        # num_burnin=100, Specific for LQubit
         batch_obs=False,
         # Kokkos arguments
         sync=True,
@@ -352,15 +345,6 @@ class LightningKokkos(Device):
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
         self._statevector = LightningKokkosStateVector(num_wires=len(self.wires), dtype=c_dtype)
-
-        #  ----------------------------------------
-        # Original:
-        # TODO: Investigate usefulness of creating numpy random generator
-        # seed = np.random.randint(0, high=10000000) if seed == "global" else seed
-        # self._rng = np.random.default_rng(seed)
-
-        # Specific for LKokkos:
-        #  ----------------------------------------
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
