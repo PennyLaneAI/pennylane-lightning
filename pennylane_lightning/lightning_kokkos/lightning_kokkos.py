@@ -24,12 +24,12 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch
-from pennylane.measurements import MidMeasureMP
 
-from ._state_vector import LightningKokkosStateVector
 from ._measurements import LightningKokkosMeasurements
+from ._state_vector import LightningKokkosStateVector
 
 try:
     # pylint: disable=import-error, no-name-in-module
@@ -90,7 +90,7 @@ def simulate(
                 )
             )
         return tuple(results)
-    
+
     final_state = state.get_final_state(circuit)
     return LightningKokkosMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
@@ -328,6 +328,10 @@ class LightningKokkos(Device):
         *,
         c_dtype=np.complex128,
         shots=None,
+        # seed="global", Specific for LQubit
+        # mcmc=False, Specific for LQubit
+        # kernel_name="Local", Specific for LQubit
+        # num_burnin=100, Specific for LQubit
         batch_obs=False,
         # Kokkos arguments
         sync=True,
@@ -354,9 +358,9 @@ class LightningKokkos(Device):
         # TODO: Investigate usefulness of creating numpy random generator
         # seed = np.random.randint(0, high=10000000) if seed == "global" else seed
         # self._rng = np.random.default_rng(seed)
-        
-        # Specific for Kokkos:
-        #  ----------------------------------------        
+
+        # Specific for LKokkos:
+        #  ----------------------------------------
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs

@@ -42,7 +42,6 @@ from pennylane_lightning.core._serialize import global_phase_diagonal
 from ._measurements import LightningKokkosMeasurements
 
 
-
 class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
     """Lightning Kokkos state-vector class.
 

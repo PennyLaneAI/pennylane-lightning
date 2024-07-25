@@ -19,7 +19,7 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import THETA, PHI, LightningDevice, device_name  # tested device
+from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
@@ -30,16 +30,23 @@ try:
 except ImportError:
     pass
 
-if device_name == 'lightning.qubit':
+if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-    
-if device_name == 'lightning.kokkos':
-    from pennylane_lightning.lightning_kokkos._measurements import LightningKokkosMeasurements as LightningMeasurements
-    from pennylane_lightning.lightning_kokkos._state_vector import LightningKokkosStateVector as LightningStateVector
+
+if device_name == "lightning.kokkos":
+    from pennylane_lightning.lightning_kokkos._measurements import (
+        LightningKokkosMeasurements as LightningMeasurements,
+    )
+    from pennylane_lightning.lightning_kokkos._state_vector import (
+        LightningKokkosStateVector as LightningStateVector,
+    )
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
-    pytest.skip("Exclusive tests for lightning.qubit or lightning.kokkos. Skipping.", allow_module_level=True)
+    pytest.skip(
+        "Exclusive tests for lightning.qubit or lightning.kokkos. Skipping.",
+        allow_module_level=True,
+    )
 
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
