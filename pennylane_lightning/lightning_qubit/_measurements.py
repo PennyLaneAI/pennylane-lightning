@@ -421,8 +421,8 @@ class LightningMeasurements:
         # split samples w.r.t. the shots
         processed_samples = []
         for lower, upper in shots.bins():
-            shot = _process_single_shot(samples[..., lower:upper, :])
-            processed_samples.append(shot)
+            result = _process_single_shot(samples[..., lower:upper, :])
+            processed_samples.append(result)
 
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]

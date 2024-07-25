@@ -830,11 +830,10 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     validate_measurements(measure_f, shots, results1, results2)
 
 
-# TODO: Add LK and LGPU after migrating to the new device API
 # TODO: Add LT after extending the support for shots_vector
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="lightning.qubit only has support for vector_shots",
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support shot vectors.",
 )
 @pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
 def test_shots_bins(shots, qubit_device):
