@@ -450,12 +450,17 @@ Authors
 
 Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
-If you are doing research using PennyLane and Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
+If you are using PennyLane and Lightning for research, please cite `[1] <https://arxiv.org/abs/1811.04968>`_ and `[2] <https://arxiv.org/pdf/2403.02512>`_:
 
-    Ville Bergholm, Josh Izaac, Maria Schuld, Christian Gogolin, M. Sohaib Alam, Shahnawaz Ahmed,
+    [1] Ville Bergholm, Josh Izaac, Maria Schuld, Christian Gogolin, M. Sohaib Alam, Shahnawaz Ahmed,
     Juan Miguel Arrazola, Carsten Blank, Alain Delgado, Soran Jahangiri, Keri McKiernan, Johannes Jakob Meyer,
     Zeyue Niu, Antal Száva, and Nathan Killoran.
-    *PennyLane: Automatic differentiation of hybrid quantum-classical computations.* 2018. arXiv:1811.04968
+    *PennyLane: Automatic differentiation of hybrid quantum-classical computations.* 2018. `arXiv:1811.04968 <https://arxiv.org/abs/1811.04968>`_
+
+    [2] Ali Asadi, Amintor Dusko, Chae-Yeun Park, Vincent Michaud-Rioux, Isidor Schoch, Shuli Shu, 
+    Trevor Vincent, and Lee James O'Riordan.
+    *Hybrid quantum programming with PennyLane Lightning on HPC platforms.* 2024. `arXiv:2403.02512 <https://arxiv.org/abs/2403.02512>`_
+
 
 .. support-start-inclusion-marker-do-not-remove
 
