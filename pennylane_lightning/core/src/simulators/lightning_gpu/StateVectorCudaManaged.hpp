@@ -1359,6 +1359,7 @@ class StateVectorCudaManaged
             /* const int32_t* */ ctrlsInt.data(),
             /* const int32_t* */ nullptr,
             /* const uint32_t */ ctrls.size()));
+	PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(BaseType::getDataBuffer().getDevTag().getStreamID()));
     }
 
     /**
@@ -1419,6 +1420,8 @@ class StateVectorCudaManaged
             /* custatevecComputeType_t */ compute_type,
             /* std::size_t* */ &extraWorkspaceSizeInBytes));
 
+	    PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(BaseType::getDataBuffer().getDevTag().getStreamID()));
+
         // allocate external workspace if necessary
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
@@ -1445,6 +1448,8 @@ class StateVectorCudaManaged
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* std::size_t */ extraWorkspaceSizeInBytes));
+	
+	PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(BaseType::getDataBuffer().getDevTag().getStreamID()));
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
             PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
