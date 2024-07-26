@@ -371,7 +371,7 @@ class LightningKokkosMeasurements:
         #     wires = qml.wires.Wires(range(total_indices))
         # else:
         #     wires = reduce(sum, (mp.wires for mp in mps))
-            
+
         # Specific for Kokkos:
         total_indices = self._qubit_state.num_wires
         wires = qml.wires.Wires(range(total_indices))
@@ -406,11 +406,11 @@ class LightningKokkosMeasurements:
                     #     samples = self._measurement_lightning.generate_samples(
                     #         list(wires), s
                     #     ).astype(int, copy=False)
-                    
+
                     # Specific for Kokkos:
-                    samples = self._measurement_lightning.generate_samples(
-                        len(wires), s
-                    ).astype(int, copy=False)
+                    samples = self._measurement_lightning.generate_samples(len(wires), s).astype(
+                        int, copy=False
+                    )
                     #  ----------------------------------------
                 except ValueError as e:
                     if str(e) != "probabilities contain NaN":
@@ -432,13 +432,13 @@ class LightningKokkosMeasurements:
             #     samples = self._measurement_lightning.generate_samples(
             #         list(wires), shots.total_shots
             #     ).astype(int, copy=False)
-                
+
             # Specific for Kokkos:
             samples = self._measurement_lightning.generate_samples(
                 len(wires), shots.total_shots
             ).astype(int, copy=False)
             #  ----------------------------------------
-                
+
         except ValueError as e:
             if str(e) != "probabilities contain NaN":
                 raise e
