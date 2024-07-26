@@ -26,6 +26,7 @@
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <random>
 #include <span>
 #include <stdexcept>
 #include <unordered_map>
