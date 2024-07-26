@@ -51,6 +51,9 @@
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
+* Update the Catalyst-specific wrapping class for Lightning Kokkos to track Catalyst's new support for MCM seeding.
+  [(819)](https://github.com/PennyLaneAI/pennylane-lightning/pull/819)
+
 ### Documentation
 
 ### Bug fixes
@@ -74,7 +77,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu, Paul Haochen Wang
 
 ---
 
