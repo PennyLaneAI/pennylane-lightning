@@ -135,29 +135,8 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         [0.+0.j 1.+0.j]
         """
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
-        state = self._asarray(state, dtype=self.dtype)
         self.sync_d2h(state)
         return state
-
-    @staticmethod
-    def _asarray(arr, dtype=None):
-        arr = np.asarray(arr)  # arr is not copied
-
-        if arr.dtype.kind not in ["f", "c"]:
-            return arr
-
-        if not dtype:
-            dtype = arr.dtype
-
-        # We allocate a new aligned memory and copy data to there if alignment
-        # or dtype mismatches
-        # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned) even for
-        # numpy allocated memory as the memory location happens to be aligned.
-        if arr.dtype != dtype:
-            new_arr = allocate_aligned_array(arr.size, np.dtype(dtype), False).reshape(arr.shape)
-            np.copyto(new_arr, arr)
-            arr = new_arr
-        return arr
 
     def sync_h2d(self, state_vector):
         """Copy the state vector data on host provided by the user to the state
