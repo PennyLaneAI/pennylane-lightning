@@ -15,11 +15,26 @@
 
 ### Improvements
 
+* Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
+  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
+
+* Shot batching is made more efficient by executing all the shots in one go on LightningQubit.
+  [#814](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
+
+* LightningQubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
+  [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
+
+* Avoid unnecessary memory reset in LightningQubit's state vector class constructor.
+  [(#811)](https://github.com/PennyLaneAI/pennylane-lightning/pull/811)
+
 * Add `generate_samples(wires)` support in LightningQubit.
   [(#809)](https://github.com/PennyLaneAI/pennylane-lightning/pull/809)
-  
+
 * Optimize the OpenMP parallelization of Lightning-Qubit's `probs` for all number of targets.
   [(#807)](https://github.com/PennyLaneAI/pennylane-lightning/pull/807)
+
+* Optimize `probs(wires)` of Lightning-Kokkos using various kernels. Which kernel is to be used depends on the device, number of qubits and number of target wires.
+  [(#802)](https://github.com/PennyLaneAI/pennylane-lightning/pull/802)
 
 * Add GPU device compute capability check for Lightning-Tensor.
   [(#803)](https://github.com/PennyLaneAI/pennylane-lightning/pull/803)
@@ -38,9 +53,6 @@
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
-
-* Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
-  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
 
 ### Documentation
 
@@ -65,7 +77,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
 
 ---
 

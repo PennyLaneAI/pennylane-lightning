@@ -23,7 +23,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
-from pennylane.measurements import Expectation, Variance
+from pennylane.measurements import Expectation, Shots, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -236,6 +236,29 @@ class TestProbs:
             match="Lightning does not currently support out-of-order indices for probabilities",
         ):
             assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
+    @pytest.mark.parametrize("n_qubits", range(4, 25, 4))
+    @pytest.mark.parametrize("n_targets", list(range(1, 9)) + list(range(9, 25, 4)))
+    def test_probs_many_wires(self, n_qubits, n_targets, tol):
+        """Test probs measuring many wires of a random quantum state."""
+        if n_targets >= n_qubits:
+            pytest.skip("Number of targets cannot exceed the number of wires.")
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            return qml.probs(wires=range(0, n_targets))
+
+        res = qml.QNode(circuit, dev)()
+        ref = qml.QNode(circuit, dq)()
+
+        assert np.allclose(res, ref, atol=tol, rtol=0)
 
 
 class TestExpval:
@@ -805,3 +828,24 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     results2 = func2(*params)
 
     validate_measurements(measure_f, shots, results1, results2)
+
+
+# TODO: Add LT after extending the support for shots_vector
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support shot vectors.",
+)
+@pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
+def test_shots_bins(shots, qubit_device):
+    """Tests that Lightning handles multiple shots."""
+
+    dev = qubit_device(wires=1, shots=shots)
+
+    @qml.qnode(dev)
+    def circuit():
+        return qml.expval(qml.PauliZ(wires=0))
+
+    if dev.name == "lightning.qubit":
+        assert np.sum(shots) == circuit.device.shots.total_shots
+
+    assert np.allclose(circuit(), 1.0)
