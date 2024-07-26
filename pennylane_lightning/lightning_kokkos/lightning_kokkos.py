@@ -28,6 +28,7 @@ from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch
 
+from ._adjoint_jacobian import LightningKokkosAdjointJacobian
 from ._measurements import LightningKokkosMeasurements
 from ._state_vector import LightningKokkosStateVector
 
@@ -108,7 +109,11 @@ def jacobian(  # pylint: disable=unused-argument
     Returns:
         TensorLike: The Jacobian of the quantum script
     """
-    return 0
+    if wire_map is not None:
+        [circuit], _ = qml.map_wires(circuit, wire_map)
+    state.reset_state()
+    final_state = state.get_final_state(circuit)
+    return LightningKokkosAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
 
 
 def simulate_and_jacobian(  # pylint: disable=unused-argument
