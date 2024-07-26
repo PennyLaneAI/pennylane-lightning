@@ -18,8 +18,11 @@
 * Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
   [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
 
+* Update the Catalyst-specific wrapping class for Lightning Kokkos to track Catalyst's new support for MCM seeding.
+  [(#819)](https://github.com/PennyLaneAI/pennylane-lightning/pull/819)
+
 * Shot batching is made more efficient by executing all the shots in one go on LightningQubit.
-  [#814](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
+  [(#814)](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
 
 * LightningQubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
   [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
@@ -77,7 +80,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
