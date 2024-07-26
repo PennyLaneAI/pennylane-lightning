@@ -106,6 +106,10 @@ auto LightningKokkosSimulator::GetDeviceShots() const -> std::size_t {
     return this->device_shots;
 }
 
+void LightningKokkosSimulator::SetDevicePRNG(std::mt19937 *gen) {
+    this->gen = gen;
+}
+
 /// LCOV_EXCL_START
 void LightningKokkosSimulator::PrintState() {
     using std::cout;
@@ -480,7 +484,7 @@ auto LightningKokkosSimulator::Measure(QubitIdType wire,
     SetDeviceShots(device_shots);
 
     // It represents the measured result, true for 1, false for 0
-    bool mres = Lightning::simulateDraw(probs, postselect);
+    bool mres = Lightning::simulateDraw(probs, postselect, this->gen);
     auto dev_wires = getDeviceWires(wires);
     this->device_sv->collapse(dev_wires[0], mres ? 1 : 0);
     return mres ? this->One() : this->Zero();
