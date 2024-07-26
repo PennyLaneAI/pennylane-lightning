@@ -63,6 +63,8 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
 
     std::size_t device_shots;
 
+    std::mt19937 *gen = nullptr;
+
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningKokkosObsManager<double> obs_manager{};
 
@@ -116,6 +118,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     void StartTapeRecording() override;
     void StopTapeRecording() override;
     void SetDeviceShots(size_t shots) override;
+    void SetDevicePRNG(std::mt19937 *) override;
     [[nodiscard]] auto GetDeviceShots() const -> size_t override;
     void PrintState() override;
     [[nodiscard]] auto Zero() const -> Result override;
