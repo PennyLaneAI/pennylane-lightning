@@ -65,7 +65,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
         mps_state.append_mps_final_state();
         auto ob = NamedObsT("PauliX", {0});
         auto res = measure.var(ob);
-        auto expected = TestType(0.7572222074);
+        auto expected = TestType(0.75722220);
         CHECK(res == Approx(expected));
     }
 
@@ -76,7 +76,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
         mps_state.append_mps_final_state();
         auto ob = NamedObsT("PauliY", {0});
         auto res = measure.var(ob);
-        auto expected = TestType(0.5849835715);
+        auto expected = TestType(0.58498357);
         CHECK(res == Approx(expected));
     }
 
@@ -87,7 +87,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
         mps_state.append_mps_final_state();
         auto ob = NamedObsT("PauliZ", {1});
         auto res = measure.var(ob);
-        auto expected = TestType(0.4068672016);
+        auto expected = TestType(0.40686720);
         CHECK(res == Approx(expected));
     }
 
@@ -98,7 +98,7 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[MPSTNCuda_Var]", float,
         mps_state.append_mps_final_state();
         auto ob = NamedObsT("Hadamard", {1});
         auto res = measure.var(ob);
-        auto expected = TestType(0.2908944989);
+        auto expected = TestType(0.29089449);
         CHECK(res == Approx(expected));
     }
 }
@@ -130,7 +130,7 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[MPSTNCuda_Var]", float,
 
         auto ob = HermitianObsT(matrix, {0});
         auto res = measure.var(ob);
-        auto expected = TestType(1.8499002205); // from default.qubit
+        auto expected = TestType(1.8499002); // from default.qubit
         CHECK(res == Approx(expected));
     }
 }
@@ -163,7 +163,7 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[MPSTNCuda_Var]", float,
 
         auto ob = TensorProdObsT::create({X0, Z1});
         auto res = measure.var(*ob);
-        auto expected = TestType(0.836679);
+        auto expected = TestType(0.83667953);
         CHECK(expected == Approx(res));
     }
 }
@@ -216,6 +216,7 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
              {0.2},
              {0.5},
              {0.5}});
+        mps_state.append_mps_final_state();
 
         auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
 
@@ -287,7 +288,7 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
                                           {ob0, ob1, ob2, ob3, ob4, ob5});
 
         auto res = m.var(*ob);
-        CHECK(res == Approx(1.083014482574645));
+        CHECK(res == Approx(1.0830144));
     }
 
     SECTION("Using 1 Hermitian") {
@@ -300,6 +301,8 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
         mps_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        mps_state.append_mps_final_state();
 
         auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
 
@@ -324,7 +327,7 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
                                           {obs0, obs1});
 
         auto res = m.var(*ob);
-        CHECK(res == Approx(0.24231647427614533));
+        CHECK(res == Approx(0.24231647));
     }
 
     SECTION("Using 2 Hermitians") {
@@ -337,6 +340,8 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
         mps_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
+
+        mps_state.append_mps_final_state();
 
         auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
 
@@ -351,12 +356,10 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
         auto Z1 = std::make_shared<HermitianObsT>(matrix_z,
                                                   std::vector<std::size_t>{1});
 
-        auto ob_term = TensorProdObsT::create({X0, Z1});
-
         auto ob =
             HamiltonianObsT::create({TestType{0.3}, TestType{0.5}}, {X0, Z1});
 
         auto res = m.var(*ob);
-        CHECK(res == Approx(0.093413));
+        CHECK(res == Approx(0.09341363));
     }
 }
