@@ -63,7 +63,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
 
     std::size_t device_shots;
 
-    std::mt19937 *gen = nullptr;
+    std::mt19937 *gen{nullptr};
 
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningKokkosObsManager<double> obs_manager{};
