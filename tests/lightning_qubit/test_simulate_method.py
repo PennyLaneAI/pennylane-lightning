@@ -112,7 +112,7 @@ class TestSimulate:
         assert np.allclose(result**2, 1, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name == "lightning.kokkos",
+        device_name != "lightning.qubit",
         reason=f"Device {device_name} does not have an mcmc option.",
     )
     @pytest.mark.parametrize("mcmc", [True, False])
