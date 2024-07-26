@@ -221,58 +221,58 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
 
         auto I0 = std::make_shared<NamedObsT>("Identity",
                                               std::vector<std::size_t>{0});
-        auto X1 =
-            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{1});
-        auto Y2 =
-            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{2});
-        auto Z3 =
-            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{3});
-        auto H4 = std::make_shared<NamedObsT>("Hadamard",
-                                              std::vector<std::size_t>{4});
-
         auto I1 = std::make_shared<NamedObsT>("Identity",
                                               std::vector<std::size_t>{1});
-        auto X2 =
-            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{2});
-        auto Y3 =
-            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{3});
-        auto Z4 =
-            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{4});
-        auto H0 = std::make_shared<NamedObsT>("Hadamard",
-                                              std::vector<std::size_t>{0});
-
         auto I2 = std::make_shared<NamedObsT>("Identity",
                                               std::vector<std::size_t>{2});
-        auto X3 =
-            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{3});
-        auto Y4 =
-            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{4});
-        auto Z0 =
-            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0});
-        auto H1 = std::make_shared<NamedObsT>("Hadamard",
-                                              std::vector<std::size_t>{1});
-
         auto I3 = std::make_shared<NamedObsT>("Identity",
                                               std::vector<std::size_t>{3});
-        auto X4 =
-            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{4});
-        auto Y0 =
-            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{0});
-        auto Z1 =
-            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
-        auto H2 = std::make_shared<NamedObsT>("Hadamard",
-                                              std::vector<std::size_t>{2});
-
         auto I4 = std::make_shared<NamedObsT>("Identity",
                                               std::vector<std::size_t>{4});
+
         auto X0 =
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+        auto X1 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{1});
+        auto X2 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{2});
+        auto X3 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{3});
+        auto X4 =
+            std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{4});
+
+        auto Y0 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{0});
         auto Y1 =
             std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{1});
+        auto Y2 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{2});
+        auto Y3 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{3});
+        auto Y4 =
+            std::make_shared<NamedObsT>("PauliY", std::vector<std::size_t>{4});
+
+        auto Z0 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0});
+        auto Z1 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
         auto Z2 =
             std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{2});
+        auto Z3 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{3});
+        auto Z4 =
+            std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{4});
+
+        auto H0 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{0});
+        auto H1 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{1});
+        auto H2 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{2});
         auto H3 = std::make_shared<NamedObsT>("Hadamard",
                                               std::vector<std::size_t>{3});
+        auto H4 = std::make_shared<NamedObsT>("Hadamard",
+                                              std::vector<std::size_t>{4});
 
         auto ob0 = TensorProdObsT::create({I0, X1, Y2, Z3, H4});
         auto ob1 = TensorProdObsT::create({I0, X1, Y2, Z3, H4});
