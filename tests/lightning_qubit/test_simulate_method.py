@@ -31,7 +31,9 @@ if device_name == "lightning.qubit":
 
 
 if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos._state_vector import LightningKokkosStateVector as LightningStateVector
+    from pennylane_lightning.lightning_kokkos._state_vector import (
+        LightningKokkosStateVector as LightningStateVector,
+    )
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import simulate
 
 
