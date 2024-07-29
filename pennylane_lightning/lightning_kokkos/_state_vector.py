@@ -179,8 +179,9 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         self._kokkos_state.DeviceToHost(state_vector.ravel(order="C"))
 
     def _kokkos_configuration(self):
-        """Set the default configuration of the kokkos device.
-        Returns: kokkos configuration
+        """Get the default configuration of the kokkos device.
+
+        Returns: The `lightning.kokkos` device configuration
         """
         return print_configuration()
 
