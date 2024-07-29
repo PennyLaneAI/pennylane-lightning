@@ -71,6 +71,7 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         self._dtype = dtype
 
         self._kokkos_config = {}
+        self._sync = sync
 
         if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -89,7 +90,6 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
             raise TypeError(
                 f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(kokkos_args)}."
             )
-        self._sync = sync
 
         if not self._kokkos_config:
             self._kokkos_config = self._kokkos_configuration()
