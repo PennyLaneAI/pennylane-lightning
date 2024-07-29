@@ -44,7 +44,6 @@ jobs:
       max-parallel: 1
       matrix:
         mpilib: ["mpich", "openmpi"]
-        enable_lapack: ["OFF", "ON"]
         cuda_version_maj: ["12"]
         cuda_version_min: ["2"]
     timeout-minutes: 30
@@ -128,7 +127,6 @@ jobs:
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
             -DENABLE_PYTHON=OFF \
-            -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
             -DENABLE_MPI=ON \
             -DCMAKE_BUILD_TYPE=Debug \
             -DENABLE_COVERAGE=ON \
