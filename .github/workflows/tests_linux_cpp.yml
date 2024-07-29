@@ -53,7 +53,7 @@ jobs:
         - enable_kernel_omp: OFF
           enable_kernel_avx_streaming: ON
     timeout-minutes: 60
-    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }})
+    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }}), ENABLE_LAPACK=${{ matrix.enable_lapack }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:

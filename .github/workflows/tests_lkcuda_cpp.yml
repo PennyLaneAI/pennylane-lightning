@@ -45,7 +45,6 @@ jobs:
         os: [ubuntu-22.04]
         exec_model: ["CUDA"]
         kokkos_version: ["4.3.01"]
-        enable_lapack: ["OFF", "ON"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -112,8 +111,9 @@ jobs:
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.3.01"]
+        enable_lapack: ["OFF", "ON"]
 
-    name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
+    name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}), enable_lapack-${{ matrix.enable_lapack }}
     runs-on:
       - ${{ matrix.os }}
       - self-hosted
