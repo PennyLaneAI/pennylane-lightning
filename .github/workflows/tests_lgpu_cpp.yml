@@ -64,7 +64,7 @@ jobs:
         enable_lapack: ["OFF", "ON"]
         cuda_version: ["12"]
 
-    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
+    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }}, enable_lapack=${{ matrix.enable_lapack }})
     runs-on:
       - ubuntu-22.04
       - self-hosted
