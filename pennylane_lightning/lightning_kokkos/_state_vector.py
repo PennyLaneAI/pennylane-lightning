@@ -164,7 +164,7 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         by the user
 
         Args:
-            state_vector(array[complex]): the state vector array on host
+            state_vector(array[complex]): the state vector array on device
 
 
         **Example**
