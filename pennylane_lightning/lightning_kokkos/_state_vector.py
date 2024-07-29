@@ -406,9 +406,10 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
                 self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
+                operations = operations[1:]
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
-            operations = operations[1:]
+                operations = operations[1:]
 
         self._apply_lightning(
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
