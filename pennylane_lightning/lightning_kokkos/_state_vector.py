@@ -15,17 +15,6 @@
 Class implementation for lightning_kokkos state-vector manipulation.
 """
 
-from itertools import product
-
-import numpy as np
-import pennylane as qml
-from pennylane import BasisState, DeviceError, StatePrep
-from pennylane.measurements import MidMeasureMP
-from pennylane.ops import Conditional
-from pennylane.ops.op_math import Adjoint
-from pennylane.tape import QuantumScript
-from pennylane.wires import Wires
-
 try:
     from pennylane_lightning.lightning_kokkos_ops import (
         InitializationSettings,
@@ -36,6 +25,17 @@ try:
     )
 except ImportError:
     pass  # Should be a complaint when kokkos_ops module is not available.
+
+from itertools import product
+
+import numpy as np
+import pennylane as qml
+from pennylane import BasisState, DeviceError, StatePrep
+from pennylane.measurements import MidMeasureMP
+from pennylane.ops import Conditional
+from pennylane.ops.op_math import Adjoint
+from pennylane.tape import QuantumScript
+from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import global_phase_diagonal
 
