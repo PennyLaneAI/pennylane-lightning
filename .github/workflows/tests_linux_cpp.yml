@@ -48,6 +48,7 @@ jobs:
         pl_backend: ["lightning_qubit"]
         enable_kernel_omp: ["OFF", "ON"]
         enable_kernel_avx_streaming: ["OFF", "ON"]
+        enable_lapack: ["OFF", "ON"]
         exclude:
         - enable_kernel_omp: OFF
           enable_kernel_avx_streaming: ON
@@ -75,6 +76,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
+              -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
