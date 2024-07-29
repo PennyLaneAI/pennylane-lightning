@@ -161,6 +161,45 @@ template <class TensorNetT> class ObservableTNCudaOperator {
     }
 
     /**
+     * @brief Create a map of modes to observable meta data.
+     *
+     * @param obs An observableTNCuda object.
+     * @param i Index of the first observable term.
+     * @param j Index of the second observable term.
+     *
+     * @return std::unordered_map<int32_t, std::vector<MetaDataT>> Map of modes
+     * to observable meta data.
+     */
+    auto create_modes_obsname_map_(ObservableTNCuda<TensorNetT> &obs,
+                                   const std::size_t i, const std::size_t j)
+        -> std::unordered_map<int32_t, std::vector<MetaDataT>> {
+        std::unordered_map<int32_t, std::vector<MetaDataT>> modes_obsname_map;
+        for (std::size_t tensor_idx = 0; tensor_idx < modes_[i].size();
+             tensor_idx++) {
+            PL_ABORT_IF_NOT(modes_[i][tensor_idx].size() == 1,
+                            "Only one-wire observables are supported for "
+                            "cutensornet v24.03");
+
+            modes_obsname_map[modes_[i][tensor_idx][0]] = {
+                obs.getMetaData()[i][tensor_idx]};
+        }
+
+        for (std::size_t tensor_idy = 0; tensor_idy < modes_[j].size();
+             tensor_idy++) {
+            auto it = modes_obsname_map.find(modes_[j][tensor_idy].front());
+            if (it != modes_obsname_map.end()) {
+                modes_obsname_map[modes_[j][tensor_idy].front()].push_back(
+                    obs.getMetaData()[j][tensor_idy]);
+            } else {
+                modes_obsname_map[modes_[j][tensor_idy].front()] = {
+                    obs.getMetaData()[j][tensor_idy]};
+            }
+        }
+
+        return modes_obsname_map;
+    }
+
+    /**
      * @brief Add observable numerical value to the cache map, the name,
      * parameters and hash value(default as 0 for named observables).
      *
@@ -299,37 +338,8 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                         coeffs_[term_idx].x * coeffs_[term_idy].x, 0.0};
                     coeffs2_.emplace_back(coeff);
 
-                    auto modes_termx = modes_[term_idx];
-                    auto modes_termy = modes_[term_idy];
-
-                    std::unordered_map<int32_t,
-                                       std::vector<MetaDataT>>
-                        modes_obsname_map; // Note that one-wire observables are
-                                           // supported as cutensornet v24.03
-
-                    for (std::size_t tensor_idx = 0;
-                         tensor_idx < modes_termx.size(); tensor_idx++) {
-                        PL_ABORT_IF_NOT(modes_termx[tensor_idx].size() == 1,
-                                        "Only one-wire observables are "
-                                        "supported for cutensornet v24.03");
-
-                        modes_obsname_map[modes_termx[tensor_idx][0]] = {
-                            obs.getMetaData()[term_idx][tensor_idx]};
-                    }
-
-                    for (std::size_t tensor_idy = 0;
-                         tensor_idy < modes_termy.size(); tensor_idy++) {
-                        auto it = modes_obsname_map.find(
-                            modes_termy[tensor_idy].front());
-                        if (it != modes_obsname_map.end()) {
-                            modes_obsname_map[modes_termy[tensor_idy].front()]
-                                .push_back(
-                                    obs.getMetaData()[term_idy][tensor_idy]);
-                        } else {
-                            modes_obsname_map[modes_termy[tensor_idy].front()] =
-                                {obs.getMetaData()[term_idy][tensor_idy]};
-                        }
-                    }
+                    auto modes_obsname_map =
+                        create_modes_obsname_map_(obs, term_idx, term_idy);
 
                     auto numTensorsPerTerm = modes_obsname_map.size();
 
@@ -376,24 +386,18 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                             } else {
                                 // Branch for Hermtian involving Pauli strings
                                 // add both observables matrix to GPU cache
-                                auto obsKey0 = add_meta_data_(metaDataArr[0]);
-                                auto obsKey1 = add_meta_data_(metaDataArr[1]);
-
                                 auto obsName = obsName0 + "@" + obsName1;
-
-                                std::size_t hash_val = 0;
 
                                 auto hermitianMatrix =
                                     std::get<2>(metaDataArr[0]);
 
-                                if (!std::get<2>(metaDataArr[1]).empty()) {
-                                    hermitianMatrix.insert(
-                                        hermitianMatrix.end(),
-                                        std::get<2>(metaDataArr[1]).begin(),
-                                        std::get<2>(metaDataArr[1]).end());
-                                }
+                                hermitianMatrix.insert(
+                                    hermitianMatrix.end(),
+                                    std::get<2>(metaDataArr[1]).begin(),
+                                    std::get<2>(metaDataArr[1]).end());
 
-                                hash_val = MatrixHasher()(hermitianMatrix);
+                                std::size_t hash_val =
+                                    MatrixHasher()(hermitianMatrix);
 
                                 auto obsKey = std::make_tuple(
                                     obsName, std::vector<PrecisionT>{},
@@ -412,6 +416,11 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                     }
 
                                     add_obs_(obsKey, hermitianMatrix_cu);
+
+                                    auto obsKey0 =
+                                        add_meta_data_(metaDataArr[0]);
+                                    auto obsKey1 =
+                                        add_meta_data_(metaDataArr[1]);
 
                                     // update the matrix data with MM operation
                                     CFP_t *mat0 = const_cast<CFP_t *>(
