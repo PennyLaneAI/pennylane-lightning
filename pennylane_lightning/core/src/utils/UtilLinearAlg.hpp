@@ -150,7 +150,7 @@ void compute_diagonalizing_gates(int n, int lda,
             }
         } else {
             try {
-                scipyPathStr = currentPathStr + "/../../scipy.libs/";
+                scipyPathStr = currentPathStr + "../../scipy.libs/";
                 // convert the relative path to absolute path
                 scipyPathStr =
                     std::filesystem::canonical(scipyPathStr).string();
