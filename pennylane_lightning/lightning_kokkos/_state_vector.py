@@ -382,9 +382,8 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif (
-                isinstance(operation, qml.ops.Controlled)
-                and isinstance(operation.base, qml.GlobalPhase)
+            elif isinstance(operation, qml.ops.Controlled) and isinstance(
+                operation.base, qml.GlobalPhase
             ):  # apply n-controlled gate
 
                 # Kokkos do not support the controlled gates except for GlobalPhase
