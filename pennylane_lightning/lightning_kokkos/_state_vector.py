@@ -86,9 +86,8 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         elif isinstance(kokkos_args, InitializationSettings):
             self._kokkos_state = self._state_dtype()(self.num_wires, kokkos_args)
         else:
-            type0 = type(InitializationSettings())
             raise TypeError(
-                f"Argument kokkos_args must be of type {type0} but it is of {type(kokkos_args)}."
+                f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(kokkos_args)}."
             )
         self._sync = sync
 
@@ -192,14 +191,6 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-    def _create_basis_state(self, index):
-        """Return a computational basis state over all wires.
-
-        Args:
-            index (int): integer representing the computational basis state.
-        """
-        self._kokkos_state.setBasisState(index)
-
     def reset_state(self):
         """Reset the device's state"""
         # init the state vector to |00..0>
@@ -298,7 +289,8 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         Note: This function does not support broadcasted inputs yet.
         """
         num = self._get_basis_state_index(state, wires)
-        self._create_basis_state(num)
+        # Return a computational basis state over all wires.
+        self._kokkos_state.setBasisState(num)
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
@@ -311,46 +303,15 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         """
         state = self.state_vector
 
-        basename = operation.base.name
-        method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
-        #  ----------------------------------------
-        # Original:
-        # target_wires = list(operation.target_wires)
-
-        # Specific for Kokkos:
         name = operation.name
-        #  ----------------------------------------
-        if method is not None:  # apply n-controlled specialized gate
-            inv = False
-            #  ----------------------------------------
-            # Original:
-            # param = operation.parameters
-            # method(control_wires, control_values, target_wires, inv, param)
-
-            # Specific for Kokkos:
-            param = operation.parameters[0]
-            wires = self.wires.indices(operation.wires)
-            matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
-            state.apply(name, wires, inv, [[param]], matrix)
-            #  ----------------------------------------
-
-        else:  # apply gate as an n-controlled matrix
-            #  ----------------------------------------
-            # Original:
-            # method = getattr(state, "applyControlledMatrix")
-            # method(
-            #     qml.matrix(operation.base),
-            #     control_wires,
-            #     control_values,
-            #     target_wires,
-            #     False,
-            # )
-
-            # Specific for Kokkos:
-            raise ValueError("Unsupported apply Controlled Matrix")
-            #  ----------------------------------------
+        # Apply GlobalPhase
+        inv = False
+        param = operation.parameters[0]
+        wires = self.wires.indices(operation.wires)
+        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
+        state.apply(name, wires, inv, [[param]], matrix)
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -424,9 +385,9 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
             elif (
                 isinstance(operation, qml.ops.Controlled)
                 and isinstance(operation.base, qml.GlobalPhase)
-                # Specific for Kokkos:
-                # Kokkos do not support the controlled gates except for GlobalPhase
             ):  # apply n-controlled gate
+
+                # Kokkos do not support the controlled gates except for GlobalPhase
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in

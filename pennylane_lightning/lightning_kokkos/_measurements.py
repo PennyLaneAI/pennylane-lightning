@@ -66,7 +66,7 @@ class LightningKokkosMeasurements:
 
     @property
     def qubit_state(self):
-        """Returns a handle to the LightningStateVector class."""
+        """Returns a handle to the LightningStateVector object."""
         return self._qubit_state
 
     @property
