@@ -406,7 +406,7 @@ Docker support
 **************
 
 Docker images for the various backends are found on the
-`PennyLane Docker Hub <https://hub.docker.com/r/pennylaneai>`_ page, where there is also a detailed description about PennyLane Docker support.
+`PennyLane Docker Hub <https://hub.docker.com/u/pennylaneai>`_ page, where there is also a detailed description about PennyLane Docker support.
 Briefly, one can build the Docker Lightning images using:
 
 .. code-block:: console
