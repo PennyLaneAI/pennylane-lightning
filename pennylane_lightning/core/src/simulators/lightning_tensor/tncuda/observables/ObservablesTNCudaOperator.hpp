@@ -78,7 +78,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                                             {"Hadamard", "H"}};
 
   private:
-    SharedCublasCaller cublascaller_;
     cutensornetNetworkOperator_t obsOperator_{
         nullptr}; // cutensornetNetworkOperator operator
 
@@ -100,21 +99,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         tensorDataPtr_; // pointers for each tensor data in each term
 
     std::vector<int64_t> ids_; // ids for each term in the graph
-
-    std::size_t numObsTerms2_;          // number of observable terms
-    vector1D<cuDoubleComplex> coeffs2_; // coefficients for each term
-    vector1D<std::size_t> numTensors2_; // number of tensors in each term
-
-    vector2D<int32_t>
-        numModes2_; // number of state modes of each tensor in each term
-
-    vector3D<int32_t> modes2_; // modes for each tensor in each term
-
-    vector2D<const int32_t *>
-        modesPtr2_; // pointers for modes of each tensor in each term
-
-    vector2D<const void *>
-        tensorDataPtr2_; // pointers for each tensor data in each term
 
     const bool var_cal_ = false;
 
@@ -164,35 +148,42 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      * @brief Create a map of modes to observable meta data.
      *
      * @param obs An observableTNCuda object.
-     * @param i Index of the first observable term.
-     * @param j Index of the second observable term.
+     * @param modes Modes of all observable terms.
+     * @param term_idx Index of the first observable term.
+     * @param term_idy Index of the second observable term.
      *
      * @return std::unordered_map<int32_t, std::vector<MetaDataT>> Map of modes
      * to observable meta data.
      */
     auto create_modes_obsname_map_(ObservableTNCuda<TensorNetT> &obs,
-                                   const std::size_t i, const std::size_t j)
+                                   const vector3D<int32_t> &modes,
+                                   const std::size_t term_idx,
+                                   const std::size_t term_idy)
         -> std::unordered_map<int32_t, std::vector<MetaDataT>> {
         std::unordered_map<int32_t, std::vector<MetaDataT>> modes_obsname_map;
-        for (std::size_t tensor_idx = 0; tensor_idx < modes_[i].size();
-             tensor_idx++) {
-            PL_ABORT_IF_NOT(modes_[i][tensor_idx].size() == 1,
-                            "Only one-wire observables are supported for "
-                            "cutensornet v24.03");
 
-            modes_obsname_map[modes_[i][tensor_idx][0]] = {
-                obs.getMetaData()[i][tensor_idx]};
+        auto modes_termx = modes[term_idx];
+        auto modes_termy = modes[term_idy];
+
+        for (std::size_t tensor_idx = 0; tensor_idx < modes_termx.size();
+             tensor_idx++) {
+            PL_ABORT_IF_NOT(modes_termx[tensor_idx].size() == 1,
+                            "Only one-wire observables are "
+                            "supported for cutensornet v24.03");
+
+            modes_obsname_map[modes_termx[tensor_idx][0]] = {
+                obs.getMetaData()[term_idx][tensor_idx]};
         }
 
-        for (std::size_t tensor_idy = 0; tensor_idy < modes_[j].size();
+        for (std::size_t tensor_idy = 0; tensor_idy < modes_termy.size();
              tensor_idy++) {
-            auto it = modes_obsname_map.find(modes_[j][tensor_idy].front());
+            auto it = modes_obsname_map.find(modes_termy[tensor_idy].front());
             if (it != modes_obsname_map.end()) {
-                modes_obsname_map[modes_[j][tensor_idy].front()].push_back(
-                    obs.getMetaData()[j][tensor_idy]);
+                modes_obsname_map[modes_termy[tensor_idy].front()].push_back(
+                    obs.getMetaData()[term_idy][tensor_idy]);
             } else {
-                modes_obsname_map[modes_[j][tensor_idy].front()] = {
-                    obs.getMetaData()[j][tensor_idy]};
+                modes_obsname_map[modes_termy[tensor_idy].front()] = {
+                    obs.getMetaData()[term_idy][tensor_idy]};
             }
         }
 
@@ -273,35 +264,31 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                              const bool var_cal = false)
         : tensor_network_{tensor_network},
           numObsTerms_(obs.getNumTensors().size()), var_cal_{var_cal} {
-        numTensors_ = obs.getNumTensors(); // number of tensors in each term
-
-        for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
-            PrecisionT coeff_real = obs.getCoeffs()[term_idx];
-            auto coeff = cuDoubleComplex{static_cast<double>(coeff_real), 0.0};
-            auto numTensors = numTensors_[term_idx];
-
-            coeffs_.emplace_back(coeff);
-
-            // number of state modes of each tensor in each term
-            numModes_.emplace_back(cast_vector<std::size_t, int32_t>(
-                obs.getNumStateModes()[term_idx]));
-
-            // modes initialization
-            vector2D<int32_t> modes_per_term;
-            for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
-                 tensor_idx++) {
-                modes_per_term.emplace_back(
-                    cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
-                        obs.getStateModes()[term_idx][tensor_idx],
-                        tensor_network.getNumQubits()));
-            }
-            modes_.emplace_back(modes_per_term);
-        }
-
         if (!var_cal) {
             for (std::size_t term_idx = 0; term_idx < numObsTerms_;
                  term_idx++) {
-                auto numTensors = numTensors_[term_idx];
+                PrecisionT coeff_real = obs.getCoeffs()[term_idx];
+                auto coeff =
+                    cuDoubleComplex{static_cast<double>(coeff_real), 0.0};
+                auto numTensors = obs.getNumTensors()[term_idx];
+
+                coeffs_.emplace_back(coeff);
+                numTensors_.emplace_back(numTensors);
+
+                // number of state modes of each tensor in each term
+                numModes_.emplace_back(cast_vector<std::size_t, int32_t>(
+                    obs.getNumStateModes()[term_idx]));
+
+                // modes initialization
+                vector2D<int32_t> modes_per_term;
+                for (std::size_t tensor_idx = 0; tensor_idx < numTensors;
+                     tensor_idx++) {
+                    modes_per_term.emplace_back(
+                        cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                            obs.getStateModes()[term_idx][tensor_idx],
+                            tensor_network.getNumQubits()));
+                }
+                modes_.emplace_back(modes_per_term);
 
                 // Not required for var calculation below
                 //  modes pointer initialization
@@ -326,24 +313,40 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                 tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
             }
         } else {
-            cublascaller_ = make_shared_cublas_caller();
+            SharedCublasCaller cublascaller = make_shared_cublas_caller();
 
-            numObsTerms2_ = numObsTerms_ * numObsTerms_;
+            // convert obs modes from std::size_t to int32_t
+            vector3D<int32_t> modes;
+            for (std::size_t term_idx = 0; term_idx < numObsTerms_;
+                 term_idx++) {
+                vector2D<int32_t> modes_per_term;
+                for (std::size_t tensor_idx = 0;
+                     tensor_idx < obs.getNumTensors()[term_idx]; tensor_idx++) {
+                    modes_per_term.emplace_back(
+                        cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                            obs.getStateModes()[term_idx][tensor_idx],
+                            tensor_network.getNumQubits()));
+                }
+                modes.emplace_back(modes_per_term);
+            }
 
             for (std::size_t term_idx = 0; term_idx < numObsTerms_;
                  term_idx++) {
                 for (std::size_t term_idy = 0; term_idy < numObsTerms_;
                      term_idy++) {
-                    auto coeff = cuDoubleComplex{
-                        coeffs_[term_idx].x * coeffs_[term_idy].x, 0.0};
-                    coeffs2_.emplace_back(coeff);
+                    PrecisionT coeff_real =
+                        obs.getCoeffs()[term_idx] * obs.getCoeffs()[term_idy];
+                    auto coeff =
+                        cuDoubleComplex{static_cast<double>(coeff_real), 0.0};
 
-                    auto modes_obsname_map =
-                        create_modes_obsname_map_(obs, term_idx, term_idy);
+                    coeffs_.emplace_back(coeff);
+
+                    auto modes_obsname_map = create_modes_obsname_map_(
+                        obs, modes, term_idx, term_idy);
 
                     auto numTensorsPerTerm = modes_obsname_map.size();
 
-                    numTensors2_.emplace_back(numTensorsPerTerm);
+                    numTensors_.emplace_back(numTensorsPerTerm);
 
                     vector2D<int32_t> modes_per_term;
                     vector1D<const void *> tensorDataPtrPerTerm_;
@@ -437,7 +440,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                                          .getDeviceID(),
                                                      tensor_network_.getDevTag()
                                                          .getStreamID(),
-                                                     *cublascaller_);
+                                                     *cublascaller);
                                 }
                                 tensorDataPtrPerTerm_.emplace_back(
                                     get_obs_device_ptr_(obsKey));
@@ -447,18 +450,18 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                      "for cutensornet v24.03");
                         }
                     }
-                    modes2_.emplace_back(modes_per_term);
-                    numModes2_.emplace_back(num_modes_per_term);
+                    modes_.emplace_back(modes_per_term);
+                    numModes_.emplace_back(num_modes_per_term);
 
                     // modes pointer initialization
                     vector1D<const int32_t *> modesPtrPerTerm;
                     for (std::size_t tensor_idx = 0;
-                         tensor_idx < modes2_.back().size(); tensor_idx++) {
+                         tensor_idx < modes_.back().size(); tensor_idx++) {
                         modesPtrPerTerm.emplace_back(
-                            modes2_.back()[tensor_idx].data());
+                            modes_.back()[tensor_idx].data());
                     }
-                    modesPtr2_.emplace_back(modesPtrPerTerm);
-                    tensorDataPtr2_.emplace_back(tensorDataPtrPerTerm_);
+                    modesPtr_.emplace_back(modesPtrPerTerm);
+                    tensorDataPtr_.emplace_back(tensorDataPtrPerTerm_);
                 }
             }
         }
@@ -473,22 +476,13 @@ template <class TensorNetT> class ObservableTNCudaOperator {
             /* cudaDataType_t */ tensor_network.getCudaDataType(),
             /* cutensornetNetworkOperator_t */ &obsOperator_));
 
-        if (var_cal) {
-            for (std::size_t term_idx = 0; term_idx < numObsTerms2_;
-                 term_idx++) {
-                appendTNOperator_(coeffs2_[term_idx], numTensors2_[term_idx],
-                                  numModes2_[term_idx].data(),
-                                  modesPtr2_[term_idx].data(),
-                                  tensorDataPtr2_[term_idx].data());
-            }
-        } else {
-            for (std::size_t term_idx = 0; term_idx < numObsTerms_;
-                 term_idx++) {
-                appendTNOperator_(coeffs_[term_idx], numTensors_[term_idx],
-                                  numModes_[term_idx].data(),
-                                  modesPtr_[term_idx].data(),
-                                  tensorDataPtr_[term_idx].data());
-            }
+        const std::size_t numObsTerms =
+            var_cal ? (numObsTerms_ * numObsTerms_) : numObsTerms_;
+        for (std::size_t term_idx = 0; term_idx < numObsTerms; term_idx++) {
+            appendTNOperator_(coeffs_[term_idx], numTensors_[term_idx],
+                              numModes_[term_idx].data(),
+                              modesPtr_[term_idx].data(),
+                              tensorDataPtr_[term_idx].data());
         }
     }
 
