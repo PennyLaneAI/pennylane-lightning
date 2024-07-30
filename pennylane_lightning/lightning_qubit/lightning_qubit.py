@@ -495,7 +495,7 @@ class LightningQubit(Device):
             raise ImportError(
                 "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
         super().__init__(wires=wires, shots=shots)
