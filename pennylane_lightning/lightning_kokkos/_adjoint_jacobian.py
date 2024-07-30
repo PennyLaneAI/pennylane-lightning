@@ -45,7 +45,7 @@ class LightningKokkosAdjointJacobian:
     """Check and execute the adjoint Jacobian differentiation method.
 
     Args:
-        qubit_state(LightningStateVector): State Vector to calculate the adjoint Jacobian with.
+        qubit_state(LightningKokkosStateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
@@ -63,12 +63,12 @@ class LightningKokkosAdjointJacobian:
 
     @property
     def qubit_state(self):
-        """Returns a handle to the LightningStateVector class."""
+        """Returns a handle to the LightningKokkosStateVector object."""
         return self._qubit_state
 
     @property
     def state(self):
-        """Returns a handle to the Lightning internal data class."""
+        """Returns a handle to the Lightning internal data object."""
         return self._state
 
     @property
@@ -180,9 +180,9 @@ class LightningKokkosAdjointJacobian:
 
         .. code-block:: python
 
-            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = LightningKokkosStateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            jacobian = LightningAdjointJacobian(statevector).calculate_jacobian(tape)
+            jacobian = LightningKokkosAdjointJacobian(statevector).calculate_jacobian(tape)
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
@@ -257,9 +257,9 @@ class LightningKokkosAdjointJacobian:
 
         .. code-block:: python
 
-            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = LightningKokkosStateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            vjp = LightningAdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
+            vjp = LightningKokkosAdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
 
         computes :math:`\\pmb{w} = (w_1,\\cdots,w_m)` where
 
