@@ -38,6 +38,9 @@ The Lightning ecosystem provides the following devices:
     :link: lightning_tensor/device.html
 
 
+Authors
+*******
+
 .. include:: ../README.rst
   :start-after: citation-start-inclusion-marker-do-not-remove
   :end-before: citation-end-inclusion-marker-do-not-remove

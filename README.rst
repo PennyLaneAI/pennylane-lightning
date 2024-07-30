@@ -445,10 +445,10 @@ The Python code is statically analyzed with `Pylint <https://pylint.readthedocs.
 We set up a pre-commit hook (see `Git hooks <https://git-scm.com/docs/githooks>`_) to run both of these on `git commit`.
 Please make your best effort to comply with `black` and `pylint` before using disabling pragmas (e.g. `# pylint: disable=missing-function-docstring`).
 
-.. citation-start-inclusion-marker-do-not-remove
-
 Authors
 *******
+
+.. citation-start-inclusion-marker-do-not-remove
 
 Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
