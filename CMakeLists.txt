@@ -47,7 +47,7 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 
-option(ENABLE_LAPACK "Enable compilation with scipy/LAPACK" ON)
+option(ENABLE_LAPACK "Enable compilation with scipy/LAPACK" OFF)
 
 # OpenMP
 find_package(OpenMP)

@@ -495,7 +495,7 @@ class LightningQubit(Device):
             raise ImportError(
                 "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
         super().__init__(wires=wires, shots=shots)
@@ -589,10 +589,7 @@ class LightningQubit(Device):
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
-            mid_circuit_measurements,
-            device=self,
-            mcm_config=exec_config.mcm_config,
-            interface=exec_config.interface,
+            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
         program.add_transform(
             decompose,
