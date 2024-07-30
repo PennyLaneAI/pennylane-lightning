@@ -66,7 +66,6 @@ def simulate(
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    state.reset_state()
     has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
     if circuit.shots and has_mcm:
         results = []
@@ -88,7 +87,7 @@ def simulate(
                 )
             )
         return tuple(results)
-
+    state.reset_state()
     final_state = state.get_final_state(circuit)
     return LightningKokkosMeasurements(final_state).measure_final_state(circuit)
 

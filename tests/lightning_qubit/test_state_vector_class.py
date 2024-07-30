@@ -45,9 +45,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 @pytest.mark.parametrize("num_wires", range(4))
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-# @pytest.mark.parametrize("device_name", ["lightning.qubit"])
-@pytest.mark.parametrize("device_name", [device_name])
-def test_device_name_and_init(num_wires, dtype, device_name):
+def test_device_name_and_init(num_wires, dtype):
     """Test the class initialization and returned properties."""
     state_vector = LightningStateVector(num_wires, dtype=dtype, device_name=device_name)
     assert state_vector.dtype == dtype

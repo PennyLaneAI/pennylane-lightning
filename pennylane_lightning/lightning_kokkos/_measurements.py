@@ -21,7 +21,6 @@ try:
 except ImportError:
     pass
 
-from functools import reduce
 from typing import Callable, List, Union
 
 import numpy as np
@@ -48,12 +47,12 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
 class LightningKokkosMeasurements:
-    """Lightning Measurements class
+    """Lightning Kokkos Measurements class
 
-    Measures the state provided by the LightningStateVector class.
+    Measures the state provided by the LightningKokkosStateVector class.
 
     Args:
-        qubit_state(LightningStateVector): Lightning state-vector class containing the state vector to be measured.
+        qubit_state(LightningKokkosStateVector): Lightning state-vector class containing the state vector to be measured.
     """
 
     def __init__(
@@ -66,7 +65,7 @@ class LightningKokkosMeasurements:
 
     @property
     def qubit_state(self):
-        """Returns a handle to the LightningStateVector class."""
+        """Returns a handle to the LightningKokkosStateVector object."""
         return self._qubit_state
 
     @property
@@ -75,7 +74,7 @@ class LightningKokkosMeasurements:
         return self._dtype
 
     def _measurement_dtype(self):
-        """Binding to Lightning Measurements C++ class.
+        """Binding to Lightning Kokkos Measurements C++ class.
 
         Returns: the Measurements class
         """
@@ -265,7 +264,6 @@ class LightningKokkosMeasurements:
 
         return results
 
-    # pylint:disable = too-many-arguments
     def measure_with_samples(
         self,
         measurements: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],

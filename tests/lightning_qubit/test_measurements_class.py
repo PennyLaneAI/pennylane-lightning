@@ -487,7 +487,7 @@ class TestMeasurements:
         assert np.allclose(result, expected, max(tol, 1.0e-4))
 
     @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 1000000])
+    @pytest.mark.parametrize("shots", [None, 1000000, (900000, 900000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -582,6 +582,9 @@ class TestMeasurements:
         # a few tests may fail in single precision, and hence we increase the tolerance
         dtol = tol if shots is None else max(tol, 1.0e-2)
         for r, e in zip(result, expected):
+            if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
+                r = np.concatenate(r)
+                e = np.concatenate(e)
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
     @pytest.mark.parametrize(
