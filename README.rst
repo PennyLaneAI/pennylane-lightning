@@ -457,17 +457,18 @@ If you are using PennyLane and Lightning for research, please cite `[1] <https:/
     [1] Ali Asadi, Amintor Dusko, Chae-Yeun Park, Vincent Michaud-Rioux, Isidor Schoch, Shuli Shu, 
     Trevor Vincent, and Lee James O'Riordan.
     *Hybrid quantum programming with PennyLane Lightning on HPC platforms.* 2024. `arXiv:2403.02512 <https://arxiv.org/abs/2403.02512>`_
-    ```bibtex
-        @misc{asadi2024hybridquantumprogrammingpennylane,
-            title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}}, 
-            author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
-            year={2024},
-            eprint={2403.02512},
-            archivePrefix={arXiv},
-            primaryClass={quant-ph},
-            url={https://arxiv.org/abs/2403.02512}, 
-        }
-    ```
+
+```bibtex
+    @misc{asadi2024hybridquantumprogrammingpennylane,
+        title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}}, 
+        author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
+        year={2024},
+        eprint={2403.02512},
+        archivePrefix={arXiv},
+        primaryClass={quant-ph},
+        url={https://arxiv.org/abs/2403.02512}, 
+    }
+```
 
 .. citation-end-inclusion-marker-do-not-remove
 .. support-start-inclusion-marker-do-not-remove
