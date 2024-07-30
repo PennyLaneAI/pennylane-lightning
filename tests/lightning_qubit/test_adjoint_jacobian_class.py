@@ -23,14 +23,23 @@ from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+if device_name == "lightning.qubit":
+    from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
+    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
 if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
+    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import (
+        LightningKokkosAdjointJacobian as LightningAdjointJacobian,
+    )
+    from pennylane_lightning.lightning_kokkos._state_vector import (
+        LightningKokkosStateVector as LightningStateVector,
+    )
 
-if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if device_name not in ("lightning.qubit", "lightning.kokkos"):
+    pytest.skip(
+        "Exclusive tests for lightning.qubit or lightning.kokkos. Skipping.",
+        allow_module_level=True,
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -43,6 +52,11 @@ I, X, Y, Z = (
     qml.PauliZ.compute_matrix(),
 )
 
+kokkos_args = [None]
+if device_name == "lightning.kokkos":
+    from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+
+    kokkos_args += [InitializationSettings().set_num_threads(2)]
 
 # General LightningStateVector fixture, for any number of wires.
 @pytest.fixture(
@@ -141,6 +155,10 @@ class TestAdjointJacobian:
         jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
         assert len(jac) == 0
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_phaseshift_gradient(self, n_qubits, par, tol, lightning_sv):
