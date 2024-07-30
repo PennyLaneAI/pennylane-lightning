@@ -24,9 +24,11 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch
 
+from ._measurements import LightningKokkosMeasurements
 from ._state_vector import LightningKokkosStateVector
 
 try:
@@ -44,7 +46,7 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-def simulate(  # pylint: disable=unused-argument
+def simulate(
     circuit: QuantumScript,
     state: LightningKokkosStateVector,
     postselect_mode: str = None,
@@ -63,7 +65,30 @@ def simulate(  # pylint: disable=unused-argument
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    return 0
+    has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+    if circuit.shots and has_mcm:
+        results = []
+        aux_circ = qml.tape.QuantumScript(
+            circuit.operations,
+            circuit.measurements,
+            shots=[1],
+            trainable_params=circuit.trainable_params,
+        )
+        for _ in range(circuit.shots.total_shots):
+            state.reset_state()
+            mid_measurements = {}
+            final_state = state.get_final_state(
+                aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+            )
+            results.append(
+                LightningKokkosMeasurements(final_state).measure_final_state(
+                    aux_circ, mid_measurements=mid_measurements
+                )
+            )
+        return tuple(results)
+    state.reset_state()
+    final_state = state.get_final_state(circuit)
+    return LightningKokkosMeasurements(final_state).measure_final_state(circuit)
 
 
 def jacobian(  # pylint: disable=unused-argument
@@ -319,10 +344,6 @@ class LightningKokkos(Device):
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
         self._statevector = LightningKokkosStateVector(num_wires=len(self.wires), dtype=c_dtype)
-
-        # TODO: Investigate usefulness of creating numpy random generator
-        seed = np.random.randint(0, high=10000000) if seed == "global" else seed
-        self._rng = np.random.default_rng(seed)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs

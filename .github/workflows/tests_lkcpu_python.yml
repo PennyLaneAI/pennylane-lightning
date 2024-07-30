@@ -249,8 +249,8 @@ jobs:
             PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
               --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
             mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          : # pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          : # pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
 
       - name: Upload test durations

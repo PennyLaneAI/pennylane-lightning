@@ -19,7 +19,7 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
@@ -30,20 +30,27 @@ try:
 except ImportError:
     pass
 
-from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+if device_name == "lightning.qubit":
+    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
+    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
 if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
+    from pennylane_lightning.lightning_kokkos._measurements import (
+        LightningKokkosMeasurements as LightningMeasurements,
+    )
+    from pennylane_lightning.lightning_kokkos._state_vector import (
+        LightningKokkosStateVector as LightningStateVector,
+    )
 
-if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if device_name not in ("lightning.qubit", "lightning.kokkos"):
+    pytest.skip(
+        "Exclusive tests for lightning.qubit or lightning.kokkos. Skipping.",
+        allow_module_level=True,
+    )
+
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-THETA = np.linspace(0.11, 1, 3)
-PHI = np.linspace(0.32, 1, 3)
 
 
 # General LightningStateVector fixture, for any number of wires.
@@ -480,7 +487,7 @@ class TestMeasurements:
         assert np.allclose(result, expected, max(tol, 1.0e-4))
 
     @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 1000000])
+    @pytest.mark.parametrize("shots", [None, 1000000, (900000, 900000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -575,6 +582,9 @@ class TestMeasurements:
         # a few tests may fail in single precision, and hence we increase the tolerance
         dtol = tol if shots is None else max(tol, 1.0e-2)
         for r, e in zip(result, expected):
+            if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
+                r = np.concatenate(r)
+                e = np.concatenate(e)
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
     @pytest.mark.parametrize(
@@ -583,6 +593,10 @@ class TestMeasurements:
             [[0, 1], [1, 0]],
             [[1, 0], [0, 1]],
         ],
+    )
+    @pytest.mark.skipif(
+        device_name == "lightning.kokkos",
+        reason="Kokkos new API in WIP.  Skipping.",
     )
     def test_probs_tape_unordered_wires(self, cases, tol):
         """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
