@@ -406,6 +406,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         d_output_tensor.CopyGpuDataToHost(h_res.data(), h_res.size());
 
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyWorkspaceDescriptor(workDesc));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyAccessor(accessor));
+
         return h_res;
     }
 
