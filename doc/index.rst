@@ -37,6 +37,10 @@ The Lightning ecosystem provides the following devices:
     :description: A tensor network simulator with NVIDIA cuQuantum library support.
     :link: lightning_tensor/device.html
 
+.. raw:: html
+
+    <div style='clear:both'></div>
+    </br>
 
 Authors
 *******
