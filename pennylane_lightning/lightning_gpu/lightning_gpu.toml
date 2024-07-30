@@ -111,4 +111,4 @@ non_commuting_observables = true
 
 # Whether the compilation pass should optimize the first
 # state preparation as a SetState operation.
-skip_initial_state_prep = true
+initial_state_prep = true
