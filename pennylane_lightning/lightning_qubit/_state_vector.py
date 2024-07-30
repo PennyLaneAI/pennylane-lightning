@@ -316,6 +316,12 @@ class LightningStateVector:
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
+            elif isinstance(operation, qml.PauliRot):
+                method = getattr(state, "applySparseOperation")
+                pw = dict((i, w) for i, w in enumerate(operation._hyperparameters["pauli_word"]))
+                mat = qml.pauli.PauliWord(pw).to_mat(format="csr")
+                indices, data = mat.indices, mat.data
+                method("PauliRot", [], [], wires, False, operation.parameters, indices, data)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)

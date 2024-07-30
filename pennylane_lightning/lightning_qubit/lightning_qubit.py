@@ -300,6 +300,7 @@ _operations = frozenset(
         "ECR",
         "BlockEncode",
         "C(BlockEncode)",
+        "PauliRot",
     }
 )
 # The set of supported operations.

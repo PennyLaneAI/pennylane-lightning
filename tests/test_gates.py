@@ -473,6 +473,34 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 @pytest.mark.skipif(
     device_name != "lightning.qubit",
+    reason="PauliRot operations only implemented in lightning.qubit.",
+)
+@pytest.mark.parametrize("n_wires", [2, 3, 4])
+def test_paulirot(n_wires, tol):
+    """Test that ControlledQubitUnitary is correctly applied to a state"""
+    n_qubits = n_wires + 2
+    dev = qml.device(device_name, wires=n_qubits)
+    dq = qml.device("default.qubit", wires=n_qubits)
+
+    init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    theta = 0.3
+
+    for word in itertools.combinations_with_replacement(("X", "Y", "Z"), n_wires):
+        for wires in itertools.combinations(range(n_qubits), n_wires):
+
+            def circuit():
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.PauliRot(theta, word, wires=wires)
+                return qml.state()
+
+            circ = qml.QNode(circuit, dev)
+            circ_def = qml.QNode(circuit, dq)
+            assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize("control_wires", range(4))

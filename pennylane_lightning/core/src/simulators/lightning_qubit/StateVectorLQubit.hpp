@@ -30,6 +30,7 @@
 #include "KernelType.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
 
 /// @cond DEV
 namespace {
@@ -432,6 +433,31 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         } else {
             applyMatrix(matrix, wires, inverse);
         }
+    }
+
+    /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void
+    applySparseOperation(const std::string &opName,
+                         const std::vector<std::size_t> &controlled_wires,
+                         const std::vector<bool> &controlled_values,
+                         const std::vector<std::size_t> &wires,
+                         const bool inverse,
+                         const std::vector<PrecisionT> &params,
+                         const std::vector<std::size_t> &indices,
+                         const std::vector<std::complex<PrecisionT>> &data) {
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        GateImplementationsLM::applyPauliRot<PrecisionT>(
+            this->getData(), this->getNumQubits(), controlled_wires,
+            controlled_values, wires, inverse, params[0], indices, data);
     }
 
     /**

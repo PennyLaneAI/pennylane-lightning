@@ -557,6 +557,35 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         applyNCMultiQubitOp(arr, num_qubits, matrix, {}, {}, wires, inverse);
     }
 
+    template <class PrecisionT>
+    static void
+    applyPauliRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                  const std::vector<std::size_t> &controlled_wires,
+                  const std::vector<bool> &controlled_values,
+                  const std::vector<std::size_t> &wires, const bool inverse,
+                  PrecisionT angle, const std::vector<std::size_t> &indices,
+                  const std::vector<std::complex<PrecisionT>> &data) {
+        constexpr std::size_t one{1};
+        const std::size_t n_wires = wires.size();
+        const std::size_t dim = one << n_wires;
+        const PrecisionT c = std::cos(angle / 2);
+        const std::complex<PrecisionT> s = {0.0, -std::sin(angle / 2)};
+
+        auto core_function =
+            [dim, c, &s, &indices,
+             &data](std::complex<PrecisionT> *arr,
+                    const std::vector<std::size_t> &arr_inds,
+                    const std::vector<std::complex<PrecisionT>> &arr_vals) {
+                for (std::size_t i = 0; i < dim; i++) {
+                    const auto index = arr_inds[i];
+                    arr[index] *= c;
+                    arr[index] += s * data[i] * arr_vals[indices[i]];
+                }
+            };
+        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
+                 core_function);
+    }
+
     /* One-qubit gates */
 
     /**

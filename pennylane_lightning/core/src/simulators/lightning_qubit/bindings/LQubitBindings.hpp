@@ -171,7 +171,19 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
-
+    pyclass.def(
+        "applySparseOperation",
+        [](StateVectorT &sv, const std::string &opName,
+           const std::vector<std::size_t> &controlled_wires,
+           const std::vector<bool> &controlled_values,
+           const std::vector<std::size_t> &wires, const bool inverse,
+           const std::vector<ParamT> &params,
+           const std::vector<std::size_t> &indices,
+           const std::vector<std::complex<ParamT>> &data) {
+            sv.applySparseOperation(opName, controlled_wires, controlled_values,
+                                    wires, inverse, params, indices, data);
+        },
+        "Apply a sparse operation.");
     pyclass
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
