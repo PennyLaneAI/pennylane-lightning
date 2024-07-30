@@ -112,3 +112,6 @@ dynamic_qubit_management = false
 # in a single execution
 non_commuting_observables = true
 
+# Whether the compilation pass should optimize the first
+# state preparation as a SetState operation.
+skip_initial_state_prep = false
