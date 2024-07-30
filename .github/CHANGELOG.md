@@ -15,15 +15,27 @@
 
 ### Improvements
 
+* `ENABLE_LAPACK` is off by default for all Lightning backends.
+  [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
+
+* Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
+  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
+
+* Update the Catalyst-specific wrapping class for Lightning Kokkos to track Catalyst's new support for MCM seeding.
+  [(#819)](https://github.com/PennyLaneAI/pennylane-lightning/pull/819)
+
+* Shot batching is made more efficient by executing all the shots in one go on LightningQubit.
+  [(#814)](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
+
 * LightningQubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
   [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
 
 * Avoid unnecessary memory reset in LightningQubit's state vector class constructor.
   [(#811)](https://github.com/PennyLaneAI/pennylane-lightning/pull/811)
-  
+
 * Add `generate_samples(wires)` support in LightningQubit.
   [(#809)](https://github.com/PennyLaneAI/pennylane-lightning/pull/809)
-  
+
 * Optimize the OpenMP parallelization of Lightning-Qubit's `probs` for all number of targets.
   [(#807)](https://github.com/PennyLaneAI/pennylane-lightning/pull/807)
 
@@ -71,7 +83,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 

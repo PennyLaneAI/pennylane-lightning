@@ -74,7 +74,7 @@ class LightningBase(QubitDevice):
             raise ImportError(
                 f"Pre-compiled binaries for {self.short_name} are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
         if c_dtype is np.complex64:
             r_dtype = np.float32
