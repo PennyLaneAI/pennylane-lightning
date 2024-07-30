@@ -12,10 +12,6 @@ Lightning plugins
   :start-after:   header-start-inclusion-marker-do-not-remove
   :end-before: header-end-inclusion-marker-do-not-remove
 
-.. include:: ../README.rst
-  :start-after: citation-start-inclusion-marker-do-not-remove
-  :end-before: citation-end-inclusion-marker-do-not-remove
-
 Devices
 *******
 
@@ -40,6 +36,11 @@ The Lightning ecosystem provides the following devices:
     :name: 'lightning.tensor'
     :description: A heterogeneous backend tensor network simulator with NVIDIA cuQuantum library support.
     :link: lightning_tensor/device.html
+
+
+.. include:: ../README.rst
+  :start-after: citation-start-inclusion-marker-do-not-remove
+  :end-before: citation-end-inclusion-marker-do-not-remove
 
 .. raw:: html
 
