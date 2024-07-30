@@ -58,6 +58,7 @@ if device_name == "lightning.kokkos":
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
+
 # General LightningStateVector fixture, for any number of wires.
 @pytest.fixture(
     scope="function",

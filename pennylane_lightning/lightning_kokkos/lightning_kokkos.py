@@ -112,10 +112,12 @@ def jacobian(
         [circuit], _ = qml.map_wires(circuit, wire_map)
     state.reset_state()
     final_state = state.get_final_state(circuit)
-    return LightningKokkosAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(circuit)
+    return LightningKokkosAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
+        circuit
+    )
 
 
-def simulate_and_jacobian(  # pylint: disable=unused-argument
+def simulate_and_jacobian(
     circuit: QuantumTape, state: LightningKokkosStateVector, batch_obs=False, wire_map=None
 ):
     """Simulate a single quantum script and compute its Jacobian.
@@ -140,7 +142,7 @@ def simulate_and_jacobian(  # pylint: disable=unused-argument
     return res, jac
 
 
-def vjp(  # pylint: disable=unused-argument
+def vjp(
     circuit: QuantumTape,
     cotangents: Tuple[Number],
     state: LightningKokkosStateVector,
@@ -172,7 +174,7 @@ def vjp(  # pylint: disable=unused-argument
     )
 
 
-def simulate_and_vjp(  # pylint: disable=unused-argument
+def simulate_and_vjp(
     circuit: QuantumTape,
     cotangents: Tuple[Number],
     state: LightningKokkosStateVector,
@@ -199,9 +201,10 @@ def simulate_and_vjp(  # pylint: disable=unused-argument
     if wire_map is not None:
         [circuit], _ = qml.map_wires(circuit, wire_map)
     res = simulate(circuit, state)
-    _vjp = LightningKokkosAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(circuit, cotangents)
+    _vjp = LightningKokkosAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(
+        circuit, cotangents
+    )
     return res, _vjp
-
 
 
 _operations = frozenset(

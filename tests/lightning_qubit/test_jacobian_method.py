@@ -22,14 +22,26 @@ from pennylane.tape import QuantumScript
 
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-    from pennylane_lightning.lightning_qubit.lightning_qubit import simulate, jacobian, simulate_and_jacobian, vjp, simulate_and_vjp
+    from pennylane_lightning.lightning_qubit.lightning_qubit import (
+        jacobian,
+        simulate,
+        simulate_and_jacobian,
+        simulate_and_vjp,
+        vjp,
+    )
 
 
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos._state_vector import (
         LightningKokkosStateVector as LightningStateVector,
     )
-    from pennylane_lightning.lightning_kokkos.lightning_kokkos import simulate, jacobian, simulate_and_jacobian, vjp, simulate_and_vjp
+    from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
+        jacobian,
+        simulate,
+        simulate_and_jacobian,
+        simulate_and_vjp,
+        vjp,
+    )
 
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
@@ -53,6 +65,7 @@ def lightning_sv(request):
 
     return _statevector
 
+
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support derivatives",
@@ -72,18 +85,17 @@ class TestJacobian:
             results = device.execute(tapes, config)
             jac = device.compute_derivatives(tapes, config)
         return transf_fn(results), jac
-    
+
     @staticmethod
     def process_and_execute(statevector, tape, execute_and_derivatives=False, obs_batch=False):
 
         if execute_and_derivatives:
-            results, jac = simulate_and_jacobian(tape,statevector)
+            results, jac = simulate_and_jacobian(tape, statevector)
         else:
             results = simulate(tape, statevector)
             jac = jacobian(tape, statevector)
         return results, jac
 
-    
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
@@ -112,7 +124,7 @@ class TestJacobian:
         )
 
         statevector = lightning_sv(num_wires=3)
-        res, jac = self.process_and_execute(statevector,qs,execute_and_derivatives)
+        res, jac = self.process_and_execute(statevector, qs, execute_and_derivatives)
         # print(f'res: {res}')
         # print(f'jac: {jac}')
 
@@ -157,15 +169,13 @@ class TestVJP:
     @staticmethod
     def process_and_execute(statevector, tape, dy, execute_and_derivatives=False, obs_batch=False):
         dy = [dy]
-    
+
         if execute_and_derivatives:
             results, jac = simulate_and_vjp(tape, dy, statevector)
         else:
             results = simulate(tape, statevector)
             jac = vjp(tape, dy, statevector)
         return results, jac
-
-
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
