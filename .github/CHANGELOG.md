@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* `ENABLE_LAPACK` is off by default for all Lightning backends.
+  [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
+
 * Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
   [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
 
