@@ -31,8 +31,8 @@ if not ld._CPP_BINARY_AVAILABLE:
 
 
 @pytest.mark.skipif(
-    ld._new_API or device_name == "lightning.tensor",
-    reason="Old API required, lightning.tensor does not support qml.state().",
+    ld._new_API,
+    reason="Old API required.",
 )
 class TestApply:
     """Tests that operations of certain operations are applied correctly or

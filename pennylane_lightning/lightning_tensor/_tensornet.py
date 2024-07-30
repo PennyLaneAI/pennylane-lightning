@@ -90,6 +90,13 @@ class LightningTensorNet:
         """Returns a handle to the tensor network."""
         return self._tensornet
 
+    @property
+    def state(self):
+        """Copy the state vector data to a numpy array."""
+        state = np.zeros(2**self._num_wires, dtype=self.dtype)
+        self._tensornet.getState(state)
+        return state
+
     def _tensornet_dtype(self):
         """Binding to Lightning Managed tensor network C++ class.
 

@@ -262,31 +262,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     /**
      * @brief Get the full state vector representation of a MPS quantum state.
      *
-     * NOTE: This method is for MPS unit tests purpose only, given that full
-     * state vector requires too much memory (`exp2(numQubits)`) in large
-     * systems.
      *
      * @return std::vector<ComplexT> Full state vector representation of MPS
      * quantum state on host
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        // 1D representation
-        std::vector<std::size_t> output_modes(std::size_t{1}, std::size_t{1});
-        std::vector<std::size_t> output_extent(
-            std::size_t{1}, std::size_t{1} << BaseType::getNumQubits());
-        TensorCuda<Precision> output_tensor(output_modes.size(), output_modes,
-                                            output_extent,
-                                            BaseType::getDevTag());
-
-        void *output_tensorPtr[] = {
-            static_cast<void *>(output_tensor.getDataBuffer().getData())};
-
-        BaseType::computeState(nullptr, output_tensorPtr);
-
-        std::vector<ComplexT> results(output_extent.front());
-        output_tensor.CopyGpuDataToHost(results.data(), results.size());
-
-        return results;
+        return BaseType::get_state_tensor();
     }
 
   private:

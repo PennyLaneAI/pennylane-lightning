@@ -131,7 +131,7 @@ class TestAmplitudeEmbedding:
             if not first_op:
                 qml.Hadamard(0)
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         X = np.random.rand(2**n_qubits)
         X /= np.linalg.norm(X)
@@ -172,7 +172,7 @@ class TestDisplacementSqueezingEmbedding:
         def circuit(feature_vector):
             template(features=feature_vector, wires=range(n_qubits))
             qml.QuadraticPhase(0.1, wires=1)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         X = np.arange(1, n_qubits + 1)
 
@@ -237,7 +237,7 @@ class TestCVNeuralNetLayers:
 
         def circuit(weights):
             qml.CVNeuralNetLayers(*weights, wires=[0, 1])
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
