@@ -448,6 +448,8 @@ Please make your best effort to comply with `black` and `pylint` before using di
 Authors
 *******
 
+.. citation-start-inclusion-marker-do-not-remove
+
 Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
 If you are using PennyLane and Lightning for research, please cite `[1] <https://arxiv.org/pdf/2403.02512>`_:
@@ -467,6 +469,7 @@ If you are using PennyLane and Lightning for research, please cite `[1] <https:/
         }
     ```
 
+.. citation-end-inclusion-marker-do-not-remove
 .. support-start-inclusion-marker-do-not-remove
 
 Support

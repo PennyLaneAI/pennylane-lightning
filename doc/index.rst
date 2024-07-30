@@ -12,6 +12,9 @@ Lightning plugins
   :start-after:   header-start-inclusion-marker-do-not-remove
   :end-before: header-end-inclusion-marker-do-not-remove
 
+.. include:: ../README.rst
+  :start-after: citation-start-inclusion-marker-do-not-remove
+  :end-before: citation-end-inclusion-marker-do-not-remove
 
 Devices
 *******
