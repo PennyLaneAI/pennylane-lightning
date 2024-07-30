@@ -445,22 +445,19 @@ The Python code is statically analyzed with `Pylint <https://pylint.readthedocs.
 We set up a pre-commit hook (see `Git hooks <https://git-scm.com/docs/githooks>`_) to run both of these on `git commit`.
 Please make your best effort to comply with `black` and `pylint` before using disabling pragmas (e.g. `# pylint: disable=missing-function-docstring`).
 
+.. citation-start-inclusion-marker-do-not-remove
+
 Authors
 *******
 
-.. citation-start-inclusion-marker-do-not-remove
-
 Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
-If you are using PennyLane and Lightning for research, please cite `[1] <https://arxiv.org/pdf/2403.02512>`_:
-
-    [1] Ali Asadi, Amintor Dusko, Chae-Yeun Park, Vincent Michaud-Rioux, Isidor Schoch, Shuli Shu, 
-    Trevor Vincent, and Lee James O'Riordan.
-    *Hybrid quantum programming with PennyLane Lightning on HPC platforms.* 2024. `arXiv:2403.02512 <https://arxiv.org/abs/2403.02512>`_,.
+If you are using Lightning for research, please cite:
 
 .. code-block:: bibtex
 
-    @misc{asadi2024hybridquantumprogrammingpennylane,
+    @misc{
+        asadi2024,
         title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}}, 
         author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
         year={2024},
