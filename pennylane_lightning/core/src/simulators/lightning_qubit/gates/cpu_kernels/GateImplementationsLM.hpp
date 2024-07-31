@@ -572,10 +572,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t n_wires = wires.size();
         const std::size_t dim = one << n_wires;
         const PrecisionT c = std::cos(angle / 2);
-        const std::complex<PrecisionT> s = {0.0, -std::sin(angle / 2)};
         std::vector<std::complex<PrecisionT>> coeffs(dim);
-
-        auto core_function = [dim, c, &s, &coeffs, &indices,
+        auto core_function = [dim, c, &coeffs, &indices,
                               &data](std::complex<PrecisionT> *arr,
                                      const std::vector<std::size_t> &arr_inds,
                                      const std::size_t offset) {
@@ -585,7 +583,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             for (std::size_t i = 0; i < dim; i++) {
                 const auto index = arr_inds[i] + offset;
                 arr[index] *= c;
-                arr[index] += s * data[i] * coeffs[indices[i]];
+                arr[index] += data[i] * coeffs[indices[i]];
             }
         };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
