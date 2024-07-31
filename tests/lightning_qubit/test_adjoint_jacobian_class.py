@@ -143,7 +143,7 @@ class TestAdjointJacobian:
 
         with pytest.raises(
             qml.QuantumFunctionError,
-            match="Adjoint differentiation does not support State measurements.",
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=3), tape)
 

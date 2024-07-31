@@ -187,18 +187,25 @@ class LightningKokkosAdjointJacobian:
 
         tape_return_type = self._get_return_type(tape.measurements)
 
-        if is_jacobian and not tape_return_type:
-            # the tape does not have measurements
-            return True
+        if is_jacobian:
+            if not tape_return_type:
+                # the tape does not have measurements
+                return True
+            
+            if tape_return_type is State:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support measurement StateMP."
+                )
 
-        if not is_jacobian and (qml.math.allclose(grad_vec, 0.0) or tape_return_type is None):
-            # the tape does not have measurements or the gradient is 0.0
-            return True
+        if not is_jacobian: 
+            if qml.math.allclose(grad_vec, 0.0) or not tape_return_type:
+                # the tape does not have measurements or the gradient is 0.0
+                return True
 
-        if tape_return_type is State:
-            raise QuantumFunctionError(
-                "Adjoint differentiation does not support State measurements."
-            )
+            if tape_return_type is State:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation does not support State measurements."
+                )
 
         if any(m.return_type is not Expectation for m in tape.measurements):
             raise QuantumFunctionError(
