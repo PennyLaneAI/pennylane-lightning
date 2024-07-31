@@ -181,6 +181,8 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
     SECTION("Using TensorProd") {
         std::size_t bondDim = GENERATE(2);
         constexpr std::size_t num_qubits = 5;
+        constexpr std::size_t num_paulis = 5;
+        constexpr std::size_t num_obs_terms = 6;
         std::size_t maxBondDim = bondDim;
 
         TensorNetT mps_state{num_qubits, maxBondDim};
@@ -221,43 +223,46 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
 
         auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
 
-        std::array<std::shared_ptr<NamedObsT>, num_qubits> I;
-        std::array<std::shared_ptr<NamedObsT>, num_qubits> X;
-        std::array<std::shared_ptr<NamedObsT>, num_qubits> Y;
-        std::array<std::shared_ptr<NamedObsT>, num_qubits> Z;
-        std::array<std::shared_ptr<NamedObsT>, num_qubits> H;
+        std::array<std::string, num_paulis> paulis = {
+            "Identity", "PauliX", "PauliY", "PauliZ", "Hadamard"};
 
-        for (std::size_t i = 0; i < num_qubits; i++) {
-            I[i] = std::make_shared<NamedObsT>("Identity",
-                                               std::vector<std::size_t>{i});
-
-            X[i] = std::make_shared<NamedObsT>("PauliX",
-                                               std::vector<std::size_t>{i});
-
-            Y[i] = std::make_shared<NamedObsT>("PauliY",
-                                               std::vector<std::size_t>{i});
-
-            Z[i] = std::make_shared<NamedObsT>("PauliZ",
-                                               std::vector<std::size_t>{i});
-
-            H[i] = std::make_shared<NamedObsT>("Hadamard",
-                                               std::vector<std::size_t>{i});
+        std::array<std::array<std::shared_ptr<NamedObsT>, num_qubits>,
+                   num_paulis>
+            named_obs;
+        // create Paulis(0)-Paulis(num_qubits-1) for each Pauli
+        for (std::size_t i = 0; i < num_paulis; i++) {
+            for (std::size_t j = 0; j < num_qubits; j++) {
+                named_obs[i][j] = std::make_shared<NamedObsT>(
+                    paulis[i], std::vector<std::size_t>{j});
+            }
         }
 
-        auto ob0 = TensorProdObsT::create({I[0], X[1], Y[2], Z[3], H[4]});
-        auto ob1 = TensorProdObsT::create({I[0], X[1], Y[2], Z[3], H[4]});
-        auto ob2 = TensorProdObsT::create({I[1], X[2], Y[3], Z[4], H[0]});
-        auto ob3 = TensorProdObsT::create({I[2], X[3], Y[4], Z[0], H[1]});
-        auto ob4 = TensorProdObsT::create({I[3], X[4], Y[0], Z[1], H[2]});
-        auto ob5 = TensorProdObsT::create({I[4], X[0], Y[1], Z[2], H[3]});
+        std::array<std::shared_ptr<TensorProdObsT>, num_obs_terms>
+            obs_tensor_prod;
 
-        auto ob = HamiltonianObsT::create({TestType{0.3}, TestType{0.5},
-                                           TestType{0.3}, TestType{0.5},
-                                           TestType{0.3}, TestType{0.5}},
-                                          {ob0, ob1, ob2, ob3, ob4, ob5});
+        // Create the tensor product of the observables
+        // I(i % num_qubits)@X((i + 1) % num_qubits)@Y((i + 2) %
+        // num_qubits)@Z((i + 3) % num_qubits)@H((i + 4) % num_qubits)
+        for (std::size_t i = 0; i < num_obs_terms - 1; i++) {
+            obs_tensor_prod[i + 1] =
+                TensorProdObsT::create({named_obs[0][i % num_qubits],
+                                        named_obs[1][(i + 1) % num_qubits],
+                                        named_obs[2][(i + 2) % num_qubits],
+                                        named_obs[3][(i + 3) % num_qubits],
+                                        named_obs[4][(i + 4) % num_qubits]});
+        }
+
+        obs_tensor_prod[0] = obs_tensor_prod[1];
+
+        std::initializer_list<TestType> coeffs{0.3, 0.5, 0.3, 0.5, 0.3, 0.5};
+        std::initializer_list<std::shared_ptr<ObservableTNCuda<TensorNetT>>>
+            obs{obs_tensor_prod[0], obs_tensor_prod[1], obs_tensor_prod[2],
+                obs_tensor_prod[3], obs_tensor_prod[4], obs_tensor_prod[5]};
+
+        auto ob = HamiltonianObsT::create(coeffs, obs);
 
         auto res = m.var(*ob);
-        CHECK(res == Approx(1.0830144));
+        CHECK(res == Approx(1.0830144)); // results from default.qubit
     }
 
     SECTION("Using 1 Hermitian") {
