@@ -578,12 +578,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                      const std::vector<std::size_t> &arr_inds,
                                      const std::size_t offset) {
             for (std::size_t i = 0; i < dim; i++) {
-                coeffs[i] = arr[arr_inds[i] + offset];
+                const auto index = arr_inds[i] + offset;
+                coeffs[i] = arr[index];
+                arr[index] *= c;
             }
             for (std::size_t i = 0; i < dim; i++) {
-                const auto index = arr_inds[i] + offset;
-                arr[index] *= c;
-                arr[index] += data[i] * coeffs[indices[i]];
+                arr[arr_inds[i] + offset] += data[i] * coeffs[indices[i]];
             }
         };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
