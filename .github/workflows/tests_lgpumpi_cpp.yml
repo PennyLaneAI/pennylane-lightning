@@ -134,6 +134,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=mpicxx \
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
+            -DCUQUANTUM_SDK=${CUQUANTUM_SDK} \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja
           cmake --build ./Build
