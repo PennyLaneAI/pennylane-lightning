@@ -66,7 +66,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
         .def(
             "getState",
-            [](const TensorNet &tensor_network, np_arr_c &state) {
+            [](TensorNet &tensor_network, np_arr_c &state) {
                 py::buffer_info numpyArrayInfo = state.request();
                 auto *data_ptr =
                     static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
