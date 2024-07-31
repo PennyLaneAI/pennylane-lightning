@@ -448,15 +448,26 @@ Please make your best effort to comply with `black` and `pylint` before using di
 Authors
 *******
 
+.. citation-start-inclusion-marker-do-not-remove
+
 Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
-If you are doing research using PennyLane and Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
+If you are using Lightning for research, please cite:
 
-    Ville Bergholm, Josh Izaac, Maria Schuld, Christian Gogolin, M. Sohaib Alam, Shahnawaz Ahmed,
-    Juan Miguel Arrazola, Carsten Blank, Alain Delgado, Soran Jahangiri, Keri McKiernan, Johannes Jakob Meyer,
-    Zeyue Niu, Antal Száva, and Nathan Killoran.
-    *PennyLane: Automatic differentiation of hybrid quantum-classical computations.* 2018. arXiv:1811.04968
+.. code-block:: bibtex
 
+    @misc{
+        asadi2024,
+        title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}}, 
+        author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
+        year={2024},
+        eprint={2403.02512},
+        archivePrefix={arXiv},
+        primaryClass={quant-ph},
+        url={https://arxiv.org/abs/2403.02512}, 
+    }
+
+.. citation-end-inclusion-marker-do-not-remove
 .. support-start-inclusion-marker-do-not-remove
 
 Support
