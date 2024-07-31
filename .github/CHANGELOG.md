@@ -18,6 +18,9 @@
 
 ### Improvements
 
+* `ENABLE_LAPACK` is off by default for all Lightning backends.
+  [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
+
 * Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
   [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
 
@@ -62,6 +65,9 @@
 
 ### Documentation
 
+* Updated the README and added citation format for Lightning arxiv preprint.
+  [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
+
 ### Bug fixes
 
 * Check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of `cuTensorNet-v24.03.0`.
@@ -83,7 +89,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
