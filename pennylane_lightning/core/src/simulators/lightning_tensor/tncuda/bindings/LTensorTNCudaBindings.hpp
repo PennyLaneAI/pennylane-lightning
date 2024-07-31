@@ -71,9 +71,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 auto *data_ptr =
                     static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
                 if (state.size()) {
-                    std::copy(tensor_network.getDataVector(),
-                              tensor_network.getDataVector() +
-                                  tensor_network.getDataVector().size(),
+                    auto &&state_tensor = tensor_network.getDataVector();
+                    std::copy(state_tensor.begin(), state_tensor.end(),
                               data_ptr);
                 }
             },
