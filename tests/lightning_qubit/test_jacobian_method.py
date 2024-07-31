@@ -87,7 +87,7 @@ class TestJacobian:
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(statevector, tape, execute_and_derivatives=False, obs_batch=False):
+    def process_and_execute(statevector, tape, execute_and_derivatives=False):
 
         if execute_and_derivatives:
             results, jac = simulate_and_jacobian(tape, statevector)
@@ -125,8 +125,6 @@ class TestJacobian:
 
         statevector = lightning_sv(num_wires=3)
         res, jac = self.process_and_execute(statevector, qs, execute_and_derivatives)
-        # print(f'res: {res}')
-        # print(f'jac: {jac}')
 
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
@@ -137,8 +135,6 @@ class TestJacobian:
         expected, expected_jac = self.calculate_reference(
             qs, execute_and_derivatives=execute_and_derivatives
         )
-        # print(f'expected: {expected}')
-        # print(f'expected_jac: {expected_jac }')
 
         tol = 1e-5 if statevector.dtype == np.complex64 else 1e-7
         assert np.allclose(res, expected, atol=tol, rtol=0)
@@ -167,7 +163,7 @@ class TestVJP:
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(statevector, tape, dy, execute_and_derivatives=False, obs_batch=False):
+    def process_and_execute(statevector, tape, dy, execute_and_derivatives=False):
         dy = [dy]
 
         if execute_and_derivatives:
@@ -219,6 +215,5 @@ class TestVJP:
         )
 
         tol = 1e-5 if statevector.dtype == np.complex64 else 1e-7
-        # assert len(res) == len(jac) == 1
         assert np.allclose(res, expected, atol=tol, rtol=0)
         assert np.allclose(jac, expected_jac, atol=tol, rtol=0)

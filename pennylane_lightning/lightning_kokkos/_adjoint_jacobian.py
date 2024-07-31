@@ -14,6 +14,17 @@
 r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
+
+try:
+    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
+        AdjointJacobianC64,
+        AdjointJacobianC128,
+        create_ops_listC64,
+        create_ops_listC128,
+    )
+except ImportError:
+    pass
+
 from os import getenv
 from typing import List
 
@@ -26,17 +37,6 @@ from pennylane.tape import QuantumTape
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from pennylane_lightning.core.lightning_base import _chunk_iterable
-
-# pylint: disable=import-error, no-name-in-module, ungrouped-imports
-try:
-    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
-        AdjointJacobianC64,
-        AdjointJacobianC128,
-        create_ops_listC64,
-        create_ops_listC128,
-    )
-except ImportError:
-    pass
 
 from ._state_vector import LightningKokkosStateVector
 
@@ -271,7 +271,7 @@ class LightningKokkosAdjointJacobian:
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
-            grad_vec (tensor_like): Gradient-output vector, also called dy or cotangent. Must have shape matching the output
+            grad_vec (tensor_like): Gradient-output vector, also called `dy` or cotangent. Must have shape matching the output
                 shape of the corresponding tape, i.e. number of measurements if the return type is expectation.
 
         Returns:
@@ -287,7 +287,7 @@ class LightningKokkosAdjointJacobian:
         measurements = tape.measurements
         tape_return_type = self._get_return_type(measurements)
 
-        if qml.math.allclose(grad_vec, 0) or tape_return_type is None:
+        if qml.math.allclose(grad_vec, 0.0) or tape_return_type is None:
             return qml.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
 
         if tape_return_type is State:
@@ -300,7 +300,7 @@ class LightningKokkosAdjointJacobian:
                 "Adjoint differentiation method does not support expectation return type "
                 "mixed with other return types"
             )
-
+            
         # Proceed, because tape_return_type is Expectation.
         if qml.math.ndim(grad_vec) == 0:
             grad_vec = (grad_vec,)
