@@ -486,7 +486,7 @@ def test_paulirot(n_wires, tol):
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     theta = 0.3
 
-    for word in itertools.combinations_with_replacement(("X", "Y", "Z"), n_wires):
+    for word in itertools.combinations_with_replacement(("I", "X", "Y", "Z"), n_wires):
         for wires in itertools.combinations(range(n_qubits), n_wires):
 
             def circuit():

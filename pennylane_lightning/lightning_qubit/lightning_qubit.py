@@ -15,6 +15,7 @@
 This module contains the LightningQubit class that inherits from the new device interface.
 """
 from dataclasses import replace
+from functools import reduce
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple, Union
@@ -342,7 +343,9 @@ def stopping_condition(op: Operator) -> bool:
     # consistency with `lightning_qubit.toml`
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
-
+    if isinstance(op, qml.PauliRot):
+        n = reduce(lambda x, y: x + (y != "I"), op._hyperparameters["pauli_word"], 0)
+        return n > 2
     return op.name in _operations
 
 
