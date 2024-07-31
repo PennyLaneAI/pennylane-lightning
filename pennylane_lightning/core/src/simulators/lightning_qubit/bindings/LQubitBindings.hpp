@@ -168,6 +168,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using ParamT = PrecisionT; // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
+    using np_arr_sparse_ind =
+        py::array_t<std::size_t, py::array::c_style | py::array::forcecast>;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
@@ -177,11 +179,12 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
            const std::vector<std::size_t> &controlled_wires,
            const std::vector<bool> &controlled_values,
            const std::vector<std::size_t> &wires, const bool inverse,
-           const std::vector<ParamT> &params,
-           const std::vector<std::size_t> &indices,
-           const std::vector<std::complex<ParamT>> &data) {
-            sv.applySparseOperation(opName, controlled_wires, controlled_values,
-                                    wires, inverse, params, indices, data);
+           const std::vector<ParamT> &params, const np_arr_sparse_ind &indices,
+           const np_arr_c &data) {
+            sv.applySparseOperation(
+                opName, controlled_wires, controlled_values, wires, inverse,
+                params, static_cast<std::size_t *>(indices.request().ptr),
+                static_cast<std::complex<PrecisionT> *>(data.request().ptr));
         },
         "Apply a sparse operation.");
     pyclass
