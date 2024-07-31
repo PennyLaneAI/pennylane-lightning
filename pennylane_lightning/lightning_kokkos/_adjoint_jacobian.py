@@ -175,6 +175,39 @@ class LightningKokkosAdjointJacobian:
         # must be 2-dimensional
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
+    def _handle_raises(self, tape: QuantumTape, is_jacobian: bool, grad_vec=None):
+        """Handle the raises related with the tape for computing the Jacobian with the adjoint method or the vector-Jacobian products."""
+
+        if tape.shots:
+            raise QuantumFunctionError(
+                "Requested adjoint differentiation to be computed with finite shots. "
+                "The derivative is always exact when using the adjoint "
+                "differentiation method."
+            )
+
+        tape_return_type = self._get_return_type(tape.measurements)
+
+        if is_jacobian and not tape_return_type:
+            # the tape does not have measurements
+            return True
+
+        if not is_jacobian and (qml.math.allclose(grad_vec, 0.0) or tape_return_type is None):
+            # the tape does not have measurements or the gradient is 0.0
+            return True
+
+        if tape_return_type is State:
+            raise QuantumFunctionError(
+                "Adjoint differentiation does not support State measurements."
+            )
+
+        if any(m.return_type is not Expectation for m in tape.measurements):
+            raise QuantumFunctionError(
+                "Adjoint differentiation method does not support expectation return type "
+                "mixed with other return types"
+            )
+
+        return False
+
     def calculate_jacobian(self, tape: QuantumTape):
         """Computes the Jacobian with the adjoint method.
 
@@ -191,28 +224,10 @@ class LightningKokkosAdjointJacobian:
             The Jacobian of a tape.
         """
 
-        if tape.shots:
-            raise QuantumFunctionError(
-                "Requested adjoint differentiation to be computed with finite shots. "
-                "The derivative is always exact when using the adjoint "
-                "differentiation method."
-            )
+        empty_array = self._handle_raises(tape, is_jacobian=True)
 
-        tape_return_type = self._get_return_type(tape.measurements)
-
-        if not tape_return_type:  # the tape does not have measurements
+        if empty_array:
             return np.array([], dtype=self._dtype)
-
-        if tape_return_type is State:
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support measurement StateMP."
-            )
-
-        if any(m.return_type is not Expectation for m in tape.measurements):
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support expectation return type "
-                "mixed with other return types"
-            )
 
         processed_data = self._process_jacobian_tape(tape)
 
@@ -277,35 +292,17 @@ class LightningKokkosAdjointJacobian:
         Returns:
             The vector-Jacobian products of a tape.
         """
-        if tape.shots:
-            raise QuantumFunctionError(
-                "Requested adjoint differentiation to be computed with finite shots. "
-                "The derivative is always exact when using the adjoint differentiation "
-                "method."
-            )
 
-        measurements = tape.measurements
-        tape_return_type = self._get_return_type(measurements)
+        empty_array = self._handle_raises(tape, is_jacobian=False, grad_vec=grad_vec)
 
-        if qml.math.allclose(grad_vec, 0.0) or tape_return_type is None:
+        if empty_array:
             return qml.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
-
-        if tape_return_type is State:
-            raise QuantumFunctionError(
-                "Adjoint differentiation does not support State measurements."
-            )
-
-        if any(m.return_type is not Expectation for m in tape.measurements):
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support expectation return type "
-                "mixed with other return types"
-            )
 
         # Proceed, because tape_return_type is Expectation.
         if qml.math.ndim(grad_vec) == 0:
             grad_vec = (grad_vec,)
 
-        if len(grad_vec) != len(measurements):
+        if len(grad_vec) != len(tape.measurements):
             raise ValueError(
                 "Number of observables in the tape must be the same as the "
                 "length of grad_vec in the vjp method"
@@ -317,7 +314,7 @@ class LightningKokkosAdjointJacobian:
                 "tape is returning an expectation value"
             )
 
-        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in measurements]))
+        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in tape.measurements]))
 
         num_params = len(tape.trainable_params)
 

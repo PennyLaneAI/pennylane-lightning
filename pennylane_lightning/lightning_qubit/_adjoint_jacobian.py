@@ -205,7 +205,7 @@ class LightningAdjointJacobian:
 
         if tape_return_type is State:
             raise QuantumFunctionError(
-                "Adjoint differentiation method does not support measurement StateMP."
+                "Adjoint differentiation does not support State measurements."
             )
 
         if any(m.return_type is not Expectation for m in tape.measurements):
