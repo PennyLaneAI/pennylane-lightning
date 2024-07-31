@@ -21,7 +21,6 @@
 #pragma once
 
 #include <complex>
-#include <cuComplex.h>
 #include <cutensornet.h>
 #include <vector>
 
@@ -40,13 +39,6 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 /// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda::Measures {
-extern void getProbs_CUDA(cuComplex *state, float *probs, const int data_size,
-                          const std::size_t thread_per_block,
-                          cudaStream_t stream_id);
-extern void getProbs_CUDA(cuDoubleComplex *state, double *probs,
-                          const int data_size,
-                          const std::size_t thread_per_block,
-                          cudaStream_t stream_id);
 /**
  * @brief ObservablesTNCuda's Measurement Class.
  *
@@ -59,7 +51,6 @@ template <class TensorNetT> class MeasurementsTNCuda {
   private:
     using PrecisionT = typename TensorNetT::PrecisionT;
     using ComplexT = typename TensorNetT::ComplexT;
-    using CFP_t = typename TensorNetT::CFP_t;
 
     const TensorNetT &tensor_network_;
 
