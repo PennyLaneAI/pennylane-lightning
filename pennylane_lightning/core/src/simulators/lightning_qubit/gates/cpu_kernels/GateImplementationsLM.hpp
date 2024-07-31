@@ -26,6 +26,7 @@
 
 #include "BitUtil.hpp" // revWireParity
 #include "Error.hpp"
+#include "GateIndices.hpp"
 #include "GateOperation.hpp"
 #include "GatePragmas.hpp"
 #include "Gates.hpp"
@@ -489,16 +490,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ASSERT(nw_tot == parity.size() - 1);
 
         const std::size_t dim = one << n_wires;
+        const auto indices =
+            parity2indices(0, parity, rev_wire_shifts, n_contr, rev_wires);
+        const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
+            Pennylane::Util::getIndicesAfterExclusion(all_wires, num_qubits),
+            num_qubits);
 
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            const auto indices =
-                parity2indices(k, parity, rev_wire_shifts, n_contr, rev_wires);
-            std::vector<std::complex<PrecisionT>> coeffs_in(dim);
-            for (std::size_t i = 0; i < dim; i++) {
-                coeffs_in[i] = arr[indices[i]];
-            }
-            core_function(arr, indices, coeffs_in);
+        for (auto offset : all_offsets) {
+            core_function(arr, indices, offset);
         }
     }
 
@@ -531,20 +531,23 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         }
-        auto core_function =
-            [dim,
-             &mat](std::complex<PrecisionT> *arr,
-                   const std::vector<std::size_t> &indices,
-                   const std::vector<std::complex<PrecisionT>> &coeffs_in) {
-                for (std::size_t i = 0; i < dim; i++) {
-                    const auto index = indices[i];
-                    arr[index] = 0.0;
-                    const std::size_t base_idx = i * dim;
-                    for (std::size_t j = 0; j < dim; j++) {
-                        arr[index] += mat[base_idx + j] * coeffs_in[j];
-                    }
+        std::vector<std::complex<PrecisionT>> coeffs(dim);
+        auto core_function = [dim, &coeffs,
+                              &mat](std::complex<PrecisionT> *arr,
+                                    const std::vector<std::size_t> &indices,
+                                    const std::size_t offset) {
+            for (std::size_t i = 0; i < dim; i++) {
+                coeffs[i] = arr[indices[i] + offset];
+            }
+            for (std::size_t i = 0; i < dim; i++) {
+                const auto index = indices[i] + offset;
+                const std::size_t base_idx = i * dim;
+                arr[index] = 0.0;
+                for (std::size_t j = 0; j < dim; j++) {
+                    arr[index] += mat[base_idx + j] * coeffs[j];
                 }
-            };
+            }
+        };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
     }
@@ -570,18 +573,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t dim = one << n_wires;
         const PrecisionT c = std::cos(angle / 2);
         const std::complex<PrecisionT> s = {0.0, -std::sin(angle / 2)};
+        std::vector<std::complex<PrecisionT>> coeffs(dim);
 
-        auto core_function =
-            [dim, c, &s, &indices,
-             &data](std::complex<PrecisionT> *arr,
-                    const std::vector<std::size_t> &arr_inds,
-                    const std::vector<std::complex<PrecisionT>> &arr_vals) {
-                for (std::size_t i = 0; i < dim; i++) {
-                    const auto index = arr_inds[i];
-                    arr[index] *= c;
-                    arr[index] += s * data[i] * arr_vals[indices[i]];
-                }
-            };
+        auto core_function = [dim, c, &s, &coeffs, &indices,
+                              &data](std::complex<PrecisionT> *arr,
+                                     const std::vector<std::size_t> &arr_inds,
+                                     const std::size_t offset) {
+            for (std::size_t i = 0; i < dim; i++) {
+                coeffs[i] = arr[arr_inds[i] + offset];
+            }
+            for (std::size_t i = 0; i < dim; i++) {
+                const auto index = arr_inds[i] + offset;
+                arr[index] *= c;
+                arr[index] += s * data[i] * coeffs[indices[i]];
+            }
+        };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
     }
@@ -1915,16 +1921,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             wires_parity |=
                 (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
         }
-        auto core_function =
-            [wires_parity, &shifts](
-                std::complex<PrecisionT> *arr,
-                const std::vector<std::size_t> &indices,
-                [[maybe_unused]] const std::vector<std::complex<PrecisionT>>
-                    &coeffs_in) {
-                for (const auto &k : indices) {
-                    arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
-                }
-            };
+        auto core_function = [wires_parity,
+                              &shifts](std::complex<PrecisionT> *arr,
+                                       const std::vector<std::size_t> &indices,
+                                       const std::size_t offset) {
+            for (auto k : indices) {
+                k += offset;
+                arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
+            }
+        };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
     }

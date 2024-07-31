@@ -354,7 +354,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                 U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
                 U, _ = np.linalg.qr(U)
                 init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-                init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+                init_state /= np.linalg.norm(init_state)
 
                 def circuit():
                     qml.StatePrep(init_state, wires=range(n_qubits))
@@ -423,7 +423,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
             target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
             init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-            init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+            init_state /= np.linalg.norm(init_state)
 
             def circuit():
                 qml.StatePrep(init_state, wires=range(n_qubits))
