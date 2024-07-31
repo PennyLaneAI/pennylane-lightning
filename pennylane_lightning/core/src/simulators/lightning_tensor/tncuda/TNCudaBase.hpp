@@ -294,7 +294,16 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* int32_t unitary*/ 1));
     }
 
-    auto get_state_tensor(const int32_t numHyperSamples = 1) {
+    /**
+     * @brief Get full state tensor
+     *
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
+     * @return Full state tensor on the host memory
+     */
+    auto get_state_tensor(const int32_t numHyperSamples = 1)
+        -> std::vector<ComplexT> {
         std::vector<std::size_t> wires(BaseType::getNumQubits());
         std::iota(wires.begin(), wires.end(), 0);
         return get_state_tensor(wires, numHyperSamples);
@@ -303,17 +312,24 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     auto get_state_tensor(const std::vector<std::size_t> &wires,
                           const int32_t numHyperSamples = 1)
         -> std::vector<ComplexT> {
-        std::vector<std::size_t> sorted_wires(wires);
-
-        std::sort(sorted_wires.begin(), sorted_wires.end(),
-                  std::less<std::size_t>());
-
         const std::size_t length = std::size_t{1} << wires.size();
 
         std::vector<ComplexT> h_res(length);
 
         DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
 
+        get_state_tensor(d_output_tensor.getData(), d_output_tensor.getLength(),
+                         wires, numHyperSamples);
+
+        d_output_tensor.CopyGpuDataToHost(h_res.data(), h_res.size());
+
+        return h_res;
+    }
+
+    void get_state_tensor(CFP_t *tensor_data,
+                          const std::size_t tensor_data_size,
+                          const std::vector<std::size_t> &wires,
+                          const int32_t numHyperSamples = 1) {
         auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
             wires, BaseType::getNumQubits());
 
@@ -389,7 +405,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             projectedModeValues.data(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* void *amplitudesTensor*/
-            static_cast<void *>(d_output_tensor.getData()),
+            static_cast<void *>(tensor_data),
             /* void *stateNorm */ static_cast<void *>(&stateNorm2),
             /* cudaStream_t cudaStream */ 0x0));
 
@@ -399,17 +415,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         SharedCublasCaller cublascaller = make_shared_cublas_caller();
 
-        scaleC_CUDA<CFP_t, CFP_t>(scale_scalar_cu, d_output_tensor.getData(),
-                                  d_output_tensor.getLength(),
-                                  getDevTag().getDeviceID(),
+        scaleC_CUDA<CFP_t, CFP_t>(scale_scalar_cu, tensor_data,
+                                  tensor_data_size, getDevTag().getDeviceID(),
                                   getDevTag().getStreamID(), *cublascaller);
 
-        d_output_tensor.CopyGpuDataToHost(h_res.data(), h_res.size());
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyWorkspaceDescriptor(workDesc));
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyAccessor(accessor));
-
-        return h_res;
     }
 
   protected:

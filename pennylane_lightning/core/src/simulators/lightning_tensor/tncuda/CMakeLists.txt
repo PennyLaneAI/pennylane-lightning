@@ -9,7 +9,7 @@ message(${LOGO})
 
 project(${PL_BACKEND}
     DESCRIPTION "Lightning-Tensor MPS bindings for PennyLane. Backed by NVIDIA cuQuantum SDK."
-    LANGUAGES CXX C
+    LANGUAGES CXX C CUDA
 )
 
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
@@ -17,7 +17,7 @@ include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pltensortncuda.cmake")
 findCUDATK(lightning_external_libs)
 findCutensornet(lightning_external_libs)
 
-set(LTENSOR_MPS_FILES  MPSTNCuda.cpp CACHE INTERNAL "" FORCE)
+set(LTENSOR_MPS_FILES  MPSTNCuda.cpp cuda_kernels_ltensor.cu CACHE INTERNAL "" FORCE)
 
 add_library(${PL_BACKEND} STATIC ${LTENSOR_MPS_FILES})
 
