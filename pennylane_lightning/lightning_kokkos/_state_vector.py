@@ -24,7 +24,7 @@ try:
         print_configuration,
     )
 except ImportError:
-    pass  
+    pass
 
 from itertools import product
 
