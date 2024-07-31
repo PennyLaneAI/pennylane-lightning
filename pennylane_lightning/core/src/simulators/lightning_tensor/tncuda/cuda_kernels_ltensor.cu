@@ -18,7 +18,8 @@
 
 namespace Pennylane::LightningTensor::TNCuda {
 /**
- * @brief Explicitly get the probability of given state tensor data on GPU device.
+ * @brief Explicitly get the probability of given state tensor data on GPU
+ * device.
  *
  * @param state Complex data pointer of state tensor on device.
  * @param probs The probability result on device.
@@ -32,11 +33,12 @@ void getProbs_CUDA(cuDoubleComplex *state, double *probs, const int data_size,
                    const std::size_t thread_per_block, cudaStream_t stream_id);
 
 /**
- * @brief The CUDA kernel that calculate the probability from a given state tensor data on GPU device.
+ * @brief The CUDA kernel that calculate the probability from a given state
+ * tensor data on GPU device.
  *
  * @tparam GPUDataT cuComplex data type (cuComplex or cuDoubleComplex).
  * @tparam PrecisionT Floating data type.
- * 
+ *
  * @param state Complex data pointer of state tensor on device.
  * @param probs The probability result on device.
  * @param data_size The length of state tensor on device.
@@ -55,10 +57,10 @@ __global__ void getProbsKernel(GPUDataT *state, PrecisionT *probs,
 
 /**
  * @brief The CUDA kernel call wrapper.
- * 
+ *
  * @tparam GPUDataT cuComplex data type (cuComplex or cuDoubleComplex).
  * @tparam PrecisionT Floating data type.
- * 
+ *
  * @param state Complex data pointer of state tensor on device.
  * @param probs The probability result on device.
  * @param data_size The length of state tensor on device.
@@ -79,7 +81,7 @@ void getProbs_CUDA_call(GPUDataT *state, PrecisionT *probs, const int data_size,
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
 
-//Definitions
+// Definitions
 void getProbs_CUDA(cuComplex *state, float *probs, const int data_size,
                    const std::size_t thread_per_block, cudaStream_t stream_id) {
     getProbs_CUDA_call<cuComplex, float>(state, probs, data_size,
