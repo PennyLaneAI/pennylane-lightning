@@ -298,12 +298,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             idx |= ((k << i) & parity[i]);
         }
         for (std::size_t i = 0; i < n_contr; i++) {
-            if (rev_wires.empty()) {
-                idx |= rev_wire_shifts[i];
-            } else {
-                idx &= ~(one << rev_wires[i]);
-                idx |= rev_wire_shifts[i];
-            }
+            idx &=
+                ~(static_cast<std::size_t>(!rev_wires.empty()) << rev_wires[i]);
+            idx |= rev_wire_shifts[i];
         }
         indices[0] = idx;
         for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
@@ -490,11 +487,30 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         PL_ASSERT(nw_tot == parity.size() - 1);
 
         const std::size_t dim = one << n_wires;
-        const auto indices =
-            parity2indices(0, parity, rev_wire_shifts, n_contr, rev_wires);
-        const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
-            Pennylane::Util::getIndicesAfterExclusion(all_wires, num_qubits),
-            num_qubits);
+
+        bool is_equal_to_all_wires = n_wires == num_qubits;
+        for (std::size_t k = 0; k < n_wires; k++) {
+            if (!is_equal_to_all_wires) {
+                break;
+            }
+            is_equal_to_all_wires = wires[k] == k;
+        }
+        std::vector<std::size_t> indices;
+        std::vector<std::size_t> all_offsets;
+        if (is_equal_to_all_wires) {
+            indices.reserve(one << num_qubits);
+            std::iota(indices.begin(), indices.end(), 0);
+            all_offsets = std::vector<std::size_t>(1, 0);
+        } else {
+            indices = (n_contr == 0)
+                          ? Gates::generateBitPatterns(wires, num_qubits)
+                          : parity2indices(0, parity, rev_wire_shifts, n_contr,
+                                           rev_wires);
+            all_offsets = Gates::generateBitPatterns(
+                Pennylane::Util::getIndicesAfterExclusion(all_wires,
+                                                          num_qubits),
+                num_qubits);
+        }
 
         PL_LOOP_PARALLEL(1)
         for (auto offset : all_offsets) {
