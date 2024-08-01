@@ -46,7 +46,7 @@ if device_name == "lightning.kokkos":
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip(
-        "Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.",
+        "Exclusive tests for new API backends lightning.qubit and lightning.kokkos for LightningAdjointJacobian class. Skipping.",
         allow_module_level=True,
     )
 
@@ -65,11 +65,6 @@ def lightning_sv(request):
 
     return _statevector
 
-
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support derivatives",
-)
 class TestJacobian:
     """Unit tests for the jacobian method with the new device API."""
 
