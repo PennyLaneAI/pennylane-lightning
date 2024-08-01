@@ -194,7 +194,6 @@ class LightningTensorNet:
 
         Returns:
             LightningTensorNet: Lightning final state class.
-
         """
         self.apply_operations(circuit.operations)
         if self._method == "mps":

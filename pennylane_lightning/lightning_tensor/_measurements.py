@@ -61,6 +61,18 @@ class LightningTensorMeasurements:
         """
         return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
 
+    def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
+        """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
+            This method is bypassing the measurement process to default.qubit implementation.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            TensorLike: the result of the measurement
+        """
+        return self._tensornet.state
+
     # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
         """Expectation value of the supplied observable contained in the MeasurementProcess.
@@ -123,6 +135,9 @@ class LightningTensorMeasurements:
 
             if isinstance(measurementprocess, VarianceMP):
                 return self.var
+
+            if measurementprocess.obs is None:
+                return self.state_diagonalizing_gates
 
         raise NotImplementedError(
             "Does not support current measurement. Only ExpectationMP measurements are supported."
