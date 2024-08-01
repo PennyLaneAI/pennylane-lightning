@@ -326,6 +326,8 @@ class LightningTensor(Device):
 
     def _tensornet(self):
         """Return the tensornet object."""
+        # Ensure that the tensor network is only created and calculated once, which enable access to qml.state().
+        # parameter-shift/finite-diff calculation will return a new LightningTensorNet object.
         if self._tensor_network is None:
             self._tensor_network = LightningTensorNet(
                 self._num_wires,

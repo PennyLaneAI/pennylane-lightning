@@ -652,7 +652,8 @@ class TestApproxTimeEvolution:
 
         def circuit(time):
             qml.ApproxTimeEvolution(hamiltonian, time, 1)
-            return qml.state() 
+            return qml.state()
+
         res = qml.QNode(circuit, dev, diff_method=None)(1.3)
         ref = qml.QNode(circuit, dq, diff_method=None)(1.3)
 
@@ -800,6 +801,7 @@ class TestAQFT:
 
 class TestQSVT:
     """Test the QSVT algorithm."""
+
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
         reason="lightning.tensor does not support BlockEncode",
