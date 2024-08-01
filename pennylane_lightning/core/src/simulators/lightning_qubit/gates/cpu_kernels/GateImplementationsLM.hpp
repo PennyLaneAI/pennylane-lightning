@@ -494,12 +494,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             (n_contr == 0) ? Gates::generateBitPatterns(wires, num_qubits)
                            : parity2indices(0, parity, rev_wire_shifts, n_contr,
                                             rev_wires);
-        const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
-            Pennylane::Util::getIndicesAfterExclusion(all_wires, num_qubits),
-            num_qubits);
 
         PL_LOOP_PARALLEL(1)
-        for (const auto offset : all_offsets) {
+        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+            std::size_t offset{0};
+            for (std::size_t i = 0; i < parity.size(); i++) {
+                offset |= ((k << i) & parity[i]);
+            }
+            for (std::size_t i = 0; i < n_contr; i++) {
+                offset &= ~(one << rev_wires[i]);
+                offset |= rev_wire_shifts[i];
+            }
             core_function(arr, indices, offset);
         }
     }
@@ -580,8 +585,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                      const std::vector<std::size_t> &arr_inds,
                                      const std::size_t offset) {
             for (std::size_t i = 0; i < dim; i++) {
-                const auto index = arr_inds[i] + offset;
-                coeffs[indices[i]] = arr[index];
+                coeffs[indices[i]] = arr[arr_inds[i] + offset];
             }
             for (std::size_t i = 0; i < dim; i++) {
                 const auto index = arr_inds[i] + offset;
