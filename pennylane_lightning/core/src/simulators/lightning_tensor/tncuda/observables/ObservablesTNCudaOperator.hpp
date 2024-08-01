@@ -71,11 +71,12 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         std::tuple<std::string, std::vector<PrecisionT>, std::size_t>;
 
   private:
-    std::unordered_map<std::string, std::string> pauli_map_{{"Identity", "I"},
-                                                            {"PauliX", "X"},
-                                                            {"PauliY", "Y"},
-                                                            {"PauliZ", "Z"},
-                                                            {"Hadamard", "H"}};
+    static inline std::unordered_map<std::string, std::string> pauli_map_{
+        {"Identity", "I"},
+        {"PauliX", "X"},
+        {"PauliY", "Y"},
+        {"PauliZ", "Z"},
+        {"Hadamard", "H"}};
 
   private:
     cutensornetNetworkOperator_t obsOperator_{
