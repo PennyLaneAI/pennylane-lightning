@@ -1,4 +1,3 @@
-pip
 git+https://github.com/PennyLaneAI/pennylane.git@master
 ninja
 flaky
