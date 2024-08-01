@@ -594,10 +594,6 @@ class TestMeasurements:
             [[1, 0], [0, 1]],
         ],
     )
-    @pytest.mark.skipif(
-        device_name == "lightning.kokkos",
-        reason="Kokkos new API in WIP.  Skipping.",
-    )
     def test_probs_tape_unordered_wires(self, cases, tol):
         """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
 
