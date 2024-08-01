@@ -100,7 +100,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
     std::vector<int64_t> ids_; // ids for each term in the graph
 
-    const bool var_cal_ = false;
+    const bool var_cal_{false};
 
   private:
     /**
@@ -145,7 +145,7 @@ template <class TensorNetT> class ObservableTNCudaOperator {
     }
 
     /**
-     * @brief Create a map of modes to observable meta data.
+     * @brief Create a map of modes to observable metadata.
      *
      * @param obs An observableTNCuda object.
      * @param modes Modes of all observable terms.
@@ -162,8 +162,8 @@ template <class TensorNetT> class ObservableTNCudaOperator {
         -> std::unordered_map<int32_t, std::vector<MetaDataT>> {
         std::unordered_map<int32_t, std::vector<MetaDataT>> modes_obsname_map;
 
-        auto modes_termx = modes[term_idx];
-        auto modes_termy = modes[term_idy];
+        auto &&modes_termx = modes[term_idx];
+        auto &&modes_termy = modes[term_idy];
 
         for (std::size_t tensor_idx = 0; tensor_idx < modes_termx.size();
              tensor_idx++) {
@@ -177,12 +177,13 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
         for (std::size_t tensor_idy = 0; tensor_idy < modes_termy.size();
              tensor_idy++) {
-            auto it = modes_obsname_map.find(modes_termy[tensor_idy].front());
+            auto &&termy = modes_termy[tensor_idy];
+            auto it = modes_obsname_map.find(termy.front());
             if (it != modes_obsname_map.end()) {
-                modes_obsname_map[modes_termy[tensor_idy].front()].push_back(
+                modes_obsname_map[termy.front()].push_back(
                     obs.getMetaData()[term_idy][tensor_idy]);
             } else {
-                modes_obsname_map[modes_termy[tensor_idy].front()] = {
+                modes_obsname_map[termy.front()] = {
                     obs.getMetaData()[term_idy][tensor_idy]};
             }
         }
@@ -223,14 +224,11 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      * @return obs_key The key of observable tensor operator.
      */
     auto add_meta_data_(const MetaDataT &metaData) -> obs_key {
-        auto obsName = std::get<0>(metaData);
-        auto param = std::get<1>(metaData);
-        auto hermitianMatrix = std::get<2>(metaData);
-        std::size_t hash_val = 0;
-
-        if (!hermitianMatrix.empty()) {
-            hash_val = MatrixHasher()(hermitianMatrix);
-        }
+        auto &&obsName = std::get<0>(metaData);
+        auto &&param = std::get<1>(metaData);
+        auto &&hermitianMatrix = std::get<2>(metaData);
+        std::size_t hash_val =
+            hermitianMatrix.empty() ? 0 : MatrixHasher()(hermitianMatrix);
 
         auto obsKey = std::make_tuple(obsName, param, hash_val);
 
@@ -259,6 +257,13 @@ template <class TensorNetT> class ObservableTNCudaOperator {
     }
 
   public:
+    /**
+     * @brief Construct a new ObservableTNCudaOperator object.
+     *
+     * @param tensor_network Tensor network object.
+     * @param obs ObservableTNCuda object.
+     * @param var_cal If true, calculate the variance of the observable.
+     */
     ObservableTNCudaOperator(const TensorNetT &tensor_network,
                              ObservableTNCuda<TensorNetT> &obs,
                              const bool var_cal = false)
@@ -268,11 +273,10 @@ template <class TensorNetT> class ObservableTNCudaOperator {
             for (std::size_t term_idx = 0; term_idx < numObsTerms_;
                  term_idx++) {
                 PrecisionT coeff_real = obs.getCoeffs()[term_idx];
-                auto coeff =
-                    cuDoubleComplex{static_cast<double>(coeff_real), 0.0};
                 auto numTensors = obs.getNumTensors()[term_idx];
 
-                coeffs_.emplace_back(coeff);
+                coeffs_.emplace_back(
+                    cuDoubleComplex{static_cast<double>(coeff_real), 0.0});
                 numTensors_.emplace_back(numTensors);
 
                 // number of state modes of each tensor in each term
@@ -336,10 +340,12 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                      term_idy++) {
                     PrecisionT coeff_real =
                         obs.getCoeffs()[term_idx] * obs.getCoeffs()[term_idy];
-                    auto coeff =
-                        cuDoubleComplex{static_cast<double>(coeff_real), 0.0};
+                    // auto coeff =
+                    //     cuDoubleComplex{static_cast<double>(coeff_real),
+                    //     0.0};
 
-                    coeffs_.emplace_back(coeff);
+                    coeffs_.emplace_back(
+                        cuDoubleComplex{static_cast<double>(coeff_real), 0.0});
 
                     auto modes_obsname_map = create_modes_obsname_map_(
                         obs, modes, term_idx, term_idy);
