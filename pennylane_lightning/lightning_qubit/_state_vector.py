@@ -325,7 +325,9 @@ class LightningStateVector:
                 scale *= qml.math.sin(operation.parameters[0] / 2)
                 data = pw._get_csr_data(pw.wires, scale)
                 indices = pw._get_csr_indices(pw.wires)
-                method("PauliRot", [], [], pw.wires, False, operation.parameters, indices, data)
+                method(
+                    [], [], pw.wires, False, operation.parameters, indices, data
+                )  # control wires and values
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)

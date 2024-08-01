@@ -253,8 +253,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         constexpr std::size_t one{1};
         constexpr std::size_t dim = one << length;
         std::array<std::size_t, dim> indices{};
-        std::size_t idx = (k & parity[0]);
-        for (std::size_t i = 1; i < parity.size(); i++) {
+        std::size_t idx{0U};
+        for (std::size_t i = 0; i < parity.size(); i++) {
             idx |= ((k << i) & parity[i]);
         }
         for (std::size_t i = 0; i < n_contr; i++) {
@@ -293,17 +293,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         constexpr std::size_t one{1};
         const std::size_t dim = one << (rev_wire_shifts.size() - n_contr);
         std::vector<std::size_t> indices(dim);
-        std::size_t idx = (k & parity[0]);
-        for (std::size_t i = 1; i < parity.size(); i++) {
+        std::size_t idx{0U};
+        for (std::size_t i = 0; i < parity.size(); i++) {
             idx |= ((k << i) & parity[i]);
         }
         for (std::size_t i = 0; i < n_contr; i++) {
-            if (rev_wires.empty()) {
-                idx |= rev_wire_shifts[i];
-            } else {
+            if (!rev_wires.empty()) {
                 idx &= ~(one << rev_wires[i]);
-                idx |= rev_wire_shifts[i];
             }
+            idx |= rev_wire_shifts[i];
         }
         indices[0] = idx;
         for (std::size_t inner_idx = 1; inner_idx < dim; inner_idx++) {
@@ -468,7 +466,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                          const std::vector<bool> &controlled_values,
                          const std::vector<std::size_t> &wires,
                          FuncT core_function) {
-        static constexpr std::size_t one{1};
         const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
@@ -489,23 +486,23 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             Pennylane::Util::revWireParity(rev_wires);
         PL_ASSERT(nw_tot == parity.size() - 1);
 
-        const std::size_t dim = one << n_wires;
-        const std::vector<std::size_t> indices =
+        std::vector<std::size_t> indices =
             (n_contr == 0) ? Gates::generateBitPatterns(wires, num_qubits)
-                           : parity2indices(0, parity, rev_wire_shifts, n_contr,
-                                            rev_wires);
+                           : std::vector<std::size_t>(0);
 
         PL_LOOP_PARALLEL(1)
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            std::size_t offset{0};
-            for (std::size_t i = 0; i < parity.size(); i++) {
-                offset |= ((k << i) & parity[i]);
+            std::size_t offset{0U};
+            if (n_contr == 0) {
+                for (std::size_t i = 0; i < parity.size(); i++) {
+                    offset |= ((k << i) & parity[i]);
+                }
+                core_function(arr, indices, offset);
+            } else {
+                const auto ctrl_indices = parity2indices(
+                    k, parity, rev_wire_shifts, n_contr, rev_wires);
+                core_function(arr, ctrl_indices, offset);
             }
-            for (std::size_t i = 0; i < n_contr; i++) {
-                offset &= ~(one << rev_wires[i]);
-                offset |= rev_wire_shifts[i];
-            }
-            core_function(arr, indices, offset);
         }
     }
 
@@ -538,11 +535,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 }
             }
         }
-        std::vector<std::complex<PrecisionT>> coeffs(dim);
-        auto core_function = [dim, &coeffs,
+        auto core_function = [dim,
                               &mat](std::complex<PrecisionT> *arr,
                                     const std::vector<std::size_t> &indices,
                                     const std::size_t offset) {
+            std::vector<std::complex<PrecisionT>> coeffs(dim);
             for (std::size_t i = 0; i < dim; i++) {
                 coeffs[i] = arr[indices[i] + offset];
             }
@@ -568,13 +565,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
-    static void
-    applyPauliRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
-                  const std::vector<std::size_t> &controlled_wires,
-                  const std::vector<bool> &controlled_values,
-                  const std::vector<std::size_t> &wires, const bool inverse,
-                  PrecisionT angle, const std::size_t *indices,
-                  const std::complex<PrecisionT> *data) {
+    static void applyPauliRot(std::complex<PrecisionT> *arr,
+                              std::size_t num_qubits,
+                              const std::vector<std::size_t> &controlled_wires,
+                              const std::vector<bool> &controlled_values,
+                              const std::vector<std::size_t> &wires,
+                              [[maybe_unused]] const bool inverse,
+                              PrecisionT angle, const std::size_t *indices,
+                              const std::complex<PrecisionT> *data) {
         constexpr std::size_t one{1};
         const std::size_t n_wires = wires.size();
         const std::size_t dim = one << n_wires;
@@ -1961,7 +1959,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             arr[i0] *= phase;
             arr[i1] *= phase;
         };
-        std::size_t target{0};
+        std::size_t target{0U};
         if (!controlled_wires.empty()) {
             for (std::size_t i = 0; i < num_qubits; i++) {
                 if (std::find(controlled_wires.begin(), controlled_wires.end(),
@@ -2031,7 +2029,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t dim = one << nw_tot;
         // std::vector<std::size_t> indices(dim);
 
-        std::size_t mask{0};
+        std::size_t mask{0U};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
             mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
                     << k;
@@ -2061,7 +2059,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         auto core_function = []([[maybe_unused]] std::complex<PrecisionT> *arr,
                                 [[maybe_unused]] const std::size_t i0,
                                 [[maybe_unused]] const std::size_t i1) {};
-        std::size_t target{0};
+        std::size_t target{0U};
         if (!controlled_wires.empty()) {
             for (std::size_t i = 0; i < num_qubits; i++) {
                 if (std::find(controlled_wires.begin(), controlled_wires.end(),
@@ -2255,7 +2253,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const std::size_t dim = one << nw_tot;
 
-        std::size_t mask{0};
+        std::size_t mask{0U};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
             mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
                     << k;
@@ -2543,7 +2541,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t dim = one << nw_tot;
         std::vector<std::size_t> indices(dim);
 
-        std::size_t mask{0};
+        std::size_t mask{0U};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
             mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
                     << k;

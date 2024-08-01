@@ -443,8 +443,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param inverse Indicates whether to use inverse of gate.
      * @param params Optional parameter list for parametric gates.
      */
-    void applyPauliRot(const std::string &opName,
-                       const std::vector<std::size_t> &controlled_wires,
+    void applyPauliRot(const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
                        const bool inverse,

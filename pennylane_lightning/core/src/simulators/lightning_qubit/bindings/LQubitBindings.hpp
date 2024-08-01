@@ -175,15 +175,14 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerControlledGate<StateVectorT>(pyclass);
     pyclass.def(
         "applyPauliRot",
-        [](StateVectorT &sv, const std::string &opName,
-           const std::vector<std::size_t> &controlled_wires,
+        [](StateVectorT &sv, const std::vector<std::size_t> &controlled_wires,
            const std::vector<bool> &controlled_values,
            const std::vector<std::size_t> &wires, const bool inverse,
            const std::vector<ParamT> &params, const np_arr_sparse_ind &indices,
            const np_arr_c &data) {
             sv.applyPauliRot(
-                opName, controlled_wires, controlled_values, wires, inverse,
-                params, static_cast<std::size_t *>(indices.request().ptr),
+                controlled_wires, controlled_values, wires, inverse, params,
+                static_cast<std::size_t *>(indices.request().ptr),
                 static_cast<std::complex<PrecisionT> *>(data.request().ptr));
         },
         "Apply a sparse operation.");
