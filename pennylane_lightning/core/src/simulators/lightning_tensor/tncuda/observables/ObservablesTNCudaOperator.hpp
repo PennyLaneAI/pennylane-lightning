@@ -340,9 +340,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                      term_idy++) {
                     PrecisionT coeff_real =
                         obs.getCoeffs()[term_idx] * obs.getCoeffs()[term_idy];
-                    // auto coeff =
-                    //     cuDoubleComplex{static_cast<double>(coeff_real),
-                    //     0.0};
 
                     coeffs_.emplace_back(
                         cuDoubleComplex{static_cast<double>(coeff_real), 0.0});
@@ -373,21 +370,13 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                             auto obsName0 = std::get<0>(metaDataArr[0]);
                             auto obsName1 = std::get<0>(metaDataArr[1]);
 
-                            auto param0 = std::get<1>(metaDataArr[0]);
-                            auto param1 = std::get<1>(metaDataArr[1]);
-
-                            std::string obsName;
-
                             if (pauli_map_.find(obsName0) != pauli_map_.end() &&
                                 pauli_map_.find(obsName1) != pauli_map_.end()) {
                                 // Branch for Pauli strings
-                                obsName0 = pauli_map_[obsName0];
-                                obsName1 = pauli_map_[obsName1];
-                                obsName = obsName0 + "@" + obsName1;
-
-                                MetaDataT metaData = {obsName, {}, {}};
-
-                                auto obsKey = add_meta_data_(metaData);
+                                auto obsName = pauli_map_[obsName0] + "@" +
+                                               pauli_map_[obsName1];
+                                auto &&obsKey =
+                                    add_meta_data_(MetaDataT{obsName, {}, {}});
 
                                 tensorDataPtrPerTerm_.emplace_back(
                                     static_cast<const void *>(
@@ -397,13 +386,13 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                                 // add both observables matrix to GPU cache
                                 auto obsName = obsName0 + "@" + obsName1;
 
-                                auto hermitianMatrix =
-                                    std::get<2>(metaDataArr[0]);
+                                auto obsMat0 = std::get<2>(metaDataArr[0]);
+                                auto obsMat1 = std::get<2>(metaDataArr[1]);
 
-                                hermitianMatrix.insert(
-                                    hermitianMatrix.end(),
-                                    std::get<2>(metaDataArr[1]).begin(),
-                                    std::get<2>(metaDataArr[1]).end());
+                                auto hermitianMatrix = obsMat0;
+                                hermitianMatrix.insert(hermitianMatrix.end(),
+                                                       obsMat1.begin(),
+                                                       obsMat1.end());
 
                                 std::size_t hash_val =
                                     MatrixHasher()(hermitianMatrix);
@@ -414,21 +403,15 @@ template <class TensorNetT> class ObservableTNCudaOperator {
 
                                 if (device_obs_cache_.find(obsKey) ==
                                     device_obs_cache_.end()) {
-                                    auto hermitianMatrix_cu =
-                                        cuUtil::complexToCu<ComplexT>(
-                                            std::get<2>(metaDataArr[0]));
-
-                                    if (hermitianMatrix_cu.empty()) {
-                                        hermitianMatrix_cu =
-                                            cuUtil::complexToCu<ComplexT>(
-                                                std::get<2>(metaDataArr[1]));
-                                    }
+                                    std::vector<CFP_t> hermitianMatrix_cu(
+                                        obsMat0.empty() ? obsMat1.size()
+                                                        : obsMat0.size());
 
                                     add_obs_(obsKey, hermitianMatrix_cu);
 
-                                    auto obsKey0 =
+                                    auto &&obsKey0 =
                                         add_meta_data_(metaDataArr[0]);
-                                    auto obsKey1 =
+                                    auto &&obsKey1 =
                                         add_meta_data_(metaDataArr[1]);
 
                                     // update the matrix data with MM operation
