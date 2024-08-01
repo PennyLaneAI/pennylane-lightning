@@ -259,6 +259,13 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                         const CublasCaller &cublascaller) -> obs_key {
         auto obsName0 = std::get<0>(metaData0);
         auto obsName1 = std::get<0>(metaData1);
+        
+        // Branch for two Pauli observables
+        if (pauli_map_.find(obsName0) != pauli_map_.end() &&
+            pauli_map_.find(obsName1) != pauli_map_.end()) {
+            auto obsName = pauli_map_[obsName0] + "@" + pauli_map_[obsName1];
+            return add_meta_data_(MetaDataT{obsName, {}, {}});
+        }
 
         auto obsName = obsName0 + "@" + obsName1;
 
@@ -424,22 +431,8 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                     if (metaDataArr.size() == 1) {
                         obsKey = std::move(add_meta_data_(metaDataArr[0]));
                     } else if (metaDataArr.size() == 2) {
-                        auto obsName0 = std::get<0>(metaDataArr[0]);
-                        auto obsName1 = std::get<0>(metaDataArr[1]);
-
-                        if (pauli_map_.find(obsName0) != pauli_map_.end() &&
-                            pauli_map_.find(obsName1) != pauli_map_.end()) {
-                            // Branch for Pauli strings
-                            auto obsName = pauli_map_[obsName0] + "@" +
-                                           pauli_map_[obsName1];
-                            obsKey = std::move(
-                                add_meta_data_(MetaDataT{obsName, {}, {}}));
-                        } else {
-                            // Branch for Hermtian involving Pauli strings
-                            // add both observables matrix to GPU cache
-                            obsKey = std::move(add_meta_data_(
-                                metaDataArr[0], metaDataArr[1], *cublascaller));
-                        }
+                        obsKey = std::move(add_meta_data_(
+                            metaDataArr[0], metaDataArr[1], *cublascaller));
                     } else {
                         PL_ABORT("Only one wire observables are supported "
                                  "for cutensornet v24.03");
