@@ -16,6 +16,8 @@ import platform
 import subprocess
 import shutil
 import sys
+import toml
+
 from pathlib import Path
 from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
@@ -167,15 +169,13 @@ class CMakeBuild(build_ext):
         )
 
 
-with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
-    version = f.readlines()[-1].split()[-1].strip("\"'")
-
 requirements = [
     "pennylane>=0.36",
 ]
 
 packages_list = ["pennylane_lightning." + backend]
 
+version = toml.load("pyproject.toml")["project"]["version"]
 if backend == "lightning_qubit":
     packages_list += ["pennylane_lightning.core"]
 else:
@@ -191,28 +191,15 @@ pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Light
 pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
 info = {
-    "name": f"PennyLane_Lightning{pkg_suffix}",
-    "version": version,
-    "maintainer": "Xanadu Inc.",
-    "maintainer_email": "software@xanadu.ai",
-    "url": "https://github.com/PennyLaneAI/pennylane-lightning",
-    "license": "Apache License 2.0",
     "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
     "entry_points": {"pennylane.plugins": pennylane_plugins},
-    "description": "PennyLane-Lightning plugin",
-    "long_description": open("README.rst").read(),
-    "long_description_content_type": "text/x-rst",
     "install_requires": requirements,
     "ext_modules": (
         [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]
     ),
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
-    "extras_require": {
-        "gpu": ["pennylane-lightning-gpu"],
-        "kokkos": ["pennylane-lightning-kokkos"],
-    },
 }
 
 if backend == "lightning_qubit":
@@ -227,24 +214,4 @@ if backend == "lightning_qubit":
         }
     )
 
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
-    "Natural Language :: English",
-    "Operating System :: POSIX",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: Microsoft :: Windows",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Scientific/Engineering :: Physics",
-]
-
-setup(classifiers=classifiers, **(info))
+setup(**(info))
