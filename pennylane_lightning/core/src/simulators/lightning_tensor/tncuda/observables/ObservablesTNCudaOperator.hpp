@@ -259,7 +259,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                         const CublasCaller &cublascaller) -> obs_key {
         auto obsName0 = std::get<0>(metaData0);
         auto obsName1 = std::get<0>(metaData1);
-        
         // Branch for two Pauli observables
         if (pauli_map_.find(obsName0) != pauli_map_.end() &&
             pauli_map_.find(obsName1) != pauli_map_.end()) {

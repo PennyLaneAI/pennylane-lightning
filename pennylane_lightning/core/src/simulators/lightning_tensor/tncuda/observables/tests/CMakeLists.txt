@@ -28,7 +28,8 @@ target_sources(${PL_BACKEND}_observables_tests INTERFACE runner_${PL_BACKEND}_ob
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES Test_Observables_TNCuda.cpp)
+set(TEST_SOURCES Test_Observables_TNCuda.cpp
+                 Test_Observables_TNCudaOperators.cpp)
 
 add_executable(${PL_BACKEND}_observables_test_runner ${TEST_SOURCES})
 target_link_libraries(${PL_BACKEND}_observables_test_runner PRIVATE ${PL_BACKEND}_observables_tests)
