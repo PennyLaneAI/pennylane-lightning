@@ -170,7 +170,7 @@ class CMakeBuild(build_ext):
 
 
 requirements = [
-    "pennylane>=0.36",
+    "pennylane>=0.37",
 ]
 
 packages_list = ["pennylane_lightning." + backend]

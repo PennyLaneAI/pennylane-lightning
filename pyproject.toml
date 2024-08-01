@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "PennyLane-Lightning"
-version = "0.37.0-dev52"
+version = "0.38.0-dev22"
 description = "PennyLane-Lightning plugin"
 readme = "README.rst"
 license = {text = "Apache License 2.0"}
