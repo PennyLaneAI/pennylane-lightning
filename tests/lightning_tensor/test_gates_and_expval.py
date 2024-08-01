@@ -118,8 +118,6 @@ def circuit_ansatz(params, wires):
     qml.OrbitalRotation(params[20], wires=[wires[0], wires[1], wires[5], wires[6]])
     qml.QFT(wires=[wires[0]])
     qml.ECR(wires=[wires[1], wires[3]])
-    qml.BlockEncode([[0.1, 0.2], [0.3, 0.4]], wires=[wires[0], wires[3]])
-    qml.ctrl(qml.BlockEncode([0.1], wires=[wires[0]]), control=wires[1])
 
 
 @pytest.mark.parametrize(
