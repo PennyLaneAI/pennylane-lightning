@@ -374,10 +374,6 @@ class TestExecution:
         expected_tape = qml.tape.QuantumScript([*decomp, qml.RX(1.23, wires=0)], tape.measurements)
         assert qml.equal(new_tape, expected_tape)
 
-    # @pytest.mark.skipif(
-    #     device_name == "lightning.kokkos",
-    #     reason="Kokkos new API in WIP.  Skipping."
-    # )
     @pytest.mark.parametrize(
         "op, decomp_depth",
         [
@@ -405,17 +401,6 @@ class TestExecution:
         expected_tape = qml.tape.QuantumScript(
             [qml.RX(1.23, wires=0), *decomp, qml.CNOT([0, 1])], tape.measurements
         )
-        print('\n FDX') 
-        print(f'decomp {decomp}')
-        # print(f'program: {program}')
-        # print(f'new_tape: {new_tape} | expected_tape: {expected_tape}' )
-        # # print(decomp)
-        # print(new_tape.__dict__)
-        # print(expected_tape.__dict__)
-        # print(f'tmp | {tmp}')
-        for res, expec in zip_longest(new_tape.__dict__,expected_tape.__dict__):
-            print(f' {res} : {new_tape.__dict__[res]} |\n {expec} : {expected_tape.__dict__[expec]}')
-            print('-'*100)
         assert qml.equal(new_tape, expected_tape)
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")

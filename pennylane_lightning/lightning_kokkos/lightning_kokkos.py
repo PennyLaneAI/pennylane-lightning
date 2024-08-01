@@ -224,9 +224,9 @@ def simulate_and_vjp(
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
+        # "BasisState",
         "QubitStateVector",
-        "StatePrep",
+        # "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -563,7 +563,6 @@ class LightningKokkos(Device):
         )
         program.add_transform(qml.transforms.broadcast_expand)
 
-        print('Here FDDDDDDX')
 
         if exec_config.gradient_method == "adjoint":
             _add_adjoint_transforms(program)
