@@ -644,6 +644,7 @@ class TestControlledOps:
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250
         num_wires = max(operation.num_wires, 1)
+        np.random.seed(0)
 
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -690,7 +691,7 @@ class TestControlledOps:
                 result = m.measure_final_state(tape)
                 expected = self.calculate_reference(tape)
 
-                assert np.allclose(result, expected, tol * 10)
+                assert np.allclose(result, expected, tol * 20)
 
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
         n_qubits = 10

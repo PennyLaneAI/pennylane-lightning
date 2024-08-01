@@ -1930,8 +1930,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                        const std::vector<std::size_t> &indices,
                                        const std::size_t offset) {
             for (auto k : indices) {
-                k += offset;
-                arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
+                arr[(k + offset)] *=
+                    shifts[std::popcount((k + offset) & wires_parity) % 2];
             }
         };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,

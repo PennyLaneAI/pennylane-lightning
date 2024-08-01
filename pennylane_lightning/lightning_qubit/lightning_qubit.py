@@ -328,7 +328,7 @@ _observables = frozenset(
 # The set of supported observables.
 
 
-def stopping_condition(op: Operator) -> bool:
+def stopping_condition(op: Operator, num_wires: int = 64) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
@@ -345,7 +345,7 @@ def stopping_condition(op: Operator) -> bool:
         return True
     if isinstance(op, qml.PauliRot):
         n = reduce(lambda x, y: x + (y != "I"), op._hyperparameters["pauli_word"], 0)
-        return n > 2
+        return n > 2 and num_wires - n > 2
     return op.name in _operations
 
 
@@ -595,9 +595,13 @@ class LightningQubit(Device):
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+
+        def stopping_condition_wires(op: Operator) -> bool:
+            return stopping_condition(op, num_wires=len(self.wires))
+
         program.add_transform(
             decompose,
-            stopping_condition=stopping_condition,
+            stopping_condition=stopping_condition_wires,
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=self.name,

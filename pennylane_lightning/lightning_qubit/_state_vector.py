@@ -278,66 +278,6 @@ class LightningStateVector:
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
-    def _apply_lightning_paulirot1(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot2(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot3(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot4(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot5(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot6(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot7(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot8(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot9(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot10(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot11(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot12(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot13(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot14(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot15(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot16(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot17(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot18(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot19(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
-    def _apply_lightning_paulirot20(self, method, wires, inverse, parameters, indices, data):
-        method("PauliRot", [], [], wires, inverse, parameters, indices, data)
-
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
@@ -377,94 +317,15 @@ class LightningStateVector:
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
             elif isinstance(operation, qml.PauliRot):
-                method = getattr(state, "applySparseOperation")
+                method = getattr(state, "applyPauliRot")
                 pw = operation._hyperparameters["pauli_word"]
                 pw = dict((i, w) for i, w in zip(wires, pw) if w != "I")
                 pw = qml.pauli.PauliWord(pw)
-                data = pw._get_csr_data(pw.wires, -1.0j * qml.math.sin(operation.parameters[0] / 2))
+                scale = 1.0j if invert_param else -1.0j
+                scale *= qml.math.sin(operation.parameters[0] / 2)
+                data = pw._get_csr_data(pw.wires, scale)
                 indices = pw._get_csr_indices(pw.wires)
-                if len(pw.wires) == 1:
-                    self._apply_lightning_paulirot1(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 2:
-                    self._apply_lightning_paulirot2(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 3:
-                    self._apply_lightning_paulirot3(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 4:
-                    self._apply_lightning_paulirot4(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 5:
-                    self._apply_lightning_paulirot5(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 6:
-                    self._apply_lightning_paulirot6(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 7:
-                    self._apply_lightning_paulirot7(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 8:
-                    self._apply_lightning_paulirot8(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 9:
-                    self._apply_lightning_paulirot9(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 10:
-                    self._apply_lightning_paulirot10(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 11:
-                    self._apply_lightning_paulirot11(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 12:
-                    self._apply_lightning_paulirot12(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 13:
-                    self._apply_lightning_paulirot13(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 14:
-                    self._apply_lightning_paulirot14(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 15:
-                    self._apply_lightning_paulirot15(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 16:
-                    self._apply_lightning_paulirot16(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 17:
-                    self._apply_lightning_paulirot17(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 18:
-                    self._apply_lightning_paulirot18(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 19:
-                    self._apply_lightning_paulirot19(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                elif len(pw.wires) == 20:
-                    self._apply_lightning_paulirot20(
-                        method, pw.wires, False, operation.parameters, indices, data
-                    )
-                else:
-                    method("PauliRot", [], [], pw.wires, False, operation.parameters, indices, data)
+                method("PauliRot", [], [], pw.wires, False, operation.parameters, indices, data)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
