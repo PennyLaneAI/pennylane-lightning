@@ -309,6 +309,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         return get_state_tensor(wires, numHyperSamples);
     }
 
+    /**
+     * @brief Get full state tensor
+     *
+     * @param wires Wires to get the state tensor for.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
+     * @return Full state tensor on the host memory
+     */
     auto get_state_tensor(const std::vector<std::size_t> &wires,
                           const int32_t numHyperSamples = 1)
         -> std::vector<ComplexT> {
@@ -326,6 +335,17 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         return h_res;
     }
 
+    /**
+     * @brief Get full state tensor
+     *
+     * @param tensor_data Pointer to the device memory for state tensor data.
+     * @param tensor_data_size Size of the state tensor data.
+     * @param wires Wires to get the state tensor for.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
+     * @return Full state tensor on the host memory
+     */
     void get_state_tensor(CFP_t *tensor_data,
                           const std::size_t tensor_data_size,
                           const std::vector<std::size_t> &wires,
