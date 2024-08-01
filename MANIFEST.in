@@ -1,3 +1,5 @@
+include CMakeLists.txt
+include cmake/*
 include requirements.txt
 include .github/CHANGELOG.md
 include pennylane_lightning/lightning_qubit/lightning_qubit.toml
