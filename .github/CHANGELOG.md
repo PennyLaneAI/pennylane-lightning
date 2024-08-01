@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs^2` and this implementation scales `O(num_obs^2)`.
+* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
   [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804) 
 
 ### Breaking changes
