@@ -330,20 +330,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           const std::size_t tensor_data_size,
                           const std::vector<std::size_t> &wires,
                           const int32_t numHyperSamples = 1) {
+        // NOTE: this is a solution to get the full state tensor
+        // TODO: project_modes and projectedModeValues are to be updated for
+        // prob() support.
         auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
             wires, BaseType::getNumQubits());
 
-        std::vector<int32_t> projected_modes;
+        std::vector<int32_t> projected_modes{};
 
-        for (std::size_t idx = 0; idx < BaseType::getNumQubits(); idx++) {
-            auto it = std::find(stateModes.begin(), stateModes.end(),
-                                static_cast<int32_t>(idx));
-            if (it == stateModes.end()) {
-                projected_modes.emplace_back(static_cast<int32_t>(idx));
-            }
-        }
-
-        std::vector<int64_t> projectedModeValues(projected_modes.size(), 1);
+        std::vector<int64_t> projectedModeValues{};
 
         cutensornetStateAccessor_t accessor;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateAccessor(
