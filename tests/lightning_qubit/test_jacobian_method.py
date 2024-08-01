@@ -65,6 +65,7 @@ def lightning_sv(request):
 
     return _statevector
 
+
 class TestJacobian:
     """Unit tests for the jacobian method with the new device API."""
 

@@ -177,7 +177,7 @@ class TestAdjointJacobian:
         with pytest.raises(
             qml.QuantumFunctionError,
             match="Adjoint differentiation method does not support expectation return type "
-                "mixed with other return types",
+            "mixed with other return types",
         ):
             self.calculate_jacobian(lightning_sv(num_wires=1), tape)
 
@@ -574,7 +574,7 @@ class TestVectorJacobianProduct:
         vjp = self.calculate_vjp(statevector, tape, dy)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
-        
+
     def test_empty_dy(self, tol, lightning_sv):
         """A zero dy vector will return no tapes and a zero matrix"""
         statevector = lightning_sv(num_wires=2)
