@@ -179,7 +179,7 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
     using HamiltonianObsT = HamiltonianTNCuda<TensorNetT>;
 
     SECTION("Using TensorProd") {
-        std::size_t bondDim = GENERATE(2);
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
         constexpr std::size_t num_qubits = 5;
         constexpr std::size_t num_paulis = 5;
         constexpr std::size_t num_obs_terms = 6;
@@ -266,7 +266,7 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
     }
 
     SECTION("Using 1 Hermitian") {
-        std::size_t bondDim = GENERATE(2);
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
 
@@ -305,7 +305,7 @@ TEMPLATE_TEST_CASE("Test var value of HamiltonianObs", "[MPSTNCuda_Var]", float,
     }
 
     SECTION("Using 2 Hermitians") {
-        std::size_t bondDim = GENERATE(2);
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
 

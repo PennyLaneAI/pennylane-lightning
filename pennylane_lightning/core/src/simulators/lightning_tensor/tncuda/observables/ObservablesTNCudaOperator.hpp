@@ -179,12 +179,12 @@ template <class TensorNetT> class ObservableTNCudaOperator {
              tensor_idy++) {
             auto &&termy = modes_termy[tensor_idy];
             auto it = modes_obsname_map.find(termy.front());
-            if (it != modes_obsname_map.end()) {
-                modes_obsname_map[termy.front()].push_back(
-                    obs.getMetaData()[term_idy][tensor_idy]);
-            } else {
+            if (it == modes_obsname_map.end()) {
                 modes_obsname_map[termy.front()] = {
                     obs.getMetaData()[term_idy][tensor_idy]};
+            } else {
+                modes_obsname_map[termy.front()].push_back(
+                    obs.getMetaData()[term_idy][tensor_idy]);
             }
         }
 
@@ -224,9 +224,9 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      * @return obs_key The key of observable tensor operator.
      */
     auto add_meta_data_(const MetaDataT &metaData) -> obs_key {
-        auto &&obsName = std::get<0>(metaData);
-        auto &&param = std::get<1>(metaData);
-        auto &&hermitianMatrix = std::get<2>(metaData);
+        auto obsName = std::get<0>(metaData);
+        auto param = std::get<1>(metaData);
+        auto hermitianMatrix = std::get<2>(metaData);
         std::size_t hash_val =
             hermitianMatrix.empty() ? 0 : MatrixHasher()(hermitianMatrix);
 
