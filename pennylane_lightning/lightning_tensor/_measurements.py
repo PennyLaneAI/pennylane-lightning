@@ -28,6 +28,7 @@ import pennylane as qml
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
+from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
@@ -71,7 +72,13 @@ class LightningTensorMeasurements:
         Returns:
             TensorLike: the result of the measurement
         """
-        return self._tensornet.state
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        self._tensornet.apply_operations(diagonalizing_gates)
+        state_array = self._tensornet.state
+        wires = Wires(range(self._tensornet.num_wires))
+        result = measurementprocess.process_state(state_array, wires)
+        self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+        return result
 
     # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
@@ -139,9 +146,7 @@ class LightningTensorMeasurements:
             if measurementprocess.obs is None:
                 return self.state_diagonalizing_gates
 
-        raise NotImplementedError(
-            "Does not support current measurement. Only ExpectationMP measurements are supported."
-        )
+        raise NotImplementedError
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Apply a measurement process to a tensor network.

@@ -308,10 +308,7 @@ class TestSparseHExpval:
         tape = qml.tape.QuantumScript(measurements=obs)
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="Does not support current measurement. Only ExpectationMP measurements are supported.",
-        ):
+        with pytest.raises(NotImplementedError):
             m.measure_tensor_network(tape)
 
 
