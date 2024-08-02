@@ -16,6 +16,7 @@ r"""
 This module contains the :class:`~.LightningKokkos` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+from dataclasses import replace
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple, Union
@@ -23,9 +24,22 @@ from typing import Callable, Optional, Sequence, Tuple, Union
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.devices.preprocess import (
+    decompose,
+    mid_circuit_measurements,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
 from pennylane.measurements import MidMeasureMP
+from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
 from ._adjoint_jacobian import LightningKokkosAdjointJacobian
@@ -210,9 +224,9 @@ def simulate_and_vjp(
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
+        # "BasisState",
         "QubitStateVector",
-        "StatePrep",
+        # "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -293,6 +307,104 @@ _observables = frozenset(
 )
 # The set of supported observables.
 
+def stopping_condition(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
+    # These thresholds are adapted from `lightning_base.py`
+    # To avoid building matrices beyond the given thresholds.
+    # This should reduce runtime overheads for larger systems.
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+
+    # As ControlledQubitUnitary == C(QubitUnitrary),
+    # it can be removed from `_operations` to keep
+    # consistency with `lightning_qubit.toml`
+    if isinstance(op, qml.ControlledQubitUnitary):
+        return True
+
+    return op.name in _operations
+
+
+def stopping_condition_shots(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.kokkos``
+    with finite shots."""
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+
+
+def accepted_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.kokkos``."""
+    return obs.name in _observables
+
+
+def adjoint_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.kokkos``
+    when using the adjoint differentiation method."""
+    if isinstance(obs, qml.Projector):
+        return False
+
+    if isinstance(obs, Tensor):
+        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
+            return False
+        return True
+
+    if isinstance(obs, SProd):
+        return adjoint_observables(obs.base)
+
+    if isinstance(obs, (Sum, Prod)):
+        return all(adjoint_observables(o) for o in obs)
+
+    return obs.name in _observables
+
+
+def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
+    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
+    return isinstance(mp, qml.measurements.ExpectationMP)
+
+
+def _supports_adjoint(circuit):
+    if circuit is None:
+        return True
+
+    prog = TransformProgram()
+    _add_adjoint_transforms(prog)
+
+    try:
+        prog((circuit,))
+    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
+        return False
+    return True
+
+
+def _add_adjoint_transforms(program: TransformProgram) -> None:
+    """Private helper function for ``preprocess`` that adds the transforms specific
+    for adjoint differentiation.
+
+    Args:
+        program (TransformProgram): where we will add the adjoint differentiation transforms
+
+    Side Effects:
+        Adds transforms to the input program.
+
+    """
+
+    name = "adjoint + lightning.kokkos"
+    program.add_transform(no_sampling, name=name)
+    program.add_transform(
+        decompose,
+        stopping_condition=adjoint_ops,
+        stopping_condition_shots=stopping_condition_shots,
+        name=name,
+        skip_initial_state_prep=False,
+    )
+    program.add_transform(validate_observables, accepted_observables, name=name)
+    program.add_transform(
+        validate_measurements, analytic_measurements=adjoint_measurements, name=name
+    )
+    program.add_transform(qml.transforms.broadcast_expand)
+    program.add_transform(validate_adjoint_trainable_params)
+
+
 
 def _kokkos_configuration():
     return print_configuration()
@@ -313,17 +425,18 @@ class LightningKokkos(Device):
         sync (bool): immediately sync with host-sv after applying operations
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
-            (threading parameters).
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
+            (threading parameters).
     """
 
     # pylint: disable=too-many-instance-attributes
 
-    _device_options = ("rng", "c_dtype", "batch_obs", "kernel_name")
+    # General device options
+    _device_options = ("rng", "c_dtype", "batch_obs")
     _new_API = True
 
     # Device specific options
@@ -387,13 +500,31 @@ class LightningKokkos(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    dtype = c_dtype
+    # dtype = c_dtype
 
     def _setup_execution_config(self, config):
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
-        return 0
+        updated_values = {}
+        if config.gradient_method == "best":
+            updated_values["gradient_method"] = "adjoint"
+        if config.use_device_gradient is None:
+            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+        if config.grad_on_execution is None:
+            updated_values["grad_on_execution"] = True
+
+        new_device_options = dict(config.device_options)
+        for option in self._device_options:
+            if option not in new_device_options:
+                new_device_options[option] = getattr(self, f"_{option}", None)
+                
+        # add this to fit the Execute confgiuration  
+        mcmc_default = {'mcmc': False, 'kernel_name': None, 'num_burnin': 0}
+        new_device_options.update(mcmc_default)
+
+        return replace(config, **updated_values, device_options=new_device_options)
+
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
@@ -414,7 +545,28 @@ class LightningKokkos(Device):
         * Currently does not intrinsically support parameter broadcasting
 
         """
-        return 0
+        exec_config = self._setup_execution_config(execution_config)
+        program = TransformProgram()
+
+        program.add_transform(validate_measurements, name=self.name)
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        program.add_transform(
+            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
+        )
+        program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
+            skip_initial_state_prep=True,
+            name=self.name,
+        )
+        program.add_transform(qml.transforms.broadcast_expand)
+
+
+        if exec_config.gradient_method == "adjoint":
+            _add_adjoint_transforms(program)
+        return program, exec_config
 
     # pylint: disable=unused-argument
     def execute(
@@ -431,7 +583,20 @@ class LightningKokkos(Device):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        return 0
+        results = []
+        for circuit in circuits:
+            if self._wire_map is not None:
+                [circuit], _ = qml.map_wires(circuit, self._wire_map)
+            results.append(
+                simulate(
+                    circuit,
+                    self._statevector,
+                    postselect_mode=execution_config.mcm_config.postselect_mode,
+                )
+            )
+
+        return tuple(results)
+
 
     def supports_derivatives(
         self,
@@ -450,7 +615,13 @@ class LightningKokkos(Device):
             Bool: Whether or not a derivative can be calculated provided the given information
 
         """
-        return 0
+        if execution_config is None and circuit is None:
+            return True
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
+        if circuit is None:
+            return True
+        return _supports_adjoint(circuit=circuit)
 
     def compute_derivatives(
         self,
@@ -466,8 +637,13 @@ class LightningKokkos(Device):
         Returns:
             Tuple: The jacobian for each trainable parameter
         """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
-        return 0
+        return tuple(
+            jacobian(circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            for circuit in circuits
+        )
+
 
     def execute_and_compute_derivatives(
         self,
@@ -483,7 +659,15 @@ class LightningKokkos(Device):
         Returns:
             tuple: A numeric result of the computation and the gradient.
         """
-        return 0
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        results = tuple(
+            simulate_and_jacobian(
+                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
+            for c in circuits
+        )
+        return tuple(zip(*results))
+
 
     def supports_vjp(
         self,
@@ -498,7 +682,7 @@ class LightningKokkos(Device):
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
         """
-        return 0
+        return self.supports_derivatives(execution_config, circuit)    
 
     def compute_vjp(
         self,
@@ -532,7 +716,12 @@ class LightningKokkos(Device):
         * For ``n`` expectation values, the cotangents must have shape ``(n, batch_size)``. If ``n = 1``,
           then the shape must be ``(batch_size,)``.
         """
-        return 0
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        return tuple(
+            vjp(circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            for circuit, cots in zip(circuits, cotangents)
+        )
+
 
     def execute_and_compute_vjp(
         self,
@@ -550,4 +739,12 @@ class LightningKokkos(Device):
         Returns:
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
         """
-        return 0
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        results = tuple(
+            simulate_and_vjp(
+                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
+            for circuit, cots in zip(circuits, cotangents)
+        )
+        return tuple(zip(*results))
+

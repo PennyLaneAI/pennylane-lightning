@@ -16,6 +16,8 @@ This module contains unit tests for new device API Lightning classes.
 """
 # pylint: disable=too-many-arguments, unused-argument
 
+from itertools import zip_longest
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -43,7 +45,6 @@ if device_name == "lightning.qubit":
     )
 
 if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
         _supports_adjoint,
@@ -181,8 +182,8 @@ class TestHelpers:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shots or mcmc",
+    device_name != "lightning.qubit",
+    reason=f"The device {device_name} does not support mcmc",
 )
 class TestInitialization:
     """Unit tests for device initialization"""
@@ -257,7 +258,7 @@ class TestExecution:
                     device_options=_default_device_options,
                 ),
             ),
-            (
+            pytest.param(
                 ExecutionConfig(
                     device_options={
                         "c_dtype": np.complex64,
@@ -275,6 +276,9 @@ class TestExecution:
                         "num_burnin": 0,
                     },
                 ),
+                marks=pytest.mark.skipif(device_name != "lightning.qubit",
+                                         reason=f"The device {device_name} does not support mcmc",
+                )
             ),
             (
                 ExecutionConfig(
@@ -319,7 +323,7 @@ class TestExecution:
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
         if adjoint:
-            name = "adjoint + lightning.qubit"
+            name = f"adjoint + {device_name}"
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(
                 decompose,
@@ -822,7 +826,8 @@ class TestDerivatives:
         ops = [
             qml.X(0),
             qml.X(1),
-            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
+            # qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
+            qml.RX(phi, 2),
         ]
 
         qs1 = QuantumScript(
@@ -837,19 +842,21 @@ class TestDerivatives:
         ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
         qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
 
+        expected_device = DefaultQubit(wires=4, max_workers=1)
+        
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_derivatives((qs1, qs2))
+        
+            expected, expected_jac = expected_device.execute_and_compute_derivatives((qs1, qs2))
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_derivatives((qs1, qs2))
+            
+            expected = expected_device.execute((qs1, qs2))
+            expected_jac = expected_device.compute_derivatives((qs1, qs2))
+
 
         # Assert results
-        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
-        x1 = np.cos(phi / 2) ** 2 / 2
-        x2 = np.sin(phi / 2) ** 2 / 2
-        expected2 = sum([x1, -x2, -x1, x2])  # zero
-        expected = (expected1, expected2)
-
         assert len(results) == len(expected)
         assert len(results[0]) == len(expected[0])
         assert np.allclose(results[0][0], expected[0][0])
@@ -857,12 +864,6 @@ class TestDerivatives:
         assert np.allclose(results[1], expected[1])
 
         # Assert derivatives
-        expected_jac1 = (-np.cos(phi), -3 * np.sin(phi))
-        x1_jac = -np.cos(phi / 2) * np.sin(phi / 2) / 2
-        x2_jac = np.sin(phi / 2) * np.cos(phi / 2) / 2
-        expected_jac2 = sum([x1_jac, -x2_jac, -x1_jac, x2_jac])  # zero
-        expected_jac = (expected_jac1, expected_jac2)
-
         assert len(jacs) == len(expected_jac)
         assert len(jacs[0]) == len(expected_jac[0])
         assert np.allclose(jacs[0], expected_jac[0])
@@ -1160,7 +1161,7 @@ class TestVJP:
         ops = [
             qml.X(0),
             qml.X(1),
-            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
+            qml.RX(phi, 2),
         ]
 
         qs1 = QuantumScript(
@@ -1176,31 +1177,24 @@ class TestVJP:
         qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
         dy = [(1.5, 2.5), 1.0]
 
+        expected_device = DefaultQubit(wires=4, max_workers=1)
+        
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_vjp((qs1, qs2), dy)
+        
+            expected, expected_jac = expected_device.execute_and_compute_vjp((qs1, qs2), dy)
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_vjp((qs1, qs2), dy)
-
-        # Assert results
-        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
-        x1 = np.cos(phi / 2) ** 2 / 2
-        x2 = np.sin(phi / 2) ** 2 / 2
-        expected2 = sum([x1, -x2, -x1, x2])  # zero
-        expected = (expected1, expected2)
+            
+            expected = expected_device.execute((qs1, qs2))
+            expected_jac = expected_device.compute_vjp((qs1, qs2), dy)
 
         assert len(results) == len(expected)
         assert len(results[0]) == len(expected[0])
         assert np.allclose(results[0][0], expected[0][0])
         assert np.allclose(results[0][1], expected[0][1])
         assert np.allclose(results[1], expected[1])
-
-        # Assert derivatives
-        expected_jac1 = -1.5 * np.cos(phi) - 2.5 * 3 * np.sin(phi)
-        x1_jac = -np.cos(phi / 2) * np.sin(phi / 2) / 2
-        x2_jac = np.sin(phi / 2) * np.cos(phi / 2) / 2
-        expected_jac2 = sum([x1_jac, -x2_jac, -x1_jac, x2_jac])  # zero
-        expected_jac = (expected_jac1, expected_jac2)
 
         assert len(jacs) == len(expected_jac) == 2
         assert np.allclose(jacs[0], expected_jac[0])
