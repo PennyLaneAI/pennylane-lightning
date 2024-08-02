@@ -1502,7 +1502,7 @@ class TestApplyLightningMethod:
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
@@ -1539,7 +1539,7 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))

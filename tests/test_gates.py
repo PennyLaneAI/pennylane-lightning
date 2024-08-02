@@ -286,7 +286,7 @@ def test_qubit_RY(theta, phi, tol):
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))
@@ -310,7 +310,7 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
     perms = list(itertools.permutations(wires))
     if n_wires > 4:
@@ -477,13 +477,13 @@ def test_controlled_qubit_unitary_from_op(tol):
 )
 @pytest.mark.parametrize("n_wires", [2, 3, 4])
 def test_paulirot(n_wires, tol):
-    """Test that ControlledQubitUnitary is correctly applied to a state"""
+    """Test that PauliRot is correctly applied to a state."""
     n_qubits = n_wires + 2
     dev = qml.device(device_name, wires=n_qubits)
     dq = qml.device("default.qubit", wires=n_qubits)
 
     init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     theta = 0.3
 
     for word in itertools.combinations_with_replacement(("I", "X", "Y", "Z"), n_wires):
@@ -517,7 +517,7 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
     wires = control_wires + target_wires
     U = qml.matrix(qml.PauliX(target_wires))
     init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))
@@ -552,7 +552,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
             target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
             init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-            init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+            init_state /= np.linalg.norm(init_state)
 
             def circuit():
                 qml.StatePrep(init_state, wires=range(n_qubits))
