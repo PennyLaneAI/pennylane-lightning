@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `qml.state()` support to `lightning.tensor`.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
+
 * Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
   [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804) 
 
