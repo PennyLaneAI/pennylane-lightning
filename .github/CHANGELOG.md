@@ -67,6 +67,9 @@
 
 ### Bug fixes
 
+* Fix cuQuantum SDK path pass-though in CMake.
+  [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
+
 * Fix CUDA sync issues on aarch64+GraceHopper.
   [(#823)](https://github.com/PennyLaneAI/pennylane-lightning/pull/823)
 
