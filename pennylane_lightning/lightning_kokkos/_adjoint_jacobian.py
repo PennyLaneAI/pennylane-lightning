@@ -300,13 +300,11 @@ class LightningKokkosAdjointJacobian:
             The vector-Jacobian products of a tape.
         """
 
-        # print(f'FDX01 : {grad_vec} : {qml.math.ndim(grad_vec)}')
         empty_array = self._handle_raises(tape, is_jacobian=False, grad_vec=grad_vec)
 
         if empty_array:
             return qml.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
 
-        # print(f'FDX02 : {grad_vec} : {qml.math.ndim(grad_vec)}')
         # Proceed, because tape_return_type is Expectation.
         if qml.math.ndim(grad_vec) == 0:
             grad_vec = (grad_vec,)
