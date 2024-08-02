@@ -448,14 +448,13 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                        const std::vector<std::size_t> &wires,
                        const bool inverse,
                        const std::vector<PrecisionT> &params,
-                       const std::size_t *indices,
-                       const std::complex<PrecisionT> *data) {
+                       const std::string &word) {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
         GateImplementationsLM::applyPauliRot<PrecisionT>(
             this->getData(), this->getNumQubits(), controlled_wires,
-            controlled_values, wires, inverse, params[0], indices, data);
+            controlled_values, wires, inverse, params[0], word);
     }
 
     /**

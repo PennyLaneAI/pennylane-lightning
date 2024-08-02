@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <bit>
 #include <complex>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -565,23 +566,26 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
-    static void applyPauliRot(std::complex<PrecisionT> *arr,
-                              std::size_t num_qubits,
-                              const std::vector<std::size_t> &controlled_wires,
-                              const std::vector<bool> &controlled_values,
-                              const std::vector<std::size_t> &wires,
-                              [[maybe_unused]] const bool inverse,
-                              PrecisionT angle, const std::size_t *indices,
-                              const std::complex<PrecisionT> *data) {
+    static void
+    applyPauliRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                  const std::vector<std::size_t> &controlled_wires,
+                  const std::vector<bool> &controlled_values,
+                  const std::vector<std::size_t> &wires, const bool inverse,
+                  PrecisionT angle, const std::string &word) {
         constexpr std::size_t one{1};
+        constexpr auto IMAG = Pennylane::Util::IMAG<PrecisionT>();
         const std::size_t n_wires = wires.size();
         const std::size_t dim = one << n_wires;
         const PrecisionT c = std::cos(angle / 2);
-        std::vector<std::complex<PrecisionT>> coeffs(dim);
-        auto core_function = [dim, c, &coeffs, &indices,
+        const std::complex<PrecisionT> s =
+            ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
+        const auto data = generatePauliWordData(word, s);
+        const auto indices = generatePauliWordIndices(word);
+        auto core_function = [dim, c, &indices,
                               &data](std::complex<PrecisionT> *arr,
                                      const std::vector<std::size_t> &arr_inds,
                                      const std::size_t offset) {
+            std::vector<std::complex<PrecisionT>> coeffs(dim);
             for (std::size_t i = 0; i < dim; i++) {
                 coeffs[indices[i]] = arr[arr_inds[i] + offset];
             }

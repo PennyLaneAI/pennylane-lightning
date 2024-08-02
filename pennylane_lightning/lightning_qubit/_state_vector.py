@@ -318,16 +318,10 @@ class LightningStateVector:
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                pw = operation._hyperparameters["pauli_word"]
-                pw = dict((i, w) for i, w in zip(wires, pw) if w != "I")
-                pw = qml.pauli.PauliWord(pw)
-                scale = 1.0j if invert_param else -1.0j
-                scale *= qml.math.sin(operation.parameters[0] / 2)
-                data = pw._get_csr_data(pw.wires, scale)
-                indices = pw._get_csr_indices(pw.wires)
+                word = operation._hyperparameters["pauli_word"]
                 method(
-                    [], [], pw.wires, False, operation.parameters, indices, data
-                )  # control wires and values
+                    [], [], wires, invert_param, operation.parameters, "".join(word)
+                )  # control wires and values empty
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
