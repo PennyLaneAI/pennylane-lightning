@@ -47,7 +47,7 @@ endmacro()
 
 # Macro to aid in finding cuStateVec lib
 macro(findCustatevec external_libs)
-    set(CQENV "$ENV{CUQUANTUM_SDK}")
+    set(CUQUANTUM_ENV "$ENV{CUQUANTUM_SDK}")
     find_library(CUSTATEVEC_LIB
         NAMES   libcustatevec.so.1 custatevec.so.1
         HINTS   /usr/lib
