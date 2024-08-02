@@ -240,6 +240,13 @@ class LightningTensor(Device):
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
+    # TODO: Move supported ops/obs to TOML file
+    operations = _operations
+    # The names of the supported operations.
+
+    observables = _observables
+    # The names of the supported observables.
+
     # pylint: disable=too-many-arguments
     def __init__(
         self,

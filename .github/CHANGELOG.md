@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
+  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804) 
+
 ### Breaking changes
 
 * Remove `NDpermuter.hpp` which is no longer required.
@@ -60,7 +63,13 @@
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
 
+* Add `initial_state_prep` option to Catalyst TOML file.
+  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
+
 ### Documentation
+
+* Updated the README and added citation format for Lightning arxiv preprint.
+  [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
 
@@ -83,7 +92,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
