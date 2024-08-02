@@ -323,9 +323,12 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         -> std::vector<ComplexT> {
         const std::size_t length = std::size_t{1} << wires.size();
 
-        std::vector<ComplexT> h_res(length);
+        PL_ABORT_IF(length * sizeof(CFP_t) >= getFreeMemorySize(),
+                    "State tensor size exceeds the available GPU memory!");
 
         DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
+
+        std::vector<ComplexT> h_res(length);
 
         get_state_tensor(d_output_tensor.getData(), d_output_tensor.getLength(),
                          wires, numHyperSamples);
