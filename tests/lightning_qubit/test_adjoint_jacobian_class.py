@@ -37,7 +37,7 @@ if device_name == "lightning.kokkos":
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip(
-        "Exclusive tests for lightning.qubit or lightning.kokkos. Skipping.",
+        "Exclusive tests for new API backends lightning.qubit and lightning.kokkos for LightningAdjointJacobian class. Skipping.",
         allow_module_level=True,
     )
 
@@ -155,6 +155,31 @@ class TestAdjointJacobian:
 
         jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
         assert len(jac) == 0
+
+    def test_empty_trainable_params(self, lightning_sv):
+        """Tests if an empty array is returned when the number trainable params is zero."""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.X(wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
+        assert len(jac) == 0
+
+    def test_not_expectation_return_type(self, lightning_sv):
+        """Tests if an empty array is returned when the number trainable params is zero."""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.X(wires=[0])
+            qml.RX(0.4, wires=[0])
+            qml.var(qml.PauliZ(1))
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation method does not support expectation return type "
+            "mixed with other return types",
+        ):
+            self.calculate_jacobian(lightning_sv(num_wires=1), tape)
 
     @pytest.mark.skipif(
         device_name != "lightning.qubit",
@@ -549,6 +574,26 @@ class TestVectorJacobianProduct:
         vjp = self.calculate_vjp(statevector, tape, dy)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
+
+    def test_empty_dy(self, tol, lightning_sv):
+        """A zero dy vector will return no tapes and a zero matrix"""
+        statevector = lightning_sv(num_wires=2)
+        x = 0.543
+        y = -0.654
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(x, wires=[0])
+            qml.RY(y, wires=[1])
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
+
+        tape.trainable_params = {0, 1}
+        dy = np.array(1.0)
+
+        vjp = self.calculate_vjp(statevector, tape, dy)
+
+        expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
+        assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
     def test_single_expectation_value(self, tol, lightning_sv):
         """Tests correct output shape and evaluation for a tape
