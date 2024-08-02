@@ -24,7 +24,7 @@ try:
         print_configuration,
     )
 except ImportError:
-    pass  # Should be a complaint when kokkos_ops module is not available.
+    pass
 
 from itertools import product
 
