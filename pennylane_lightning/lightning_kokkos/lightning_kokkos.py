@@ -307,6 +307,7 @@ _observables = frozenset(
 )
 # The set of supported observables.
 
+
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
     # These thresholds are adapted from `lightning_base.py`
@@ -403,7 +404,6 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     )
     program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
-
 
 
 def _kokkos_configuration():
@@ -518,13 +518,12 @@ class LightningKokkos(Device):
         for option in self._device_options:
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
-                
-        # add this to fit the Execute confgiuration  
-        mcmc_default = {'mcmc': False, 'kernel_name': None, 'num_burnin': 0}
+
+        # add this to fit the Execute confgiuration
+        mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0}
         new_device_options.update(mcmc_default)
 
         return replace(config, **updated_values, device_options=new_device_options)
-
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
@@ -563,7 +562,6 @@ class LightningKokkos(Device):
         )
         program.add_transform(qml.transforms.broadcast_expand)
 
-
         if exec_config.gradient_method == "adjoint":
             _add_adjoint_transforms(program)
         return program, exec_config
@@ -596,7 +594,6 @@ class LightningKokkos(Device):
             )
 
         return tuple(results)
-
 
     def supports_derivatives(
         self,
@@ -644,7 +641,6 @@ class LightningKokkos(Device):
             for circuit in circuits
         )
 
-
     def execute_and_compute_derivatives(
         self,
         circuits: QuantumTape_or_Batch,
@@ -668,7 +664,6 @@ class LightningKokkos(Device):
         )
         return tuple(zip(*results))
 
-
     def supports_vjp(
         self,
         execution_config: Optional[ExecutionConfig] = None,
@@ -682,7 +677,7 @@ class LightningKokkos(Device):
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
         """
-        return self.supports_derivatives(execution_config, circuit)    
+        return self.supports_derivatives(execution_config, circuit)
 
     def compute_vjp(
         self,
@@ -722,7 +717,6 @@ class LightningKokkos(Device):
             for circuit, cots in zip(circuits, cotangents)
         )
 
-
     def execute_and_compute_vjp(
         self,
         circuits: QuantumTape_or_Batch,
@@ -747,4 +741,3 @@ class LightningKokkos(Device):
             for circuit, cots in zip(circuits, cotangents)
         )
         return tuple(zip(*results))
-

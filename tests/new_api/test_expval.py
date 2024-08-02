@@ -21,7 +21,6 @@ import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane.devices import DefaultQubit
 
-
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 

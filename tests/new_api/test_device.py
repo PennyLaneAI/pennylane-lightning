@@ -276,9 +276,10 @@ class TestExecution:
                         "num_burnin": 0,
                     },
                 ),
-                marks=pytest.mark.skipif(device_name != "lightning.qubit",
-                                         reason=f"The device {device_name} does not support mcmc",
-                )
+                marks=pytest.mark.skipif(
+                    device_name != "lightning.qubit",
+                    reason=f"The device {device_name} does not support mcmc",
+                ),
             ),
             (
                 ExecutionConfig(
@@ -843,18 +844,17 @@ class TestDerivatives:
         qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
 
         expected_device = DefaultQubit(wires=4, max_workers=1)
-        
+
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_derivatives((qs1, qs2))
-        
+
             expected, expected_jac = expected_device.execute_and_compute_derivatives((qs1, qs2))
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_derivatives((qs1, qs2))
-            
+
             expected = expected_device.execute((qs1, qs2))
             expected_jac = expected_device.compute_derivatives((qs1, qs2))
-
 
         # Assert results
         assert len(results) == len(expected)
@@ -1178,15 +1178,15 @@ class TestVJP:
         dy = [(1.5, 2.5), 1.0]
 
         expected_device = DefaultQubit(wires=4, max_workers=1)
-        
+
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_vjp((qs1, qs2), dy)
-        
+
             expected, expected_jac = expected_device.execute_and_compute_vjp((qs1, qs2), dy)
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_vjp((qs1, qs2), dy)
-            
+
             expected = expected_device.execute((qs1, qs2))
             expected_jac = expected_device.compute_vjp((qs1, qs2), dy)
 
