@@ -297,15 +297,6 @@ class LightningTensor(Device):
         if not isinstance(self._max_bond_dim, int) or self._max_bond_dim < 1:
             raise ValueError("The maximum bond dimension must be an integer greater than 0.")
 
-        self._tensor_network = LightningTensorNet(
-            self._num_wires,
-            self._method,
-            self._c_dtype,
-            self._max_bond_dim,
-            self._cutoff,
-            self._cutoff_mode,
-        )
-
     @property
     def name(self):
         """The name of the device."""
@@ -330,6 +321,17 @@ class LightningTensor(Device):
     def c_dtype(self):
         """Tensor complex data type."""
         return self._c_dtype
+
+    def _tensornet(self):
+        """Return the tensornet object."""
+        return LightningTensorNet(
+            self._num_wires,
+            self._method,
+            self._c_dtype,
+            self._max_bond_dim,
+            self._cutoff,
+            self._cutoff_mode,
+        )
 
     dtype = c_dtype
 
@@ -408,7 +410,7 @@ class LightningTensor(Device):
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._tensor_network))
+            results.append(simulate(circuit, self._tensornet()))
 
         return tuple(results)
 

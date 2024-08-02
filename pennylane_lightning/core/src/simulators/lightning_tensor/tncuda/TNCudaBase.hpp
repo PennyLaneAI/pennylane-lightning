@@ -129,31 +129,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     ~TNCudaBase() {
-        if (quantumState_ != nullptr) {
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
-        }
-    }
-
-    /**
-     * @brief Reset the quantum state / tensor network graph.
-     */
-    void reset_graph() {
-        // Clear the existing quantum graph
-        if (quantumState_ != nullptr) {
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
-            quantumState_ = nullptr;
-        }
-
-        // Create a new quantum graph
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
-            /* const cutensornetHandle_t */ handle_.get(),
-            /* cutensornetStatePurity_t */ purity_,
-            /* int32_t numStateModes */
-            static_cast<int32_t>(BaseType::getNumQubits()),
-            /* const int64_t *stateModeExtents */
-            reinterpret_cast<int64_t *>(BaseType::getQubitDims().data()),
-            /* cudaDataType_t */ typeData_,
-            /*  cutensornetState_t * */ &quantumState_));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
 
     /**

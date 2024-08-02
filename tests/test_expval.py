@@ -198,7 +198,11 @@ class TestExpval:
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
             if device_name == "lightning.tensor" and n_wires > 1:
-                pytest.skip("lightning.tensor does not support multi-wire Hermitian observables.")
+                with pytest.raises(
+                    ValueError,
+                    match="The number of Hermitian observables target wires should be 1.",
+                ):
+                    assert np.allclose(circ(), circ_def(), tol)
             else:
                 assert np.allclose(circ(), circ_def(), tol)
 
