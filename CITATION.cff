@@ -1,0 +1,59 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Asadi
+  given-names: Ali
+  orcid: "https://orcid.org/0009-0004-6010-2110"
+- family-names: Dusko
+  given-names: Amintor
+  orcid: "https://orcid.org/0000-0002-0910-7715"
+- family-names: Park
+  given-names: Chae-Yeun
+  orcid: "https://orcid.org/0000-0003-4430-1000"
+- family-names: Michaud-Rioux
+  given-names: Vincent
+  orcid: "https://orcid.org/0000-0003-4367-5940"
+- family-names: Schoch
+  given-names: Isidor
+- family-names: Shu
+  given-names: Shuli
+  orcid: "https://orcid.org/0000-0001-6528-8584"
+- family-names: Vincent
+  given-names: Trevor
+- family-names: O'Riordan
+  given-names: Lee J.
+  orcid: "https://orcid.org/0000-0002-6758-9433"
+contact:
+- family-names: O'Riordan
+  given-names: Lee J.
+  orcid: "https://orcid.org/0000-0002-6758-9433"
+message: If you use this software, please cite as follows.
+preferred-citation:
+  authors:
+  - family-names: Asadi
+    given-names: Ali
+    orcid: "https://orcid.org/0009-0004-6010-2110"
+  - family-names: Dusko
+    given-names: Amintor
+    orcid: "https://orcid.org/0000-0002-0910-7715"
+  - family-names: Park
+    given-names: Chae-Yeun
+    orcid: "https://orcid.org/0000-0003-4430-1000"
+  - family-names: Michaud-Rioux
+    given-names: Vincent
+    orcid: "https://orcid.org/0000-0003-4367-5940"
+  - family-names: Schoch
+    given-names: Isidor
+  - family-names: Shu
+    given-names: Shuli
+    orcid: "https://orcid.org/0000-0001-6528-8584"
+  - family-names: Vincent
+    given-names: Trevor
+  - family-names: O'Riordan
+    given-names: Lee J.
+    orcid: "https://orcid.org/0000-0002-6758-9433"
+  - url: "https://arxiv.org/abs/2403.02512"
+  - type: other
+    value: "arXiv:2403.02512"
+  title: "Hybrid quantum programming with PennyLane Lightning on HPC platforms"
+  type: article
+title: "Hybrid quantum programming with PennyLane Lightning on HPC platforms"

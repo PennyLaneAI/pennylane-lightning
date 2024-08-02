@@ -357,7 +357,7 @@ The supported backend options are ``SERIAL``, ``OPENMP``, ``THREADS``, ``HIP`` a
 One can activate simultaneously one serial, one parallel CPU host (e.g. ``OPENMP``, ``THREADS``) and one parallel GPU device backend (e.g. ``HIP``, ``CUDA``), but not two of any category at the same time.
 For ``HIP`` and ``CUDA``, the appropriate software stacks are required to enable compilation and subsequent use.
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
-A list of the architectures is found on the `Kokkos wiki <https://github.com/kokkos/kokkos/wiki/Macros#architectures>`_.
+A list of the architectures is found on the `Kokkos wiki <https://kokkos.org/kokkos-core-wiki/API/core/Macros.html#architectures>`_.
 Note that ``THREADS`` backend is not recommended since `Kokkos does not guarantee its safety <https://github.com/kokkos/kokkos-core-wiki/blob/17f08a6483937c26e14ec3c93a2aa40e4ce081ce/docs/source/ProgrammingGuide/Initialization.md?plain=1#L67>`_.
 
 .. installation_LKokkos-end-inclusion-marker-do-not-remove
@@ -406,7 +406,7 @@ Docker support
 **************
 
 Docker images for the various backends are found on the
-`PennyLane Docker Hub <https://hub.docker.com/repository/docker/pennylaneai/pennylane/general>`_ page, where there is also a detailed description about PennyLane Docker support.
+`PennyLane Docker Hub <https://hub.docker.com/u/pennylaneai>`_ page, where there is also a detailed description about PennyLane Docker support.
 Briefly, one can build the Docker Lightning images using:
 
 .. code-block:: console
@@ -448,15 +448,26 @@ Please make your best effort to comply with `black` and `pylint` before using di
 Authors
 *******
 
+.. citation-start-inclusion-marker-do-not-remove
+
 Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
-If you are doing research using PennyLane and Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
+If you are using Lightning for research, please cite:
 
-    Ville Bergholm, Josh Izaac, Maria Schuld, Christian Gogolin, M. Sohaib Alam, Shahnawaz Ahmed,
-    Juan Miguel Arrazola, Carsten Blank, Alain Delgado, Soran Jahangiri, Keri McKiernan, Johannes Jakob Meyer,
-    Zeyue Niu, Antal Száva, and Nathan Killoran.
-    *PennyLane: Automatic differentiation of hybrid quantum-classical computations.* 2018. arXiv:1811.04968
+.. code-block:: bibtex
 
+    @misc{
+        asadi2024,
+        title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}}, 
+        author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
+        year={2024},
+        eprint={2403.02512},
+        archivePrefix={arXiv},
+        primaryClass={quant-ph},
+        url={https://arxiv.org/abs/2403.02512}, 
+    }
+
+.. citation-end-inclusion-marker-do-not-remove
 .. support-start-inclusion-marker-do-not-remove
 
 Support
