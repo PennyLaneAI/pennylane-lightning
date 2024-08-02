@@ -249,7 +249,7 @@ Then the `cuStateVec`_ library can be installed and set a ``CUQUANTUM_SDK`` envi
 .. code-block:: console
 
     python -m pip install wheel custatevec-cu12
-    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/')")
+    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-GPU can then be installed with ``pip``:
 
