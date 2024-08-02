@@ -567,6 +567,9 @@ class LightningQubit(Device):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
+    def _stopping_condition(self, op: Operator) -> bool:
+        return stopping_condition(op, num_wires=len(self.wires))
+
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
@@ -596,12 +599,9 @@ class LightningQubit(Device):
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
 
-        def stopping_condition_wires(op: Operator) -> bool:
-            return stopping_condition(op, num_wires=len(self.wires))
-
         program.add_transform(
             decompose,
-            stopping_condition=stopping_condition_wires,
+            stopping_condition=self._stopping_condition,
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=self.name,
