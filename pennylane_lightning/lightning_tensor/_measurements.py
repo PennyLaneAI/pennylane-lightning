@@ -86,7 +86,7 @@ class LightningTensorMeasurements:
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess. Note that the variance is
         calculated as <obs**2> - <obs>**2. The current implementation only supports single-wire observables.
-        2 and 2+-wires observables, projector and sparse-hamiltonian are not supported.
+        Observables with more than 1 wire, projector and sparse-hamiltonian are not supported.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state

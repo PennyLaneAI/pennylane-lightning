@@ -471,10 +471,10 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                              const bool var_cal = false)
         : tensor_network_{tensor_network},
           numObsTerms_(obs.getNumTensors().size()), var_cal_{var_cal} {
-        if (!var_cal) {
-            initHelper_expval_(tensor_network, obs);
-        } else {
+        if (var_cal) {
             initHelper_var_(tensor_network, obs);
+        } else {
+            initHelper_expval_(tensor_network, obs);
         }
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
