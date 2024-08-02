@@ -59,8 +59,8 @@ macro(findCustatevec external_libs)
             lib64
             ${CUQUANTUM_SDK}/lib
             ${CUQUANTUM_SDK}/lib64
-            ${CQENV}/lib
-            ${CQENV}/lib64
+            ${CUQUANTUM_ENV}/lib
+            ${CUQUANTUM_ENV}/lib64
             ${CUDAToolkit_LIBRARY_DIR}
             ${CUDA_TOOLKIT_ROOT_DIR}/lib
             ${CUDA_TOOLKIT_ROOT_DIR}/lib64
