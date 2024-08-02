@@ -297,8 +297,6 @@ class LightningTensor(Device):
         if not isinstance(self._max_bond_dim, int) or self._max_bond_dim < 1:
             raise ValueError("The maximum bond dimension must be an integer greater than 0.")
 
-        self._tensor_network = None
-
     @property
     def name(self):
         """The name of the device."""
@@ -326,18 +324,6 @@ class LightningTensor(Device):
 
     def _tensornet(self):
         """Return the tensornet object."""
-        # Ensure that the tensor network is only created and calculated once, which enable access to qml.state().
-        # parameter-shift/finite-diff calculation will return a new LightningTensorNet object.
-        if self._tensor_network is None:
-            self._tensor_network = LightningTensorNet(
-                self._num_wires,
-                self._method,
-                self._c_dtype,
-                self._max_bond_dim,
-                self._cutoff,
-                self._cutoff_mode,
-            )
-            return self._tensor_network
         return LightningTensorNet(
             self._num_wires,
             self._method,

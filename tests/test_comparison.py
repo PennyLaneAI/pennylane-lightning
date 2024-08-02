@@ -102,15 +102,15 @@ class TestComparison:
         assert np.allclose(lightning_state, default_state)
         assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device dose not direct access to state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
     @pytest.mark.parametrize(
         "lightning_dev_version",
-        (
-            [lightning_backend_dev, lightning_backend_batch_obs_dev]
-            if device_name != "lightning.tensor"
-            else [lightning_backend_dev]
-        ),
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_two_qubit_circuit(
@@ -147,22 +147,18 @@ class TestComparison:
         default_state = default(qml.state)
 
         # pylint: disable=protected-access
-        if device_name == "lightning.tensor":
-            lightning_state = dev_l._tensor_network.state
-            assert np.allclose(lightning_state, default_state)
-        else:
-            lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
-            assert np.allclose(lightning_state, default_state)
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
+        assert np.allclose(lightning_state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device dose not direct access to state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
     @pytest.mark.parametrize(
         "lightning_dev_version",
-        (
-            [lightning_backend_dev, lightning_backend_batch_obs_dev]
-            if device_name != "lightning.tensor"
-            else [lightning_backend_dev]
-        ),
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_three_qubit_circuit(
@@ -207,22 +203,18 @@ class TestComparison:
         default_state = default(qml.state)
 
         # pylint: disable=protected-access
-        if device_name == "lightning.tensor":
-            lightning_state = dev_l._tensor_network.state
-            assert np.allclose(lightning_state, default_state)
-        else:
-            lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
-            assert np.allclose(lightning_state, default_state)
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
+        assert np.allclose(lightning_state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device dose not direct access to state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
     @pytest.mark.parametrize(
         "lightning_dev_version",
-        (
-            [lightning_backend_dev, lightning_backend_batch_obs_dev]
-            if device_name != "lightning.tensor"
-            else [lightning_backend_dev]
-        ),
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_four_qubit_circuit(
@@ -272,12 +264,8 @@ class TestComparison:
         default_state = default(qml.state)
 
         # pylint: disable=protected-access
-        if device_name == "lightning.tensor":
-            lightning_state = dev_l._tensor_network.state
-            assert np.allclose(lightning_state, default_state)
-        else:
-            lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
-            assert np.allclose(lightning_state, default_state)
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
+        assert np.allclose(lightning_state, default_state)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
