@@ -73,6 +73,12 @@
 
 ### Bug fixes
 
+* Fix cuQuantum SDK path pass-though in CMake.
+  [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
+
+* Fix CUDA sync issues on aarch64+GraceHopper.
+  [(#823)](https://github.com/PennyLaneAI/pennylane-lightning/pull/823)
+
 * Check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of `cuTensorNet-v24.03.0`.
   [(#806)](https://github.com/PennyLaneAI/pennylane-lightning/pull/806)
 
