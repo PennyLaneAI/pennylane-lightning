@@ -77,7 +77,7 @@ macro(findCustatevec external_libs)
             /opt/cuda
             include
             ${CUQUANTUM_SDK}/include
-            ${CQENV}/include
+            ${CUQUANTUM_ENV}/include
             ${CUDAToolkit_INCLUDE_DIRS}
             ${CUDA_TOOLKIT_ROOT_DIR}/include
             ${Python_SITELIB}/cuquantum/include
