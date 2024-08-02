@@ -156,10 +156,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
-     * @brief Set current quantum state as zero state.
+     * @brief Set current quantum state as zero state and clear the tensor
+     * network graph.
      */
     void reset() {
         const std::vector<std::size_t> zeroState(BaseType::getNumQubits(), 0);
+        BaseType::reset_graph();
         setBasisState(zeroState);
     }
 
