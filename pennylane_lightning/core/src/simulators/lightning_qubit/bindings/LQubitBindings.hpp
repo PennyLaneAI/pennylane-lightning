@@ -168,8 +168,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using ParamT = PrecisionT; // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using np_arr_sparse_ind =
-        py::array_t<std::size_t, py::array::c_style | py::array::forcecast>;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);

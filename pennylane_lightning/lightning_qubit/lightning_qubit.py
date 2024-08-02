@@ -344,7 +344,8 @@ def stopping_condition(op: Operator, num_wires: int = 64) -> bool:
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
     if isinstance(op, qml.PauliRot):
-        n = reduce(lambda x, y: x + (y != "I"), op._hyperparameters["pauli_word"], 0)
+        word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
+        n = reduce(lambda x, y: x + (y != "I"), word, 0)
         return n > 2 and num_wires - n > 2
     return op.name in _operations
 

@@ -489,14 +489,15 @@ def test_paulirot(n_wires, tol):
     for word in itertools.combinations_with_replacement(("I", "X", "Y", "Z"), n_wires):
         for wires in itertools.combinations(range(n_qubits), n_wires):
 
-            def circuit():
-                qml.StatePrep(init_state, wires=range(n_qubits))
-                qml.PauliRot(theta, word, wires=wires)
-                return qml.state()
+            tape = qml.tape.QuantumScript(
+                [
+                    qml.StatePrep(init_state, wires=range(n_qubits)),
+                    qml.PauliRot(theta, word, wires=wires),
+                ],
+                [qml.state()],
+            )
 
-            circ = qml.QNode(circuit, dev)
-            circ_def = qml.QNode(circuit, dq)
-            assert np.allclose(circ(), circ_def(), tol)
+            assert np.allclose(dev.execute(tape), dq.execute(tape), tol)
 
 
 @pytest.mark.skipif(
