@@ -18,6 +18,9 @@
 
 ### Improvements
 
+* LightningQubit gains native support for the `PauliRot` gate.
+  [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
 
