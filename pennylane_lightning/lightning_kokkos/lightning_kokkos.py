@@ -155,7 +155,7 @@ allowed_observables = {
 }
 
 # The absolute path of the plugin shared object varies according to the installation type.
-# This lookup table keeps track those possible locations
+# This lookup table keeps track of those possible locations
 lib_name = "liblightning_kokkos_catalyst.so"
 package_root = os.path.dirname(__file__)
 wheel_mode_location = os.path.join(package_root, "..", lib_name)
