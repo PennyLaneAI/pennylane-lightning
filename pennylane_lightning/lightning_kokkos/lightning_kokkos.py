@@ -154,6 +154,18 @@ allowed_observables = {
     "Exp",
 }
 
+# The absolute path of the plugin shared object varies according to the installation type. 
+# This lookup table keeps track those possible locations
+lib_name = "liblightning_kokkos_catalyst.so"
+package_root = os.path.dirname(__file__)
+wheel_mode_location = os.path.join(package_root, "..", lib_name)
+editable_mode_location = os.path.join(
+    package_root,
+    f"../../build/lib.{platform.system().lower()}-{platform.machine()}-{sys.version_info[0]}.{sys.version_info[1]}/pennylane_lightning",
+    lib_name,
+)
+plugin_locations = [wheel_mode_location, editable_mode_location]
+
 
 class LightningKokkos(LightningBase):
     """PennyLane Lightning Kokkos device.
@@ -844,10 +856,8 @@ class LightningKokkos(LightningBase):
         the location to the shared object with the C/C++ device implementation.
         """
 
-        package_root = os.path.dirname(__file__)
-        plugin_lib_path = os.path.join(
-            package_root,
-            f"../../build/lib.{platform.system().lower()}-{platform.machine()}-{sys.version_info[0]}.{sys.version_info[1]}/pennylane_lightning",
-        )
+        for location in plugin_locations:
+            if os.path.isfile(location):
+                return "LightningKokkosSimulator", location
 
-        return "LightningKokkosSimulator", plugin_lib_path + "/liblightning_kokkos_catalyst.so"
+        raise RuntimeError("Shared object not found")
