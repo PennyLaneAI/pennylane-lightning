@@ -846,8 +846,6 @@ class LightningKokkos(LightningBase):
         """
 
         package_root = os.path.dirname(__file__)
-        plugin_lib_path = os.path.join(package_root, f"../../build/lib.{platform.platform()}-{platform.machine()}-{sys.version_info[0]}.{sys.version_info[1]}/pennylane_lightning")
-        print(plugin_lib_path)
-        assert False
+        plugin_lib_path = os.path.join(package_root, f"../../build/lib.{platform.system().lower()}-{platform.machine()}-{sys.version_info[0]}.{sys.version_info[1]}/pennylane_lightning")
 
-        return "LightningKokkos", plugin_lib_path + "/liblightning_kokkos_catalyst.so"
+        return "LightningKokkosSimulator", plugin_lib_path + "/liblightning_kokkos_catalyst.so"
