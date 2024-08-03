@@ -20,7 +20,6 @@ interfaces with C++ for fast linear algebra calculations.
 import os.path
 import platform
 import sys
-
 from os import getenv
 from pathlib import Path
 from typing import List
@@ -838,14 +837,17 @@ class LightningKokkos(LightningBase):
                 return self.adjoint_jacobian(new_tape, starting_state, use_device_state)
 
             return processing_fn
-        
+
     @staticmethod
     def get_c_interface():
-        """ Returns a tuple consisting of the device name, and
+        """Returns a tuple consisting of the device name, and
         the location to the shared object with the C/C++ device implementation.
         """
 
         package_root = os.path.dirname(__file__)
-        plugin_lib_path = os.path.join(package_root, f"../../build/lib.{platform.system().lower()}-{platform.machine()}-{sys.version_info[0]}.{sys.version_info[1]}/pennylane_lightning")
+        plugin_lib_path = os.path.join(
+            package_root,
+            f"../../build/lib.{platform.system().lower()}-{platform.machine()}-{sys.version_info[0]}.{sys.version_info[1]}/pennylane_lightning",
+        )
 
         return "LightningKokkosSimulator", plugin_lib_path + "/liblightning_kokkos_catalyst.so"
