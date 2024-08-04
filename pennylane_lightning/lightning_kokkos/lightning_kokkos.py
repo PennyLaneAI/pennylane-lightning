@@ -18,8 +18,6 @@ interfaces with C++ for fast linear algebra calculations.
 """
 
 import os.path
-import platform
-import sys
 from os import getenv
 from pathlib import Path
 from typing import List
@@ -153,18 +151,6 @@ allowed_observables = {
     "Prod",
     "Exp",
 }
-
-# The absolute path of the plugin shared object varies according to the installation type.
-# This lookup table keeps track of those possible locations
-lib_name = "liblightning_kokkos_catalyst.so"
-package_root = os.path.dirname(__file__)
-wheel_mode_location = os.path.join(package_root, "..", lib_name)
-editable_mode_location = os.path.join(
-    package_root,
-    f"../../build/lib.{platform.system().lower()}-{platform.machine()}-{sys.version_info[0]}.{sys.version_info[1]}/pennylane_lightning",
-    lib_name,
-)
-plugin_locations = [wheel_mode_location, editable_mode_location]
 
 
 class LightningKokkos(LightningBase):
@@ -856,8 +842,25 @@ class LightningKokkos(LightningBase):
         the location to the shared object with the C/C++ device implementation.
         """
 
-        for location in plugin_locations:
-            if os.path.isfile(location):
-                return "LightningKokkosSimulator", location
+        lib_name = "liblightning_kokkos_catalyst.so"
+        package_root = os.path.dirname(__file__)
+
+        # The absolute path of the plugin shared object varies according to the installation mode.
+
+        # Wheel mode:
+        # Fixed location at the root of the project
+        wheel_mode_location = os.path.join(package_root, "..", lib_name)
+        if os.path.isfile(wheel_mode_location):
+            return "LightningKokkosSimulator", wheel_mode_location
+
+        # Editable mode:
+        # The build directory contains a folder which varies according to the platform:
+        #   lib.<system>-<architecture>-<python-id>"
+        # To avoid mismatching the folder name, we search for the shared object instead.
+        # TODO: locate where the naming convention of the folder is decided and replicate it here.
+        editable_mode_path = os.path.join(package_root, "../../build")
+        for path, _, files in os.walk(editable_mode_path):
+            if lib_name in files:
+                return "LightningKokkosSimulator", os.path.join(path, lib_name)
 
         raise RuntimeError("Shared object not found")
