@@ -224,9 +224,7 @@ def simulate_and_vjp(
 _operations = frozenset(
     {
         "Identity",
-        # "BasisState",
         "QubitStateVector",
-        # "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -500,7 +498,6 @@ class LightningKokkos(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    # dtype = c_dtype
     @property
     def dtype(self):
         """State vector complex data type."""

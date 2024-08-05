@@ -822,12 +822,11 @@ class TestDerivatives:
         tapes."""
         device = LightningDevice(wires=4, batch_obs=batch_obs)
 
-        ops = [
-            qml.X(0),
-            qml.X(1),
-            # qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
-            qml.RX(phi, 2),
-        ]
+        ops = [qml.X(0), qml.X(1)]
+        if device_name == "lighlightning.qubit":
+            ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
+        else:
+            ops.append(qml.RX(phi, 2))
 
         qs1 = QuantumScript(
             ops,
@@ -1159,8 +1158,11 @@ class TestVJP:
         ops = [
             qml.X(0),
             qml.X(1),
-            qml.RX(phi, 2),
         ]
+        if device_name == "lighlightning.qubit":
+            ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
+        else:
+            ops.append(qml.RX(phi, 2))
 
         qs1 = QuantumScript(
             ops,

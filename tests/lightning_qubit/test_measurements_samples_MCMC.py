@@ -21,7 +21,9 @@ from conftest import LightningDevice as ld
 from conftest import device_name
 
 if device_name != "lightning.qubit":
-    pytest.skip(f"Device {device_name} does not have an mcmc option.", allow_module_level=True)
+    pytest.skip(
+        f"Device {device_name} does not have an mcmc option. Skipping.", allow_module_level=True
+    )
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)

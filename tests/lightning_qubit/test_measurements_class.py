@@ -25,7 +25,6 @@ from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
-
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
@@ -454,7 +453,6 @@ class TestMeasurements:
                 qml.ops.Sum,
                 qml.ops.SProd,
                 qml.ops.Prod,
-                #  qml.Hamiltonian,
                 qml.SparseHamiltonian,
             ),
         ):

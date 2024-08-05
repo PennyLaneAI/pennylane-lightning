@@ -542,7 +542,6 @@ class LightningQubit(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    # dtype = c_dtype
     @property
     def dtype(self):
         """State vector complex data type."""
