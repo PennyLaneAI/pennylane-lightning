@@ -22,13 +22,11 @@ from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
 from pennylane._device import DeviceError
 
-
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
 
 
 def get_device(wires, **kwargs):
@@ -93,10 +91,11 @@ def test_unsupported_measurement():
         ):
             func(*params)
     if device_name == "lightning.kokkos":
-        
+
         with pytest.raises(
             DeviceError,
-            match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on " + device_name,
+            match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
+            + device_name,
         ):
             func(*params)
 

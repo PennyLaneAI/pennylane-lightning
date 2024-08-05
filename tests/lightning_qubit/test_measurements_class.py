@@ -454,12 +454,13 @@ class TestMeasurements:
     def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol):
         if measurement is qml.probs and isinstance(
             observable,
-            (qml.ops.Sum, 
-             qml.ops.SProd, 
-             qml.ops.Prod, 
-            #  qml.Hamiltonian, 
-             qml.SparseHamiltonian
-             ),
+            (
+                qml.ops.Sum,
+                qml.ops.SProd,
+                qml.ops.Prod,
+                #  qml.Hamiltonian,
+                qml.SparseHamiltonian,
+            ),
         ):
             pytest.skip(
                 f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
@@ -494,8 +495,7 @@ class TestMeasurements:
         )
         do_skip = measurement is qml.var and isinstance(observable, skip_list)
         do_skip = do_skip or (
-            measurement is qml.expval
-            and isinstance(observable, qml.SparseHamiltonian)
+            measurement is qml.expval and isinstance(observable, qml.SparseHamiltonian)
         )
         do_skip = do_skip and shots is not None
         if do_skip:
@@ -506,14 +506,13 @@ class TestMeasurements:
             result = m.measure_final_state(tape)
 
         expected = self.calculate_reference(tape, lightning_sv)
-        
+
         # a few tests may fail in single precision, and hence we increase the tolerance
         if shots is None:
             assert np.allclose(result, expected, max(tol, 1.0e-4))
-        else: 
+        else:
             dtol = max(tol, 1.0e-2)
             assert np.allclose(result, expected, rtol=dtol, atol=dtol)
-
 
     @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 1000000, (900000, 900000)])
