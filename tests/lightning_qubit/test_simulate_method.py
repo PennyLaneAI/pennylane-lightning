@@ -118,7 +118,7 @@ class TestSimulate:
     @pytest.mark.parametrize("mcmc", [True, False])
     @pytest.mark.parametrize("kernel", ["Local", "NonZeroRandom"])
     def test_sample_values_with_mcmc(self, lightning_sv, tol, mcmc, kernel):
-        """Tests if the samples returned by simulate have the correct values"""
+        """Tests if the samples returned by simulate have the correct values using mcmc"""
         ops = [qml.RX(1.5708, wires=[0])]
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
 
