@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <set>
 #include <string>
-#include <utility>
 #include <vector>
 
 #include "Util.hpp"
