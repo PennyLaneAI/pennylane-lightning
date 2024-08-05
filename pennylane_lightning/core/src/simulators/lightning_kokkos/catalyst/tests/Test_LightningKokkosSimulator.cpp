@@ -659,4 +659,30 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
             expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
+
+    SECTION("setBasisState")
+    {
+        const size_t num_qubits = 1;
+        std::unique_ptr<LKSimulator> sv1 = std::make_unique<LKSimulator>();
+        std::vector<intptr_t> Qs = sv1->AllocateQubits(num_qubits);
+        sv1->setBasisState(0);
+        std::vector<std::complex<PrecisionT>> expected({{1.0, 0.0}, {0.0, 0.0}});
+        CHECK(sv1->getDataVector() == expected);
+        sv1->setBasisState(1);
+        std::vector<std::complex<PrecisionT>> expected2({{0.0, 0.0}, {1.0, 0.0}});
+        CHECK(sv1->getDataVector() == expected2);
+    }
+
+    SECTION("setStateVector")
+    {
+        const size_t num_qubits = 1;
+        std::unique_ptr<LKSimulator> sv1 = std::make_unique<LKSimulator>();
+        std::vector<intptr_t> Qs = sv1->AllocateQubits(num_qubits);
+        sv1->setStateVector({0}, {{0.5, 0.5}});
+        std::vector<std::complex<PrecisionT>> expected({{0.5, 0.5}, {0.0, 0.0}});
+        CHECK(sv1->getDataVector() == expected);
+        sv1->setStateVector({1}, {{0.5, 0.5}});
+        std::vector<std::complex<PrecisionT>> expected2({{0.5, 0.5}, {0.5, 0.5}});
+        CHECK(sv1->getDataVector() == expected2);
+    }
 }
