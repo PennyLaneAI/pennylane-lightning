@@ -329,7 +329,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     void get_state_tensor(CFP_t *tensor_data,
                           const std::size_t tensor_data_size,
                           const std::vector<std::size_t> &wires,
-                          const int32_t numHyperSamples = 1) {
+                          const int32_t numHyperSamples = 1) const {
         auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
             wires, BaseType::getNumQubits());
 

@@ -16,7 +16,7 @@
 #include "cuError.hpp"
 #include "cuda_helpers.hpp"
 
-namespace Pennylane::LightningTensor::TNCuda {
+namespace Pennylane::LightningTensor::TNCuda::Measures {
 /**
  * @brief Explicitly get the probability of given state tensor data on GPU
  * device.
@@ -93,4 +93,4 @@ void getProbs_CUDA(cuDoubleComplex *state, double *probs, const int data_size,
     getProbs_CUDA_call<cuDoubleComplex, double>(state, probs, data_size,
                                                 thread_per_block, stream_id);
 }
-} // namespace Pennylane::LightningTensor::TNCuda
+} // namespace Pennylane::LightningTensor::TNCuda::Measures
