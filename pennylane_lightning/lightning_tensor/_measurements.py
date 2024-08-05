@@ -28,6 +28,7 @@ import pennylane as qml
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
+from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
@@ -71,7 +72,13 @@ class LightningTensorMeasurements:
         Returns:
             TensorLike: the result of the measurement
         """
-        return self._tensornet.state
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        self._tensornet.apply_operations(diagonalizing_gates)
+        state_array = self._tensornet.state
+        wires = Wires(range(self._tensornet.num_wires))
+        result = measurementprocess.process_state(state_array, wires)
+        self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+        return result
 
     # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
@@ -94,6 +101,25 @@ class LightningTensorMeasurements:
             self._tensornet.device_name, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
+
+    def probs(self, measurementprocess: MeasurementProcess):
+        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Probabilities of the supplied observable or wires
+        """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(diagonalizing_gates)
+        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(
+                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            )
+        return results
 
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess. Note that the variance is

@@ -50,10 +50,6 @@ def test_no_measure():
         circuit(0.65)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.probs()",
-)
 class TestProbs:
     """Test Probs in Lightning devices"""
 

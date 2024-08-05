@@ -1363,7 +1363,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.prob()",
+        reason="lightning.tensor does not support _tensornet.state access",
     )
     def test_apply_qpe(self, qubit_device, tol):
         """Test the application of qml.QuantumPhaseEstimation"""
