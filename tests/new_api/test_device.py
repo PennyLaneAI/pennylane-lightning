@@ -16,8 +16,6 @@ This module contains unit tests for new device API Lightning classes.
 """
 # pylint: disable=too-many-arguments, unused-argument
 
-from itertools import zip_longest
-
 import numpy as np
 import pennylane as qml
 import pytest
