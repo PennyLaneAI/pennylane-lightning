@@ -326,17 +326,19 @@ class TestExecution:
 
     @pytest.mark.parametrize(
         "op, is_trainable",
-        ([
-            (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), False),
-            (qml.StatePrep(qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0), True),
-            (qml.StatePrep(np.array([1, 0]), wires=0), False),
-            (qml.BasisState([1, 1], wires=[0, 1]), False),
-            (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
-        ]  
-        if device_name != "lightning.tensor"
+        (
+            [
+                (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), False),
+                (qml.StatePrep(qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0), True),
+                (qml.StatePrep(np.array([1, 0]), wires=0), False),
+                (qml.BasisState([1, 1], wires=[0, 1]), False),
+                (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
+            ]
+            if device_name != "lightning.tensor"
             else [
                 (qml.BasisState([1, 1], wires=[0, 1]), False),
-            ]),
+            ]
+        ),
     )
     def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
         """Test that state prep ops in the beginning of a tape are decomposed with adjoint
@@ -389,7 +391,7 @@ class TestExecution:
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp",
-         (
+        (
             [
                 qml.probs(wires=[1, 2]),
                 qml.probs(op=qml.Z(2)),
