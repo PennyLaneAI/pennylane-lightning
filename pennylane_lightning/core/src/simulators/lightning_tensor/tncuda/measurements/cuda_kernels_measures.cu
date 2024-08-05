@@ -33,6 +33,22 @@ void getProbs_CUDA(cuDoubleComplex *state, double *probs, const int data_size,
                    const std::size_t thread_per_block, cudaStream_t stream_id);
 
 /**
+ * @brief Explicitly get the probability of given state tensor data on GPU
+ * device.
+ *
+ * @param probs The probability to be normalized.
+ * @param data_size The length of state tensor on device.
+ * @param thread_per_block Number of threads set per block.
+ * @param stream_id Stream id of CUDA calls
+ */
+void normalizeProbs_CUDA(float *probs, const int data_size, const float sum,
+                         const std::size_t thread_per_block,
+                         cudaStream_t stream_id);
+void normalizeProbs_CUDA(double *probs, const int data_size, const double sum,
+                         const std::size_t thread_per_block,
+                         cudaStream_t stream_id);
+
+/**
  * @brief The CUDA kernel that calculate the probability from a given state
  * tensor data on GPU device.
  *
@@ -52,6 +68,26 @@ __global__ void getProbsKernel(GPUDataT *state, PrecisionT *probs,
         PrecisionT real = state[i].x;
         PrecisionT imag = state[i].y;
         probs[i] = real * real + imag * imag;
+    }
+}
+
+/**
+ * @brief The CUDA kernel that normalize the probability from a given state
+ * tensor data on GPU device.
+ *
+ * @tparam PrecisionT Floating data type.
+ *
+ * @param probs The probability to be normalized.
+ * @param data_size The length of state tensor on device.
+ * @param sum The sum of all probabilities.
+ */
+template <class PrecisionT>
+__global__ void normalizeProbsKernel(PrecisionT *probs, const int data_size,
+                                     const PrecisionT sum) {
+    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (i < data_size) {
+        probs[i] /= sum;
     }
 }
 
@@ -81,6 +117,32 @@ void getProbs_CUDA_call(GPUDataT *state, PrecisionT *probs, const int data_size,
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
 
+/**
+ * @brief The CUDA kernel call wrapper.
+ *
+ * @tparam PrecisionT Floating data type.
+ *
+ * @param probs The probability to be normalized.
+ * @param data_size The length of state tensor on device.
+ * @param thread_per_block Number of threads set per block.
+ * @param stream_id Stream id of CUDA calls
+ */
+template <class PrecisionT>
+void normalizeProbs_CUDA_call(PrecisionT *probs, const int data_size,
+                              const PrecisionT sum,
+                              std::size_t thread_per_block,
+                              cudaStream_t stream_id) {
+    auto dv = std::div(data_size, thread_per_block);
+    std::size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
+    const std::size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
+    dim3 blockSize(thread_per_block, 1, 1);
+    dim3 gridSize(block_per_grid, 1);
+
+    normalizeProbsKernel<PrecisionT>
+        <<<gridSize, blockSize, 0, stream_id>>>(probs, data_size, sum);
+    PL_CUDA_IS_SUCCESS(cudaGetLastError());
+}
+
 // Definitions
 void getProbs_CUDA(cuComplex *state, float *probs, const int data_size,
                    const std::size_t thread_per_block, cudaStream_t stream_id) {
@@ -92,5 +154,19 @@ void getProbs_CUDA(cuDoubleComplex *state, double *probs, const int data_size,
                    const std::size_t thread_per_block, cudaStream_t stream_id) {
     getProbs_CUDA_call<cuDoubleComplex, double>(state, probs, data_size,
                                                 thread_per_block, stream_id);
+}
+
+void normalizeProbs_CUDA(float *probs, const int data_size, const float sum,
+                         const std::size_t thread_per_block,
+                         cudaStream_t stream_id) {
+    normalizeProbs_CUDA_call<float>(probs, data_size, sum, thread_per_block,
+                                    stream_id);
+}
+
+void normalizeProbs_CUDA(double *probs, const int data_size, const double sum,
+                         const std::size_t thread_per_block,
+                         cudaStream_t stream_id) {
+    normalizeProbs_CUDA_call<double>(probs, data_size, sum, thread_per_block,
+                                     stream_id);
 }
 } // namespace Pennylane::LightningTensor::TNCuda::Measures

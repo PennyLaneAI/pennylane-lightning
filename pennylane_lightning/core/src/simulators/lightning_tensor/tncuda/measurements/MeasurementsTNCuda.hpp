@@ -25,6 +25,7 @@
 #include <cutensornet.h>
 #include <vector>
 
+#include "LinearAlg.hpp"
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 #include "ObservablesTNCudaOperator.hpp"
@@ -47,6 +48,14 @@ extern void getProbs_CUDA(cuDoubleComplex *state, double *probs,
                           const int data_size,
                           const std::size_t thread_per_block,
                           cudaStream_t stream_id);
+extern void normalizeProbs_CUDA(float *probs, const int data_size,
+                                const float sum,
+                                const std::size_t thread_per_block,
+                                cudaStream_t stream_id);
+extern void normalizeProbs_CUDA(double *probs, const int data_size,
+                                const double sum,
+                                const std::size_t thread_per_block,
+                                cudaStream_t stream_id);
 /**
  * @brief ObservablesTNCuda's Measurement Class.
  *
@@ -97,6 +106,19 @@ template <class TensorNetT> class MeasurementsTNCuda {
         getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
                       length, static_cast<int>(thread_per_block),
                       tensor_network_.getDevTag().getStreamID());
+
+        SharedCublasCaller cublascaller = make_shared_cublas_caller();
+
+        PrecisionT sum;
+
+        asum_CUDA_device<PrecisionT>(d_output_probs.getData(), length,
+                                     tensor_network_.getDevTag().getDeviceID(),
+                                     tensor_network_.getDevTag().getStreamID(),
+                                     *cublascaller, &sum);
+
+        normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
+                            static_cast<int>(thread_per_block),
+                            tensor_network_.getDevTag().getStreamID());
 
         d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
 
