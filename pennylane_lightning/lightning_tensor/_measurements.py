@@ -165,9 +165,7 @@ class LightningTensorMeasurements:
             if measurementprocess.obs is None:
                 return self.state_diagonalizing_gates
 
-        raise NotImplementedError(
-            "Does not support current measurement. Only ExpectationMP measurements are supported."
-        )
+        raise NotImplementedError("Not supported measurement.")
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Apply a measurement process to a tensor network.
