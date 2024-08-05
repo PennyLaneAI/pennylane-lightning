@@ -137,16 +137,16 @@ void LightningKokkosSimulator::PrintState() {
 }
 /// LCOV_EXCL_STOP
 
-void LightningKokkosSimulator::SetState(DataView<std::complex<double>, 1> &data_view)
-{
-    std::vector<Kokkos::complex<double>> data_vector(data_view.begin(), data_view.end());
+void LightningKokkosSimulator::SetState(
+    DataView<std::complex<double>, 1> &data_view) {
+    std::vector<Kokkos::complex<double>> data_vector(data_view.begin(),
+                                                     data_view.end());
     std::vector<std::size_t> count(data_vector.size());
     std::iota(std::begin(count), std::end(count), 0);
     this->device_sv->setStateVector(count, data_vector);
 }
 
-void LightningKokkosSimulator::SetBasisState(const std::size_t index)
-{
+void LightningKokkosSimulator::SetBasisState(const std::size_t index) {
     this->device_sv->setBasisState(index);
 }
 
