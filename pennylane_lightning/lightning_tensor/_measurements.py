@@ -113,10 +113,10 @@ class LightningTensorMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         if diagonalizing_gates:
-            self._qubit_state.apply_operations(diagonalizing_gates)
+            self._tensornet.apply_operations(diagonalizing_gates)
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         if diagonalizing_gates:
-            self._qubit_state.apply_operations(
+            self._tensornet.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
         return results
