@@ -123,7 +123,7 @@ jobs:
       - name: Build and run unit tests
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+          export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
             -DENABLE_PYTHON=OFF \
@@ -134,6 +134,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=mpicxx \
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
+            -DCUQUANTUM_SDK=${CUQUANTUM_SDK} \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja
           cmake --build ./Build
