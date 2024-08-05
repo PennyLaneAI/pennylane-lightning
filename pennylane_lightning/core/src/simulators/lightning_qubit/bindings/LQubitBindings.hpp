@@ -180,7 +180,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             sv.applyPauliRot(controlled_wires, controlled_values, wires,
                              inverse, params, word);
         },
-        "Apply a sparse operation.");
+        "Apply a Pauli rotation.");
     pyclass
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);

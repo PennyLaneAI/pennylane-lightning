@@ -436,12 +436,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a single gate to the state-vector.
+     * @brief Apply a PauliRot gate to the state-vector.
      *
-     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use inverse of gate.
-     * @param params Optional parameter list for parametric gates.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
      */
     void applyPauliRot(const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
