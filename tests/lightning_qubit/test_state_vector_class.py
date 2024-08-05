@@ -30,8 +30,14 @@ if device_name == "lightning.qubit":
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos._state_vector import (
         LightningKokkosStateVector as LightningStateVector,
-        InitializationSettings,
     )
+    
+    try:
+        from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+    except ImportError:
+        pass
+
+
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip(
