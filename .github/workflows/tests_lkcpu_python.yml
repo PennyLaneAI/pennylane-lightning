@@ -207,6 +207,8 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
+          # Clean all editable mode installations
+          make clean && python -m pip uninstall pennylane-lightning pennylane-lightning-kokkos
           cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
@@ -214,6 +216,7 @@ jobs:
             SKIP_COMPILATION=True python -m pip install . -vv
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
+          ls
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -245,6 +248,7 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
+          ls
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
               --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
