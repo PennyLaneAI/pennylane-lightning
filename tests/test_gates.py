@@ -475,29 +475,36 @@ def test_controlled_qubit_unitary_from_op(tol):
     device_name != "lightning.qubit",
     reason="PauliRot operations only implemented in lightning.qubit.",
 )
-@pytest.mark.parametrize("n_wires", [2, 3, 4])
-def test_paulirot(n_wires, tol):
+@pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
+@pytest.mark.parametrize("n_targets", [1, 2, 3])
+def test_paulirot(n_wires, n_targets, tol):
     """Test that PauliRot is correctly applied to a state."""
-    n_qubits = n_wires + 2
-    dev = qml.device(device_name, wires=n_qubits)
-    dq = qml.device("default.qubit", wires=n_qubits)
+    pws = dict((k, v) for k, v in enumerate(("X", "Y", "Z")))
 
-    init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+    if n_wires < n_targets:
+        pytest.skip("The number of targets cannot exceed the number of wires.")
+    dev = qml.device(device_name, wires=n_wires)
+
+    init_state = np.random.rand(2**n_wires) + 1.0j * np.random.rand(2**n_wires)
     init_state /= np.linalg.norm(init_state)
     theta = 0.3
 
-    for word in itertools.combinations_with_replacement(("I", "X", "Y", "Z"), n_wires):
-        for wires in itertools.combinations(range(n_qubits), n_wires):
+    for _ in range(10):
+        word = "".join(pws[w] for w in np.random.randint(0, 3, n_targets))
+        wires = np.random.permutation(n_wires)[0:n_targets]
+        stateprep = qml.StatePrep(init_state, wires=range(n_wires))
+        op = qml.PauliRot(theta, word, wires=wires)
+        tape0 = qml.tape.QuantumScript(
+            [stateprep, op],
+            [qml.state()],
+        )
 
-            tape = qml.tape.QuantumScript(
-                [
-                    qml.StatePrep(init_state, wires=range(n_qubits)),
-                    qml.PauliRot(theta, word, wires=wires),
-                ],
-                [qml.state()],
-            )
+        tape1 = qml.tape.QuantumScript(
+            [stateprep] + op.decomposition(),
+            [qml.state()],
+        )
 
-            assert np.allclose(dev.execute(tape), dq.execute(tape), tol)
+        assert np.allclose(dev.execute(tape1), dev.execute(tape0), tol)
 
 
 @pytest.mark.skipif(
