@@ -205,11 +205,12 @@ jobs:
 
       - name: Get required Python packages
         run: |
+          set -x
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
+          cd main
           # Clean all editable mode installations
           make clean && python -m pip uninstall pennylane-lightning pennylane-lightning-kokkos
-          cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
@@ -247,6 +248,7 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
+          set -x
           cd main/
           ls
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
