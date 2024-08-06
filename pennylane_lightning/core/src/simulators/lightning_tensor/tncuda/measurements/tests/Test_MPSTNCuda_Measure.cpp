@@ -40,16 +40,15 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     using TensorNetT = MPSTNCuda<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
     std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
-        input = {
-            {{2, 1, 0},
-             {7.67899385e-01, 9.97094446e-02, 1.54593908e-02, 2.00735578e-03,
-              9.97094446e-02, 1.29469740e-02, 2.00735578e-03, 2.60649160e-04}},
-            {{2, 1}, {0.86760883, 0.11265642, 0.01746675, 0.002268}},
-            {{2, 0}, {0.78335878, 0.1017168, 0.1017168, 0.01320762}},
-            {{0, 1}, {0.86760883, 0.01746675, 0.11265642, 0.002268}},
-            {{2}, {0.88507558, 0.11492442}},
-            {{1}, {0.98026525, 0.01973475}},
-            {{0}, {0.88507558, 0.11492442}}}; // data from default.qubit
+        input = {{{0, 1, 2},
+                  {0.65473791, 0.08501576, 0.02690407, 0.00349341, 0.19540418,
+                   0.02537265, 0.00802942, 0.0010426}},
+                 {{0, 1}, {0.73975367, 0.03039748, 0.22077683, 0.00907202}},
+                 {{0, 2}, {0.68164198, 0.08850918, 0.2034336, 0.02641525}},
+                 {{1, 2}, {0.85014208, 0.11038841, 0.03493349, 0.00453601}},
+                 {{0}, {0.77015115, 0.22984885}},
+                 {{1}, {0.9605305, 0.0394695}},
+                 {{2}, {0.88507558, 0.11492442}}}; // data from default.qubit
 
     // Defining the State Vector that will be measured.
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
@@ -59,7 +58,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     TensorNetT mps_state{num_qubits, maxBondDim};
 
     mps_state.applyOperations(
-        {{"RX"}, {"RY"}, {"RX"}, {"RY"}, {"RX"}, {"RY"}},
+        {{"RX"}, {"RX"}, {"RY"}, {"RY"}, {"RX"}, {"RY"}},
         {{0}, {0}, {1}, {1}, {2}, {2}},
         {{false}, {false}, {false}, {false}, {false}, {false}},
         {{0.5}, {0.5}, {0.2}, {0.2}, {0.5}, {0.5}});
@@ -73,5 +72,9 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
             REQUIRE_THAT(term.second,
                          Catch::Approx(probabilities).margin(1e-6));
         }
+    }
+
+    SECTION("Test TNCudaOperator ctor failures") {
+        REQUIRE_THROWS_AS(measure.probs({2, 1}), LightningException);
     }
 }

@@ -89,6 +89,10 @@ template <class TensorNetT> class MeasurementsTNCuda {
     template <std::size_t thread_per_block = 256>
     auto probs(const std::vector<std::size_t> &wires,
                const int32_t numHyperSamples = 1) -> std::vector<PrecisionT> {
+        PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
+                        "Invalid wire indices order. Please ensure that the "
+                        "wire indices are in the ascending order.");
+
         const std::size_t length = std::size_t{1} << wires.size();
 
         std::vector<PrecisionT> h_res(length);
