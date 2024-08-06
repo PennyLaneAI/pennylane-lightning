@@ -114,7 +114,7 @@ class LightningTensorMeasurements:
             Variance of the observable
         """
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError("Sparse Hamiltonian Observables are not supported.")
+            raise NotImplementedError("The var measurement does not support sparse Hamiltonian observables.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
@@ -146,7 +146,7 @@ class LightningTensorMeasurements:
             if measurementprocess.obs is None:
                 return self.state_diagonalizing_gates
 
-        raise NotImplementedError("Not supported measurement.")
+        raise NotImplementedError("Unsupported measurement type.")
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Apply a measurement process to a tensor network.
