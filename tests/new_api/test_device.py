@@ -414,6 +414,8 @@ class TestExecution:
             ]
             if device_name != "lightning.tensor"
             else [
+                qml.probs(wires=[1, 2]),
+                qml.probs(op=qml.X(2)),
                 qml.expval(qml.Z(2)),
                 qml.var(qml.X(2)),
                 qml.expval(qml.X(0) + qml.Z(0)),
@@ -448,13 +450,8 @@ class TestExecution:
         "mp1",
         (
             [
+                qml.probs(op=qml.X(2)),
                 qml.probs(wires=[1, 2]),
-                qml.expval(qml.Z(2)),
-                qml.var(qml.X(2)),
-                qml.var(qml.Hermitian(qml.Hadamard.compute_matrix(), 0)),
-            ]
-            if device_name != "lightning.tensor"
-            else [
                 qml.expval(qml.Z(2)),
                 qml.var(qml.X(2)),
                 qml.var(qml.Hermitian(qml.Hadamard.compute_matrix(), 0)),
@@ -466,12 +463,6 @@ class TestExecution:
         (
             [
                 qml.probs(op=qml.X(2)),
-                qml.expval(qml.Y(2)),
-                qml.var(qml.Y(2)),
-                qml.expval(qml.Hamiltonian([-0.5, 1.5, -1.1], [qml.Y(1), qml.X(1), qml.Z(0)])),
-            ]
-            if device_name != "lightning.tensor"
-            else [
                 qml.expval(qml.Y(2)),
                 qml.var(qml.Y(2)),
                 qml.expval(qml.Hamiltonian([-0.5, 1.5, -1.1], [qml.Y(1), qml.X(1), qml.Z(0)])),

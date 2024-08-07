@@ -157,6 +157,15 @@ template <class PrecisionT> class TNCudaGateCache {
         return device_gates_.at(gate_id).second.getDataBuffer().getData();
     }
 
+    auto get_cache_head_idx() const -> std::size_t {
+        auto it = device_gates_.begin();
+        std::size_t idx;
+        idx = it->first;
+        return idx;
+    }
+
+    auto get_cache_size() const -> std::size_t { return device_gates_.size(); }
+
   private:
     const DevTag<int> device_tag_;
     std::size_t total_alloc_bytes_;

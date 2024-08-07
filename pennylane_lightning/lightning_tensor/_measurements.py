@@ -80,10 +80,12 @@ class LightningTensorMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         self._tensornet.apply_operations(diagonalizing_gates)
+        self._tensornet.appendMPSFinalState()
         state_array = self._tensornet.state
         wires = Wires(range(self._tensornet.num_wires))
         result = measurementprocess.process_state(state_array, wires)
         self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+        self._tensornet.appendMPSFinalState()
         return result
 
     # pylint: disable=protected-access
@@ -117,7 +119,16 @@ class LightningTensorMeasurements:
         Returns:
             Probabilities of the supplied observable or wires
         """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        if diagonalizing_gates:
+            self._tensornet.apply_operations(diagonalizing_gates)
+            self._tensornet.appendMPSFinalState()
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        if diagonalizing_gates:
+            self._tensornet.apply_operations(
+                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            )
+            self._tensornet.appendMPSFinalState()
         return results
 
     def var(self, measurementprocess: MeasurementProcess):
@@ -166,7 +177,7 @@ class LightningTensorMeasurements:
             if isinstance(measurementprocess, ProbabilityMP):
                 return self.probs
 
-            if measurementprocess.obs is None:
+            if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates
 
         raise NotImplementedError("Unsupported measurement type.")
