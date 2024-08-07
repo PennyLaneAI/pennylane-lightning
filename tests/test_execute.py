@@ -24,6 +24,7 @@ from pennylane import numpy as np
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
     reason="lightning.tensor does not support gates with more than 2 wires, preprocess is required for the following tests",

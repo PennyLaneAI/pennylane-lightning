@@ -29,6 +29,7 @@ from pennylane.wires import Wires
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 @pytest.mark.skipif(
     ld._new_API or device_name == "lightning.tensor",
     reason="Old API required, lightning.tensor does not support qml.state().",
