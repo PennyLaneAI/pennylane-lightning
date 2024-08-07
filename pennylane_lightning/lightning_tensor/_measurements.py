@@ -25,7 +25,13 @@ from typing import Callable
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
+from pennylane.measurements import (
+    ExpectationMP,
+    MeasurementProcess,
+    ProbabilityMP,
+    StateMeasurement,
+    VarianceMP,
+)
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -161,6 +167,9 @@ class LightningTensorMeasurements:
 
             if isinstance(measurementprocess, VarianceMP):
                 return self.var
+
+            if isinstance(measurementprocess, ProbabilityMP):
+                return self.probs
 
             if measurementprocess.obs is None:
                 return self.state_diagonalizing_gates

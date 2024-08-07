@@ -38,35 +38,37 @@ using namespace Pennylane::LightningTensor::TNCuda;
 
 TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     using TensorNetT = MPSTNCuda<TestType>;
-    // Probabilities calculated with Pennylane default.qubit:
-    std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
-        input = {{{0, 1, 2},
-                  {0.65473791, 0.08501576, 0.02690407, 0.00349341, 0.19540418,
-                   0.02537265, 0.00802942, 0.0010426}},
-                 {{0, 1}, {0.73975367, 0.03039748, 0.22077683, 0.00907202}},
-                 {{0, 2}, {0.68164198, 0.08850918, 0.2034336, 0.02641525}},
-                 {{1, 2}, {0.85014208, 0.11038841, 0.03493349, 0.00453601}},
-                 {{0}, {0.77015115, 0.22984885}},
-                 {{1}, {0.9605305, 0.0394695}},
-                 {{2}, {0.88507558, 0.11492442}}}; // data from default.qubit
-
-    // Defining the State Vector that will be measured.
-    std::size_t bondDim = GENERATE(2, 3, 4, 5);
-    std::size_t num_qubits = 3;
-    std::size_t maxBondDim = bondDim;
-
-    TensorNetT mps_state{num_qubits, maxBondDim};
-
-    mps_state.applyOperations(
-        {{"RX"}, {"RX"}, {"RY"}, {"RY"}, {"RX"}, {"RY"}},
-        {{0}, {0}, {1}, {1}, {2}, {2}},
-        {{false}, {false}, {false}, {false}, {false}, {false}},
-        {{0.5}, {0.5}, {0.2}, {0.2}, {0.5}, {0.5}});
-    mps_state.append_mps_final_state();
-
-    auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
 
     SECTION("Looping over different wire configurations:") {
+        // Probabilities calculated with Pennylane default.qubit:
+        std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
+            input = {
+                {{0, 1, 2},
+                 {0.65473791, 0.08501576, 0.02690407, 0.00349341, 0.19540418,
+                  0.02537265, 0.00802942, 0.0010426}},
+                {{0, 1}, {0.73975367, 0.03039748, 0.22077683, 0.00907202}},
+                {{0, 2}, {0.68164198, 0.08850918, 0.2034336, 0.02641525}},
+                {{1, 2}, {0.85014208, 0.11038841, 0.03493349, 0.00453601}},
+                {{0}, {0.77015115, 0.22984885}},
+                {{1}, {0.9605305, 0.0394695}},
+                {{2}, {0.88507558, 0.11492442}}}; // data from default.qubit
+
+        // Defining the State Vector that will be measured.
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations(
+            {{"RX"}, {"RX"}, {"RY"}, {"RY"}, {"RX"}, {"RY"}},
+            {{0}, {0}, {1}, {1}, {2}, {2}},
+            {{false}, {false}, {false}, {false}, {false}, {false}},
+            {{0.5}, {0.5}, {0.2}, {0.2}, {0.5}, {0.5}});
+        mps_state.append_mps_final_state();
+
+        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
+
         for (const auto &term : input) {
             auto probabilities = measure.probs(term.first);
             REQUIRE_THAT(term.second,
@@ -75,6 +77,18 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     }
 
     SECTION("Test TNCudaOperator ctor failures") {
+        // Defining the State Vector that will be measured.
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        mps_state.applyOperations({{"RX"}, {"RY"}}, {{0}, {0}},
+                                  {{false}, {false}}, {{0.5}, {0.5}});
+        mps_state.append_mps_final_state();
+
+        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
         REQUIRE_THROWS_AS(measure.probs({2, 1}), LightningException);
     }
 }

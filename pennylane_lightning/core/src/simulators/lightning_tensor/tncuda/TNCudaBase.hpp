@@ -363,7 +363,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             }
         }
 
-        std::vector<int64_t> projectedModeValues(projected_modes.size(), 1);
+        std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
 
         cutensornetStateAccessor_t accessor;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateAccessor(

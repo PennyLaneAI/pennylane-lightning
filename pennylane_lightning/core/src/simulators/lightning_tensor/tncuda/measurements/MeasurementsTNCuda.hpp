@@ -95,7 +95,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
         const std::size_t length = std::size_t{1} << wires.size();
 
-        std::vector<PrecisionT> h_res(length);
+        std::vector<PrecisionT> h_res(length, 0.0);
 
         DataBuffer<CFP_t, int> d_output_tensor(
             length, tensor_network_.getDevTag(), true);
@@ -119,6 +119,11 @@ template <class TensorNetT> class MeasurementsTNCuda {
                                      tensor_network_.getDevTag().getDeviceID(),
                                      tensor_network_.getDevTag().getStreamID(),
                                      *cublascaller, &sum);
+
+        // TODO : Check if sum is zero and return h_res
+        if (sum == 0.0) {
+            return h_res;
+        }
 
         normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
                             static_cast<int>(thread_per_block),
