@@ -476,7 +476,7 @@ def test_controlled_qubit_unitary_from_op(tol):
     reason="PauliRot operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
-@pytest.mark.parametrize("n_targets", [1, 2, 3])
+@pytest.mark.parametrize("n_targets", [1, 2, 3, 4, 5, 10, 15])
 def test_paulirot(n_wires, n_targets, tol):
     """Test that PauliRot is correctly applied to a state."""
     pws = dict((k, v) for k, v in enumerate(("X", "Y", "Z")))

@@ -581,79 +581,35 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
         const auto data = generatePauliWordData(word, s);
         const auto indices = generatePauliWordIndices(word);
-        // const std::vector<std::pair<std::size_t, std::complex<PrecisionT>>>
-        //     pairs;
-        // pairs.reserve(indices.size());
-        // std::transform(
-        //     indices.begin(), indices.end(), data.begin(),
-        //     std::back_inserter(pairs),
-        //     [](const auto i, const auto &v) { return std::make_pair(i, v);
-        //     });
-        // std::sort(
-        //     pairs.begin(), pairs.end(),
-        //     [](const auto &p0, const auto &p1) { return p0.first < p1.first;
-        //     });
-        // for (std::size_t i = 0; i < dim; i++) {
-        //     printf("%ld, ", indices[i]);
-        // }
-        // printf("\n");
         auto core_function = [dim, c, &indices,
                               &data](std::complex<PrecisionT> *arr,
                                      const std::vector<std::size_t> &arr_inds,
                                      const std::size_t offset) {
-            std::vector<std::complex<PrecisionT>> coeffs(dim);
-            for (std::size_t i = 0; i < dim; i++) {
-                coeffs[i] = arr[arr_inds[indices[i]] + offset];
-            }
-            std::vector<std::size_t> found(dim, 0U);
+            std::vector<std::size_t> updated(dim, 0U);
             std::size_t count{0U};
-            std::size_t i{0};
+            std::size_t i{0U};
             while (count < dim) {
-                auto index = arr_inds[i] + offset;
-                auto indii = arr_inds[indices[i]] + offset;
-                std::complex<PrecisionT> arr0{0.0};
-                std::complex<PrecisionT> arrindii{0.0};
-                while (!found[i]) {
-                    index = arr_inds[i] + offset;
-                    arr[index] = c * arr[index] + data[i] * coeffs[i];
-                    count++;
-                    if (count == dim) {
-                        break;
-                    }
-                    found[i] = 1U;
-                    i = indices[i];
-                }
-                if (count == dim) {
-                    break;
-                }
-                while (found[i] == 1U) {
+                while (updated[i] == 1U) {
                     i = (i + 1) % dim;
                 }
+                const std::size_t ind0 = i;
+                auto index = arr_inds[i] + offset;
+                auto indii = arr_inds[indices[i]] + offset;
+                const std::complex<PrecisionT> arr0 = arr[index];
+                std::complex<PrecisionT> arrindii = arr[indii];
+                while (ind0 != indices[i]) {
+                    arr[index] = c * arr[index] + data[i] * arrindii;
+                    count++;
+                    updated[i] = 1U;
+                    i = indices[i];
+                    index = indii;
+                    indii = arr_inds[indices[i]] + offset;
+                    arrindii = arr[indii];
+                }
+                arr[index] = c * arr[index] + data[i] * arr0;
+                count++;
+                updated[i] = 1U;
             }
-            // while (count < dim) {
-            //     // i = indices[count];
-            //     // index = arr_inds[i] + offset;
-            //     // arrindii = arr[indii];
-            //     arr[index] = c * arr[index] + data[i] * coeffs[i];
-            //     i = indices[i];
-            //     index = arr_inds[i] + offset;
-            //     indii = arr_inds[indices[i]] + offset;
-            //     count++;
-            // }
-            // arr[index] = c * arr[index] + data[i] * arr0;
-            // for (std::size_t i = 0; i < dim; i++) {
-            //     const auto index = arr_inds[i] + offset;
-            //     if (!found[indices[i]]) {
-            //         coeffs[indices[i]] = arr[index];
-            //         found[indices[i]] = 1;
-            //     }
-            //     if (!found[i]) {
-            //         const auto indii = arr_inds[indices[i]] + offset;
-            //         coeffs[i] = arr[indii];
-            //         found[i] = 1;
-            //     }
-            //     arr[index] = c * arr[index] + data[i] * coeffs[i];
-            // }
         };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
