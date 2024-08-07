@@ -369,21 +369,17 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             get_accessor_(tensor_data, tensor_data_size, projected_modes,
                           projectedModeValues, numHyperSamples);
         } else {
-
             DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
 
             for (std::size_t idx = 0;
                  idx < (size_t(1) << projected_modes.size()); idx++) {
-                // std::vector<int64_t>
-                // projectedModeValues(projected_modes.size(), 0);
-
                 for (std::size_t j = 0; j < projected_modes.size(); j++) {
                     projectedModeValues[j] = (idx >> j) & 1;
                 }
 
                 get_accessor_(tmp.getData(), tensor_data_size, projected_modes,
                               projectedModeValues, numHyperSamples);
-
+                //TODO move cublascaller to the class member data
                 SharedCublasCaller cublascaller = make_shared_cublas_caller();
                 // Copy the data to the output tensor
                 scaleAndAddC_CUDA(std::complex<PrecisionT>{1.0, 0.0},
