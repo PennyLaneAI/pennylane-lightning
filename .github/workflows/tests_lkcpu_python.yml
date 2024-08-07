@@ -246,6 +246,7 @@ jobs:
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            # Remove `python -m` to avoid running tests with relative modules
             PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
               --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
             mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
