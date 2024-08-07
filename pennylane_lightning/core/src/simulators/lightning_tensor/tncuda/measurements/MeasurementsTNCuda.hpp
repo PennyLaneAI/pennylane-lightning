@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file
+ * @file MeasurementsTNCuda.hpp
  * Defines a class for the measurement of observables in quantum states
  * represented by a Lightning Tensor class.
  */
@@ -113,14 +113,12 @@ template <class TensorNetT> class MeasurementsTNCuda {
                       length, static_cast<int>(thread_per_block),
                       tensor_network_.getDevTag().getStreamID());
 
-        SharedCublasCaller cublascaller = make_shared_cublas_caller();
-
         PrecisionT sum;
 
         asum_CUDA_device<PrecisionT>(d_output_probs.getData(), length,
                                      tensor_network_.getDevTag().getDeviceID(),
                                      tensor_network_.getDevTag().getStreamID(),
-                                     *cublascaller, &sum);
+                                     tensor_network_.getCublasCaller(), &sum);
 
         // TODO : Check if sum is zero and return h_res
         if (sum == 0.0) {

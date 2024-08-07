@@ -60,6 +60,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     using ComplexT = std::complex<PrecisionT>;
     using BaseType = TensornetBase<PrecisionT, Derived>;
     SharedTNCudaHandle handle_;
+    SharedCublasCaller cublascaller_;
     cudaDataType_t typeData_;
     DevTag<int> dev_tag_;
     cutensornetComputeType_t typeCompute_;
@@ -78,6 +79,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
                         cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
+          cublascaller_(make_shared_cublas_caller()),
           dev_tag_({device_id, stream_id}),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
@@ -105,7 +107,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     // runtime in the C++ layer
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
-          dev_tag_(dev_tag),
+          cublascaller_(make_shared_cublas_caller()), dev_tag_(dev_tag),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
@@ -148,6 +150,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      */
     [[nodiscard]] auto getTNCudaHandle() const -> cutensornetHandle_t {
         return handle_.get();
+    }
+
+    /**
+     * @brief Access the CublasCaller the object is using.
+     *
+     * @return a reference to the object's CublasCaller object.
+     */
+    auto getCublasCaller() const -> const CublasCaller & {
+        return *cublascaller_;
     }
 
     /**
@@ -379,13 +390,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
                 get_accessor_(tmp.getData(), tensor_data_size, projected_modes,
                               projectedModeValues, numHyperSamples);
-                // TODO move cublascaller to the class member data
-                SharedCublasCaller cublascaller = make_shared_cublas_caller();
                 // Copy the data to the output tensor
                 scaleAndAddC_CUDA(std::complex<PrecisionT>{1.0, 0.0},
                                   tmp.getData(), tensor_data, tmp.getLength(),
                                   getDevTag().getDeviceID(),
-                                  getDevTag().getStreamID(), *cublascaller);
+                                  getDevTag().getStreamID(), getCublasCaller());
             }
         }
     }
@@ -516,11 +525,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         CFP_t scale_scalar_cu{scale_scalar.real(), scale_scalar.imag()};
 
-        SharedCublasCaller cublascaller = make_shared_cublas_caller();
-
         scaleC_CUDA<CFP_t, CFP_t>(scale_scalar_cu, tensor_data,
                                   tensor_data_size, getDevTag().getDeviceID(),
-                                  getDevTag().getStreamID(), *cublascaller);
+                                  getDevTag().getStreamID(), getCublasCaller());
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
