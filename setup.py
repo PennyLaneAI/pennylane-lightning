@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,48 +22,9 @@ from pathlib import Path
 from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
-default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor"}
-supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
-
-
-def get_backend():
-    """Return backend.
-
-    The backend is ``lightning_qubit`` by default.
-    Allowed values are: "lightning_kokkos", "lightning_qubit" and "lightning_gpu".
-    A dot can also be used instead of an underscore.
-    If the environment variable ``PL_BACKEND`` is defined, its value is used.
-    Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it
-    contains the CMake option ``PL_BACKEND``, its value is used.
-    Dots are replaced by underscores upon exiting.
-    """
-    backend = None
-    if "PL_BACKEND" in os.environ:
-        backend = os.environ.get("PL_BACKEND", default_backend)
-        backend = backend.replace(".", "_")
-    if "CMAKE_ARGS" in os.environ:
-        cmake_args = os.environ["CMAKE_ARGS"].split(" ")
-        arg = [x for x in cmake_args if "PL_BACKEND" in x]
-        if not arg and backend is not None:
-            cmake_backend = backend
-        else:
-            cmake_backend = arg[0].split("=")[1].replace(".", "_") if arg else default_backend
-        if backend is not None and backend != cmake_backend:
-            raise ValueError(
-                f"Backends {backend} and {cmake_backend} specified by PL_BACKEND and CMAKE_ARGS respectively do not match."
-            )
-        backend = cmake_backend
-    if backend is None:
-        backend = default_backend
-    if backend not in supported_backends:
-        raise ValueError(f"Invalid backend {backend}.")
-    return backend
-
-
-backend = get_backend()
-device_name = backend.replace("_", ".")
-
+project_name = toml.load("pyproject.toml")['project']['name']
+backend = project_name.replace("PennyLane_", "").lower()
+if (backend == "lightning"): backend = "lightning_qubit"
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=""):
@@ -168,33 +129,14 @@ class CMakeBuild(build_ext):
             env=os.environ,
         )
 
-
-requirements = [
-    "pennylane>=0.37",
-]
-
 packages_list = ["pennylane_lightning." + backend]
 
-version = toml.load("pyproject.toml")["project"]["version"]
 if backend == "lightning_qubit":
     packages_list += ["pennylane_lightning.core"]
-else:
-    requirements += ["pennylane_lightning==" + version]
-
-suffix = backend.replace("lightning_", "")
-if suffix == "gpu":
-    suffix = suffix[0:].upper()
-suffix = suffix[0].upper() + suffix[1:]
-
-pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
-
-pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
 info = {
     "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
-    "entry_points": {"pennylane.plugins": pennylane_plugins},
-    "install_requires": requirements,
     "ext_modules": (
         [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]
     ),
