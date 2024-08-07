@@ -117,7 +117,6 @@ class LightningTensorMeasurements:
         Returns:
             Probabilities of the supplied observable or wires
         """
-        diagonalizing_gates = measurementprocess.diagonalizing_gates()
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         return results
 
