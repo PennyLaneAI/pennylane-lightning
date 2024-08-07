@@ -100,6 +100,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
         DataBuffer<CFP_t, int> d_output_tensor(
             length, tensor_network_.getDevTag(), true);
 
+        d_output_tensor.zeroInit();
+
         DataBuffer<PrecisionT, int> d_output_probs(
             length, tensor_network_.getDevTag(), true);
 

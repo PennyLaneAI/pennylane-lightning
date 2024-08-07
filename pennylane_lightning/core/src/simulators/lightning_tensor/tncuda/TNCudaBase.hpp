@@ -365,6 +365,93 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
 
+        if (projected_modes.empty()) {
+            get_accessor_(tensor_data, tensor_data_size, projected_modes,
+                          projectedModeValues, numHyperSamples);
+        } else {
+
+            DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
+
+            for (std::size_t idx = 0;
+                 idx < (size_t(1) << projected_modes.size()); idx++) {
+                // std::vector<int64_t>
+                // projectedModeValues(projected_modes.size(), 0);
+
+                for (std::size_t j = 0; j < projected_modes.size(); j++) {
+                    projectedModeValues[j] = (idx >> j) & 1;
+                }
+
+                get_accessor_(tmp.getData(), tensor_data_size, projected_modes,
+                              projectedModeValues, numHyperSamples);
+
+                SharedCublasCaller cublascaller = make_shared_cublas_caller();
+                // Copy the data to the output tensor
+                scaleAndAddC_CUDA(std::complex<PrecisionT>{1.0, 0.0},
+                                  tmp.getData(), tensor_data, tmp.getLength(),
+                                  getDevTag().getDeviceID(),
+                                  getDevTag().getStreamID(), *cublascaller);
+            }
+        }
+    }
+
+  protected:
+    /**
+     * @brief Save quantumState information to data provided by a user
+     *
+     * @param tensorPtr Pointer to tensors provided by a user
+     */
+    void computeState(int64_t **extentsPtr, void **tensorPtr) {
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
+
+        // TODO we assign half (magic number is) of free memory size to the
+        // maximum memory usage.
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /*  cudaStream_t unused as of v24.03*/ 0x0));
+
+        std::size_t worksize =
+            getWorkSpaceMemorySize(getTNCudaHandle(), workDesc);
+
+        PL_ABORT_IF(worksize > scratchSize,
+                    "Insufficient workspace size on Device!");
+
+        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
+        DataBuffer<std::size_t, int> d_scratch(d_scratch_length, getDevTag(),
+                                               true);
+
+        setWorkSpaceMemory(getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* int64_t * */ extentsPtr,
+            /* int64_t *stridesOut */ nullptr,
+            /* void * */ tensorPtr,
+            /* cudaStream_t */ getDevTag().getStreamID()));
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
+    }
+
+  private:
+    /**
+     * @brief Get accessor of a state tensor
+     */
+
+    void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
+                       const std::vector<int32_t> &projected_modes,
+                       const std::vector<int64_t> &projectedModeValues,
+                       const int32_t numHyperSamples = 1) const {
         cutensornetStateAccessor_t accessor;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateAccessor(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
@@ -442,55 +529,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyAccessor(accessor));
-    }
-
-  protected:
-    /**
-     * @brief Save quantumState information to data provided by a user
-     *
-     * @param tensorPtr Pointer to tensors provided by a user
-     */
-    void computeState(int64_t **extentsPtr, void **tensorPtr) {
-        cutensornetWorkspaceDescriptor_t workDesc;
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
-
-        // TODO we assign half (magic number is) of free memory size to the
-        // maximum memory usage.
-        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetState_t */ getQuantumState(),
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /*  cudaStream_t unused as of v24.03*/ 0x0));
-
-        std::size_t worksize =
-            getWorkSpaceMemorySize(getTNCudaHandle(), workDesc);
-
-        PL_ABORT_IF(worksize > scratchSize,
-                    "Insufficient workspace size on Device!");
-
-        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
-        DataBuffer<std::size_t, int> d_scratch(d_scratch_length, getDevTag(),
-                                               true);
-
-        setWorkSpaceMemory(getTNCudaHandle(), workDesc,
-                           reinterpret_cast<void *>(d_scratch.getData()),
-                           worksize);
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetState_t */ getQuantumState(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ extentsPtr,
-            /* int64_t *stridesOut */ nullptr,
-            /* void * */ tensorPtr,
-            /* cudaStream_t */ getDevTag().getStreamID()));
-
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyWorkspaceDescriptor(workDesc));
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda
