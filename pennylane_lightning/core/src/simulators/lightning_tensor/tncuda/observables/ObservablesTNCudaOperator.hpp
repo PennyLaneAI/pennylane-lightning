@@ -12,6 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/**
+ * @file ObservablesTNCudaOperator.hpp
+ * Class for appending a ObservablesTNCuda object to a tensor network object.
+ */
+
 #pragma once
 
 #include <cutensornet.h>
@@ -380,8 +385,6 @@ template <class TensorNetT> class ObservableTNCudaOperator {
      */
     void initHelper_var_(const TensorNetT &tensor_network,
                          ObservableTNCuda<TensorNetT> &obs) {
-        SharedCublasCaller cublascaller = make_shared_cublas_caller();
-
         // convert obs modes to cutensornet compatible format/order
         vector3D<int32_t> modes;
         for (std::size_t term_idx = 0; term_idx < numObsTerms_; term_idx++) {
@@ -430,8 +433,9 @@ template <class TensorNetT> class ObservableTNCudaOperator {
                     if (metaDataArr.size() == 1) {
                         obsKey = std::move(add_meta_data_(metaDataArr[0]));
                     } else if (metaDataArr.size() == 2) {
-                        obsKey = std::move(add_meta_data_(
-                            metaDataArr[0], metaDataArr[1], *cublascaller));
+                        obsKey = std::move(
+                            add_meta_data_(metaDataArr[0], metaDataArr[1],
+                                           tensor_network.getCublasCaller()));
                     } else {
                         PL_ABORT("Only one wire observables are supported "
                                  "for cutensornet v24.03");

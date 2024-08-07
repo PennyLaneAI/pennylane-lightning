@@ -60,6 +60,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     using ComplexT = std::complex<PrecisionT>;
     using BaseType = TensornetBase<PrecisionT, Derived>;
     SharedTNCudaHandle handle_;
+    SharedCublasCaller cublascaller_;
     cudaDataType_t typeData_;
     DevTag<int> dev_tag_;
     cutensornetComputeType_t typeCompute_;
@@ -78,6 +79,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
                         cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
+          cublascaller_(make_shared_cublas_caller()),
           dev_tag_({device_id, stream_id}),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
@@ -105,7 +107,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     // runtime in the C++ layer
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
-          dev_tag_(dev_tag),
+          cublascaller_(make_shared_cublas_caller()), dev_tag_(dev_tag),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
@@ -148,6 +150,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      */
     [[nodiscard]] auto getTNCudaHandle() const -> cutensornetHandle_t {
         return handle_.get();
+    }
+
+    /**
+     * @brief Access the CublasCaller the object is using.
+     *
+     * @return a reference to the object's CublasCaller object.
+     */
+    auto getCublasCaller() const -> const CublasCaller & {
+        return *cublascaller_;
     }
 
     /**
@@ -294,6 +305,22 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* int32_t unitary*/ 1));
     }
 
+    void dummy_tensor_update() {
+        if (gate_cache_->get_cache_size() == 0) {
+            applyOperation("Identity", {0}, false);
+        }
+        int64_t id = gate_cache_->get_cache_head_idx();
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* int64_t tensorId*/ id,
+            /* void* */
+            static_cast<void *>(
+                gate_cache_->get_gate_device_ptr(static_cast<std::size_t>(id))),
+            /* int32_t unitary*/ 1));
+    }
+
     /**
      * @brief Get the full state tensor
      *
@@ -310,13 +337,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get a slice of the state tensor
+     * @brief Get a slice of the full state tensor
      *
      * @param wires Wires to get the state tensor for.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is default as 1.
      *
-     * @return A slice of the state tensor on the host memory
+     * @return Full state tensor on the host memory
      */
     auto get_state_tensor(const std::vector<std::size_t> &wires,
                           const int32_t numHyperSamples = 1)
@@ -339,28 +366,116 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get a slice of the state tensor
+     * @brief Get a slice of the full state tensor
      *
-     * @param tensor_data Pointer to the device memory for state tensor data.
-     * @param tensor_data_size Size of the state tensor data.
+     * @param tensor_data Pointer to the tensor data on the device memory.
+     * @param tensor_data_size Size of the tensor data.
      * @param wires Wires to get the state tensor for.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is default as 1.
+     *
+     * @return Full state tensor on the host memory
      */
     void get_state_tensor(CFP_t *tensor_data,
                           const std::size_t tensor_data_size,
                           const std::vector<std::size_t> &wires,
-                          const int32_t numHyperSamples = 1) {
-        // NOTE: this is a solution to get the full state tensor
-        // TODO: project_modes and projectedModeValues are to be updated for
-        // prob() support.
+                          const int32_t numHyperSamples = 1) const {
         auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
             wires, BaseType::getNumQubits());
 
         std::vector<int32_t> projected_modes{};
 
-        std::vector<int64_t> projectedModeValues{};
+        for (std::size_t idx = 0; idx < BaseType::getNumQubits(); idx++) {
+            auto it = std::find(stateModes.begin(), stateModes.end(),
+                                static_cast<int32_t>(idx));
+            if (it == stateModes.end()) {
+                projected_modes.emplace_back(static_cast<int32_t>(idx));
+            }
+        }
 
+        std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
+
+        if (projected_modes.empty()) {
+            get_accessor_(tensor_data, tensor_data_size, projected_modes,
+                          projectedModeValues, numHyperSamples);
+        } else {
+            DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
+
+            for (std::size_t idx = 0;
+                 idx < (size_t(1) << projected_modes.size()); idx++) {
+                for (std::size_t j = 0; j < projected_modes.size(); j++) {
+                    projectedModeValues[j] = (idx >> j) & 1;
+                }
+
+                get_accessor_(tmp.getData(), tensor_data_size, projected_modes,
+                              projectedModeValues, numHyperSamples);
+                // Copy the data to the output tensor
+                scaleAndAddC_CUDA(std::complex<PrecisionT>{1.0, 0.0},
+                                  tmp.getData(), tensor_data, tmp.getLength(),
+                                  getDevTag().getDeviceID(),
+                                  getDevTag().getStreamID(), getCublasCaller());
+            }
+        }
+    }
+
+  protected:
+    /**
+     * @brief Save quantumState information to data provided by a user
+     *
+     * @param tensorPtr Pointer to tensors provided by a user
+     */
+    void computeState(int64_t **extentsPtr, void **tensorPtr) {
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
+
+        // TODO we assign half (magic number is) of free memory size to the
+        // maximum memory usage.
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /*  cudaStream_t unused as of v24.03*/ 0x0));
+
+        std::size_t worksize =
+            getWorkSpaceMemorySize(getTNCudaHandle(), workDesc);
+
+        PL_ABORT_IF(worksize > scratchSize,
+                    "Insufficient workspace size on Device!");
+
+        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
+        DataBuffer<std::size_t, int> d_scratch(d_scratch_length, getDevTag(),
+                                               true);
+
+        setWorkSpaceMemory(getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* int64_t * */ extentsPtr,
+            /* int64_t *stridesOut */ nullptr,
+            /* void * */ tensorPtr,
+            /* cudaStream_t */ getDevTag().getStreamID()));
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
+    }
+
+  private:
+    /**
+     * @brief Get accessor of a state tensor
+     */
+
+    void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
+                       const std::vector<int32_t> &projected_modes,
+                       const std::vector<int64_t> &projectedModeValues,
+                       const int32_t numHyperSamples = 1) const {
         cutensornetStateAccessor_t accessor;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateAccessor(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
@@ -429,64 +544,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         CFP_t scale_scalar_cu{scale_scalar.real(), scale_scalar.imag()};
 
-        SharedCublasCaller cublascaller = make_shared_cublas_caller();
-
         scaleC_CUDA<CFP_t, CFP_t>(scale_scalar_cu, tensor_data,
                                   tensor_data_size, getDevTag().getDeviceID(),
-                                  getDevTag().getStreamID(), *cublascaller);
+                                  getDevTag().getStreamID(), getCublasCaller());
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyAccessor(accessor));
-    }
-
-  protected:
-    /**
-     * @brief Save quantumState information to data provided by a user
-     *
-     * @param tensorPtr Pointer to tensors provided by a user
-     */
-    void computeState(int64_t **extentsPtr, void **tensorPtr) {
-        cutensornetWorkspaceDescriptor_t workDesc;
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetCreateWorkspaceDescriptor(getTNCudaHandle(), &workDesc));
-
-        // TODO we assign half (magic number is) of free memory size to the
-        // maximum memory usage.
-        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetState_t */ getQuantumState(),
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /*  cudaStream_t unused as of v24.03*/ 0x0));
-
-        std::size_t worksize =
-            getWorkSpaceMemorySize(getTNCudaHandle(), workDesc);
-
-        PL_ABORT_IF(worksize > scratchSize,
-                    "Insufficient workspace size on Device!");
-
-        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
-        DataBuffer<std::size_t, int> d_scratch(d_scratch_length, getDevTag(),
-                                               true);
-
-        setWorkSpaceMemory(getTNCudaHandle(), workDesc,
-                           reinterpret_cast<void *>(d_scratch.getData()),
-                           worksize);
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetState_t */ getQuantumState(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ extentsPtr,
-            /* int64_t *stridesOut */ nullptr,
-            /* void * */ tensorPtr,
-            /* cudaStream_t */ getDevTag().getStreamID()));
-
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyWorkspaceDescriptor(workDesc));
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda

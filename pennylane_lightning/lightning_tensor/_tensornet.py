@@ -191,10 +191,14 @@ class LightningTensorNet:
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
-
-        Returns:
-            LightningTensorNet: Lightning final state class.
         """
         self.apply_operations(circuit.operations)
+        self.appendMPSFinalState()
+
+    def appendMPSFinalState(self):
+        """
+        Append the final state to the tensor network for the MPS backend. This is an function to be called
+        by once apply_operations is called.
+        """
         if self._method == "mps":
             self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)

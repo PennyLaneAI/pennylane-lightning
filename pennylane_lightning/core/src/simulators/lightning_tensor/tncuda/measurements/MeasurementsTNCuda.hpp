@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file
+ * @file MeasurementsTNCuda.hpp
  * Defines a class for the measurement of observables in quantum states
  * represented by a Lightning Tensor class.
  */
@@ -21,9 +21,11 @@
 #pragma once
 
 #include <complex>
+#include <cuComplex.h>
 #include <cutensornet.h>
 #include <vector>
 
+#include "LinearAlg.hpp"
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 #include "ObservablesTNCudaOperator.hpp"
@@ -39,6 +41,21 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 /// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda::Measures {
+extern void getProbs_CUDA(cuComplex *state, float *probs, const int data_size,
+                          const std::size_t thread_per_block,
+                          cudaStream_t stream_id);
+extern void getProbs_CUDA(cuDoubleComplex *state, double *probs,
+                          const int data_size,
+                          const std::size_t thread_per_block,
+                          cudaStream_t stream_id);
+extern void normalizeProbs_CUDA(float *probs, const int data_size,
+                                const float sum,
+                                const std::size_t thread_per_block,
+                                cudaStream_t stream_id);
+extern void normalizeProbs_CUDA(double *probs, const int data_size,
+                                const double sum,
+                                const std::size_t thread_per_block,
+                                cudaStream_t stream_id);
 /**
  * @brief ObservablesTNCuda's Measurement Class.
  *
@@ -51,12 +68,71 @@ template <class TensorNetT> class MeasurementsTNCuda {
   private:
     using PrecisionT = typename TensorNetT::PrecisionT;
     using ComplexT = typename TensorNetT::ComplexT;
+    using CFP_t = typename TensorNetT::CFP_t;
 
     const TensorNetT &tensor_network_;
 
   public:
     explicit MeasurementsTNCuda(const TensorNetT &tensor_network)
         : tensor_network_(tensor_network){};
+
+    /**
+     * @brief Probabilities for a subset of the full system.
+     *
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     * @param  numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    template <std::size_t thread_per_block = 256>
+    auto probs(const std::vector<std::size_t> &wires,
+               const int32_t numHyperSamples = 1) -> std::vector<PrecisionT> {
+        PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
+                        "Invalid wire indices order. Please ensure that the "
+                        "wire indices are in the ascending order.");
+
+        const std::size_t length = std::size_t{1} << wires.size();
+
+        std::vector<PrecisionT> h_res(length, 0.0);
+
+        DataBuffer<CFP_t, int> d_output_tensor(
+            length, tensor_network_.getDevTag(), true);
+
+        d_output_tensor.zeroInit();
+
+        DataBuffer<PrecisionT, int> d_output_probs(
+            length, tensor_network_.getDevTag(), true);
+
+        tensor_network_.get_state_tensor(d_output_tensor.getData(),
+                                         d_output_tensor.getLength(), wires,
+                                         numHyperSamples);
+
+        getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
+                      length, static_cast<int>(thread_per_block),
+                      tensor_network_.getDevTag().getStreamID());
+
+        PrecisionT sum;
+
+        asum_CUDA_device<PrecisionT>(d_output_probs.getData(), length,
+                                     tensor_network_.getDevTag().getDeviceID(),
+                                     tensor_network_.getDevTag().getStreamID(),
+                                     tensor_network_.getCublasCaller(), &sum);
+
+        // TODO : Check if sum is zero and return h_res
+        if (sum == 0.0) {
+            return h_res;
+        }
+
+        normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
+                            static_cast<int>(thread_per_block),
+                            tensor_network_.getDevTag().getStreamID());
+
+        d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
+
+        return h_res;
+    }
 
     /**
      * @brief Calculate var value for a general ObservableTNCuda Observable.
