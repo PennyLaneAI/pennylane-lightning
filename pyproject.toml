@@ -1,52 +1,28 @@
 [build-system]
-requires = [
-    "cmake~=3.24.0",
-    "ninja; platform_system!='Windows'",
-    "pybind11",
-    "setuptools>=42",
-    "toml"]
-
+requires = [ "cmake~=3.24.0", "ninja; platform_system!='Windows'", "setuptools>=42", "toml",]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "PennyLane-Lightning"
+name = "PennyLane_Lightning"
 version = "0.38.0-dev22"
 description = "PennyLane-Lightning plugin"
 readme = "README.rst"
-license = {text = "Apache License 2.0"}
-maintainers = [
-    { name = "Xanadu Inc.", email = "software@xanadu.ai" },
-]
 requires-python = ">=3.9"
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
-    "Natural Language :: English",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Operating System :: POSIX :: Linux",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Scientific/Engineering :: Physics",
-]
+classifiers = [ "Development Status :: 4 - Beta", "Environment :: Console", "Intended Audience :: Science/Research", "License :: OSI Approved :: Apache Software License", "Natural Language :: English", "Operating System :: MacOS :: MacOS X", "Operating System :: Microsoft :: Windows", "Operating System :: POSIX", "Operating System :: POSIX :: Linux", "Programming Language :: Python", "Programming Language :: Python :: 3", "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.9", "Programming Language :: Python :: 3.10", "Programming Language :: Python :: 3.11", "Programming Language :: Python :: 3.12", "Topic :: Scientific/Engineering :: Physics",]
+dependencies = [ "pennylane>=0.37",]
+[[project.maintainers]]
+name = "Xanadu Inc."
+email = "software@xanadu.ai"
 
-dynamic = ["entry-points", "dependencies"]
+[project.license]
+text = "Apache License 2.0"
 
 [project.optional-dependencies]
-gpu = [
-    "pennylane-lightning-gpu",
-]
-kokkos = [
-    "pennylane-lightning-kokkos",
-]
+gpu = [ "pennylane-lightning-gpu",]
+kokkos = [ "pennylane-lightning-kokkos",]
 
 [project.urls]
 Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
+
+[project.entry-points."pennylane.plugins"]
+"lightning.qubit" = "pennylane_lightning.lightning_qubit:LightningQubit"
