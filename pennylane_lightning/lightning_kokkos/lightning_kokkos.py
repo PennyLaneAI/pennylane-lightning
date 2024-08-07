@@ -864,7 +864,7 @@ class LightningKokkos(LightningBase):
         # Fixed location at the root of the project
         wheel_mode_location = package_root.parent / lib_name
         if wheel_mode_location.is_file():
-            return "LightningKokkosSimulator", wheel_mode_location
+            return "LightningKokkosSimulator", wheel_mode_location.as_posix()
 
         # Editable mode:
         # The build directory contains a folder which varies according to the platform:

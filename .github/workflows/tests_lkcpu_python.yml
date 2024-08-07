@@ -211,10 +211,9 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
-            python -m pip install . -vv
+            SKIP_COMPILATION=True python -m pip install . -vv
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
-          ls build/lib.*/pennylane_lightning
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -246,9 +245,8 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           cd main/
-          ls build/lib.*/pennylane_lightning/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
+            PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
               --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
             mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
