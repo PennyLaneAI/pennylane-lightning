@@ -257,7 +257,8 @@ class TestSparseHExpval:
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            NotImplementedError, match="The var measurement does not support sparse Hamiltonian observables."
+            NotImplementedError,
+            match="The var measurement does not support sparse Hamiltonian observables.",
         ):
             m.var(q.queue[0])
 
@@ -297,7 +298,9 @@ class TestSparseHExpval:
         tape = qml.tape.QuantumScript(measurements=obs, shots=1000)
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError, match="Shots are not supported for tensor network simulations."):
+        with pytest.raises(
+            NotImplementedError, match="Shots are not supported for tensor network simulations."
+        ):
             m.measure_tensor_network(tape)
 
     def test_measurement_not_supported(self):

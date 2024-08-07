@@ -379,7 +379,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
                 get_accessor_(tmp.getData(), tensor_data_size, projected_modes,
                               projectedModeValues, numHyperSamples);
-                //TODO move cublascaller to the class member data
+                // TODO move cublascaller to the class member data
                 SharedCublasCaller cublascaller = make_shared_cublas_caller();
                 // Copy the data to the output tensor
                 scaleAndAddC_CUDA(std::complex<PrecisionT>{1.0, 0.0},
