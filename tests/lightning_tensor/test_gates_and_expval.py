@@ -305,7 +305,7 @@ class TestSparseHExpval:
 
     def test_measurement_not_supported(self):
         """Test error for measure_tensor_network."""
-        obs = [qml.sample(wires=0)]
+        obs = [qml.sample(wires=[0])]
 
         tensornet = LightningTensorNet(4, 10)
         tape = qml.tape.QuantumScript(measurements=obs)

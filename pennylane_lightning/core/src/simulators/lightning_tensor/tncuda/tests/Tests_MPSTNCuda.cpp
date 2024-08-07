@@ -163,13 +163,12 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 }
 
 TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
-    std::size_t num_qubits = 10;
-    std::size_t maxBondDim = 2;
-    DevTag<int> dev_tag{0, 0};
-
-    MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
-
     SECTION("Get zero state") {
+        std::size_t num_qubits = 10;
+        std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
         std::vector<std::complex<TestType>> expected_state(
             std::size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
 
@@ -177,5 +176,18 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 
         CHECK(expected_state ==
               Pennylane::Util::approx(mps_state.getDataVector()));
+    }
+
+    SECTION("Throw error for getDataVector() on device") {
+        std::size_t num_qubits = 100;
+        std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
+
+        REQUIRE_THROWS_WITH(
+            mps_state.getDataVector(),
+            Catch::Matchers::Contains(
+                "State tensor size exceeds the available GPU memory!"));
     }
 }
