@@ -823,7 +823,7 @@ class TestDerivatives:
         device = LightningDevice(wires=4, batch_obs=batch_obs)
 
         ops = [qml.X(0), qml.X(1)]
-        if device_name == "lighlightning.qubit":
+        if device_name == "lightning.qubit":
             ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
         else:
             ops.append(qml.RX(phi, 2))
@@ -1159,7 +1159,7 @@ class TestVJP:
             qml.X(0),
             qml.X(1),
         ]
-        if device_name == "lighlightning.qubit":
+        if device_name == "lightning.qubit":
             ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
         else:
             ops.append(qml.RX(phi, 2))
