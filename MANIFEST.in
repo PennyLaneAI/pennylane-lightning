@@ -5,3 +5,4 @@ include .github/CHANGELOG.md
 include pennylane_lightning/lightning_qubit/lightning_qubit.toml
 include pennylane_lightning/lightning_qpu/lightning_gpu.toml
 include pennylane_lightning/lightning_kokkos/lightning_kokkos.toml
+graft pennylane_lightning/core/src/
