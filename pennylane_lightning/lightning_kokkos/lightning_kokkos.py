@@ -477,7 +477,6 @@ class LightningKokkos(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        self._statevector = LightningKokkosStateVector(num_wires=len(self.wires), dtype=c_dtype)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
@@ -487,6 +486,8 @@ class LightningKokkos(Device):
         self._sync = sync
         if not LightningKokkos.kokkos_config:
             LightningKokkos.kokkos_config = _kokkos_configuration()
+
+        self._statevector = LightningKokkosStateVector(num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args, sync=sync)
 
     @property
     def name(self):
