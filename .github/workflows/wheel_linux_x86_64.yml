@@ -138,7 +138,7 @@ jobs:
         run: python3.9 -m pip install cibuildwheel~=2.16.0
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
