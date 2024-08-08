@@ -694,9 +694,11 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param index Index of the target element.
      */
     void setBasisState(const std::size_t index) {
+        auto length = this->getLength();
+        PL_ABORT_IF(index > length - 1, "Invalid index");
+
         auto *arr = this->getData();
-        PL_ABORT_IF(index > this->getLength() - 1, "Invalid wire");
-        for (size_t k = 0; k < this->getLength(); k++) {
+        for (size_t k = 0; k < length; k++) {
             arr[k] = {0.0, 0.0};
         }
         arr[index] = {1.0, 0.0};
@@ -710,9 +712,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
+        std::unordered_set index_set(indices.begin(), indices.end());
+        auto num_indices = index_set.size();
+        PL_ABORT_IF(num_indices != indices.size(), "Indices must be unique");
+        PL_ABORT_IF(num_indices != values.size(),
+                    "Indices and values length must match");
+
         auto *arr = this->getData();
-        for (std::size_t n = 0; n < indices.size(); n++) {
-            arr[indices[n]] = values[n];
+        auto length = this->getLength();
+
+        for (std::size_t i = 0; i < num_indices; i++) {
+            PL_ABORT_IF(i >= length, "Invalid index");
+            arr[indices[i]] = values[i];
         }
     }
 
