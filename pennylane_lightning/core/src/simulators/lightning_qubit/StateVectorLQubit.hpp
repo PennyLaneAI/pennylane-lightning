@@ -59,6 +59,41 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     using ComplexT = std::complex<PrecisionT>;
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param index Index of the target element.
+     */
+    void setBasisState(const std::size_t index) {
+        auto *arr = this->getData();
+        memset(arr, 0, sizeof(ComplexT) * this->getLength());
+        arr[index] = {1.0, 0.0};
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        auto *arr = this->getData();
+        for (std::size_t n = 0; n < indices.size(); n++) {
+            arr[indices[n]] = values[n];
+        }
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     *
+     */
+    void resetStateVector() {
+        if (this->getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
+
   protected:
     const Threading threading_;
     const CPUMemoryModel memory_model_;
