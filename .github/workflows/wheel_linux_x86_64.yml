@@ -159,8 +159,7 @@ jobs:
             source /opt/rh/gcc-toolset-13/enable -y
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
-          CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
+          CIBW_ENVIRONMENT: PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           # lightning.qubit is the default backend.
           CIBW_BEFORE_TEST: |
