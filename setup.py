@@ -129,12 +129,16 @@ class CMakeBuild(build_ext):
             env=os.environ,
         )
 
+with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
+    version = f.readlines()[-1].split()[-1].strip("\"'")
+
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
     packages_list += ["pennylane_lightning.core"]
 
 info = {
+    "version": version,
     "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
     "ext_modules": (
