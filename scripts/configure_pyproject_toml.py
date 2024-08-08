@@ -18,6 +18,8 @@ import os
 import toml
 from backend_support import backend, device_name
 
+with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
+    version = f.readlines()[-1].split()[-1].strip("\"'")
 
 ########################################################################
 # Parsing arguments
@@ -66,7 +68,7 @@ if __name__ == "__main__":
     ]
 
     if backend != "lightning_qubit":
-        dependencies += ["pennylane_lightning==" + pyproject["project"]["version"]]
+        dependencies += ["pennylane_lightning==" + version]
 
     # Package requirements.
     pyproject["project"]["dependencies"] = dependencies
