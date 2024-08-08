@@ -134,7 +134,7 @@ jobs:
         run: |
           dnf update -y && dnf install -y podman
 
-      - name: Install cibuildwheel
+      - name: Install dependencies
         run: python3.9 -m pip install cibuildwheel~=2.16.0 toml
 
       - name: Configure pyproject.toml file
