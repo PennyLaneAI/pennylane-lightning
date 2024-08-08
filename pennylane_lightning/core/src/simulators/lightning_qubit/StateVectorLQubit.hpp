@@ -732,5 +732,46 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             setBasisState(0U);
         }
     }
+
+    /**
+     * @brief
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     */
+    void setBasisState(const std::vector<uint8_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        // TODO: We could reduce memory usage by a factor of 8 by packing bits.
+        constexpr size_t bits = sizeof(size_t) * 8;
+        auto wires_size = wires.size();
+        auto basis_state_size = state.size();
+        PL_ABORT_IF(
+            wires_size != basis_state_size,
+            "Basis state must be same size as number of wires specified");
+        auto total_wire_count = this->getLength();
+
+        auto size = wires_size;
+        // Using size_t because of setBasisState. This actually simplifies
+        // the check for overflow.
+        size_t accumulator = 0;
+        for (size_t index = 0; index < size - 1; index++) {
+            PL_ABORT_IF(accumulator < 0, "Overflow");
+            PL_ABORT_IF(wires[index] > bits,
+                        "Wires can't exceed number of bits in size_t.");
+            PL_ABORT_IF(wires[index] >= total_wire_count,
+                        "Invalid wire range.");
+            PL_ABORT_IF(state[index] & 0b00,
+                        "Basis state must be either zero or one.");
+
+            auto wire = wires[index];
+            auto oneOrZero = state[index];
+            auto wire_correct_endian = total_wire_count - 1 - wire;
+            auto exponent = static_cast<size_t>(1) << wire_correct_endian;
+            auto decimal = oneOrZero * exponent;
+            accumulator += decimal;
+        }
+        setBasisState(accumulator);
+    }
 };
 } // namespace Pennylane::LightningQubit
