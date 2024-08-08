@@ -688,7 +688,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         }
     }
 
-  public:
     /**
      * @brief Prepares a single computational basis state.
      *
