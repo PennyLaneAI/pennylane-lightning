@@ -49,6 +49,11 @@ auto generateBitPatterns(const std::vector<std::size_t> &qubitIndices,
     return indices;
 }
 
+/**
+ * @brief Computes the CSR-format indices of a Pauli word times a coefficient.
+ *
+ * @param word Pauli word such as "XYYX".
+ */
 auto generatePauliWordIndices(const std::string &word)
     -> std::vector<std::size_t> {
     const std::size_t n_word = word.size();
@@ -81,6 +86,13 @@ auto generatePauliWordIndices(const std::string &word)
     return indices;
 }
 
+/**
+ * @brief Computes the CSR-format data of a Pauli word times a coefficient.
+ *
+ * @tparam PrecisionT Floating point data type.
+ * @param word Pauli word such as "XYYX".
+ * @param coeff Multiplicative factor.
+ */
 template <class PrecisionT>
 auto generatePauliWordData(const std::string &word,
                            const std::complex<PrecisionT> &coeff)
