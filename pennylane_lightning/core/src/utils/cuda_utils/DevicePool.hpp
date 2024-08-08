@@ -131,11 +131,11 @@ template <typename DeviceIndexType = int> class DevicePool {
         int deviceCount;
         cudaGetDeviceCount(&deviceCount);
         int device;
-        std::vector<cudaUUID_t> dev_uid(deviceCount);
+        std::vector<std::string> dev_uid(deviceCount);
         for (device = 0; device < deviceCount; device++) {
             cudaDeviceProp deviceProp;
             cudaGetDeviceProperties(&deviceProp, device);
-            dev_uid[device] = deviceProp.uuid;
+            dev_uid[device] = std::string(deviceProp.uuid.bytes);
         }
         return dev_uid;
     }

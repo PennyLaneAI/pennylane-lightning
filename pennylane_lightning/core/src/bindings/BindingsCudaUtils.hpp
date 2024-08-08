@@ -65,7 +65,15 @@ void registerCudaUtils(py::module_ &m) {
         .def("syncDevice", &DevicePool<int>::syncDevice)
         .def("refresh", &DevicePool<int>::refresh)
         .def_static("getTotalDevices", &DevicePool<int>::getTotalDevices)
-        .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
+        .def_static("getDeviceUIDs", [](){
+            auto data = DevicePool<int>::getDeviceUIDs();
+	    std::vector<py::bytes> data_conv;
+	    data_conv.reserve(data.size());
+	    for(auto d : data){
+	        data_conv.push_back(py::bytes(std::move(d)));
+	    }
+	    return data_conv;
+        })
         .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx)
         .def(py::pickle(
             []([[maybe_unused]] const DevicePool<int> &self) { // __getstate__
