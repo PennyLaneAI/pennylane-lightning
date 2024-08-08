@@ -12,7 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PennyLane lightning_gpu package."""
-import toml
 
-__version__ = toml.load("pyproject.toml")["project"]["version"]
-from .lightning_gpu import LightningGPU
+from pennylane_lightning.core import __version__

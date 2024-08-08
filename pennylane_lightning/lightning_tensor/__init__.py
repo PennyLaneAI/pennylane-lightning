@@ -12,7 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PennyLane lightning_tensor package."""
-import toml
 
-__version__ = toml.load("pyproject.toml")["project"]["version"]
-from .lightning_tensor import LightningTensor
+from pennylane_lightning.core import __version__

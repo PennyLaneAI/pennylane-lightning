@@ -12,6 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PennyLane lightning module."""
-import toml
 
-__version__ = toml.load("pyproject.toml")["project"]["version"]
+from ._version import __version__
