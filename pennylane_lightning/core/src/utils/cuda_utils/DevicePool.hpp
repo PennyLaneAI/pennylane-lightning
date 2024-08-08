@@ -127,7 +127,7 @@ template <typename DeviceIndexType = int> class DevicePool {
      *
      * @return std::vector<cudaUUID_t>
      */
-    static std::vector<cudaUUID_t> getDeviceUIDs() {
+    static std::vector<std::string> getDeviceUIDs() {
         int deviceCount;
         cudaGetDeviceCount(&deviceCount);
         int device;
