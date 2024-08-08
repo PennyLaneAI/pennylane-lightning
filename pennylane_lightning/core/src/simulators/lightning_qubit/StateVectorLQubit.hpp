@@ -23,6 +23,7 @@
 #pragma once
 #include <complex>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "CPUMemoryModel.hpp"
 #include "GateOperation.hpp"
@@ -712,7 +713,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
-        std::unordered_set index_set(indices.begin(), indices.end());
+        std::unordered_set<std::size_t> index_set(indices.begin(), indices.end());
         auto num_indices = index_set.size();
         PL_ABORT_IF(num_indices != indices.size(), "Indices must be unique");
         PL_ABORT_IF(num_indices != values.size(),
