@@ -695,7 +695,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void setBasisState(const std::size_t index) {
         auto *arr = this->getData();
-        memset(arr, 0, sizeof(ComplexT) * this->getLength());
+        PL_ABORT_IF(index > this->getLength() - 1, "Invalid wire");
+        for (size_t k = 0; k < this->getLength(); k++) {
+            arr[k] = {0.0, 0.0};
+        }
         arr[index] = {1.0, 0.0};
     }
 
