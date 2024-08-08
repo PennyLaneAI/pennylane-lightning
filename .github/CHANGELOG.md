@@ -65,6 +65,7 @@
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
+  [(#837)](https://github.com/PennyLaneAI/pennylane-lightning/pull/837)
 
 * Add `initial_state_prep` option to Catalyst TOML file.
   [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
