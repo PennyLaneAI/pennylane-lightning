@@ -137,6 +137,9 @@ jobs:
       - name: Install cibuildwheel
         run: python3.9 -m pip install cibuildwheel~=2.16.0
 
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+
       - name: Build wheels
         env:
           CIBW_CONTAINER_ENGINE: "podman"
@@ -158,11 +161,15 @@ jobs:
 
           CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
-            PL_BACKEND="${{ matrix.pl_backend }}"
 
+          # lightning.qubit is the default backend.
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv; fi
+            if ${{ matrix.pl_backend == 'lightning_kokkos'}}
+            then
+              python scripts/configure_pyproject_toml.py
+              SKIP_COMPILATION=True python -m pip install . -vv
+            fi
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
