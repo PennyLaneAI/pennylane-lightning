@@ -749,7 +749,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF(
             wires_size != basis_state_size,
             "Basis state must be same size as number of wires specified");
-        std::set wire_set(wires.begin(), wires.end());
+        std::unordered_set<std::size_t> wire_set(wires.begin(), wires.end());
         PL_ABORT_IF(wire_set.size() != wires_size, "Repeated wire");
 
         auto total_wire_count = this->getLength();
@@ -783,9 +783,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param state State.
      * @param wires Wires.
      */
-    void setStatePrep(const std::vector<size_t> &state,
+    void setStatePrep(const std::vector<std::size_t> &state,
                       const std::vector<std::size_t> &wires) {
-        std::set wire_set(wires.begin(), wires.end());
+        std::unordered_set<std::size_t> wire_set(wires.begin(), wires.end());
         PL_ABORT_IF(wire_set.size() != wires.size(), "Repeated wire");
 
         auto *arr = this->getData();
@@ -812,11 +812,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                      const std::vector<std::complex<PrecisionT>> &coeffs_in) {
                 auto state_size = state.size();
                 auto indices_size = state.size();
-                for (size_t state_index = 0; state_index < state_size - 1;
-                     state_index++) {
-                    for (size_t index_index = 0; index_index < indices_size - 1;
-                         index_index++) {
-                        arr[indices[state_index]] = state[state_index];
+                for (size_t state_idx = 0; state_idx < state_size;
+                     state_idx++) {
+                    for (size_t i = 0; i < indices_size; i++) {
+                        arr[indices[state_idx]] = state[state_idx];
                     }
                 }
             };
