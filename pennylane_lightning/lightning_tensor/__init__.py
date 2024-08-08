@@ -14,3 +14,5 @@
 """PennyLane lightning_tensor package."""
 
 from pennylane_lightning.core import __version__
+
+from .lightning_tensor import LightningTensor

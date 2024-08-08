@@ -14,3 +14,5 @@
 """PennyLane lightning_qubit package."""
 
 from pennylane_lightning.core import __version__
+
+from .lightning_qubit import LightningQubit

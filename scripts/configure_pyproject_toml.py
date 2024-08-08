@@ -21,6 +21,7 @@ from backend_support import backend, device_name
 with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
+
 ########################################################################
 # Parsing arguments
 ########################################################################

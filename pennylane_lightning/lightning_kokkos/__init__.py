@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """PennyLane lightning_kokkos package."""
-import toml
 
-__version__ = toml.load("pyproject.toml")["project"]["version"]
+from pennylane_lightning.core import __version__
+
 from .lightning_kokkos import LightningKokkos

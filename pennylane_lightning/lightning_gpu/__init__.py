@@ -14,3 +14,5 @@
 """PennyLane lightning_gpu package."""
 
 from pennylane_lightning.core import __version__
+
+from .lightning_gpu import LightningGPU
