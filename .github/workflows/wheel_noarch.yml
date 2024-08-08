@@ -57,12 +57,15 @@ jobs:
         run: |
           python -m pip install --upgrade cmake ninja
 
-      - name: Build wheels
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+
+      - name: Build wheels and source dist
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         run: |
-          python -m pip install --upgrade pip wheel
+          python -m pip install --upgrade pip wheel build
           cd main
-          PL_BACKEND="${{ matrix.pl_backend }}" python setup.py bdist_wheel
+          python -m build
         env:
           SKIP_COMPILATION: True
 
@@ -80,15 +83,6 @@ jobs:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: main/dist/*.whl
 
-      - name: Build source dist
-        if: ${{ matrix.pl_backend != 'lightning_qubit'}}
-        run: |
-          python -m pip install --upgrade pip wheel
-          cd main
-          PL_BACKEND="${{ matrix.pl_backend }}" python setup.py sdist
-        env:
-          SKIP_COMPILATION: True
-
       - uses: actions/upload-artifact@v3
         if: ${{ matrix.pl_backend != 'lightning_qubit' && (github.event_name == 'release' || github.ref == 'refs/heads/master') }}
         with:
@@ -101,9 +95,7 @@ jobs:
       matrix:
         pl_backend: ["lightning_gpu", "lightning_kokkos", "lightning_qubit"]
     runs-on: ubuntu-latest
-    if: |
-      matrix.pl_backend == 'lightning_qubit' &&
-      github.event_name == 'release'
+    if: matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release'
 
     steps:
       - uses: actions/download-artifact@v3

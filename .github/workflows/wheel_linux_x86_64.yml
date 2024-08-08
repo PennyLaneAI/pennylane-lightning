@@ -161,12 +161,11 @@ jobs:
 
           CIBW_ENVIRONMENT: PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
-          # lightning.qubit is the default backend.
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
-              python scripts/configure_pyproject_toml.py
+              PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
               SKIP_COMPILATION=True python -m pip install . -vv
             fi
 

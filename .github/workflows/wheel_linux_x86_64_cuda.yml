@@ -68,6 +68,9 @@ jobs:
       - name: Install cibuildwheel
         run: python3.9 -m pip install cibuildwheel~=2.16.0
 
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py
+
       - name: Build wheels
         env:
           CIBW_CONTAINER_ENGINE: "podman"
@@ -93,7 +96,6 @@ jobs:
           CIBW_ENVIRONMENT: |
             PATH=/opt/rh/gcc-toolset-12/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
             LD_LIBRARY_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64:/opt/rh/gcc-toolset-12/root/usr/lib:/opt/rh/gcc-toolset-12/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-12/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
-            PL_BACKEND="${{ matrix.pl_backend }}" \
             PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
@@ -148,4 +150,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_LGPU_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/

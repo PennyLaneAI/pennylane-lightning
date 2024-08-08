@@ -78,6 +78,9 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.16.0
 
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+
       - name: Build wheels
         env:
           CIBW_BUILD: ${{ matrix.cibw_build }}
@@ -91,13 +94,15 @@ jobs:
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools scipy
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF" \
-            PL_BACKEND="${{ matrix.pl_backend }}"
+            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv; fi
-
+            if ${{ matrix.pl_backend == 'lightning_kokkos'}}
+            then
+              PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+              SKIP_COMPILATION=True python -m pip install . -vv
+            fi
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
