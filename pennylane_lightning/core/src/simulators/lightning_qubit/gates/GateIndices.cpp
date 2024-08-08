@@ -61,7 +61,7 @@ auto generatePauliWordIndices(const std::string &word)
     std::size_t current_size = 2;
     indices[0] = 0UL;
     indices[1] = 1UL;
-    if (mtype[n_word - 1 - 0] == 1) {
+    if (mtype[n_word - 1] == 1) {
         std::swap(indices[0], indices[1]);
     }
     for (std::size_t i = 1; i < n_word; i++) {

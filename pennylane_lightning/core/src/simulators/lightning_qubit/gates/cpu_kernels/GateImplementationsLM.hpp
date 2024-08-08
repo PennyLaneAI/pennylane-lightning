@@ -576,9 +576,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         constexpr auto IMAG = Pennylane::Util::IMAG<PrecisionT>();
         const std::size_t n_wires = wires.size();
         const std::size_t dim = one << n_wires;
-        const PrecisionT c = std::cos(angle / 2);
+        const PrecisionT c = std::cos(angle / 2.0);
         const std::complex<PrecisionT> s =
-            ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
+            ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2.0);
         const auto data = generatePauliWordData(word, s);
         const auto indices = generatePauliWordIndices(word);
         auto core_function = [dim, c, &indices,
