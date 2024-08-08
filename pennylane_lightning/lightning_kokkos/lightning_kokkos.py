@@ -522,7 +522,7 @@ class LightningKokkos(Device):
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
-        # add this to fit the Execute confgiuration
+        # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
         mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0}
         new_device_options.update(mcmc_default)
 
