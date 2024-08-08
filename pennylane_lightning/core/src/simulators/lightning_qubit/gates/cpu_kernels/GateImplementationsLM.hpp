@@ -585,39 +585,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                               &data](std::complex<PrecisionT> *arr,
                                      const std::vector<std::size_t> &arr_inds,
                                      const std::size_t offset) {
-            std::vector<std::size_t> updated(dim,
-                                             0U); // record of updated elements
-            std::size_t count{0U};                // number of updated elements
-            std::size_t i{0U};                    // current data element index
-            std::size_t ind0;                     // first index in inner loop
-            std::size_t index;                    // current array element index
-            std::size_t indii;                    // next array element index
-            std::size_t updated_lb{0U}; // all array elements have been updated
-                                        // up to at least updated_lower_bound
-            std::complex<PrecisionT> arr0; // first array element in inner loop
-            while (count < dim) {
-                i = updated_lb;
-                while (updated[i] == 1U) {
-                    i = (i + 1) % dim;
-                }
-                updated_lb = i;
-                ind0 = i;
-                index = arr_inds[i] + offset;
-                indii = arr_inds[indices[i]] + offset;
-                arr0 = arr[index];
-                while (ind0 != indices[i]) {
-                    arr[index] = c * arr[index] + data[i] * arr[indii];
-                    count++;
-                    updated[i] = 1U;
-                    updated_lb += static_cast<std::size_t>(updated_lb == i);
-                    i = indices[i];
-                    index = indii;
-                    indii = arr_inds[indices[i]] + offset;
-                }
-                arr[index] = c * arr[index] + data[i] * arr0;
-                count++;
-                updated[i] = 1U;
-                updated_lb += static_cast<std::size_t>(updated_lb == i);
+            std::vector<std::complex<PrecisionT>> coeffs(dim);
+            for (std::size_t i = 0; i < dim; i++) {
+                const auto index = arr_inds[i] + offset;
+                coeffs[indices[i]] = arr[index];
+            }
+            for (std::size_t i = 0; i < dim; i++) {
+                const auto index = arr_inds[i] + offset;
+                arr[index] = c * arr[index] + data[i] * coeffs[i];
             }
         };
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
