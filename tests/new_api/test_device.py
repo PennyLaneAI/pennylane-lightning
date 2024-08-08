@@ -291,7 +291,7 @@ class TestExecution:
         )
         expected_program.add_transform(
             decompose,
-            stopping_condition=stopping_condition,
+            stopping_condition=device._stopping_condition,
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=device.name,

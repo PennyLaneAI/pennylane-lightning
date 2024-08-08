@@ -30,6 +30,7 @@
 #include "KernelType.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
 
 /// @cond DEV
 namespace {
@@ -432,6 +433,30 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         } else {
             applyMatrix(matrix, wires, inverse);
         }
+    }
+
+    /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    void applyPauliRot(const std::vector<std::size_t> &controlled_wires,
+                       const std::vector<bool> &controlled_values,
+                       const std::vector<std::size_t> &wires,
+                       const bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        GateImplementationsLM::applyPauliRot<PrecisionT>(
+            this->getData(), this->getNumQubits(), controlled_wires,
+            controlled_values, wires, inverse, params[0], word);
     }
 
     /**
