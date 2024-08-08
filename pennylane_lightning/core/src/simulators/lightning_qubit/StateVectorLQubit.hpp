@@ -30,6 +30,7 @@
 #include "KernelType.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
 
 /// @cond DEV
 namespace {
@@ -734,7 +735,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief
      * @brief Prepares a single computational basis state.
      *
      * @param state Binary number representing the index
@@ -749,6 +749,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF(
             wires_size != basis_state_size,
             "Basis state must be same size as number of wires specified");
+        std::set wire_set(wires.begin(), wires.end());
+        PL_ABORT_IF(wire_set.size() != wires_size, "Repeated wire");
+
         auto total_wire_count = this->getLength();
 
         auto size = wires_size;
@@ -772,6 +775,54 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             accumulator += decimal;
         }
         setBasisState(accumulator);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStatePrep(const std::vector<size_t> &state,
+                      const std::vector<std::size_t> &wires) {
+        std::set wire_set(wires.begin(), wires.end());
+        PL_ABORT_IF(wire_set.size() != wires.size(), "Repeated wire");
+
+        auto *arr = this->getData();
+        auto total_wire_count = this->getLength();
+        auto num_qubits = wires.size();
+        std::vector<std::size_t> extra_wires(total_wire_count);
+        std::iota(std::begin(extra_wires), std::end(extra_wires), 0);
+
+        std::vector<std::size_t> reversed_sorted_wires(wires);
+        std::sort(reversed_sorted_wires.begin(), reversed_sorted_wires.end());
+        std::reverse(reversed_sorted_wires.begin(),
+                     reversed_sorted_wires.end());
+
+        for (auto wire : reversed_sorted_wires) {
+            // Reverse guarantees that we start erasing at the end of the array.
+            // Maybe this can be optimized.
+            extra_wires.erase(extra_wires.begin() + wire);
+        }
+
+        const std::vector<bool> controlled_values(extra_wires.size(), false);
+        auto core_function =
+            [&state](std::complex<PrecisionT> *arr,
+                     const std::vector<std::size_t> &indices,
+                     const std::vector<std::complex<PrecisionT>> &coeffs_in) {
+                auto state_size = state.size();
+                auto indices_size = state.size();
+                for (size_t state_index = 0; state_index < state_size - 1;
+                     state_index++) {
+                    for (size_t index_index = 0; index_index < indices_size - 1;
+                         index_index++) {
+                        arr[indices[state_index]] = state[state_index];
+                    }
+                }
+            };
+        GateImplementationsLM::applyNCN(arr, num_qubits, wires,
+                                        controlled_values, extra_wires,
+                                        core_function);
     }
 };
 } // namespace Pennylane::LightningQubit
