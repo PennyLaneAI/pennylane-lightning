@@ -67,6 +67,9 @@
 * Add `initial_state_prep` option to Catalyst TOML file.
   [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
 
+* Move `setBasisState`, `setStateVector` and `resetStateVector` from LM to `StateVectorLQubit`.
+  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
+
 ### Documentation
 
 * Updated the README and added citation format for Lightning arxiv preprint.
