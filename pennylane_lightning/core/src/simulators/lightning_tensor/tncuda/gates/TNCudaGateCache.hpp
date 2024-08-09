@@ -157,24 +157,6 @@ template <class PrecisionT> class TNCudaGateCache {
         return device_gates_.at(gate_id).second.getDataBuffer().getData();
     }
 
-    /**
-     * @brief Returns the first element of gate cache.
-     *
-     * @return std::size_t The id of gate tensor operator in the computate
-     * graph.
-     */
-    auto get_cache_head_idx() const -> std::size_t {
-        PL_ABORT_IF(device_gates_.empty(), "Gate cache is empty.");
-        return device_gates_.begin()->first;
-    }
-
-    /**
-     * @brief Returns the size of gate cache.
-     *
-     * @return std::size_t The size of gate cache.
-     */
-    auto get_cache_size() const -> std::size_t { return device_gates_.size(); }
-
   private:
     const DevTag<int> device_tag_;
     std::size_t total_alloc_bytes_;

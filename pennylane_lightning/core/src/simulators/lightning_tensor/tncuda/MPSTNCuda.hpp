@@ -62,6 +62,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
+    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
 
     const std::size_t maxBondDim_;
 
@@ -214,6 +215,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     void append_mps_final_state(double cutoff = 0,
                                 std::string cutoff_mode = "abs") {
+        if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
@@ -222,6 +224,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* const int64_t *const extentsOut[] */
             getSitesExtentsPtr().data(),
             /*strides=*/nullptr));
+        }
 
         // Optional: SVD
         cutensornetTensorSVDAlgo_t algo =
@@ -253,8 +256,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
             reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
-
-        //this->apply_dummy_operator_update();
     }
 
     /**
