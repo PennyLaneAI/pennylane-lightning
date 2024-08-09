@@ -11,6 +11,7 @@ CRZ                    = { properties = [ "invertible",                 "differe
 CSWAP                  = { properties = [ "invertible",                 "differentiable" ] }
 CY                     = { properties = [ "invertible",                 "differentiable" ] }
 CZ                     = { properties = [ "invertible",                 "differentiable" ] }
+CH                     = { properties = [ "invertible",                 "differentiable" ] }
 DoubleExcitationMinus  = { properties = [ "invertible", "controllable", "differentiable" ] }
 DoubleExcitationPlus   = { properties = [ "invertible", "controllable", "differentiable" ] }
 DoubleExcitation       = { properties = [ "invertible", "controllable", "differentiable" ] }
@@ -52,6 +53,7 @@ QFT                    = {}
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
 
+PCPhase                = {properties = [ "controllable" ]}
 BlockEncode            = {properties = [ "controllable" ]}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
