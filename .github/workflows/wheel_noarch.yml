@@ -41,31 +41,36 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
+        if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         uses: actions/checkout@v4
 
 
       - uses: actions/setup-python@v5
+        if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         with:
           python-version: '3.9'
 
       - name: Upgrade pip
+        if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         run: |
           python -m pip install --upgrade pip
 
       - name: Install dependencies
+        if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         run: |
           python -m pip install --upgrade cmake ninja toml
 
       - name: Configure pyproject.toml file
+        if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
 
       - name: Build wheels and source dist
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
+        env:
+          SKIP_COMPILATION: True
         run: |
           python -m pip install --upgrade pip wheel build
           python -m build
-        env:
-          SKIP_COMPILATION: True
 
       - name: Validate wheels
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
