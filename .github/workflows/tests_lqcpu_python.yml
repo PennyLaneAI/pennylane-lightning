@@ -86,7 +86,7 @@ jobs:
         id: create_lq_wheel
         run: |
           cd main
-          PL_BACKEND=${{ matrix.pl_backend }} scripts/configure_pyproject_toml.py
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
           CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m build
           cd dist
