@@ -96,6 +96,7 @@ jobs:
           SKIP_COMPILATION: True
           PL_BACKEND: "lightning_qubit"
         run: |
+          python scripts/configure_pyproject_toml.py
           python -m pip install . -vv
 
       - name: Install extra backend device
