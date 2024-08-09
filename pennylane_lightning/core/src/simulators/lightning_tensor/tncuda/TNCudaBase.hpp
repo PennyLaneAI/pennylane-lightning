@@ -299,50 +299,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* int32_t unitary*/ 1));
     }
 
-    /**
-     * @brief Get the state vector representation of a tensor network.
-     *
-     * @param numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 1.
-     *
-     * @return Full the state tensor on the host memory
-     */
-    auto get_state_tensor(const int32_t numHyperSamples = 1)
-        -> std::vector<ComplexT> {
-        std::vector<std::size_t> wires(BaseType::getNumQubits());
-        std::iota(wires.begin(), wires.end(), 0);
-        return get_state_tensor(wires, numHyperSamples);
-    }
-
-    /**
-     * @brief Get the state vector representation of a tensor network.
-     *
-     * @param wires Wires to get the state tensor for.
-     * @param numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 1.
-     *
-     * @return A slice of the state tensor on the host memory
-     */
-    auto get_state_tensor(const std::vector<std::size_t> &wires,
-                          const int32_t numHyperSamples = 1)
-        -> std::vector<ComplexT> {
-        const std::size_t length = std::size_t{1} << wires.size();
-
-        PL_ABORT_IF(length * sizeof(CFP_t) >= getFreeMemorySize(),
-                    "State tensor size exceeds the available GPU memory!");
-
-        DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
-
-        std::vector<ComplexT> h_res(length);
-
-        get_state_tensor(d_output_tensor.getData(), d_output_tensor.getLength(),
-                         wires, numHyperSamples);
-
-        d_output_tensor.CopyGpuDataToHost(h_res.data(), h_res.size());
-
-        return h_res;
-    }
-
+  protected:
     /**
      * @brief Get the state vector representation of a tensor network.
      *
@@ -356,9 +313,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         std::iota(wires.begin(), wires.end(), 0);
 
         const std::size_t length = std::size_t{1} << wires.size();
-
-        PL_ABORT_IF(length * sizeof(CFP_t) >= getFreeMemorySize(),
-                    "State tensor size exceeds the available GPU memory!");
 
         DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
 
@@ -455,7 +409,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* void *stateNorm */ static_cast<void *>(&stateNorm2),
             /* cudaStream_t cudaStream */ 0x0));
 
-        //PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(getDevTag().getStreamID()));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(getDevTag().getStreamID()));
 
         ComplexT scale_scalar = ComplexT{1.0, 0.0} / stateNorm2;
 
@@ -472,7 +426,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyAccessor(accessor));
     }
 
-  protected:
     /**
      * @brief Save quantumState information to data provided by a user
      *

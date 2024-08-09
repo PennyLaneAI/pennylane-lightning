@@ -71,7 +71,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 auto *data_ptr =
                     static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
 
-                tensor_network.get_state_tensor(data_ptr);
+                tensor_network.getData(data_ptr, state.size());
             },
             "Copy StateVector data into a Numpy array.")
         .def(
