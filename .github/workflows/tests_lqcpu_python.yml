@@ -87,7 +87,8 @@ jobs:
         run: |
           cd main
           python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};ENABLE_BLAS=${{ matrix.blas }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
+          PL_BACKEND=${{ matrix.pl_backend }} scripts/configure_pyproject_toml.py
+          python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
