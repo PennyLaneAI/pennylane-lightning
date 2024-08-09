@@ -137,7 +137,7 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install -r requirements-dev.txt
-          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }} openfermionpyscf
+          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}==2.4.0.post1 openfermionpyscf
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'

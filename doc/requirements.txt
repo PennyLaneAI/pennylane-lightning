@@ -12,7 +12,7 @@ sphinxcontrib-htmlhelp==2.0.1
 sphinxcontrib-serializinghtml==1.1.5
 pennylane-sphinx-theme
 custatevec-cu12
-cutensornet-cu12
+cutensornet-cu12==2.4.0.post1
 wheel
 sphinxext-opengraph
 matplotlib

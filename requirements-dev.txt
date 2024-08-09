@@ -17,6 +17,6 @@ isort==5.13.2
 click==8.0.4
 cmake
 custatevec-cu12
-cutensornet-cu12
+cutensornet-cu12==2.4.0.post1
 pylint
 scipy
