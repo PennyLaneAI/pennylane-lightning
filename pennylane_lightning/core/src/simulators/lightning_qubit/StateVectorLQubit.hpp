@@ -728,7 +728,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      *
      */
     void resetStateVector() {
-        if (this->getLength() > 0) {
+        if (this->getLength()) {
             setBasisState(0U);
         }
     }
