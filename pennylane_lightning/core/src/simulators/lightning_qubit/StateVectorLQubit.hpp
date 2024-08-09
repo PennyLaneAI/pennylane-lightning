@@ -758,44 +758,37 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param state State.
      * @param wires Wires.
      */
-    void setStatePrep(const std::vector<std::size_t> &state,
-                      const std::vector<std::size_t> &wires) {
+    void setStateVector(const std::vector<ComplexT> &state,
+                        const std::vector<std::size_t> &wires) {
         std::unordered_set<std::size_t> wire_set(wires.begin(), wires.end());
         PL_ABORT_IF(wire_set.size() != wires.size(), "Repeated wire");
 
         auto *arr = this->getData();
         auto total_wire_count = this->getNumQubits();
-        auto num_qubits = wires.size();
-        std::vector<std::size_t> extra_wires(total_wire_count);
-        std::iota(std::begin(extra_wires), std::end(extra_wires), 0);
 
-        std::vector<std::size_t> reversed_sorted_wires(wires);
-        std::sort(reversed_sorted_wires.begin(), reversed_sorted_wires.end());
-        std::reverse(reversed_sorted_wires.begin(),
-                     reversed_sorted_wires.end());
+        std::vector<std::size_t> all_wires(total_wire_count);
+        std::iota(all_wires.begin(), all_wires.end(), 0);
+        std::vector<std::size_t> controlled_wires;
+        std::copy_if(all_wires.begin(), all_wires.end(),
+                     std::back_inserter(controlled_wires),
+                     [&wires](const auto val) {
+                         return std::find(wires.begin(), wires.end(), val) ==
+                                wires.end();
+                     });
 
-        for (auto wire : reversed_sorted_wires) {
-            // Reverse guarantees that we start erasing at the end of the array.
-            // Maybe this can be optimized.
-            extra_wires.erase(extra_wires.begin() + wire);
-        }
-
-        const std::vector<bool> controlled_values(extra_wires.size(), false);
+        const std::vector<bool> controlled_values(controlled_wires.size(),
+                                                  false);
         auto core_function =
             [&state](std::complex<PrecisionT> *arr,
                      const std::vector<std::size_t> &indices,
-                     const std::vector<std::complex<PrecisionT>> &coeffs_in) {
-                auto state_size = state.size();
+                     const std::vector<std::complex<PrecisionT>> &) {
                 auto indices_size = state.size();
-                for (size_t state_idx = 0; state_idx < state_size;
-                     state_idx++) {
-                    for (size_t i = 0; i < indices_size; i++) {
-                        arr[indices[state_idx]] = state[state_idx];
-                    }
+                for (size_t i = 0; i < indices_size; i++) {
+                    arr[indices[i]] = state[i];
                 }
             };
-        GateImplementationsLM::applyNCN(arr, num_qubits, wires,
-                                        controlled_values, extra_wires,
+        GateImplementationsLM::applyNCN(arr, total_wire_count, controlled_wires,
+                                        controlled_values, wires,
                                         core_function);
     }
 };

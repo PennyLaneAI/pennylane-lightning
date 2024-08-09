@@ -103,9 +103,79 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setBasisState",
         sv.setBasisState({1, 1}, {0, 1});
         REQUIRE(sv.getDataVector() == approx(expected_state_110));
 
-        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+        std::vector<ComplexT> expected_state_111 = {zero, zero, zero, zero,
                                                     zero, zero, zero, init};
         sv.setBasisState({1, 1, 1}, {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_111));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setStateVector",
+                           "[setStateVector]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+
+    SECTION("setStateVector") {
+
+        const ComplexT init{1.0, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+        const ComplexT half{0.5, PrecisionT{0.0}};
+
+        std::vector<ComplexT> init_state_zeros = {zero, zero, zero, zero,
+                                                  zero, zero, zero, zero};
+        std::vector<ComplexT> expected_state_000 = {init, zero, zero, zero,
+                                                    zero, zero, zero, zero};
+
+        StateVectorT sv(init_state_zeros.data(), init_state_zeros.size());
+        sv.setStateVector({init, zero}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_000));
+
+        std::vector<ComplexT> expected_state_001 = {zero, init, zero, zero,
+                                                    zero, zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, init}, {2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_001));
+
+        std::vector<ComplexT> expected_state_010 = {zero, zero, init, zero,
+                                                    zero, zero, zero, zero};
+
+        sv.resetStateVector();
+        sv.setStateVector({zero, init}, {1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_010));
+
+        std::vector<ComplexT> expected_state_011 = {zero, zero, zero, init,
+                                                    zero, zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, init}, {1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_011));
+
+        std::vector<ComplexT> expected_state_100 = {zero, zero, zero, zero,
+                                                    init, zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, init}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_100));
+
+        std::vector<ComplexT> expected_state_101 = {zero, zero, zero, zero,
+                                                    zero, init, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, init}, {0, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_101));
+
+        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+                                                    zero, zero, init, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, init}, {0, 1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_110));
+
+        std::vector<ComplexT> expected_state_111 = {zero, zero, zero, zero,
+                                                    zero, zero, zero, init};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, zero, zero, zero, zero, init},
+                          {0, 1, 2});
         REQUIRE(sv.getDataVector() == approx(expected_state_111));
     }
 }
