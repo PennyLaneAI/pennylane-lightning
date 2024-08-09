@@ -740,7 +740,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param state Binary number representing the index
      * @param wires Wires.
      */
-    void setBasisState(const std::vector<uint8_t> &state,
+    void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires) {
         auto n_wires = wires.size();
         auto num_qubits = this->getNumQubits();
