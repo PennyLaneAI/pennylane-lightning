@@ -699,9 +699,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF(index > length - 1, "Invalid index");
 
         auto *arr = this->getData();
-        for (size_t k = 0; k < length; k++) {
-            arr[k] = {0.0, 0.0};
-        }
+        std::fill(arr, arr + length, 0.0);
         arr[index] = {1.0, 0.0};
     }
 
@@ -713,10 +711,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
-        std::unordered_set<std::size_t> index_set(indices.begin(),
-                                                  indices.end());
-        auto num_indices = index_set.size();
-        PL_ABORT_IF(num_indices != indices.size(), "Indices must be unique");
+        auto num_indices = indices.size();
         PL_ABORT_IF(num_indices != values.size(),
                     "Indices and values length must match");
 
