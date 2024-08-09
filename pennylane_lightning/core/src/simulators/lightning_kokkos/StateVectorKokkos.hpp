@@ -145,6 +145,35 @@ class StateVectorKokkos final
     }
 
     /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        const auto n_wires = wires.size();
+        const auto num_qubits = this->getNumQubits();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        setBasisState(index);
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     *
+     * @param num_qubits Number of qubits
+     */
+    void resetStateVector() {
+        if (this->getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
+
+    /**
      * @brief Set values for a batch of elements of the state-vector.
      *
      * @param values Values to be set for the target elements.
@@ -164,14 +193,29 @@ class StateVectorKokkos final
     }
 
     /**
-     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     * @brief Set values for a batch of elements of the state-vector.
      *
-     * @param num_qubits Number of qubits
+     * @param state State.
+     * @param wires Wires.
      */
-    void resetStateVector() {
-        if (this->getLength() > 0) {
-            setBasisState(0U);
-        }
+    void setStateVector(const std::vector<ComplexT> &state,
+                        const std::vector<std::size_t> &wires) {
+        constexpr std::size_t one{1U};
+        const auto num_qubits = this->getNumQubits();
+        auto d_sv = getView();
+        auto d_state = vector2view(state);
+        auto d_wires = vector2view(wires);
+        initZeros();
+        Kokkos::parallel_for(
+            state.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                std::size_t index{0U};
+                for (std::size_t w = 0; w < d_wires.size(); w++) {
+                    const std::size_t bit = (i & (one << w)) >> w;
+                    index |= bit << (num_qubits - 1 -
+                                     d_wires(d_wires.size() - 1 - w));
+                }
+                d_sv(index) = d_state(i);
+            });
     }
 
     /**

@@ -331,8 +331,8 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="PennyLane-like StatePrep only implemented in lightning.qubit.",
+    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    reason="PennyLane-like StatePrep only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_targets", list(range(2, 8)))
 def test_state_prep(n_targets, tol):
@@ -349,8 +349,8 @@ def test_state_prep(n_targets, tol):
             [qml.state()],
         )
         ref = dq.execute([tape])[0]
-        res = dev.execute([tape])[0]
-        np.allclose(res.ravel(), ref.ravel(), tol)
+        res = dev.execute([tape])[0] if ld._new_API else dev.execute(tape)
+        assert np.allclose(res.ravel(), ref.ravel(), tol)
 
 
 @pytest.mark.skipif(
