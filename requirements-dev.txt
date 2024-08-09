@@ -1,4 +1,5 @@
 git+https://github.com/PennyLaneAI/pennylane.git@master
+build
 ninja
 flaky
 pybind11
