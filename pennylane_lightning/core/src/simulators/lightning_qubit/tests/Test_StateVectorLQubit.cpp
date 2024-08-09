@@ -92,6 +92,21 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setBasisState",
         sv.setBasisState({1}, {0});
         REQUIRE(sv.getDataVector() == approx(expected_state_100));
 
+        std::vector<ComplexT> expected_state_101 = {zero, zero, zero, zero,
+                                                    zero, init, zero, zero};
+
+        sv.setBasisState({1, 0, 1}, {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_101));
+
+        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+                                                    zero, zero, init, zero};
+        sv.setBasisState({1, 1}, {0, 1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_110));
+
+        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+                                                    zero, zero, zero, init};
+        sv.setBasisState({1, 1, 1}, {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_111));
     }
 }
 
