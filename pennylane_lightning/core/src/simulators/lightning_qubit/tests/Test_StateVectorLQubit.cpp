@@ -121,7 +121,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setStateVector",
 
         const ComplexT one{1.0};
         const ComplexT zero{0.0};
-        const ComplexT half{0.5};
 
         std::vector<ComplexT> init_state_zeros = {zero, zero, zero, zero,
                                                   zero, zero, zero, zero};
