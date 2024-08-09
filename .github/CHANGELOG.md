@@ -77,6 +77,9 @@
 
 ### Bug fixes
 
+* Set the `immutable` parameter value as `false` for the `cutensornetStateApplyTensorOperator` to allow the following `cutensornetStateUpdateTensorOperator` call.
+  [(#845)](https://github.com/PennyLaneAI/pennylane-lightning/pull/845)
+
 * Fix cuQuantum SDK path pass-though in CMake.
   [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
 
