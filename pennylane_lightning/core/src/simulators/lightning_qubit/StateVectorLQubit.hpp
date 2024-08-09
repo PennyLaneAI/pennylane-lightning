@@ -768,13 +768,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
         std::vector<std::size_t> all_wires(total_wire_count);
         std::iota(all_wires.begin(), all_wires.end(), 0);
-        std::vector<std::size_t> controlled_wires;
-        std::copy_if(all_wires.begin(), all_wires.end(),
-                     std::back_inserter(controlled_wires),
-                     [&wires](const auto val) {
-                         return std::find(wires.begin(), wires.end(), val) ==
-                                wires.end();
-                     });
+        std::vector<std::size_t> controlled_wires(total_wire_count);
+        std::iota(std::begin(controlled_wires), std::end(controlled_wires), 0);
+
+        std::vector<std::size_t> reversed_sorted_wires(wires);
+        std::sort(reversed_sorted_wires.begin(), reversed_sorted_wires.end());
+        std::reverse(reversed_sorted_wires.begin(),
+                     reversed_sorted_wires.end());
+        for (auto wire : reversed_sorted_wires) {
+            // Reverse guarantees that we start erasing at the end of the array.
+            // Maybe this can be optimized.
+            controlled_wires.erase(controlled_wires.begin() + wire);
+        }
 
         const std::vector<bool> controlled_values(controlled_wires.size(),
                                                   false);
