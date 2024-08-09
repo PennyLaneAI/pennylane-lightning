@@ -316,12 +316,6 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qml.GroverOperator):
         return len(op.wires) < 13
 
-    # As ControlledQubitUnitary == C(QubitUnitrary),
-    # it can be removed from `_operations` to keep
-    # consistency with `lightning_qubit.toml`
-    if isinstance(op, qml.ControlledQubitUnitary):
-        return True
-
     return op.name in _operations
 
 
@@ -500,10 +494,7 @@ class LightningKokkos(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    @property
-    def dtype(self):
-        """State vector complex data type."""
-        return self._c_dtype
+    dtype = c_dtype
 
     def _setup_execution_config(self, config):
         """
