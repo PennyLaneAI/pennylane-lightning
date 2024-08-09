@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+r"""
+Project configuration script.
+"""
 import argparse
 import os
 
@@ -74,6 +76,5 @@ if __name__ == "__main__":
     # Package requirements.
     pyproject["project"]["dependencies"] = dependencies
 
-    file = open(pyproject_path, "w")
-    toml.dump(pyproject, file)
-    file.close()
+    with open(pyproject_path, "w") as file:
+        toml.dump(pyproject, file)

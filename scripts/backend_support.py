@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+r"""
+Internal logic to check and set backend variables.
+"""
 import os
 
 default_backend = "lightning_qubit"
@@ -30,24 +32,24 @@ def get_backend():
     contains the CMake option ``PL_BACKEND``, its value is used.
     Dots are replaced by underscores upon exiting.
     """
-    backend = None
+    _backend = None
     if "PL_BACKEND" in os.environ:
-        backend = os.environ.get("PL_BACKEND", default_backend)
-        backend = backend.replace(".", "_")
+        _backend = os.environ.get("PL_BACKEND", default_backend)
+        _backend = _backend.replace(".", "_")
     if "CMAKE_ARGS" in os.environ:
         cmake_args = os.environ["CMAKE_ARGS"].split(" ")
         arg = [x for x in cmake_args if "PL_BACKEND" in x]
-        if not arg and backend is not None:
-            cmake_backend = backend
+        if not arg and _backend is not None:
+            cmake_backend = _backend
         else:
             cmake_backend = arg[0].split("=")[1].replace(".", "_") if arg else default_backend
         # CMake determined backend will always take precedence over PL_BACKEND.
-        backend = cmake_backend
-    if backend is None:
-        backend = default_backend
-    if backend not in supported_backends:
-        raise ValueError(f"Invalid backend {backend}.")
-    return backend
+        _backend = cmake_backend
+    if _backend is None:
+        _backend = default_backend
+    if _backend not in supported_backends:
+        raise ValueError(f"Invalid backend {_backend}.")
+    return _backend
 
 
 backend = get_backend()
