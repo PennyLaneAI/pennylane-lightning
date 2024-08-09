@@ -123,7 +123,7 @@ jobs:
         run: |
           cd main
           python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS: "-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
