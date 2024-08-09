@@ -212,6 +212,22 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
                 "State tensor size exceeds the available GPU memory!"));
     }
 
+    SECTION("Throw wrong size for getData() on device") {
+        std::size_t num_qubits = 50;
+        std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
+
+        const std::size_t length = 1;
+        std::vector<cp_t> results(1);
+
+        REQUIRE_THROWS_WITH(mps_state.getData(results.data(), length),
+                            Catch::Matchers::Contains(
+                                "The size of the result vector should be equal "
+                                "to the dimension of the quantum state."));
+    }
+
     SECTION("Throw error for 0 an 1 qubit circuit") {
         std::size_t num_qubits = GENERATE(0, 1);
         std::size_t maxBondDim = 2;
