@@ -434,7 +434,7 @@ class LightningKokkos(Device):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("rng", "c_dtype", "batch_obs")
+    _device_options = ("c_dtype", "batch_obs")
     _new_API = True
 
     # Device specific options
