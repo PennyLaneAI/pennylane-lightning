@@ -82,6 +82,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
+        PL_ABORT_IF(numQubits < 2,
+                    "The number of qubits should be greater than 1.");
+
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
@@ -109,6 +112,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
+        PL_ABORT_IF(numQubits < 2,
+                    "The number of qubits should be greater than 1.");
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;

@@ -190,4 +190,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
             Catch::Matchers::Contains(
                 "State tensor size exceeds the available GPU memory!"));
     }
+
+    SECTION("Throw error for 0 an 1 qubit circuit") {
+        std::size_t num_qubits = GENERATE(0, 1);
+        std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        REQUIRE_THROWS_WITH(
+            MPSTNCuda<TestType>(num_qubits, maxBondDim, dev_tag),
+            Catch::Matchers::Contains(
+                "The number of qubits should be greater than 1."));
+    }
 }
