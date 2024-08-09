@@ -717,7 +717,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
         auto *arr = this->getData();
         auto length = this->getLength();
-std::fill(arr, arr + length, 0.0);
+        std::fill(arr, arr + length, 0.0);
         for (std::size_t i = 0; i < num_indices; i++) {
             PL_ABORT_IF(i >= length, "Invalid index");
             arr[indices[i]] = values[i];
