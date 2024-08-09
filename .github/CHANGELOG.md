@@ -18,6 +18,9 @@
 
 ### Improvements
 
+* The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` are overloaded to support PennyLane-like parameters.
+  [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
+
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
 

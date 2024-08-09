@@ -704,24 +704,21 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Set values for a batch of elements of the state-vector.
+     * @brief Prepares a single computational basis state.
      *
-     * @param values Values to be set for the target elements.
-     * @param indices Indices of the target elements.
+     * @param state Binary number representing the index
+     * @param wires Wires.
      */
-    void setStateVector(const std::vector<std::size_t> &indices,
-                        const std::vector<ComplexT> &values) {
-        auto num_indices = indices.size();
-        PL_ABORT_IF(num_indices != values.size(),
-                    "Indices and values length must match");
-
-        auto *arr = this->getData();
-        auto length = this->getLength();
-        std::fill(arr, arr + length, 0.0);
-        for (std::size_t i = 0; i < num_indices; i++) {
-            PL_ABORT_IF(i >= length, "Invalid index");
-            arr[indices[i]] = values[i];
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        const auto n_wires = wires.size();
+        const auto num_qubits = this->getNumQubits();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
         }
+        setBasisState(index);
     }
 
     /**
@@ -735,21 +732,24 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Prepares a single computational basis state.
+     * @brief Set values for a batch of elements of the state-vector.
      *
-     * @param state Binary number representing the index
-     * @param wires Wires.
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
      */
-    void setBasisState(const std::vector<std::size_t> &state,
-                       const std::vector<std::size_t> &wires) {
-        auto n_wires = wires.size();
-        auto num_qubits = this->getNumQubits();
-        std::size_t index{0U};
-        for (std::size_t k = 0; k < n_wires; k++) {
-            const auto bit = static_cast<std::size_t>(state[k]);
-            index |= bit << (num_qubits - 1 - wires[k]);
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        const auto num_indices = indices.size();
+        PL_ABORT_IF(num_indices != values.size(),
+                    "Indices and values length must match");
+
+        auto *arr = this->getData();
+        const auto length = this->getLength();
+        std::fill(arr, arr + length, 0.0);
+        for (std::size_t i = 0; i < num_indices; i++) {
+            PL_ABORT_IF(i >= length, "Invalid index");
+            arr[indices[i]] = values[i];
         }
-        setBasisState(index);
     }
 
     /**
@@ -760,21 +760,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void setStateVector(const std::vector<ComplexT> &state,
                         const std::vector<std::size_t> &wires) {
-        std::unordered_set<std::size_t> wire_set(wires.begin(), wires.end());
-        PL_ABORT_IF(wire_set.size() != wires.size(), "Repeated wire");
-
-        auto *arr = this->getData();
-        auto total_wire_count = this->getNumQubits();
-
-        std::vector<std::size_t> all_wires(total_wire_count);
-        std::iota(all_wires.begin(), all_wires.end(), 0);
-        std::vector<std::size_t> controlled_wires(total_wire_count);
-        std::iota(std::begin(controlled_wires), std::end(controlled_wires), 0);
+        const auto total_wire_count = this->getNumQubits();
 
         std::vector<std::size_t> reversed_sorted_wires(wires);
         std::sort(reversed_sorted_wires.begin(), reversed_sorted_wires.end());
         std::reverse(reversed_sorted_wires.begin(),
                      reversed_sorted_wires.end());
+        std::vector<std::size_t> controlled_wires(total_wire_count);
+        std::iota(std::begin(controlled_wires), std::end(controlled_wires), 0);
         for (auto wire : reversed_sorted_wires) {
             // Reverse guarantees that we start erasing at the end of the array.
             // Maybe this can be optimized.
@@ -792,9 +785,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                     arr[indices[i]] = state[i];
                 }
             };
-        GateImplementationsLM::applyNCN(arr, total_wire_count, controlled_wires,
-                                        controlled_values, wires,
-                                        core_function);
+        GateImplementationsLM::applyNCN(this->getData(), total_wire_count,
+                                        controlled_wires, controlled_values,
+                                        wires, core_function);
     }
 };
 } // namespace Pennylane::LightningQubit

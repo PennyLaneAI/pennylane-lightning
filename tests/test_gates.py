@@ -332,6 +332,29 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
 
 @pytest.mark.skipif(
     device_name != "lightning.qubit",
+    reason="PennyLane-like StatePrep only implemented in lightning.qubit.",
+)
+@pytest.mark.parametrize("n_targets", list(range(2, 8)))
+def test_state_prep(n_targets, tol):
+    """Test that StatePrep is correctly applied to a state."""
+    n_wires = 7
+    dq = qml.device("default.qubit", wires=n_wires)
+    dev = qml.device(device_name, wires=n_wires)
+    init_state = np.random.rand(2**n_targets) + 1.0j * np.random.rand(2**n_targets)
+    init_state /= np.linalg.norm(init_state)
+    for _ in range(10):
+        wires = np.random.permutation(n_wires)[0:n_targets]
+        tape = qml.tape.QuantumTape(
+            [qml.StatePrep(init_state, wires=wires)] + [qml.X(i) for i in range(n_wires)],
+            [qml.state()],
+        )
+        ref = dq.execute([tape])[0]
+        res = dev.execute([tape])[0]
+        np.allclose(res.ravel(), ref.ravel(), tol)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize("control_value", [False, True])
