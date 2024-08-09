@@ -344,6 +344,31 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get the state vector representation of a tensor network.
+     *
+     * @param host_data Pointer to the host memory for state tensor data.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     */
+    void get_state_tensor(ComplexT *host_data,
+                          const int32_t numHyperSamples = 1) {
+        std::vector<std::size_t> wires(BaseType::getNumQubits());
+        std::iota(wires.begin(), wires.end(), 0);
+
+        const std::size_t length = std::size_t{1} << wires.size();
+
+        PL_ABORT_IF(length * sizeof(CFP_t) >= getFreeMemorySize(),
+                    "State tensor size exceeds the available GPU memory!");
+
+        DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
+
+        get_state_tensor(d_output_tensor.getData(), d_output_tensor.getLength(),
+                         wires, numHyperSamples);
+
+        d_output_tensor.CopyGpuDataToHost(host_data, length);
+    }
+
+    /**
      * @brief Get a slice of the state tensor
      *
      * @param tensor_data Pointer to the device memory for state tensor data.
