@@ -23,7 +23,6 @@
 #pragma once
 #include <complex>
 #include <unordered_map>
-#include <unordered_set>
 
 #include "CPUMemoryModel.hpp"
 #include "GateOperation.hpp"
