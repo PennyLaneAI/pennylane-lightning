@@ -4,10 +4,6 @@ name: Wheel::Linux::x86_64::CUDA
 #                   Python versions: 3.9, 3.10, 3.11, 3.12.
 # **Why we have it**: To build wheels for pennylane-lightning-gpu installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
-
-env:
-  GCC_VERSION: 12
-
 on:
   pull_request:
   push:
@@ -81,7 +77,7 @@ jobs:
 
           CIBW_SKIP: "*-musllinux*"
 
-          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="CMAKE_CXX_COMPILER=$(which g++);CMAKE_C_COMPILER=$(which gcc);LIGHTNING_RELEASE_TAG=master"
+          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="LIGHTNING_RELEASE_TAG=master"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
