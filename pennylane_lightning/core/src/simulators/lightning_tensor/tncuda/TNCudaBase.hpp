@@ -425,6 +425,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* void *stateNorm */ static_cast<void *>(&stateNorm2),
             /* cudaStream_t cudaStream */ 0x0));
 
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(getDevTag().getStreamID()));
+
         ComplexT scale_scalar = ComplexT{1.0, 0.0} / stateNorm2;
 
         CFP_t scale_scalar_cu{scale_scalar.real(), scale_scalar.imag()};
