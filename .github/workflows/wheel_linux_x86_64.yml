@@ -100,7 +100,8 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        : # pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        pl_backend: ["lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}

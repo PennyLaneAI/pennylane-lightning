@@ -60,7 +60,8 @@ jobs:
       matrix:
         os: [macos-12]
         arch: [arm64]
-        pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        : # pl_backend: ["lightning_kokkos", "lightning_qubit"]
+        pl_backend: ["lightning_qubit"]
         cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
     timeout-minutes: 30
     name: macos-latest::arm64 - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})

@@ -25,6 +25,7 @@ from pennylane.tape import QuantumScript
 if device_name == "lightning.tensor":
     pytest.skip("lightning.tensor does not support qml.var()", allow_module_level=True)
 
+
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
