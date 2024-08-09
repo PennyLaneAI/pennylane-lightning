@@ -25,11 +25,6 @@ from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
-    pass
-
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
@@ -429,6 +424,7 @@ class TestMeasurements:
         return m.measure_final_state(tape)
 
     @flaky(max_runs=5)
+    @pytest.mark.parametrize("shots", [None, 1000000, (900000, 900000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -450,10 +446,15 @@ class TestMeasurements:
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
     )
-    def test_single_return_value(self, measurement, observable, lightning_sv, tol):
+    def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol):
         if measurement is qml.probs and isinstance(
             observable,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
+            (
+                qml.ops.Sum,
+                qml.ops.SProd,
+                qml.ops.Prod,
+                qml.SparseHamiltonian,
+            ),
         ):
             pytest.skip(
                 f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
@@ -475,16 +476,37 @@ class TestMeasurements:
             if isinstance(observable, list)
             else [measurement(op=observable)]
         )
-        tape = qml.tape.QuantumScript(ops, measurements)
+        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        expected = self.calculate_reference(tape, lightning_sv)
         statevector = lightning_sv(n_qubits)
         statevector = statevector.get_final_state(tape)
         m = LightningMeasurements(statevector)
-        result = m.measure_final_state(tape)
+
+        skip_list = (
+            qml.ops.Sum,
+            # qml.Hamiltonian,
+            qml.SparseHamiltonian,
+        )
+        do_skip = measurement is qml.var and isinstance(observable, skip_list)
+        do_skip = do_skip or (
+            measurement is qml.expval and isinstance(observable, qml.SparseHamiltonian)
+        )
+        do_skip = do_skip and shots is not None
+        if do_skip:
+            with pytest.raises(TypeError):
+                _ = m.measure_final_state(tape)
+            return
+        else:
+            result = m.measure_final_state(tape)
+
+        expected = self.calculate_reference(tape, lightning_sv)
 
         # a few tests may fail in single precision, and hence we increase the tolerance
-        assert np.allclose(result, expected, max(tol, 1.0e-4))
+        if shots is None:
+            assert np.allclose(result, expected, max(tol, 1.0e-4))
+        else:
+            dtol = max(tol, 1.0e-2)
+            assert np.allclose(result, expected, rtol=dtol, atol=dtol)
 
     @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 1000000, (900000, 900000)])
@@ -593,10 +615,6 @@ class TestMeasurements:
             [[0, 1], [1, 0]],
             [[1, 0], [0, 1]],
         ],
-    )
-    @pytest.mark.skipif(
-        device_name == "lightning.kokkos",
-        reason="Kokkos new API in WIP.  Skipping.",
     )
     def test_probs_tape_unordered_wires(self, cases, tol):
         """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""

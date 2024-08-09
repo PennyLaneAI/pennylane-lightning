@@ -73,7 +73,7 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
         self._kokkos_config = {}
         self._sync = sync
 
-        if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
+        if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
 
         if device_name != "lightning.kokkos":
