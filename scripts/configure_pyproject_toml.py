@@ -76,5 +76,5 @@ if __name__ == "__main__":
     # Package requirements.
     pyproject["project"]["dependencies"] = dependencies
 
-    with open(pyproject_path, "w") as file:
+    with open(pyproject_path, "w", encoding="utf-8") as file:
         toml.dump(pyproject, file)
