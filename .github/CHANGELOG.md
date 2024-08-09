@@ -74,7 +74,7 @@
 
 ### Bug fixes
 
-* Pin `cutensornet` to the version `2.4.0.post1` to fix the issue brought by the recent changes in `cutensornet-cu12 2.5.0`.
+* Pin `cutensornet` to the version `2.4.0.post1` temporarily to fix the issue brought by the recent changes in `cutensornet-cu12 2.5.0`.
   [(#844)](https://github.com/PennyLaneAI/pennylane-lightning/pull/844)
 
 * Fix cuQuantum SDK path pass-though in CMake.
