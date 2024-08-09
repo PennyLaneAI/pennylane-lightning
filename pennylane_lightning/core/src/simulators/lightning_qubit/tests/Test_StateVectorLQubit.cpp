@@ -49,6 +49,52 @@ TEMPLATE_TEST_CASE("StateVectorLQubit::Constructibility",
     }
 }
 
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setBasisState",
+                           "[setBasisState]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+
+    SECTION("setBasisState") {
+
+        const ComplexT init{1.0, PrecisionT{0.0}};
+        const ComplexT zero{PrecisionT{0.0}, PrecisionT{0.0}};
+
+        std::vector<ComplexT> init_state_zeros = {zero, zero, zero, zero,
+                                                  zero, zero, zero, zero};
+        std::vector<ComplexT> expected_state_000 = {init, zero, zero, zero,
+                                                    zero, zero, zero, zero};
+
+        StateVectorT sv(init_state_zeros.data(), init_state_zeros.size());
+        sv.setBasisState({0}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_000));
+
+        std::vector<ComplexT> expected_state_001 = {zero, init, zero, zero,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1}, {2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_001));
+
+        std::vector<ComplexT> expected_state_010 = {zero, zero, init, zero,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1}, {1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_010));
+
+        std::vector<ComplexT> expected_state_011 = {zero, zero, zero, init,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1, 1}, {1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_011));
+
+        std::vector<ComplexT> expected_state_100 = {zero, zero, zero, zero,
+                                                    init, zero, zero, zero};
+        sv.setBasisState({1}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_100));
+
+    }
+}
+
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::Constructibility",
                            "[General Constructibility]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),

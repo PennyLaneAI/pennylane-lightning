@@ -742,39 +742,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void setBasisState(const std::vector<uint8_t> &state,
                        const std::vector<std::size_t> &wires) {
-        // TODO: We could reduce memory usage by a factor of 8 by packing bits.
-        constexpr size_t bits = sizeof(size_t) * 8;
-        auto wires_size = wires.size();
-        auto basis_state_size = state.size();
-        PL_ABORT_IF(
-            wires_size != basis_state_size,
-            "Basis state must be same size as number of wires specified");
-        std::unordered_set<std::size_t> wire_set(wires.begin(), wires.end());
-        PL_ABORT_IF(wire_set.size() != wires_size, "Repeated wire");
-
-        auto total_wire_count = this->getLength();
-
-        auto size = wires_size;
-        // Using size_t because of setBasisState. This actually simplifies
-        // the check for overflow.
-        size_t accumulator = 0;
-        for (size_t index = 0; index < size - 1; index++) {
-            PL_ABORT_IF(accumulator < 0, "Overflow");
-            PL_ABORT_IF(wires[index] > bits,
-                        "Wires can't exceed number of bits in size_t.");
-            PL_ABORT_IF(wires[index] >= total_wire_count,
-                        "Invalid wire range.");
-            PL_ABORT_IF(state[index] & 0b00,
-                        "Basis state must be either zero or one.");
-
-            auto wire = wires[index];
-            auto oneOrZero = state[index];
-            auto wire_correct_endian = total_wire_count - 1 - wire;
-            auto exponent = static_cast<size_t>(1) << wire_correct_endian;
-            auto decimal = oneOrZero * exponent;
-            accumulator += decimal;
+        auto n_wires = wires.size();
+        auto num_qubits = this->getNumQubits();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
         }
-        setBasisState(accumulator);
+        setBasisState(index);
     }
 
     /**
@@ -789,7 +764,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF(wire_set.size() != wires.size(), "Repeated wire");
 
         auto *arr = this->getData();
-        auto total_wire_count = this->getLength();
+        auto total_wire_count = this->getNumQubits();
         auto num_qubits = wires.size();
         std::vector<std::size_t> extra_wires(total_wire_count);
         std::iota(std::begin(extra_wires), std::end(extra_wires), 0);
