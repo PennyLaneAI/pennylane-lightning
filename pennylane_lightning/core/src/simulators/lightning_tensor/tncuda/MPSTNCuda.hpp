@@ -216,14 +216,15 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     void append_mps_final_state(double cutoff = 0,
                                 std::string cutoff_mode = "abs") {
         if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
-            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetBoundaryCondition_t */
-            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-            /* const int64_t *const extentsOut[] */
-            getSitesExtentsPtr().data(),
-            /*strides=*/nullptr));
+            MPSFinalized_ = MPSStatus::MPSFinalizedSet;
+            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
+                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+                /* cutensornetState_t */ BaseType::getQuantumState(),
+                /* cutensornetBoundaryCondition_t */
+                CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+                /* const int64_t *const extentsOut[] */
+                getSitesExtentsPtr().data(),
+                /*strides=*/nullptr));
         }
 
         // Optional: SVD
