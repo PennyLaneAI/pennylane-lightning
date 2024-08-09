@@ -431,7 +431,7 @@ class LightningKokkos(Device):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("rng", "c_dtype", "batch_obs")
+    _device_options = ("c_dtype", "batch_obs")
     _new_API = True
 
     # Device specific options
@@ -474,8 +474,6 @@ class LightningKokkos(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        self._statevector = LightningKokkosStateVector(num_wires=len(self.wires), dtype=c_dtype)
-
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
 
@@ -484,6 +482,10 @@ class LightningKokkos(Device):
         self._sync = sync
         if not LightningKokkos.kokkos_config:
             LightningKokkos.kokkos_config = _kokkos_configuration()
+
+        self._statevector = LightningKokkosStateVector(
+            num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args, sync=sync
+        )
 
     @property
     def name(self):
@@ -514,7 +516,7 @@ class LightningKokkos(Device):
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
-        # add this to fit the Execute configuration
+        # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
         mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0}
         new_device_options.update(mcmc_default)
 

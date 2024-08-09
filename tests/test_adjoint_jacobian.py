@@ -26,9 +26,6 @@ from pennylane import numpy as np
 from pennylane import qchem, qnode
 from scipy.stats import unitary_group
 
-if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
-
 I, X, Y, Z = (
     np.eye(2),
     qml.X.compute_matrix(),
@@ -128,12 +125,11 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        if device_name == "lightning.kokkos":
-            message = "Adjoint differentiation does not support State measurements."
+        if device_name in ("lightning.qubit", "lightning.kokkos"):
+            message = "Adjoint differentiation method does not support measurement StateMP."
         elif device_name == "lightning.gpu":
             message = "Adjoint differentiation does not support State measurements."
-        else:
-            message = "Adjoint differentiation method does not support measurement StateMP."
+
         with pytest.raises(
             qml.QuantumFunctionError,
             match=message,
