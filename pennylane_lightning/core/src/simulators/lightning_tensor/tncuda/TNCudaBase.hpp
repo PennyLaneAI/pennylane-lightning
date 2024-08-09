@@ -300,7 +300,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get the full state tensor
+     * @brief Get the state vector representation of a tensor network.
      *
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is default as 1.
@@ -315,7 +315,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get a slice of the state tensor
+     * @brief Get the state vector representation of a tensor network.
      *
      * @param wires Wires to get the state tensor for.
      * @param numHyperSamples Number of hyper samples to use in the calculation
