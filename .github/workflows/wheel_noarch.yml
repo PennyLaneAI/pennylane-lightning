@@ -42,8 +42,7 @@ jobs:
     steps:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
-        with:
-          path: main
+
 
       - uses: actions/setup-python@v5
         with:

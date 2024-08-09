@@ -121,7 +121,7 @@ jobs:
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
