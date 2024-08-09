@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
+  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804) 
+
 ### Breaking changes
 
 * Remove `NDpermuter.hpp` which is no longer required.
@@ -59,6 +62,10 @@
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
+  [(#837)](https://github.com/PennyLaneAI/pennylane-lightning/pull/837)
+
+* Add `initial_state_prep` option to Catalyst TOML file.
+  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
 
 ### Documentation
 
@@ -66,6 +73,12 @@
   [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Fix cuQuantum SDK path pass-though in CMake.
+  [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
+
+* Fix CUDA sync issues on aarch64+GraceHopper.
+  [(#823)](https://github.com/PennyLaneAI/pennylane-lightning/pull/823)
 
 * Check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of `cuTensorNet-v24.03.0`.
   [(#806)](https://github.com/PennyLaneAI/pennylane-lightning/pull/806)
@@ -86,7 +99,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 

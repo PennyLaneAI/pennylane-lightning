@@ -24,8 +24,6 @@ from conftest import device_name
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == "lightning.tensor":
-    pytest.skip("lightning.tensor doesn't support var.", allow_module_level=True)
 
 np.random.seed(42)
 
@@ -56,6 +54,10 @@ class TestVar:
         expected = 0.25 * (3 - np.cos(2 * theta) - 2 * np.cos(theta) ** 2 * np.cos(2 * phi))
 
         assert np.allclose(var, expected, tol)
+
+    pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor doesn't support projector."
+    )
 
     def test_projector_var(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""

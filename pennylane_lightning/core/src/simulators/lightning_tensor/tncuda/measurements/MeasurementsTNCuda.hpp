@@ -59,7 +59,34 @@ template <class TensorNetT> class MeasurementsTNCuda {
         : tensor_network_(tensor_network){};
 
     /**
-     * @brief Calculate expectation value for a general Observable.
+     * @brief Calculate var value for a general ObservableTNCuda Observable.
+     *
+     * Current implementation ensure that only one cutensornetNetworkOperator_t
+     * object is attached to the circuit.
+     *
+     * @param obs An Observable object.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     */
+    auto var(ObservableTNCuda<TensorNetT> &obs,
+             const int32_t numHyperSamples = 1) -> PrecisionT {
+        auto expectation_val =
+            expval(obs, numHyperSamples); // The cutensornetNetworkOperator_t
+                                          // object created in expval() will be
+                                          // released after the function call.
+
+        const bool val_cal = true;
+        auto tnObs2Operator =
+            ObservableTNCudaOperator<TensorNetT>(tensor_network_, obs, val_cal);
+        auto expectation_squared_obs =
+            expval_(tnObs2Operator.getTNOperator(), numHyperSamples);
+
+        return expectation_squared_obs - expectation_val * expectation_val;
+    }
+
+    /**
+     * @brief Calculate expectation value for a general ObservableTNCuda
+     * Observable.
      *
      * @param obs An Observable object.
      * @param numHyperSamples Number of hyper samples to use in the calculation
@@ -72,6 +99,24 @@ template <class TensorNetT> class MeasurementsTNCuda {
         auto tnoperator =
             ObservableTNCudaOperator<TensorNetT>(tensor_network_, obs);
 
+        return expval_(tnoperator.getTNOperator(), numHyperSamples);
+    }
+
+  private:
+    /**
+     * @brief Calculate expectation value for a cutensornetNetworkOperator_t
+     * object.
+     *
+     * @param tnoperator A cutensornetNetworkOperator_t object.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
+     * @return Expectation value with respect to the given
+     * cutensornetNetworkOperator_t object.
+     */
+
+    auto expval_(cutensornetNetworkOperator_t tnoperator,
+                 const int32_t numHyperSamples) -> PrecisionT {
         ComplexT expectation_val{0.0, 0.0};
         ComplexT state_norm2{0.0, 0.0};
 
@@ -80,7 +125,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateExpectation(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetState_t */ tensor_network_.getQuantumState(),
-            /* cutensornetNetworkOperator_t */ tnoperator.getTNOperator(),
+            /* cutensornetNetworkOperator_t */ tnoperator,
             /* cutensornetStateExpectation_t * */ &expectation));
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationConfigure(
