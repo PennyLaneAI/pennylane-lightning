@@ -110,3 +110,49 @@ def test_device_init_zero_qubit():
         return qml.state()
 
     assert np.allclose(circuit(), np.array([1.0]))
+
+
+@pytest.mark.skipif(
+    (device_name != "lightning.kokkos" or sys.platform != "win32"),
+    reason="This test is for Kokkos under Windows only.",
+)
+def test_unsupported_windows_platform_kokkos():
+    """Test unsupported Windows platform for Kokkos."""
+
+    dev = qml.device(device_name, wires=0)
+
+    with pytest.raises(
+        RuntimeError,
+        match="'LightningKokkosSimulator' shared library not available for 'win32' platform",
+    ):
+        dev.get_c_interface()
+
+
+@pytest.mark.skipif(
+    (device_name != "lightning.kokkos" or sys.platform != "linux"),
+    reason="This test is for Kokkos under Linux only.",
+)
+def test_supported_linux_platform_kokkos():
+    """Test supported Linux platform for Kokkos."""
+
+    dev = qml.device(device_name, wires=0)
+
+    dev_name, shared_lib_name = dev.get_c_interface()
+
+    assert dev_name == "LightningKokkosSimulator"
+    assert "liblightning_kokkos_catalyst.so" in shared_lib_name
+
+
+@pytest.mark.skipif(
+    (device_name != "lightning.kokkos" or sys.platform != "darwin"),
+    reason="This test is for Kokkos under MacOS only.",
+)
+def test_supported_macos_platform_kokkos():
+    """Test supported MacOS platform for Kokkos."""
+
+    dev = qml.device(device_name, wires=0)
+
+    dev_name, shared_lib_name = dev.get_c_interface()
+
+    assert dev_name == "LightningKokkosSimulator"
+    assert "liblightning_kokkos_catalyst.dylib" in shared_lib_name
