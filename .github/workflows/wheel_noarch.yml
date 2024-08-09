@@ -63,7 +63,6 @@ jobs:
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         run: |
           python -m pip install --upgrade pip wheel build
-          cd main
           python -m build
         env:
           SKIP_COMPILATION: True
