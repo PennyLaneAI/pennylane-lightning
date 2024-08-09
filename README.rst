@@ -135,25 +135,17 @@ For development and testing, you can install by cloning the repository:
     $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     $ cd pennylane-lightning
     $ pip install -r requirements.txt
-    $ PL_BACKEND=${PL_BACKEND} pip install -e . -vv
+    $ PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
+    $ pip install -e . -vv
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
-``build`` folder. Run ``make clean`` if you would like to recompile from scratch.
+``build`` folder, and the ``pyproject.toml`` file define by the configuration script. Run ``make clean`` if you would like to recompile from scratch.
 
 You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
 .. code-block:: console
 
     $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
-
-or with ``build_ext`` and the ``--define`` flag as follows:
-
-.. code-block:: console
-
-    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF"
-    $ python3 setup.py develop
-
-where ``-D`` must not be included before ``;``-separated options.
 
 Compile MSVC (Windows)
 ======================
@@ -235,14 +227,15 @@ Please see the `cuQuantum SDK`_ install guide for more information.
 Install Lightning-GPU from source
 =================================
 
-To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU:
+To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be installed (compilation is not necessary):
 
 .. code-block:: console
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
-    PL_BACKEND="lightning_qubit" pip install -e . -vv
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    SKIP_COMPILATION=True pip install -e . -vv
 
 Then the `cuStateVec`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
@@ -255,7 +248,8 @@ The Lightning-GPU can then be installed with ``pip``:
 
 .. code-block:: console
 
-    PL_BACKEND="lightning_gpu" python -m pip install -e .
+    PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
+    python -m pip install -e .
 
 To simplify the build, we recommend using the containerized build process described in Docker support section.
 
@@ -275,7 +269,8 @@ Then Lightning-GPU with MPI support can then be installed with ``pip``:
 
 .. code-block:: console
 
-    CMAKE_ARGS="-DENABLE_MPI=ON"  PL_BACKEND="lightning_gpu" python -m pip install -e .
+    PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e .
 
 
 Test Lightning-GPU with MPI
@@ -343,7 +338,8 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
 .. code-block:: console
 
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python -m pip install .
+   PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install .
 
 To build the plugin directly with CMake as above:
 
@@ -372,16 +368,17 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 
 Install Lightning-Tensor from source
 ====================================
-Lightning-Qubit should be installed before Lightning-Tensor:
+Lightning-Qubit should be installed before Lightning-Tensor (compilation is not necessary):
 
 .. code-block:: console
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
-    PL_BACKEND="lightning_qubit" pip install .
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    SKIP_COMPILATION=True pip install .
 
-Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable. 
+Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
 .. code-block:: console
 
@@ -392,7 +389,8 @@ The Lightning-Tensor can then be installed with ``pip``:
 
 .. code-block:: console
 
-    PL_BACKEND="lightning_tensor" pip install -e .
+    PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
+    pip install -e .
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
@@ -458,13 +456,13 @@ If you are using Lightning for research, please cite:
 
     @misc{
         asadi2024,
-        title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}}, 
+        title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}},
         author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
         year={2024},
         eprint={2403.02512},
         archivePrefix={arXiv},
         primaryClass={quant-ph},
-        url={https://arxiv.org/abs/2403.02512}, 
+        url={https://arxiv.org/abs/2403.02512},
     }
 
 .. citation-end-inclusion-marker-do-not-remove
