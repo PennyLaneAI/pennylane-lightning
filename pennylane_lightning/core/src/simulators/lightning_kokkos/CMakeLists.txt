@@ -70,6 +70,7 @@ endif()
 ###############################################################################
 set(COMPONENT_SUBDIRS   algorithms
                         bindings
+                        catalyst
                         gates
                         measurements
                         observables
@@ -79,10 +80,6 @@ set(COMPONENT_SUBDIRS   algorithms
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
 endforeach()
-
-if (BUILD_CATALYST_PLUGIN)
-    add_subdirectory(catalyst)
-endif()
 
 if (BUILD_TESTS)
     enable_testing()
