@@ -53,12 +53,10 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setBasisState",
                            "[setBasisState]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),
                            (float, double)) {
-
     using StateVectorT = TestType;
     using ComplexT = typename StateVectorT::ComplexT;
 
     SECTION("setBasisState") {
-
         const ComplexT one{1.0};
         const ComplexT zero{0.0};
 
@@ -113,12 +111,10 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setStateVector",
                            "[setStateVector]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),
                            (float, double)) {
-
     using StateVectorT = TestType;
     using ComplexT = typename StateVectorT::ComplexT;
 
     SECTION("setStateVector") {
-
         const ComplexT one{1.0};
         const ComplexT zero{0.0};
 
