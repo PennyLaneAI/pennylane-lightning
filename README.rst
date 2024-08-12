@@ -77,26 +77,14 @@ The following table summarizes the supported platforms and the primary installat
 Lightning-Qubit installation
 ****************************
 
-PyPI wheels (pip)
-=================
-
-Lightning plugins can be installed using ``pip`` as follows
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning
-
-The above command will install the Lightning-Qubit plugin (the default since it is most broadly supported).
-In order to install the Lightning-GPU and Lightning-Kokkos (OpenMP) backends, you can respectively use the following commands:
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning[gpu]
-    $ pip install pennylane-lightning[kokkos]
-
+Lightning Qubit comes with installing PennyLane. Please follow our `installation instructions on pennylane.ai <https://pennylane.ai/install/>`_ to install PennyLane.
 
 Install from source
 ===================
+
+.. note::
+    The below contains instructions for installing Lightning Qubit ***from source***. For most cases, *this is not required* and one can simply use the `installation instructions at pennylane.ai/install <https://pennylane.ai/install>`_.
+    If those instructions did / do not work for you, then consider reading on.
 
 To build Lightning plugins from source you can run
 
@@ -222,18 +210,14 @@ The C++ code can be tested with
 Lightning-GPU installation
 **************************
 
-Lightning-GPU can be installed using ``pip``:
-
-.. code-block:: console
-
-    pip install pennylane-lightning[gpu]
-
-Lightning-GPU requires CUDA 12 and the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cuStateVec <https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html>`_ library is required).
-The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
-Please see the `cuQuantum SDK`_ install guide for more information.
+For the majority of cases, Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_.
 
 Install Lightning-GPU from source
 =================================
+
+.. note::
+    The below contains instructions for installing Lightning-GPU ***from source***. For most cases, *this is not required* and one can simply use the `installation instructions at pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_.
+    If those instructions did / do not work for you, then consider reading on.
 
 To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU:
 
@@ -304,14 +288,14 @@ The C++ code is tested with
 Lightning-Kokkos installation
 *****************************
 
-On linux systems, ``lightning.kokkos`` with the OpenMP backend can be installed by providing the optional ``[kokkos]`` tag:
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning[kokkos]
+On most Linux systems, Lightning-Kokkos can be installed via Spack or Docker by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_.
 
 Install Lightning-Kokkos from source
 ====================================
+
+.. note::
+    The below contains instructions for installing Lightning-Kokkos ***from source***. For most cases, one can install Lightning-Kokkos via Spack or Docker by the `installation instructions at pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_.
+    If those instructions did / do not work for you, then consider reading on.
 
 As Kokkos enables support for many different HPC-targeted hardware platforms, ``lightning.kokkos`` can be built to support any of these platforms when building from source.
 
@@ -366,12 +350,14 @@ Note that ``THREADS`` backend is not recommended since `Kokkos does not guarante
 
 Lightning-Tensor installation
 *****************************
+
 Lightning-Tensor requires CUDA 12 and the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`_ library is required).
 The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
 Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
 
 Install Lightning-Tensor from source
 ====================================
+
 Lightning-Qubit should be installed before Lightning-Tensor:
 
 .. code-block:: console
