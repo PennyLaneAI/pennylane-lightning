@@ -277,9 +277,9 @@ jobs:
           cd main/
           for device in lightning.qubit lightning.kokkos; do
             echo "FDX test01: ${device} "
-            pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+            pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append -vvv
             echo "FDX test02: ${device} "
-            pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+            pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append -vvv
             echo "FDX ending: ${device} "
           done
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
