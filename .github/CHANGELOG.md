@@ -72,8 +72,11 @@
 
 ### Documentation
 
+* The installation instructions for all lightning plugins has been improved.
+  [(#848)](https://github.com/PennyLaneAI/pennylane-lightning/pull/848)
+
 * Updated the README and added citation format for Lightning arxiv preprint.
-  [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
+  [(#818)](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
 
