@@ -404,7 +404,7 @@ class QuantumScriptSerializer:
                 uses_stateprep = True
                 continue
             if isinstance(operation, Rot):
-                op_list = operation.expand().operations
+                op_list = operation.decomposition()
             else:
                 op_list = [operation]
 
