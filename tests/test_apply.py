@@ -671,7 +671,7 @@ class TestSample:
         dev = qubit_device(wires=2)
         ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
 
-        shots = 10
+        shots = qml.measurements.Shots(10)
         obs = qml.PauliZ(wires=[0])
         if ld._new_API:
             tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
@@ -679,35 +679,35 @@ class TestSample:
         else:
             dev.reset()
             dev.apply(ops)
-            dev.shots = shots
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
+            dev.target_device._shots = shots
+            dev.target_device._wires_measured = {0}
+            dev.target_device._samples = dev.generate_samples()
             s1 = dev.sample(obs)
         assert np.array_equal(s1.shape, (shots,))
 
-        shots = 12
+        shots = qml.measurements.Shots(12)
         obs = qml.PauliZ(wires=[1])
         if ld._new_API:
             tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
             s2 = dev.execute(tape)
         else:
             dev.reset()
-            dev.shots = shots
-            dev._wires_measured = {1}
-            dev._samples = dev.generate_samples()
+            dev.target_device._shots = shots
+            dev.target_device._wires_measured = {1}
+            dev.target_device._samples = dev.generate_samples()
             s2 = dev.sample(qml.PauliZ(wires=[1]))
         assert np.array_equal(s2.shape, (shots,))
 
-        shots = 17
+        shots = qml.measurements.Shots(17)
         obs = qml.PauliX(0) @ qml.PauliZ(1)
         if ld._new_API:
             tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
             s3 = dev.execute(tape)
         else:
             dev.reset()
-            dev.shots = shots
-            dev._wires_measured = {0, 1}
-            dev._samples = dev.generate_samples()
+            dev.target_device._shots = shots
+            dev.target_device._wires_measured = {0, 1}
+            dev.target_device._samples = dev.generate_samples()
             s3 = dev.sample(qml.PauliZ(wires=[1]))
         assert np.array_equal(s3.shape, (shots,))
 
@@ -723,7 +723,7 @@ class TestSample:
 
         ops = [qml.RX(1.5708, wires=[0])]
 
-        shots = 1000
+        shots = qml.measurements.Shots(1000)
         obs = qml.PauliZ(0)
         if ld._new_API:
             tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
@@ -731,9 +731,9 @@ class TestSample:
         else:
             dev.reset()
             dev.apply(ops)
-            dev.shots = shots
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
+            dev.target_device._shots = shots
+            dev.target_device._wires_measured = {0}
+            dev.target_device._samples = dev.generate_samples()
             s1 = dev.sample(obs)
 
         # s1 should only contain 1 and -1, which is guaranteed if

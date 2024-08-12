@@ -926,7 +926,7 @@ class TestAdjointJacobianQNode:
         if ld._new_API:
             spy = mocker.spy(dev, "execute_and_compute_derivatives")
         else:
-            spy = mocker.spy(dev, "adjoint_jacobian")
+            spy = mocker.spy(dev.target_device, "adjoint_jacobian")
 
         # analytic gradient
         grad_fn = qml.grad(cost)

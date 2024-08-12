@@ -656,8 +656,8 @@ class TestSample:
             s1 = dev.execute(tape)
         else:
             dev.apply(ops)
-            dev._wires_measured = wires
-            dev._samples = dev.generate_samples()
+            dev.target_device._wires_measured = wires
+            dev.target_device._samples = dev.generate_samples()
             s1 = dev.sample(obs)
         assert np.array_equal(s1.shape, (shots,))
 
