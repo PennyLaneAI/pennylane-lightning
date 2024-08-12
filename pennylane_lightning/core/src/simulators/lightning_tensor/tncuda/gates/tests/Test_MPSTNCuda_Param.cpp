@@ -84,9 +84,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PhaseShift", "[MPSTNCuda_Param]", float,
             mps_state.applyOperation("PhaseShift", {index}, inverse,
                                      {sign * angles[index]});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -127,9 +125,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RX", "[MPSTNCuda_Param]", float, double) {
 
             mps_state.applyOperation("RX", {index}, inverse, {angles[index]});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -199,9 +195,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RY", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("RY", {index}, inverse, {angles[index]});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -262,9 +256,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::RZ", "[MPSTNCuda_Param]", float, double) {
 
             mps_state.applyOperation("RZ", {index}, inverse, {angles[index]});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -310,9 +302,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::ControlledPhaseShift",
             mps_state.applyOperation("ControlledPhaseShift", {0, 1}, inverse,
                                      {sign * angles[0]});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -325,9 +315,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::ControlledPhaseShift",
 
             mps_state.applyOperation("ControlledPhaseShift", {0, 2}, inverse,
                                      {sign * angles[1]});
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -369,9 +357,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Rot", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("Rot", {index}, inverse, angles[index]);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -400,9 +386,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRot", "[MPSTNCuda_param]", float,
 
             expected_results[0] = cp_t{1, 0};
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -414,9 +398,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRot", "[MPSTNCuda_param]", float,
 
             expected_results[0] = cp_t{1, 0};
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -466,9 +448,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXX", "[MPSTNCuda_param]", float,
             mps_state.applyOperation("IsingXX", {0, 1}, inverse,
                                      {angles[index]});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -480,9 +460,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXX", "[MPSTNCuda_param]", float,
             mps_state.applyOperation("IsingXX", {0, 2}, inverse,
                                      {angles[index]});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(
                                  expected_results[index + angles.size()]));
@@ -532,9 +510,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXY", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingXY", {0, 1}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -546,9 +522,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXY", "[MPSTNCuda_param]", float,
                                       {{0}, {1}, {2}}, {false, false, false});
             mps_state.applyOperation("IsingXY", {0, 2}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -597,9 +571,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingYY", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingYY", {0, 1}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -612,9 +584,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingYY", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingYY", {0, 2}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -663,9 +633,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingZZ", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingZZ", {0, 1}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -678,9 +646,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingZZ", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingZZ", {0, 2}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -729,9 +695,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRX", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("CRX", {0, 1}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -744,9 +708,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRX", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("CRX", {0, 2}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -799,9 +761,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRY", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("CRY", {0, 1}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -814,9 +774,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRY", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("CRY", {0, 2}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -865,9 +823,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRZ", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("CRZ", {0, 1}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -879,9 +835,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRZ", "[MPSTNCuda_param]", float,
                                       {{0}, {1}, {2}}, {false, false, false});
             mps_state.applyOperation("CRZ", {0, 2}, inverse, angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -932,9 +886,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitation", "[MPSTNCuda_param]",
             mps_state.applyOperation("SingleExcitation", {0, 1}, inverse,
                                      angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -948,9 +900,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitation", "[MPSTNCuda_param]",
             mps_state.applyOperation("SingleExcitation", {0, 2}, inverse,
                                      angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1007,9 +957,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationMinus",
             mps_state.applyOperation("SingleExcitationMinus", {0, 1}, inverse,
                                      angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -1023,9 +971,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationMinus",
             mps_state.applyOperation("SingleExcitationMinus", {0, 2}, inverse,
                                      angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1082,9 +1028,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationPlus",
             mps_state.applyOperation("SingleExcitationPlus", {0, 1}, inverse,
                                      angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -1097,9 +1041,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SingleExcitationPlus",
             mps_state.applyOperation("SingleExcitationPlus", {0, 2}, inverse,
                                      angles);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }

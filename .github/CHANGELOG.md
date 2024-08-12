@@ -10,7 +10,7 @@
 
 ### Breaking changes
 
-* Replace `getDataVector()` with `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector. 
+* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector. 
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
 * Remove `NDpermuter.hpp` which is no longer required.

@@ -60,7 +60,6 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
 
 TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
                    float, double) {
-    using cp_t = std::complex<TestType>;
     std::vector<std::vector<std::size_t>> basisStates = {
         {0, 0, 0}, {0, 0, 1}, {0, 1, 0}, {0, 1, 1},
         {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}};
@@ -109,10 +108,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         CHECK(mps_state.getMaxBondDim() == maxBondDim);
 
-        const std::size_t length = std::size_t{1} << num_qubits;
-        std::vector<cp_t> results(length);
-
-        mps_state.getData(results.data(), results.size());
+        auto results = mps_state.getDataVector();
 
         CHECK(expected_state == Pennylane::Util::approx(results));
     }
@@ -139,10 +135,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         expected_state[index] = {1.0, 0.0};
 
-        const std::size_t length = std::size_t{1} << num_qubits;
-        std::vector<cp_t> results(length);
-
-        mps_state.getData(results.data(), results.size());
+        auto results = mps_state.getDataVector();
 
         CHECK(expected_state == Pennylane::Util::approx(results));
     }
@@ -166,10 +159,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         expected_state[index] = {1.0, 0.0};
 
-        const std::size_t length = std::size_t{1} << num_qubits;
-        std::vector<cp_t> results(length);
-
-        mps_state.getData(results.data(), results.size());
+        auto results = mps_state.getDataVector();
 
         CHECK(expected_state == Pennylane::Util::approx(results));
     }
@@ -188,10 +178,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 
         expected_state[0] = {1.0, 0.0};
 
-        const std::size_t length = std::size_t{1} << num_qubits;
-        std::vector<cp_t> results(length);
-
-        mps_state.getData(results.data(), results.size());
+        auto results = mps_state.getDataVector();
 
         CHECK(expected_state == Pennylane::Util::approx(results));
     }

@@ -51,10 +51,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Identity", "[MPSTNCuda_Nonparam]", float,
             mps_state.applyOperation("Identity", {index}, inverse);
             cp_t expected(1.0 / std::sqrt(2), 0);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(expected.real() ==
                   Approx(results[0b1 << ((num_qubits - 1 - index))].real()));
@@ -80,10 +77,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Hadamard", "[MPSTNCuda_Nonparam]", float,
             mps_state.applyOperation("Hadamard", {index}, inverse);
             cp_t expected(1.0 / std::sqrt(2), 0);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(expected.real() ==
                   Approx(results[0b1 << ((num_qubits - 1 - index))].real()));
@@ -95,7 +89,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Hadamard", "[MPSTNCuda_Nonparam]", float,
 
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliX", "[MPSTNCuda_Nonparam]", float,
                    double) {
-    using cp_t = std::complex<TestType>;
     const bool inverse = GENERATE(false, true);
     {
         std::size_t num_qubits = 3;
@@ -108,10 +101,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliX", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("PauliX", {index}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results[0] == cuUtil::ZERO<std::complex<TestType>>());
             CHECK(results[0b1 << (num_qubits - index - 1)] ==
@@ -149,10 +139,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliY", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("PauliY", {index}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -186,10 +173,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliZ", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("PauliZ", {index}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -227,10 +211,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::S", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("S", {index}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -267,10 +248,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::T", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("T", {index}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
@@ -281,7 +259,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CNOT", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false, true);
     {
-        using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         std::size_t maxExtent = 2;
         DevTag<int> dev_tag{0, 0};
@@ -293,10 +270,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CNOT", "[MPSTNCuda_Nonparam]", float,
                                       {{0}, {0, 1}, {1, 2}},
                                       {false, inverse, inverse});
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results.front() ==
                   cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -309,10 +283,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CNOT", "[MPSTNCuda_Nonparam]", float,
             mps_state.applyOperation("Hadamard", {0}, false);
             mps_state.applyOperation("CNOT", {0, 2}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results[0] == cuUtil::INVSQRT2<std::complex<TestType>>());
             CHECK(results[5] == cuUtil::INVSQRT2<std::complex<TestType>>());
@@ -346,10 +317,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SWAP", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("SWAP", {0, 1}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected));
         }
@@ -371,10 +339,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::SWAP", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("SWAP", {0, 2}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected));
         }
@@ -408,10 +373,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CY", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("CY", {0, 1}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -434,10 +396,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CY", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("CY", {0, 2}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -471,10 +430,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CZ", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("CZ", {0, 1}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
@@ -497,10 +453,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CZ", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("CZ", {0, 2}, inverse);
 
-            const std::size_t length = std::size_t{1} << num_qubits;
-            std::vector<cp_t> results(length);
-
-            mps_state.getData(results.data(), results.size());
+            auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results));
         }

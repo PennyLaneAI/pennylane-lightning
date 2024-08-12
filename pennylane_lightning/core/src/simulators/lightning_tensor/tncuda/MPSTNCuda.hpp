@@ -279,6 +279,22 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         this->get_state_tensor(res);
     }
 
+    /**
+     * @brief Get the full state vector representation of a MPS quantum state.
+     *
+     *
+     * @return std::vector<ComplexT> Full state vector representation of MPS
+     * quantum state on host
+     */
+    auto getDataVector() -> std::vector<ComplexT> {
+        std::size_t length = std::size_t{1} << BaseType::getNumQubits();
+        std::vector<ComplexT> results(length);
+
+        getData(results.data(), results.size());
+
+        return results;
+    }
+
   private:
     /**
      * @brief Return siteModes to the member initializer
