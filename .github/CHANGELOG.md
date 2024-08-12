@@ -70,12 +70,18 @@
 * Add `initial_state_prep` option to Catalyst TOML file.
   [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
 
+* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
+  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
+
 ### Documentation
 
 * Updated the README and added citation format for Lightning arxiv preprint.
   [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Set the `immutable` parameter value as `false` for the `cutensornetStateApplyTensorOperator` to allow the following `cutensornetStateUpdateTensorOperator` call.
+  [(#845)](https://github.com/PennyLaneAI/pennylane-lightning/pull/845)
 
 * Fix cuQuantum SDK path pass-though in CMake.
   [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
