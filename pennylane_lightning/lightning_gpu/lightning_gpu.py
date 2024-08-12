@@ -817,9 +817,9 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
             array[int]: array of samples in binary representation with shape
             ``(dev.shots, dev.num_wires)``
         """
-        return self.measurements.generate_samples(len(self.wires), self.shots.total_shots).astype(
-            int, copy=False
-        )
+        shots = self.shots if isinstance(self.shots, int) else self.shots.total_shots
+
+        return self.measurements.generate_samples(len(self.wires), shots).astype(int, copy=False)
 
     # pylint: disable=protected-access
     def expval(self, observable, shot_range=None, bin_size=None):

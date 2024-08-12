@@ -623,6 +623,9 @@ class LightningKokkos(LightningBase):
             ``(dev.shots, dev.num_wires)``
         """
         shots = self.shots if shots is None else shots
+
+        shots = shots if isinstance(shots, int) else shots.total_shots
+        
         measure = (
             MeasurementsC64(self._kokkos_state)
             if self.use_csingle

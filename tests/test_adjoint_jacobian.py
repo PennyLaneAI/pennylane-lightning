@@ -700,19 +700,20 @@ class TestAdjointJacobianQNode:
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_finite_shots_warning(self):
-        """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
+    def test_finite_shots_error(self):
+        """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
 
         dev = qml.device(device_name, wires=1, shots=1)
-
-        @qml.qnode(dev, diff_method="adjoint")
-        def circ(x):
-            qml.RX(x, wires=0)
-            return qml.expval(qml.PauliZ(0))
 
         with pytest.raises(
             qml.QuantumFunctionError, match="does not support adjoint with requested circuit."
         ):
+
+            @qml.qnode(dev, diff_method="adjoint")
+            def circ(x):
+                qml.RX(x, wires=0)
+                return qml.expval(qml.PauliZ(0))
+
             qml.grad(circ)(0.1)
 
     def test_qnode(self, mocker, dev):
