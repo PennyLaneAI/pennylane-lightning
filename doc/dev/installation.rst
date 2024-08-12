@@ -9,7 +9,7 @@ Install from source
 **********************
 
 .. note::
-   In cases where our `high-performance computing installation instructions <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_ 
+   In cases where our `general installation instructions <https://pennylane.ai/install/>`_ 
    do not suffice, please consider reading on.
 
 Select the device below for detailed source-installation instructions:
