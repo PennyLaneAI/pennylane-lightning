@@ -6,6 +6,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+      - labeled
     paths:
       - .github/workflows/tidy.yml
       - pennylane_lightning/core/src/**

@@ -18,6 +18,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+      - labeled
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lmps_tncuda_python.yml'

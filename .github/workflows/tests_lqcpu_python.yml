@@ -16,6 +16,7 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+      - labeled
   push:
     branches:
       - master
