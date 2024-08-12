@@ -628,7 +628,7 @@ class LightningKokkos(LightningBase):
             if self.use_csingle
             else MeasurementsC128(self._kokkos_state)
         )
-        return measure.generate_samples(len(self.wires), shots).astype(int, copy=False)
+        return measure.generate_samples(len(self.wires), shots.total_shots).astype(int, copy=False)
 
     def probability_lightning(self, wires):
         """Return the probability of each computational basis state.
