@@ -11,7 +11,7 @@ classifiers = [ "Development Status :: 4 - Beta", "Environment :: Console", "Int
 dependencies = [ "pennylane>=0.37",]
 dynamic = [ "version",]
 [[project.maintainers]]
-name = "Xanadu Inc."
+name = "Xanadu Quantum Technologies Inc."
 email = "software@xanadu.ai"
 
 [project.license]
