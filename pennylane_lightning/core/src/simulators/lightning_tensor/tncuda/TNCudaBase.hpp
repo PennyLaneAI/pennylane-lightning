@@ -336,7 +336,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           const std::vector<std::size_t> &wires,
                           const int32_t numHyperSamples = 1) {
         // NOTE: this is a solution to get the full state tensor
-        // TODO: project_modes and projectedModeValues are to be updated for
+        // TODO: projected_modes and projectedModeValues are to be updated for
         // prob() support.
         auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
             wires, BaseType::getNumQubits());
