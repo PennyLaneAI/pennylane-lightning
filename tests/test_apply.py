@@ -683,7 +683,7 @@ class TestSample:
             dev.target_device._wires_measured = {0}
             dev.target_device._samples = dev.generate_samples()
             s1 = dev.sample(obs)
-        assert np.array_equal(s1.shape, (shots,))
+        assert np.array_equal(s1.shape, (shots.total_shots,))
 
         shots = qml.measurements.Shots(12)
         obs = qml.PauliZ(wires=[1])
@@ -696,7 +696,7 @@ class TestSample:
             dev.target_device._wires_measured = {1}
             dev.target_device._samples = dev.generate_samples()
             s2 = dev.sample(qml.PauliZ(wires=[1]))
-        assert np.array_equal(s2.shape, (shots,))
+        assert np.array_equal(s2.shape, (shots.total_shots,))
 
         shots = qml.measurements.Shots(17)
         obs = qml.PauliX(0) @ qml.PauliZ(1)
@@ -709,7 +709,7 @@ class TestSample:
             dev.target_device._wires_measured = {0, 1}
             dev.target_device._samples = dev.generate_samples()
             s3 = dev.sample(qml.PauliZ(wires=[1]))
-        assert np.array_equal(s3.shape, (shots,))
+        assert np.array_equal(s3.shape, (shots.total_shots,))
 
     def test_sample_values(self, qubit_device, tol):
         """Tests if the samples returned by sample have
@@ -753,7 +753,7 @@ class TestLightningDeviceIntegration:
             assert not dev.shots
             assert len(dev.wires) == 2
         else:
-            assert dev.shots is None
+            assert dev.shots == qml.measurements.Shots(None)
             assert dev.num_wires == 2
             assert dev.short_name == device_name
 

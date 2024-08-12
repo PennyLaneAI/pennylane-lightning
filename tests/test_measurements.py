@@ -674,8 +674,8 @@ class TestSample:
             s1 = dev.execute(tape)
         else:
             dev.apply(ops)
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
+            dev.target_device._wires_measured = {0}
+            dev.target_device._samples = dev.generate_samples()
             s1 = dev.sample(qml.PauliZ(0))
 
         # s1 should only contain 1 and -1, which is guaranteed if

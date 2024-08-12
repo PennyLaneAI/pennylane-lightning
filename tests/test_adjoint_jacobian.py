@@ -741,7 +741,7 @@ class TestAdjointJacobianQNode:
         spy = (
             mocker.spy(dev, "execute_and_compute_derivatives")
             if ld._new_API
-            else mocker.spy(dev, "adjoint_jacobian")
+            else mocker.spy(dev.target_device, "adjoint_jacobian")
         )
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
@@ -968,7 +968,7 @@ class TestAdjointJacobianQNode:
         spy_analytic = (
             mocker.spy(dev, "execute_and_compute_derivatives")
             if ld._new_API
-            else mocker.spy(dev, "adjoint_jacobian")
+            else mocker.spy(dev.target_device, "adjoint_jacobian")
         )
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
@@ -1559,7 +1559,9 @@ def test_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
@@ -1601,7 +1603,9 @@ def test_diff_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
