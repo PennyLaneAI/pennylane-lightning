@@ -705,7 +705,6 @@ class TestAdjointJacobianQNode:
 
         dev = qml.device(device_name, wires=1, shots=1)
 
-
         @qml.qnode(dev, diff_method="adjoint")
         def circ(x):
             qml.RX(x, wires=0)
