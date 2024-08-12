@@ -1402,7 +1402,7 @@ class TestLightningDeviceIntegration:
     # https://docs.pennylane.ai/en/stable/code/api/pennylane.BlockEncode.html
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.state()",
+        reason="lightning.tensor does not support qml.BlockEncode",
     )
     @pytest.mark.parametrize(
         "op, op_wires",
