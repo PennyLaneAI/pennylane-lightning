@@ -70,7 +70,7 @@
 * Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
   [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
 
-* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
   [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
 
 ### Documentation
