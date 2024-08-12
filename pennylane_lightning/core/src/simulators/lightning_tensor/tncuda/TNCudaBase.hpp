@@ -310,7 +310,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* int32_t unitary*/ 1));
     }
 
-  protected:
     /**
      * @brief Get the state vector representation of a tensor network.
      *
@@ -387,6 +386,21 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
   protected:
+    void dummy_tensor_update() {
+        if (gate_cache_->get_cache_size() == 0) {
+            applyOperation("Identity", {0}, false);
+        }
+        int64_t id = gate_cache_->get_cache_head_idx();
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* int64_t tensorId*/ id,
+            /* void* */
+            static_cast<void *>(
+                gate_cache_->get_gate_device_ptr(static_cast<std::size_t>(id))),
+            /* int32_t unitary*/ 1));
+    }
     /**
      * @brief Save quantumState information to data provided by a user
      *
