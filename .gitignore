@@ -35,3 +35,4 @@ prototypes/
 tests/__pycache__/
 venv/
 wheelhouse/
+pyproject.toml
