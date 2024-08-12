@@ -1,11 +1,6 @@
 name: Update dev version automatically
 on:
   pull_request_target:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
     branches:
       - master
 
@@ -16,7 +11,6 @@ concurrency:
 
 jobs:
   update-dev-version:
-    if: github.event.pull_request.draft == false
     name: Update version for development branches
     runs-on: ubuntu-latest
     steps:
