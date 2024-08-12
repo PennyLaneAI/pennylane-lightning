@@ -480,12 +480,13 @@ class LightningKokkos(Device):
         # Kokkos specific options
         self._kokkos_args = kokkos_args
         self._sync = sync
-        if not LightningKokkos.kokkos_config:
-            LightningKokkos.kokkos_config = _kokkos_configuration()
 
         self._statevector = LightningKokkosStateVector(
             num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args, sync=sync
         )
+
+        if not LightningKokkos.kokkos_config:
+            LightningKokkos.kokkos_config = _kokkos_configuration()
 
     @property
     def name(self):
