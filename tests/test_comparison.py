@@ -152,7 +152,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not direct access to state",
+        reason="lightning.tensor device dose not support the direct access to state",
     )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
