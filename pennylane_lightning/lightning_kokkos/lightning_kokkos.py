@@ -366,6 +366,12 @@ class LightningKokkos(LightningBase):
 
         Note: This function does not support broadcasted inputs yet.
         """
+        if not set(state.tolist()).issubset({0, 1}):
+            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
+
+        if len(state) != len(wires):
+            raise ValueError("BasisState parameter and wires must be of equal length.")
+
         self._kokkos_state.setBasisState(state, list(wires))
 
     def _apply_lightning_midmeasure(
