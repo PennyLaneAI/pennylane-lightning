@@ -25,7 +25,7 @@ def get_backend():
     """Return backend.
 
     The backend is ``lightning_qubit`` by default.
-    Allowed values are: "lightning_kokkos", "lightning_qubit" and "lightning_gpu".
+    Allowed values are: "lightning_kokkos", "lightning_qubit", "lightning_gpu" and "lightning_tensor".
     A dot can also be used instead of an underscore.
     If the environment variable ``PL_BACKEND`` is defined, its value is used.
     Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it
