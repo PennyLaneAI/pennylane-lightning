@@ -53,6 +53,25 @@ if __name__ == "__main__":
 
     pyproject = toml.load(pyproject_path)
 
+    # ------------------------
+    # Configure Build.
+    # ------------------------
+    requires = [
+        "cmake~=3.24.0",
+        "ninja; platform_system!='Windows'",
+        "setuptools>=42",
+        "toml",
+    ]
+    if backend == "lightning_gpu":
+        requires.append("custatevec-cu12")
+    if backend == "lightning_tensor":
+        requires.append("cutensornet-cu12")
+
+    pyproject["build-system"]["requires"] = requires
+
+    # ------------------------
+    # Configure Project.
+    # ------------------------
     suffix = backend.replace("lightning_", "")
     suffix = suffix.upper() if suffix == "gpu" else suffix.title()
 
