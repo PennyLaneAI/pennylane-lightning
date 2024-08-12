@@ -329,7 +329,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @param tensor_data_size Size of the state tensor data.
      * @param wires Wires to get the state tensor for.
      * @param numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 1.
+     * and is set to 1 by default.
      */
     void get_state_tensor(CFP_t *tensor_data,
                           const std::size_t tensor_data_size,
