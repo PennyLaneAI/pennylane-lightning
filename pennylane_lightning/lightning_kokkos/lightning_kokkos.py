@@ -354,7 +354,6 @@ class LightningKokkos(LightningBase):
             # Initialize the entire device state with the input state
             self.sync_h2d(self._reshape(state, output_shape))
             return
-
         self._kokkos_state.setStateVector(state, list(device_wires))  # this operation on device
 
     def _apply_basis_state(self, state, wires):
@@ -367,12 +366,6 @@ class LightningKokkos(LightningBase):
 
         Note: This function does not support broadcasted inputs yet.
         """
-        if not set(state.tolist()).issubset({0, 1}):
-            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
-
-        if len(state) != len(wires):
-            raise ValueError("BasisState parameter and wires must be of equal length.")
-
         self._kokkos_state.setBasisState(state, list(wires))
 
     def _apply_lightning_midmeasure(

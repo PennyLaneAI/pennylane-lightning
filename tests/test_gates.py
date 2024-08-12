@@ -342,8 +342,11 @@ def test_state_prep(n_targets, tol):
     dev = qml.device(device_name, wires=n_wires)
     init_state = np.random.rand(2**n_targets) + 1.0j * np.random.rand(2**n_targets)
     init_state /= np.linalg.norm(init_state)
-    for _ in range(10):
-        wires = np.random.permutation(n_wires)[0:n_targets]
+    for i in range(10):
+        if i == 0:
+            wires = np.arange(n_targets, dtype=int)
+        else:
+            wires = np.random.permutation(n_wires)[0:n_targets]
         tape = qml.tape.QuantumTape(
             [qml.StatePrep(init_state, wires=wires)] + [qml.X(i) for i in range(n_wires)],
             [qml.state()],
