@@ -65,7 +65,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not support 1 wires tensor network",
+        reason="lightning.tensor device dose not support 1 wire tensor network",
     )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
