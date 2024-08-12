@@ -84,6 +84,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
+        PL_ABORT_IF(numQubits < 2,
+                    "The number of qubits should be greater than 1.");
+
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
@@ -111,6 +114,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
+        PL_ABORT_IF(numQubits < 2,
+                    "The number of qubits should be greater than 1.");
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
@@ -281,7 +286,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t * stateModes */ stateModes.data(),
             /* void * */ static_cast<void *>(dummy_device_data.getData()),
             /* const int64_t *tensorModeStrides */ nullptr,
-            /* const int32_t immutable */ 1,
+            /* const int32_t immutable */ 0,
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
@@ -305,64 +310,27 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* int32_t unitary*/ 1));
     }
 
-    void dummy_tensor_update() {
-        if (gate_cache_->get_cache_size() == 0) {
-            applyOperation("Identity", {0}, false);
-        }
-        int64_t id = gate_cache_->get_cache_head_idx();
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetState_t */ getQuantumState(),
-            /* int64_t tensorId*/ id,
-            /* void* */
-            static_cast<void *>(
-                gate_cache_->get_gate_device_ptr(static_cast<std::size_t>(id))),
-            /* int32_t unitary*/ 1));
-    }
-
+  protected:
     /**
-     * @brief Get the full state tensor
+     * @brief Get the state vector representation of a tensor network.
      *
+     * @param host_data Pointer to the host memory for state tensor data.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is default as 1.
-     *
-     * @return Full the state tensor on the host memory
      */
-    auto get_state_tensor(const int32_t numHyperSamples = 1)
-        -> std::vector<ComplexT> {
+    void get_state_tensor(ComplexT *host_data,
+                          const int32_t numHyperSamples = 1) {
         std::vector<std::size_t> wires(BaseType::getNumQubits());
         std::iota(wires.begin(), wires.end(), 0);
-        return get_state_tensor(wires, numHyperSamples);
-    }
 
-    /**
-     * @brief Get a slice of the full state tensor
-     *
-     * @param wires Wires to get the state tensor for.
-     * @param numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 1.
-     *
-     * @return Full state tensor on the host memory
-     */
-    auto get_state_tensor(const std::vector<std::size_t> &wires,
-                          const int32_t numHyperSamples = 1)
-        -> std::vector<ComplexT> {
         const std::size_t length = std::size_t{1} << wires.size();
 
-        PL_ABORT_IF(length * sizeof(CFP_t) >= getFreeMemorySize(),
-                    "State tensor size exceeds the available GPU memory!");
-
         DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
-
-        std::vector<ComplexT> h_res(length);
 
         get_state_tensor(d_output_tensor.getData(), d_output_tensor.getLength(),
                          wires, numHyperSamples);
 
-        d_output_tensor.CopyGpuDataToHost(h_res.data(), h_res.size());
-
-        return h_res;
+        d_output_tensor.CopyGpuDataToHost(host_data, length);
     }
 
     /**
@@ -539,6 +507,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             static_cast<void *>(tensor_data),
             /* void *stateNorm */ static_cast<void *>(&stateNorm2),
             /* cudaStream_t cudaStream */ 0x0));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(getDevTag().getStreamID()));
 
         ComplexT scale_scalar = ComplexT{1.0, 0.0} / stateNorm2;
 

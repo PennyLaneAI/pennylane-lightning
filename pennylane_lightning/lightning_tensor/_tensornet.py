@@ -67,6 +67,9 @@ class LightningTensorNet:
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
+        if num_wires < 2:
+            raise ValueError("Number of wires must be greater than 1.")
+
         self._device_name = device_name
         self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
 

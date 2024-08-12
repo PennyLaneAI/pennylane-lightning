@@ -22,6 +22,7 @@ import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.measurements import ProbabilityMP
 from pennylane.tape import QuantumScript
 
 if device_name == "lightning.qubit":
@@ -412,22 +413,16 @@ class TestExecution:
                 ),
                 qml.expval(qml.Projector([1], wires=2)),
             ]
-            if device_name != "lightning.tensor"
-            else [
-                qml.probs(wires=[1, 2]),
-                qml.probs(op=qml.X(2)),
-                qml.expval(qml.Z(2)),
-                qml.var(qml.X(2)),
-                qml.expval(qml.X(0) + qml.Z(0)),
-                qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
-                qml.expval(2.5 * qml.Z(0)),
-                qml.expval(qml.Z(0) @ qml.X(1)),
-                qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
-            ]
         ),
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
         """Test that execute returns the correct results with a single measurement."""
+        if device_name == "lightning.tensor":
+            if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
+                pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
+            if isinstance(mp, ProbabilityMP):
+                pytest.skip("qml.probs() not supported in lightning.tensor")
+
         if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
 
@@ -471,6 +466,10 @@ class TestExecution:
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
+        if device_name == "lightning.tensor":
+            if isinstance(mp1, ProbabilityMP) or isinstance(mp2, ProbabilityMP):
+                pytest.skip("qml.probs() not supported in lightning.tensor")
+
         if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
 

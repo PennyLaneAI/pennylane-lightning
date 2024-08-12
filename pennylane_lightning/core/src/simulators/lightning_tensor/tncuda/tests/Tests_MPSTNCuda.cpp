@@ -108,8 +108,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         CHECK(mps_state.getMaxBondDim() == maxBondDim);
 
-        CHECK(expected_state ==
-              Pennylane::Util::approx(mps_state.getDataVector()));
+        auto results = mps_state.getDataVector();
+
+        CHECK(expected_state == Pennylane::Util::approx(results));
     }
 
     SECTION("Test different bondDim and different basisstate") {
@@ -134,8 +135,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         expected_state[index] = {1.0, 0.0};
 
-        CHECK(expected_state ==
-              Pennylane::Util::approx(mps_state.getDataVector()));
+        auto results = mps_state.getDataVector();
+
+        CHECK(expected_state == Pennylane::Util::approx(results));
     }
 
     SECTION("Test different bondDim and different basisstate & reset()") {
@@ -157,12 +159,14 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
         expected_state[index] = {1.0, 0.0};
 
-        CHECK(expected_state ==
-              Pennylane::Util::approx(mps_state.getDataVector()));
+        auto results = mps_state.getDataVector();
+
+        CHECK(expected_state == Pennylane::Util::approx(results));
     }
 }
 
 TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
+    using cp_t = std::complex<TestType>;
     SECTION("Get zero state") {
         std::size_t num_qubits = 10;
         std::size_t maxBondDim = 2;
@@ -174,20 +178,51 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 
         expected_state[0] = {1.0, 0.0};
 
-        CHECK(expected_state ==
-              Pennylane::Util::approx(mps_state.getDataVector()));
+        auto results = mps_state.getDataVector();
+
+        CHECK(expected_state == Pennylane::Util::approx(results));
     }
 
-    SECTION("Throw error for getDataVector() on device") {
-        std::size_t num_qubits = 100;
+    SECTION("Throw error for getData() on device") {
+        std::size_t num_qubits = 50;
         std::size_t maxBondDim = 2;
         DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
 
+        const std::size_t length = std::size_t{1} << num_qubits;
+        std::vector<cp_t> results(1);
+
         REQUIRE_THROWS_WITH(
-            mps_state.getDataVector(),
+            mps_state.getData(results.data(), length),
             Catch::Matchers::Contains(
                 "State tensor size exceeds the available GPU memory!"));
+    }
+
+    SECTION("Throw wrong size for getData() on device") {
+        std::size_t num_qubits = 50;
+        std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
+
+        const std::size_t length = 1;
+        std::vector<cp_t> results(1);
+
+        REQUIRE_THROWS_WITH(mps_state.getData(results.data(), length),
+                            Catch::Matchers::Contains(
+                                "The size of the result vector should be equal "
+                                "to the dimension of the quantum state."));
+    }
+
+    SECTION("Throw error for 0 an 1 qubit circuit") {
+        std::size_t num_qubits = GENERATE(0, 1);
+        std::size_t maxBondDim = 2;
+        DevTag<int> dev_tag{0, 0};
+
+        REQUIRE_THROWS_WITH(
+            MPSTNCuda<TestType>(num_qubits, maxBondDim, dev_tag),
+            Catch::Matchers::Contains(
+                "The number of qubits should be greater than 1."));
     }
 }
