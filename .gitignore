@@ -34,3 +34,4 @@ PennyLane_Lightning.egg-info/
 prototypes/
 tests/__pycache__/
 venv/
+wheelhouse/
