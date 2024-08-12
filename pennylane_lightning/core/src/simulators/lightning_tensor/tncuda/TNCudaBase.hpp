@@ -305,7 +305,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      *
      * @param host_data Pointer to the host memory for state tensor data.
      * @param numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 1.
+     * and is set to 1 by default.
      */
     void get_state_tensor(ComplexT *host_data,
                           const int32_t numHyperSamples = 1) {
