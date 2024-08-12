@@ -16,11 +16,10 @@ Project configuration script.
 """
 import argparse
 import os
+from pathlib import Path
 
 import toml
 from backend_support import backend, device_name
-
-from pathlib import Path
 
 path_to_version = Path("pennylane_lightning").absolute() / "core" / "_version.py"
 with open(path_to_version, encoding="utf-8") as f:
