@@ -356,7 +356,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetStateAccessor_t *tensorNetworkAccessor*/ &accessor));
 
         // Configure the computation
-        cutensornetAccessorAttributes_t accessor_attribute =
+        const cutensornetAccessorAttributes_t accessor_attribute =
             CUTENSORNET_ACCESSOR_CONFIG_NUM_HYPER_SAMPLES;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetAccessorConfigure(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
@@ -411,7 +411,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(getDevTag().getStreamID()));
 
-        ComplexT scale_scalar = ComplexT{1.0, 0.0} / stateNorm2;
+        const ComplexT scale_scalar = ComplexT{1.0, 0.0} / stateNorm2;
 
         CFP_t scale_scalar_cu{scale_scalar.real(), scale_scalar.imag()};
 
