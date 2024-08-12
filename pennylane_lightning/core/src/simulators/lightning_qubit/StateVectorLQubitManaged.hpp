@@ -140,39 +140,6 @@ class StateVectorLQubitManaged final
 
     ~StateVectorLQubitManaged() = default;
 
-    /**
-     * @brief Prepares a single computational basis state.
-     *
-     * @param index Index of the target element.
-     */
-    void setBasisState(const std::size_t index) {
-        std::fill(data_.begin(), data_.end(), 0.0);
-        data_[index] = {1.0, 0.0};
-    }
-
-    /**
-     * @brief Set values for a batch of elements of the state-vector.
-     *
-     * @param values Values to be set for the target elements.
-     * @param indices Indices of the target elements.
-     */
-    void setStateVector(const std::vector<std::size_t> &indices,
-                        const std::vector<ComplexT> &values) {
-        for (std::size_t n = 0; n < indices.size(); n++) {
-            data_[indices[n]] = values[n];
-        }
-    }
-
-    /**
-     * @brief Reset the data back to the \f$\ket{0}\f$ state.
-     *
-     */
-    void resetStateVector() {
-        if (this->getLength() > 0) {
-            setBasisState(0U);
-        }
-    }
-
     [[nodiscard]] auto getData() -> ComplexT * { return data_.data(); }
 
     [[nodiscard]] auto getData() const -> const ComplexT * {
