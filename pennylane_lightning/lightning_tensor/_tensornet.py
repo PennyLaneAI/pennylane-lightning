@@ -21,12 +21,51 @@ try:
 except ImportError:
     pass
 
+from itertools import product
 
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
+from pennylane.wires import Wires
+
+
+def split(M, bond_dim):
+    U, S, Vd = np.linalg.svd(M, full_matrices=False)
+    bonds = len(S)
+    Vd = Vd.reshape(bonds, 2, -1)
+    U = U.reshape((-1, 2, bonds))
+    
+    # keep only chi bonds
+    chi = np.min([bonds, bond_dim])
+    U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
+    return U, S, Vd
+
+def dense_to_mps(psi, n_wires, bond_dim):
+    Ms = []
+    #Ss = []
+
+    psi = np.reshape(psi, (2, -1))   # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
+    U, S, Vd = split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+
+    Ms.append(U)
+    Ss.append(S)
+    bondL = Vd.shape[0]
+    psi = Vd
+
+    for _ in range(n_wires-2):
+        psi = np.reshape(psi, (2*bondL, -1))   # reshape psi[2 * bondL, (2x2x2...)]
+        U, S, Vd = split(psi, bond_dim)        # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+        Ms.append(U)
+        #Ss.append(S)
+
+        psi = Vd
+        bondL = Vd.shape[0]
+
+    Ms.append(Vd)
+    
+    return Ms#, Ss
 
 
 # pylint: disable=too-many-instance-attributes
@@ -112,6 +151,56 @@ class LightningTensorNet:
         # init the quantum state to |00..0>
         self._tensornet.reset()
 
+    def _preprocess_state_vector(self, state, device_wires):
+        """Initialize the internal state vector in a specified state.
+
+        Args:
+            state (array[complex]): normalized input state of length ``2**len(wires)``
+                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            device_wires (Wires): wires that get initialized in the state
+
+        Returns:
+            array[complex]: normalized input state of length ``2**len(wires)``
+                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+        """
+        output_shape = [2] * self._num_wires
+        # special case for integral types
+        if state.dtype.kind == "i":
+            state = np.array(state, dtype=self.dtype)
+
+        if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
+            return np.reshape(state, output_shape).ravel(order="C")
+
+        # generate basis states on subset of qubits via the cartesian product
+        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
+
+        # get basis states to alter on full set of qubits
+        unravelled_indices = np.zeros((2 ** len(device_wires), self._num_wires), dtype=int)
+        unravelled_indices[:, device_wires] = basis_states
+
+        # get indices for which the state is changed to input state vector elements
+        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
+
+        # get full state vector to be factorized into MPS
+        full_state = np.array(output_shape, dtype=self.dtype)
+        for i in ravelled_indices:
+            full_state[i] = state[i]
+        return full_state
+
+    def _apply_state_vector(self, state, device_wires: Wires):
+        """Initialize the internal state vector in a specified state.
+        Args:
+            state (array[complex]): normalized input state of length ``2**len(wires)``
+                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            device_wires (Wires): wires that get initialized in the state
+        """
+
+        state = self._preprocess_state_vector(state, device_wires)
+
+        M = dense_to_mps(state, self._num_wires, self._max_bond_dim)
+
+        self._tensornet.setState(M)
+
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
 
@@ -177,9 +266,8 @@ class LightningTensorNet:
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                raise DeviceError(
-                    "lightning.tensor does not support initialization with a state vector."
-                )
+                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
+                operations = operations[1:]
             if isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]

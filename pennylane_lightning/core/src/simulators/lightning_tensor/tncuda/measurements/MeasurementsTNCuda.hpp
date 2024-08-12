@@ -120,7 +120,6 @@ template <class TensorNetT> class MeasurementsTNCuda {
                                      tensor_network_.getDevTag().getStreamID(),
                                      tensor_network_.getCublasCaller(), &sum);
 
-        
         PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
 
         normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
