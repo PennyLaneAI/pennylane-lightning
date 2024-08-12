@@ -55,9 +55,7 @@ if __name__ == "__main__":
     pyproject = toml.load(pyproject_path)
 
     suffix = backend.replace("lightning_", "")
-    if suffix == "gpu":
-        suffix = suffix[0:].upper()
-    suffix = suffix[0].upper() + suffix[1:]
+    suffix = suffix.upper() if suffix == "gpu" else suffix.title()
 
     plugin = "pennylane_lightning." + backend + ":Lightning" + suffix
 
