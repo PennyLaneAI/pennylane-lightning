@@ -139,7 +139,7 @@ For development and testing, you can install by cloning the repository:
     $ pip install -e . -vv
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
-``build`` folder, and the ``pyproject.toml`` file define by the configuration script. Run ``make clean`` if you would like to recompile from scratch.
+``build`` folder, and the ``pyproject.toml`` file defined by the configuration script. Run ``make clean`` if you would like to recompile from scratch.
 
 You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
