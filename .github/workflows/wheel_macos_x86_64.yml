@@ -7,6 +7,11 @@ name: Wheel::MacOS::Intel
 
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
   push:
     branches:
       - master
@@ -24,6 +29,7 @@ concurrency:
 jobs:
   set_wheel_build_matrix:
     if: |
+      github.event.pull_request.draft == false &&
       github.event_name != 'pull_request' ||
       contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
       github.event_name == 'workflow_dispatch'

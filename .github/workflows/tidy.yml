@@ -1,6 +1,11 @@
 name: Clang-tidy check
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
     paths:
       - .github/workflows/tidy.yml
       - pennylane_lightning/core/src/**
@@ -17,6 +22,7 @@ concurrency:
 jobs:
 
   tidy-cpp:
+    if: github.event.pull_request.draft == false
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]

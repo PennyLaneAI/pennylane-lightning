@@ -14,6 +14,11 @@ on:
     branches:
       - main
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lgpumpi_python.yml'
@@ -35,7 +40,7 @@ concurrency:
 jobs:
 
   python_tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) && github.event.pull_request.draft == false }}
     runs-on:
       - self-hosted
       - linux

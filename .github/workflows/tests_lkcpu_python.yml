@@ -11,6 +11,11 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lkcpu_python.yml'
@@ -40,12 +45,14 @@ concurrency:
 jobs:
 
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
       default_runner: ubuntu-22.04
 
   build_and_cache_Kokkos:
+    if: github.event.pull_request.draft == false
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
