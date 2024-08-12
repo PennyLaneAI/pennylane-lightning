@@ -70,6 +70,9 @@
 * Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
   [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
 
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
+  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
+
 ### Documentation
 
 * Updated the README and added citation format for Lightning arxiv preprint.
@@ -105,7 +108,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
