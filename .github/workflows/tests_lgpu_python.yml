@@ -83,26 +83,6 @@ jobs:
           nvcc --version
           nvidia-smi
 
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-          path: main
-
-      - name: Switch to release build of Lightning
-        if: inputs.lightning-version == 'release'
-        run: |
-          cd main
-          git fetch --all
-          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
-
-      - name: Switch to stable build of Lightning
-        if: inputs.lightning-version == 'stable'
-        run: |
-          cd main
-          git fetch --tags --force
-          git checkout latest_release
-
       - uses: actions/setup-python@v5
         name: Install Python
         with:
@@ -171,7 +151,26 @@ jobs:
           cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
-      - name: Build and install package
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          path: main
+
+      - name: Switch to Lightning GPU release build
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Install Lightning GPU (stable)
+        if: inputs.lightning-version == 'stable'
+        run: |
+          pip install PennyLane-Lightning-GPU --update
+
+      - name: Install Lightning GPU (${{ inputs.lightning-version }})
+        if: inputs.lightning-version != 'stable'
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
