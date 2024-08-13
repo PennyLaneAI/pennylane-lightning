@@ -57,7 +57,7 @@ if __name__ == "__main__":
     # Configure Build.
     # ------------------------
     requires = [
-        "cmake~=3.24.0",
+        "cmake~=3.26.0",
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
         "toml",
