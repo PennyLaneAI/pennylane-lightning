@@ -201,7 +201,7 @@ jobs:
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: ${{ matrix.pl_backend == 'all' }} and ${{ inputs.lightning-version == 'stable' }}
+        if: matrix.pl_backend == 'all' && inputs.lightning-version == 'stable'
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
@@ -214,7 +214,7 @@ jobs:
           PL_BACKEND=lightning_GPU python -m pip install . -vv
 
       - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: ${{ matrix.pl_backend == 'all' }} and ${{ inputs.lightning-version != 'stable' }}
+        if: matrix.pl_backend == 'all'&& inputs.lightning-version != 'stable'
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |

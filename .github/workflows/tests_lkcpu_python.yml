@@ -115,7 +115,7 @@ jobs:
 
       # TODO: Update after Release 0.37
       - name: Create device wheel ${{ inputs.lightning-version }}
-        if: inputs.lightning-version != 'stable'
+        if: inputs.lightning-version == 'stable'
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
@@ -127,10 +127,11 @@ jobs:
 
       # TODO: Remove after Release 0.37
       - name: Create device wheel ${{ inputs.lightning-version }}
-        if: inputs.lightning-version == 'stable'
+        if: inputs.lightning-version != 'stable'
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
+          python scripts/configure_pyproject_toml.py
           CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)

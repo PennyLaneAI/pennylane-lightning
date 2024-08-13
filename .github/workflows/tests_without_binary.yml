@@ -100,7 +100,7 @@ jobs:
           python -m pip install . -vv
 
       - name: Install extra backend device ${{ inputs.lightning-version }}
-        if: ${{matrix.pl_backend != 'lightning_qubit'}} and ${{ inputs.lightning-version == 'stable' }}
+        if: matrix.pl_backend != 'lightning_qubit' && inputs.lightning-version == 'stable'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
@@ -118,7 +118,7 @@ jobs:
           python -m pip install . -vv
 
       - name: Install extra backend device ${{ inputs.lightning-version }}
-        if: ${{matrix.pl_backend != 'lightning_qubit'}} and ${{ inputs.lightning-version != 'stable' }}
+        if: matrix.pl_backend != 'lightning_qubit' && inputs.lightning-version != 'stable'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}

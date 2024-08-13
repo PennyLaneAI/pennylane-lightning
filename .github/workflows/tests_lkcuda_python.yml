@@ -232,7 +232,7 @@ jobs:
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
       - name: Install backend devices (${{ inputs.lightning-version }})
-        if: ${{ matrix.pl_backend != 'all'}} and ${{ inputs.lightning-version == 'stable' }}
+        if: matrix.pl_backend != 'all' && inputs.lightning-version == 'stable'
         run: |
           ls -l ${{ github.workspace }}/Kokkos
 
@@ -243,7 +243,7 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos python -m pip install . -vv
 
       - name: Install backend devices (${{ inputs.lightning-version }})
-        if: ${{ matrix.pl_backend != 'all'}} and ${{ inputs.lightning-version != 'stable' }}
+        if: matrix.pl_backend != 'all' && inputs.lightning-version != 'stable'
         run: |
           ls -l ${{ github.workspace }}/Kokkos
 
@@ -266,7 +266,7 @@ jobs:
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: ${{ matrix.pl_backend == 'all' }} and inputs.lightning-version == 'stable'
+        if: matrix.pl_backend == 'all' && inputs.lightning-version == 'stable'
         run: |
           pip install pip~=22.0
 
@@ -275,7 +275,7 @@ jobs:
           PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
 
       - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: ${{ matrix.pl_backend == 'all' }}  and inputs.lightning-version != 'stable'
+        if: matrix.pl_backend == 'all' && inputs.lightning-version != 'stable'
         run: |
           PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
           python -m pip install . -vv
