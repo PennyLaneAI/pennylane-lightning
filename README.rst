@@ -357,6 +357,25 @@ Build Kokkos for NVIDIA A100 cards
     $ cmake --build build && cmake --install build
     $ export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
 
+
+.. code-block:: bash
+
+    cmake -S . -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
+        -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.1.00/AMPERE80 \
+        -DCMAKE_CXX_STANDARD=20 \
+        -DBUILD_SHARED_LIBS:BOOL=ON \
+        -DBUILD_TESTING:BOOL=OFF \
+        -DKokkos_ENABLE_SERIAL:BOOL=ON \
+        -DKokkos_ENABLE_CUDA:BOOL=ON \
+        -DKokkos_ARCH_AMPERE80:BOOL=ON \
+        -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
+        -DKokkos_ENABLE_TESTS:BOOL=OFF \
+        -DKokkos_ENABLE_LIBDL:BOOL=OFF
+    cmake --build build && cmake --install build
+    export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
+
+
 Next, append the install location to ``CMAKE_PREFIX_PATH``.
 Note that the C++20 standard is required (``-DCMAKE_CXX_STANDARD=20`` option), and hence CUDA v12 is required for the CUDA backend.
 
