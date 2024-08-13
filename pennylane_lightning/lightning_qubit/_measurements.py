@@ -390,17 +390,6 @@ class LightningMeasurements:
         else:
             wires = reduce(sum, (mp.wires for mp in mps))
 
-        def _process_single_shot(samples):
-            processed = []
-            for mp in mps:
-                res = mp.process_samples(samples, wires)
-                if not isinstance(mp, CountsMP):
-                    res = qml.math.squeeze(res)
-
-                processed.append(res)
-
-            return tuple(processed)
-
         try:
             if self._mcmc:
                 samples = self._measurement_lightning.generate_mcmc_samples(
@@ -417,12 +406,33 @@ class LightningMeasurements:
 
         self._apply_diagonalizing_gates(mps, adjoint=True)
 
+        def _find_shots_sections(shots):
+            shot_vector = shots.shot_vector
+            section_vector = np.arange(1, shot_vector[0].copies + 1) * shot_vector[0].shots
+
+            for partial in shot_vector[1:]:
+                section_vector = np.concatenate(
+                    (
+                        section_vector,
+                        np.arange(1, partial.copies + 1) * partial.shots + section_vector[-1],
+                    )
+                )
+
+            return section_vector[:-1]
+
         # if there is a shot vector, use the shots.bins generator to
         # split samples w.r.t. the shots
+        partial_samples = np.array_split(samples, _find_shots_sections(shots))
         processed_samples = []
-        for lower, upper in shots.bins():
-            result = _process_single_shot(samples[..., lower:upper, :])
-            processed_samples.append(result)
+        for samples in partial_samples:
+            processed = []
+            for mp in mps:
+                res = mp.process_samples(samples, wires)
+                if not isinstance(mp, CountsMP):
+                    res = qml.math.squeeze(res)
+
+                processed.append(res)
+            processed_samples.append(tuple(processed))
 
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
