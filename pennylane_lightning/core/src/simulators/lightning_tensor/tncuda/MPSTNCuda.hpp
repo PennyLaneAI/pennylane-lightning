@@ -166,6 +166,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         setBasisState(zeroState);
     }
 
+    /**
+     * @brief Set the quantum state to zero state.
+     */
     void setZeroState() { reset(); }
 
     /**
@@ -175,7 +178,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * @param data Pointer to the data on host.
      * @param length Length of the data.
      */
-
     void setIthMPSSite(const std::size_t i, const ComplexT *data,
                        std::size_t length) {
         PL_ABORT_IF(BaseType::getNumQubits() < i,

@@ -31,7 +31,8 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-def split(M, bond_dim):
+def svd_split(M, bond_dim):
+    """SVD split a matrix into a matrix product state via numpy linalg."""
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     U = U @ np.diag(S)  # Append singular values to U
     bonds = len(S)
@@ -45,10 +46,11 @@ def split(M, bond_dim):
 
 
 def dense_to_mps(psi, n_wires, bond_dim):
+    """Convert a dense state vector to a matrix product state."""
     Ms = []
 
     psi = np.reshape(psi, (2, -1))  # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
-    U, S, Vd = split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+    U, S, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
 
     Ms.append(U)
     bondL = Vd.shape[0]
@@ -56,7 +58,7 @@ def dense_to_mps(psi, n_wires, bond_dim):
 
     for _ in range(n_wires - 2):
         psi = np.reshape(psi, (2 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
-        U, S, Vd = split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+        U, S, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
         Ms.append(U)
 
         psi = Vd
