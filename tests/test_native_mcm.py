@@ -22,6 +22,9 @@ from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
 from pennylane._device import DeviceError
 
+if device_name == "lightning.gpu":
+    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
+
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
