@@ -320,6 +320,26 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     /**
      * @brief Get the full state vector representation of a MPS quantum state.
+     * Note that users/developers should be responsible to ensure that there is
+     * sufficient memory on the host to store the full state vector.
+     *
+     * @param res Pointer to the host memory to store the full state vector
+     * @param res_length Length of the result vector
+     */
+    void getData(ComplexT *res, const std::size_t res_length) {
+        PL_ABORT_IF(log2(res_length) != BaseType::getNumQubits(),
+                    "The size of the result vector should be equal to the "
+                    "dimension of the quantum state.");
+
+        std::size_t avail_gpu_memory = getFreeMemorySize();
+
+        PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
+                    "State tensor size exceeds the available GPU memory!");
+        this->get_state_tensor(res);
+    }
+
+    /**
+     * @brief Get the full state vector representation of a MPS quantum state.
      *
      *
      * @return std::vector<ComplexT> Full state vector representation of MPS
