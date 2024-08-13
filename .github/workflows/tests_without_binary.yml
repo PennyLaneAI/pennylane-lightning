@@ -45,7 +45,8 @@ jobs:
       - name: Make disk space
         run: |
           for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
-            sudo du -sh $DIR && sudo rm -rf $DIR
+            sudo du -sh $DIR || echo $DIR not found 
+            sudo rm -rf $DIR
           done
 
       - name: Checkout PennyLane-Lightning
