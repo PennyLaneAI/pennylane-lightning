@@ -222,7 +222,7 @@ The C++ code can be tested with
 
 .. installation_LGPU-start-inclusion-marker-do-not-remove
 
------
+--------------------------
 
 Lightning-GPU installation
 **************************
@@ -308,6 +308,8 @@ The C++ code is tested with
 
 .. installation_LKokkos-start-inclusion-marker-do-not-remove
 
+-----------------------------
+
 Lightning-Kokkos installation
 *****************************
 
@@ -387,6 +389,8 @@ Note that ``THREADS`` backend is not recommended since `Kokkos does not guarante
 
 .. installation_LTensor-start-inclusion-marker-do-not-remove
 
+-----------------------------
+
 Lightning-Tensor installation
 *****************************
 Lightning-Tensor requires CUDA 12 and the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`_ library is required).
@@ -425,6 +429,8 @@ Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/li
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
 
 .. docker-start-inclusion-marker-do-not-remove
+
+--------------
 
 Docker support
 **************
