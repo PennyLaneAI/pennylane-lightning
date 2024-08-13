@@ -44,10 +44,10 @@ jobs:
     steps:
       - name: Check disk
         run: |
-          du -sh /usr/share/dotnet
-          du -sh /opt/ghc
-          du -sh /usr/local/share/boost
-          du -sh $AGENT_TOOLSDIRECTORY
+          du -sh /usr/share/dotnet || echo not found
+          du -sh /opt/ghc || echo not found
+          du -sh /usr/local/share/boost || echo not found
+          du -sh $AGENT_TOOLSDIRECTORY || echo not found
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
