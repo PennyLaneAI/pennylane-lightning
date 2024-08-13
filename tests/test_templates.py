@@ -109,10 +109,6 @@ class TestAngleEmbedding:
 class TestAmplitudeEmbedding:
     """Test the AmplitudeEmbedding algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support QubitStateVector.",
-    )
     @pytest.mark.parametrize("first_op", [False, True])
     @pytest.mark.parametrize("n_qubits", range(2, 10, 2))
     def test_amplitudeembedding(self, first_op, n_qubits):

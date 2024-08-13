@@ -82,7 +82,7 @@ class TestHelpers:
         is supported by the device."""
         valid_obs = qml.Projector([0], 0)
         invalid_obs = self.DummyOperator(0)
-        result = True if device_name != "lightning.tensor" else False
+        result = True
         assert accepted_observables(valid_obs) is result
         assert accepted_observables(invalid_obs) is False
 
@@ -334,15 +334,14 @@ class TestExecution:
                 (qml.BasisState([1, 1], wires=[0, 1]), False),
                 (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
             ]
-            if device_name != "lightning.tensor"
-            else [
-                (qml.BasisState([1, 1], wires=[0, 1]), False),
-            ]
         ),
     )
     def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
         """Test that state prep ops in the beginning of a tape are decomposed with adjoint
         but not otherwise."""
+        if device_name == "lightning.tensor" and is_trainable:
+            pytest.skip("StatePrep trainable not supported in lightning.tensor")  
+
         tape = qml.tape.QuantumScript([op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))])
         device = LightningDevice(wires=3)
 

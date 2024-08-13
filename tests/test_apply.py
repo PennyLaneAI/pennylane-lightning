@@ -202,11 +202,6 @@ class TestApply:
                     [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
                 ),
             ]
-            if device_name != "lightning.tensor"
-            else [
-                (qml.BasisState, [0, 0, 1, 0], [1, 0]),
-                (qml.BasisState, [0, 0, 0, 1], [1, 1]),
-            ]
         ),
     )
     def test_apply_operation_state_preparation(
@@ -890,11 +885,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    # This test is ran against the state |Phi+> with two Z expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.Stateprep()",
-    )
     @pytest.mark.parametrize(
         "name,expected_output",
         [
@@ -953,33 +943,9 @@ class TestLightningDeviceIntegration:
             ("BasisState", [0, 0], [1, 1]),
             ("BasisState", [1, 0], [-1, 1]),
             ("BasisState", [0, 1], [1, -1]),
-            pytest.param(
-                "QubitStateVector",
-                [1, 0, 0, 0],
-                [1, 1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
-            pytest.param(
-                "QubitStateVector",
-                [0, 0, 1, 0],
-                [-1, 1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
-            pytest.param(
-                "QubitStateVector",
-                [0, 1, 0, 0],
-                [1, -1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
+            ("QubitStateVector", [1, 0, 0, 0], [1, 1]),
+            ("QubitStateVector", [0, 0, 1, 0], [-1, 1]),
+            ("QubitStateVector", [0, 1, 0, 0], [1, -1]),
         ],
     )
     def test_supported_state_preparation(self, qubit_device, tol, name, par, expected_output):
@@ -1068,10 +1034,10 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is run with three expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector()",
-    )
+    #@pytest.mark.skipif(
+    #    device_name == "lightning.tensor",
+    #    reason="lightning.tensor does not support qml.QubitStateVector()",
+    #)
     @pytest.mark.parametrize(
         "name,par,wires,expected_output",
         [
@@ -1146,10 +1112,6 @@ class TestLightningDeviceIntegration:
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is ran against the state 1/2|00>+sqrt(3)/2|11> with two Z expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
-    )
     @pytest.mark.parametrize(
         "name,par,expected_output",
         [
@@ -1195,7 +1157,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
+        reason="lightning.tensor does not support a single wire device",
     )
     @pytest.mark.parametrize(
         "name,state,expected_output",
@@ -1234,7 +1196,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "name,state,expected_output,par",

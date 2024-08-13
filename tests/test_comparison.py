@@ -269,7 +269,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not support initialization with a state vector",
+        reason="lightning.tensor device dose not support direct access to the state vector",
     )
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]

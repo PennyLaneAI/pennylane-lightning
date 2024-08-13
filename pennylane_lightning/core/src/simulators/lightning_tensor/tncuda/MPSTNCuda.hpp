@@ -168,13 +168,14 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                     "The size of a basis state should be equal to the number "
                     "of qubits.");
 
-        PL_ABORT_IF(length > tensors_[i].getDataBuffer().getLength(),
+        const std::size_t idx = BaseType::getNumQubits() - i - 1;
+        PL_ABORT_IF(length > tensors_[idx].getDataBuffer().getLength(),
                     "The length of the data should be equal to the dimension "
                     "of the qubit.");
 
-        tensors_[i].getDataBuffer().zeroInit();
+        tensors_[idx].getDataBuffer().zeroInit();
 
-        PL_CUDA_IS_SUCCESS(cudaMemcpy(tensors_[i].getDataBuffer().getData(),
+        PL_CUDA_IS_SUCCESS(cudaMemcpy(tensors_[idx].getDataBuffer().getData(),
                                       data, sizeof(CFP_t) * length,
                                       cudaMemcpyHostToDevice));
         if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {

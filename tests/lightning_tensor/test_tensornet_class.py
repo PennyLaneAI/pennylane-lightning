@@ -65,29 +65,3 @@ def test_errors_basis_state():
         tensornet = LightningTensorNet(3, 5)
         tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
 
-
-@pytest.mark.parametrize(
-    "operation,par",
-    [
-        (qml.StatePrep, [0, 0, 1, 0]),
-        (qml.StatePrep, [0, 0, 0, 1]),
-        (
-            qml.StatePrep,
-            [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-        ),
-        (
-            qml.StatePrep,
-            [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-        ),
-    ],
-)
-def test_errors_apply_operation_state_preparation(operation, par):
-    """Test that errors are raised when applying a StatePreparation operation."""
-    wires = 2
-    bondDims = 5
-    tensornet = LightningTensorNet(wires, bondDims)
-
-    with pytest.raises(
-        DeviceError, match="lightning.tensor does not support initialization with a state vector."
-    ):
-        tensornet.apply_operations([operation(np.array(par), Wires(range(wires)))])

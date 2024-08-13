@@ -33,39 +33,38 @@ from pennylane.wires import Wires
 
 def split(M, bond_dim):
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
+    U = U @ np.diag(S)  # Append singular values to U
     bonds = len(S)
     Vd = Vd.reshape(bonds, 2, -1)
     U = U.reshape((-1, 2, bonds))
-    
+
     # keep only chi bonds
     chi = np.min([bonds, bond_dim])
     U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
     return U, S, Vd
 
+
 def dense_to_mps(psi, n_wires, bond_dim):
     Ms = []
-    #Ss = []
 
-    psi = np.reshape(psi, (2, -1))   # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
+    psi = np.reshape(psi, (2, -1))  # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
     U, S, Vd = split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
 
     Ms.append(U)
-    Ss.append(S)
     bondL = Vd.shape[0]
     psi = Vd
 
-    for _ in range(n_wires-2):
-        psi = np.reshape(psi, (2*bondL, -1))   # reshape psi[2 * bondL, (2x2x2...)]
-        U, S, Vd = split(psi, bond_dim)        # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+    for _ in range(n_wires - 2):
+        psi = np.reshape(psi, (2 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
+        U, S, Vd = split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
         Ms.append(U)
-        #Ss.append(S)
 
         psi = Vd
         bondL = Vd.shape[0]
 
     Ms.append(Vd)
-    
-    return Ms#, Ss
+
+    return Ms
 
 
 # pylint: disable=too-many-instance-attributes
@@ -182,10 +181,10 @@ class LightningTensorNet:
         ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
 
         # get full state vector to be factorized into MPS
-        full_state = np.array(output_shape, dtype=self.dtype)
-        for i in ravelled_indices:
-            full_state[i] = state[i]
-        return full_state
+        full_state = np.zeros(2 ** self._num_wires, dtype=self.dtype)
+        for i in range(len(state)):
+            full_state[ravelled_indices[i]] = state[i]
+        return np.reshape(full_state, output_shape).ravel(order="C")
 
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
@@ -199,7 +198,9 @@ class LightningTensorNet:
 
         M = dense_to_mps(state, self._num_wires, self._max_bond_dim)
 
-        self._tensornet.setState(M)
+        for i in range(len(M)):
+            print(M[i].shape)
+            self._tensornet.setIthSite(i, M[i])
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
@@ -266,9 +267,10 @@ class LightningTensorNet:
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
+                print("++********++++")
                 self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 operations = operations[1:]
-            if isinstance(operations[0], BasisState):
+            elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
