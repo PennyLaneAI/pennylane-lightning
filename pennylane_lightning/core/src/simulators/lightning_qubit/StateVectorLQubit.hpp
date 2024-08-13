@@ -760,6 +760,20 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void setStateVector(const std::vector<ComplexT> &state,
                         const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.")
+        setStateVector(state.data(), wires);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const ComplexT *state,
+                        const std::vector<std::size_t> &wires) {
+        const std::size_t num_state = exp2(wires.size());
         const auto total_wire_count = this->getNumQubits();
 
         std::vector<std::size_t> reversed_sorted_wires(wires);
@@ -777,11 +791,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         const std::vector<bool> controlled_values(controlled_wires.size(),
                                                   false);
         auto core_function =
-            [&state](std::complex<PrecisionT> *arr,
-                     const std::vector<std::size_t> &indices,
-                     const std::vector<std::complex<PrecisionT>> &) {
-                auto indices_size = state.size();
-                for (size_t i = 0; i < indices_size; i++) {
+            [num_state, &state](std::complex<PrecisionT> *arr,
+                                const std::vector<std::size_t> &indices,
+                                const std::vector<std::complex<PrecisionT>> &) {
+                for (std::size_t i = 0; i < num_state; i++) {
                     arr[indices[i]] = state[i];
                 }
             };

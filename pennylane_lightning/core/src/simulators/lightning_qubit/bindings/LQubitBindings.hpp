@@ -189,13 +189,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             [](StateVectorT &sv, const np_arr_c &state,
                const std::vector<std::size_t> &wires) {
                 const auto buffer = state.request();
-                std::vector<ComplexT> state_vector;
-                if (buffer.size) {
-                    const auto ptr = static_cast<const ComplexT *>(buffer.ptr);
-                    state_vector =
-                        std::vector<ComplexT>{ptr, ptr + buffer.size};
-                }
-                sv.setStateVector(state_vector, wires);
+                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
+                                  wires);
             },
             "Set the state vector to the data contained in `state`.")
         .def(
