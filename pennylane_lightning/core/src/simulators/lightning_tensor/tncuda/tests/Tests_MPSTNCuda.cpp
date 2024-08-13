@@ -99,8 +99,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
 
         mps_state.reset(); // Reset the state to zero state
 
-        std::vector<std::complex<TestType>> site0_data(4, {0.0, 0.0}); //MSB
-        std::vector<std::complex<TestType>> site1_data(4, {0.0, 0.0}); //LSB
+        std::vector<std::complex<TestType>> site0_data(4, {0.0, 0.0}); // MSB
+        std::vector<std::complex<TestType>> site1_data(4, {0.0, 0.0}); // LSB
 
         site0_data[2] = {1.0, 0.0};
         site1_data[1] = {1.0, 0.0};

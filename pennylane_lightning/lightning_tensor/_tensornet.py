@@ -153,16 +153,14 @@ class LightningTensorNet:
         self._tensornet.reset()
 
     def _preprocess_state_vector(self, state, device_wires):
-        """Initialize the internal state vector in a specified state.
+        """Convert a specified state to a full internal state vector.
 
         Args:
             state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
             device_wires (Wires): wires that get initialized in the state
 
         Returns:
             array[complex]: normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
         """
         output_shape = [2] * self._num_wires
         # special case for integral types
@@ -189,7 +187,7 @@ class LightningTensorNet:
         return np.reshape(full_state, output_shape).ravel(order="C")
 
     def _apply_state_vector(self, state, device_wires: Wires):
-        """Initialize the internal state vector in a specified state.
+        """Convert a specified state to MPS sites.
         Args:
             state (array[complex]): normalized input state of length ``2**len(wires)``
                 or broadcasted state of shape ``(batch_size, 2**len(wires))``
