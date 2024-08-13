@@ -42,6 +42,13 @@ jobs:
     name: Python Tests without Binary (${{ matrix.pl_backend }})
 
     steps:
+      - name: Check disk
+        run: |
+          du -sh /usr/share/dotnet
+          du -sh /opt/ghc
+          du -sh /usr/local/share/boost
+          du -sh $AGENT_TOOLSDIRECTORY
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
