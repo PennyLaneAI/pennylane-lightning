@@ -44,12 +44,9 @@ jobs:
     steps:
       - name: Make disk space
         run: |
-          sudo du -sh /usr/share/dotnet
-          sudo du -sh /usr/local/share/powershell
-          sudo du -sh /usr/share/swift
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/share/powershell
-          sudo rm -rf /usr/share/swift
+          for dir in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
+            sudo du -sh dir && sudo rm -rf dir
+          done
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
