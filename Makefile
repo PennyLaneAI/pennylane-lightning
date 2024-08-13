@@ -66,7 +66,7 @@ clean:
 .PHONY: python
 python:
 	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
-	CMAKE_ARGS="-DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(shell which g++)" pip install -e . -vv
+	pip install -e . -vv
 
 .PHONY: wheel
 wheel:
