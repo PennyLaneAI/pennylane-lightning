@@ -28,6 +28,7 @@ from itertools import product
 
 import numpy as np
 import pennylane as qml
+from line_profiler import profile
 from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
@@ -50,6 +51,7 @@ class LightningStateVector:
         device_name(string): state vector device name. Options: ["lightning.qubit"]
     """
 
+    @profile
     def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.qubit"):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
@@ -104,6 +106,7 @@ class LightningStateVector:
         self._qubit_state.getState(state)
         return state
 
+    @profile
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
 
@@ -111,6 +114,7 @@ class LightningStateVector:
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
+    @profile
     def _create_basis_state(self, index):
         """Return a computational basis state over all wires.
 
@@ -119,11 +123,13 @@ class LightningStateVector:
         """
         self._qubit_state.setBasisState(index)
 
+    @profile
     def reset_state(self):
         """Reset the device's state"""
         # init the state vector to |00..0>
         self._qubit_state.resetStateVector()
 
+    @profile
     def _preprocess_state_vector(self, state, device_wires):
         """Initialize the internal state vector in a specified state.
 
@@ -155,6 +161,7 @@ class LightningStateVector:
         ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
         return ravelled_indices, state
 
+    @profile
     def _get_basis_state_index(self, state, wires):
         """Returns the basis state index of a specified computational basis state.
 
@@ -180,6 +187,7 @@ class LightningStateVector:
         basis_states = qml.math.convert_like(basis_states, state)
         return int(qml.math.dot(state, basis_states))
 
+    @profile
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
@@ -206,6 +214,7 @@ class LightningStateVector:
 
         self._qubit_state.setStateVector(ravelled_indices, state)
 
+    @profile
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
 
@@ -220,6 +229,7 @@ class LightningStateVector:
         num = self._get_basis_state_index(state, wires)
         self._create_basis_state(num)
 
+    @profile
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
 
@@ -250,6 +260,7 @@ class LightningStateVector:
                 False,
             )
 
+    @profile
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
     ):
@@ -278,6 +289,7 @@ class LightningStateVector:
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
+    @profile
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
@@ -337,6 +349,7 @@ class LightningStateVector:
                     # To support older versions of PL
                     method(operation.matrix, wires, False)
 
+    @profile
     def apply_operations(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
@@ -353,6 +366,7 @@ class LightningStateVector:
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
         )
 
+    @profile
     def get_final_state(
         self,
         circuit: QuantumScript,

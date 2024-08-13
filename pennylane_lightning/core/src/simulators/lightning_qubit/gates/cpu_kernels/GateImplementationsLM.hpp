@@ -21,6 +21,7 @@
 #include <complex>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 #include <iostream>
@@ -566,6 +567,40 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
+    static void applyPauliWord(std::complex<PrecisionT> *arr,
+                               std::size_t num_qubits,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               [[maybe_unused]] const bool inverse,
+                               const std::string &word) {
+        PL_ABORT_IF_NOT(word.size() == wires.size(),
+                        "The word size and number of wires must be equal.")
+        if (wires.empty()) {
+            return;
+        }
+        constexpr std::complex<PrecisionT> one{1.0};
+        const std::size_t n_wires = wires.size();
+        const std::size_t dim = exp2(n_wires);
+        const auto data = generatePauliWordData(word, one);
+        const auto indices = generatePauliWordIndices(word);
+        auto core_function = [dim, &indices,
+                              &data](std::complex<PrecisionT> *arr,
+                                     const std::vector<std::size_t> &arr_inds,
+                                     const std::size_t offset) {
+            std::vector<std::complex<PrecisionT>> coeffs(dim);
+            for (std::size_t i = 0; i < dim; i++) {
+                coeffs[indices[i]] = arr[arr_inds[i] + offset];
+            }
+            for (std::size_t i = 0; i < dim; i++) {
+                arr[arr_inds[i] + offset] = data[i] * coeffs[i];
+            }
+        };
+        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
+                 core_function);
+    }
+
+    template <class PrecisionT>
     static void
     applyPauliRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                   const std::vector<std::size_t> &controlled_wires,
@@ -579,24 +614,38 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT c = std::cos(angle / 2);
         const std::complex<PrecisionT> s =
             ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
-        const auto data = generatePauliWordData(word, s);
-        const auto indices = generatePauliWordIndices(word);
-        auto core_function = [dim, c, &indices,
-                              &data](std::complex<PrecisionT> *arr,
-                                     const std::vector<std::size_t> &arr_inds,
-                                     const std::size_t offset) {
-            std::vector<std::complex<PrecisionT>> coeffs(dim);
-            for (std::size_t i = 0; i < dim; i++) {
-                const auto index = arr_inds[i] + offset;
-                coeffs[indices[i]] = arr[index];
+        std::vector<std::complex<PrecisionT>> sv_copy(
+            arr, arr + (one << num_qubits));
+        const std::size_t nz = std::count_if(
+            word.begin(), word.end(), [](const int ch) { return ch == 'Z'; });
+        if (nz) {
+            std::string xyword(wires.size() - nz, 'X');
+            std::string zword(nz, 'Z');
+            std::copy_if(word.begin(), word.end(), xyword.begin(),
+                         [](const int ch) { return ch != 'Z'; });
+            std::vector<std::size_t> wxy;
+            wxy.reserve(wires.size() - nz);
+            std::vector<std::size_t> wz;
+            wz.reserve(nz);
+            for (std::size_t i = 0; i < wires.size(); i++) {
+                if (word[i] == 'Z') {
+                    wz.emplace_back(wires[i]);
+                } else {
+                    wxy.emplace_back(wires[i]);
+                }
             }
-            for (std::size_t i = 0; i < dim; i++) {
-                const auto index = arr_inds[i] + offset;
-                arr[index] = c * arr[index] + data[i] * coeffs[i];
-            }
-        };
-        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
-                 core_function);
+            applyPauliWord(sv_copy.data(), num_qubits, controlled_wires,
+                           controlled_values, wxy, inverse, xyword);
+            applyPauliWord(sv_copy.data(), num_qubits, controlled_wires,
+                           controlled_values, wz, inverse, zword);
+        } else {
+            applyPauliWord(sv_copy.data(), num_qubits, controlled_wires,
+                           controlled_values, wires, inverse, word);
+        }
+        for (std::size_t i = 0; i < sv_copy.size(); i++) {
+            arr[i] *= c;
+            arr[i] += s * sv_copy[i];
+        }
     }
 
     /* One-qubit gates */

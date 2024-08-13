@@ -26,6 +26,7 @@ from typing import Callable, List, Union
 
 import numpy as np
 import pennylane as qml
+from line_profiler import profile
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
@@ -66,6 +67,7 @@ class LightningMeasurements:
             result in a closer approximation but increased runtime.
     """
 
+    @profile
     def __init__(
         self,
         qubit_state,
@@ -85,15 +87,18 @@ class LightningMeasurements:
             self._num_burnin = 100
 
     @property
+    @profile
     def qubit_state(self):
         """Returns a handle to the LightningStateVector class."""
         return self._qubit_state
 
     @property
+    @profile
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
 
+    @profile
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
 
@@ -101,6 +106,7 @@ class LightningMeasurements:
         """
         return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
 
+    @profile
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
             This method is bypassing the measurement process to default.qubit implementation.
@@ -120,6 +126,7 @@ class LightningMeasurements:
         return result
 
     # pylint: disable=protected-access
+    @profile
     def expval(self, measurementprocess: MeasurementProcess):
         """Expectation value of the supplied observable contained in the MeasurementProcess.
 
@@ -155,6 +162,7 @@ class LightningMeasurements:
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
+    @profile
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
@@ -174,6 +182,7 @@ class LightningMeasurements:
             )
         return results
 
+    @profile
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess.
 
@@ -209,6 +218,7 @@ class LightningMeasurements:
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
+    @profile
     def get_measurement_function(
         self, measurementprocess: MeasurementProcess
     ) -> Callable[[MeasurementProcess, TensorLike], TensorLike]:
@@ -238,6 +248,7 @@ class LightningMeasurements:
 
         raise NotImplementedError
 
+    @profile
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Apply a measurement process to a state.
 
@@ -249,6 +260,7 @@ class LightningMeasurements:
         """
         return self.get_measurement_function(measurementprocess)(measurementprocess)
 
+    @profile
     def measure_final_state(self, circuit: QuantumScript, mid_measurements=None) -> Result:
         """
         Perform the measurements required by the circuit on the provided state.
@@ -286,6 +298,7 @@ class LightningMeasurements:
         return results
 
     # pylint:disable = too-many-arguments
+    @profile
     def measure_with_samples(
         self,
         measurements: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],
@@ -349,6 +362,7 @@ class LightningMeasurements:
 
         return sorted_res
 
+    @profile
     def _apply_diagonalizing_gates(self, mps: List[SampleMeasurement], adjoint: bool = False):
         if len(mps) == 1:
             diagonalizing_gates = mps[0].diagonalizing_gates()
@@ -364,6 +378,7 @@ class LightningMeasurements:
 
         self._qubit_state.apply_operations(diagonalizing_gates)
 
+    @profile
     def _measure_with_samples_diagonalizing_gates(
         self,
         mps: List[SampleMeasurement],
@@ -428,6 +443,7 @@ class LightningMeasurements:
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
 
+    @profile
     def _measure_hamiltonian_with_samples(
         self,
         mp: List[SampleMeasurement],
@@ -448,6 +464,7 @@ class LightningMeasurements:
         unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
         return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]
 
+    @profile
     def _measure_sum_with_samples(
         self,
         mp: List[SampleMeasurement],

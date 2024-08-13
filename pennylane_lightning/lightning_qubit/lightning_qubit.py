@@ -327,7 +327,10 @@ _observables = frozenset(
 )
 # The set of supported observables.
 
+from line_profiler import profile
 
+
+@profile
 def stopping_condition(op: Operator, num_wires: int = 64) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
     # These thresholds are adapted from `lightning_base.py`
@@ -344,25 +347,29 @@ def stopping_condition(op: Operator, num_wires: int = 64) -> bool:
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
     if isinstance(op, qml.PauliRot):
+        # return False
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         n = reduce(lambda x, y: x + (y != "I"), word, 0)
         # decomposes to IsingXX, etc. for n <= 2
         # little or no speed-ups for all wires because of large temporary variables
-        return n > 2 and num_wires - n > 2
+        return n > 2 and num_wires - n > 1
     return op.name in _operations
 
 
+@profile
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
     return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
+@profile
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
     return obs.name in _observables
 
 
+@profile
 def adjoint_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``
     when using the adjoint differentiation method."""
@@ -383,11 +390,13 @@ def adjoint_observables(obs: Operator) -> bool:
     return obs.name in _observables
 
 
+@profile
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
     return isinstance(mp, qml.measurements.ExpectationMP)
 
 
+@profile
 def _supports_adjoint(circuit):
     if circuit is None:
         return True
@@ -402,6 +411,7 @@ def _supports_adjoint(circuit):
     return True
 
 
+@profile
 def _add_adjoint_transforms(program: TransformProgram) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
     for adjoint differentiation.
