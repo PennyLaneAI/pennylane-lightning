@@ -462,10 +462,6 @@ class TestExecution:
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
-        if device_name == "lightning.tensor":
-            if isinstance(mp1, ProbabilityMP) or isinstance(mp2, ProbabilityMP):
-                pytest.skip("qml.probs() not supported in lightning.tensor")
-
         if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
 
