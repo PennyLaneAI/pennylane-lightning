@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add `qml.prob()` measurement support to `lightning.tensor`.
+* Add `qml.probs()` measurement support to `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
 
 * Add `qml.state()` measurement support to `lightning.tensor`.

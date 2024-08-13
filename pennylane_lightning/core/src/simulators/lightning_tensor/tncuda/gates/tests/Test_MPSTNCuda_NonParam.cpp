@@ -80,6 +80,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Hadamard", "[MPSTNCuda_Nonparam]", float,
 
             mps_state.applyOperation("Identity", {index}, inverse);
 
+            // Test for multiple final states appendings
             mps_state.append_mps_final_state();
 
             cp_t expected(1.0 / std::sqrt(2), 0);
