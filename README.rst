@@ -123,8 +123,8 @@ On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
 
     brew install llvm libomp
 
-The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu12``, etc.), and hence we recommend referring to `Lightning-GPU installation`_ section.
-Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos installation`_ section.
+The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu12``, etc.), and hence we recommend referring to `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_ section.
+Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_ section.
 
 Development installation
 ========================
