@@ -266,7 +266,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         // Optional: SVD
         cutensornetTensorSVDAlgo_t algo =
-            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default
+            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default option
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
@@ -295,6 +295,11 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
             reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
 
+        // TODO: This is a dummy tensor update to allow multiple calls to the
+        // `append_mps_final_state` method as well as appending additional
+        // operations to the graph. This line can be removed in the future when
+        // the `cutensornet` backend allows multiple calls to the
+        // `cutensornetStateFinalizeMPS` method.
         BaseType::dummy_tensor_update();
     }
 
