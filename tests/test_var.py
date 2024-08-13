@@ -61,6 +61,9 @@ class TestVar:
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
 
+        if "Projector" not in dev.observables:
+            pytest.skip("Device does not support the Projector observable.")
+
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
         obs = (
