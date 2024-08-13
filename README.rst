@@ -104,7 +104,13 @@ To build Lightning plugins from source you can run
 
     $ PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
 
-where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu`` or ``lightning_kokkos``.
+where ``${PL_BACKEND}`` can be 
+
+- ``lightning_qubit`` (default), 
+- ``lightning_gpu`` 
+- ``lightning_kokkos``
+- ``lightning_tensor``
+
 The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is required to bind the C++ functionality to Python.
 
 A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` is required.
@@ -112,7 +118,7 @@ On Debian-based systems, this can be installed via ``apt``:
 
 .. code-block:: console
 
-    $ sudo apt -y update &&
+    $ sudo apt -y update
     $ sudo apt install g++ libomp-dev
 
 where ``libomp-dev`` is included to also install OpenMP.
@@ -146,6 +152,15 @@ You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 .. code-block:: console
 
     $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
+    
+Supported options are
+
+- ``-DENABLE_WARNINGS:BOOL=ON``
+- ``-DENABLE_NATIVE:BOOL=ON`` (for ``-march=native``)
+- ``-DENABLE_BLAS:BOOL=ON``
+- ``-DENABLE_OPENMP:BOOL=ON``
+- ``-DENABLE_CLANG_TIDY:BOOL=ON``
+
 
 Compile MSVC (Windows)
 ======================
@@ -172,35 +187,31 @@ Then a common command will work.
 
 Note that OpenMP and BLAS are disabled on this platform.
 
-CMake support
-=============
-
-One can also build the plugin using CMake:
-
-.. code-block:: console
-
-    $ cmake -S. -B build
-    $ cmake --build build
-
-Supported options are
-
-- ``-DENABLE_WARNINGS:BOOL=ON``
-- ``-DENABLE_NATIVE:BOOL=ON`` (for ``-march=native``)
-- ``-DENABLE_BLAS:BOOL=ON``
-- ``-DENABLE_OPENMP:BOOL=ON``
-- ``-DENABLE_CLANG_TIDY:BOOL=ON``
 
 Testing
 =======
 
-To test that a plugin is working correctly, test the Python code with:
+To test that a plugin is working correctly, 
+
+Python Test
+^^^^^^^^^^^ 
+
+Test the Python code with:
 
 .. code-block:: console
 
-    $ make test-python device=${PL_DEVICE}
+    $ make test-python device=${PL.DEVICE}
 
-where ``${PL_DEVICE}`` can be ``lightning.qubit`` (default), ``lightning.gpu`` or ``lightning.kokkos``.
-These differ from ``${PL_BACKEND}`` by replacing the underscore by a dot.
+where ``${PL.DEVICE}`` differ from ``${PL_BACKEND}`` by replacing the underscore by a dot. And can be 
+
+- ``lightning.qubit`` (default) 
+- ``lightning.gpu``  
+- ``lightning.kokkos``
+- ``lightning.tensor``
+
+C++ Test
+^^^^^^^^
+ 
 The C++ code can be tested with
 
 .. code-block:: console
@@ -210,6 +221,8 @@ The C++ code can be tested with
 .. installation_LQubit-end-inclusion-marker-do-not-remove
 
 .. installation_LGPU-start-inclusion-marker-do-not-remove
+
+-----
 
 Lightning-GPU installation
 **************************
@@ -269,7 +282,7 @@ Then Lightning-GPU with MPI support can then be installed with ``pip``:
 .. code-block:: console
 
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e .
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . -vv
 
 
 Test Lightning-GPU with MPI
@@ -309,11 +322,17 @@ Install Lightning-Kokkos from source
 
 As Kokkos enables support for many different HPC-targeted hardware platforms, ``lightning.kokkos`` can be built to support any of these platforms when building from source.
 
+Install Kokkos (Optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards
 
 .. code-block:: console
 
+		wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz #Select the correct version
+		tar -xvf 4.x.yz.tar.gz
+		cd kokkos-4.x.yz
     cmake -S . -B build -G Ninja \
         -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
         -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.1.00/AMPERE80 \
@@ -327,28 +346,37 @@ For example, the following will build Kokkos for NVIDIA A100 cards
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
     cmake --build build && cmake --install build
-    echo export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
+    export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
 
 Next, append the install location to ``CMAKE_PREFIX_PATH``.
 Note that the C++20 standard is required (``-DCMAKE_CXX_STANDARD=20`` option), and hence CUDA v12 is required for the CUDA backend.
-If an installation is not found, our builder will clone and install it during the build process.
+
+Install Lightning-Kokkos
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+If an installation of Kokkos is not found, then our builder will clone and install it during the build process.
 
 The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
 .. code-block:: console
 
+   git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+   cd pennylane-lightning
+   PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+   SKIP_COMPILATION=True pip install -e . -vv
    PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install .
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . -vv
 
-To build the plugin directly with CMake as above:
+The supported backend options are 
 
-.. code-block:: console
+- ``SERIAL``
+- ``OPENMP``
+- ``THREADS``
+- ``HIP``
+- ``CUDA`` 
 
-   cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPL_BACKEND=lightning_kokkos -G Ninja
-   cmake --build build
+and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 
-
-The supported backend options are ``SERIAL``, ``OPENMP``, ``THREADS``, ``HIP`` and ``CUDA`` and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 One can activate simultaneously one serial, one parallel CPU host (e.g. ``OPENMP``, ``THREADS``) and one parallel GPU device backend (e.g. ``HIP``, ``CUDA``), but not two of any category at the same time.
 For ``HIP`` and ``CUDA``, the appropriate software stacks are required to enable compilation and subsequent use.
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
@@ -375,7 +403,7 @@ Lightning-Qubit should be installed before Lightning-Tensor (compilation is not 
     cd pennylane-lightning
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install .
+    SKIP_COMPILATION=True pip install . 
 
 Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
@@ -388,7 +416,7 @@ The Lightning-Tensor can then be installed with ``pip``:
 .. code-block:: console
 
     PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
-    pip install -e .
+    pip install -e . -vv
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
