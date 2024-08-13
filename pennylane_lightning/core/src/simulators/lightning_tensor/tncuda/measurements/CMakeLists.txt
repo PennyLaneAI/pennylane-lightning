@@ -1,6 +1,11 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25.2)
 
 project(${PL_BACKEND}_measurements LANGUAGES CXX C CUDA)
+
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CUDA_STANDARD 20)
+set(CMAKE_CUDA_STANDARD_REQUIRED ON)
 
 set(LTENSOR_MPS_FILES cuda_kernels_measures.cu CACHE INTERNAL "" FORCE)
 

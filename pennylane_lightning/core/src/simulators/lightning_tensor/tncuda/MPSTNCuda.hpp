@@ -174,28 +174,27 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     void setZeroState() { reset(); }
 
     /**
-     * @brief Set the ith MPS site.
+     * @brief Update the ith MPS site.
      *
-     * @param i Index of the MPS site.
-     * @param data Pointer to the data on host.
-     * @param length Length of the data.
+     * @param site_idx Index of the MPS site.
+     * @param host_data Pointer to the data on host.
+     * @param host_data_size Length of the data.
      */
-    void setIthMPSSite(const std::size_t i, const ComplexT *data,
-                       std::size_t length) {
-        PL_ABORT_IF(BaseType::getNumQubits() < i,
-                    "The size of a basis state should be equal to the number "
-                    "of qubits.");
+    void updateIthMPSSite(const std::size_t site_idx, const ComplexT *host_data,
+                          std::size_t host_data_size) {
+        PL_ABORT_IF_NOT(
+            site_idx < BaseType::getNumQubits(),
+            "The site index should be less than the number of qubits.");
 
-        const std::size_t idx = BaseType::getNumQubits() - i - 1;
-        PL_ABORT_IF(length > tensors_[idx].getDataBuffer().getLength(),
-                    "The length of the data should be equal to the dimension "
-                    "of the qubit.");
+        const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
+        PL_ABORT_IF_NOT(
+            host_data_size == tensors_[idx].getDataBuffer().getLength(),
+            "The length of the host data should match its copy on the device.");
 
         tensors_[idx].getDataBuffer().zeroInit();
 
-        PL_CUDA_IS_SUCCESS(cudaMemcpy(tensors_[idx].getDataBuffer().getData(),
-                                      data, sizeof(CFP_t) * length,
-                                      cudaMemcpyHostToDevice));
+        tensors_[idx].getDataBuffer().CopyHostDataToGpu(host_data,
+                                                        host_data_size);
     }
 
     /**

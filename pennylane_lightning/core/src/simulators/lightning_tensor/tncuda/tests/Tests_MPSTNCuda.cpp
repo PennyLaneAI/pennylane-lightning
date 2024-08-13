@@ -58,6 +58,40 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
     }
 }
 
+TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
+    SECTION("Set MPS site with wrong site index") {
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = 3;
+        std::size_t siteIdx = 3;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
+
+        REQUIRE_THROWS_WITH(
+            mps_state.updateIthMPSSite(siteIdx, site_data.data(),
+                                       site_data.size()),
+            Catch::Matchers::Contains(
+                "The site index should be less than the number of qubits."));
+    }
+
+    SECTION("Set MPS site with wrong site data size") {
+        std::size_t num_qubits = 3;
+        std::size_t maxBondDim = 3;
+        std::size_t siteIdx = 0;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
+
+        REQUIRE_THROWS_WITH(
+            mps_state.updateIthMPSSite(siteIdx, site_data.data(),
+                                       site_data.size()),
+            Catch::Matchers::Contains("The length of the host data should "
+                                      "match its copy on the device."));
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
                    float, double) {
     std::vector<std::vector<std::size_t>> basisStates = {
