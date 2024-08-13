@@ -126,7 +126,6 @@ jobs:
 
       - name: Install required packages
         run: |
-          cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
 
@@ -148,40 +147,38 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Switch to Lightning GPU release build
         if: inputs.lightning-version == 'release'
         run: |
-          cd main
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
+      # TODO: Remove after Release 0.37
       - name: Install Lightning GPU (stable)
         if: inputs.lightning-version == 'stable'
         run: |
-          pip install PennyLane-Lightning-GPU --update
+          pip install pip~=22 PennyLane-Lightning-GPU --upgrade
 
+      # TODO: Remove after Release 0.37
       - name: Switch to Lightning GPU stable branch
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
 
+      # TODO: Update after Release 0.37
       - name: Install Lightning GPU (${{ inputs.lightning-version }})
         if: inputs.lightning-version != 'stable'
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
-          cd main
           rm -rf build
           PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
           CMAKE_ARGS="-DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
@@ -198,7 +195,6 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
@@ -210,7 +206,6 @@ jobs:
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
-          cd main
           rm -rf build
           CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
@@ -225,7 +220,6 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          cd main/
           PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
@@ -238,7 +232,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: .coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           if-no-files-found: error
 
   upload-to-codecov-linux-python:
