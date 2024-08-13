@@ -117,8 +117,6 @@ _operations = frozenset(
         "OrbitalRotation",
         "QFT",
         "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
     }
 )
 
