@@ -79,7 +79,7 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
       # TODO: Update after Release 0.37
-      - name: Create device wheel (stable)
+      - name: Create device wheel (${{ inputs.lightning-version }})
         if: inputs.lightning-version != 'stable'
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
@@ -90,7 +90,7 @@ jobs:
           echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
 
       # TODO: Remove after Release 0.37
-      - name: Create device wheel (${{ inputs.lightning-version }})
+      - name: Create device wheel (stable)
         if: inputs.lightning-version == 'stable'
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON" \
