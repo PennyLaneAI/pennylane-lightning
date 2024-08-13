@@ -267,7 +267,6 @@ class LightningTensorNet:
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                print("++********++++")
                 self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], BasisState):
