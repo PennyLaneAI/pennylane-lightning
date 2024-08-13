@@ -104,13 +104,7 @@ To build Lightning plugins from source you can run
 
     $ PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
 
-where ``${PL_BACKEND}`` can be 
-
-- ``lightning_qubit`` (default), 
-- ``lightning_gpu`` 
-- ``lightning_kokkos``
-- ``lightning_tensor``
-
+where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
 The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is required to bind the C++ functionality to Python.
 
 A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` is required.
