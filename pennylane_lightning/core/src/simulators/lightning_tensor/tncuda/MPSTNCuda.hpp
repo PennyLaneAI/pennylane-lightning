@@ -64,7 +64,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
 
     const std::size_t maxBondDim_;
-
+    const std::vector<std::size_t> bondDims_;
     const std::vector<std::vector<std::size_t>> sitesModes_;
     const std::vector<std::vector<std::size_t>> sitesExtents_;
     const std::vector<std::vector<int64_t>> sitesExtents_int64_;
@@ -86,7 +86,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
-          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
         setZeroState();
@@ -98,7 +99,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
-          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
         setZeroState();
@@ -217,20 +219,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
-        // TODO: Refactor this part to set bondDims as a data member variable
-        std::vector<std::size_t> bondDims(BaseType::getNumQubits() - 1,
-                                          maxBondDim_);
-
-        for (std::size_t i = 0; i < bondDims.size(); i++) {
-            std::size_t bondDim =
-                std::min(i + 1, BaseType::getNumQubits() - i - 1);
-            if (bondDim > log2(maxBondDim_)) {
-                bondDims[i] = maxBondDim_;
-            } else {
-                bondDims[i] = std::size_t{1} << bondDim;
-            }
-        }
-
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
             std::size_t target = 0;
@@ -240,7 +228,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             if (i == 0) {
                 target = basisState[idx];
             } else {
-                target = basisState[idx] == 0 ? 0 : bondDims[i - 1];
+                target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
             }
 
             PL_CUDA_IS_SUCCESS(
@@ -343,6 +331,27 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
   private:
     /**
+     * @brief Return bondDims to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::size_t>
+     */
+    std::vector<std::size_t> setBondDims_() {
+        std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1,
+                                               maxBondDim_);
+
+        for (std::size_t i = 0; i < localBondDims.size(); i++) {
+            std::size_t bondDim =
+                std::min(i + 1, BaseType::getNumQubits() - i - 1);
+            if (bondDim > log2(maxBondDim_)) {
+                localBondDims[i] = maxBondDim_;
+            } else {
+                localBondDims[i] = std::size_t{1} << bondDim;
+            }
+        }
+        return localBondDims;
+    }
+
+    /**
      * @brief Return siteModes to the member initializer
      * NOTE: This method only works for the open boundary condition
      * @return std::vector<std::vector<std::size_t>>
@@ -377,19 +386,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     std::vector<std::vector<std::size_t>> setSitesExtents_() {
         std::vector<std::vector<std::size_t>> localSitesExtents;
-        // TODO: Refactor this part to set bondDims as a data member variable
-        std::vector<std::size_t> bondDims(BaseType::getNumQubits() - 1,
-                                          maxBondDim_);
-
-        for (std::size_t i = 0; i < bondDims.size(); i++) {
-            std::size_t bondDim =
-                std::min(i + 1, BaseType::getNumQubits() - i - 1);
-            if (bondDim > log2(maxBondDim_)) {
-                bondDims[i] = maxBondDim_;
-            } else {
-                bondDims[i] = std::size_t{1} << bondDim;
-            }
-        }
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             std::vector<std::size_t> localSiteExtents;
@@ -397,16 +393,16 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             if (i == 0) {
                 // Leftmost site (state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {BaseType::getQubitDims()[i], bondDims[i]});
+                    {BaseType::getQubitDims()[i], bondDims_[i]});
             } else if (i == BaseType::getNumQubits() - 1) {
                 // Rightmost site (shared mode, state mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {bondDims[i - 1], BaseType::getQubitDims()[i]});
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i]});
             } else {
                 // Interior sites (state mode, state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {bondDims[i - 1], BaseType::getQubitDims()[i],
-                     bondDims[i]});
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i],
+                     bondDims_[i]});
             }
             localSitesExtents.push_back(std::move(localSiteExtents));
         }
