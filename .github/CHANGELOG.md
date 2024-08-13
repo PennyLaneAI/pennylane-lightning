@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
+  [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
+
 * Add `qml.probs()` measurement support to `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
 
