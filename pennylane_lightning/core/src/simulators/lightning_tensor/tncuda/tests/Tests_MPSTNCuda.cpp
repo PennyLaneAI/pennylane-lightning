@@ -90,6 +90,33 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
             Catch::Matchers::Contains("The length of the host data should "
                                       "match its copy on the device."));
     }
+
+    SECTION("Set MPS sites") {
+        std::size_t num_qubits = 2;
+        std::size_t maxBondDim = 3;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        mps_state.reset(); // Reset the state to zero state
+
+        std::vector<std::complex<TestType>> site0_data(4, {0.0, 0.0}); //MSB
+        std::vector<std::complex<TestType>> site1_data(4, {0.0, 0.0}); //LSB
+
+        site0_data[2] = {1.0, 0.0};
+        site1_data[1] = {1.0, 0.0};
+
+        mps_state.updateIthMPSSite(0, site0_data.data(), site0_data.size());
+        mps_state.updateIthMPSSite(1, site1_data.data(), site1_data.size());
+
+        auto results = mps_state.getDataVector();
+
+        std::vector<std::complex<TestType>> expected_state(
+            std::size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+
+        expected_state[3] = {1.0, 0.0};
+
+        CHECK(expected_state == Pennylane::Util::approx(results));
+    }
 }
 
 TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
