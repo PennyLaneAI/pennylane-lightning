@@ -115,7 +115,7 @@ jobs:
 
       # TODO: Update after Release 0.37
       - name: Create device wheel ${{ inputs.lightning-version }}
-        if: inputs.lightning-version == 'stable'
+        if: inputs.lightning-version != 'stable'
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
@@ -126,7 +126,7 @@ jobs:
           echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
 
       # TODO: Remove after Release 0.37
-      - name: Create device wheel (stable)
+      - name: Create device wheel ${{ inputs.lightning-version }}
         if: inputs.lightning-version == 'stable'
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}

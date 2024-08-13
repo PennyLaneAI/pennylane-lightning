@@ -86,14 +86,6 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
-      - name: Install required packages
-        run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          python -m pip install -r requirements-dev.txt
-
-          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          SKIP_COMPILATION=True python -m pip install . -vv
-
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
         uses: actions/checkout@v4
@@ -113,6 +105,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true
+
+      - name: Install required packages
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          python -m pip install -r requirements-dev.txt
+
+          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
+          SKIP_COMPILATION=True python -m pip install . -vv
 
       - name: Switch to Lightning GPU release build
         if: inputs.lightning-version == 'release'
