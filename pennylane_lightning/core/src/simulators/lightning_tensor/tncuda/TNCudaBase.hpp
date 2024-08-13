@@ -336,7 +336,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @brief Get a slice of the full state tensor
      *
      * @param tensor_data Pointer to the device memory for state tensor data.
-     * @param tensor_data_size Size of the tensor data.
+     * @param tensor_data_size Size of the state tensor data.
      * @param wires Wires to get the state tensor for.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is set to 1 by default.
