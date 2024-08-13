@@ -28,9 +28,6 @@ from pennylane.measurements import Expectation, Shots, Variance
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
-
 
 @pytest.mark.skipif(ld._new_API, reason="Old API required")
 def test_measurements():

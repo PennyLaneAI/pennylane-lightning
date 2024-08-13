@@ -24,8 +24,6 @@ from pennylane import numpy as np
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-if device_name == "lightning.kokkos":
-    pytest.skip("Kokkos new API in WIP.  Skipping.", allow_module_level=True)
 
 if device_name == "lightning.tensor":
     pytest.skip("lightning.tensor doesn't support vjp.", allow_module_level=True)
