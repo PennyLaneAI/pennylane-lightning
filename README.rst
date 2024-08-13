@@ -343,7 +343,7 @@ Build Kokkos for NVIDIA A100 cards
     
 .. code-block:: console
 
-    cmake -S . -B build -G Ninja \
+    $ cmake -S . -B build -G Ninja \
         -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
         -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.1.00/AMPERE80 \
         -DCMAKE_CXX_STANDARD=20 \
@@ -355,8 +355,8 @@ Build Kokkos for NVIDIA A100 cards
         -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
-    cmake --build build && cmake --install build
-    export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
+    $ cmake --build build && cmake --install build
+    $ export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
 
 Next, append the install location to ``CMAKE_PREFIX_PATH``.
 Note that the C++20 standard is required (``-DCMAKE_CXX_STANDARD=20`` option), and hence CUDA v12 is required for the CUDA backend.
@@ -364,18 +364,18 @@ Note that the C++20 standard is required (``-DCMAKE_CXX_STANDARD=20`` option), a
 Install Lightning-Kokkos
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-If an installation of Kokkos is not found, then our builder will clone and install it during the build process.
+If an installation of Kokkos is not found, then our builder will clone and install it during the build process. Lightning-Qubit should be installed (compilation is not necessary):
 
 The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
 .. code-block:: console
 
-   git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-   cd pennylane-lightning
-   PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-   SKIP_COMPILATION=True pip install -e . -vv
-   PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . -vv
+   $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+   $ cd pennylane-lightning
+   $ PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+   $ SKIP_COMPILATION=True pip install -e . -vv
+   $ PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+   $ CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . -vv
 
 The supported backend options are 
 
@@ -411,24 +411,24 @@ Lightning-Qubit should be installed before Lightning-Tensor (compilation is not 
 
 .. code-block:: console
 
-    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-    cd pennylane-lightning
-    pip install -r requirements.txt
-    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install . 
+    $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    $ cd pennylane-lightning
+    $ pip install -r requirements.txt
+    $ PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    $ SKIP_COMPILATION=True pip install . 
 
 Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
 .. code-block:: console
 
-    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
+    $ export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-Tensor can then be installed with ``pip``:
 
 .. code-block:: console
 
-    PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
-    pip install -e . -vv
+    $ PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
+    $ pip install -e . -vv
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
