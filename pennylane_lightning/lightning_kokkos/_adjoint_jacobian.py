@@ -35,6 +35,7 @@ from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
+# pylint: disable=import-error, no-name-in-module, ungrouped-imports
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from pennylane_lightning.core.lightning_base import _chunk_iterable
 

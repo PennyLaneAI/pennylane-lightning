@@ -20,7 +20,6 @@ import os
 import sys
 from dataclasses import replace
 from numbers import Number
-from os import getenv
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple, Union
 
