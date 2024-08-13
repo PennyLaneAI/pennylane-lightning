@@ -30,6 +30,9 @@
 
 ### Improvements
 
+* Multiple calls to the `append_mps_final_state()` API is allowed.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
 
