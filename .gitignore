@@ -32,6 +32,7 @@ kokkos/
 PennyLane_Lightning_Kokkos.egg-info/
 PennyLane_Lightning.egg-info/
 prototypes/
+pyproject.toml
 tests/__pycache__/
 venv/
 wheelhouse/

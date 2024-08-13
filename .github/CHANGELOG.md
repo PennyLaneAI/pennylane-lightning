@@ -33,6 +33,9 @@
 * Multiple calls to the `append_mps_final_state()` API is allowed.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
 
+* The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
+  [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
+
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
 
