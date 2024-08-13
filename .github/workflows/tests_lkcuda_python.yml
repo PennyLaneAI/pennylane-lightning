@@ -236,6 +236,8 @@ jobs:
         run: |
           ls -l ${{ github.workspace }}/Kokkos
 
+          pip install pip~=22.0
+
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos python -m pip install . -vv
@@ -266,6 +268,8 @@ jobs:
       - name: Install all backend devices ${{ inputs.lightning-version }}
         if: ${{ matrix.pl_backend == 'all' }} and inputs.lightning-version == 'stable'
         run: |
+          pip install pip~=22.0
+
           PL_BACKEND=lightning_qubit python -m pip install . -vv
 
           PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv

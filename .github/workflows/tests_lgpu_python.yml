@@ -164,7 +164,7 @@ jobs:
       - name: Install Lightning GPU (stable)
         if: inputs.lightning-version == 'stable'
         run: |
-          pip install pip~=22 PennyLane-Lightning-GPU --upgrade
+          pip install pip~=22.0 PennyLane-Lightning-GPU --upgrade
 
       # TODO: Remove after Release 0.37
       - name: Switch to Lightning GPU stable branch
@@ -205,6 +205,8 @@ jobs:
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
+          pip install pip~=22.0
+
           rm -rf build
           PL_BACKEND=lightning_qubit python -m pip install . -vv
 

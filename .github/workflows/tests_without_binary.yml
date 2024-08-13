@@ -105,6 +105,7 @@ jobs:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
+          pip install pip~=22.0
           python -m pip install . -vv
 
       - name: Install the pennylane_lightning core package (lightning_qubit)
