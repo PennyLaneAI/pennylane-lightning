@@ -74,6 +74,8 @@ The following table summarizes the supported platforms and the primary installat
 
 .. installation_LQubit-start-inclusion-marker-do-not-remove
 
+----------------------------
+
 Lightning-Qubit installation
 ****************************
 
@@ -82,17 +84,17 @@ PyPI wheels (pip)
 
 Lightning plugins can be installed using ``pip`` as follows
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ pip install pennylane-lightning
+    pip install pennylane-lightning
 
 The above command will install the Lightning-Qubit plugin (the default since it is most broadly supported).
 In order to install the Lightning-GPU and Lightning-Kokkos (OpenMP) backends, you can respectively use the following commands:
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ pip install pennylane-lightning[gpu]
-    $ pip install pennylane-lightning[kokkos]
+    pip install pennylane-lightning[gpu]
+    pip install pennylane-lightning[kokkos]
 
 
 Install from source
@@ -103,6 +105,10 @@ To build Lightning plugins from source you can run
 .. code-block:: console
 
     $ PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
+    
+.. code-block:: bash
+
+    PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
 
 where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
 The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is required to bind the C++ functionality to Python.
@@ -366,7 +372,7 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
    $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
    $ cd pennylane-lightning
    $ PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-   $ SKIP_COMPILATION=True pip install -e . -vv
+   $ SKIP_COMPILATION=True pip install -e .
    $ PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
    $ CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . -vv
 
