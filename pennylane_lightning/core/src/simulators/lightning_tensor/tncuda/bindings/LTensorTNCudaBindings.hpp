@@ -53,12 +53,27 @@ using TensorNetBackends =
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForTensorNet<TensorNet>(pyclass);
+    using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
+    using ParamT = PrecisionT; // Parameter's data precision
+
+    using np_arr_c = py::array_t<std::complex<ParamT>,
+                                 py::array::c_style | py::array::forcecast>;
 
     pyclass
         .def(py::init<const std::size_t,
                       const std::size_t>()) // num_qubits, max_bond_dim
         .def(py::init<const std::size_t, const std::size_t,
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
+        .def(
+            "getState",
+            [](TensorNet &tensor_network, np_arr_c &state) {
+                py::buffer_info numpyArrayInfo = state.request();
+                auto *data_ptr =
+                    static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+
+                tensor_network.getData(data_ptr, state.size());
+            },
+            "Copy StateVector data into a Numpy array.")
         .def(
             "setBasisState",
             [](TensorNet &tensor_network,
