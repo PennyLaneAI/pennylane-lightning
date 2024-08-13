@@ -44,8 +44,8 @@ jobs:
     steps:
       - name: Make disk space
         run: |
-          for dir in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
-            sudo du -sh dir && sudo rm -rf dir
+          for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
+            sudo du -sh $DIR && sudo rm -rf $DIR
           done
 
       - name: Checkout PennyLane-Lightning
