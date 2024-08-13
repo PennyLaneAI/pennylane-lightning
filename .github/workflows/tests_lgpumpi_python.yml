@@ -92,8 +92,7 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          python -m pip install . -vv
+          SKIP_COMPILATION=True python -m pip install . -vv
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'

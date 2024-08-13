@@ -92,6 +92,23 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning core package (lightning_qubit)
+        if: inputs.lightning-version == 'stable'
+        env:
+          SKIP_COMPILATION: True
+          PL_BACKEND: "lightning_qubit"
+        run: |
+          python -m pip install . -vv
+
+      - name: Install extra backend device
+        if: ${{matrix.pl_backend != 'lightning_qubit'}} and inputs.lightning-version == 'stable'
+        env:
+          SKIP_COMPILATION: True
+          PL_BACKEND: ${{ matrix.pl_backend }}
+        run: |
+          python -m pip install . -vv
+
+      - name: Install the pennylane_lightning core package (lightning_qubit)
+        if: inputs.lightning-version != 'stable'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: "lightning_qubit"
@@ -100,7 +117,7 @@ jobs:
           python -m pip install . -vv
 
       - name: Install extra backend device
-        if: matrix.pl_backend != 'lightning_qubit'
+        if: ${{matrix.pl_backend != 'lightning_qubit'}} and inputs.lightning-version != 'stable'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}

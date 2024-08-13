@@ -149,20 +149,17 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
-          path: main
           fetch-tags: true
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
         run: |
-          cd main
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
           git log -1 --format='%H'
@@ -205,7 +202,6 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
@@ -227,7 +223,6 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
@@ -236,11 +231,22 @@ jobs:
           python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
-      - name: Install backend device
-        if: ${{ matrix.pl_backend != 'all'}}
+      - name: Install backend devices (${{ inputs.lightning-version }})
+        if: ${{ matrix.pl_backend != 'all'}} and inputs.lightning-version == 'stable'
         run: |
           ls -l ${{ github.workspace }}/Kokkos
-          cd main
+
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
+          SKIP_COMPILATION=True python -m pip install . -vv
+
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          python -m pip install . -vv
+
+      - name: Install backend devices (${{ inputs.lightning-version }})
+        if: ${{ matrix.pl_backend != 'all'}} and inputs.lightning-version != 'stable'
+        run: |
+          ls -l ${{ github.workspace }}/Kokkos
 
           PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install . -vv
@@ -255,25 +261,27 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-      - name: Install all backend devices
-        if: ${{ matrix.pl_backend == 'all' }}
+      - name: Install all backend devices ${{ inputs.lightning-version }}
+        if: ${{ matrix.pl_backend == 'all' }} and inputs.lightning-version == 'stable'
         run: |
-          cd main
+          PL_BACKEND=lightning_qubit python -m pip install . -vv
 
+          PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
+
+      - name: Install all backend devices ${{ inputs.lightning-version }}
+        if: ${{ matrix.pl_backend == 'all' }}  and inputs.lightning-version != 'stable'
+        run: |
           PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
 
           PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
@@ -281,7 +289,6 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          cd main/
           for device in lightning.qubit lightning.kokkos; do
             pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
             pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
@@ -292,5 +299,5 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: ./coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           if-no-files-found: error
