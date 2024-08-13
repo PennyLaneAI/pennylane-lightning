@@ -261,30 +261,36 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     /**
      * @brief Get the full state vector representation of a MPS quantum state.
+     * Note that users/developers should be responsible to ensure that there is
+     * sufficient memory on the host to store the full state vector.
      *
-     * NOTE: This method is for MPS unit tests purpose only, given that full
-     * state vector requires too much memory (`exp2(numQubits)`) in large
-     * systems.
+     * @param res Pointer to the host memory to store the full state vector
+     * @param res_length Length of the result vector
+     */
+    void getData(ComplexT *res, const std::size_t res_length) {
+        PL_ABORT_IF(log2(res_length) != BaseType::getNumQubits(),
+                    "The size of the result vector should be equal to the "
+                    "dimension of the quantum state.");
+
+        std::size_t avail_gpu_memory = getFreeMemorySize();
+
+        PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
+                    "State tensor size exceeds the available GPU memory!");
+        this->get_state_tensor(res);
+    }
+
+    /**
+     * @brief Get the full state vector representation of a MPS quantum state.
+     *
      *
      * @return std::vector<ComplexT> Full state vector representation of MPS
      * quantum state on host
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        // 1D representation
-        std::vector<std::size_t> output_modes(std::size_t{1}, std::size_t{1});
-        std::vector<std::size_t> output_extent(
-            std::size_t{1}, std::size_t{1} << BaseType::getNumQubits());
-        TensorCuda<Precision> output_tensor(output_modes.size(), output_modes,
-                                            output_extent,
-                                            BaseType::getDevTag());
+        std::size_t length = std::size_t{1} << BaseType::getNumQubits();
+        std::vector<ComplexT> results(length);
 
-        void *output_tensorPtr[] = {
-            static_cast<void *>(output_tensor.getDataBuffer().getData())};
-
-        BaseType::computeState(nullptr, output_tensorPtr);
-
-        std::vector<ComplexT> results(output_extent.front());
-        output_tensor.CopyGpuDataToHost(results.data(), results.size());
+        getData(results.data(), results.size());
 
         return results;
     }

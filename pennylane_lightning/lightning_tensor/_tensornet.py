@@ -67,6 +67,9 @@ class LightningTensorNet:
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
+        if num_wires < 2:
+            raise ValueError("Number of wires must be greater than 1.")
+
         self._device_name = device_name
         self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
 
@@ -89,6 +92,13 @@ class LightningTensorNet:
     def tensornet(self):
         """Returns a handle to the tensor network."""
         return self._tensornet
+
+    @property
+    def state(self):
+        """Copy the state vector data to a numpy array."""
+        state = np.zeros(2**self._num_wires, dtype=self.dtype)
+        self._tensornet.getState(state)
+        return state
 
     def _tensornet_dtype(self):
         """Binding to Lightning Managed tensor network C++ class.
@@ -187,7 +197,6 @@ class LightningTensorNet:
 
         Returns:
             LightningTensorNet: Lightning final state class.
-
         """
         self.apply_operations(circuit.operations)
         if self._method == "mps":
