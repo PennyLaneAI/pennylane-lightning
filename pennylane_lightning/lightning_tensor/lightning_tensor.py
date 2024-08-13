@@ -278,7 +278,6 @@ class LightningTensor(Device):
         self._method = method
         self._c_dtype = c_dtype
 
-        # Set default values aligned with default.tensor
         self._max_bond_dim = kwargs.get("max_bond_dim", 128)
         self._cutoff = kwargs.get("cutoff", 0)
         self._cutoff_mode = kwargs.get("cutoff_mode", "abs")

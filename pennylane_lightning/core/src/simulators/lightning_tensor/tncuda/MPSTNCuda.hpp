@@ -389,7 +389,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             std::vector<std::size_t> localSiteExtents;
-
             if (i == 0) {
                 // Leftmost site (state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
@@ -440,8 +439,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
-     * @brief Update quantumState (cutensornetState_t) with data provided by a
-     * user
+     * @brief Append initial MPS sites to the compute graph with data provided
+     * by a user
      *
      */
     void appendInitialMPSState_() {

@@ -1434,10 +1434,6 @@ class TestApplyLightningMethod:
         with pytest.raises(ValueError, match="Unsupported operation"):
             dev.apply_lightning([EmptyGate(0)])
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support StatePrep",
-    )
     @pytest.mark.parametrize(
         "ops0",
         [
@@ -1503,11 +1499,7 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
     def circuit():
-        (
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            if device_name != "lightning.tensor"
-            else qml.BasisState([0, 0, 0, 0, 0], wires=[0, 1, 2, 3, 4])
-        )
+        qml.StatePrep(init_state, wires=range(n_qubits))
         qml.RY(theta, wires=[0])
         qml.RY(phi, wires=[1])
         qml.CNOT(wires=[0, 1])
