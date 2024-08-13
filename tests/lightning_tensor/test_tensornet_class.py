@@ -64,4 +64,3 @@ def test_errors_basis_state():
     with pytest.raises(ValueError, match="BasisState parameter and wires must be of equal length."):
         tensornet = LightningTensorNet(3, 5)
         tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
-

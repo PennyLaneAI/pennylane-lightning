@@ -181,7 +181,7 @@ class LightningTensorNet:
         ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
 
         # get full state vector to be factorized into MPS
-        full_state = np.zeros(2 ** self._num_wires, dtype=self.dtype)
+        full_state = np.zeros(2**self._num_wires, dtype=self.dtype)
         for i in range(len(state)):
             full_state[ravelled_indices[i]] = state[i]
         return np.reshape(full_state, output_shape).ravel(order="C")

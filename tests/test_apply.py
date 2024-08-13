@@ -1034,10 +1034,6 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is run with three expvals
-    #@pytest.mark.skipif(
-    #    device_name == "lightning.tensor",
-    #    reason="lightning.tensor does not support qml.QubitStateVector()",
-    #)
     @pytest.mark.parametrize(
         "name,par,wires,expected_output",
         [

@@ -89,6 +89,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
+        setZeroState();
+        appendInitialMPSState_();
     }
 
     // TODO: Add method to the constructor to allow users to select methods at
@@ -99,6 +101,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
+        setZeroState();
+        appendInitialMPSState_();
     }
 
     ~MPSTNCuda() = default;
@@ -162,6 +166,16 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         setBasisState(zeroState);
     }
 
+    void setZeroState() { reset(); }
+
+    /**
+     * @brief Set the ith MPS site.
+     *
+     * @param i Index of the MPS site.
+     * @param data Pointer to the data on host.
+     * @param length Length of the data.
+     */
+
     void setIthMPSSite(const std::size_t i, const ComplexT *data,
                        std::size_t length) {
         PL_ABORT_IF(BaseType::getNumQubits() < i,
@@ -178,10 +192,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         PL_CUDA_IS_SUCCESS(cudaMemcpy(tensors_[idx].getDataBuffer().getData(),
                                       data, sizeof(CFP_t) * length,
                                       cudaMemcpyHostToDevice));
-        if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {
-            MPSInitialized_ = MPSStatus::MPSInitSet;
-            appendInitialMPSState_();
-        }
     }
 
     /**
@@ -205,6 +215,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
+        // TODO: Refactor this part to set bondDims as a data member variable
         std::vector<std::size_t> bondDims(BaseType::getNumQubits() - 1,
                                           maxBondDim_);
 
@@ -233,11 +244,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             PL_CUDA_IS_SUCCESS(
                 cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
-        }
-
-        if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {
-            MPSInitialized_ = MPSStatus::MPSInitSet;
-            appendInitialMPSState_();
         }
     };
 
@@ -364,7 +370,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     std::vector<std::vector<std::size_t>> setSitesExtents_() {
         std::vector<std::vector<std::size_t>> localSitesExtents;
-
+        // TODO: Refactor this part to set bondDims as a data member variable
         std::vector<std::size_t> bondDims(BaseType::getNumQubits() - 1,
                                           maxBondDim_);
 

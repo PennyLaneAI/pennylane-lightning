@@ -340,7 +340,7 @@ class TestExecution:
         """Test that state prep ops in the beginning of a tape are decomposed with adjoint
         but not otherwise."""
         if device_name == "lightning.tensor" and is_trainable:
-            pytest.skip("StatePrep trainable not supported in lightning.tensor")  
+            pytest.skip("StatePrep trainable not supported in lightning.tensor")
 
         tape = qml.tape.QuantumScript([op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))])
         device = LightningDevice(wires=3)
