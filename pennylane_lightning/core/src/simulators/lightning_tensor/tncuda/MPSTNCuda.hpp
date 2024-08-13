@@ -256,9 +256,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         // TODO: This is a dummy tensor update to allow multiple calls to the
         // `append_mps_final_state` method as well as appending additional
-        // operations to the graph. This line can be removed in the future when
-        // the `cutensornet` backend allows multiple calls to the
-        // `cutensornetStateFinalizeMPS` method.
+        // operations to the graph. This is a temporary solution and this line
+        // can be removed in the future when the `cutensornet` backend allows
+        // multiple calls to the `cutensornetStateFinalizeMPS` method.
         BaseType::dummy_tensor_update();
     }
 
