@@ -162,6 +162,27 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         setBasisState(zeroState);
     }
 
+    void setIthMPSSite(const std::size_t i, const ComplexT *data,
+                       std::size_t length) {
+        PL_ABORT_IF(BaseType::getNumQubits() < i,
+                    "The size of a basis state should be equal to the number "
+                    "of qubits.");
+
+        PL_ABORT_IF(length > tensors_[i].getDataBuffer().getLength(),
+                    "The length of the data should be equal to the dimension "
+                    "of the qubit.");
+
+        tensors_[i].getDataBuffer().zeroInit();
+
+        PL_CUDA_IS_SUCCESS(cudaMemcpy(tensors_[i].getDataBuffer().getData(),
+                                      data, sizeof(CFP_t) * length,
+                                      cudaMemcpyHostToDevice));
+        if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {
+            MPSInitialized_ = MPSStatus::MPSInitSet;
+            appendInitialMPSState_();
+        }
+    }
+
     /**
      * @brief Update quantum state with a basis state.
      * NOTE: This API assumes the bond vector is a standard basis vector
@@ -183,6 +204,19 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
+        std::vector<std::size_t> bondDims(BaseType::getNumQubits() - 1,
+                                          maxBondDim_);
+
+        for (std::size_t i = 0; i < bondDims.size(); i++) {
+            std::size_t bondDim =
+                std::min(i + 1, BaseType::getNumQubits() - i - 1);
+            if (bondDim > log2(maxBondDim_)) {
+                bondDims[i] = maxBondDim_;
+            } else {
+                bondDims[i] = std::size_t{1} << bondDim;
+            }
+        }
+
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
             std::size_t target = 0;
@@ -192,7 +226,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             if (i == 0) {
                 target = basisState[idx];
             } else {
-                target = basisState[idx] == 0 ? 0 : maxBondDim_;
+                target = basisState[idx] == 0 ? 0 : bondDims[i - 1];
             }
 
             PL_CUDA_IS_SUCCESS(
@@ -202,7 +236,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {
             MPSInitialized_ = MPSStatus::MPSInitSet;
-            updateQuantumStateMPS_();
+            appendInitialMPSState_();
         }
     };
 
@@ -330,20 +364,35 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     std::vector<std::vector<std::size_t>> setSitesExtents_() {
         std::vector<std::vector<std::size_t>> localSitesExtents;
 
+        std::vector<std::size_t> bondDims(BaseType::getNumQubits() - 1,
+                                          maxBondDim_);
+
+        for (std::size_t i = 0; i < bondDims.size(); i++) {
+            std::size_t bondDim =
+                std::min(i + 1, BaseType::getNumQubits() - i - 1);
+            if (bondDim > log2(maxBondDim_)) {
+                bondDims[i] = maxBondDim_;
+            } else {
+                bondDims[i] = std::size_t{1} << bondDim;
+            }
+        }
+
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             std::vector<std::size_t> localSiteExtents;
+
             if (i == 0) {
                 // Leftmost site (state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {BaseType::getQubitDims()[i], maxBondDim_});
+                    {BaseType::getQubitDims()[i], bondDims[i]});
             } else if (i == BaseType::getNumQubits() - 1) {
                 // Rightmost site (shared mode, state mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {maxBondDim_, BaseType::getQubitDims()[i]});
+                    {bondDims[i - 1], BaseType::getQubitDims()[i]});
             } else {
                 // Interior sites (state mode, state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {maxBondDim_, BaseType::getQubitDims()[i], maxBondDim_});
+                    {bondDims[i - 1], BaseType::getQubitDims()[i],
+                     bondDims[i]});
             }
             localSitesExtents.push_back(std::move(localSiteExtents));
         }
@@ -385,7 +434,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * user
      *
      */
-    void updateQuantumStateMPS_() {
+    void appendInitialMPSState_() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),

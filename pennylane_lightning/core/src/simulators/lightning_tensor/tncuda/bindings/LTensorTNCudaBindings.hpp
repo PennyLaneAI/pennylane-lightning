@@ -75,6 +75,16 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Copy StateVector data into a Numpy array.")
         .def(
+            "setIthSite",
+            [](TensorNet &tensor_network, const std::size_t idx,
+               np_arr_c &ith_site) {
+                py::buffer_info numpyArrayInfo = ith_site.request();
+                auto *data_ptr =
+                    static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+                tensor_network.setIthMPSSite(idx, data_ptr, ith_site.size());
+            },
+            "Copy StateVector data to C++ backend")
+        .def(
             "setBasisState",
             [](TensorNet &tensor_network,
                std::vector<std::size_t> &basisState) {
