@@ -112,8 +112,7 @@ On Debian-based systems, this can be installed via ``apt``:
 
 .. code-block:: console
 
-    $ sudo apt -y update
-    $ sudo apt install g++ libomp-dev
+    sudo apt -y update && sudo apt install -y g++ libomp-dev
 
 where ``libomp-dev`` is included to also install OpenMP.
 On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
