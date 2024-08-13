@@ -4,10 +4,6 @@ name: Wheel::Linux::x86_64::CUDA
 #                   Python versions: 3.9, 3.10, 3.11, 3.12.
 # **Why we have it**: To build wheels for pennylane-lightning-gpu installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
-
-env:
-  GCC_VERSION: 12
-
 on:
   pull_request:
   push:
@@ -58,15 +54,18 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
           dnf update -y && dnf install -y podman
 
-      - name: Install cibuildwheel
-        run: python3.9 -m pip install cibuildwheel~=2.16.0
+      - name: Install dependencies
+        run: python3.9 -m pip install cibuildwheel~=2.16.0 toml
+
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -78,7 +77,7 @@ jobs:
 
           CIBW_SKIP: "*-musllinux*"
 
-          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="CMAKE_CXX_COMPILER=$(which g++);CMAKE_C_COMPILER=$(which gcc);LIGHTNING_RELEASE_TAG=master"
+          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="LIGHTNING_RELEASE_TAG=master"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
@@ -93,7 +92,6 @@ jobs:
           CIBW_ENVIRONMENT: |
             PATH=/opt/rh/gcc-toolset-12/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
             LD_LIBRARY_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64:/opt/rh/gcc-toolset-12/root/usr/lib:/opt/rh/gcc-toolset-12/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-12/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
-            PL_BACKEND="${{ matrix.pl_backend }}" \
             PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
@@ -148,4 +146,4 @@ jobs:
         with:
           user: __token__
           password: ${{ secrets.TEST_PYPI_LGPU_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
+          repository-url: https://test.pypi.org/legacy/

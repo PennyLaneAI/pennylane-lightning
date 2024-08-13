@@ -6,7 +6,7 @@
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
 * Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
-  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804) 
+  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804)
 
 ### Breaking changes
 
@@ -21,6 +21,9 @@
 
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
+
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
 
 ### Improvements
 
@@ -76,6 +79,9 @@
 * Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
   [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
 
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
+  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
+
 ### Documentation
 
 * Updated the README and added citation format for Lightning arxiv preprint.
@@ -111,7 +117,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
