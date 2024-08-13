@@ -169,6 +169,13 @@ jobs:
         run: |
           pip install PennyLane-Lightning-GPU --update
 
+      - name: Switch to Lightning GPU stable branch
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git fetch --tags --force
+          git checkout latest_release
+
       - name: Install Lightning GPU (${{ inputs.lightning-version }})
         if: inputs.lightning-version != 'stable'
         env:
