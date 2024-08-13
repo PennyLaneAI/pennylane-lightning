@@ -335,11 +335,29 @@ Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightni
 
     # Replace x, y, and z by the correct version
     wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz 
-    tar -xvf 4.x.yz.tar.gz
-    cd kokkos-4.x.yz
+    tar -xvf 4.x.y.z.tar.gz
+    cd kokkos-4.x.y.z
 
 Build Kokkos for NVIDIA A100 cards
     
+.. code-block:: console
+
+    cmake -S . -B build -G Ninja \
+        -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
+        -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.x.y.z/AMPERE80 \
+        -DCMAKE_CXX_STANDARD=20 \
+        -DBUILD_SHARED_LIBS:BOOL=ON \
+        -DBUILD_TESTING:BOOL=OFF \
+        -DKokkos_ENABLE_SERIAL:BOOL=ON \
+        -DKokkos_ENABLE_CUDA:BOOL=ON \
+        -DKokkos_ARCH_AMPERE80:BOOL=ON \
+        -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
+        -DKokkos_ENABLE_TESTS:BOOL=OFF \
+        -DKokkos_ENABLE_LIBDL:BOOL=OFF
+    cmake --build build && cmake --install build
+    export CMAKE_PREFIX_PATH=/opt/kokkos/4.x.y.z/AMPERE80:\$CMAKE_PREFIX_PATH
+
+
 .. code-block:: bash
 
     cmake -S . -B build -G Ninja \
@@ -355,25 +373,7 @@ Build Kokkos for NVIDIA A100 cards
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
     cmake --build build && cmake --install build
-    export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
-
-
-.. code-block:: bash
-
-    cmake -S . -B build -G Ninja \
-        -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
-        -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.1.00/AMPERE80 \
-        -DCMAKE_CXX_STANDARD=20 \
-        -DBUILD_SHARED_LIBS:BOOL=ON \
-        -DBUILD_TESTING:BOOL=OFF \
-        -DKokkos_ENABLE_SERIAL:BOOL=ON \
-        -DKokkos_ENABLE_CUDA:BOOL=ON \
-        -DKokkos_ARCH_AMPERE80:BOOL=ON \
-        -DKokkos_ENABLE_EXAMPLES:BOOL=OFF \
-        -DKokkos_ENABLE_TESTS:BOOL=OFF \
-        -DKokkos_ENABLE_LIBDL:BOOL=OFF
-    cmake --build build && cmake --install build
-    export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
+    export CMAKE_PREFIX_PATH=/opt/kokkos/4.x.y.z/AMPERE80:\$CMAKE_PREFIX_PATH
 
 
 Next, append the install location to ``CMAKE_PREFIX_PATH``.
@@ -388,12 +388,12 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
 .. code-block:: bash
 
-   git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-   cd pennylane-lightning
-   PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-   SKIP_COMPILATION=True pip install -e .
-   PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . -vv
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    SKIP_COMPILATION=True pip install -e .
+    PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . -vv
 
 The supported backend options are 
 
