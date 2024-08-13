@@ -127,7 +127,7 @@ jobs:
           git checkout latest_release
 
       # TODO: Update after Release 0.37
-      - name: Install Lightning GPU (${{ inputs.lightning-version }})
+      - name: Install Lightning GPU ${{ inputs.lightning-version }}
         if: inputs.lightning-version != 'stable'
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
@@ -138,7 +138,7 @@ jobs:
           python -m pip install . -vv
 
       # TODO: Remove after Release 0.37
-      - name: Install Lightning GPU (stable)
+      - name: Install Lightning GPU ${{ inputs.lightning-version }}
         if: inputs.lightning-version == 'stable'
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")

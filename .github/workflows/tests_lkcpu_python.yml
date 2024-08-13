@@ -119,8 +119,7 @@ jobs:
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
-          python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python setup.py bdist_wheel
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl

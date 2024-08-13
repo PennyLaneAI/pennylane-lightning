@@ -236,12 +236,9 @@ jobs:
         run: |
           ls -l ${{ github.workspace }}/Kokkos
 
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          SKIP_COMPILATION=True python -m pip install . -vv
+          PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
-          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos python -m pip install . -vv
 
       - name: Install backend devices (${{ inputs.lightning-version }})
         if: ${{ matrix.pl_backend != 'all'}} and inputs.lightning-version != 'stable'
@@ -252,8 +249,7 @@ jobs:
           SKIP_COMPILATION=True python -m pip install . -vv
 
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
