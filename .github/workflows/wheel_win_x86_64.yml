@@ -120,8 +120,13 @@ jobs:
           Copy-Item -Path "D:\a\install_dir\${{ matrix.exec_model }}\" `
                     -Destination "D:\a\pennylane-lightning\pennylane-lightning\Kokkos" -Recurse -Force
 
-      - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel~=2.16.0 wheel
+      - name: Install dependencies
+        run: python -m pip install cibuildwheel~=2.16.0 wheel toml
+
+      - name: Configure pyproject.toml file
+        env:
+          PL_BACKEND: "${{ matrix.pl_backend }}"
+        run:  python scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -135,7 +140,6 @@ jobs:
 
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS="-DENABLE_LAPACK=OFF"
-            PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 
@@ -180,7 +184,8 @@ jobs:
           python -m pip install setuptools
           python -m pip install -r requirements-tests.txt
           if (${{ matrix.pl_backend == 'lightning_kokkos'}}) {
-            SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
+            PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+            SKIP_COMPILATION=True python -m pip install . -vv
           }
           pushd wheelhouse
           $wheels = Get-ChildItem "./" -Filter *.whl

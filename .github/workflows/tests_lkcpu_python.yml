@@ -125,13 +125,14 @@ jobs:
           cd main
           python -m pip install -r requirements-dev.txt
 
-      - name: Create device wheel
+      - name: Configure and build device wheel
         env:
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
           cd main
-          python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          python setup.py bdist_wheel
+          python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
@@ -219,6 +220,7 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
+            python scripts/configure_pyproject_toml.py
             SKIP_COMPILATION=True python -m pip install . -vv
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps

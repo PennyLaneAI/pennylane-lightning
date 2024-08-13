@@ -315,7 +315,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::ControlledPhaseShift",
 
             mps_state.applyOperation("ControlledPhaseShift", {0, 2}, inverse,
                                      {sign * angles[1]});
-
             auto results = mps_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
@@ -357,8 +356,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Rot", "[MPSTNCuda_param]", float,
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
             mps_state.applyOperation("Rot", {index}, inverse, angles[index]);
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[index]));
+
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
     }
 }
@@ -384,8 +385,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRot", "[MPSTNCuda_param]", float,
             mps_state.applyOperation("CRot", {0, 1}, inverse, angles);
 
             expected_results[0] = cp_t{1, 0};
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results));
+
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results));
         }
 
         SECTION("Apply non-adjacent wires") {
@@ -394,8 +397,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::CRot", "[MPSTNCuda_param]", float,
             mps_state.applyOperation("CRot", {0, 2}, inverse, angles);
 
             expected_results[0] = cp_t{1, 0};
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results));
+
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results));
         }
     }
 }
@@ -443,8 +448,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXX", "[MPSTNCuda_param]", float,
             mps_state.applyOperation("IsingXX", {0, 1}, inverse,
                                      {angles[index]});
 
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[index]));
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results[index]));
         }
 
         SECTION("Apply non-adjacent wires") {
@@ -454,9 +460,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXX", "[MPSTNCuda_param]", float,
             mps_state.applyOperation("IsingXX", {0, 2}, inverse,
                                      {angles[index]});
 
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(
-                      expected_results[index + angles.size()]));
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(
+                                 expected_results[index + angles.size()]));
         }
     }
 }
@@ -503,8 +510,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXY", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingXY", {0, 1}, inverse, angles);
 
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[0]));
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent wires") {
@@ -516,8 +524,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingXY", "[MPSTNCuda_param]", float,
 
             auto results = mps_state.getDataVector();
 
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[1]));
+            CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
     }
 }
@@ -564,8 +571,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingYY", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingYY", {0, 1}, inverse, angles);
 
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[0]));
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent wires") {
@@ -625,8 +633,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::IsingZZ", "[MPSTNCuda_param]", float,
 
             mps_state.applyOperation("IsingZZ", {0, 1}, inverse, angles);
 
-            CHECK(mps_state.getDataVector() ==
-                  Pennylane::Util::approx(expected_results[0]));
+            auto results = mps_state.getDataVector();
+
+            CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
         SECTION("Apply non-adjacent wires") {

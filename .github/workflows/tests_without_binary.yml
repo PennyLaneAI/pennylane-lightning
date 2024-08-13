@@ -53,19 +53,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
         run: |
-          cd main
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
           git log -1 --format='%H'
@@ -79,7 +76,6 @@ jobs:
       - name: Get required Python packages
         run: |
           rm -fr $(python -m pip cache dir)/selfcheck/
-          cd main
           python -m pip install -r requirements-dev.txt
 
       - name: Checkout PennyLane for release build
@@ -100,39 +96,34 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
-      - name: Install the pennylane_lightning package
-        if: ${{ contains(fromJson('["lightning_kokkos", "lightning_gpu", "lightning_tensor"]'), matrix.pl_backend) }}
+      - name: Install the pennylane_lightning core package (lightning_qubit)
+        env:
+          SKIP_COMPILATION: True
+          PL_BACKEND: "lightning_qubit"
         run: |
-          cd main
-          SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv
+          python scripts/configure_pyproject_toml.py
+          python -m pip install . -vv
 
-      - name: Install backend device
-        # FIXME: Remove this condition with v0.37.0 release
-        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
+      - name: Install extra backend device
+        if: matrix.pl_backend != 'lightning_qubit'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
-          cd main
+          python scripts/configure_pyproject_toml.py
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for all backends
-        # FIXME: Remove this condition with v0.37.0 release
-        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         run: |
-          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
 
       - name: Upload coverage to Codecov
-        # FIXME: Remove this condition with v0.37.0 release
-        if: matrix.pl_backend != 'lightning_tensor' || inputs.lightning-version != 'stable'
         uses: codecov/codecov-action@v4
         with:
-          files: ./main/coverage.xml
+          files: coverage.xml
           fail_ci_if_error: true
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}

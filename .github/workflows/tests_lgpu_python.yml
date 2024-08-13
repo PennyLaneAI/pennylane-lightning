@@ -71,7 +71,6 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_gpu"]
-        default_backend: ["lightning_qubit"]
         cuda_version: ["12"]
 
     name: Python Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
@@ -136,8 +135,7 @@ jobs:
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
-          
-                    
+
           # Adding venv site-packages to output for subsequent step to referecen if needed
           echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
 
@@ -186,12 +184,13 @@ jobs:
         run: |
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.default_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
           python -m pip install . -vv
-          rm -rf build
 
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning-GPU unit tests

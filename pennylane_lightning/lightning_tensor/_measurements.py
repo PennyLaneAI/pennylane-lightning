@@ -28,6 +28,7 @@ import pennylane as qml
 from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
+from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
@@ -60,6 +61,24 @@ class LightningTensorMeasurements:
         Returns: the Measurements class
         """
         return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+
+    def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
+        """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
+            This method is bypassing the measurement process to default.qubit implementation.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            TensorLike: the result of the measurement
+        """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        self._tensornet.apply_operations(diagonalizing_gates)
+        state_array = self._tensornet.state
+        wires = Wires(range(self._tensornet.num_wires))
+        result = measurementprocess.process_state(state_array, wires)
+        self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+        return result
 
     # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
@@ -95,7 +114,9 @@ class LightningTensorMeasurements:
             Variance of the observable
         """
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError("Sparse Hamiltonian Observables are not supported.")
+            raise NotImplementedError(
+                "The var measurement does not support sparse Hamiltonian observables."
+            )
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
@@ -124,9 +145,10 @@ class LightningTensorMeasurements:
             if isinstance(measurementprocess, VarianceMP):
                 return self.var
 
-        raise NotImplementedError(
-            "Does not support current measurement. Only ExpectationMP measurements are supported."
-        )
+            if measurementprocess.obs is None:
+                return self.state_diagonalizing_gates
+
+        raise NotImplementedError("Unsupported measurement type.")
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
         """Apply a measurement process to a tensor network.
