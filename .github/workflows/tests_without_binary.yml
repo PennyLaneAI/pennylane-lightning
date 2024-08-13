@@ -44,10 +44,10 @@ jobs:
     steps:
       - name: Check disk
         run: |
-          du -sh /usr/share/*
-          du -sh /usr/local/share/*
-          du -sh $(home)/*
-          du -sh $AGENT_TOOLSDIRECTORY/*
+          sudo du -sh /usr/share/*
+          sudo du -sh /usr/local/share/*
+          sudo du -sh $(home)/*
+          sudo du -sh $AGENT_TOOLSDIRECTORY/*
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
