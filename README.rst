@@ -74,8 +74,6 @@ The following table summarizes the supported platforms and the primary installat
 
 .. installation_LQubit-start-inclusion-marker-do-not-remove
 
-----------------------------
-
 Lightning-Qubit installation
 ****************************
 
