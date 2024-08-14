@@ -84,7 +84,7 @@ Install from source
 
 .. note::
 
-    The below contains instructions for installing Lightning Qubit ***from source***. For most cases, *this is not required* and one can simply use the `installation instructions at pennylane.ai/install <https://pennylane.ai/install>`_.
+    The below contains instructions for installing Lightning-Qubit ***from source***. For most cases, *this is not required* and one can simply use the `installation instructions at pennylane.ai/install <https://pennylane.ai/install>`_.
     If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
 To build Lightning plugins from source you can run
@@ -209,6 +209,7 @@ Install Lightning-GPU from source
 =================================
 
 .. note::
+
 
     The below contains instructions for installing Lightning-GPU ***from source***. For most cases, *this is not required* and one can simply use the `installation instructions at pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_.
     If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
