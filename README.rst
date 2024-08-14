@@ -174,6 +174,7 @@ The supported options and the default value are
 ``-DENABLE_OPENMP=OFF``                    Enable OpenMP
 ``-DBUILD_TESTS=OFF``                      Build cpp tests
 ``-DBUILD_BENCHMARKS=OFF``                 Enable cpp benchmarks
+=========================================  =======================================
 
 Compile MSVC (Windows)
 ======================
