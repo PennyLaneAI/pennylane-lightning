@@ -246,7 +246,7 @@ jobs:
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
@@ -271,7 +271,7 @@ jobs:
           PL_BACKEND=lightning_qubit python -m pip install . -vv
 
           PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos python -m pip install . -vv
+          PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
