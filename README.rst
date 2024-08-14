@@ -184,7 +184,7 @@ Note that OpenMP and BLAS are disabled on this platform.
 Testing
 =======
 
-To test that a plugin is working correctly, 
+To test that a plugin is working correctly, one can check both Python and C++ unit tests for each device.
 
 Python Test
 ^^^^^^^^^^^ 
