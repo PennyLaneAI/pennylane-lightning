@@ -70,7 +70,6 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     :nosignatures:
 
     ~pennylane.BasisState
-    ~pennylane.BlockEncode
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
@@ -134,6 +133,8 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     ~pennylane.DoubleExcitationMinus
     ~pennylane.DoubleExcitationPlus
     ~pennylane.GlobalPhase
+    ~pennylane.BlockEncode
+
 
 .. raw:: html
 

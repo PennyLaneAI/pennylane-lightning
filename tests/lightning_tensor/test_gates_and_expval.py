@@ -118,8 +118,6 @@ def circuit_ansatz(params, wires):
     qml.OrbitalRotation(params[20], wires=[wires[0], wires[1], wires[5], wires[6]])
     qml.QFT(wires=[wires[0]])
     qml.ECR(wires=[wires[1], wires[3]])
-    qml.BlockEncode([[0.1, 0.2], [0.3, 0.4]], wires=[wires[0], wires[3]])
-    qml.ctrl(qml.BlockEncode([0.1], wires=[wires[0]]), control=wires[1])
 
 
 @pytest.mark.parametrize(
@@ -259,7 +257,8 @@ class TestSparseHExpval:
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            NotImplementedError, match="Sparse Hamiltonian Observables are not supported."
+            NotImplementedError,
+            match="The var measurement does not support sparse Hamiltonian observables.",
         ):
             m.var(q.queue[0])
 
@@ -299,7 +298,9 @@ class TestSparseHExpval:
         tape = qml.tape.QuantumScript(measurements=obs, shots=1000)
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError, match="Shots are not supported for tensor network"):
+        with pytest.raises(
+            NotImplementedError, match="Shots are not supported for tensor network simulations."
+        ):
             m.measure_tensor_network(tape)
 
     def test_measurement_not_supported(self):
@@ -310,10 +311,7 @@ class TestSparseHExpval:
         tape = qml.tape.QuantumScript(measurements=obs)
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="Does not support current measurement. Only ExpectationMP measurements are supported.",
-        ):
+        with pytest.raises(NotImplementedError, match="Unsupported measurement type."):
             m.measure_tensor_network(tape)
 
 

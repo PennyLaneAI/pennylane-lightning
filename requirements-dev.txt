@@ -1,5 +1,5 @@
-pip~=22.0
 git+https://github.com/PennyLaneAI/pennylane.git@ad/facade-wrapper
+build
 ninja
 flaky
 pybind11
