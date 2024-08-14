@@ -147,7 +147,7 @@ You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
     CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
     
 
-The supported options for CMakes are listed in the file [CMakeOptions.rst](doc/CMakeOptions.rst).
+The supported options for CMakes are listed in the file `CMakeOptions.rst <https://github.com/PennyLaneAI/pennylane-lightning/blob/kokkosNewAPI_readme/doc/CMakeOptions.rst>`_.
 
 Compile MSVC (Windows)
 ======================
