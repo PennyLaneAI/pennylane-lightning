@@ -811,7 +811,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
 # TODO: Add LT after extending the support for shots_vector
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shot vectors.",
+    reason="lightning.tensor does not support single-wire devices.",
 )
 @pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
 def test_shots_bins(shots, qubit_device):

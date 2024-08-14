@@ -150,7 +150,7 @@ def stopping_condition(op: Operator) -> bool:
 
 
 def stopping_condition_shots(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.qubit``
+    """A function that determines whether or not an operation is supported by ``lightning.tensor``
     with finite shots."""
     return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
