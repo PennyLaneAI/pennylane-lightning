@@ -301,8 +301,6 @@ The C++ code is tested with
 
 .. installation_LKokkos-start-inclusion-marker-do-not-remove
 
------------------------------
-
 Lightning-Kokkos installation
 *****************************
 
