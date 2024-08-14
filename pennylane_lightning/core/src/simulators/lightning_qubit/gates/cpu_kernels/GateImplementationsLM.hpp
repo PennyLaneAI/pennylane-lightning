@@ -581,38 +581,43 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const PrecisionT c = std::cos(angle / 2);
         const ComplexT s = ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
         const std::array<ComplexT, 4> sines = {s, IMAG * s, -s, -IMAG * s};
-        std::size_t mask_xy{0U};
-        for (std::size_t iw = 0; iw < n_wires; iw++) {
-            if (word[iw] != 'Z') {
-                mask_xy |= (one << (num_qubits - 1 - wires[iw]));
+
+        auto get_mask = [one, num_qubits, &word,
+                         &wires](std::function<bool(const int)> f) {
+            std::size_t mask{0U};
+            for (std::size_t iw = 0; iw < wires.size(); iw++) {
+                const auto bit = static_cast<std::size_t>(f(iw));
+                mask |= bit << (num_qubits - 1 - wires[iw]);
             }
-        }
+            return mask;
+        };
+        const std::size_t mask_xy =
+            get_mask([&word](const int a) { return word[a] != 'Z'; });
+        const std::size_t mask_y =
+            get_mask([&word](const int a) { return word[a] == 'Y'; });
+        const std::size_t mask_z =
+            get_mask([&word](const int a) { return word[a] == 'Z'; });
+        const auto count_mask_y = std::popcount(mask_y);
+
         PL_LOOP_PARALLEL(1)
         for (std::size_t i0 = 0; i0 < (one << num_qubits); i0++) {
             const std::size_t i1 = i0 ^ mask_xy;
             if (i0 > i1) {
                 continue;
             }
-            std::size_t sign_i0{0U};
-            std::size_t sign_i1{0U};
-            for (std::size_t iw = 0; iw < n_wires; iw++) {
-                const std::size_t cond =
-                    ((i0 >> (num_qubits - 1 - wires[iw])) & one);
-                switch (word[iw]) {
-                case 'Y':
-                    sign_i0 += cond ? 1 : 3;
-                    sign_i1 += cond ? 3 : 1;
-                    break;
-                case 'Z':
-                    sign_i0 += cond * 2;
-                    sign_i1 += cond * 2;
-                    break;
-                }
+            const auto sign_i0 = std::popcount(i0 & mask_z) * 2 +
+                                 count_mask_y * 3 -
+                                 std::popcount(i0 & mask_y) * 2;
+            const auto sign_i1 = std::popcount(i0 & mask_z) * 2 + count_mask_y +
+                                 std::popcount(i0 & mask_y) * 2;
+            if (mask_xy) {
+                const ComplexT v0 = arr[i0];
+                const ComplexT v1 = arr[i1];
+                arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
+                arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
+            } else {
+                arr[i0] *= c + sines[sign_i0 % 4];
             }
-            const ComplexT v0 = arr[i0];
-            const ComplexT v1 = arr[i1];
-            arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
-            arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
         }
     }
 
