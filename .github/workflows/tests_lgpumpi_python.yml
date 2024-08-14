@@ -51,6 +51,24 @@ jobs:
     timeout-minutes: 30
 
     steps:
+      - name: Checkout pennyLane-lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          git fetch --tags --force
+          git checkout latest_release
+
+
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
       - name: Setup Python virtual environment
@@ -86,6 +104,15 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
+      - name: Install required packages
+        run: |
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          python -m pip install -r requirements-dev.txt
+
+          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
+          python -m pip install . -vv
+
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
         uses: actions/checkout@v4
@@ -101,34 +128,7 @@ jobs:
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
-      - name: Checkout pennyLane-lightning
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-
-      - name: Install required packages
-        run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          python -m pip install -r requirements-dev.txt
-
-          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          SKIP_COMPILATION=True python -m pip install . -vv
-
-      - name: Switch to Lightning GPU release build
-        if: inputs.lightning-version == 'release'
-        run: |
-          git fetch --all
-          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
-
-      - name: Switch to stable build of Lightning
-        if: inputs.lightning-version == 'stable'
-        run: |
-          git fetch --tags --force
-          git checkout latest_release
-
-      # TODO: Update after Release 0.37
-      - name: Install Lightning GPU ${{ inputs.lightning-version }}
-        if: inputs.lightning-version != 'stable'
+      - name: Build and install package
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
@@ -136,17 +136,6 @@ jobs:
           PL_BACKEND=lightning_gpu python scripts/configure_pyproject_toml.py
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install . -vv
-
-      # TODO: Remove after Release 0.37
-      - name: Install Lightning GPU ${{ inputs.lightning-version }}
-        if: inputs.lightning-version == 'stable'
-        env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
-        run: |
-          pip install pip~=22.0
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
-          PL_BACKEND=lightning_gpu python -m pip install . -vv
 
       # There are issues running py-cov with MPI. A solution is to use coverage as reported
       # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
@@ -162,7 +151,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
+          path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
           if-no-files-found: error
 
       - name: Cleanup
