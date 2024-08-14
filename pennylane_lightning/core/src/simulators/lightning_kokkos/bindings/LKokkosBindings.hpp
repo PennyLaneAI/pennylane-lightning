@@ -73,27 +73,20 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const std::size_t index) {
-                sv.setBasisState(index);
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires) {
+                sv.setBasisState(state, wires);
             },
-            "Create Basis State on Device.")
+            "Set the state vector to a basis state.")
         .def(
             "setStateVector",
-            [](StateVectorT &sv, const std::vector<std::size_t> &indices,
-               const np_arr_c &state) {
+            [](StateVectorT &sv, const np_arr_c &state,
+               const std::vector<std::size_t> &wires) {
                 const auto buffer = state.request();
-                std::vector<Kokkos::complex<ParamT>> state_kok;
-                if (buffer.size) {
-                    const auto ptr =
-                        static_cast<const Kokkos::complex<ParamT> *>(
-                            buffer.ptr);
-                    state_kok = std::vector<Kokkos::complex<ParamT>>{
-                        ptr, ptr + buffer.size};
-                }
-                sv.setStateVector(indices, state_kok);
+                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
+                                  wires);
             },
-            "Set State Vector on device with values and their corresponding "
-            "indices for the state vector on device")
+            "Set the state vector to the data contained in `state`.")
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, np_arr_c &host_sv) {

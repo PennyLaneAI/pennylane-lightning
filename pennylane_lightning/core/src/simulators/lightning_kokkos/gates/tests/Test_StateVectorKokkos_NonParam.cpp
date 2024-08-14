@@ -837,14 +837,18 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::SetStateVector",
         std::vector<Kokkos::complex<PrecisionT>> values = {
             init_state[1], init_state[3], init_state[5], init_state[7],
             init_state[0], init_state[2], init_state[4], init_state[6]};
-
         kokkos_sv.setStateVector(indices, values);
-
         kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
-
         for (std::size_t j = 0; j < exp2(num_qubits); j++) {
             CHECK(imag(expected_state[j]) == Approx(imag(result_sv[j])));
             CHECK(real(expected_state[j]) == Approx(real(result_sv[j])));
+        }
+
+        kokkos_sv.setStateVector(init_state, {0, 1, 2});
+        kokkos_sv.DeviceToHost(result_sv.data(), result_sv.size());
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(init_state[j]) == Approx(imag(result_sv[j])));
+            CHECK(real(init_state[j]) == Approx(real(result_sv[j])));
         }
     }
 }
