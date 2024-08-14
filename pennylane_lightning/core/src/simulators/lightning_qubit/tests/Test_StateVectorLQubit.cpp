@@ -49,6 +49,130 @@ TEMPLATE_TEST_CASE("StateVectorLQubit::Constructibility",
     }
 }
 
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setBasisState",
+                           "[setBasisState]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    SECTION("setBasisState") {
+        const ComplexT one{1.0};
+        const ComplexT zero{0.0};
+
+        std::vector<ComplexT> init_state_zeros = {zero, zero, zero, zero,
+                                                  zero, zero, zero, zero};
+        std::vector<ComplexT> expected_state_000 = {one,  zero, zero, zero,
+                                                    zero, zero, zero, zero};
+
+        StateVectorT sv(init_state_zeros.data(), init_state_zeros.size());
+        sv.setBasisState({0}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_000));
+
+        std::vector<ComplexT> expected_state_001 = {zero, one,  zero, zero,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1}, {2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_001));
+
+        std::vector<ComplexT> expected_state_010 = {zero, zero, one,  zero,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1}, {1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_010));
+
+        std::vector<ComplexT> expected_state_011 = {zero, zero, zero, one,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1, 1}, {1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_011));
+
+        std::vector<ComplexT> expected_state_100 = {zero, zero, zero, zero,
+                                                    one,  zero, zero, zero};
+        sv.setBasisState({1}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_100));
+
+        std::vector<ComplexT> expected_state_101 = {zero, zero, zero, zero,
+                                                    zero, one,  zero, zero};
+
+        sv.setBasisState({1, 0, 1}, {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_101));
+
+        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+                                                    zero, zero, one,  zero};
+        sv.setBasisState({1, 1}, {0, 1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_110));
+
+        std::vector<ComplexT> expected_state_111 = {zero, zero, zero, zero,
+                                                    zero, zero, zero, one};
+        sv.setBasisState({1, 1, 1}, {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_111));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setStateVector",
+                           "[setStateVector]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    SECTION("setStateVector") {
+        const ComplexT one{1.0};
+        const ComplexT zero{0.0};
+
+        std::vector<ComplexT> init_state_zeros = {zero, zero, zero, zero,
+                                                  zero, zero, zero, zero};
+        std::vector<ComplexT> expected_state_000 = {one,  zero, zero, zero,
+                                                    zero, zero, zero, zero};
+
+        StateVectorT sv(init_state_zeros.data(), init_state_zeros.size());
+        sv.setStateVector({one, zero}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_000));
+
+        std::vector<ComplexT> expected_state_001 = {zero, one,  zero, zero,
+                                                    zero, zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, one}, {2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_001));
+
+        std::vector<ComplexT> expected_state_010 = {zero, zero, one,  zero,
+                                                    zero, zero, zero, zero};
+
+        sv.resetStateVector();
+        sv.setStateVector({zero, one}, {1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_010));
+
+        std::vector<ComplexT> expected_state_011 = {zero, zero, zero, one,
+                                                    zero, zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, one}, {1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_011));
+
+        std::vector<ComplexT> expected_state_100 = {zero, zero, zero, zero,
+                                                    one,  zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, one}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_100));
+
+        std::vector<ComplexT> expected_state_101 = {zero, zero, zero, zero,
+                                                    zero, one,  zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, one}, {0, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_101));
+
+        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+                                                    zero, zero, one,  zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, one}, {0, 1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_110));
+
+        std::vector<ComplexT> expected_state_111 = {zero, zero, zero, zero,
+                                                    zero, zero, zero, one};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, zero, zero, zero, zero, one},
+                          {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_111));
+    }
+}
+
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::Constructibility",
                            "[General Constructibility]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),
