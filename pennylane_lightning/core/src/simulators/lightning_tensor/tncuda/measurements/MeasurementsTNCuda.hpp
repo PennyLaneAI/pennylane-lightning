@@ -135,6 +135,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
     /**
      * @brief Utility method for samples.
      *
+     * @param wires Wires will restrict probabilities to a subset
      * @param num_samples Number of Samples
      *
      * @return std::vector<std::size_t> A 1-d array storing the samples.
@@ -142,22 +143,21 @@ template <class TensorNetT> class MeasurementsTNCuda {
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
-        std::vector<int64_t> samples(num_samples *
-                                     tensor_network_.getNumQubits());
+    auto generate_samples(const std::vector<std::size_t> &wires,
+                          const size_t num_samples)
+        -> std::vector<std::size_t> {
+        std::vector<int64_t> samples(num_samples * wires.size());
 
-        std::vector<int32_t> modesToSample(tensor_network_.getNumQubits());
-
-        std::iota(modesToSample.begin(), modesToSample.end(), 0);
-
-        std::reverse(modesToSample.begin(), modesToSample.end());
+        std::vector<int32_t> modesToSample =
+            cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                wires, tensor_network_.getNumQubits());
 
         cutensornetStateSampler_t sampler;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateSampler(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetState_t */ tensor_network_.getQuantumState(),
-            /* int32_t numModesToSample */ tensor_network_.getNumQubits(),
+            /* int32_t numModesToSample */ modesToSample.size(),
             /* const int32_t *modesToSample */ modesToSample.data(),
             /* cutensornetStateSampler_t * */ &sampler));
 

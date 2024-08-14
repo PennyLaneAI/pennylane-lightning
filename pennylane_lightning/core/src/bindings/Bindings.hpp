@@ -746,7 +746,27 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
             [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
                 return M.var(*ob);
             },
-            "Variance of an observable object.");
+            "Variance of an observable object.")
+        .def("generate_samples",
+             [](MeasurementsT &M, const std::vector<std::size_t> &wires,
+                const std::size_t num_shots) {
+                 const std::size_t num_wires = wires.size();
+                 auto &&result = M.generate_samples(wires, num_shots);
+                 const std::size_t ndim = 2;
+                 const std::vector<std::size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(std::size_t);
+                 const std::vector<std::size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<std::size_t>::format(), /* data type
+                                                                    */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             });
 }
 
 /**

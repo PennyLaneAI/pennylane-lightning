@@ -128,8 +128,8 @@ TEMPLATE_TEST_CASE("Samples", "[Measures]", float, double) {
 
         std::size_t N = std::pow(2, num_qubits);
         std::size_t num_samples = 100000;
-
-        auto samples = measure.generate_samples(num_samples);
+        const std::vector<std::size_t> wires = {0, 1, 2};
+        auto samples = measure.generate_samples(wires, num_samples);
 
         std::vector<std::size_t> counts(N, 0);
         std::vector<std::size_t> samples_decimal(num_samples, 0);
