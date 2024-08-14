@@ -52,6 +52,26 @@ std::array<std::string, 5> priority_lib{"stdc", "gcc.", "quadmath", "gfortran",
                                         "openblas"};
 
 std::string get_scipylibs_path_worker() {
+    try {
+        // Import the scipy module
+        pybind11::module scipy = py::module::import("scipy");
+
+        // Get the __file__ attribute
+        pybind11::object file_attr = scipy.attr("__file__");
+        std::string file_path = py::cast<std::string>(file_attr);
+
+        // Remove the __init__.py file from the path
+        std::string scipy_lib_path = file_path.substr(0, file_path.find_last_of("/"));
+
+        PL_ABORT_IF(scipy_lib_path.empty(), "Can't find scipy.libs");
+
+        return scipy_lib_path;
+
+    } catch (const py::error_already_set& e) {
+        std::cerr << "Python error: " << e.what() << std::endl;
+    }
+
+    /*
     pybind11::object avail_site_packages =
         pybind11::module::import("site").attr("getsitepackages")();
 
@@ -68,6 +88,7 @@ std::string get_scipylibs_path_worker() {
     PL_ABORT_IF(scipy_lib_path.empty(), "Can't find scipy.libs");
 
     return scipy_lib_path;
+    */
 }
 
 std::string get_scipylibs_path() {
