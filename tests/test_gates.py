@@ -494,6 +494,7 @@ def test_paulirot(n_wires, n_targets, tol):
         wires = np.random.permutation(n_wires)[0:n_targets]
         stateprep = qml.StatePrep(init_state, wires=range(n_wires))
         op = qml.PauliRot(theta, word, wires=wires)
+
         tape0 = qml.tape.QuantumScript(
             [stateprep, op],
             [qml.state()],
@@ -503,7 +504,6 @@ def test_paulirot(n_wires, n_targets, tol):
             [stateprep] + op.decomposition(),
             [qml.state()],
         )
-
         assert np.allclose(dev.execute(tape1), dev.execute(tape0), tol)
 
 

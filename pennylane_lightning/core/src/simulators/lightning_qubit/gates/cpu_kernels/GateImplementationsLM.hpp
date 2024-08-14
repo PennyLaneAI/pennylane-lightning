@@ -566,37 +566,54 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
-    static void
-    applyPauliRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
-                  const std::vector<std::size_t> &controlled_wires,
-                  const std::vector<bool> &controlled_values,
-                  const std::vector<std::size_t> &wires, const bool inverse,
-                  PrecisionT angle, const std::string &word) {
+    static void applyPauliRot(
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,
+        [[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+        [[maybe_unused]] const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, const bool inverse,
+        PrecisionT angle, const std::string &word) {
+        using ComplexT = std::complex<PrecisionT>;
         constexpr std::size_t one{1};
         constexpr auto IMAG = Pennylane::Util::IMAG<PrecisionT>();
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.")
         const std::size_t n_wires = wires.size();
-        const std::size_t dim = one << n_wires;
         const PrecisionT c = std::cos(angle / 2);
-        const std::complex<PrecisionT> s =
-            ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
-        const auto data = generatePauliWordData(word, s);
-        const auto indices = generatePauliWordIndices(word);
-        auto core_function = [dim, c, &indices,
-                              &data](std::complex<PrecisionT> *arr,
-                                     const std::vector<std::size_t> &arr_inds,
-                                     const std::size_t offset) {
-            std::vector<std::complex<PrecisionT>> coeffs(dim);
-            for (std::size_t i = 0; i < dim; i++) {
-                const auto index = arr_inds[i] + offset;
-                coeffs[indices[i]] = arr[index];
+        const ComplexT s = ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
+        const std::array<ComplexT, 4> sines = {s, IMAG * s, -s, -IMAG * s};
+        std::size_t mask_xy{0U};
+        for (std::size_t iw = 0; iw < n_wires; iw++) {
+            if (word[iw] != 'Z') {
+                mask_xy |= (one << (num_qubits - 1 - wires[iw]));
             }
-            for (std::size_t i = 0; i < dim; i++) {
-                const auto index = arr_inds[i] + offset;
-                arr[index] = c * arr[index] + data[i] * coeffs[i];
+        }
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t i0 = 0; i0 < (one << num_qubits); i0++) {
+            const std::size_t i1 = i0 ^ mask_xy;
+            if (i0 > i1) {
+                continue;
             }
-        };
-        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
-                 core_function);
+            std::size_t sign_i0{0U};
+            std::size_t sign_i1{0U};
+            for (std::size_t iw = 0; iw < n_wires; iw++) {
+                const std::size_t cond =
+                    ((i0 >> (num_qubits - 1 - wires[iw])) & one);
+                switch (word[iw]) {
+                case 'Y':
+                    sign_i0 += cond ? 1 : 3;
+                    sign_i1 += cond ? 3 : 1;
+                    break;
+                case 'Z':
+                    sign_i0 += cond * 2;
+                    sign_i1 += cond * 2;
+                    break;
+                }
+            }
+            const ComplexT v0 = arr[i0];
+            const ComplexT v1 = arr[i1];
+            arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
+            arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
+        }
     }
 
     /* One-qubit gates */
