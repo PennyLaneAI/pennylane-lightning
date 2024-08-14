@@ -249,17 +249,6 @@ class LightningKokkos(LightningBase):
             arr = new_arr
         return arr
 
-    def _create_basis_state(self, index):
-        """Return a computational basis state over all wires.
-        Args:
-            index (int): integer representing the computational basis state
-        Returns:
-            array[complex]: complex array of shape ``[2]*self.num_wires``
-            representing the statevector of the basis state
-        Note: This function does not support broadcasted inputs yet.
-        """
-        self._kokkos_state.setBasisState(index)
-
     def reset(self):
         """Reset the device"""
         super().reset()
@@ -357,18 +346,15 @@ class LightningKokkos(LightningBase):
             state.DeviceToHost(state_data)
             state = state_data
 
-        ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
-
         # translate to wire labels used by device
         device_wires = self.map_wires(device_wires)
-        output_shape = [2] * self.num_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
+            output_shape = (2,) * self.num_wires
             # Initialize the entire device state with the input state
             self.sync_h2d(self._reshape(state, output_shape))
             return
-
-        self._kokkos_state.setStateVector(ravelled_indices, state)  # this operation on device
+        self._kokkos_state.setStateVector(state, list(device_wires))  # this operation on device
 
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
@@ -380,8 +366,13 @@ class LightningKokkos(LightningBase):
 
         Note: This function does not support broadcasted inputs yet.
         """
-        num = self._get_basis_state_index(state, wires)
-        self._create_basis_state(num)
+        if not set(state.tolist()).issubset({0, 1}):
+            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
+
+        if len(state) != len(wires):
+            raise ValueError("BasisState parameter and wires must be of equal length.")
+
+        self._kokkos_state.setBasisState(state, list(wires))
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
