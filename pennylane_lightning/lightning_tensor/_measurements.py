@@ -21,17 +21,25 @@ try:
 except ImportError:
     pass
 
-from typing import Callable
+from functools import reduce
+from typing import Callable, List, Union
 
 import numpy as np
 import pennylane as qml
+from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
+    ClassicalShadowMP,
+    CountsMP,
     ExpectationMP,
     MeasurementProcess,
     ProbabilityMP,
+    SampleMeasurement,
+    ShadowExpvalMP,
+    Shots,
     StateMeasurement,
     VarianceMP,
 )
+from pennylane.ops import Hamiltonian, SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -207,9 +215,200 @@ class LightningTensorMeasurements:
         """
 
         if circuit.shots:
-            raise NotImplementedError("Shots are not supported for tensor network simulations.")
+            # finite-shot case
+            results = self.measure_with_samples(
+                circuit.measurements,
+                shots=circuit.shots,
+                mid_measurements=None,
+            )
+
+            if len(circuit.measurements) == 1:
+                if circuit.shots.has_partitioned_shots:
+                    return tuple(res[0] for res in results)
+
+                return results[0]
+
+            return results
         # analytic case
         if len(circuit.measurements) == 1:
             return self.measurement(circuit.measurements[0])
 
         return tuple(self.measurement(mp) for mp in circuit.measurements)
+
+    # pylint:disable = too-many-arguments
+    def measure_with_samples(
+        self,
+        measurements: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],
+        shots: Shots,
+        mid_measurements=None,
+    ) -> List[TensorLike]:
+        """
+        Returns the samples of the measurement process performed on the given state.
+        This function assumes that the user-defined wire labels in the measurement process
+        have already been mapped to integer wires used in the device.
+
+        Args:
+            measurements (List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]]):
+                The sample measurements to perform
+            shots (Shots): The number of samples to take
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
+
+        Returns:
+            List[TensorLike[Any]]: Sample measurement results
+        """
+        # last N measurements are sampling MCMs in ``dynamic_one_shot`` execution mode
+        mps = measurements[0 : -len(mid_measurements)] if mid_measurements else measurements
+        groups, indices = _group_measurements(mps)
+
+        all_res = []
+        for group in groups:
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
+                group[0].obs, SparseHamiltonian
+            ):
+                raise TypeError(
+                    "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
+                )
+            if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, (Hamiltonian, Sum)):
+                raise TypeError("VarianceMP(Hamiltonian/Sum) cannot be computed with samples.")
+            if isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
+                raise TypeError(
+                    "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
+                )
+            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
+                all_res.extend(self._measure_hamiltonian_with_samples(group, shots))
+            elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
+                all_res.extend(self._measure_sum_with_samples(group, shots))
+            else:
+                all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
+
+        # reorder results
+        flat_indices = []
+        for row in indices:
+            flat_indices += row
+        sorted_res = tuple(
+            res for _, res in sorted(list(enumerate(all_res)), key=lambda r: flat_indices[r[0]])
+        )
+
+        # append MCM samples
+        if mid_measurements:
+            raise NotImplementedError("Mid-circuit measurements are not supported.")
+
+        # put the shot vector axis before the measurement axis
+        if shots.has_partitioned_shots:
+            sorted_res = tuple(zip(*sorted_res))
+
+        return sorted_res
+
+    def _apply_diagonalizing_gates(self, mps: List[SampleMeasurement], adjoint: bool = False):
+        if len(mps) == 1:
+            diagonalizing_gates = mps[0].diagonalizing_gates()
+        elif all(mp.obs for mp in mps):
+            diagonalizing_gates = qml.pauli.diagonalize_qwc_pauli_words([mp.obs for mp in mps])[0]
+        else:
+            diagonalizing_gates = []
+
+        if adjoint:
+            diagonalizing_gates = [
+                qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)
+            ]
+
+        self._tensornet.apply_operations(diagonalizing_gates)
+        self._tensornet.appendMPSFinalState()
+
+    def _measure_with_samples_diagonalizing_gates(
+        self,
+        mps: List[SampleMeasurement],
+        shots: Shots,
+    ) -> TensorLike:
+        """
+        Returns the samples of the measurement process performed on the given state,
+        by rotating the state into the measurement basis using the diagonalizing gates
+        given by the measurement process.
+
+        Args:
+            mps (~.measurements.SampleMeasurement): The sample measurements to perform
+            shots (~.measurements.Shots): The number of samples to take
+
+        Returns:
+            TensorLike[Any]: Sample measurement results
+        """
+        # apply diagonalizing gates
+        self._apply_diagonalizing_gates(mps)
+
+        # if self._mcmc:
+        #    raise NotImplementedError("MCMC sampling is not supported.")
+        # else:
+        wires = reduce(sum, (mp.wires for mp in mps))
+
+        def _process_single_shot(samples):
+            processed = []
+            for mp in mps:
+                res = mp.process_samples(samples, wires)
+                if not isinstance(mp, CountsMP):
+                    res = qml.math.squeeze(res)
+
+                processed.append(res)
+
+            return tuple(processed)
+
+        try:
+            samples = self._measurement_lightning.generate_samples(
+                list(wires), shots.total_shots
+            ).astype(int, copy=False)
+        except ValueError as e:
+            if str(e) != "probabilities contain NaN":
+                raise e
+            samples = qml.math.full((shots.total_shots, len(wires)), 0)
+
+        self._apply_diagonalizing_gates(mps, adjoint=True)
+
+        # if there is a shot vector, use the shots.bins generator to
+        # split samples w.r.t. the shots
+        processed_samples = []
+        for lower, upper in shots.bins():
+            result = _process_single_shot(samples[..., lower:upper, :])
+            processed_samples.append(result)
+
+        return (
+            tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
+        )
+
+    def _measure_hamiltonian_with_samples(
+        self,
+        mp: List[SampleMeasurement],
+        shots: Shots,
+    ):
+        # the list contains only one element based on how we group measurements
+        mp = mp[0]
+
+        # if the measurement process involves a Hamiltonian, measure each
+        # of the terms separately and sum
+        def _sum_for_single_shot(s):
+            results = self.measure_with_samples(
+                [ExpectationMP(t) for t in mp.obs.terms()[1]],
+                s,
+            )
+            return sum(c * res for c, res in zip(mp.obs.terms()[0], results))
+
+        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
+        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]
+
+    def _measure_sum_with_samples(
+        self,
+        mp: List[SampleMeasurement],
+        shots: Shots,
+    ):
+        # the list contains only one element based on how we group measurements
+        mp = mp[0]
+
+        # if the measurement process involves a Sum, measure each
+        # of the terms separately and sum
+        def _sum_for_single_shot(s):
+            results = self.measure_with_samples(
+                [ExpectationMP(t) for t in mp.obs],
+                s,
+            )
+            return sum(results)
+
+        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
+        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]

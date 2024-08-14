@@ -625,10 +625,6 @@ class TestWiresInExpval:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.sample()",
-)
 class TestSample:
     """Tests that samples are properly calculated."""
 
@@ -756,10 +752,10 @@ class TestWiresInVar:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shots",
-)
+#@pytest.mark.skipif(
+#    device_name == "lightning.tensor",
+#    reason="lightning.tensor does not support shots",
+#)
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [None, 10000, [10000, 11111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
@@ -780,7 +776,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
     n_qubits = 3
 
-    if (shots is None or device_name in ("lightning.gpu", "lightning.kokkos")) and (
+    if (shots is None or device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor")) and (
         mcmc or kernel_name != "Local"
     ):
         pytest.skip(f"Device {device_name} does not have an mcmc option.")
@@ -791,7 +787,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     if measure_f in (qml.counts, qml.sample) and shots is None:
         pytest.skip("qml.counts, qml.sample do not work with shots = None.")
 
-    if device_name in ("lightning.gpu", "lightning.kokkos"):
+    if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
         dev = qml.device(device_name, wires=n_qubits, shots=shots)
     else:
         dev = qml.device(

@@ -266,33 +266,6 @@ class TestSparseHExpval:
         ):
             m.var(q.queue[0])
 
-    def test_measurement_shot_not_supported(self):
-        """Test shots measurement error for measure_tensor_network."""
-        obs = [
-            qml.expval(qml.PauliX(0) @ qml.Identity(1)),
-        ]
-
-        tensornet = LightningTensorNet(4, 10)
-        tape = qml.tape.QuantumScript(measurements=obs, shots=1000)
-        m = LightningTensorMeasurements(tensornet)
-
-        with pytest.raises(
-            NotImplementedError, match="Shots are not supported for tensor network simulations."
-        ):
-            m.measure_tensor_network(tape)
-
-    def test_measurement_not_supported(self):
-        """Test error for measure_tensor_network."""
-        obs = [qml.sample(wires=0)]
-
-        tensornet = LightningTensorNet(4, 10)
-        tape = qml.tape.QuantumScript(measurements=obs)
-        m = LightningTensorMeasurements(tensornet)
-
-        with pytest.raises(NotImplementedError, match="Unsupported measurement type."):
-            m.measure_tensor_network(tape)
-
-
 class QChem:
     """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
 
