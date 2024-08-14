@@ -163,7 +163,7 @@ class TestHelpers:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shots or mcmc",
+    reason="lightning.tensor does not support mcmc",
 )
 class TestInitialization:
     """Unit tests for device initialization"""

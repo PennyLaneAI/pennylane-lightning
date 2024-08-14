@@ -158,8 +158,6 @@ else:
 )
 def qubit_device(request):
     def _device(wires, shots=None):
-        if device_name == "lightning.tensor":
-            return qml.device(device_name, wires=wires, c_dtype=request.param)
         return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
 
     return _device

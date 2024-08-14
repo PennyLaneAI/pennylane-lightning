@@ -573,7 +573,7 @@ class TestExpval:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurement",
+        reason="lightning.tensor does not support single wire devices",
     )
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
@@ -637,7 +637,7 @@ class TestVar:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurement and single-wire devices",
+        reason="lightning.tensor does not support single-wire devices",
     )
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
@@ -828,7 +828,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements",
+        reason="lightning.tensor does not support single wire devices",
     )
     def test_nonzero_shots(self, tol_stochastic):
         """Test that the default qubit plugin provides correct result for high shot number"""
@@ -853,7 +853,7 @@ class TestLightningDeviceIntegration:
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements and single-wire devices",
+        reason="lightning.tensor does not support single-wire devices",
     )
     @pytest.mark.parametrize(
         "name,expected_output",
@@ -999,10 +999,6 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is run with two expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support QubitStateVector",
-    )
     @pytest.mark.parametrize(
         "name,par,wires,expected_output",
         [
@@ -1217,10 +1213,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    # @pytest.mark.skipif(
-    #    device_name == "lightning.tensor",
-    #    reason="lightning.tensor does not support shot measurements",
-    # )
     def test_multi_samples_return_correlated_results(self, qubit_device):
         """Tests if the samples returned by the sample function have
         the correct dimensions
@@ -1387,7 +1379,7 @@ class TestApplyLightningMethod:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support _apply_state_vector",
+        reason="lightning.tensor does not support direct access to the state",
     )
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_apply_identity_skipped(self, mocker, tol):
