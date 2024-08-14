@@ -10,7 +10,7 @@
 
 ### Breaking changes
 
-* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector. 
+* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
 * Remove `NDpermuter.hpp` which is no longer required.
@@ -91,6 +91,9 @@
   [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Fix plugin-test-matrix CI/CD workflows.
+  [(#850)](https://github.com/PennyLaneAI/pennylane-lightning/pull/850)
 
 * Set the `immutable` parameter value as `false` for the `cutensornetStateApplyTensorOperator` to allow the following `cutensornetStateUpdateTensorOperator` call.
   [(#845)](https://github.com/PennyLaneAI/pennylane-lightning/pull/845)

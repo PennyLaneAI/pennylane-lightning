@@ -177,13 +177,12 @@ jobs:
         run: |
           cd main
           rm -rf build
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           rm -rf build
-          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning-GPU unit tests
@@ -206,12 +205,12 @@ jobs:
         run: |
           cd main
           rm -rf build
-          CMAKE_ARGS="-DPL_BACKEND=${{matrix.default_backend}} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=lightning_qubit python -m pip install . -vv
           rm -rf build
 
-          CMAKE_ARGS="-DPL_BACKEND=${{ matrix.pl_backend }} -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m pip install . -vv
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
