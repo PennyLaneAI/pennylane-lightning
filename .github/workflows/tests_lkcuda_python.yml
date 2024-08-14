@@ -283,8 +283,8 @@ jobs:
         run: |
           cd main/
           for device in lightning.qubit lightning.kokkos; do
-            pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append -vvv
-            pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append -vvv
+            pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+            pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           done
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
