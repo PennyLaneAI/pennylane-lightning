@@ -103,7 +103,7 @@ jobs:
           SKIP_COMPILATION: True
           PL_BACKEND: "lightning_qubit"
         run: |
-          python scripts/configure_pyproject_toml.py || \
+          python scripts/configure_pyproject_toml.py || true \
           python -m pip install . -vv
 
       - name: Install extra backend device
@@ -112,7 +112,7 @@ jobs:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
-          python scripts/configure_pyproject_toml.py || \
+          python scripts/configure_pyproject_toml.py || true \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for all backends
