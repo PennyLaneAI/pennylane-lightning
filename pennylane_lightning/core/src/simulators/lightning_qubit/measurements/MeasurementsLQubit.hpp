@@ -24,14 +24,13 @@
 #include <complex>
 #include <cstdio>
 #include <random>
-#include <stack>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
 
 #include "LinearAlgebra.hpp"
+#include "MeasurementKernels.hpp"
 #include "MeasurementsBase.hpp"
-#include "NDPermuter.hpp"
 #include "Observables.hpp"
 #include "SparseLinAlg.hpp"
 #include "StateVectorLQubitManaged.hpp"
@@ -42,6 +41,7 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Measures;
+using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
@@ -79,13 +79,16 @@ class Measurements final
      */
     auto probs() -> std::vector<PrecisionT> {
         const ComplexT *arr_data = this->_statevector.getData();
-        std::vector<PrecisionT> basis_probs(this->_statevector.getLength(), 0);
-
-        std::transform(
-            arr_data, arr_data + this->_statevector.getLength(),
-            basis_probs.begin(),
-            [](const ComplexT &z) -> PrecisionT { return std::norm(z); });
-        return basis_probs;
+        const std::size_t n_probs = this->_statevector.getLength();
+        std::vector<PrecisionT> probabilities(n_probs);
+        auto *probs = probabilities.data();
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for
+#endif
+        for (std::size_t k = 0; k < n_probs; k++) {
+            probs[k] = std::norm(arr_data[k]);
+        }
+        return probabilities;
     };
 
     /**
@@ -100,64 +103,52 @@ class Measurements final
     probs(const std::vector<std::size_t> &wires,
           [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
         -> std::vector<PrecisionT> {
-        // Determining index that would sort the vector.
-        // This information is needed later.
-        const auto sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
-
-        // Sorting wires.
-        std::vector<std::size_t> sorted_wires(wires.size());
-        for (size_t pos = 0; pos < wires.size(); pos++) {
-            sorted_wires[pos] = wires[sorted_ind_wires[pos]];
+        const std::size_t n_wires = wires.size();
+        if (n_wires == 0) {
+            return {1.0};
         }
-
-        // If all wires are requested, dispatch to `this->probs()`
-        if (wires.size() == this->_statevector.getNumQubits() &&
-            wires == sorted_wires) {
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        // is_equal_to_all_wires is True if `wires` includes all wires in order
+        // and false otherwise
+        bool is_equal_to_all_wires = n_wires == num_qubits;
+        for (std::size_t k = 0; k < n_wires; k++) {
+            if (!is_equal_to_all_wires) {
+                break;
+            }
+            is_equal_to_all_wires = wires[k] == k;
+        }
+        if (is_equal_to_all_wires) {
             return this->probs();
         }
 
-        // Determining probabilities for the sorted wires.
         const ComplexT *arr_data = this->_statevector.getData();
 
-        std::size_t num_qubits = this->_statevector.getNumQubits();
+        // Templated 1-4 wire cases; return probs
+        PROBS_SPECIAL_CASE(1);
+        PROBS_SPECIAL_CASE(2);
+        PROBS_SPECIAL_CASE(3);
+        PROBS_SPECIAL_CASE(4);
+
         const std::vector<std::size_t> all_indices =
-            Gates::generateBitPatterns(sorted_wires, num_qubits);
+            Gates::generateBitPatterns(wires, num_qubits);
         const std::vector<std::size_t> all_offsets = Gates::generateBitPatterns(
-            Gates::getIndicesAfterExclusion(sorted_wires, num_qubits),
-            num_qubits);
-
-        std::vector<PrecisionT> probabilities(all_indices.size(), 0);
-
-        std::size_t ind_probs = 0;
-        for (auto index : all_indices) {
+            Gates::getIndicesAfterExclusion(wires, num_qubits), num_qubits);
+        const std::size_t n_probs = PUtil::exp2(n_wires);
+        std::vector<PrecisionT> probabilities(n_probs, 0);
+        auto *probs = probabilities.data();
+        // For 5 wires and more, there are at least 32 probs entries to
+        // parallelize over This scheme was found most favorable in terms of
+        // memory accesses and it prevents the stack overflow caused by
+        // `reduction(+ : probs[ : n_probs])` when n_probs approaches 2**20
+#if defined PL_LQ_KERNEL_OMP && defined _OPENMP
+#pragma omp parallel for
+#endif
+        for (std::size_t ind_probs = 0; ind_probs < n_probs; ind_probs++) {
             for (auto offset : all_offsets) {
-                probabilities[ind_probs] += std::norm(arr_data[index + offset]);
+                probs[ind_probs] +=
+                    std::norm(arr_data[all_indices[ind_probs] + offset]);
             }
-            ind_probs++;
         }
-
-        // Permute the data according to the required wire ordering
-        if (wires != sorted_wires) {
-            static constexpr std::size_t CACHE_SIZE = 8;
-            PUtil::Permuter<PUtil::DefaultPermuter<CACHE_SIZE>> p{};
-            std::vector<std::size_t> shape(wires.size(), 2);
-            std::vector<std::string> wire_labels_old(sorted_wires.size(), "");
-            std::vector<std::string> wire_labels_new(wires.size(), "");
-
-            std::transform(sorted_wires.begin(), sorted_wires.end(),
-                           wire_labels_old.begin(), [](std::size_t index) {
-                               return std::to_string(index);
-                           });
-            std::transform(
-                wires.begin(), wires.end(), wire_labels_new.begin(),
-                [](std::size_t index) { return std::to_string(index); });
-
-            auto probs_sorted = probabilities;
-            p.Transpose(probabilities, shape, probs_sorted, wire_labels_old,
-                        wire_labels_new);
-            return probs_sorted;
-        }
-
         return probabilities;
     }
 
@@ -183,7 +174,7 @@ class Measurements final
      *
      * @return Floating point std::vector with probabilities.
      */
-    auto probs(size_t num_shots) -> std::vector<PrecisionT> {
+    auto probs(std::size_t num_shots) -> std::vector<PrecisionT> {
         return BaseType::probs(num_shots);
     }
 
@@ -266,7 +257,7 @@ class Measurements final
                 const index_type *entries_ptr, const ComplexT *values_ptr,
                 const index_type numNNZ) -> PrecisionT {
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
@@ -297,7 +288,7 @@ class Measurements final
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
         }
@@ -469,7 +460,7 @@ class Measurements final
 
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -496,7 +487,7 @@ class Measurements final
         std::size_t num_qubits = this->_statevector.getNumQubits();
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
-        std::unordered_map<size_t, std::size_t> cache;
+        std::unordered_map<std::size_t, std::size_t> cache;
         this->setRandomSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
@@ -510,13 +501,13 @@ class Measurements final
         std::size_t idx = 0;
 
         // Burn In
-        for (size_t i = 0; i < num_burnin; i++) {
+        for (std::size_t i = 0; i < num_burnin; i++) {
             idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
                                   idx); // Burn-in.
         }
 
         // Sample
-        for (size_t i = 0; i < num_samples; i++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
             idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
                                   idx);
 
@@ -529,7 +520,7 @@ class Measurements final
 
             // If not cached, compute
             else {
-                for (size_t j = 0; j < num_qubits; j++) {
+                for (std::size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
                         (idx >> j) & 1U;
                 }
@@ -559,7 +550,7 @@ class Measurements final
                    const index_type *entries_ptr, const ComplexT *values_ptr,
                    const index_type numNNZ) {
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
@@ -585,79 +576,36 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(size_t num_samples) {
+    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
-        auto &&probabilities = probs();
+        std::vector<std::size_t> wires(num_qubits);
+        std::iota(wires.begin(), wires.end(), 0);
+        return generate_samples(wires, num_samples);
+    }
 
-        std::vector<std::size_t> samples(num_samples * num_qubits, 0);
-        std::uniform_real_distribution<PrecisionT> distribution(0.0, 1.0);
-        std::unordered_map<size_t, std::size_t> cache;
+    /**
+     * @brief Generate samples.
+     *
+     * @param wires Sample are generated for the specified wires.
+     * @param num_samples The number of samples to generate.
+     * @return 1-D vector of samples in binary, each sample is
+     * separated by a stride equal to the number of qubits.
+     */
+    std::vector<std::size_t>
+    generate_samples(const std::vector<std::size_t> &wires,
+                     const std::size_t num_samples) {
+        const std::size_t n_wires = wires.size();
+        std::vector<std::size_t> samples(num_samples * n_wires);
         this->setRandomSeed();
-
-        const std::size_t N = probabilities.size();
-        std::vector<double> bucket(N);
-        std::vector<std::size_t> bucket_partner(N);
-        std::stack<std::size_t> overfull_bucket_ids;
-        std::stack<std::size_t> underfull_bucket_ids;
-
-        for (size_t i = 0; i < N; i++) {
-            bucket[i] = N * probabilities[i];
-            bucket_partner[i] = i;
-            if (bucket[i] > 1.0) {
-                overfull_bucket_ids.push(i);
-            }
-            if (bucket[i] < 1.0) {
-                underfull_bucket_ids.push(i);
-            }
-        }
-
-        // Run alias algorithm
-        while (!underfull_bucket_ids.empty() && !overfull_bucket_ids.empty()) {
-            // get an overfull bucket
-            std::size_t i = overfull_bucket_ids.top();
-
-            // get an underfull bucket
-            std::size_t j = underfull_bucket_ids.top();
-            underfull_bucket_ids.pop();
-
-            // underfull bucket is partned with an overfull bucket
-            bucket_partner[j] = i;
-            bucket[i] = bucket[i] + bucket[j] - 1;
-
-            // if overfull bucket is now underfull
-            // put in underfull stack
-            if (bucket[i] < 1) {
-                overfull_bucket_ids.pop();
-                underfull_bucket_ids.push(i);
-            }
-
-            // if overfull bucket is full -> remove
-            else if (bucket[i] == 1.0) {
-                overfull_bucket_ids.pop();
-            }
-        }
-
-        // Pick samples
-        for (size_t i = 0; i < num_samples; i++) {
-            PrecisionT pct = distribution(this->rng) * N;
-            auto idx = static_cast<std::size_t>(pct);
-            if (pct - idx > bucket[idx]) {
-                idx = bucket_partner[idx];
-            }
-            // If cached, retrieve sample from cache
-            if (cache.contains(idx)) {
-                std::size_t cache_id = cache[idx];
-                auto it_temp = samples.begin() + cache_id * num_qubits;
-                std::copy(it_temp, it_temp + num_qubits,
-                          samples.begin() + i * num_qubits);
-            }
-            // If not cached, compute
-            else {
-                for (size_t j = 0; j < num_qubits; j++) {
-                    samples[i * num_qubits + (num_qubits - 1 - j)] =
-                        (idx >> j) & 1U;
-                }
-                cache[idx] = i;
+        DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
+        // The Python layer expects a 2D array with dimensions (n_samples x
+        // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -
+        // j)` `s` being the "slow" row index and `j` being the "fast" column
+        // index
+        for (std::size_t s = 0; s < num_samples; s++) {
+            const std::size_t idx = drv();
+            for (std::size_t j = 0; j < n_wires; j++) {
+                samples[s * n_wires + (n_wires - 1 - j)] = (idx >> j) & 1U;
             }
         }
         return samples;

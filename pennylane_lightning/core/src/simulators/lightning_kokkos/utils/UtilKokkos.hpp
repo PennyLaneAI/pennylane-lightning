@@ -33,6 +33,52 @@ namespace Pennylane::LightningKokkos::Util {
 constexpr std::size_t one{1};
 
 /**
+ * @brief Copy the content of a Kokkos view to an `std::vector`.
+ *
+ * @tparam T View data type.
+ * @param view Kokkos view.
+ * @return `std::vector<T>` containing a copy of the view.
+ */
+template <typename T>
+inline auto view2vector(const Kokkos::View<T *> view) -> std::vector<T> {
+    using UnmanagedHostView =
+        Kokkos::View<T *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    std::vector<T> vec(view.size());
+    Kokkos::deep_copy(UnmanagedHostView(vec.data(), vec.size()), view);
+    return vec;
+}
+
+/**
+ * @brief Copy the content of a pointer to a Kokkos view.
+ *
+ * @tparam T Pointer data type.
+ * @param vec Pointer.
+ * @return Kokkos view pointing to a copy of the pointer.
+ */
+template <typename T>
+inline auto pointer2view(const T *vec, const std::size_t num)
+    -> Kokkos::View<T *> {
+    using UnmanagedView = Kokkos::View<const T *, Kokkos::HostSpace,
+                                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    Kokkos::View<T *> view("vec", num);
+    Kokkos::deep_copy(view, UnmanagedView(vec, num));
+    return view;
+}
+
+/**
+ * @brief Copy the content of an `std::vector` to a Kokkos view.
+ *
+ * @tparam T Vector data type.
+ * @param vec Vector.
+ * @return Kokkos view pointing to a copy of the vector.
+ */
+template <typename T>
+inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
+    return pointer2view(vec.data(), vec.size());
+}
+
+/**
  * @brief Compute the parities and shifts for multi-qubit operations.
  *
  * @param num_qubits Number of qubits in the state vector.

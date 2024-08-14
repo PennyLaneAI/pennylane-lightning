@@ -53,7 +53,7 @@ jobs:
     steps:
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /root/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -115,13 +115,13 @@ jobs:
     steps:
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /root/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.container_img }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Copy cached libraries
         if: steps.kokkos-cache.outputs.cache-hit == 'true'
@@ -166,16 +166,15 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:/usr/bin:$PATH"
             python -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
 
-          CIBW_ENVIRONMENT: |
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
-            LD_LIBRARY_PATH="/opt/python/cp39-cp39/lib:$LD_LIBRARY_PATH" \
-            Python_LIBRARY=$(python -c 'import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)') \
-            CMAKE_ARGS="-DPYTHON_EXECUTABLE=$(python -c 'import sys; print(sys.executable)') -DPYTHON_INCLUDE_DIR=$(python -c 'import sysconfig; print(sysconfig.get_paths()['include'])') -DPYTHON_LIBRARY=$(python -c 'import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)')"
-            PL_BACKEND="${{ matrix.pl_backend }}"
+          CIBW_ENVIRONMENT: PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
-            if ${{ matrix.pl_backend == 'lightning_kokkos'}}; then SKIP_COMPILATION=True PL_BACKEND="lightning_qubit" python -m pip install . -vv; fi
+            if ${{ matrix.pl_backend == 'lightning_kokkos'}}
+            then
+              PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+              SKIP_COMPILATION=True python -m pip install . -vv
+            fi
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`

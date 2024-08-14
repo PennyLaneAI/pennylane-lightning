@@ -98,7 +98,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache/save@v3
         with:
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
 
   cpptestswithKokkos:
@@ -111,8 +111,9 @@ jobs:
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
         kokkos_version: ["4.3.01"]
+        enable_lapack: ["OFF", "ON"]
 
-    name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
+    name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}), enable_lapack-${{ matrix.enable_lapack }}
     runs-on:
       - ${{ matrix.os }}
       - self-hosted
@@ -134,8 +135,8 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-${{ github.sha }}
-          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}-${{ github.ref }}-
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
@@ -193,6 +194,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
+            -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \

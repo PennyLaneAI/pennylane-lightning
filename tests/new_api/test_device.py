@@ -22,6 +22,7 @@ import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.measurements import ProbabilityMP
 from pennylane.tape import QuantumScript
 
 if device_name == "lightning.qubit":
@@ -187,10 +188,6 @@ class TestInitialization:
             _ = LightningDevice(wires=2, shots=1000, mcmc=True, kernel_name="bleh")
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support adjoint_observables",
-)
 class TestExecution:
     """Unit tests for executing quantum tapes on a device"""
 
@@ -217,6 +214,9 @@ class TestExecution:
         "num_burnin": 0,
     }
 
+    @pytest.mark.skipif(
+        device_name="lightning.tensor", reason="lightning.tensor does not support rng key"
+    )
     @pytest.mark.parametrize(
         "config, expected_config",
         [
@@ -277,6 +277,9 @@ class TestExecution:
 
         assert new_config == expected_config
 
+    @pytest.mark.skipif(
+        device_name="lightning.tensor", reason="lightning.tensor does not support adjoint"
+    )
     @pytest.mark.parametrize("adjoint", [True, False])
     def test_preprocess(self, adjoint):
         """Test that the transform program returned by preprocess is correct"""
@@ -287,7 +290,7 @@ class TestExecution:
         expected_program.add_transform(validate_observables, accepted_observables, name=device.name)
         expected_program.add_transform(validate_device_wires, device.wires, name=device.name)
         expected_program.add_transform(
-            mid_circuit_measurements, device=device, mcm_config=MCMConfig(), interface=None
+            mid_circuit_measurements, device=device, mcm_config=MCMConfig()
         )
         expected_program.add_transform(
             decompose,
@@ -324,13 +327,19 @@ class TestExecution:
 
     @pytest.mark.parametrize(
         "op, is_trainable",
-        [
-            (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), False),
-            (qml.StatePrep(qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0), True),
-            (qml.StatePrep(np.array([1, 0]), wires=0), False),
-            (qml.BasisState([1, 1], wires=[0, 1]), False),
-            (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
-        ],
+        (
+            [
+                (qml.StatePrep([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), False),
+                (qml.StatePrep(qml.numpy.array([1 / np.sqrt(2), 1 / np.sqrt(2)]), wires=0), True),
+                (qml.StatePrep(np.array([1, 0]), wires=0), False),
+                (qml.BasisState([1, 1], wires=[0, 1]), False),
+                (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
+            ]
+            if device_name != "lightning.tensor"
+            else [
+                (qml.BasisState([1, 1], wires=[0, 1]), False),
+            ]
+        ),
     )
     def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
         """Test that state prep ops in the beginning of a tape are decomposed with adjoint
@@ -383,29 +392,37 @@ class TestExecution:
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp",
-        [
-            qml.probs(wires=[1, 2]),
-            qml.probs(op=qml.Z(2)),
-            qml.expval(qml.Z(2)),
-            qml.var(qml.X(2)),
-            qml.expval(qml.X(0) + qml.Z(0)),
-            qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
-            qml.expval(2.5 * qml.Z(0)),
-            qml.expval(qml.Z(0) @ qml.X(1)),
-            qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
-            qml.expval(
-                qml.SparseHamiltonian(
-                    qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
-                        wire_order=[0, 1, 2]
-                    ),
-                    wires=[0, 1, 2],
-                )
-            ),
-            qml.expval(qml.Projector([1], wires=2)),
-        ],
+        (
+            [
+                qml.probs(wires=[1, 2]),
+                qml.probs(op=qml.Z(2)),
+                qml.expval(qml.Z(2)),
+                qml.var(qml.X(2)),
+                qml.expval(qml.X(0) + qml.Z(0)),
+                qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
+                qml.expval(2.5 * qml.Z(0)),
+                qml.expval(qml.Z(0) @ qml.X(1)),
+                qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
+                qml.expval(
+                    qml.SparseHamiltonian(
+                        qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
+                            wire_order=[0, 1, 2]
+                        ),
+                        wires=[0, 1, 2],
+                    )
+                ),
+                qml.expval(qml.Projector([1], wires=2)),
+            ]
+        ),
     )
     def test_execute_single_measurement(self, theta, phi, mp, dev):
         """Test that execute returns the correct results with a single measurement."""
+        if device_name == "lightning.tensor":
+            if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
+                pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
+            if isinstance(mp, ProbabilityMP):
+                pytest.skip("qml.probs() not supported in lightning.tensor")
+
         if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
 
@@ -426,24 +443,32 @@ class TestExecution:
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp1",
-        [
-            qml.probs(wires=[1, 2]),
-            qml.expval(qml.Z(2)),
-            qml.var(qml.X(2)),
-            qml.var(qml.Hermitian(qml.Hadamard.compute_matrix(), 0)),
-        ],
+        (
+            [
+                qml.probs(wires=[1, 2]),
+                qml.expval(qml.Z(2)),
+                qml.var(qml.X(2)),
+                qml.var(qml.Hermitian(qml.Hadamard.compute_matrix(), 0)),
+            ]
+        ),
     )
     @pytest.mark.parametrize(
         "mp2",
-        [
-            qml.probs(op=qml.X(2)),
-            qml.expval(qml.Y(2)),
-            qml.var(qml.Y(2)),
-            qml.expval(qml.Hamiltonian([-0.5, 1.5, -1.1], [qml.Y(1), qml.X(1), qml.Z(0)])),
-        ],
+        (
+            [
+                qml.probs(op=qml.X(2)),
+                qml.expval(qml.Y(2)),
+                qml.var(qml.Y(2)),
+                qml.expval(qml.Hamiltonian([-0.5, 1.5, -1.1], [qml.Y(1), qml.X(1), qml.Z(0)])),
+            ]
+        ),
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
+        if device_name == "lightning.tensor":
+            if isinstance(mp1, ProbabilityMP) or isinstance(mp2, ProbabilityMP):
+                pytest.skip("qml.probs() not supported in lightning.tensor")
+
         if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
 

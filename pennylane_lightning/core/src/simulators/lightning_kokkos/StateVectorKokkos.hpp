@@ -36,6 +36,7 @@
 #include "GateOperation.hpp"
 #include "StateVectorBase.hpp"
 #include "Util.hpp"
+#include "UtilKokkos.hpp"
 
 #include "CPUMemoryModel.hpp"
 
@@ -43,6 +44,7 @@
 namespace {
 using namespace Pennylane::Gates::Constant;
 using namespace Pennylane::LightningKokkos::Functors;
+using namespace Pennylane::LightningKokkos::Util;
 using Pennylane::Gates::GateOperation;
 using Pennylane::Gates::GeneratorOperation;
 using Pennylane::Util::array_contains;
@@ -143,26 +145,29 @@ class StateVectorKokkos final
     }
 
     /**
-     * @brief Set values for a batch of elements of the state-vector.
+     * @brief Prepares a single computational basis state.
      *
-     * @param values Values to be set for the target elements.
-     * @param indices Indices of the target elements.
+     * @param state Binary number representing the index
+     * @param wires Wires.
      */
-    void setStateVector(const std::vector<std::size_t> &indices,
-                        const std::vector<ComplexT> &values) {
-        initZeros();
-        KokkosSizeTVector d_indices("d_indices", indices.size());
-        KokkosVector d_values("d_values", values.size());
-        Kokkos::deep_copy(d_indices, UnmanagedConstSizeTHostView(
-                                         indices.data(), indices.size()));
-        Kokkos::deep_copy(d_values, UnmanagedConstComplexHostView(
-                                        values.data(), values.size()));
-        KokkosVector sv_view =
-            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
-        Kokkos::parallel_for(
-            indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
-                sv_view(d_indices[i]) = d_values[i];
-            });
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        const auto n_wires = wires.size();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        setBasisState(index);
     }
 
     /**
@@ -174,6 +179,71 @@ class StateVectorKokkos final
         if (this->getLength() > 0) {
             setBasisState(0U);
         }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        initZeros();
+        auto d_indices = vector2view(indices);
+        auto d_values = vector2view(values);
+        KokkosVector sv_view =
+            getView(); // circumvent error capturing this with KOKKOS_LAMBDA
+        Kokkos::parallel_for(
+            indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                sv_view(d_indices[i]) = d_values[i];
+            });
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const std::vector<ComplexT> &state,
+                        const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.");
+        setStateVector(state.data(), wires);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const ComplexT *state,
+                        const std::vector<std::size_t> &wires) {
+        constexpr std::size_t one{1U};
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        const auto num_state = exp2(wires.size());
+        auto d_sv = getView();
+        auto d_state = pointer2view(state, num_state);
+        auto d_wires = vector2view(wires);
+        initZeros();
+        Kokkos::parallel_for(
+            num_state, KOKKOS_LAMBDA(const std::size_t i) {
+                std::size_t index{0U};
+                for (std::size_t w = 0; w < d_wires.size(); w++) {
+                    const std::size_t bit = (i & (one << w)) >> w;
+                    index |= bit << (num_qubits - 1 -
+                                     d_wires(d_wires.size() - 1 - w));
+                }
+                d_sv(index) = d_state(i);
+            });
     }
 
     /**
@@ -283,19 +353,13 @@ class StateVectorKokkos final
             PL_ABORT_IF(gate_matrix.empty(),
                         std::string("Operation does not exist for ") + opName +
                             std::string(" and no matrix provided."));
-            KokkosVector matrix("gate_matrix", gate_matrix.size());
-            Kokkos::deep_copy(
-                matrix, UnmanagedConstComplexHostView(gate_matrix.data(),
-                                                      gate_matrix.size()));
-            return applyMultiQubitOp(matrix, wires, inverse);
+            return applyMultiQubitOp(vector2view(gate_matrix), wires, inverse);
         }
     }
 
     template <bool inverse = false>
     void applyControlledGlobalPhase(const std::vector<ComplexT> &diagonal) {
-        KokkosVector diagonal_("diagonal_", diagonal.size());
-        Kokkos::deep_copy(diagonal_, UnmanagedConstComplexHostView(
-                                         diagonal.data(), diagonal.size()));
+        auto diagonal_ = vector2view(diagonal);
         auto two2N = BaseType::getLength();
         auto dataview = getView();
         Kokkos::parallel_for(
@@ -587,15 +651,11 @@ class StateVectorKokkos final
      * @brief Get underlying data vector
      */
     [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
+        return view2vector(getView());
     }
 
     [[nodiscard]] auto getDataVector() const -> const std::vector<ComplexT> {
-        std::vector<ComplexT> data_(this->getLength());
-        DeviceToHost(data_.data(), data_.size());
-        return data_;
+        return view2vector(getView());
     }
 
     /**

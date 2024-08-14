@@ -23,7 +23,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
-from pennylane.measurements import Expectation, Variance
+from pennylane.measurements import Expectation, Shots, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -237,6 +237,29 @@ class TestProbs:
         ):
             assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
+    @pytest.mark.skipif(ld._new_API, reason="Old API required")
+    @pytest.mark.parametrize("n_qubits", range(4, 25, 4))
+    @pytest.mark.parametrize("n_targets", list(range(1, 9)) + list(range(9, 25, 4)))
+    def test_probs_many_wires(self, n_qubits, n_targets, tol):
+        """Test probs measuring many wires of a random quantum state."""
+        if n_targets >= n_qubits:
+            pytest.skip("Number of targets cannot exceed the number of wires.")
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+
+        def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            return qml.probs(wires=range(0, n_targets))
+
+        res = qml.QNode(circuit, dev)()
+        ref = qml.QNode(circuit, dq)()
+
+        assert np.allclose(res, ref, atol=tol, rtol=0)
+
 
 class TestExpval:
     """Tests for the expval function"""
@@ -311,18 +334,22 @@ class TestExpval:
             (
                 [
                     qml.PauliX(0) @ qml.PauliZ(1),
-                    qml.Hermitian(
-                        [
-                            [1.0, 0.0, 0.0, 0.0],
-                            [0.0, 3.0, 0.0, 0.0],
-                            [0.0, 0.0, -1.0, 1.0],
-                            [0.0, 0.0, 1.0, -2.0],
-                        ],
-                        wires=[0, 1],
+                    (
+                        qml.Hermitian(
+                            [
+                                [1.0, 0.0, 0.0, 0.0],
+                                [0.0, 3.0, 0.0, 0.0],
+                                [0.0, 0.0, -1.0, 1.0],
+                                [0.0, 0.0, 1.0, -2.0],
+                            ],
+                            wires=[0, 1],
+                        )
+                        if device_name != "lightning.tensor"
+                        else qml.Hermitian([[1.0, 0.0], [0.0, 1.0]], wires=[0])
                     ),
                 ],
                 [0.3, 1.0],
-                0.9319728930156066,
+                0.9319728930156066 if device_name != "lightning.tensor" else 1.0,
             ),
         ],
     )
@@ -341,9 +368,7 @@ class TestExpval:
             qml.RY(-0.2, wires=[1])
             return qml.expval(ham)
 
-        assert np.allclose(
-            circuit(), res, atol=tol, rtol=0 if device_name != "lightning.tensor" else 2e-1
-        )
+        assert np.allclose(circuit(), res, atol=tol, rtol=0)
 
     def test_value(self, dev, tol):
         """Test that the expval interface works"""
@@ -383,10 +408,6 @@ class TestExpval:
         circuit()
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support var()",
-)
 class TestVar:
     """Tests for the var function"""
 
@@ -661,11 +682,38 @@ class TestSample:
         # they square to 1
         assert np.allclose(s1**2, 1, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize("seed", range(0, 10))
+    @pytest.mark.parametrize("nwires", range(1, 11))
+    def test_sample_variations(self, qubit_device, nwires, seed):
+        """Tests if `sample(wires)` returns correct statistics."""
+        shots = 20000
+        n_qubits = max(5, nwires + 1)
+        np.random.seed(seed)
+        wires = qml.wires.Wires(np.random.permutation(nwires))
+        state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        state[np.random.randint(0, 2**n_qubits, 1)] += state.size / 10
+        state /= np.linalg.norm(state)
+        ops = [qml.StatePrep(state, wires=range(n_qubits))]
+        tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.var()",
-)
+        def reshape_samples(samples):
+            return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
+
+        dev = qubit_device(wires=n_qubits, shots=shots)
+        samples = dev.execute(tape)
+        probs = qml.measurements.ProbabilityMP(wires=wires).process_samples(
+            reshape_samples(samples), wire_order=wires
+        )
+
+        dev = qml.device("default.qubit", wires=n_qubits, shots=shots)
+        samples = dev.execute(tape)
+        ref = qml.measurements.ProbabilityMP(wires=wires).process_samples(
+            reshape_samples(samples), wire_order=wires
+        )
+
+        assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
+
+
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
 
@@ -770,3 +818,24 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     results2 = func2(*params)
 
     validate_measurements(measure_f, shots, results1, results2)
+
+
+# TODO: Add LT after extending the support for shots_vector
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support shot vectors.",
+)
+@pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
+def test_shots_bins(shots, qubit_device):
+    """Tests that Lightning handles multiple shots."""
+
+    dev = qubit_device(wires=1, shots=shots)
+
+    @qml.qnode(dev)
+    def circuit():
+        return qml.expval(qml.PauliZ(wires=0))
+
+    if dev.name == "lightning.qubit":
+        assert np.sum(shots) == circuit.device.shots.total_shots
+
+    assert np.allclose(circuit(), 1.0)

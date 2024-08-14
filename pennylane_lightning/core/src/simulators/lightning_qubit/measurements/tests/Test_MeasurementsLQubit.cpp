@@ -281,7 +281,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 constexpr std::size_t num_qubits = 2;
                 auto statevector_data =
                     std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
-                const std::vector<std::size_t> wires{0, 1};
+                const std::vector<std::size_t> device_wires{0, 1};
                 statevector_data[0] = {1.0, 0.0};
 
                 StateVectorT statevector(statevector_data.data(),
@@ -289,9 +289,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 Measurements<StateVectorT> Measurer(statevector);
 
                 auto p0_full = Measurer.probs();
-                auto p0_0 = Measurer.probs({0}, wires);
-                auto p0_1 = Measurer.probs({1}, wires);
-                auto p0_perm0 = Measurer.probs({1, 0}, wires);
+                auto p0_0 = Measurer.probs({0}, device_wires);
+                auto p0_1 = Measurer.probs({1}, device_wires);
+                auto p0_perm0 = Measurer.probs({1, 0}, device_wires);
 
                 CHECK_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
                                                       1.0, 0.0, 0.0, 0.0})
@@ -309,9 +309,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
 
                 statevector.applyOperation("Hadamard", {0}, false);
                 auto p1_full = Measurer.probs();
-                auto p1_0 = Measurer.probs({0}, wires);
-                auto p1_1 = Measurer.probs({1}, wires);
-                auto p1_perm0 = Measurer.probs({1, 0}, wires);
+                auto p1_0 = Measurer.probs({0}, device_wires);
+                auto p1_1 = Measurer.probs({1}, device_wires);
+                auto p1_perm0 = Measurer.probs({1, 0}, device_wires);
 
                 CHECK_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
                                                       0.5, 0.0, 0.5, 0.0})
@@ -328,9 +328,9 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
 
                 statevector.applyOperation("Hadamard", {1}, false);
                 auto p2_full = Measurer.probs();
-                auto p2_0 = Measurer.probs({0}, wires);
-                auto p2_1 = Measurer.probs({1}, wires);
-                auto p2_perm0 = Measurer.probs({1, 0}, wires);
+                auto p2_0 = Measurer.probs({0}, device_wires);
+                auto p2_1 = Measurer.probs({1}, device_wires);
+                auto p2_perm0 = Measurer.probs({1, 0}, device_wires);
 
                 CHECK_THAT(p2_full, Catch::Approx(std::vector<PrecisionT>{
                                                       0.25, 0.25, 0.25, 0.25})
@@ -351,7 +351,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 constexpr std::size_t num_qubits = 3;
                 auto statevector_data =
                     std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
-                const std::vector<std::size_t> wires{0, 1, 2};
+                const std::vector<std::size_t> device_wires{0, 1, 2};
                 statevector_data[0] = {1.0, 0.0};
 
                 StateVectorT statevector(statevector_data.data(),
@@ -359,24 +359,24 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 Measurements<StateVectorT> Measurer(statevector);
 
                 auto p0_full = Measurer.probs();
-                auto p0_0 = Measurer.probs({0}, wires);
-                auto p0_1 = Measurer.probs({1}, wires);
-                auto p0_2 = Measurer.probs({2}, wires);
+                auto p0_0 = Measurer.probs({0}, device_wires);
+                auto p0_1 = Measurer.probs({1}, device_wires);
+                auto p0_2 = Measurer.probs({2}, device_wires);
 
-                auto p0_01 = Measurer.probs({0, 1}, wires);
-                auto p0_02 = Measurer.probs({0, 2}, wires);
-                auto p0_12 = Measurer.probs({1, 2}, wires);
+                auto p0_01 = Measurer.probs({0, 1}, device_wires);
+                auto p0_02 = Measurer.probs({0, 2}, device_wires);
+                auto p0_12 = Measurer.probs({1, 2}, device_wires);
 
-                auto p0_10 = Measurer.probs({1, 0}, wires);
-                auto p0_20 = Measurer.probs({2, 0}, wires);
-                auto p0_21 = Measurer.probs({2, 1}, wires);
+                auto p0_10 = Measurer.probs({1, 0}, device_wires);
+                auto p0_20 = Measurer.probs({2, 0}, device_wires);
+                auto p0_21 = Measurer.probs({2, 1}, device_wires);
 
-                auto p0_012 = Measurer.probs({0, 1, 2}, wires);
-                auto p0_021 = Measurer.probs({0, 2, 1}, wires);
-                auto p0_102 = Measurer.probs({1, 0, 2}, wires);
-                auto p0_120 = Measurer.probs({1, 2, 0}, wires);
-                auto p0_201 = Measurer.probs({2, 0, 1}, wires);
-                auto p0_210 = Measurer.probs({2, 1, 0}, wires);
+                auto p0_012 = Measurer.probs({0, 1, 2}, device_wires);
+                auto p0_021 = Measurer.probs({0, 2, 1}, device_wires);
+                auto p0_102 = Measurer.probs({1, 0, 2}, device_wires);
+                auto p0_120 = Measurer.probs({1, 2, 0}, device_wires);
+                auto p0_201 = Measurer.probs({2, 0, 1}, device_wires);
+                auto p0_210 = Measurer.probs({2, 1, 0}, device_wires);
 
                 CHECK_THAT(p0_full, Catch::Approx(std::vector<PrecisionT>{
                                                       1.0, 0.0, 0.0, 0.0, 0.0,
@@ -441,24 +441,24 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                 statevector.applyOperation("Hadamard", {0}, false);
 
                 auto p1_full = Measurer.probs();
-                auto p1_0 = Measurer.probs({0}, wires);
-                auto p1_1 = Measurer.probs({1}, wires);
-                auto p1_2 = Measurer.probs({2}, wires);
+                auto p1_0 = Measurer.probs({0}, device_wires);
+                auto p1_1 = Measurer.probs({1}, device_wires);
+                auto p1_2 = Measurer.probs({2}, device_wires);
 
-                auto p1_01 = Measurer.probs({0, 1}, wires);
-                auto p1_02 = Measurer.probs({0, 2}, wires);
-                auto p1_12 = Measurer.probs({1, 2}, wires);
+                auto p1_01 = Measurer.probs({0, 1}, device_wires);
+                auto p1_02 = Measurer.probs({0, 2}, device_wires);
+                auto p1_12 = Measurer.probs({1, 2}, device_wires);
 
-                auto p1_10 = Measurer.probs({1, 0}, wires);
-                auto p1_20 = Measurer.probs({2, 0}, wires);
-                auto p1_21 = Measurer.probs({2, 1}, wires);
+                auto p1_10 = Measurer.probs({1, 0}, device_wires);
+                auto p1_20 = Measurer.probs({2, 0}, device_wires);
+                auto p1_21 = Measurer.probs({2, 1}, device_wires);
 
-                auto p1_012 = Measurer.probs({0, 1, 2}, wires);
-                auto p1_021 = Measurer.probs({0, 2, 1}, wires);
-                auto p1_102 = Measurer.probs({1, 0, 2}, wires);
-                auto p1_120 = Measurer.probs({1, 2, 0}, wires);
-                auto p1_201 = Measurer.probs({2, 0, 1}, wires);
-                auto p1_210 = Measurer.probs({2, 1, 0}, wires);
+                auto p1_012 = Measurer.probs({0, 1, 2}, device_wires);
+                auto p1_021 = Measurer.probs({0, 2, 1}, device_wires);
+                auto p1_102 = Measurer.probs({1, 0, 2}, device_wires);
+                auto p1_120 = Measurer.probs({1, 2, 0}, device_wires);
+                auto p1_201 = Measurer.probs({2, 0, 1}, device_wires);
+                auto p1_210 = Measurer.probs({2, 1, 0}, device_wires);
 
                 CHECK_THAT(p1_full, Catch::Approx(std::vector<PrecisionT>{
                                                       0.5, 0.0, 0.0, 0.0, 0.5,
@@ -521,6 +521,85 @@ TEMPLATE_PRODUCT_TEST_CASE("Probabilities", "[Measurements]",
                                        .margin(1e-7));
             }
         }
+        SECTION("5 qubits") {
+            constexpr std::size_t num_qubits = 5;
+            auto statevector_data =
+                std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+            const std::vector<std::size_t> device_wires{0, 1, 2, 3, 4};
+            statevector_data[0] = {1.0, 0.0};
+            StateVectorT statevector(statevector_data.data(),
+                                     statevector_data.size());
+            Measurements<StateVectorT> Measurer(statevector);
+            SECTION("1 target") {
+                std::size_t target = GENERATE(0, 1, 2, 3, 4);
+                statevector.applyOperation("Hadamard", {target}, false);
+                auto probs = Measurer.probs({target}, device_wires);
+                CHECK_THAT(probs,
+                           Catch::Approx(std::vector<PrecisionT>(2, 1.0 / 2))
+                               .margin(1e-7));
+            }
+            SECTION("2 targets") {
+                std::size_t target0 = GENERATE(0, 1, 2, 3, 4);
+                std::size_t target1 = GENERATE(0, 1, 2, 3, 4);
+                if (target0 != target1) {
+                    statevector.applyOperation("Hadamard", {target0}, false);
+                    auto probs =
+                        Measurer.probs({target0, target1}, device_wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.0, 0.5, 0.0})
+                                          .margin(1e-7));
+                    probs = Measurer.probs({target1, target0}, device_wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.5, 0.0, 0.0})
+                                          .margin(1e-7));
+                    statevector.applyOperation("Hadamard", {target1}, false);
+                    probs = Measurer.probs({target0, target1}, device_wires);
+                    CHECK_THAT(probs, Catch::Approx(
+                                          std::vector<PrecisionT>(4, 1.0 / 4.0))
+                                          .margin(1e-7));
+                    probs = Measurer.probs({target1, target0}, device_wires);
+                    CHECK_THAT(probs, Catch::Approx(
+                                          std::vector<PrecisionT>(4, 1.0 / 4.0))
+                                          .margin(1e-7));
+                    statevector.applyOperation("Hadamard", {target0}, false);
+                    probs = Measurer.probs({target0, target1}, device_wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.5, 0.0, 0.0})
+                                          .margin(1e-7));
+                    probs = Measurer.probs({target1, target0}, device_wires);
+                    CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                        0.5, 0.0, 0.5, 0.0})
+                                          .margin(1e-7));
+                }
+            }
+            SECTION("Many targets Hadamard(n)") {
+                const std::size_t target = GENERATE(0, 1, 2, 3, 4);
+                statevector.applyOperation("Hadamard", {target}, false);
+                std::vector<std::size_t> targets(num_qubits);
+                std::iota(targets.begin(), targets.end(), 0);
+                if (target != 4) {
+                    std::swap(targets[target], targets[4]);
+                }
+                auto probs = Measurer.probs(targets, device_wires);
+                std::vector<PrecisionT> ref(1UL << num_qubits, 0.0);
+                ref[0] = 0.5;
+                ref[1] = 0.5;
+                CHECK_THAT(probs, Catch::Approx(ref).margin(1e-7));
+            }
+            SECTION("Many targets Hadamard(all)") {
+                for (std::size_t t = 0; t < num_qubits; t++) {
+                    statevector.applyOperation("Hadamard", {t}, false);
+                }
+                const std::size_t ntarget = GENERATE(1, 2, 3, 4, 5);
+                std::vector<std::size_t> targets(ntarget);
+                std::iota(targets.begin(), targets.end(), 0);
+                auto probs = Measurer.probs(targets, device_wires);
+                CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>(
+                                                    (1UL << ntarget),
+                                                    1.0 / (1UL << ntarget)))
+                                      .margin(1e-7));
+            }
+        }
     }
 }
 
@@ -556,69 +635,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
     std::size_t num_samples = 100000;
     std::size_t num_burnin = 1000;
 
-    std::string kernel = "Local";
-    auto &&samples =
-        Measurer.generate_samples_metropolis(kernel, num_burnin, num_samples);
-
-    std::vector<std::size_t> counts(N, 0);
-    std::vector<std::size_t> samples_decimal(num_samples, 0);
-
-    // convert samples to decimal and then bin them in counts
-    for (size_t i = 0; i < num_samples; i++) {
-        for (size_t j = 0; j < num_qubits; j++) {
-            if (samples[i * num_qubits + j] != 0) {
-                samples_decimal[i] += twos[(num_qubits - 1 - j)];
-            }
-        }
-        counts[samples_decimal[i]] += 1;
-    }
-
-    // compute estimated probabilities from histogram
-    std::vector<PrecisionT> probabilities(counts.size());
-    for (size_t i = 0; i < counts.size(); i++) {
-        probabilities[i] = counts[i] / (PrecisionT)num_samples;
-    }
-
-    // compare estimated probabilities to real probabilities
-    SECTION("No wires provided:") {
-        CHECK_THAT(probabilities,
-                   Catch::Approx(expected_probabilities).margin(.05));
-    }
-}
-
-TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (NonZeroRandom Kernel)",
-                           "[Measurements][MCMC]",
-                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
-                           (float, double)) {
-    using StateVectorT = TestType;
-    using PrecisionT = typename StateVectorT::PrecisionT;
-
-    constexpr uint32_t twos[] = {
-        1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
-        1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
-        1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
-        1U << 18U, 1U << 19U, 1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U,
-        1U << 24U, 1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
-        1U << 30U, 1U << 31U};
-
-    // Defining the State Vector that will be measured.
-    auto statevector_data = createNonTrivialState<StateVectorT>();
-    StateVectorT statevector(statevector_data.data(), statevector_data.size());
-
-    // Initializing the measurements class.
-    // This object attaches to the statevector allowing several measurements.
-    Measurements<StateVectorT> Measurer(statevector);
-
-    std::vector<PrecisionT> expected_probabilities = {
-        0.67078706, 0.03062806, 0.0870997,  0.00397696,
-        0.17564072, 0.00801973, 0.02280642, 0.00104134};
-
-    std::size_t num_qubits = 3;
-    std::size_t N = std::pow(2, num_qubits);
-    std::size_t num_samples = 100000;
-    std::size_t num_burnin = 1000;
-
-    const std::string kernel = "NonZeroRandom";
+    const std::string kernel = GENERATE("Local", "NonZeroRandom");
     auto &&samples =
         Measurer.generate_samples_metropolis(kernel, num_burnin, num_samples);
 

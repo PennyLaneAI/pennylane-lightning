@@ -135,25 +135,17 @@ For development and testing, you can install by cloning the repository:
     $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     $ cd pennylane-lightning
     $ pip install -r requirements.txt
-    $ PL_BACKEND=${PL_BACKEND} pip install -e . -vv
+    $ PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
+    $ pip install -e . -vv
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
-``build`` folder. Run ``make clean`` if you would like to recompile from scratch.
+``build`` folder, and the ``pyproject.toml`` file defined by the configuration script. Run ``make clean`` if you would like to recompile from scratch.
 
 You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
 .. code-block:: console
 
     $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
-
-or with ``build_ext`` and the ``--define`` flag as follows:
-
-.. code-block:: console
-
-    $ python3 setup.py build_ext -i --define="ENABLE_OPENMP=OFF;ENABLE_BLAS=OFF"
-    $ python3 setup.py develop
-
-where ``-D`` must not be included before ``;``-separated options.
 
 Compile MSVC (Windows)
 ======================
@@ -235,27 +227,28 @@ Please see the `cuQuantum SDK`_ install guide for more information.
 Install Lightning-GPU from source
 =================================
 
-To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU:
+To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be installed (compilation is not necessary):
 
 .. code-block:: console
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
-    PL_BACKEND="lightning_qubit" pip install -e . -vv
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    SKIP_COMPILATION=True pip install -e . -vv
 
 Then the `cuStateVec`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
 .. code-block:: console
 
-    python -m pip install wheel custatevec-cu12
-    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-GPU can then be installed with ``pip``:
 
 .. code-block:: console
 
-    PL_BACKEND="lightning_gpu" python -m pip install -e .
+    PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
+    python -m pip install -e .
 
 To simplify the build, we recommend using the containerized build process described in Docker support section.
 
@@ -275,7 +268,8 @@ Then Lightning-GPU with MPI support can then be installed with ``pip``:
 
 .. code-block:: console
 
-    CMAKE_ARGS="-DENABLE_MPI=ON"  PL_BACKEND="lightning_gpu" python -m pip install -e .
+    PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e .
 
 
 Test Lightning-GPU with MPI
@@ -343,7 +337,8 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
 .. code-block:: console
 
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" PL_BACKEND="lightning_kokkos" python -m pip install .
+   PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install .
 
 To build the plugin directly with CMake as above:
 
@@ -357,7 +352,7 @@ The supported backend options are ``SERIAL``, ``OPENMP``, ``THREADS``, ``HIP`` a
 One can activate simultaneously one serial, one parallel CPU host (e.g. ``OPENMP``, ``THREADS``) and one parallel GPU device backend (e.g. ``HIP``, ``CUDA``), but not two of any category at the same time.
 For ``HIP`` and ``CUDA``, the appropriate software stacks are required to enable compilation and subsequent use.
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
-A list of the architectures is found on the `Kokkos wiki <https://github.com/kokkos/kokkos/wiki/Macros#architectures>`_.
+A list of the architectures is found on the `Kokkos wiki <https://kokkos.org/kokkos-core-wiki/API/core/Macros.html#architectures>`_.
 Note that ``THREADS`` backend is not recommended since `Kokkos does not guarantee its safety <https://github.com/kokkos/kokkos-core-wiki/blob/17f08a6483937c26e14ec3c93a2aa40e4ce081ce/docs/source/ProgrammingGuide/Initialization.md?plain=1#L67>`_.
 
 .. installation_LKokkos-end-inclusion-marker-do-not-remove
@@ -372,27 +367,28 @@ Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ ins
 
 Install Lightning-Tensor from source
 ====================================
-Lightning-Qubit should be installed before Lightning-Tensor:
+Lightning-Qubit should be installed before Lightning-Tensor (compilation is not necessary):
 
 .. code-block:: console
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
-    PL_BACKEND="lightning_qubit" pip install .
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    SKIP_COMPILATION=True pip install .
 
-Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable. 
+Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
 .. code-block:: console
 
-    pip install cutensornet-cu12
-    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')")
+    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-Tensor can then be installed with ``pip``:
 
 .. code-block:: console
 
-    PL_BACKEND="lightning_tensor" pip install -e .
+    PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
+    pip install -e .
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
@@ -406,7 +402,7 @@ Docker support
 **************
 
 Docker images for the various backends are found on the
-`PennyLane Docker Hub <https://hub.docker.com/repository/docker/pennylaneai/pennylane/general>`_ page, where there is also a detailed description about PennyLane Docker support.
+`PennyLane Docker Hub <https://hub.docker.com/u/pennylaneai>`_ page, where there is also a detailed description about PennyLane Docker support.
 Briefly, one can build the Docker Lightning images using:
 
 .. code-block:: console
@@ -448,15 +444,26 @@ Please make your best effort to comply with `black` and `pylint` before using di
 Authors
 *******
 
+.. citation-start-inclusion-marker-do-not-remove
+
 Lightning is the work of `many contributors <https://github.com/PennyLaneAI/pennylane-lightning/graphs/contributors>`_.
 
-If you are doing research using PennyLane and Lightning, please cite `our paper <https://arxiv.org/abs/1811.04968>`_:
+If you are using Lightning for research, please cite:
 
-    Ville Bergholm, Josh Izaac, Maria Schuld, Christian Gogolin, M. Sohaib Alam, Shahnawaz Ahmed,
-    Juan Miguel Arrazola, Carsten Blank, Alain Delgado, Soran Jahangiri, Keri McKiernan, Johannes Jakob Meyer,
-    Zeyue Niu, Antal Száva, and Nathan Killoran.
-    *PennyLane: Automatic differentiation of hybrid quantum-classical computations.* 2018. arXiv:1811.04968
+.. code-block:: bibtex
 
+    @misc{
+        asadi2024,
+        title={{Hybrid quantum programming with PennyLane Lightning on HPC platforms}},
+        author={Ali Asadi and Amintor Dusko and Chae-Yeun Park and Vincent Michaud-Rioux and Isidor Schoch and Shuli Shu and Trevor Vincent and Lee James O'Riordan},
+        year={2024},
+        eprint={2403.02512},
+        archivePrefix={arXiv},
+        primaryClass={quant-ph},
+        url={https://arxiv.org/abs/2403.02512},
+    }
+
+.. citation-end-inclusion-marker-do-not-remove
 .. support-start-inclusion-marker-do-not-remove
 
 Support

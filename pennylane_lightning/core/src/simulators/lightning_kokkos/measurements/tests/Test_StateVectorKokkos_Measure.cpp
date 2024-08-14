@@ -221,32 +221,130 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
 }
 
 TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
-    // Probabilities calculated with Pennylane default.qubit:
-    std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
-        input = {{{0, 1, 2},
-                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                   0.00801973, 0.02280642, 0.00104134}},
-                 // TODO: Fix LK out-of-order permutations
-                 {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
-                 {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
-                 {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
-                 {{0}, {0.79249179, 0.20750821}},
-                 {{1}, {0.88507558, 0.11492442}},
-                 {{2}, {0.9563339, 0.0436661}}};
-
-    // Defining the State Vector that will be measured.
-    const std::size_t num_qubits = 3;
-    auto statevector_data =
-        createNonTrivialState<StateVectorKokkos<TestType>>(num_qubits);
-    StateVectorKokkos<TestType> measure_sv(statevector_data.data(),
-                                           statevector_data.size());
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
 
     SECTION("Looping over different wire configurations:") {
+        // Probabilities calculated with Pennylane default.qubit:
+        std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
+            input = {{{0, 1, 2},
+                      {0.67078706, 0.03062806, 0.0870997, 0.00397696,
+                       0.17564072, 0.00801973, 0.02280642, 0.00104134}},
+                     // TODO: Fix LK out-of-order permutations
+                     {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+                     {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+                     {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+                     {{0}, {0.79249179, 0.20750821}},
+                     {{1}, {0.88507558, 0.11492442}},
+                     {{2}, {0.9563339, 0.0436661}}};
+
+        // Defining the State Vector that will be measured.
+        const std::size_t num_qubits = 3;
+        auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
+        StateVectorT measure_sv(statevector_data.data(),
+                                statevector_data.size());
         auto m = Measurements(measure_sv);
         for (const auto &term : input) {
             auto probabilities = m.probs(term.first);
             REQUIRE_THAT(term.second,
                          Catch::Approx(probabilities).margin(1e-6));
+        }
+    }
+    SECTION("21 qubits") {
+        constexpr std::size_t num_qubits = 21;
+        auto statevector_data =
+            std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
+        std::vector<std::size_t> device_wires(num_qubits);
+        std::iota(device_wires.begin(), device_wires.end(), 0);
+        statevector_data[0] = ComplexT{1.0, 0.0};
+        StateVectorT statevector(statevector_data.data(),
+                                 statevector_data.size());
+        Measurements<StateVectorT> Measurer(statevector);
+        SECTION("1 target") {
+            std::size_t target = GENERATE(0, num_qubits / 2, num_qubits - 1);
+            statevector.applyOperation("Hadamard", {target}, false);
+            auto probs = Measurer.probs({target}, device_wires);
+            CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>(2, 1.0 / 2))
+                                  .margin(1e-7));
+        }
+        SECTION("2 targets") {
+            std::size_t target0 = GENERATE(0, num_qubits / 2, num_qubits - 1);
+            std::size_t target1 = GENERATE(0, num_qubits / 2, num_qubits - 1);
+            if (target0 != target1) {
+                statevector.applyOperation("Hadamard", {target0}, false);
+                auto probs = Measurer.probs({target0, target1}, device_wires);
+                CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.0, 0.5, 0.0})
+                                      .margin(1e-7));
+                probs = Measurer.probs({target1, target0}, device_wires);
+                CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.5, 0.0, 0.0})
+                                      .margin(1e-7));
+                statevector.applyOperation("Hadamard", {target1}, false);
+                probs = Measurer.probs({target0, target1}, device_wires);
+                CHECK_THAT(probs,
+                           Catch::Approx(std::vector<PrecisionT>(4, 1.0 / 4.0))
+                               .margin(1e-7));
+                probs = Measurer.probs({target1, target0}, device_wires);
+                CHECK_THAT(probs,
+                           Catch::Approx(std::vector<PrecisionT>(4, 1.0 / 4.0))
+                               .margin(1e-7));
+                statevector.applyOperation("Hadamard", {target0}, false);
+                probs = Measurer.probs({target0, target1}, device_wires);
+                CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.5, 0.0, 0.0})
+                                      .margin(1e-7));
+                probs = Measurer.probs({target1, target0}, device_wires);
+                CHECK_THAT(probs, Catch::Approx(std::vector<PrecisionT>{
+                                                    0.5, 0.0, 0.5, 0.0})
+                                      .margin(1e-7));
+            }
+        }
+        SECTION("Many targets Hadamard(n)") {
+            constexpr std::size_t n_targets = num_qubits;
+            const std::size_t target =
+                GENERATE(0, num_qubits / 2, num_qubits - 1);
+            statevector.applyOperation("Hadamard", {target}, false);
+            std::vector<std::size_t> targets(n_targets);
+            std::iota(targets.begin(), targets.end(), 0);
+            if (target != n_targets - 1) {
+                std::swap(targets[target], targets[n_targets - 1]);
+            }
+            auto probs = Measurer.probs(targets, device_wires);
+            std::vector<PrecisionT> ref(1UL << n_targets, 0.0);
+            ref[0] = 0.5;
+            ref[1] = 0.5;
+            CHECK_THAT(probs, Catch::Approx(ref).margin(1e-7));
+        }
+        SECTION("3-8 targets Hadamard(all)") {
+            for (std::size_t t = 0; t < num_qubits; t++) {
+                statevector.applyOperation("Hadamard", {t}, false);
+            }
+            const std::size_t ntarget = GENERATE(3, 4, 5, 6, 7, 8);
+            std::vector<std::size_t> targets(ntarget);
+            std::iota(targets.begin(), targets.end(), 0);
+            auto probs = Measurer.probs(targets, device_wires);
+            CHECK_THAT(probs, Catch::Approx(
+                                  std::vector<PrecisionT>(
+                                      (1UL << ntarget), 1.0 / (1UL << ntarget)))
+                                  .margin(1e-7));
+        }
+        SECTION("Many targets Hadamard(all)") {
+            for (std::size_t t = 0; t < num_qubits; t++) {
+                statevector.applyOperation("Hadamard", {t}, false);
+            }
+            const std::size_t ntarget = 9;
+            std::vector<std::size_t> targets(ntarget);
+            std::iota(targets.begin(), targets.end(), 0);
+            auto probs =
+                Pennylane::LightningKokkos::Functors::probs_bitshift_generic<
+                    typename StateVectorT::KokkosExecSpace, PrecisionT>(
+                    statevector.getView(), num_qubits, targets);
+            CHECK_THAT(probs, Catch::Approx(
+                                  std::vector<PrecisionT>(
+                                      (1UL << ntarget), 1.0 / (1UL << ntarget)))
+                                  .margin(1e-7));
         }
     }
 }

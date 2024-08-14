@@ -39,7 +39,14 @@ from ._tensornet import LightningTensorNet
 
 try:
     # pylint: disable=import-error, unused-import
-    from pennylane_lightning.lightning_tensor_ops import backend_info
+    from pennylane_lightning.lightning_tensor_ops import (
+        backend_info,
+        get_gpu_arch,
+        is_gpu_supported,
+    )
+
+    if not is_gpu_supported():  # pragma: no cover
+        raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LT_CPP_BINARY_AVAILABLE = True
 except ImportError:
@@ -110,8 +117,6 @@ _operations = frozenset(
         "OrbitalRotation",
         "QFT",
         "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
     }
 )
 
@@ -232,6 +237,13 @@ class LightningTensor(Device):
     _device_options = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
+
+    # TODO: Move supported ops/obs to TOML file
+    operations = _operations
+    # The names of the supported operations.
+
+    observables = _observables
+    # The names of the supported observables.
 
     # pylint: disable=too-many-arguments
     def __init__(

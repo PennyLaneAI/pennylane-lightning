@@ -2,10 +2,22 @@
 
 ### New features since last release
 
+* Add `qml.state()` measurement support to `lightning.tensor`.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
+
+* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
+  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804)
+
 ### Breaking changes
 
 * Update dynamic linking to LAPACK/OpenBlas shared objects in `scipy.libs` with `pybind11` APIs for C++ layer.
   [(#701)](https://github.com/PennyLaneAI/pennylane-lightning/pull/701)
+  
+* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
+
+* Remove `NDpermuter.hpp` which is no longer required.
+  [(#795)](https://github.com/PennyLaneAI/pennylane-lightning/pull/795)
 
 * Remove temporary steps from the CI, such as downgrading Scipy to <1.14 and installing Kokkos v4.2 for `lightning-version == 'stable'`.
   [(#792)](https://github.com/PennyLaneAI/pennylane-lightning/pull/792)
@@ -13,17 +25,90 @@
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
+
 ### Improvements
+
+* The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
+  [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
+
+* `ENABLE_LAPACK` is off by default for all Lightning backends.
+  [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
+
+* Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
+  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
+
+* Update the Catalyst-specific wrapping class for Lightning Kokkos to track Catalyst's new support for MCM seeding.
+  [(#819)](https://github.com/PennyLaneAI/pennylane-lightning/pull/819)
+
+* Shot batching is made more efficient by executing all the shots in one go on LightningQubit.
+  [(#814)](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
+
+* LightningQubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
+  [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
+
+* Avoid unnecessary memory reset in LightningQubit's state vector class constructor.
+  [(#811)](https://github.com/PennyLaneAI/pennylane-lightning/pull/811)
+
+* Add `generate_samples(wires)` support in LightningQubit.
+  [(#809)](https://github.com/PennyLaneAI/pennylane-lightning/pull/809)
+
+* Optimize the OpenMP parallelization of Lightning-Qubit's `probs` for all number of targets.
+  [(#807)](https://github.com/PennyLaneAI/pennylane-lightning/pull/807)
+
+* Optimize `probs(wires)` of Lightning-Kokkos using various kernels. Which kernel is to be used depends on the device, number of qubits and number of target wires.
+  [(#802)](https://github.com/PennyLaneAI/pennylane-lightning/pull/802)
+
+* Add GPU device compute capability check for Lightning-Tensor.
+  [(#803)](https://github.com/PennyLaneAI/pennylane-lightning/pull/803)
+
+* Refactor CUDA utils Python bindings to a separate module.
+  [(#801)](https://github.com/PennyLaneAI/pennylane-lightning/pull/801)
+
+* Parallelize Lightning-Qubit `probs` with OpenMP when using the `-DLQ_ENABLE_KERNEL_OMP=1` CMake argument.
+  [(#800)](https://github.com/PennyLaneAI/pennylane-lightning/pull/800)
+
+* Implement `probs(wires)` using a bit-shift implementation akin to the gate kernels in Lightning-Qubit.
+  [(#795)](https://github.com/PennyLaneAI/pennylane-lightning/pull/795)
 
 * Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
+  [(#837)](https://github.com/PennyLaneAI/pennylane-lightning/pull/837)
+
+* Add `initial_state_prep` option to Catalyst TOML file.
+  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
+
+* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
+  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
+
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
+  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
 
 ### Documentation
 
+* Updated the README and added citation format for Lightning arxiv preprint.
+  [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
+
 ### Bug fixes
+
+* Fix plugin-test-matrix CI/CD workflows.
+  [(#850)](https://github.com/PennyLaneAI/pennylane-lightning/pull/850)
+
+* Set the `immutable` parameter value as `false` for the `cutensornetStateApplyTensorOperator` to allow the following `cutensornetStateUpdateTensorOperator` call.
+  [(#845)](https://github.com/PennyLaneAI/pennylane-lightning/pull/845)
+
+* Fix cuQuantum SDK path pass-though in CMake.
+  [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
+
+* Fix CUDA sync issues on aarch64+GraceHopper.
+  [(#823)](https://github.com/PennyLaneAI/pennylane-lightning/pull/823)
+
+* Check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of `cuTensorNet-v24.03.0`.
+  [(#806)](https://github.com/PennyLaneAI/pennylane-lightning/pull/806)
 
 * Set `PL_BACKEND` for the entire `build-wheel-lightning-gpu` Docker-build stage to properly build the Lightning-GPU wheel.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
@@ -41,7 +126,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Vincent Michaud-Rioux
+Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
@@ -446,7 +531,7 @@ Vincent Michaud-Rioux
 * The `BlockEncode` operation from PennyLane is now supported on all Lightning devices.
   [(#599)](https://github.com/PennyLaneAI/pennylane-lightning/pull/599)
 
-* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the "-DLQ_ENABLE_KERNEL_OMP=1" CMake argument.
+* OpenMP acceleration can now be enabled at compile time for all `lightning.qubit` gate kernels using the `-DLQ_ENABLE_KERNEL_OMP=1` CMake argument.
   [(#510)](https://github.com/PennyLaneAI/pennylane-lightning/pull/510)
 
 * Enable building Docker images for any branch or tag. Set the Docker build cron job to build images for the latest release and `master`.

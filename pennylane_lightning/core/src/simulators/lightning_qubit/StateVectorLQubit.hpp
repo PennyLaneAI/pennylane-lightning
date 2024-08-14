@@ -30,6 +30,7 @@
 #include "KernelType.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
 
 /// @cond DEV
 namespace {
@@ -686,6 +687,120 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         for (size_t k = 0; k < this->getLength(); k++) {
             arr[k] *= inv_norm;
         }
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param index Index of the target element.
+     */
+    void setBasisState(const std::size_t index) {
+        auto length = this->getLength();
+        PL_ABORT_IF(index > length - 1, "Invalid index");
+
+        auto *arr = this->getData();
+        std::fill(arr, arr + length, 0.0);
+        arr[index] = {1.0, 0.0};
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        const auto n_wires = wires.size();
+        const auto num_qubits = this->getNumQubits();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        setBasisState(index);
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     *
+     */
+    void resetStateVector() {
+        if (this->getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        const auto num_indices = indices.size();
+        PL_ABORT_IF(num_indices != values.size(),
+                    "Indices and values length must match");
+
+        auto *arr = this->getData();
+        const auto length = this->getLength();
+        std::fill(arr, arr + length, 0.0);
+        for (std::size_t i = 0; i < num_indices; i++) {
+            PL_ABORT_IF(i >= length, "Invalid index");
+            arr[indices[i]] = values[i];
+        }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const std::vector<ComplexT> &state,
+                        const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.")
+        setStateVector(state.data(), wires);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const ComplexT *state,
+                        const std::vector<std::size_t> &wires) {
+        const std::size_t num_state = exp2(wires.size());
+        const auto total_wire_count = this->getNumQubits();
+
+        std::vector<std::size_t> reversed_sorted_wires(wires);
+        std::sort(reversed_sorted_wires.begin(), reversed_sorted_wires.end());
+        std::reverse(reversed_sorted_wires.begin(),
+                     reversed_sorted_wires.end());
+        std::vector<std::size_t> controlled_wires(total_wire_count);
+        std::iota(std::begin(controlled_wires), std::end(controlled_wires), 0);
+        for (auto wire : reversed_sorted_wires) {
+            // Reverse guarantees that we start erasing at the end of the array.
+            // Maybe this can be optimized.
+            controlled_wires.erase(controlled_wires.begin() + wire);
+        }
+
+        const std::vector<bool> controlled_values(controlled_wires.size(),
+                                                  false);
+        auto core_function =
+            [num_state, &state](std::complex<PrecisionT> *arr,
+                                const std::vector<std::size_t> &indices,
+                                const std::vector<std::complex<PrecisionT>> &) {
+                for (std::size_t i = 0; i < num_state; i++) {
+                    arr[indices[i]] = state[i];
+                }
+            };
+        GateImplementationsLM::applyNCN(this->getData(), total_wire_count,
+                                        controlled_wires, controlled_values,
+                                        wires, core_function);
     }
 };
 } // namespace Pennylane::LightningQubit

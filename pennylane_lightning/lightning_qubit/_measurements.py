@@ -21,6 +21,7 @@ try:
 except ImportError:
     pass
 
+from functools import reduce
 from typing import Callable, List, Union
 
 import numpy as np
@@ -383,8 +384,11 @@ class LightningMeasurements:
         # apply diagonalizing gates
         self._apply_diagonalizing_gates(mps)
 
-        total_indices = self._qubit_state.num_wires
-        wires = qml.wires.Wires(range(total_indices))
+        if self._mcmc:
+            total_indices = self._qubit_state.num_wires
+            wires = qml.wires.Wires(range(total_indices))
+        else:
+            wires = reduce(sum, (mp.wires for mp in mps))
 
         def _process_single_shot(samples):
             processed = []
@@ -397,31 +401,6 @@ class LightningMeasurements:
 
             return tuple(processed)
 
-        # if there is a shot vector, build a list containing results for each shot entry
-        if shots.has_partitioned_shots:
-            processed_samples = []
-            for s in shots:
-                # currently we call sample_state for each shot entry, but it may be
-                # better to call sample_state just once with total_shots, then use
-                # the shot_range keyword argument
-                try:
-                    if self._mcmc:
-                        samples = self._measurement_lightning.generate_mcmc_samples(
-                            len(wires), self._kernel_name, self._num_burnin, s
-                        ).astype(int, copy=False)
-                    else:
-                        samples = self._measurement_lightning.generate_samples(
-                            len(wires), s
-                        ).astype(int, copy=False)
-                except ValueError as e:
-                    if str(e) != "probabilities contain NaN":
-                        raise e
-                    samples = qml.math.full((s, len(wires)), 0)
-
-                processed_samples.append(_process_single_shot(samples))
-            self._apply_diagonalizing_gates(mps, adjoint=True)
-            return tuple(zip(*processed_samples))
-
         try:
             if self._mcmc:
                 samples = self._measurement_lightning.generate_mcmc_samples(
@@ -429,7 +408,7 @@ class LightningMeasurements:
                 ).astype(int, copy=False)
             else:
                 samples = self._measurement_lightning.generate_samples(
-                    len(wires), shots.total_shots
+                    list(wires), shots.total_shots
                 ).astype(int, copy=False)
         except ValueError as e:
             if str(e) != "probabilities contain NaN":
@@ -438,7 +417,16 @@ class LightningMeasurements:
 
         self._apply_diagonalizing_gates(mps, adjoint=True)
 
-        return _process_single_shot(samples)
+        # if there is a shot vector, use the shots.bins generator to
+        # split samples w.r.t. the shots
+        processed_samples = []
+        for lower, upper in shots.bins():
+            result = _process_single_shot(samples[..., lower:upper, :])
+            processed_samples.append(result)
+
+        return (
+            tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
+        )
 
     def _measure_hamiltonian_with_samples(
         self,

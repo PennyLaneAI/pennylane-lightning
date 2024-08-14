@@ -93,7 +93,6 @@ template <typename TypeList> void testProbabilities() {
                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                   0.00801973, 0.02280642, 0.00104134}}
 #else
-#if defined(_ENABLE_PLQUBIT)
                 // LightningQubit currently supports arbitrary wire index
                 // ordering.
                 {{0, 2, 1},
@@ -112,8 +111,6 @@ template <typename TypeList> void testProbabilities() {
                  {0.67078706, 0.17564072, 0.0870997, 0.02280642, 0.03062806,
                   0.00801973, 0.00397696, 0.00104134}},
                 {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
-
-#endif
                 {{0, 1, 2},
                  {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                   0.00801973, 0.02280642, 0.00104134}},

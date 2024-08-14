@@ -179,23 +179,20 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const std::size_t index) {
-                sv.setBasisState(index);
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires) {
+                sv.setBasisState(state, wires);
             },
-            "Create Basis State.")
+            "Set the state vector to a basis state.")
         .def(
             "setStateVector",
-            [](StateVectorT &sv, const std::vector<std::size_t> &indices,
-               const np_arr_c &state) {
+            [](StateVectorT &sv, const np_arr_c &state,
+               const std::vector<std::size_t> &wires) {
                 const auto buffer = state.request();
-                std::vector<ComplexT> state_in;
-                if (buffer.size) {
-                    const auto ptr = static_cast<const ComplexT *>(buffer.ptr);
-                    state_in = std::vector<ComplexT>{ptr, ptr + buffer.size};
-                }
-                sv.setStateVector(indices, state_in);
+                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
+                                  wires);
             },
-            "Set State Vector with values and their corresponding indices")
+            "Set the state vector to the data contained in `state`.")
         .def(
             "getState",
             [](const StateVectorT &sv, np_arr_c &state) {
@@ -292,6 +289,27 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<sparse_index_type>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.")
+        .def("generate_samples",
+             [](Measurements<StateVectorT> &M,
+                const std::vector<std::size_t> &wires,
+                const std::size_t num_shots) {
+                 const std::size_t num_wires = wires.size();
+                 auto &&result = M.generate_samples(wires, num_shots);
+                 const std::size_t ndim = 2;
+                 const std::vector<std::size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(std::size_t);
+                 const std::vector<std::size_t> strides{sz * num_wires, sz};
+                 // return 2-D NumPy array
+                 return py::array(py::buffer_info(
+                     result.data(), /* data as contiguous array  */
+                     sz,            /* size of one scalar        */
+                     py::format_descriptor<std::size_t>::format(), /* data type
+                                                                    */
+                     ndim,   /* number of dimensions      */
+                     shape,  /* shape of the matrix       */
+                     strides /* strides for each axis     */
+                     ));
+             })
         .def("generate_mcmc_samples", [](Measurements<StateVectorT> &M,
                                          std::size_t num_wires,
                                          const std::string &kernelname,
