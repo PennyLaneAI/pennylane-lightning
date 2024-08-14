@@ -30,12 +30,6 @@ if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
 
-if device_name == "lightning.tensor":
-    pytest.skip(
-        "lightning.tensor doesn't support qml.state() used across this module.",
-        allow_module_level=True,
-    )
-
 
 @pytest.fixture
 def op(op_name):
@@ -108,6 +102,14 @@ def test_gate_unitary_correct(op, op_name):
 
     wires = len(op[2]["wires"])
 
+    if wires == 1 and device_name == "lightning.tensor":
+        pytest.skip("Skipping single wire device on lightning.tensor.")
+
+    if op_name == "QubitUnitary" and device_name == "lightning.tensor":
+        pytest.skip(
+            "Skipping QubitUnitary on lightning.tensor. It can't be decomposed into 1-wire or 2-wire gates"
+        )
+
     dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
@@ -165,6 +167,14 @@ def test_inverse_unitary_correct(op, op_name):
         pytest.skip("Skipping operation.")
 
     wires = len(op[2]["wires"])
+
+    if wires == 1 and device_name == "lightning.tensor":
+        pytest.skip("Skipping single wire device on lightning.tensor.")
+
+    if op_name == "QubitUnitary" and device_name == "lightning.tensor":
+        pytest.skip(
+            "Skipping QubitUnitary on lightning.tensor. It can't be decomposed into 1-wire or 2-wire gates"
+        )
 
     dev = qml.device(device_name, wires=wires)
 
@@ -292,9 +302,15 @@ def test_qubit_RY(theta, phi, tol):
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
     def circuit():
-        qml.StatePrep(init_state, wires=range(n_qubits))
+        (
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            if device_name != "lightning.tensor"
+            else qml.BasisState([0] * n_qubits, wires=range(n_qubits))
+        )
         qml.RY(theta, wires=[0])
         qml.RY(phi, wires=[1])
+        qml.RY(theta, wires=[2])
+        qml.RY(phi, wires=[3])
         return qml.state()
 
     circ = qml.QNode(circuit, dev)
@@ -303,7 +319,7 @@ def test_qubit_RY(theta, phi, tol):
 
 
 @pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
-@pytest.mark.parametrize("n_wires", range(1, 7))
+@pytest.mark.parametrize("n_wires", range(1, 7) if device_name != "lightning.tensor" else [1, 2])
 def test_qubit_unitary(n_wires, theta, phi, tol):
     """Test that Hadamard expectation value is correct"""
     n_qubits = 10
@@ -321,9 +337,21 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     for perm in perms:
 
         def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
+            (
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                if device_name != "lightning.tensor"
+                else qml.BasisState([0] * n_qubits, wires=range(n_qubits))
+            )
             qml.RY(theta, wires=[0])
             qml.RY(phi, wires=[1])
+            qml.RY(theta, wires=[2])
+            qml.RY(phi, wires=[3])
+            qml.RY(theta, wires=[4])
+            qml.RY(phi, wires=[5])
+            qml.RY(theta, wires=[6])
+            qml.RY(phi, wires=[7])
+            qml.RY(phi, wires=[8])
+            qml.RY(phi, wires=[9])
             qml.CNOT(wires=[0, 1])
             qml.QubitUnitary(U, wires=perm)
             return qml.state()
@@ -331,6 +359,32 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
         circ = qml.QNode(circuit, dev)
         circ_def = qml.QNode(circuit, dev_def)
         assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.skipif(
+    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    reason="PennyLane-like StatePrep only implemented in lightning.qubit and lightning.kokkos.",
+)
+@pytest.mark.parametrize("n_targets", list(range(2, 8)))
+def test_state_prep(n_targets, tol):
+    """Test that StatePrep is correctly applied to a state."""
+    n_wires = 7
+    dq = qml.device("default.qubit", wires=n_wires)
+    dev = qml.device(device_name, wires=n_wires)
+    init_state = np.random.rand(2**n_targets) + 1.0j * np.random.rand(2**n_targets)
+    init_state /= np.linalg.norm(init_state)
+    for i in range(10):
+        if i == 0:
+            wires = np.arange(n_targets, dtype=int)
+        else:
+            wires = np.random.permutation(n_wires)[0:n_targets]
+        tape = qml.tape.QuantumTape(
+            [qml.StatePrep(init_state, wires=wires)] + [qml.X(i) for i in range(n_wires)],
+            [qml.state()],
+        )
+        ref = dq.execute([tape])[0]
+        res = dev.execute([tape])[0] if ld._new_API else dev.execute(tape)
+        assert np.allclose(res.ravel(), ref.ravel(), tol)
 
 
 @pytest.mark.skipif(
@@ -508,6 +562,10 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
     assert np.allclose(circ(), circ_def(), tol)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support controlled globalphase gate.",
+)
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
 def test_controlled_globalphase(n_qubits, control_value, tol):

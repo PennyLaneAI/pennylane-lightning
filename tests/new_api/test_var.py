@@ -22,9 +22,6 @@ import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane.tape import QuantumScript
 
-if device_name == "lightning.tensor":
-    pytest.skip("lightning.tensor does not support qml.var()", allow_module_level=True)
-
 if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
@@ -214,6 +211,9 @@ class TestVar:
         tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
         assert np.allclose(calculated_val, reference_val, atol=tol, rtol=0)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="SparseH not supported on lightning.tensor."
+    )
     def test_sparse_hamiltonian_variance(self, theta, phi, dev):
         """Tests a Hamiltonian."""
 

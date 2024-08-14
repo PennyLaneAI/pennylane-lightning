@@ -34,8 +34,8 @@ if device_name == "lightning.gpu":
 
 
 @pytest.mark.skipif(
-    ld._new_API or device_name == "lightning.tensor",
-    reason="Old API required, lightning.tensor does not support qml.state().",
+    ld._new_API,
+    reason="Old API required.",
 )
 class TestApply:
     """Tests that operations of certain operations are applied correctly or
@@ -186,24 +186,31 @@ class TestApply:
 
     @pytest.mark.parametrize(
         "operation,expected_output,par",
-        [
-            (qml.BasisState, [0, 0, 1, 0], [1, 0]),
-            (qml.BasisState, [0, 0, 0, 1], [1, 1]),
-            (qml.QubitStateVector, [0, 0, 1, 0], [0, 0, 1, 0]),
-            (qml.QubitStateVector, [0, 0, 0, 1], [0, 0, 0, 1]),
-            (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
-            (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
-            (
-                qml.StatePrep,
-                [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-                [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-            ),
-            (
-                qml.StatePrep,
-                [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-                [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-            ),
-        ],
+        (
+            [
+                (qml.BasisState, [0, 0, 1, 0], [1, 0]),
+                (qml.BasisState, [0, 0, 0, 1], [1, 1]),
+                (qml.QubitStateVector, [0, 0, 1, 0], [0, 0, 1, 0]),
+                (qml.QubitStateVector, [0, 0, 0, 1], [0, 0, 0, 1]),
+                (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
+                (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
+                (
+                    qml.StatePrep,
+                    [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
+                    [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
+                ),
+                (
+                    qml.StatePrep,
+                    [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
+                    [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
+                ),
+            ]
+            if device_name != "lightning.tensor"
+            else [
+                (qml.BasisState, [0, 0, 1, 0], [1, 0]),
+                (qml.BasisState, [0, 0, 0, 1], [1, 1]),
+            ]
+        ),
     )
     def test_apply_operation_state_preparation(
         self, qubit_device, tol, operation, expected_output, par
@@ -532,7 +539,7 @@ class TestExpval:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector & qml.StatePrep",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "operation,input,expected_output",
@@ -596,7 +603,7 @@ class TestVar:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector & qml.StatePrep",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "operation,input,expected_output",
@@ -638,7 +645,7 @@ class TestVar:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurement",
+        reason="lightning.tensor does not support shot measurement and single-wire devices",
     )
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
@@ -858,7 +865,7 @@ class TestLightningDeviceIntegration:
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements",
+        reason="lightning.tensor does not support shot measurements and single-wire devices",
     )
     @pytest.mark.parametrize(
         "name,expected_output",
@@ -1474,7 +1481,7 @@ class TestApplyLightningMethod:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.state()",
+        reason="lightning.tensor does not support StatePrep",
     )
     @pytest.mark.parametrize(
         "ops0",
@@ -1519,10 +1526,6 @@ class TestApplyLightningMethod:
         assert np.allclose(results, expected)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.StatePrep()",
-)
 @pytest.mark.parametrize(
     "op",
     [
@@ -1545,7 +1548,11 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
 
     def circuit():
-        qml.StatePrep(init_state, wires=range(n_qubits))
+        (
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            if device_name != "lightning.tensor"
+            else qml.BasisState([0, 0, 0, 0, 0], wires=[0, 1, 2, 3, 4])
+        )
         qml.RY(theta, wires=[0])
         qml.RY(phi, wires=[1])
         qml.CNOT(wires=[0, 1])

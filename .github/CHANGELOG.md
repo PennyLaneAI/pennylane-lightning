@@ -2,10 +2,16 @@
 
 ### New features since last release
 
+* Add `qml.state()` measurement support to `lightning.tensor`.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
+
 * Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
   [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804)
 
 ### Breaking changes
+
+* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
 * Remove `NDpermuter.hpp` which is no longer required.
   [(#795)](https://github.com/PennyLaneAI/pennylane-lightning/pull/795)
@@ -20,6 +26,9 @@
   [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
 
 ### Improvements
+
+* The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
+  [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
 
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
@@ -82,6 +91,9 @@
   [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Fix plugin-test-matrix CI/CD workflows.
+  [(#850)](https://github.com/PennyLaneAI/pennylane-lightning/pull/850)
 
 * Set the `immutable` parameter value as `false` for the `cutensornetStateApplyTensorOperator` to allow the following `cutensornetStateUpdateTensorOperator` call.
   [(#845)](https://github.com/PennyLaneAI/pennylane-lightning/pull/845)
