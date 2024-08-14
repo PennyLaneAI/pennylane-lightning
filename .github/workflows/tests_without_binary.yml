@@ -49,6 +49,13 @@ jobs:
     name: Python Tests without Binary (${{ matrix.pl_backend }})
 
     steps:
+      - name: Make disk space
+        run: |
+          for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
+            sudo du -sh $DIR || echo $DIR not found 
+            sudo rm -rf $DIR
+          done
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
