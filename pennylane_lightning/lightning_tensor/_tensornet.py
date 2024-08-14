@@ -44,6 +44,37 @@ def svd_split(M, bond_dim):
     U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
     return U, S, Vd
 
+def split(M):
+    U, S, Vd = np.linalg.svd(M, full_matrices=False)
+    bonds = len(S)
+    U = U @ np.diag(S)
+    Vd = Vd.reshape(bonds, 2, 2, -1)
+    U = U.reshape((-1, 2, 2, bonds))
+
+    return U, Vd
+
+
+def dense_to_mpo(psi, n_wires):
+    Ms = []
+
+    psi = np.reshape(psi, (2**2, -1))
+    U, Vd = split(psi)  # psi[2, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
+
+    Ms.append(U)
+    bondL = Vd.shape[0]
+    psi = Vd
+
+    for _ in range(n_wires-2):
+        psi = np.reshape(psi, (4*bondL, -1))   # reshape psi[2 * bondL, (2x2x2...)]
+        U, Vd = split(psi)        # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+        Ms.append(U)
+
+        psi = Vd
+        bondL = Vd.shape[0]
+
+    Ms.append(Vd)
+    
+    return Ms
 
 def dense_to_mps(psi, n_wires, bond_dim):
     """Convert a dense state vector to a matrix product state."""
@@ -248,18 +279,35 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if method is not None:  # apply specialized gate
-                param = operation.parameters
-                method(wires, invert_param, param)
-            else:  # apply gate as a matrix
-                # Inverse can be set to False since qml.matrix(operation) is already in
-                # inverted form
-                method = getattr(tensornet, "applyMatrix")
-                try:
-                    method(qml.matrix(operation), wires, False)
-                except AttributeError:  # pragma: no cover
-                    # To support older versions of PL
-                    method(operation.matrix, wires, False)
+            if self._method == "mps":
+                if method is not None and len(wires) <= 2:
+                    param = operation.parameters
+                    method(wires, invert_param, param)
+                else:
+                    # Inverse can be set to False since qml.matrix(operation) is already in
+                    # inverted form
+                    method = getattr(tensornet, "applyMPOs")
+                    try:
+                        gate_ops_data = qml.matrix(operation)
+                    except AttributeError:
+                        gate_ops_data = operation.matrix
+                    # Check if gate permutation is required
+                    # Decompose the gate into MPOs
+                    MPOs = dense_to_mpo(gate_ops_data, len(wires))
+                    # Append the MPOs to the tensor network
+                    method(MPOs, wires, False)
+            else:
+                if method is not None:
+                    param = operation.parameters
+                    method(wires, invert_param, param)
+                else:
+                    # Inverse can be set to False since qml.matrix(operation) is already in
+                    # inverted form
+                    method = getattr(tensornet, "applyMatrix")
+                    try:
+                        method(qml.matrix(operation), wires, False)
+                    except AttributeError:
+                        method(operation.matrix, wires, False)           
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""
