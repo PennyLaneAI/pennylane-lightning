@@ -148,32 +148,32 @@ You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
     
 The supported options and the default value are
 
-==========================================  =======================================
-``Cmake`` option                            Description
-==========================================  =======================================
-``-DENABLE_BLAS = OFF                   ``  Enable BLAS
-``-DENABLE_GATE_DISPATCHER = ON         ``  Enable gate kernel dispatching on AVX/AVX2/AVX512
-``-DLQ_ENABLE_KERNEL_OMP = OFF          ``  Enable OpenMP pragmas for gate kernels
-``-DLQ_ENABLE_KERNEL_AVX_STREAMING = OFF``  Enable AVX2/512 streaming operations for gate kernels
-``-DPLLGPU_DISABLE_CUDA_SAFETY = OFF    ``  Build without CUDA call safety checks
-``-DKokkos_ENABLE_SERIAL = ON           ``  Enable Kokkos SERIAL device
-``-DKokkos_ENABLE_COMPLEX_ALIGN = OFF   ``  Enable complex alignment in memory
-``-DENABLE_CLANG_TIDY = OFF             ``  Enable clang-tidy build checks
-``-DENABLE_COVERAGE = OFF               ``  Enable code coverage
-``-DENABLE_WARNINGS = ON                ``  Enable warnings
-``-DENABLE_NATIVE = OFF                 ``  Enable native CPU build tuning
-``-DENABLE_PYTHON = ON                  ``  Enable compilation of the Python module
-``-DENABLE_LAPACK = OFF                 ``  Enable compilation with scipy/LAPACK
-``-DENABLE_OPENMP = ON                  ``  Enable OpenMP
-``-DBUILD_TESTS = OFF                   ``  Build cpp tests
-``-DBUILD_BENCHMARKS = OFF              ``  Enable cpp benchmarks
-``-DPLKOKKOS_ENABLE_NATIVE = OFF        ``  Enable native CPU build tuning
-``-DPLKOKKOS_ENABLE_SANITIZER = OFF     ``  Enable address sanitizer
-``-DPLKOKKOS_ENABLE_WARNINGS = ON       ``  Enable warnings
-==========================================  =======================================
-
-
-
+=========================================  =======================================
+``Cmake`` option                           Description
+=========================================  =======================================
+``-DPLKOKKOS_ENABLE_NATIVE=OFF``           Enable native CPU build tuning
+``-DPLKOKKOS_ENABLE_SANITIZER=OFF``        Enable address sanitizer
+``-DPLKOKKOS_ENABLE_WARNINGS=ON``          Enable warnings
+``-DENABLE_BLAS=OFF``                      Enable BLAS
+``-DENABLE_GATE_DISPATCHER=ON``            Enable gate kernel dispatching on AVX/AVX2/AVX512
+``-DLQ_ENABLE_KERNEL_OMP=OFF``             Enable OpenMP pragmas for gate kernels
+``-DLQ_ENABLE_KERNEL_AVX_STREAMING=OFF``   Enable AVX2/512 streaming operations for gate kernels
+``-DPL_DISABLE_CUDA_SAFETY=OFF``           Build without CUDA call safety checks
+``-DPL_DISABLE_CUDA_SAFETY=OFF``           Build without CUDA call safety checks
+``-DPLLGPU_DISABLE_CUDA_SAFETY=OFF``       Build without CUDA call safety checks
+``-DKokkos_ENABLE_SERIAL=ON``              Enable Kokkos SERIAL device
+``-DKokkos_ENABLE_SERIAL=ON``              Enable Kokkos SERIAL device
+``-DKokkos_ENABLE_COMPLEX_ALIGN=OFF``      Enable complex alignment in memory
+``-DENABLE_CLANG_TIDY=OFF``                Enable clang-tidy build checks
+``-DENABLE_COVERAGE=OFF``                  Enable code coverage
+``-DENABLE_WARNINGS=ON``                   Enable warnings
+``-DENABLE_NATIVE=OFF``                    Enable native CPU build tuning
+``-DENABLE_PYTHON=ON``                     Enable compilation of the Python module
+``-DENABLE_LAPACK=OFF``                    Enable compilation with scipy/LAPACK
+``-DENABLE_OPENMP=ON``                     Enable OpenMP
+``-DENABLE_OPENMP=OFF``                    Enable OpenMP
+``-DBUILD_TESTS=OFF``                      Build cpp tests
+``-DBUILD_BENCHMARKS=OFF``                 Enable cpp benchmarks
 
 Compile MSVC (Windows)
 ======================
