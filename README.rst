@@ -263,7 +263,7 @@ Please consult the `cuQuantum SDK`_ , `mpi4py <https://mpi4py.readthedocs.io/en/
 `MPICH <https://www.mpich.org/static/downloads/4.1.1/mpich-4.1.1-README.txt>`_, or `OpenMPI <https://www.open-mpi.org/faq/?category=buildcuda>`_ install guide for more information.
 
 Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed and the environment variable ``CUQUANTUM_SDK`` is set properly.
-Then Lightning-GPU with MPI support can then be installed with ``pip``:
+Then Lightning-GPU with MPI support can then be installed in the *editable* mode:
 
 .. code-block:: bash
 
