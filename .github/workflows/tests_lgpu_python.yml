@@ -124,11 +124,6 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
-      - name: Install required packages
-        run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
-
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
         uses: actions/checkout@v4
@@ -159,6 +154,11 @@ jobs:
         run: |
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Install required packages
+        run: |
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
 
       # TODO: Remove after Release 0.37
       - name: Install Lightning GPU (stable)
