@@ -25,6 +25,9 @@
 * Update python packaging to follow PEP 517/518/621/660 standards.
   [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
 
+* Lightning Kokkos migrated to new device API.
+  [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
+
 ### Improvements
 
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
@@ -120,7 +123,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Luis Alfredo Nuñez Meneses, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
