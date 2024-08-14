@@ -39,7 +39,7 @@ concurrency:
 
 jobs:
   cpp_tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') && !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) && github.event.pull_request.draft == false}}
+    if: ${{ github.event.pull_request.draft == false && (contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name)) }}
     runs-on:
       - self-hosted
       - linux
