@@ -105,13 +105,14 @@ jobs:
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
+        env:
+          PL_BACKEND: lightning_qubit
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           python -m pip install -r requirements-dev.txt
 
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          python -m pip install . -vv
+          python scripts/configure_pyproject_toml.py || python -m pip install . -vv
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -131,9 +132,10 @@ jobs:
       - name: Build and install package
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
+          PL_BACKEND: lightning_gpu
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
-          PL_BACKEND=lightning_gpu python scripts/configure_pyproject_toml.py
+          python scripts/configure_pyproject_toml.py || \
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install . -vv
 
