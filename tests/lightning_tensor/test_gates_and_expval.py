@@ -266,6 +266,7 @@ class TestSparseHExpval:
         ):
             m.var(q.queue[0])
 
+
 class QChem:
     """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
 

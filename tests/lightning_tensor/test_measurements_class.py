@@ -62,4 +62,3 @@ class TestMeasurementFunction:
         mp = qml.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
-
