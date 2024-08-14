@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <cuComplex.h>
 #include <cutensornet.h>
@@ -148,6 +149,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
         std::vector<int32_t> modesToSample(tensor_network_.getNumQubits());
 
         std::iota(modesToSample.begin(), modesToSample.end(), 0);
+
+        std::reverse(modesToSample.begin(), modesToSample.end());
 
         cutensornetStateSampler_t sampler;
 
