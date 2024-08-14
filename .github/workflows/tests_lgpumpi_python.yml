@@ -112,7 +112,8 @@ jobs:
           python -m pip install -r requirements-dev.txt
 
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
-          python scripts/configure_pyproject_toml.py || python -m pip install . -vv
+          python scripts/configure_pyproject_toml.py || true
+          python -m pip install . -vv
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
