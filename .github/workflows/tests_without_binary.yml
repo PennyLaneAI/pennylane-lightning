@@ -45,7 +45,7 @@ jobs:
       - name: Make disk space
         run: |
           for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
-            sudo du -sh $DIR || echo $DIR not found 
+            sudo du -sh $DIR || echo $DIR not found
             sudo rm -rf $DIR
           done
 
@@ -99,38 +99,20 @@ jobs:
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install the pennylane_lightning core package (lightning_qubit)
-        if: inputs.lightning-version == 'stable'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: "lightning_qubit"
         run: |
+          python scripts/configure_pyproject_toml.py || \
           python -m pip install . -vv
 
-      - name: Install extra backend device ${{ inputs.lightning-version }}
-        if: matrix.pl_backend != 'lightning_qubit' && inputs.lightning-version == 'stable'
+      - name: Install extra backend device
+        if: matrix.pl_backend != 'lightning_qubit'
         env:
           SKIP_COMPILATION: True
           PL_BACKEND: ${{ matrix.pl_backend }}
         run: |
-          pip install pip~=22.0
-          python -m pip install . -vv
-
-      - name: Install the pennylane_lightning core package (lightning_qubit)
-        if: inputs.lightning-version != 'stable'
-        env:
-          SKIP_COMPILATION: True
-          PL_BACKEND: "lightning_qubit"
-        run: |
-          python scripts/configure_pyproject_toml.py
-          python -m pip install . -vv
-
-      - name: Install extra backend device ${{ inputs.lightning-version }}
-        if: matrix.pl_backend != 'lightning_qubit' && inputs.lightning-version != 'stable'
-        env:
-          SKIP_COMPILATION: True
-          PL_BACKEND: ${{ matrix.pl_backend }}
-        run: |
-          python scripts/configure_pyproject_toml.py
+          python scripts/configure_pyproject_toml.py || \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for all backends

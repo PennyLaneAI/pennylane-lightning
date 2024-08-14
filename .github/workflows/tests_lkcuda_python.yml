@@ -104,6 +104,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
+          retention-days: 1
 
   pythontestswithKokkos:
     needs: [builddeps]
@@ -235,29 +236,18 @@ jobs:
           python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
-      - name: Install backend devices (${{ inputs.lightning-version }})
-        if: matrix.pl_backend != 'all' && inputs.lightning-version == 'stable'
+      - name: Install backend device
+        if: ${{ matrix.pl_backend != 'all'}}
         run: |
           ls -l ${{ github.workspace }}/Kokkos
           cd main
 
-          pip install pip~=22.0
-
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || \
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
-          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
-
-      - name: Install backend devices (${{ inputs.lightning-version }})
-        if: matrix.pl_backend != 'all' && inputs.lightning-version != 'stable'
-        run: |
-          ls -l ${{ github.workspace }}/Kokkos
-          cd main
-
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          SKIP_COMPILATION=True python -m pip install . -vv
-
-          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || \
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
+          python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
@@ -265,32 +255,23 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          cd main
+          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-      - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: matrix.pl_backend == 'all' && inputs.lightning-version == 'stable'
+      - name: Install all backend devices
+        if: ${{ matrix.pl_backend == 'all' }}
         run: |
           cd main
-          pip install pip~=22.0
 
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || \
           PL_BACKEND=lightning_qubit python -m pip install . -vv
 
-          PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
-
-      - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: matrix.pl_backend == 'all' && inputs.lightning-version != 'stable'
-        run: |
-          cd main
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          python -m pip install . -vv
-
-          PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
+          PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py || \
+          PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
@@ -298,7 +279,7 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          cd main
+          cd main/
           for device in lightning.qubit lightning.kokkos; do
             pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
             pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append

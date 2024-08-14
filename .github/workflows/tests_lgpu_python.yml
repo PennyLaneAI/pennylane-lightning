@@ -83,6 +83,26 @@ jobs:
           nvcc --version
           nvidia-smi
 
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          path: main
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          cd main
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          cd main
+          git fetch --tags --force
+          git checkout latest_release
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:
@@ -124,6 +144,12 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
+      - name: Install required packages
+        run: |
+          cd main
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
+
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
         uses: actions/checkout@v4
@@ -142,50 +168,21 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
+          cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-
-      - name: Switch to Lightning GPU release build
-        if: inputs.lightning-version == 'release'
-        run: |
-          git fetch --all
-          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
-
-      - name: Install required packages
-        run: |
-          python -m pip install -r requirements-dev.txt
-          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
-
-      # TODO: Remove after Release 0.37
-      - name: Install Lightning GPU (stable)
-        if: inputs.lightning-version == 'stable'
-        run: |
-          pip install pip~=22.0 PennyLane-Lightning-GPU --upgrade
-
-      # TODO: Remove after Release 0.37
-      - name: Switch to Lightning GPU stable branch
-        if: inputs.lightning-version == 'stable'
-        run: |
-          git fetch --tags --force
-          git checkout latest_release
-
-      # TODO: Update after Release 0.37
-      - name: Install Lightning GPU (${{ inputs.lightning-version }})
-        if: inputs.lightning-version != 'stable'
+      - name: Build and install package
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
+          cd main
           rm -rf build
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          SKIP_COMPILATION=True python -m pip install . -vv
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || \
+          PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           rm -rf build
-          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || \
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning-GPU unit tests
@@ -194,37 +191,26 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
+          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-      - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: matrix.pl_backend == 'all' && inputs.lightning-version == 'stable'
+      - name: Install all backend devices
+        if: ${{ matrix.pl_backend == 'all' }}
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
-          pip install pip~=22.0
-
+          cd main
           rm -rf build
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || \
           PL_BACKEND=lightning_qubit python -m pip install . -vv
-
           rm -rf build
-          PL_BACKEND=lightning_GPU python -m pip install . -vv
 
-      - name: Install all backend devices ${{ inputs.lightning-version }}
-        if: matrix.pl_backend == 'all'&& inputs.lightning-version != 'stable'
-        env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
-        run: |
-          rm -rf build
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          python -m pip install . -vv
-
-          rm -rf build
-          PL_BACKEND=lightning_GPU python scripts/configure_pyproject_toml.py
-          python -m pip install . -vv
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || \
+          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
       - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
@@ -232,6 +218,7 @@ jobs:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
+          cd main/
           PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
           pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
@@ -244,7 +231,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           if-no-files-found: error
 
   upload-to-codecov-linux-python:
