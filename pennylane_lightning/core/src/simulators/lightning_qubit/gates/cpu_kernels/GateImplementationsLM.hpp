@@ -579,7 +579,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const ComplexT s = ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
         const std::array<ComplexT, 4> sines = {s, IMAG * s, -s, -IMAG * s};
 
-        auto get_mask = [one, num_qubits, &word, &wires](
+        auto get_mask = [num_qubits, &wires](
                             const std::function<bool(const int)> &condition) {
             std::size_t mask{0U};
             for (std::size_t iw = 0; iw < wires.size(); iw++) {
