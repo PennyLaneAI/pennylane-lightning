@@ -327,7 +327,7 @@ _observables = frozenset(
 # The set of supported observables.
 
 
-def stopping_condition(op: Operator, num_wires: int = 64) -> bool:
+def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
@@ -399,6 +399,11 @@ def _supports_adjoint(circuit):
     return True
 
 
+def _adjoint_ops(op: qml.operation.Operator) -> bool:
+    """Specify whether or not an Operator is supported by adjoint differentiation."""
+    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
+
+
 def _add_adjoint_transforms(program: TransformProgram) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
     for adjoint differentiation.
@@ -415,7 +420,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(no_sampling, name=name)
     program.add_transform(
         decompose,
-        stopping_condition=adjoint_ops,
+        stopping_condition=_adjoint_ops,
         stopping_condition_shots=stopping_condition_shots,
         name=name,
         skip_initial_state_prep=False,
@@ -567,9 +572,6 @@ class LightningQubit(Device):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def _stopping_condition(self, op: Operator) -> bool:
-        return stopping_condition(op, num_wires=len(self.wires))
-
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
@@ -601,7 +603,7 @@ class LightningQubit(Device):
 
         program.add_transform(
             decompose,
-            stopping_condition=self._stopping_condition,
+            stopping_condition=stopping_condition,
             stopping_condition_shots=stopping_condition_shots,
             skip_initial_state_prep=True,
             name=self.name,
