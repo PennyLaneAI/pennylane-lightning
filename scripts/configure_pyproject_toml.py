@@ -60,6 +60,7 @@ if __name__ == "__main__":
         "cmake~=3.24.0",
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
+        "pybind11",
         "toml",
     ]
     if backend == "lightning_gpu":
