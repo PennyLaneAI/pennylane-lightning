@@ -357,6 +357,25 @@ class StateVectorKokkos final
         }
     }
 
+    /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    void applyPauliRot(const std::vector<std::size_t> &wires,
+                       const bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.");
+        Pennylane::LightningKokkos::Functors::applyPauliRot<KokkosExecSpace,
+                                                            PrecisionT>(
+            getView(), this->getNumQubits(), wires, inverse, params[0], word);
+    }
+
     template <bool inverse = false>
     void applyControlledGlobalPhase(const std::vector<ComplexT> &diagonal) {
         auto diagonal_ = vector2view(diagonal);

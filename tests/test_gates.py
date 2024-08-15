@@ -526,8 +526,8 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="PauliRot operations only implemented in lightning.qubit.",
+    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    reason="PauliRot operations only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
 @pytest.mark.parametrize("n_targets", [1, 2, 3, 4, 5, 10, 15])

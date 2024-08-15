@@ -19,12 +19,15 @@
 #include "BitUtil.hpp"
 #include "GateOperation.hpp"
 #include "Gates.hpp"
+#include "Util.hpp" // exp2, INVSQRT2
+#include "UtilKokkos.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::kokkos_swap;
 using Pennylane::Gates::GateOperation;
+using Pennylane::LightningKokkos::Util::vector2view;
 } // namespace
 /// @endcond
 
@@ -1089,6 +1092,57 @@ void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             arr_(k) *= (Kokkos::Impl::bit_count(k & wires_parity) % 2 == 0)
                            ? shift_0
                            : shift_1;
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                   const std::size_t num_qubits,
+                   const std::vector<std::size_t> &wires, const bool inverse,
+                   const PrecisionT angle, const std::string &word) {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    constexpr auto IMAG = Pennylane::Util::IMAG<PrecisionT>();
+    PL_ABORT_IF_NOT(wires.size() == word.size(),
+                    "wires and word have incompatible dimensions.")
+    const PrecisionT c = std::cos(angle / 2);
+    const ComplexT s = ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
+    const std::vector<ComplexT> sines = {s, IMAG * s, -s, -IMAG * s};
+    auto d_sines = vector2view(sines);
+    auto get_mask =
+        [num_qubits, &wires](
+            [[maybe_unused]] const std::function<bool(const int)> &condition) {
+            std::size_t mask{0U};
+            for (std::size_t iw = 0; iw < wires.size(); iw++) {
+                const auto bit = static_cast<std::size_t>(condition(iw));
+                mask |= bit << (num_qubits - 1 - wires[iw]);
+            }
+            return mask;
+        };
+    const std::size_t mask_xy =
+        get_mask([&word](const int a) { return word[a] != 'Z'; });
+    const std::size_t mask_y =
+        get_mask([&word](const int a) { return word[a] == 'Y'; });
+    const std::size_t mask_z =
+        get_mask([&word](const int a) { return word[a] == 'Z'; });
+    const auto count_mask_y = std::popcount(mask_y);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        KOKKOS_LAMBDA(const std::size_t i0) {
+            const std::size_t i1 = i0 ^ mask_xy;
+            if (i0 <= i1) {
+                const auto count_y = Kokkos::Impl::bit_count(i0 & mask_y) * 2;
+                const auto count_z = Kokkos::Impl::bit_count(i0 & mask_z) * 2;
+                const auto sign_i0 = count_z + count_mask_y * 3 - count_y;
+                if (mask_xy) {
+                    const auto sign_i1 = count_z + count_mask_y + count_y;
+                    const ComplexT v0 = arr_(i0);
+                    const ComplexT v1 = arr_(i1);
+                    arr_(i0) = c * v0 + d_sines(sign_i0 % 4) * v1;
+                    arr_(i1) = c * v1 + d_sines(sign_i1 % 4) * v0;
+                } else {
+                    arr_(i0) *= c + d_sines(sign_i0 % 4);
+                }
+            }
         });
 }
 

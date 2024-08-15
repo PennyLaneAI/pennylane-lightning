@@ -134,6 +134,7 @@ allowed_operations = {
     "ECR",
     "BlockEncode",
     "C(BlockEncode)",
+    "PauliRot",
 }
 
 allowed_observables = {
@@ -428,6 +429,12 @@ class LightningKokkos(LightningBase):
                     self.apply_lightning([ops.base])
             elif isinstance(ops, MidMeasureMP):
                 self._apply_lightning_midmeasure(ops, mid_measurements, postselect_mode)
+            elif isinstance(ops, qml.PauliRot):
+                method = getattr(state, "applyPauliRot")
+                paulis = ops._hyperparameters["pauli_word"]
+                wires = [i for i, w in zip(wires, paulis) if w != "I"]
+                word = "".join(p for p in paulis if p != "I")  # pylint: disable=protected-access
+                method(wires, invert_param, ops.parameters, word)
             elif isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
                 ops.base, qml.GlobalPhase
             ):
