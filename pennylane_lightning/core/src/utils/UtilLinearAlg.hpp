@@ -26,6 +26,15 @@
 #include <string>
 #include <vector>
 
+#if defined(__APPLE__) || defined(__linux__)
+#include <dlfcn.h>
+#define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
+
+#else
+#include <windows.h>
+#define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
+#endif
+
 #include "SharedLibLoader.hpp"
 
 /// @cond DEV
