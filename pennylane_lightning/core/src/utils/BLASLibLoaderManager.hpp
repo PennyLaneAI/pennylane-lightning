@@ -171,6 +171,7 @@ class BLASLibLoaderManager {
             // branch for C++ interface
             scipyPathStr = get_scipylibs_path_();
 #endif
+            PL_ABORT_IF(scipyPathStr.empty(), "Can't find BLAS libraries");
         }
         init_helper_(scipyPathStr);
     }
