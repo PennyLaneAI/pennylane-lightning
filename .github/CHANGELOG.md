@@ -2,10 +2,16 @@
 
 ### New features since last release
 
+* Add `qml.state()` measurement support to `lightning.tensor`.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
+
 * Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
-  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804) 
+  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804)
 
 ### Breaking changes
+
+* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
 * Remove `NDpermuter.hpp` which is no longer required.
   [(#795)](https://github.com/PennyLaneAI/pennylane-lightning/pull/795)
@@ -16,10 +22,16 @@
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
+
 ### Improvements
 
 * LightningQubit gains native support for the `PauliRot` gate.
   [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+  
+* The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
+  [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
 
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
@@ -70,12 +82,24 @@
 * Add `initial_state_prep` option to Catalyst TOML file.
   [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
 
+* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
+  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
+
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
+  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
+
 ### Documentation
 
 * Updated the README and added citation format for Lightning arxiv preprint.
   [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Fix plugin-test-matrix CI/CD workflows.
+  [(#850)](https://github.com/PennyLaneAI/pennylane-lightning/pull/850)
+
+* Set the `immutable` parameter value as `false` for the `cutensornetStateApplyTensorOperator` to allow the following `cutensornetStateUpdateTensorOperator` call.
+  [(#845)](https://github.com/PennyLaneAI/pennylane-lightning/pull/845)
 
 * Fix cuQuantum SDK path pass-though in CMake.
   [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
@@ -102,7 +126,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 

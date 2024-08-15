@@ -741,6 +741,29 @@ class TestSerializeOps:
         assert s == s_expected
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_Rot_in_circuit(self, wires_map):
+        """Test expected serialization for a circuit with Rot which should be decomposed"""
+
+        with qml.queuing.AnnotatedQueue() as q:
+            qml.Rot(0.1, 0.2, 0.3, wires=0)
+
+        tape = qml.tape.QuantumScript.from_queue(q)
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
+        s_expected = (
+            (
+                ["RZ", "RY", "RZ"],
+                [np.array([0.1]), np.array([0.2]), np.array([0.3])],
+                [[0], [0], [0]],
+                [False, False, False],
+                [[], [], []],
+                [[], [], []],
+                [[], [], []],
+            ),
+            False,
+        )
+        assert s == s_expected
+
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_basic_circuit_not_implemented_ctrl_ops(self, wires_map):
         """Test expected serialization for a simple circuit"""
         ops = qml.OrbitalRotation(0.1234, wires=range(4))

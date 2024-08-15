@@ -326,8 +326,8 @@ void testApplyIsingXX() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "XX");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "XX");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -359,8 +359,8 @@ void testApplyIsingXX() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "XX");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "XX");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -392,8 +392,8 @@ void testApplyIsingXX() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "XX");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "XX");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -425,8 +425,8 @@ void testApplyIsingXX() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "XX");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "XX");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -646,8 +646,8 @@ void testApplyIsingYY() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "YY");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "YY");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -678,8 +678,8 @@ void testApplyIsingYY() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "YY");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "YY");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -710,8 +710,8 @@ void testApplyIsingYY() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "YY");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "YY");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -742,8 +742,8 @@ void testApplyIsingYY() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "YY");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "YY");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
@@ -2256,8 +2256,8 @@ void testApplyMultiRZ() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             auto sv = createPlusState<PrecisionT>(num_qubits);
-            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits,
-                                                 wires, false, angle, "Z");
+            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits, wires,
+                                                 false, angle, "Z");
             REQUIRE(sv == approx(expected).margin(1e-7));
         }
     }
@@ -2287,8 +2287,8 @@ void testApplyMultiRZ() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             auto sv = createPlusState<PrecisionT>(num_qubits);
-            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits,
-                                                 wires, false, angle, "ZZ");
+            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits, wires,
+                                                 false, angle, "ZZ");
             REQUIRE(sv == approx(expected).margin(1e-7));
         }
     }
@@ -2318,8 +2318,8 @@ void testApplyMultiRZ() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             auto sv = createPlusState<PrecisionT>(num_qubits);
-            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits,
-                                                 wires, false, angle, "ZZZ");
+            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits, wires,
+                                                 false, angle, "ZZZ");
             REQUIRE(sv == approx(expected).margin(1e-7));
         }
     }
@@ -2348,8 +2348,8 @@ void testApplyMultiRZ() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             auto sv = createPlusState<PrecisionT>(num_qubits);
-            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits,
-                                                 wires, false, angle, "ZZZZ");
+            GateImplementationsLM::applyPauliRot(sv.data(), num_qubits, wires,
+                                                 false, angle, "ZZZZ");
             REQUIRE(sv == approx(expected).margin(1e-7));
         }
     }
@@ -2406,8 +2406,8 @@ void testApplyMultiRZ() {
         if constexpr (std::is_same_v<GateImplementation,
                                      GateImplementationsLM>) {
             st = ini_st;
-            GateImplementationsLM::applyPauliRot(st.data(), num_qubits,
-                                                 wires, false, angle, "ZZZ");
+            GateImplementationsLM::applyPauliRot(st.data(), num_qubits, wires,
+                                                 false, angle, "ZZZ");
             REQUIRE(st == approx(expected).margin(1e-7));
         }
     }
