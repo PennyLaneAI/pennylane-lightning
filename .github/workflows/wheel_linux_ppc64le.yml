@@ -141,8 +141,7 @@ jobs:
             python -m pip install ninja cmake~=3.24.0 scipy
 
           CIBW_ENVIRONMENT: |
-            PL_BACKEND="${{ matrix.pl_backend }}" \
-            pybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
+            PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_MANYLINUX_PPC64LE_IMAGE: manylinux_2_28
 
