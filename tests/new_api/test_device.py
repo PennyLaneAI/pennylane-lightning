@@ -307,7 +307,7 @@ class TestExecution:
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(
                 decompose,
-                stopping_condition=adjoint_ops,
+                stopping_condition=_adjoint_ops,
                 stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,
