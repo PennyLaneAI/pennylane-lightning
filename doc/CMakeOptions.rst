@@ -12,7 +12,6 @@ Pennylane Lightning ``Cmake`` option           Description
 ``-DENABLE_WARNINGS=ON``                      Enable warnings
 ``-DLQ_ENABLE_KERNEL_AVX_STREAMING=OFF``      Enable AVX2/512 streaming operations for gate kernels
 ``-DLQ_ENABLE_KERNEL_OMP=OFF``                Enable OpenMP pragmas for gate kernels
-``-DPL_DISABLE_CUDA_SAFETY=OFF``              Build without CUDA call safety checks
 ============================================  =======================================
 
 ============================================  =======================================
