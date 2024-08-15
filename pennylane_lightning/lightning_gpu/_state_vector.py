@@ -22,6 +22,7 @@ from pennylane.wires import Wires
 
 # from ._measurements import LightningMeasurements
 
+
 class LightningStateVector:
     """Lightning state-vector class.
 
@@ -66,4 +67,3 @@ class LightningStateVector:
     def num_wires(self):
         """Number of wires addressed on this device"""
         return self._num_wires
-

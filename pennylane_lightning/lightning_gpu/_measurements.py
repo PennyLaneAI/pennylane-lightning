@@ -44,4 +44,3 @@ class LightningMeasurements:
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
-

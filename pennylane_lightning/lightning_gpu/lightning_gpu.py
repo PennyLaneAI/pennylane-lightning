@@ -95,6 +95,7 @@ except (ImportError, ValueError) as e:
     backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
 
+
 def simulate(
     circuit: QuantumScript,
     state: LightningStateVector,
@@ -120,6 +121,7 @@ def simulate(
     """
     return 0
 
+
 def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None):
     """Compute the Jacobian for a single quantum script.
 
@@ -135,6 +137,7 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False,
         TensorLike: The Jacobian of the quantum script
     """
     return 0
+
 
 def simulate_and_jacobian(
     circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
@@ -155,6 +158,7 @@ def simulate_and_jacobian(
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
     return 0
+
 
 def vjp(
     circuit: QuantumTape,
@@ -180,6 +184,7 @@ def vjp(
         TensorLike: The VJP of the quantum script
     """
     return 0
+
 
 def simulate_and_vjp(
     circuit: QuantumTape,
@@ -207,6 +212,7 @@ def simulate_and_vjp(
     """
     return 0
 
+
 def _gpu_dtype(dtype, mpi=False):
     if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
         raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
@@ -227,84 +233,84 @@ def _mebibytesToBytes(mebibytes):
 
 _operations = frozenset(
     {
-    "Identity",
-    "BasisState",
-    "QubitStateVector",
-    "StatePrep",
-    "QubitUnitary",
-    "ControlledQubitUnitary",
-    "MultiControlledX",
-    "DiagonalQubitUnitary",
-    "PauliX",
-    "PauliY",
-    "PauliZ",
-    "MultiRZ",
-    "GlobalPhase",
-    "C(GlobalPhase)",
-    "Hadamard",
-    "S",
-    "Adjoint(S)",
-    "T",
-    "Adjoint(T)",
-    "SX",
-    "Adjoint(SX)",
-    "CNOT",
-    "SWAP",
-    "ISWAP",
-    "PSWAP",
-    "Adjoint(ISWAP)",
-    "SISWAP",
-    "Adjoint(SISWAP)",
-    "SQISW",
-    "CSWAP",
-    "Toffoli",
-    "CY",
-    "CZ",
-    "PhaseShift",
-    "ControlledPhaseShift",
-    "RX",
-    "RY",
-    "RZ",
-    "Rot",
-    "CRX",
-    "CRY",
-    "CRZ",
-    "CRot",
-    "IsingXX",
-    "IsingYY",
-    "IsingZZ",
-    "IsingXY",
-    "SingleExcitation",
-    "SingleExcitationPlus",
-    "SingleExcitationMinus",
-    "DoubleExcitation",
-    "DoubleExcitationPlus",
-    "DoubleExcitationMinus",
-    "QubitCarry",
-    "QubitSum",
-    "OrbitalRotation",
-    "QFT",
-    "ECR",
-    "BlockEncode",
-    "C(BlockEncode)",
-}
+        "Identity",
+        "BasisState",
+        "QubitStateVector",
+        "StatePrep",
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "GlobalPhase",
+        "C(GlobalPhase)",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "QFT",
+        "ECR",
+        "BlockEncode",
+        "C(BlockEncode)",
+    }
 )
 
 _observables = frozenset(
     {
-    "PauliX",
-    "PauliY",
-    "PauliZ",
-    "Hadamard",
-    "SparseHamiltonian",
-    "Hamiltonian",
-    "LinearCombination",
-    "Hermitian",
-    "Identity",
-    "Sum",
-    "Prod",
-    "SProd",
-}
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "SparseHamiltonian",
+        "Hamiltonian",
+        "LinearCombination",
+        "Hermitian",
+        "Identity",
+        "Sum",
+        "Prod",
+        "SProd",
+    }
 )
 
 gate_cache_needs_hash = (
@@ -443,6 +449,7 @@ class LightningQubit(Device):
         Update the execution config with choices for how the device should be used and the device options.
         """
         return 0
+
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
@@ -581,7 +588,7 @@ class LightningQubit(Device):
         """
 
         return 0
-    
+
     def execute_and_compute_vjp(
         self,
         circuits: QuantumTape_or_Batch,

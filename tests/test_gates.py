@@ -30,7 +30,6 @@ if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
 
-
 @pytest.fixture
 def op(op_name):
     ops_list = {

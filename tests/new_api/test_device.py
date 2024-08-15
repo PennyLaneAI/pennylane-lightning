@@ -42,7 +42,7 @@ if device_name == "lightning.qubit":
         validate_measurements,
         validate_observables,
     )
-    
+
 if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
