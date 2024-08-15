@@ -20,21 +20,13 @@
 #pragma once
 
 #include <algorithm>
-#include <array>
 #include <complex>
 #include <cstdlib>
-#include <filesystem>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include <iostream>
-
-#include <Python.h>
-#include <pybind11/embed.h>
-#include <pybind11/pybind11.h>
-
-#include "SharedLibLoader.hpp"
+#include "BLASLibLoaderManager.hpp"
 
 /// @cond DEV
 namespace {
@@ -47,58 +39,6 @@ using cheevPtr = void (*)(const char *, const char *, const int *,
                           std::complex<float> *, const int *, float *,
                           std::complex<float> *, const int *, float *, int *);
 
-// Priority table used to sort openblas and its dependencies
-std::array<std::string, 5> priority_lib{"stdc", "gcc.", "quadmath", "gfortran",
-                                        "openblas"};
-
-std::string get_scipylibs_path_worker() {
-    try {
-        // Import the scipy module
-        pybind11::module scipy = py::module::import("scipy");
-
-        // Get the __file__ attribute
-        pybind11::object file_attr = scipy.attr("__file__");
-        std::string file_path = py::cast<std::string>(file_attr);
-
-        // Remove the __init__.py file from the path
-        std::string scipy_lib_path = file_path.substr(0, file_path.find_last_of("/"));
-
-        PL_ABORT_IF(scipy_lib_path.empty(), "Can't find scipy.libs");
-
-        return scipy_lib_path;
-
-    } catch (const py::error_already_set& e) {
-        std::cerr << "Python error: " << e.what() << std::endl;
-    }
-
-    /*
-    pybind11::object avail_site_packages =
-        pybind11::module::import("site").attr("getsitepackages")();
-
-    std::string scipy_lib_path;
-
-    for (auto item : avail_site_packages) {
-        std::string tmp_path = pybind11::str(item);
-        tmp_path += "/scipy.libs";
-        if (std::filesystem::exists(tmp_path)) {
-            return tmp_path;
-        }
-    }
-
-    PL_ABORT_IF(scipy_lib_path.empty(), "Can't find scipy.libs");
-
-    return scipy_lib_path;
-    */
-}
-
-std::string get_scipylibs_path() {
-    if (Py_IsInitialized()) {
-        return get_scipylibs_path_worker();
-    }
-
-    pybind11::scoped_interpreter scope_guard{};
-    return get_scipylibs_path_worker();
-}
 } // namespace
 /// @endcond
 
@@ -120,7 +60,9 @@ template <typename T>
 void compute_diagonalizing_gates(int n, int lda,
                                  const std::vector<std::complex<T>> &Ah,
                                  std::vector<T> &eigenVals,
-                                 std::vector<std::complex<T>> &unitary) {
+                                 std::vector<std::complex<T>> &unitary,
+                                 SharedLibLoader *blasLibLoader,
+                                 const bool scipy_prefix) {
     eigenVals.clear();
     eigenVals.resize(n);
     unitary = std::vector<std::complex<T>>(n * n, {0, 0});
@@ -134,55 +76,6 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 
-    // Scipy packages `libopenblas` as `libscipy_openblas` on Linux
-    // starting v1.14, and OpenBlas symbols are now exposed with
-    // a prefix `scipy_`.
-    auto scipy_prefix = false;
-
-#ifdef __APPLE__
-    // LCOV_EXCL_START
-    const std::string libName =
-        "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
-        "Frameworks/vecLib.framework/libLAPACK.dylib";
-    std::shared_ptr<SharedLibLoader> blasLib =
-        std::make_shared<SharedLibLoader>(libName);
-    // LCOV_EXCL_STOP
-#else
-    std::shared_ptr<SharedLibLoader> blasLib;
-    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
-
-    std::filesystem::path scipyLibsPath(get_scipylibs_path());
-
-    std::vector<std::string> availableLibs;
-    availableLibs.reserve(priority_lib.size());
-
-    for (const auto &iter : priority_lib) {
-        for (const auto &lib :
-             std::filesystem::directory_iterator(scipyLibsPath)) {
-            if (lib.is_regular_file()) {
-                std::string libname_str = lib.path().filename().string();
-                if (libname_str.find(iter) != std::string::npos) {
-                    availableLibs.push_back(libname_str);
-                }
-            }
-        }
-    }
-
-    for (const auto &lib : availableLibs) {
-        auto libPath = scipyLibsPath / lib.c_str();
-        blasLibs.emplace_back(
-            std::make_shared<SharedLibLoader>(libPath.string()));
-    }
-
-    scipy_prefix =
-        std::find_if(availableLibs.begin(), availableLibs.end(),
-                     [](const auto &lib) {
-                         return lib.find("scipy_openblas") != std::string::npos;
-                     }) != availableLibs.end();
-
-    blasLib = blasLibs.back();
-#endif
-
     char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
     char uplo = 'L'; // Upper triangle of matrix is stored
     std::vector<std::complex<T>> work_query(1); // Vector for optimal size query
@@ -192,7 +85,7 @@ void compute_diagonalizing_gates(int n, int lda,
 
     if constexpr (std::is_same<T, float>::value) {
         auto cheev = reinterpret_cast<cheevPtr>(
-            blasLib->getSymbol(scipy_prefix ? "scipy_cheev_" : "cheev_"));
+            blasLibLoader->getSymbol(scipy_prefix ? "scipy_cheev_" : "cheev_"));
         // Query optimal workspace size
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
@@ -204,7 +97,7 @@ void compute_diagonalizing_gates(int n, int lda,
               work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
         auto zheev = reinterpret_cast<zheevPtr>(
-            blasLib->getSymbol(scipy_prefix ? "scipy_zheev_" : "zheev_"));
+            blasLibLoader->getSymbol(scipy_prefix ? "scipy_zheev_" : "zheev_"));
         // Query optimal workspace size
         zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
