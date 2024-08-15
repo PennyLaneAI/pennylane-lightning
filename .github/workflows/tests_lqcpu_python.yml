@@ -47,6 +47,13 @@ jobs:
     steps:
       - name: Make disk space
         run: |
+          sudo apt-get autoremove -y
+          sudo apt-get autoclean -y
+          sudo apt-get clean -y
+          sudo journalctl --vacuum-time=3d
+          sudo apt-get install -y byobu
+          sudo purge-old-kernels
+          sudo apt-get purge $(dpkg -l | grep 'linux-image-' | grep -v "^ii" | awk '{print $2}')
           sudo du -sh /* || true
           sudo du -sh /home/* || true
           sudo du -sh /mnt/* || true
