@@ -22,6 +22,7 @@
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
+#define HANDLE_TYPE void *
 #define PL_DLOPEN(NAME, ARG) dlopen(NAME, ARG)
 #define PL_DLERROR() dlerror()
 #define PL_DLCLOSE(NAME) dlclose(NAME)
@@ -29,6 +30,7 @@
 
 #else
 #include <windows.h>
+#define HANDLE_TYPE HMODULE
 #define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
 #define PL_DLERROR() GetLastError()
 #define PL_DLCLOSE(NAME) FreeLibrary(NAME)
@@ -50,11 +52,7 @@ namespace Pennylane::Util {
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
-#if defined(__APPLE__) || defined(__linux__)
-    void *handle_{nullptr};
-#else
-    HMODULE handle_ = nullptr;
-#endif
+    HANDLE_TYPE handle_;
     std::mutex mtx_;
 
   public:
@@ -70,15 +68,11 @@ class SharedLibLoader final {
         PL_DLCLOSE(handle_);
     }
 
-    void *getHandle() { return handle_; }
+    HANDLE_TYPE getHandle() { return handle_; }
 
-    /*
-    void *getSymbol(const std::string &symbol) {
-        void *sym = static_cast<void *>(PL_DLSYS(handle_, symbol.c_str()));
-        //PL_ABORT_IF(!sym, PL_DLERROR());
-        return sym;
+    template <typename FunPtr> FunPtr getSymbol(const std::string &symbol) {
+        return reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
     }
-    */
 };
 // NOLINTEND
 
