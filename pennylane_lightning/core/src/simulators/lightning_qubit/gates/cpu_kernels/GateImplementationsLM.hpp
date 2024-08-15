@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <bit>
 #include <complex>
+#include <functional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -579,15 +580,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const ComplexT s = ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
         const std::array<ComplexT, 4> sines = {s, IMAG * s, -s, -IMAG * s};
 
-        auto get_mask = [num_qubits, &wires](
-                            const std::function<bool(const int)> &condition) {
-            std::size_t mask{0U};
-            for (std::size_t iw = 0; iw < wires.size(); iw++) {
-                const auto bit = static_cast<std::size_t>(condition(iw));
-                mask |= bit << (num_qubits - 1 - wires[iw]);
-            }
-            return mask;
-        };
+        auto get_mask =
+            [num_qubits,
+             &wires]([[maybe_unused]] const std::function<bool(const int)>
+                         &condition) {
+                std::size_t mask{0U};
+                for (std::size_t iw = 0; iw < wires.size(); iw++) {
+                    const auto bit = static_cast<std::size_t>(condition(iw));
+                    mask |= bit << (num_qubits - 1 - wires[iw]);
+                }
+                return mask;
+            };
         const std::size_t mask_xy =
             get_mask([&word](const int a) { return word[a] != 'Z'; });
         const std::size_t mask_y =
