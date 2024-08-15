@@ -143,7 +143,8 @@ jobs:
             python -m pip install pybind11 cmake~=3.24.0 build scipy
 
           CIBW_ENVIRONMENT: |
-            PL_BACKEND="${{ matrix.pl_backend }}"
+            PL_BACKEND="${{ matrix.pl_backend }}" \
+            pybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 

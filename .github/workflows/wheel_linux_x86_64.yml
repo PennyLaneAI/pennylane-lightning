@@ -166,7 +166,9 @@ jobs:
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:/usr/bin:$PATH"
             python -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
 
-          CIBW_ENVIRONMENT: PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+          CIBW_ENVIRONMENT: |
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" \
+            pybind11_DIR=$(python -c "import pybind11; print(pybind11.get_cmake_dir())")
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
