@@ -48,8 +48,10 @@ jobs:
       - name: Make disk space
         run: |
           sudo du -sh /* || true
-          sudo du -sh /usr/* || true
+          sudo du -sh /home/* || true
+          sudo du -sh /mnt/* || true
           sudo du -sh /opt/* || true
+          sudo du -sh /usr/* || true
           for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
             sudo du -sh $DIR || echo $DIR not found
             sudo rm -rf $DIR
