@@ -59,7 +59,7 @@ QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-#def get_numpy_libs_path():
+# def get_numpy_libs_path():
 #    numpy_base_path = os.path.dirname(np.__file__)
 #    return os.path.join(os.path.dirname(numpy_base_path), "numpy.libs")
 
@@ -538,7 +538,7 @@ class LightningQubit(Device):
             self._kernel_name = None
             self._num_burnin = 0
 
-        #BLASLibLoader.getInstance(get_numpy_libs_path())
+        # BLASLibLoader.getInstance(get_numpy_libs_path())
 
     @property
     def name(self):
