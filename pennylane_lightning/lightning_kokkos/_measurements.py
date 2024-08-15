@@ -362,18 +362,9 @@ class LightningKokkosMeasurements:
         # apply diagonalizing gates
         self._apply_diagonalizing_gates(mps)
 
-        #  ----------------------------------------
-        # Original:
-        # if self._mcmc:
-        #     total_indices = self._qubit_state.num_wires
-        #     wires = qml.wires.Wires(range(total_indices))
-        # else:
-        #     wires = reduce(sum, (mp.wires for mp in mps))
-
         # Specific for Kokkos:
         total_indices = self._qubit_state.num_wires
         wires = qml.wires.Wires(range(total_indices))
-        #  ----------------------------------------
 
         def _process_single_shot(samples):
             processed = []
@@ -387,22 +378,9 @@ class LightningKokkosMeasurements:
             return tuple(processed)
 
         try:
-            #  ----------------------------------------
-            # Original:
-            # if self._mcmc:
-            #     samples = self._measurement_lightning.generate_mcmc_samples(
-            #         len(wires), self._kernel_name, self._num_burnin, shots.total_shots
-            #     ).astype(int, copy=False)
-            # else:
-            #     samples = self._measurement_lightning.generate_samples(
-            #         list(wires), shots.total_shots
-            #     ).astype(int, copy=False)
-
-            # Specific for Kokkos:
             samples = self._measurement_lightning.generate_samples(
                 len(wires), shots.total_shots
             ).astype(int, copy=False)
-            #  ----------------------------------------
 
         except ValueError as e:
             if str(e) != "probabilities contain NaN":

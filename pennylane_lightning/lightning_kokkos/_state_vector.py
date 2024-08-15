@@ -80,7 +80,6 @@ class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
 
         self._device_name = device_name
 
-        # self._qubit_state = self._state_dtype()(self._num_wires)
         if kokkos_args is None:
             self._kokkos_state = self._state_dtype()(self.num_wires)
         elif isinstance(kokkos_args, InitializationSettings):
