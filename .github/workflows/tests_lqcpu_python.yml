@@ -47,7 +47,8 @@ jobs:
     steps:
       - name: Make disk space
         run: |
-          sudo du -sh /*
+          sudo du -sh /usr/share/*
+          sudo du -sh /opt/*
           for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
             sudo du -sh $DIR || echo $DIR not found
             sudo rm -rf $DIR
