@@ -94,7 +94,7 @@ jobs:
         if: inputs.lightning-version == 'stable'
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON" \
-          python -m setup.py bdist_wheel
+          python setup.py bdist_wheel
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
