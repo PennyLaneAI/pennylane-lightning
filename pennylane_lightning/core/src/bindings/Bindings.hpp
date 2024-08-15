@@ -303,6 +303,21 @@ void registerInfo(py::module_ &m) {
 }
 
 /**
+ * @brief Register bindings for Lightning utils.
+ *
+ * @param m Pybind11 module.
+ */
+void registerUtils(py::module_ &m) {
+    py::class_<BLASLibLoaderManager>(m, "BLASLibLoader")
+        .def_static(
+            "getInstance",
+            [](const std::string &param) {
+                return &BLASLibLoaderManager::getInstance(param);
+            },
+            py::return_value_policy::reference_internal);
+}
+
+/**
  * @brief Register observable classes.
  *
  * @tparam LightningBackendT

@@ -26,13 +26,13 @@ target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs
                                                 )
+if(NOT ENABLE_PYTHON)
 target_include_directories(lightning_utils INTERFACE  ${Python_INCLUDE_DIRS})
 target_link_libraries(lightning_utils INTERFACE pybind11::module
                                               pybind11::pybind11
                                               pybind11::embed
                                               ${Python_LIBRARIES})
-
-#message(STATUS "Python Include Dir: ${Python::Python}")
+endif()
 
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 

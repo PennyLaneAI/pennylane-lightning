@@ -27,9 +27,11 @@
 #include <string>
 #include <vector>
 
+#ifndef ENABLE_PYTHON
 #include <Python.h>
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
+#endif
 
 #include "SharedLibLoader.hpp"
 
@@ -69,6 +71,7 @@ class BLASLibLoaderManager {
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
   private:
+#ifndef ENABLE_PYTHON
     std::string get_scipylibs_path_worker_() {
         pybind11::object avail_site_packages =
             pybind11::module::import("site").attr("getsitepackages")();
@@ -106,7 +109,7 @@ class BLASLibLoaderManager {
         pybind11::scoped_interpreter scope_guard{};
         return get_scipylibs_path_worker_();
     }
-
+#endif
     /**
      * @brief BLASLibLoaderManager.
      *
@@ -159,20 +162,18 @@ class BLASLibLoaderManager {
     BLASLibLoaderManager(const std::string &blaslib_path) {
         std::string scipyPathStr;
         if (std::filesystem::exists(blaslib_path)) {
+            // branch for python interface
             scipyPathStr = blaslib_path;
         } else if (std::filesystem::exists(scipy_lib_path_macos)) {
             scipyPathStr = scipy_lib_path_macos;
         } else {
-#ifdef SCIPY_LIBS_PATH
-            scipyPathStr = std::string(SCIPY_LIBS_PATH);
-#else
+#ifndef ENABLE_PYTHON
+            // branch for C++ interface
             scipyPathStr = get_scipylibs_path_();
 #endif
         }
         init_helper_(scipyPathStr);
     }
-
-    ~BLASLibLoaderManager() = default;
 
   public:
     BLASLibLoaderManager(BLASLibLoaderManager &&) = delete;
@@ -184,6 +185,8 @@ class BLASLibLoaderManager {
         static BLASLibLoaderManager instance(blaslib_path);
         return instance;
     }
+
+    ~BLASLibLoaderManager() = default;
 
     /**
      * @brief Get the BLAS library.

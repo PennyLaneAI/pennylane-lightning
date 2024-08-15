@@ -104,6 +104,10 @@ else()
     FetchContent_MakeAvailable(pybind11)
 endif()
 
+if(ENABLE_PYTHON)
+    add_compile_definitions(ENABLE_PYTHON=1)
+endif()
+
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
