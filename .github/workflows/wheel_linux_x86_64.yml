@@ -146,7 +146,7 @@ jobs:
           python3.11 -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.11 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
