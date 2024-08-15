@@ -61,6 +61,7 @@ if __name__ == "__main__":
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
         "pybind11",
+        "scipy",
         "toml",
     ]
     if backend == "lightning_gpu":
