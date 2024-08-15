@@ -145,6 +145,9 @@ jobs:
           python3.11 -m pip install cibuildwheel~=2.16.0
           python3.11 -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
 
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+
       - name: Build wheels
         env:
           CIBW_CONTAINER_ENGINE: "podman"
