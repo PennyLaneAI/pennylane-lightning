@@ -364,11 +364,17 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
 The supported backend options are 
 
-* ``SERIAL``
-* ``OPENMP``
-* ``THREADS``
-* ``HIP``
-* ``CUDA`` 
+.. list-table:: Frozen Delights!
+    :align: center
+    :width: 100 %
+    :widths: 20 20 20 20 20
+    :header-rows: 0
+
+    *- ``SERIAL``
+     - ``OPENMP``
+     - ``THREADS``
+     - ``HIP``
+     - ``CUDA`` 
 
 and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 
