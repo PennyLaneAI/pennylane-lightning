@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include "BLASLibLoaderManager.hpp"
+#include "SharedLibLoader.hpp"
 
 /// @cond DEV
 namespace {
@@ -84,8 +84,12 @@ void compute_diagonalizing_gates(int n, int lda,
     int info;
 
     if constexpr (std::is_same<T, float>::value) {
+        // auto cheev = reinterpret_cast<cheevPtr>(
+        //     blasLibLoader->getSymbol(scipy_prefix ? "scipy_cheev_" :
+        //     "cheev_"));
+        std::string symbol = scipy_prefix ? "scipy_cheev_" : "cheev_";
         auto cheev = reinterpret_cast<cheevPtr>(
-            blasLibLoader->getSymbol(scipy_prefix ? "scipy_cheev_" : "cheev_"));
+            PL_DLSYS(blasLibLoader->getHandle(), symbol.c_str()));
         // Query optimal workspace size
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
@@ -96,8 +100,12 @@ void compute_diagonalizing_gates(int n, int lda,
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
+        // auto zheev = reinterpret_cast<zheevPtr>(
+        //     blasLibLoader->getSymbol(scipy_prefix ? "scipy_zheev_" :
+        //     "zheev_"));
+        std::string symbol = scipy_prefix ? "scipy_zheev_" : "zheev_";
         auto zheev = reinterpret_cast<zheevPtr>(
-            blasLibLoader->getSymbol(scipy_prefix ? "scipy_zheev_" : "zheev_"));
+            PL_DLSYS(blasLibLoader->getHandle(), symbol.c_str()));
         // Query optimal workspace size
         zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
