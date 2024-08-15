@@ -173,12 +173,10 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerControlledGate<StateVectorT>(pyclass);
     pyclass.def(
         "applyPauliRot",
-        [](StateVectorT &sv, const std::vector<std::size_t> &controlled_wires,
-           const std::vector<bool> &controlled_values,
-           const std::vector<std::size_t> &wires, const bool inverse,
-           const std::vector<ParamT> &params, const std::string &word) {
-            sv.applyPauliRot(controlled_wires, controlled_values, wires,
-                             inverse, params, word);
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<ParamT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
         },
         "Apply a Pauli rotation.");
     pyclass

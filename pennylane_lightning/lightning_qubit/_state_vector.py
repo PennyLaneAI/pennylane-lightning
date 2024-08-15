@@ -318,10 +318,10 @@ class LightningStateVector:
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                word = operation._hyperparameters["pauli_word"]  # pylint: disable=protected-access
-                method(
-                    [], [], wires, invert_param, operation.parameters, "".join(word)
-                )  # control wires and values empty
+                word = "".join(
+                    operation._hyperparameters["pauli_word"]
+                )  # pylint: disable=protected-access
+                method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)

@@ -20,7 +20,6 @@
 
 #include <cstdlib>
 #include <set>
-#include <string>
 #include <vector>
 
 #include "Util.hpp"
@@ -85,13 +84,4 @@ struct GateIndices {
           external{generateBitPatterns(
               getIndicesAfterExclusion(wires, num_qubits), num_qubits)} {}
 };
-
-auto generatePauliWordIndices(const std::string &word)
-    -> std::vector<std::size_t>;
-
-template <class PrecisionT>
-auto generatePauliWordData(const std::string &word,
-                           const std::complex<PrecisionT> &coeff)
-    -> std::vector<std::complex<PrecisionT>>;
-
 } // namespace Pennylane::LightningQubit::Gates

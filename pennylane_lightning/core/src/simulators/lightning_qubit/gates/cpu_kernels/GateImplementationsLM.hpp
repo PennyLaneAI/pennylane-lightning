@@ -566,18 +566,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
-    static void applyPauliRot(
-        std::complex<PrecisionT> *arr, std::size_t num_qubits,
-        [[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
-        [[maybe_unused]] const std::vector<bool> &controlled_values,
-        const std::vector<std::size_t> &wires, const bool inverse,
-        PrecisionT angle, const std::string &word) {
+    static void
+    applyPauliRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                  const std::vector<std::size_t> &wires, const bool inverse,
+                  PrecisionT angle, const std::string &word) {
         using ComplexT = std::complex<PrecisionT>;
         constexpr std::size_t one{1};
         constexpr auto IMAG = Pennylane::Util::IMAG<PrecisionT>();
         PL_ABORT_IF_NOT(wires.size() == word.size(),
                         "wires and word have incompatible dimensions.")
-        const std::size_t n_wires = wires.size();
         const PrecisionT c = std::cos(angle / 2);
         const ComplexT s = ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
         const std::array<ComplexT, 4> sines = {s, IMAG * s, -s, -IMAG * s};

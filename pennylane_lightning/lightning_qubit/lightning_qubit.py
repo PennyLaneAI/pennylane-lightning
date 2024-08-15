@@ -301,7 +301,6 @@ _operations = frozenset(
         "ECR",
         "BlockEncode",
         "C(BlockEncode)",
-        "PauliRot",
     }
 )
 # The set of supported operations.
@@ -345,10 +344,8 @@ def stopping_condition(op: Operator, num_wires: int = 64) -> bool:
         return True
     if isinstance(op, qml.PauliRot):
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
-        n = reduce(lambda x, y: x + (y != "I"), word, 0)
         # decomposes to IsingXX, etc. for n <= 2
-        # little or no speed-ups for all wires because of large temporary variables
-        return n > 2 and num_wires - n > 2
+        return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     return op.name in _operations
 
 
