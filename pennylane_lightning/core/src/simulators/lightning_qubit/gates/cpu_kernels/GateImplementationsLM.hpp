@@ -602,11 +602,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             if (i0 > i1) {
                 continue;
             }
-            const auto sign_i0 = std::popcount(i0 & mask_z) * 2 +
-                                 count_mask_y * 3 -
-                                 std::popcount(i0 & mask_y) * 2;
-            const auto sign_i1 = std::popcount(i0 & mask_z) * 2 + count_mask_y +
-                                 std::popcount(i0 & mask_y) * 2;
+            const auto count_y = std::popcount(i0 & mask_y) * 2;
+            const auto count_z = std::popcount(i0 & mask_z) * 2;
+            const auto sign_i0 = count_z + count_mask_y * 3 - count_y;
+            const auto sign_i1 = count_z + count_mask_y + count_y;
             if (mask_xy) {
                 const ComplexT v0 = arr[i0];
                 const ComplexT v1 = arr[i1];

@@ -809,14 +809,14 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
         const std::vector<bool> controlled_values(controlled_wires.size(),
                                                   false);
-        auto core_function =
-            [num_state, &state](std::complex<PrecisionT> *arr,
-                                const std::vector<std::size_t> &indices,
-                                const std::vector<std::complex<PrecisionT>> &) {
-                for (std::size_t i = 0; i < num_state; i++) {
-                    arr[indices[i]] = state[i];
-                }
-            };
+        auto core_function = [num_state,
+                              &state](std::complex<PrecisionT> *arr,
+                                      const std::vector<std::size_t> &indices,
+                                      const std::size_t offset) {
+            for (std::size_t i = 0; i < num_state; i++) {
+                arr[indices[i] + offset] = state[i];
+            }
+        };
         GateImplementationsLM::applyNCN(this->getData(), total_wire_count,
                                         controlled_wires, controlled_values,
                                         wires, core_function);
