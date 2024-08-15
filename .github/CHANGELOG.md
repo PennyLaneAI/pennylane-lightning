@@ -95,6 +95,9 @@
 
 ### Bug fixes
 
+* Remove wrong -m when calling setup.py.
+  [(#854)](https://github.com/PennyLaneAI/pennylane-lightning/pull/854)
+
 * Fix plugin-test-matrix CI/CD workflows.
   [(#850)](https://github.com/PennyLaneAI/pennylane-lightning/pull/850)
 
