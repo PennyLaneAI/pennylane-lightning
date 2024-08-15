@@ -86,13 +86,13 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 
 include(FetchContent)
 
-#find_package(pybind11 REQUIRED)
 find_package(Python COMPONENTS Interpreter Development)
 
 find_package(pybind11 CONFIG)
 
 if(pybind11_FOUND)
     message(STATUS "Found pybind11")
+    message(STATUS "pybind11_INCLUDE_DIRS: ${pybind11_DIR}")
 else()
     message(STATUS "Could not find existing pybind11-dev package. Building from source.")
     set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning

@@ -17,6 +17,7 @@ import subprocess
 import shutil
 import sys
 import toml
+import pybind11
 
 from pathlib import Path
 from setuptools import setup, Extension, find_namespace_packages
@@ -71,6 +72,8 @@ class CMakeBuild(build_ext):
             if platform.system() == "Linux"
             else [f"-DPython_EXECUTABLE={sys.executable}"]
         )
+
+        configure_args += [f"-Dpybind11_DIR={pybind11.get_cmake_dir()}"]
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
