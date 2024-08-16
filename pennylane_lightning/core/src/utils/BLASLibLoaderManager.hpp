@@ -205,6 +205,6 @@ class BLASLibLoaderManager {
      *
      * @return std::vector<SharedLibLoader*> The BLAS libraries.
      */
-    auto getScipyPrefix() const -> bool { return scipy_prefix_; }
+    [[nodiscard]] auto getScipyPrefix() const -> bool { return scipy_prefix_; }
 };
 } // namespace Pennylane::Util
