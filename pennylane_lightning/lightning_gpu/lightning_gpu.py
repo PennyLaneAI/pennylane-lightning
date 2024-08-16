@@ -447,7 +447,6 @@ class LightningGPU(Device):
         """
         return 0
 
-    # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
