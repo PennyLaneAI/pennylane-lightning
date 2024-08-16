@@ -626,10 +626,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::size_t rev_wire = num_qubits - wires[0] - 1;
             const std::size_t rev_wire_shift = (one << rev_wire);
             const auto parities = revWireParity(rev_wire);
+            const auto parity_high = parities.first;
+            const auto parity_low = parities.second;
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
                 const std::size_t i0 =
-                    ((k << 1U) & parities.first) | (parities.second & k);
+                    ((k << 1U) & parity_high) | (parity_low & k);
                 const std::size_t i1 = i0 | rev_wire_shift;
                 core_function(arr, i0, i1);
             }
@@ -1262,11 +1264,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::size_t rev_wire1_shift = static_cast<std::size_t>(1U)
                                                 << rev_wire1;
             const auto parities = revWireParity(rev_wire0, rev_wire1);
+            const auto parity_high = std::get<0>(parities);
+            const auto parity_middle = std::get<1>(parities);
+            const auto parity_low = std::get<2>(parities);
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                const std::size_t i00 = ((k << 2U) & std::get<0>(parities)) |
-                                        ((k << 1U) & std::get<1>(parities)) |
-                                        (k & std::get<2>(parities));
+                const std::size_t i00 = ((k << 2U) & parity_high) |
+                                        ((k << 1U) & parity_middle) |
+                                        (k & parity_low);
                 const std::size_t i10 = i00 | rev_wire1_shift;
                 const std::size_t i01 = i00 | rev_wire0_shift;
                 const std::size_t i11 = i00 | rev_wire0_shift | rev_wire1_shift;
