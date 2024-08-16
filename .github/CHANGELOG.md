@@ -92,6 +92,9 @@
 
 ### Bug fixes
 
+* Replace structured bindings by variables in `GateImplementationsLM.hpp`.
+  [(#856)](https://github.com/PennyLaneAI/pennylane-lightning/pull/856)
+
 * Remove wrong -m when calling setup.py.
   [(#854)](https://github.com/PennyLaneAI/pennylane-lightning/pull/854)
 
