@@ -135,7 +135,7 @@ For development and testing, you can install by cloning the repository:
     cd pennylane-lightning
     pip install -r requirements.txt
     PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
-    pip install -e . -vv
+    pip install -e . --config-settings editable_mode=compat -vv
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
 ``build`` folder, and the ``pyproject.toml`` file defined by the configuration script. Run ``make clean`` if you would like to recompile from scratch.
