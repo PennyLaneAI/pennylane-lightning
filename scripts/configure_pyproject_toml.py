@@ -55,7 +55,7 @@ if __name__ == "__main__":
     pyproject = toml.load(pyproject_path)
 
     scipy_libs = (
-        "scipy-openblas64"
+        "scipy-openblas64==0.3.27.0.0"
         if "ppc" in platform.machine() or "powerpc" in platform.machine()
         else "scipy"
     )
