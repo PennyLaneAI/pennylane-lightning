@@ -27,6 +27,9 @@
 
 ### Improvements
 
+* Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
+  [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
+
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
   [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
 
@@ -126,7 +129,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
 
 ---
 
