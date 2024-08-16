@@ -54,12 +54,6 @@ if __name__ == "__main__":
 
     pyproject = toml.load(pyproject_path)
 
-    scipy_libs = (
-        "scipy-openblas64==0.3.27.0.0"
-        if "ppc" in platform.machine() or "powerpc" in platform.machine()
-        else "scipy"
-    )
-
     # ------------------------
     # Configure Build.
     # ------------------------
@@ -68,9 +62,12 @@ if __name__ == "__main__":
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
         "pybind11",
-        scipy_libs,
         "toml",
     ]
+
+    if "ppc" not in platform.machine() and "powerpc" not in platform.machine():
+        requires.append("scipy")
+
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")
     if backend == "lightning_tensor":
