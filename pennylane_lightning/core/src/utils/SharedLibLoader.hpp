@@ -29,6 +29,7 @@
 #define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
 
 #else
+#define NOMINMAX
 #include <windows.h>
 #define HANDLE_TYPE HMODULE
 #define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)

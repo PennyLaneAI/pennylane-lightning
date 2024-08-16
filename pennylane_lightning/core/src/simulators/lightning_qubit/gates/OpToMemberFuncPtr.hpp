@@ -43,9 +43,7 @@ template <class PrecisionT, class ParamT, class GateImplementation,
           GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
     // raises compile error when this struct is instantiated.
-    constexpr static std::size_t max_limit =
-        std::numeric_limits<std::size_t>::max();
-    static_assert(sizeof(PrecisionT) == max_limit,
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
                   "GateOpToMemberFuncPtr is not defined for the given gate. "
                   "When you define a new GateOperation, check that you also "
                   "have added the corresponding entry in "
