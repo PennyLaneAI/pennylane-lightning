@@ -163,7 +163,7 @@ class BLASLibLoaderManager {
 
         if (std::filesystem::exists(scipy_lib_path_macos)) {
             scipyPathStr = scipy_lib_path_macos;
-            blasLib = std::make_shared<SharedLibLoader>(scipyPathStr)
+            blasLib = std::make_shared<SharedLibLoader>(scipyPathStr);
         } else {
             if (std::filesystem::exists(blaslib_path)) {
                 // branch for python interface
