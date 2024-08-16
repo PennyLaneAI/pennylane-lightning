@@ -66,7 +66,7 @@ clean:
 .PHONY: python
 python:
 	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
-	pip install -e . -vv
+	pip install -e . --config-settings editable_mode=compat -vv
 
 .PHONY: wheel
 wheel:
@@ -98,7 +98,7 @@ coverage-cpp:
 test-python: test-builtin test-suite
 
 test-builtin:
-	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) $(TESTRUNNER)
+	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000
