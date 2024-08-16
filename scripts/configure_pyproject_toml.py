@@ -16,6 +16,7 @@ Project configuration script.
 """
 import argparse
 import os
+import platform
 from pathlib import Path
 
 import toml
@@ -53,6 +54,12 @@ if __name__ == "__main__":
 
     pyproject = toml.load(pyproject_path)
 
+    scipy_libs = (
+        "scipy-openblas64"
+        if "ppc" in platform.machine() or "powerpc" in platform.machine()
+        else "scipy"
+    )
+
     # ------------------------
     # Configure Build.
     # ------------------------
@@ -61,7 +68,7 @@ if __name__ == "__main__":
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
         "pybind11",
-        "scipy",
+        scipy_libs,
         "toml",
     ]
     if backend == "lightning_gpu":
