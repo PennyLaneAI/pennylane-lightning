@@ -144,7 +144,7 @@ You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
 .. code-block:: bash
 
-    CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
+    CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . --config-settings editable_mode=compat -vv
     
 
 The supported options for CMakes are listed in the file `CMakeOptions.rst <https://github.com/PennyLaneAI/pennylane-lightning/blob/kokkosNewAPI_readme/doc/CMakeOptions.rst>`_.
@@ -234,7 +234,7 @@ To install Lightning-GPU from the package sources using the direct SDK path, Lig
     cd pennylane-lightning
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install -e . -vv
+    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
 Then the `cuStateVec`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
@@ -247,7 +247,7 @@ The Lightning-GPU can then be installed with ``pip``:
 .. code-block:: bash
 
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
-    python -m pip install -e .
+    python -m pip install -e . --config-settings editable_mode=compat -vv
 
 To simplify the build, we recommend using the containerized build process described in Docker support section.
 
@@ -268,7 +268,7 @@ Then Lightning-GPU with MPI support can then be installed in the *editable* mode
 .. code-block:: bash
 
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . -vv
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
 
 Test Lightning-GPU with MPI
@@ -358,9 +358,9 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install -e .
+    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . -vv
+    CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
 The supported backend options are 
 
@@ -405,7 +405,7 @@ Lightning-Qubit should be installed before Lightning-Tensor (compilation is not 
     cd pennylane-lightning
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install -e . 
+    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
 
 Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
@@ -418,7 +418,7 @@ The Lightning-Tensor can then be installed with ``pip``:
 .. code-block:: bash
 
     PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
-    pip install -e . -vv
+    pip install -e . --config-settings editable_mode=compat -vv
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
