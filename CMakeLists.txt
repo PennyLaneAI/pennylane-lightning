@@ -85,8 +85,10 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 
 include(FetchContent)
-
-find_package(Python COMPONENTS Interpreter Development)
+if(ENABLE_PYTHON)
+    find_package(Python COMPONENTS Interpreter Development)
+    add_compile_definitions(ENABLE_PYTHON=1)
+endif()
 
 find_package(pybind11 CONFIG)
 
@@ -104,9 +106,6 @@ else()
     FetchContent_MakeAvailable(pybind11)
 endif()
 
-if(ENABLE_PYTHON)
-    add_compile_definitions(ENABLE_PYTHON=1)
-endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
