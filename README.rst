@@ -170,7 +170,7 @@ Then a common command will work.
 .. code-block:: bash
 
     pip install -r requirements.txt
-    pip install -e .
+    pip install -e . --config-settings editable_mode=compat
 
 Note that OpenMP and BLAS are disabled on this platform.
 
