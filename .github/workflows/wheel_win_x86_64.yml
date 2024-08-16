@@ -86,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2022]
         arch: [AMD64]
         pl_backend: ["lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
@@ -97,17 +97,6 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Determine Python version
-        id: pyvs
-        shell: bash
-        run: |
-          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
-
-      - uses: actions/setup-python@v5
-        name: Install Python
-        with:
-          python-version: ${{ steps.pyvs.outputs.version }}
-          
       - name: Restoring cached dependencies
         id: kokkos-cache
         uses: actions/cache@v4
@@ -170,6 +159,17 @@ jobs:
             Remove-Item $dirName -Recurse
           }
           cd ..
+
+      - name: Determine Python version
+        id: pyvs
+        shell: bash
+        run: |
+          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ steps.pyvs.outputs.version }}
 
       - name: Test wheels
         run: |

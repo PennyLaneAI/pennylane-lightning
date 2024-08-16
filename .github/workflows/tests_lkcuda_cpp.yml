@@ -194,7 +194,6 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
-            -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \

@@ -139,7 +139,6 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            yum install python3-devel -y
             python -m pip install ninja cmake~=3.24.0 scipy pybind11
 
           CIBW_ENVIRONMENT: |

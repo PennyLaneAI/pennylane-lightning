@@ -6,7 +6,7 @@ name: Wheel::Linux::x86_64
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
 env:
-  GCC_VERSION: 12
+  GCC_VERSION: 13
 
 on:
   pull_request:
@@ -61,14 +61,14 @@ jobs:
       - name: Install dependencies (Ubuntu)
         if: ${{ (matrix.container_img == 'ubuntu-latest') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git python3-dev
-          echo "COMPILER=g++-12" >> $GITHUB_ENV
+          apt-get update && DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION ninja-build git
+          echo "COMPILER=g++-13" >> $GITHUB_ENV
 
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') && (steps.kokkos-cache.outputs.cache-hit != 'true') }}
         run: |
-          dnf update -y && dnf install -y cmake ninja-build python-devel
-          echo "COMPILER=g++-12" >> $GITHUB_ENV
+          dnf update -y && dnf install -y cmake ninja-build
+          echo "COMPILER=g++" >> $GITHUB_ENV
 
       - name: Clone Kokkos libs
         if: steps.kokkos-cache.outputs.cache-hit != 'true'
@@ -132,21 +132,13 @@ jobs:
       - name: Install dependencies (AlmaLinux)
         if: ${{ (matrix.container_img == 'quay.io/pypa/manylinux_2_28_x86_64') }}
         run: |
-          dnf update -y && dnf install -y podman python3-devel
-      
-      - name: Verify Python installation
-        run: |
-          python3 --version
-          which python3
-          ls -l /usr/lib/python*  # Check for python.so or relevant directories
+          dnf update -y && dnf install -y podman
 
-      - name: Install cibuildwheel
-        run: |
-          python3.11 -m pip install cibuildwheel~=2.16.0 toml
-          python3.11 -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
+      - name: Install dependencies
+        run: python3.9 -m pip install cibuildwheel~=2.16.0 toml
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.11 scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -165,12 +157,9 @@ jobs:
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
-            LD_LIBRARY_PATH="/usr/lib:$LD_LIBRARY_PATH"
-            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:/usr/bin:$PATH"
-            python -c "import sysconfig, os.path; python_so_path = os.path.join(sysconfig.get_config_var('LIBDIR'), sysconfig.get_config_var('INSTSONAME'));print(python_so_path)"
-
-          CIBW_ENVIRONMENT: |
             PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
+
+          CIBW_ENVIRONMENT: PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
@@ -188,12 +177,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.11 -m cibuildwheel --output-dir wheelhouse
+        run: python3.9 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.11 -m pip install twine
-          python3.11 -m twine check ./wheelhouse/*.whl
+          python3.9 -m pip install twine
+          python3.9 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
