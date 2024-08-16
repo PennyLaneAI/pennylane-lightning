@@ -18,7 +18,6 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 
 from ctypes.util import find_library
-from dataclasses import replace
 from importlib import util as imp_util
 from numbers import Number
 from pathlib import Path
@@ -27,25 +26,11 @@ from typing import Callable, Optional, Sequence, Tuple, Union
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.devices.preprocess import (
-    decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    validate_adjoint_trainable_params,
-    validate_device_wires,
-    validate_measurements,
-    validate_observables,
-)
-from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
-from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-# from ._adjoint_jacobian import LightningGPUAdjointJacobian
+from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
 from ._state_vector import LightningGPUStateVector
 
