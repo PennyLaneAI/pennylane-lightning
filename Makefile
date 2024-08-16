@@ -66,7 +66,7 @@ clean:
 .PHONY: python
 python:
 	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
-	pip install -e . -vv
+	pip install -e . --config-settings editable_mode=compat -vv
 
 .PHONY: wheel
 wheel:
