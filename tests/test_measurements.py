@@ -23,7 +23,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
-from pennylane.measurements import Expectation, Variance
+from pennylane.measurements import Expectation, Shots, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -349,7 +349,7 @@ class TestExpval:
                     ),
                 ],
                 [0.3, 1.0],
-                0.9319728930156066,
+                0.9319728930156066 if device_name != "lightning.tensor" else 1.0,
             ),
         ],
     )
@@ -368,9 +368,7 @@ class TestExpval:
             qml.RY(-0.2, wires=[1])
             return qml.expval(ham)
 
-        assert np.allclose(
-            circuit(), res, atol=tol, rtol=0 if device_name != "lightning.tensor" else 2e-1
-        )
+        assert np.allclose(circuit(), res, atol=tol, rtol=0)
 
     def test_value(self, dev, tol):
         """Test that the expval interface works"""
@@ -410,10 +408,6 @@ class TestExpval:
         circuit()
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support var()",
-)
 class TestVar:
     """Tests for the var function"""
 
@@ -720,10 +714,6 @@ class TestSample:
         assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.var()",
-)
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
 
@@ -828,3 +818,24 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     results2 = func2(*params)
 
     validate_measurements(measure_f, shots, results1, results2)
+
+
+# TODO: Add LT after extending the support for shots_vector
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support shot vectors.",
+)
+@pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
+def test_shots_bins(shots, qubit_device):
+    """Tests that Lightning handles multiple shots."""
+
+    dev = qubit_device(wires=1, shots=shots)
+
+    @qml.qnode(dev)
+    def circuit():
+        return qml.expval(qml.PauliZ(wires=0))
+
+    if dev.name == "lightning.qubit":
+        assert np.sum(shots) == circuit.device.shots.total_shots
+
+    assert np.allclose(circuit(), 1.0)
