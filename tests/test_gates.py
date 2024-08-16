@@ -380,7 +380,7 @@ def test_state_prep(n_targets, tol):
             [qml.state()],
         )
         ref = dq.execute([tape])[0]
-        res = dev.execute([tape])[0] if ld._new_API else dev.execute(tape)
+        res = dev.execute([tape])[0]
         assert np.allclose(res.ravel(), ref.ravel(), tol)
 
 
