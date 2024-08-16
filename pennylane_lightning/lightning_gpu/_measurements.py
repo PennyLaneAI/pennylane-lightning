@@ -19,25 +19,25 @@ import numpy as np
 import pennylane as qml
 
 
-class LightningMeasurements:
+class LightningGPUMeasurements:
     """Lightning Measurements class
 
     Measures the state provided by the LightningStateVector class.
 
     Args:
-        qubit_state(LightningStateVector): Lightning state-vector class containing the state vector to be measured.
+        qubit_state(LightningGPUStateVector): Lightning state-vector class containing the state vector to be measured.
     """
 
     def __init__(
         self,
-        qubit_state,
+        lgpu_state,
     ) -> None:
-        self._qubit_state = qubit_state
-        self._dtype = qubit_state.dtype
+        self._qubit_state = lgpu_state
+        self._dtype = lgpu_state.dtype
 
     @property
     def qubit_state(self):
-        """Returns a handle to the LightningStateVector class."""
+        """Returns a handle to the LightningGPUStateVector class."""
         return self._qubit_state
 
     @property

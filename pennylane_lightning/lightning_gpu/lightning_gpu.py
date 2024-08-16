@@ -45,9 +45,9 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-# from ._adjoint_jacobian import LightningAdjointJacobian
-from ._measurements import LightningMeasurements
-from ._state_vector import LightningStateVector
+# from ._adjoint_jacobian import LightningGPUAdjointJacobian
+from ._measurements import LightningGPUMeasurements
+from ._state_vector import LightningGPUStateVector
 
 try:
 
@@ -88,18 +88,14 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 def simulate(
     circuit: QuantumScript,
-    state: LightningStateVector,
-    mcmc: dict = None,
+    state: LightningGPUStateVector,
     postselect_mode: str = None,
 ) -> Result:
     """Simulate a single quantum script.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateVector): handle to Lightning state vector
-        mcmc (dict): Dictionary containing the Markov Chain Monte Carlo
-            parameters: mcmc, kernel_name, num_burnin. Descriptions of
-            these fields are found in :class:`~.LightningQubit`.
+        state (LightningGPUStateVector): handle to LightningGPU state vector
         postselect_mode (str): Configuration for handling shots with mid-circuit measurement
             postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
             keep the same number of shots. Default is ``None``.
@@ -112,15 +108,16 @@ def simulate(
     return 0
 
 
-def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None):
+def jacobian(circuit: QuantumTape, state: LightningGPUStateVector, batch_obs=False, wire_map=None):
     """Compute the Jacobian for a single quantum script.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP. Default is False.
+            computing the jacobian. This value is only relevant when the lightning.gpu 
+            is built with MPI. Default is False.
+
         wire_map (Optional[dict]): a map from wire labels to simulation indices
 
     Returns:
@@ -130,16 +127,16 @@ def jacobian(circuit: QuantumTape, state: LightningStateVector, batch_obs=False,
 
 
 def simulate_and_jacobian(
-    circuit: QuantumTape, state: LightningStateVector, batch_obs=False, wire_map=None
+    circuit: QuantumTape, state: LightningGPUStateVector, batch_obs=False, wire_map=None
 ):
     """Simulate a single quantum script and compute its Jacobian.
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP. Default is False.
+            computing the jacobian. This value is only relevant when the lightning.gpu 
+            is built with MPI. Default is False.
         wire_map (Optional[dict]): a map from wire labels to simulation indices
 
     Returns:
@@ -153,7 +150,7 @@ def simulate_and_jacobian(
 def vjp(
     circuit: QuantumTape,
     cotangents: Tuple[Number],
-    state: LightningStateVector,
+    state: LightningGPUStateVector,
     batch_obs=False,
     wire_map=None,
 ):
@@ -164,10 +161,10 @@ def vjp(
             have shape matching the output shape of the corresponding circuit. If
             the circuit has a single output, ``cotangents`` may be a single number,
             not an iterable of numbers.
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the VJP. This value is only relevant when the lightning
-            qubit is built with OpenMP.
+            computing the jacobian. This value is only relevant when the lightning.gpu 
+            is built with MPI. Default is False.
         wire_map (Optional[dict]): a map from wire labels to simulation indices
 
     Returns:
@@ -179,7 +176,7 @@ def vjp(
 def simulate_and_vjp(
     circuit: QuantumTape,
     cotangents: Tuple[Number],
-    state: LightningStateVector,
+    state: LightningGPUStateVector,
     batch_obs=False,
     wire_map=None,
 ):
@@ -190,10 +187,10 @@ def simulate_and_vjp(
             have shape matching the output shape of the corresponding circuit. If
             the circuit has a single output, ``cotangents`` may be a single number,
             not an iterable of numbers.
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP.
+            computing the jacobian. This value is only relevant when the lightning.gpu 
+            is built with MPI. Default is False.
         wire_map (Optional[dict]): a map from wire labels to simulation indices
 
     Returns:
@@ -303,12 +300,12 @@ gate_cache_needs_hash = (
 @simulator_tracking
 @single_tape_support
 class LightningGPU(Device):
-    """PennyLane Lightning Qubit device.
+    """PennyLane Lightning GPU device.
 
     A device that interfaces with C++ to perform fast linear algebra calculations.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
-    :doc:`/lightning_qubit/installation` guide for more details.
+    :doc:`/lightning_gpu/installation` guide for more details.
 
     Args:
         wires (int): the number of wires to initialize the device with
@@ -318,24 +315,9 @@ class LightningGPU(Device):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        seed (Union[str, None, int, array_like[int], SeedSequence, BitGenerator, Generator]): A
-            seed-like parameter matching that of ``seed`` for ``numpy.random.default_rng``, or
-            a request to seed from numpy's global random number generator.
-            The default, ``seed="global"`` pulls a seed from NumPy's global generator. ``seed=None``
-            will pull a seed from the OS entropy.
-        mcmc (bool): Determine whether to use the approximate Markov Chain Monte Carlo
-            sampling method when generating samples.
-        kernel_name (str): name of transition MCMC kernel. The current version supports
-            two kernels: ``"Local"`` and ``"NonZeroRandom"``.
-            The local kernel conducts a bit-flip local transition between states.
-            The local kernel generates a random qubit site and then generates a random
-            number to determine the new bit at that qubit site. The ``"NonZeroRandom"`` kernel
-            randomly transits between states that have nonzero probability.
-        num_burnin (int): number of MCMC steps that will be dropped. Increasing this value will
-            result in a closer approximation but increased runtime.
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning
-            qubit is built with OpenMP.
+            computing the jacobian. This value is only relevant when the lightning.gpu 
+            is built with MPI. Default is False.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -346,7 +328,7 @@ class LightningGPU(Device):
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
     # This `config` is used in Catalyst-Frontend
-    config = Path(__file__).parent / "lightning_qubit.toml"
+    config = Path(__file__).parent / "lightning_gpu.toml"
 
     # TODO: Move supported ops/obs to TOML file
     operations = _operations
@@ -361,15 +343,11 @@ class LightningGPU(Device):
         *,
         c_dtype=np.complex128,
         shots=None,
-        seed="global",
-        mcmc=False,
-        kernel_name="Local",
-        num_burnin=100,
         batch_obs=False,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
-                "Pre-compiled binaries for lightning.qubit are not available. "
+                "Pre-compiled binaries for lightning.gpu are not available. "
                 "To manually compile from source, follow the instructions at "
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
@@ -381,37 +359,15 @@ class LightningGPU(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
-
-        # TODO: Investigate usefulness of creating numpy random generator
-        seed = np.random.randint(0, high=10000000) if seed == "global" else seed
-        self._rng = np.random.default_rng(seed)
+        self._statevector = LightningGPUStateVector(num_wires=len(self.wires), dtype=c_dtype)
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
-        self._mcmc = mcmc
-        if self._mcmc:
-            if kernel_name not in [
-                "Local",
-                "NonZeroRandom",
-            ]:
-                raise NotImplementedError(
-                    f"The {kernel_name} is not supported and currently "
-                    "only 'Local' and 'NonZeroRandom' kernels are supported."
-                )
-            shots = shots if isinstance(shots, Sequence) else [shots]
-            if any(num_burnin >= s for s in shots):
-                raise ValueError("Shots should be greater than num_burnin.")
-            self._kernel_name = kernel_name
-            self._num_burnin = num_burnin
-        else:
-            self._kernel_name = None
-            self._num_burnin = 0
 
     @property
     def name(self):
         """The name of the device."""
-        return "lightning.qubit"
+        return "lightning.gpu"
 
     @property
     def c_dtype(self):
@@ -470,7 +426,7 @@ class LightningGPU(Device):
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
 
-        ``LightningQubit`` supports adjoint differentiation with analytic results.
+        ``LightningGPU`` supports adjoint differentiation with analytic results.
 
         Args:
             execution_config (ExecutionConfig): The configuration of the desired derivative calculation
@@ -520,7 +476,7 @@ class LightningGPU(Device):
         circuit: Optional[QuantumTape] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector jacobian product.
-        ``LightningQubit`` supports adjoint differentiation with analytic results.
+        ``LightningGPU`` supports adjoint differentiation with analytic results.
         Args:
             execution_config (ExecutionConfig): The configuration of the desired derivative calculation
             circuit (QuantumTape): An optional circuit to check derivatives support for.
@@ -535,7 +491,7 @@ class LightningGPU(Device):
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        r"""The vector jacobian product used in reverse-mode differentiation. ``LightningQubit`` uses the
+        r"""The vector jacobian product used in reverse-mode differentiation. ``LightningGPU`` uses the
         adjoint differentiation method to compute the VJP.
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits

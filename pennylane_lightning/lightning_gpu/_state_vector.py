@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state-vector manipulation.
+Class implementation for lightning_gpu state-vector manipulation.
 """
 
 import numpy as np
@@ -20,11 +20,11 @@ import pennylane as qml
 from pennylane import DeviceError
 from pennylane.wires import Wires
 
-# from ._measurements import LightningMeasurements
+from ._measurements import LightningGPUMeasurements
 
 
-class LightningStateVector:
-    """Lightning state-vector class.
+class LightningGPUStateVector:
+    """Lightning GPU state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
 
@@ -32,10 +32,10 @@ class LightningStateVector:
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.qubit"]
+        device_name(string): state vector device name. Options: ["lightning.gpu"]
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.qubit"):
+    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.gpu"):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
@@ -43,7 +43,7 @@ class LightningStateVector:
         if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
 
-        if device_name != "lightning.qubit":
+        if device_name != "lightning.gpu":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._device_name = device_name
