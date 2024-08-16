@@ -62,7 +62,7 @@ class BLASLibLoaderManager {
   private:
     static inline std::array<std::string, 5> priority_lib{
         "stdc", "gcc.", "quadmath", "gfortran", "openblas"};
-    const std::string scipy_lib_path_macos =
+    const std::string scipy_lib_path_macos_str =
         "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
         "Frameworks/vecLib.framework/libLAPACK.dylib";
 
@@ -158,16 +158,15 @@ class BLASLibLoaderManager {
      *
      * @param blaslib_path The path to the BLAS libraries.
      */
-    explicit BLASLibLoaderManager(const std::string &blaslib_path) {
-        std::string scipyPathStr;
-
-        if (std::filesystem::exists(scipy_lib_path_macos)) {
-            scipyPathStr = scipy_lib_path_macos;
-            blasLib = std::make_shared<SharedLibLoader>(scipyPathStr);
-        } else {
+    explicit BLASLibLoaderManager([[maybe_unused]]const std::string &blaslib_path_str) {
+#if defined(__APPLE__)
+            blasLib = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str);
+#else
+            std::string scipyPathStr;
+            std::filesystem::path blaslib_path(blaslib_path_str);
             if (std::filesystem::exists(blaslib_path)) {
                 // branch for python interface
-                scipyPathStr = blaslib_path;
+                scipyPathStr = blaslib_path_str;
             } else {
 #ifndef ENABLE_PYTHON
                 // branch for C++ interface
@@ -176,7 +175,7 @@ class BLASLibLoaderManager {
                 PL_ABORT_IF(scipyPathStr.empty(), "Can't find BLAS libraries");
             }
             init_helper_(scipyPathStr);
-        }
+#endif
     }
 
   public:
