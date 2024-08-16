@@ -64,8 +64,6 @@ jobs:
 
           CIBW_SKIP: "*-musllinux*"
 
-          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="CMAKE_CXX_COMPILER=$(which g++);CMAKE_C_COMPILER=$(which gcc);LIGHTNING_RELEASE_TAG=master"
-
           # Python build settings
           CIBW_BEFORE_BUILD: |
             python -m pip install ninja cmake~=3.24.3 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }}
