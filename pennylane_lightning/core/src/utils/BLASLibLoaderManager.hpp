@@ -70,7 +70,6 @@ class BLASLibLoaderManager {
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-  private:
 #ifndef ENABLE_PYTHON
     std::string get_scipylibs_path_worker_() {
         pybind11::object avail_site_packages =
@@ -159,7 +158,7 @@ class BLASLibLoaderManager {
      *
      * @param blaslib_path The path to the BLAS libraries.
      */
-    BLASLibLoaderManager(const std::string &blaslib_path) {
+    explicit BLASLibLoaderManager(const std::string &blaslib_path) {
         std::string scipyPathStr;
         if (std::filesystem::exists(blaslib_path)) {
             // branch for python interface
@@ -180,9 +179,10 @@ class BLASLibLoaderManager {
     BLASLibLoaderManager(BLASLibLoaderManager &&) = delete;
     BLASLibLoaderManager(const BLASLibLoaderManager &) = delete;
     BLASLibLoaderManager &operator=(const BLASLibLoaderManager &) = delete;
+    BLASLibLoaderManager operator=(const BLASLibLoaderManager &&) = delete;
 
     static BLASLibLoaderManager &
-    getInstance(const std::string blaslib_path = {}) {
+    getInstance(const std::string &blaslib_path = {}) {
         static BLASLibLoaderManager instance(blaslib_path);
         return instance;
     }
@@ -205,6 +205,6 @@ class BLASLibLoaderManager {
      *
      * @return std::vector<SharedLibLoader*> The BLAS libraries.
      */
-    auto getScipyPrefix() -> bool { return scipy_prefix_; }
+    auto getScipyPrefix() const -> bool { return scipy_prefix_; }
 };
 } // namespace Pennylane::Util
