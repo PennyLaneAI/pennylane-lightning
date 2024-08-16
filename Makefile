@@ -98,7 +98,7 @@ coverage-cpp:
 test-python: test-builtin test-suite
 
 test-builtin:
-	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
+	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) $(TESTRUNNER)
 
 test-suite:
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000
