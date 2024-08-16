@@ -53,6 +53,9 @@ jobs:
       - name: Install cibuildwheel
         run: python -m pip install cibuildwheel~=2.16.0
 
+      - name: Configure pyproject.toml file
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+
       - uses: docker/setup-qemu-action@v2
         name: Set up QEMU
 
@@ -63,6 +66,8 @@ jobs:
           CIBW_BUILD: ${{ matrix.cibw_build }}
 
           CIBW_SKIP: "*-musllinux*"
+
+          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="LIGHTNING_RELEASE_TAG=master"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
