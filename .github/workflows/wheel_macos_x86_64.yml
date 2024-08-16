@@ -125,7 +125,7 @@ jobs:
           python-version: '3.9'
 
       - name: Install dependencies
-        run: python -m pip install cibuildwheel~=2.16.0 toml
+        run: python -m pip install cibuildwheel~=2.16.0 tomli
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py

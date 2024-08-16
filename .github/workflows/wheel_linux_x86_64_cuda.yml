@@ -62,7 +62,7 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.9 -m pip install cibuildwheel~=2.16.0 toml
+        run: python3.9 -m pip install cibuildwheel~=2.16.0 tomli
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py

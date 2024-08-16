@@ -16,13 +16,34 @@ import platform
 import subprocess
 import shutil
 import sys
-import toml
+
+from importlib import import_module
+from importlib.util import find_spec
 
 from pathlib import Path
 from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
-project_name = toml.load("pyproject.toml")['project']['name']
+
+has_toml = False
+toml_libs = ["tomllib", "tomli", "tomlkit"]
+for pkg in toml_libs:
+    spec = find_spec(pkg)
+    if spec:
+        tomllib = import_module(pkg)
+        has_toml = True
+        break
+
+if not has_toml:
+    raise ImportError(
+        "A TOML parser is required in 'setup.py'. "
+        "We support any of the following TOML parsers: [tomli, tomlkit, tomllib] "
+        "You can install either tomli via `pip install tomli`, "
+        "tomlkit via `pip install tomlkit`, or use Python 3.11 "
+        "or above which natively offers the tomllib library."
+    )
+
+project_name = tomllib.load("pyproject.toml")['project']['name']
 backend = project_name.replace("PennyLane_", "").lower()
 if (backend == "lightning"): backend = "lightning_qubit"
 

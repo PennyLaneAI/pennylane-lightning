@@ -18,13 +18,23 @@ import argparse
 import os
 from pathlib import Path
 
-import toml
+from importlib import import_module
+from importlib.util import find_spec
 from backend_support import backend, device_name
 
 path_to_version = Path("pennylane_lightning").absolute() / "core" / "_version.py"
 with open(path_to_version, encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
+
+has_toml = False
+toml_libs = ["tomllib", "tomli", "tomlkit"]
+for pkg in toml_libs:
+    spec = find_spec(pkg)
+    if spec:
+        tomllib = import_module(pkg)
+        has_toml = True
+        break
 
 ########################################################################
 # Parsing arguments
@@ -51,7 +61,16 @@ if __name__ == "__main__":
     parsed_args = parse_args()
     pyproject_path = os.path.join(parsed_args.path, "pyproject.toml")
 
-    pyproject = toml.load(pyproject_path)
+    if not has_toml:
+        raise ImportError(
+            "A TOML parser is required to configure 'pyproject.toml'. "
+            "We support any of the following TOML parsers: [tomli, tomlkit, tomllib] "
+            "You can install either tomli via `pip install tomli`, "
+            "tomlkit via `pip install tomlkit`, or use Python 3.11 "
+            "or above which natively offers the tomllib library."
+        )
+
+    pyproject = tomllib.load(pyproject_path)
 
     # ------------------------
     # Configure Build.
@@ -96,4 +115,4 @@ if __name__ == "__main__":
     pyproject["project"]["dependencies"] = dependencies
 
     with open(pyproject_path, "w", encoding="utf-8") as file:
-        toml.dump(pyproject, file)
+        tomllib.dump(pyproject, file)
