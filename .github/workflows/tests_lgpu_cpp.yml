@@ -61,10 +61,9 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_gpu"]
-        enable_lapack: ["OFF", "ON"]
         cuda_version: ["12"]
 
-    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }}, enable_lapack=${{ matrix.enable_lapack }})
+    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }}
     runs-on:
       - ubuntu-22.04
       - self-hosted
@@ -127,7 +126,7 @@ jobs:
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }}
+          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} scipy
           sudo apt-get -y -q install liblapack-dev black
 
       - name: Build and run unit tests
@@ -137,7 +136,6 @@ jobs:
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
-            -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \

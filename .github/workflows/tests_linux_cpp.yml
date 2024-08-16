@@ -48,12 +48,11 @@ jobs:
         pl_backend: ["lightning_qubit"]
         enable_kernel_omp: ["OFF", "ON"]
         enable_kernel_avx_streaming: ["OFF", "ON"]
-        enable_lapack: ["OFF", "ON"]
         exclude:
         - enable_kernel_omp: OFF
           enable_kernel_avx_streaming: ON
     timeout-minutes: 60
-    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }}), ENABLE_LAPACK=${{ matrix.enable_lapack }})
+    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -68,7 +67,7 @@ jobs:
       - name: Install dependencies
         run: |
             echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-            python -m pip install scipy
+            python -m pip install scipy pybind11
 
       - name: Build and run unit tests
         run: |
@@ -76,7 +75,6 @@ jobs:
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
-              -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
@@ -131,7 +129,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-base libopenblas-dev ninja-build gcovr lcov
-          python -m pip install scipy pybind11
+          python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
