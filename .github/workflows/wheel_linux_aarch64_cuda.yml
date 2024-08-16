@@ -51,7 +51,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel~=2.16.0
+        run: python -m pip install cibuildwheel~=2.16.0 toml
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
