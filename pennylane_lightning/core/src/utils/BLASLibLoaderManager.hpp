@@ -28,7 +28,6 @@
 #include <vector>
 
 #ifndef ENABLE_PYTHON
-#include <Python.h>
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #endif
@@ -101,10 +100,6 @@ class BLASLibLoaderManager {
      * @return std::string The path to the scipy.libs package.
      */
     std::string get_scipylibs_path_() {
-        if (Py_IsInitialized()) {
-            return get_scipylibs_path_worker_();
-        }
-
         pybind11::scoped_interpreter scope_guard{};
         return get_scipylibs_path_worker_();
     }

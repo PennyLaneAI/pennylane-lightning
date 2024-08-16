@@ -27,11 +27,9 @@ target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs
                                                 )
 if(NOT ENABLE_PYTHON)
-target_include_directories(lightning_utils INTERFACE  ${Python_INCLUDE_DIRS})
 target_link_libraries(lightning_utils INTERFACE pybind11::module
                                               pybind11::pybind11
-                                              pybind11::embed
-                                              ${Python_LIBRARIES})
+                                              pybind11::embed)
 endif()
 
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)
