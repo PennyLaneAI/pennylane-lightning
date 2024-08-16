@@ -158,23 +158,24 @@ class BLASLibLoaderManager {
      *
      * @param blaslib_path The path to the BLAS libraries.
      */
-    explicit BLASLibLoaderManager([[maybe_unused]]const std::string &blaslib_path_str) {
+    explicit BLASLibLoaderManager(
+        [[maybe_unused]] const std::string &blaslib_path_str) {
 #if defined(__APPLE__)
-            blasLib = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str);
+        blasLib = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str);
 #else
-            std::string scipyPathStr;
-            std::filesystem::path blaslib_path(blaslib_path_str);
-            if (std::filesystem::exists(blaslib_path)) {
-                // branch for python interface
-                scipyPathStr = blaslib_path_str;
-            } else {
+        std::string scipyPathStr;
+        std::filesystem::path blaslib_path(blaslib_path_str);
+        if (std::filesystem::exists(blaslib_path)) {
+            // branch for python interface
+            scipyPathStr = blaslib_path_str;
+        } else {
 #ifndef ENABLE_PYTHON
-                // branch for C++ interface
-                scipyPathStr = get_scipylibs_path_();
+            // branch for C++ interface
+            scipyPathStr = get_scipylibs_path_();
 #endif
-                PL_ABORT_IF(scipyPathStr.empty(), "Can't find BLAS libraries");
-            }
-            init_helper_(scipyPathStr);
+            PL_ABORT_IF(scipyPathStr.empty(), "Can't find BLAS libraries");
+        }
+        init_helper_(scipyPathStr);
 #endif
     }
 
