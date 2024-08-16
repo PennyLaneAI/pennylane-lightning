@@ -160,19 +160,23 @@ class BLASLibLoaderManager {
      */
     explicit BLASLibLoaderManager(const std::string &blaslib_path) {
         std::string scipyPathStr;
-        if (std::filesystem::exists(blaslib_path)) {
-            // branch for python interface
-            scipyPathStr = blaslib_path;
-        } else if (std::filesystem::exists(scipy_lib_path_macos)) {
+
+        if (std::filesystem::exists(scipy_lib_path_macos)) {
             scipyPathStr = scipy_lib_path_macos;
+            blasLib = std::make_shared<SharedLibLoader>(scipyPathStr)
         } else {
+            if (std::filesystem::exists(blaslib_path)) {
+                // branch for python interface
+                scipyPathStr = blaslib_path;
+            } else {
 #ifndef ENABLE_PYTHON
-            // branch for C++ interface
-            scipyPathStr = get_scipylibs_path_();
+                // branch for C++ interface
+                scipyPathStr = get_scipylibs_path_();
 #endif
-            PL_ABORT_IF(scipyPathStr.empty(), "Can't find BLAS libraries");
+                PL_ABORT_IF(scipyPathStr.empty(), "Can't find BLAS libraries");
+            }
+            init_helper_(scipyPathStr);
         }
-        init_helper_(scipyPathStr);
     }
 
   public:
