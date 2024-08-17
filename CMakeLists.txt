@@ -46,6 +46,7 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(ENABLE_PYTHON_HEADERS "Enable Python headers" OFF)
 
 # OpenMP
 find_package(OpenMP)
@@ -87,6 +88,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 include(FetchContent)
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
+    add_compile_definitions(_ENABLE_PYTHON=1)
 endif()
 
 FetchContent_Declare(pybind11
