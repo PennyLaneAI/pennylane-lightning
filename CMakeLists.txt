@@ -90,21 +90,12 @@ if(ENABLE_PYTHON)
     add_compile_definitions(_ENABLE_PYTHON=1)
 endif()
 
-find_package(pybind11 CONFIG)
-
-if(pybind11_FOUND)
-    message(STATUS "Found pybind11")
-    message(STATUS "pybind11_INCLUDE_DIRS: ${pybind11_DIR}")
-else()
-    message(STATUS "Could not find existing pybind11-dev package. Building from source.")
-    set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
-    FetchContent_Declare(pybind11
+FetchContent_Declare(pybind11
     GIT_REPOSITORY https://github.com/pybind/pybind11.git
     GIT_TAG        v2.11.1
-    )
+)
 
-    FetchContent_MakeAvailable(pybind11)
-endif()
+FetchContent_MakeAvailable(pybind11)
 
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

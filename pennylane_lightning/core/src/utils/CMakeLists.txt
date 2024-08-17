@@ -24,7 +24,7 @@ target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs
                                                 )
-if(NOT _ENABLE_PYTHON)
+if(NOT ENABLE_PYTHON)
 target_link_libraries(lightning_utils INTERFACE pybind11::module
                                               pybind11::pybind11
                                               pybind11::embed)
