@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#ifdef _USE_PYTHON_HEADERS //Catalyst usage only
+#ifdef _USE_PYTHON_HEADERS // Catalyst usage only
 #include <Python.h>
 #endif
 
