@@ -70,6 +70,7 @@ class BLASLibLoaderManager {
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
+#ifndef __APPLE__
     std::string get_scipylibs_path_worker_() {
         pybind11::object scipy_module =
             pybind11::module::import("scipy").attr("__file__");
@@ -139,7 +140,7 @@ class BLASLibLoaderManager {
 
         blasLib = blasLibs.back();
     }
-
+#endif
     /**
      * @brief BLASLibLoaderManager.
      *
