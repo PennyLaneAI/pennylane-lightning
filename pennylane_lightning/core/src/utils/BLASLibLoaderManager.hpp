@@ -166,7 +166,7 @@ class BLASLibLoaderManager {
         PL_ABORT_IF_NOT(std::filesystem::exists(blaslib_path),
                         "The provided BLAS library path does not exist.");
         init_helper_(blaslib_path_str);
-#elif 
+#else
         // Given that the BLAS library path is not provided by the C++
         // layer, use the path found by pybind11.
         const std::string scipyPathStr = get_scipylibs_path_();
