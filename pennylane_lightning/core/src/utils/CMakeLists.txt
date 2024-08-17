@@ -20,13 +20,11 @@ foreach(BACKEND ${PL_BACKEND})
     endif()
 endforeach()
 
-message(STATUS "Python Include Dir: ${Python_INCLUDE_DIRS}")
-
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs
                                                 )
-if(NOT ENABLE_PYTHON)
+if(NOT _ENABLE_PYTHON)
 target_link_libraries(lightning_utils INTERFACE pybind11::module
                                               pybind11::pybind11
                                               pybind11::embed)

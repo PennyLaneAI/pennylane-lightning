@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-#ifndef ENABLE_PYTHON
+#ifndef _ENABLE_PYTHON
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #endif
@@ -69,7 +69,7 @@ class BLASLibLoaderManager {
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-#ifndef ENABLE_PYTHON
+#ifndef _ENABLE_PYTHON
     std::string get_scipylibs_path_worker_() {
         pybind11::object scipy_module =
             pybind11::module::import("scipy").attr("__file__");
@@ -156,7 +156,7 @@ class BLASLibLoaderManager {
             // branch for python interface
             scipyPathStr = blaslib_path_str;
         } else {
-#ifndef ENABLE_PYTHON
+#ifndef _ENABLE_PYTHON
             // branch for C++ interface
             scipyPathStr = get_scipylibs_path_();
 #endif
