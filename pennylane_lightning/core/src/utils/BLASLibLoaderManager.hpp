@@ -71,20 +71,12 @@ class BLASLibLoaderManager {
 
 #ifndef ENABLE_PYTHON
     std::string get_scipylibs_path_worker_() {
-        pybind11::object avail_site_packages =
-            pybind11::module::import("site").attr("getsitepackages")();
+        pybind11::object scipy_module =
+            pybind11::module::import("scipy").attr("__file__");
 
-        std::string scipy_lib_path;
-
-        for (auto item : avail_site_packages) {
-            std::string tmp_path = pybind11::str(item);
-            tmp_path += "/scipy.libs";
-            if (std::filesystem::exists(tmp_path)) {
-                return tmp_path;
-            }
-        }
-
-        PL_ABORT_IF(scipy_lib_path.empty(), "Can't find scipy.libs");
+        std::string scipy_path = pybind11::str(scipy_module);
+        std::string scipy_lib_path =
+            scipy_path.substr(0, scipy_path.find("scipy")) + "scipy.libs";
 
         return scipy_lib_path;
     }
