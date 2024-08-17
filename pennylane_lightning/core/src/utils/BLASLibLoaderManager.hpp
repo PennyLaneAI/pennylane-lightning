@@ -27,7 +27,8 @@
 #include <string>
 #include <vector>
 
-#if not defined(_ENABLE_PYTHON) || not defined(__APPLE__)
+#ifndef __APPLE__
+#include <Python.h>
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #endif
@@ -69,7 +70,6 @@ class BLASLibLoaderManager {
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
 
-#ifndef _ENABLE_PYTHON
     std::string get_scipylibs_path_worker_() {
         pybind11::object scipy_module =
             pybind11::module::import("scipy").attr("__file__");
@@ -92,10 +92,13 @@ class BLASLibLoaderManager {
      * @return std::string The path to the scipy.libs package.
      */
     std::string get_scipylibs_path_() {
+        if (Py_IsInitialized()) {
+            return get_scipylibs_path_worker_();
+        }
         pybind11::scoped_interpreter scope_guard{};
         return get_scipylibs_path_worker_();
     }
-#endif
+
     /**
      * @brief BLASLibLoaderManager.
      *
@@ -150,18 +153,18 @@ class BLASLibLoaderManager {
 #if defined(__APPLE__)
         // On macOS, use the default BLAS library path.
         blasLib = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str);
-#elif defined(_ENABLE_PYTHON)
+#else
         // Given that the BLAS library path is provided by the Python layer, use
         // the provided path.
         std::filesystem::path blaslib_path(blaslib_path_str);
-        PL_ABORT_IF_NOT(std::filesystem::exists(blaslib_path),
-                        "Provided BLAS library path does not exist.");
-        init_helper_(blaslib_path_str);
-#else
-        // Given that the BLAS library path is not provided by the C++ layer,
-        // use the path found by pybind11.
-        const std::string scipyPathStr = get_scipylibs_path_();
-        init_helper_(scipyPathStr);
+        if (std::filesystem::exists(blaslib_path)) {
+            init_helper_(blaslib_path_str);
+        } else {
+            // Given that the BLAS library path is not provided by the C++
+            // layer, use the path found by pybind11.
+            const std::string scipyPathStr = get_scipylibs_path_();
+            init_helper_(scipyPathStr);
+        }
 #endif
     }
 
