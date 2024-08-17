@@ -31,7 +31,7 @@
 #include <Python.h>
 #endif
 
-#if not defined(_ENABLE_PYTHON) || not defined(__APPLE__)
+#if not defined(__APPLE__) && not defined(_ENABLE_PYTHON)
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #endif
@@ -65,15 +65,14 @@ class BLASLibLoaderManager {
   private:
     static inline std::array<std::string, 5> priority_lib{
         "stdc", "gcc.", "quadmath", "gfortran", "openblas"};
+    bool scipy_prefix_ = false;
+    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
+    std::shared_ptr<SharedLibLoader> blasLib;
+#ifdef __APPLE__
     const std::string scipy_lib_path_macos_str =
         "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
         "Frameworks/vecLib.framework/libLAPACK.dylib";
-
-    bool scipy_prefix_ = false;
-    std::shared_ptr<SharedLibLoader> blasLib;
-    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
-
-#if not defined(_ENABLE_PYTHON) || not defined(__APPLE__)
+#elif not defined(_ENABLE_PYTHON)
     std::string get_scipylibs_path_worker_() {
         pybind11::object scipy_module =
             pybind11::module::import("scipy").attr("__file__");
@@ -104,7 +103,7 @@ class BLASLibLoaderManager {
         pybind11::scoped_interpreter scope_guard{};
         return get_scipylibs_path_worker_();
     }
-
+#endif
     /**
      * @brief BLASLibLoaderManager.
      *
@@ -145,7 +144,6 @@ class BLASLibLoaderManager {
 
         blasLib = blasLibs.back();
     }
-#endif
     /**
      * @brief BLASLibLoaderManager.
      *
