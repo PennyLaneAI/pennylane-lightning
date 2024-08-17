@@ -23,8 +23,11 @@ endforeach()
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
                                                 lightning_external_libs
-                                                )
-if(NOT ENABLE_PYTHON)
+                 
+                               )
+if(ENABLE_PYTHON)
+target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PYTHON=1")
+else()
 target_link_libraries(lightning_utils INTERFACE pybind11::module
                                               pybind11::pybind11
                                               pybind11::embed)

@@ -87,7 +87,6 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 include(FetchContent)
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
-    add_compile_definitions(_ENABLE_PYTHON=1)
 endif()
 
 FetchContent_Declare(pybind11
