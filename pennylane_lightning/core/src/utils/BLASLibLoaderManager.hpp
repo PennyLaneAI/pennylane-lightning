@@ -96,7 +96,7 @@ class BLASLibLoaderManager {
      * @return std::string The path to the scipy.libs package.
      */
     std::string get_scipylibs_path_() {
-#ifdef USE_PYTHON_HEADERS
+#ifdef _USE_PYTHON_HEADERS
         if (Py_IsInitialized()) {
             return get_scipylibs_path_worker_();
         }
