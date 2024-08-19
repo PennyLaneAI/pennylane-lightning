@@ -27,6 +27,9 @@ with open(path_to_version, encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
 
+# ------------------------
+# Find the toml parser.
+# ------------------------
 has_toml = False
 toml_libs = ["tomllib", "tomlkit"]
 for pkg in toml_libs:
