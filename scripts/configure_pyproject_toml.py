@@ -16,10 +16,10 @@ Project configuration script.
 """
 import argparse
 import os
-from pathlib import Path
-
 from importlib import import_module
 from importlib.util import find_spec
+from pathlib import Path
+
 from backend_support import backend, device_name
 
 path_to_version = Path("pennylane_lightning").absolute() / "core" / "_version.py"
@@ -35,6 +35,7 @@ for pkg in toml_libs:
         tomllib = import_module(pkg)
         has_toml = True
         break
+
 
 ########################################################################
 # Parsing arguments
@@ -79,7 +80,7 @@ if __name__ == "__main__":
         "cmake~=3.24.0",
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
-        "tomlkit; python_version < '3.11'",
+        "tomlkit",
     ]
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")

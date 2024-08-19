@@ -1,5 +1,5 @@
 [build-system]
-requires = ["cmake~=3.24.0", "ninja; platform_system!='Windows'", "setuptools>=42", "tomlkit; python_version < '3.11'"]
+requires = ["cmake~=3.24.0", "ninja; platform_system!='Windows'", "setuptools>=42", "tomlkit"]
 build-backend = "setuptools.build_meta"
 
 [project]
