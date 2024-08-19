@@ -512,7 +512,7 @@ class TestExecution:
 
     @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
     @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_custom_wires(self, phi, theta, wires):
+    def test_custom_wires_execute(self, phi, theta, wires):
         """Test execution with custom wires"""
         device = LightningDevice(wires=wires)
         qs = QuantumScript(
@@ -532,6 +532,8 @@ class TestExecution:
 
         assert np.allclose(result[0], np.cos(phi))
         assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
+
+
 
     @pytest.mark.parametrize(
         "wires, wire_order", [(3, (0, 1, 2)), (("a", "b", "c"), ("a", "b", "c"))]
@@ -865,31 +867,68 @@ class TestDerivatives:
         ops = [qml.Hadamard(0), qml.IsingXX(phi, wires=(0, 1))]
         qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
 
-        expected_device = DefaultQubit(wires=4, max_workers=1)
-
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_derivatives((qs1, qs2))
 
-            expected, expected_jac = expected_device.execute_and_compute_derivatives((qs1, qs2))
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_derivatives((qs1, qs2))
 
-            expected = expected_device.execute((qs1, qs2))
-            expected_jac = expected_device.compute_derivatives((qs1, qs2))
-
         # Assert results
+        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
+        x1 = np.cos(phi / 2) ** 2 / 2
+        x2 = np.sin(phi / 2) ** 2 / 2
+        expected2 = sum([x1, -x2, -x1, x2])  # zero
+        expected = (expected1, expected2)
+        
         assert len(results) == len(expected)
         assert len(results[0]) == len(expected[0])
         assert np.allclose(results[0][0], expected[0][0])
         assert np.allclose(results[0][1], expected[0][1])
         assert np.allclose(results[1], expected[1])
-
+        
         # Assert derivatives
+        expected_jac1 = (-np.cos(phi), -3 * np.sin(phi))
+        x1_jac = -np.cos(phi / 2) * np.sin(phi / 2) / 2
+        x2_jac = np.sin(phi / 2) * np.cos(phi / 2) / 2
+        expected_jac2 = sum([x1_jac, -x2_jac, -x1_jac, x2_jac])  # zero
+        expected_jac = (expected_jac1, expected_jac2)
+        
         assert len(jacs) == len(expected_jac)
         assert len(jacs[0]) == len(expected_jac[0])
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
+        
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
+    def test_derivatives_custom_wires(
+        self, theta, phi, dev, execute_and_derivatives, batch_obs, wires
+    ):
+        """Test that the jacobian is correct when set custom wires"""
+        device = LightningDevice(wires=wires)
+
+        qs = QuantumScript(
+            [
+                qml.RX(theta, wires[0]), 
+                qml.CNOT([wires[0], wires[1]]), 
+                qml.RY(phi, wires[1])
+            ],
+            [qml.expval(qml.Z(wires[1]))],
+            trainable_params=[0, 1],
+        )
+
+        res, jac = self.process_and_execute(
+            device, qs, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+        expected, expected_jac = self.calculate_reference(
+            qs, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
 @pytest.mark.skipif(
@@ -1202,25 +1241,65 @@ class TestVJP:
         qs2 = QuantumScript(ops, [qml.expval(qml.prod(qml.Z(0), qml.Z(1)))], trainable_params=[0])
         dy = [(1.5, 2.5), 1.0]
 
-        expected_device = DefaultQubit(wires=4, max_workers=1)
-
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_vjp((qs1, qs2), dy)
 
-            expected, expected_jac = expected_device.execute_and_compute_vjp((qs1, qs2), dy)
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_vjp((qs1, qs2), dy)
 
-            expected = expected_device.execute((qs1, qs2))
-            expected_jac = expected_device.compute_vjp((qs1, qs2), dy)
-
+        # Assert results 
+        expected1 = (-np.sin(phi) - 1, 3 * np.cos(phi))
+        x1 = np.cos(phi / 2) ** 2 / 2
+        x2 = np.sin(phi / 2) ** 2 / 2
+        expected2 = sum([x1, -x2, -x1, x2])  # zero
+        expected = (expected1, expected2)
+        
         assert len(results) == len(expected)
         assert len(results[0]) == len(expected[0])
         assert np.allclose(results[0][0], expected[0][0])
         assert np.allclose(results[0][1], expected[0][1])
         assert np.allclose(results[1], expected[1])
 
+        # Assert derivatives
+        expected_jac1 = -1.5 * np.cos(phi) - 2.5 * 3 * np.sin(phi)
+        x1_jac = -np.cos(phi / 2) * np.sin(phi / 2) / 2
+        x2_jac = np.sin(phi / 2) * np.cos(phi / 2) / 2
+        expected_jac2 = sum([x1_jac, -x2_jac, -x1_jac, x2_jac])  # zero
+        expected_jac = (expected_jac1, expected_jac2)
+        
         assert len(jacs) == len(expected_jac) == 2
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
+    def test_vjp_custom_wires(self, theta, phi, dev, wires, execute_and_derivatives, batch_obs):
+        """Test that the VJP is correct when set a custom wires"""
+
+        device = LightningDevice(wires=wires)
+
+        qs = QuantumScript(
+            [
+                qml.RX(theta, wires[0]), 
+                qml.CNOT([wires[0], wires[1]]), 
+                qml.RY(phi, wires[1])
+            ],
+            [qml.expval(qml.Z(wires[1]))],
+            trainable_params=[0, 1],
+        )
+
+        dy = 1.0
+        res, jac = self.process_and_execute(
+            device, qs, dy, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+        
+        expected, expected_jac = self.calculate_reference(
+            qs, dy, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
