@@ -171,7 +171,7 @@ template <class PrecisionT> class TNCudaGateCache {
     /**
      * @brief Returns if the `device_gates_` is empty.
      */
-    auto is_cache_empty() const -> bool { return device_gates_.empty(); }
+    auto is_empty() const -> bool { return device_gates_.empty(); }
 
   private:
     const DevTag<int> device_tag_;

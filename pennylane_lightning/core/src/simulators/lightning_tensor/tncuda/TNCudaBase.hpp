@@ -488,7 +488,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * gate cache is empty or update the exisisting gate operator by itself.
      */
     void dummy_tensor_update() {
-        if (gate_cache_->is_cache_empty()) {
+        if (gate_cache_->is_empty()) {
             applyOperation("Identity", {0}, false);
         }
 
