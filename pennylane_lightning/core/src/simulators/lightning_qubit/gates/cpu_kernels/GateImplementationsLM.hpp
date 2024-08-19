@@ -610,10 +610,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const auto count_y = std::popcount(i0 & mask_y) * 2;
             const auto count_z = std::popcount(i0 & mask_z) * 2;
             const auto sign_i0 = count_z + count_mask_y * 3 - count_y;
-            const auto sign_i1 = count_z + count_mask_y + count_y;
             if (mask_xy) {
                 const ComplexT v0 = arr[i0];
                 const ComplexT v1 = arr[i1];
+                const auto sign_i1 = count_z + count_mask_y + count_y;
                 arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
                 arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
             } else {
