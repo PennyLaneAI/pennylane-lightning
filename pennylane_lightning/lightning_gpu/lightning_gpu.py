@@ -100,7 +100,7 @@ def jacobian(circuit: QuantumTape, state: LightningGPUStateVector, batch_obs=Fal
         circuit (QuantumTape): The single circuit to simulate
         state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu 
+            computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
 
         wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -120,7 +120,7 @@ def simulate_and_jacobian(
         circuit (QuantumTape): The single circuit to simulate
         state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu 
+            computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
         wire_map (Optional[dict]): a map from wire labels to simulation indices
 
@@ -148,7 +148,7 @@ def vjp(
             not an iterable of numbers.
         state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu 
+            computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
         wire_map (Optional[dict]): a map from wire labels to simulation indices
 
@@ -174,7 +174,7 @@ def simulate_and_vjp(
             not an iterable of numbers.
         state (LightningGPUStateVector): handle to Lightning state vector
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu 
+            computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
         wire_map (Optional[dict]): a map from wire labels to simulation indices
 
@@ -301,7 +301,7 @@ class LightningGPU(Device):
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
         batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu 
+            computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
     """
 
