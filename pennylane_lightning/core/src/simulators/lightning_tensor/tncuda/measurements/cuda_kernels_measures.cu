@@ -77,7 +77,7 @@ template <class GPUDataT, class PrecisionT>
 void getProbs_CUDA_call(GPUDataT *state, PrecisionT *probs, const int data_size,
                         std::size_t thread_per_block, cudaStream_t stream_id) {
     auto dv = std::div(data_size, thread_per_block);
-    std::size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
+    const std::size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
     const std::size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
     dim3 blockSize(thread_per_block, 1, 1);
     dim3 gridSize(block_per_grid, 1);
