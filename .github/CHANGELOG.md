@@ -30,6 +30,9 @@
 
 ### Improvements
 
+* LightningQubit gains native support for the `PauliRot` gate.
+  [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+  
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
   [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
 
@@ -92,11 +95,15 @@
 
 * The installation instructions for all lightning plugins have been improved.
   [(#851)](https://github.com/PennyLaneAI/pennylane-lightning/pull/851)
+  [(#858)](https://github.com/PennyLaneAI/pennylane-lightning/pull/858)
 
 * Updated the README and added citation format for Lightning arxiv preprint.
   [(#818)](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Replace structured bindings by variables in `GateImplementationsLM.hpp`.
+  [(#856)](https://github.com/PennyLaneAI/pennylane-lightning/pull/856)
 
 * Remove wrong -m when calling setup.py.
   [(#854)](https://github.com/PennyLaneAI/pennylane-lightning/pull/854)
@@ -132,7 +139,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
 
 ---
 

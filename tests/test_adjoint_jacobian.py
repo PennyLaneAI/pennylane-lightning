@@ -790,7 +790,7 @@ class TestAdjointJacobianQNode:
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
 
         num_wires = max(operation.num_wires, 1)
@@ -856,7 +856,7 @@ class TestAdjointJacobianQNode:
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
         num_wires = max(operation.num_wires, 1)
         if num_wires > n_qubits:
@@ -1557,7 +1557,7 @@ def test_qubit_unitary(n_targets):
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
@@ -1599,7 +1599,7 @@ def test_diff_qubit_unitary(n_targets):
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
