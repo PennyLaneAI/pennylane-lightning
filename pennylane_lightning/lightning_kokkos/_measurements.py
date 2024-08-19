@@ -290,8 +290,8 @@ class LightningKokkosMeasurements:
 
         all_res = []
         for group in groups:
-            if ( isinstance(group[0], (ExpectationMP, VarianceMP)) 
-                and isinstance(group[0].obs, SparseHamiltonian )
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
+                group[0].obs, SparseHamiltonian
             ):
                 raise TypeError(
                     "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
