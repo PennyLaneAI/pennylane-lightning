@@ -118,6 +118,9 @@ inline void GEMM_CUDA_device(T *A, T *B, T *C, const int m, const int k,
  *
  * @param A Device data pointer of vector A.
  * @param n Length of the vector.
+ * @param dev_id the device on which the function should be executed.
+ * @param stream_id the CUDA stream on which the operation should be executed.
+ * @param cublas the CublasCaller object that manages the cuBLAS handle.
  * @param res Device data pointer to store the result.
  */
 template <class T = double, class DevTypeID = int>

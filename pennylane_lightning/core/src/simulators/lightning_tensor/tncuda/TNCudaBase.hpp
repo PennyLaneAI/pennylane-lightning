@@ -366,8 +366,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         } else {
             DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
 
-            for (std::size_t idx = 0;
-                 idx < (size_t(1) << projected_modes.size()); idx++) {
+            const std::size_t projected_modes_size = size_t(1)
+                                                     << projected_modes.size();
+            for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
                 for (std::size_t j = 0; j < projected_modes.size(); j++) {
                     projectedModeValues[j] = (idx >> j) & 1;
                 }

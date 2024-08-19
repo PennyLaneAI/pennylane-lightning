@@ -165,9 +165,7 @@ template <class PrecisionT> class TNCudaGateCache {
      */
     auto get_cache_head_idx() const -> std::size_t {
         auto it = device_gates_.begin();
-        std::size_t idx;
-        idx = it->first;
-        return idx;
+        return it->first;
     }
 
     /**
