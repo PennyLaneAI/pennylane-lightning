@@ -32,7 +32,7 @@ from pennylane.wires import Wires
 
 
 def svd_split(M, bond_dim):
-    """SVD split a matrix into a matrix product state via numpy linalg."""
+    """SVD split a matrix into a matrix product state via numpy linalg. Note that this function is to be moved to the C++ layer."""
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     U = U @ np.diag(S)  # Append singular values to U
     bonds = len(S)

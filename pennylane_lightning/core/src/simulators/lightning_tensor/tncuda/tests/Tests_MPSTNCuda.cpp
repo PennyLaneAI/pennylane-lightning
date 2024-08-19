@@ -60,9 +60,9 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
 
 TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     SECTION("Set MPS site with wrong site index") {
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = 3;
-        std::size_t siteIdx = 3;
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 3;
+        const std::size_t siteIdx = 3;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -76,9 +76,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     }
 
     SECTION("Set MPS site with wrong site data size") {
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = 3;
-        std::size_t siteIdx = 0;
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 3;
+        const std::size_t siteIdx = 0;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -92,8 +92,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     }
 
     SECTION("Set MPS sites") {
-        std::size_t num_qubits = 2;
-        std::size_t maxBondDim = 3;
+        const std::size_t num_qubits = 2;
+        const std::size_t maxBondDim = 3;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 

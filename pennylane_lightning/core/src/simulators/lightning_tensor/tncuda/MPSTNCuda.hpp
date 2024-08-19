@@ -169,7 +169,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
-     * @brief Set the quantum state to zero state.
+     * @brief Set the quantum state to the zero state.
      */
     void setZeroState() { reset(); }
 
@@ -341,9 +341,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         for (std::size_t i = 0; i < localBondDims.size(); i++) {
             std::size_t bondDim =
                 std::min(i + 1, BaseType::getNumQubits() - i - 1);
-            if (bondDim > log2(maxBondDim_)) {
-                localBondDims[i] = maxBondDim_;
-            } else {
+
+            if (bondDim <= log2(maxBondDim_)) {
                 localBondDims[i] = std::size_t{1} << bondDim;
             }
         }
