@@ -198,8 +198,7 @@ class LightningTensorNet:
 
         M = dense_to_mps(state, self._num_wires, self._max_bond_dim)
 
-        for i in range(len(M)):
-            self._tensornet.updateIthSite(i, M[i])
+        self._tensornet.updateMPSSites(M)
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
