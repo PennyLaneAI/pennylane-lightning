@@ -482,8 +482,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         all_wires.insert(all_wires.begin() + wires.size(),
                          controlled_wires.begin(), controlled_wires.end());
 
-        const auto [rev_wires, rev_wire_shifts] =
+        const auto revs =
             reverseWires(num_qubits, all_wires, controlled_values);
+        const auto &rev_wires = revs.first;
+        const auto &rev_wire_shifts = revs.second;
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
         PL_ASSERT(nw_tot == parity.size() - 1);
@@ -600,8 +602,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
             all_wires.insert(all_wires.begin() + wires.size(),
                              controlled_wires.begin(), controlled_wires.end());
-            const auto [rev_wires, rev_wire_shifts] =
+            const auto revs =
                 reverseWires(num_qubits, all_wires, controlled_values);
+            const auto &rev_wires = revs.first;
+            const auto &rev_wire_shifts = revs.second;
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
 
@@ -621,7 +625,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         } else {
             const std::size_t rev_wire = num_qubits - wires[0] - 1;
             const std::size_t rev_wire_shift = (one << rev_wire);
-            const auto [parity_high, parity_low] = revWireParity(rev_wire);
+            const auto parities = revWireParity(rev_wire);
+            const auto parity_high = parities.first;
+            const auto parity_low = parities.second;
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
                 const std::size_t i0 =
@@ -1227,8 +1233,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
             all_wires.insert(all_wires.begin() + wires.size(),
                              controlled_wires.begin(), controlled_wires.end());
-            const auto [rev_wires, rev_wire_shifts] =
+            const auto revs =
                 reverseWires(num_qubits, all_wires, controlled_values);
+            const auto &rev_wires = revs.first;
+            const auto &rev_wire_shifts = revs.second;
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
             PL_LOOP_PARALLEL(1)
@@ -1255,8 +1263,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                                 << rev_wire0;
             const std::size_t rev_wire1_shift = static_cast<std::size_t>(1U)
                                                 << rev_wire1;
-            const auto [parity_high, parity_middle, parity_low] =
-                revWireParity(rev_wire0, rev_wire1);
+            const auto parities = revWireParity(rev_wire0, rev_wire1);
+            const auto parity_high = std::get<0>(parities);
+            const auto parity_middle = std::get<1>(parities);
+            const auto parity_low = std::get<2>(parities);
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
                 const std::size_t i00 = ((k << 2U) & parity_high) |
@@ -1664,8 +1674,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
             all_wires.insert(all_wires.begin() + wires.size(),
                              controlled_wires.begin(), controlled_wires.end());
-            const auto [rev_wires, rev_wire_shifts] =
+            const auto revs =
                 reverseWires(num_qubits, all_wires, controlled_values);
+            const auto &rev_wires = revs.first;
+            const auto &rev_wire_shifts = revs.second;
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
             PL_LOOP_PARALLEL_VA(1, firstprivate(indices, i0000, i0011, i1100))
@@ -1989,9 +2001,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         }
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
-
         const std::size_t dim = one << nw_tot;
-        // std::vector<std::size_t> indices(dim);
 
         std::size_t mask{0};
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
