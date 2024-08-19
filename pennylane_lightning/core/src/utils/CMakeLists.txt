@@ -27,16 +27,10 @@ target_link_libraries(lightning_utils INTERFACE lightning_compile_options
 
 if(ENABLE_PYTHON)
     add_compile_definitions(_ENABLE_PYTHON)
-else()
+elseif(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     target_link_libraries(lightning_utils INTERFACE pybind11::module
                                                   pybind11::pybind11
                                                   pybind11::embed)
-endif()
-
-if(USE_PYTHON_HEADERS)
-    add_compile_definitions(_USE_PYTHON_HEADERS=1)
-    target_include_directories(lightning_utils INTERFACE ${PYTHON_INCLUDE_DIR})
-    target_link_libraries(lightning_utils INTERFACE ${PYTHON_LIBRARY})
 endif()
 
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)

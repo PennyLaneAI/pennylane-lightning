@@ -27,16 +27,38 @@
 #include <string>
 #include <vector>
 
-#ifdef _USE_PYTHON_HEADERS // Catalyst usage only
-#include <Python.h>
-#endif
-
 #if not defined(__APPLE__) && not defined(_ENABLE_PYTHON)
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #endif
 
 #include "SharedLibLoader.hpp"
+
+namespace {
+// Exclusively for python calls and tested in the python layer
+// LCOV_EXCL_START
+#ifdef __linux__
+/**
+ * @brief Get the path to the current shared library object.
+ *
+ * @return const char*
+ */
+inline const char *getPath() {
+    Dl_info dl_info;
+    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
+                "Can't get the path to the shared library.");
+    return dl_info.dli_fname;
+}
+#elif defined(_MSC_VER)
+inline std::string getPath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
+    std::string fullPath(buffer);
+    std::size_t pos = fullPath.find_last_of("\\/");
+    return fullPath.substr(0, pos);
+}
+#endif
+} // namespace
 
 namespace Pennylane::Util {
 /**
@@ -72,6 +94,46 @@ class BLASLibLoaderManager {
     const std::string scipy_lib_path_macos_str =
         "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
         "Frameworks/vecLib.framework/libLAPACK.dylib";
+#elif defined(_ENABLE_PYTHON)
+    std::string get_scipylibs_path_() {
+        // Exclusively for python calls
+        // LCOV_EXCL_START
+        std::string currentPathStr(getPath());
+        std::string site_packages_str("site-packages/");
+        std::string scipyPathStr;
+
+        std::size_t str_pos = currentPathStr.find(site_packages_str);
+        if (str_pos != std::string::npos) {
+            scipyPathStr =
+                currentPathStr.substr(0, str_pos + site_packages_str.size());
+            scipyPathStr += "scipy.libs";
+        }
+
+        if (std::filesystem::exists(scipyPathStr)) {
+            try {
+                // convert the relative path to absolute path
+                scipyPathStr =
+                    std::filesystem::canonical(scipyPathStr).string();
+            } catch (const std::exception &err) {
+                std::cerr << "Canonical path for scipy.libs"
+                          << " threw exception:\n"
+                          << err.what() << '\n';
+            }
+        } else {
+            try {
+                scipyPathStr = currentPathStr + "/../../scipy.libs/";
+                // convert the relative path to absolute path
+                scipyPathStr =
+                    std::filesystem::canonical(scipyPathStr).string();
+            } catch (const std::exception &err) {
+                std::cerr << "Canonical path for scipy.libs"
+                          << " threw exception:\n"
+                          << err.what() << '\n';
+            }
+        }
+        return scipyPathStr;
+        // LCOV_EXCL_STOP
+    }
 #elif not defined(_ENABLE_PYTHON)
     std::string get_scipylibs_path_worker_() {
         pybind11::object scipy_module =
@@ -95,11 +157,6 @@ class BLASLibLoaderManager {
      * @return std::string The path to the scipy.libs package.
      */
     std::string get_scipylibs_path_() {
-#ifdef _USE_PYTHON_HEADERS
-        if (Py_IsInitialized()) {
-            return get_scipylibs_path_worker_();
-        }
-#endif
         pybind11::scoped_interpreter scope_guard{};
         return get_scipylibs_path_worker_();
     }
