@@ -702,7 +702,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
                     "vector has norm close to zero and can't be normalized");
 
-        std::complex<PrecisionT> inv_norm = 1. / norm;
+        ComplexT inv_norm = 1. / norm;
         for (size_t k = 0; k < this->getLength(); k++) {
             arr[k] *= inv_norm;
         }
@@ -810,7 +810,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         const std::vector<bool> controlled_values(controlled_wires.size(),
                                                   false);
         auto core_function = [num_state,
-                              &state](std::complex<PrecisionT> *arr,
+                              &state](ComplexT *arr,
                                       const std::vector<std::size_t> &indices,
                                       const std::size_t offset) {
             for (std::size_t i = 0; i < num_state; i++) {
