@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 
+#include <iostream>
+
 #if not defined(__APPLE__) && not defined(_ENABLE_PYTHON)
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
@@ -214,17 +216,16 @@ class BLASLibLoaderManager {
 #if defined(__APPLE__)
         // On macOS, use the default BLAS library path.
         blasLib = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str);
-#elif defined(_ENABLE_PYTHON)
+#else
         // Given that the BLAS library path is provided by the Python layer, use
         // the provided path.
         std::filesystem::path blaslib_path(blaslib_path_str);
-        PL_ABORT_IF_NOT(std::filesystem::exists(blaslib_path),
-                        "The provided BLAS library path does not exist.");
-        init_helper_(blaslib_path_str);
-#else
-        // Given that the BLAS library path is not provided by the C++
-        // layer, use the path found by pybind11.
-        const std::string scipyPathStr = get_scipylibs_path_();
+        std::string scipyPathStr;
+        if(std::filesystem::exists(blaslib_path)){
+            scipyPathStr = blaslib_path_str;
+        }else{
+            scipyPathStr = get_scipylibs_path_();
+        }
         init_helper_(scipyPathStr);
 #endif
     }
