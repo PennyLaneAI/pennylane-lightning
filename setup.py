@@ -26,7 +26,7 @@ from setuptools.command.build_ext import build_ext
 
 
 has_toml = False
-toml_libs = ["tomllib", "tomli", "tomlkit"]
+toml_libs = ["tomllib", "tomlkit"]
 for pkg in toml_libs:
     spec = find_spec(pkg)
     if spec:
@@ -36,14 +36,16 @@ for pkg in toml_libs:
 
 if not has_toml:
     raise ImportError(
-        "A TOML parser is required in 'setup.py'. "
-        "We support any of the following TOML parsers: [tomli, tomlkit, tomllib] "
-        "You can install either tomli via `pip install tomli`, "
-        "tomlkit via `pip install tomlkit`, or use Python 3.11 "
-        "or above which natively offers the tomllib library."
+        "A TOML parser is required to configure 'pyproject.toml'. "
+        "We support any of the following TOML parsers: [tomlkit, tomllib] "
+        "You can install tomlkit via `pip install tomlkit`, "
+        "or use Python 3.11 or above which natively offers the tomllib library."
     )
 
-project_name = tomllib.load("pyproject.toml")['project']['name']
+
+with open("pyproject.toml", "rb") as f:
+    project_name = tomllib.load(f)['project']['name']
+
 backend = project_name.replace("PennyLane_", "").lower()
 if (backend == "lightning"): backend = "lightning_qubit"
 

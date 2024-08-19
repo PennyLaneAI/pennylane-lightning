@@ -28,7 +28,7 @@ with open(path_to_version, encoding="utf-8") as f:
 
 
 has_toml = False
-toml_libs = ["tomllib", "tomli", "tomlkit"]
+toml_libs = ["tomllib", "tomlkit"]
 for pkg in toml_libs:
     spec = find_spec(pkg)
     if spec:
@@ -64,10 +64,9 @@ if __name__ == "__main__":
     if not has_toml:
         raise ImportError(
             "A TOML parser is required to configure 'pyproject.toml'. "
-            "We support any of the following TOML parsers: [tomli, tomlkit, tomllib] "
-            "You can install either tomli via `pip install tomli`, "
-            "tomlkit via `pip install tomlkit`, or use Python 3.11 "
-            "or above which natively offers the tomllib library."
+            "We support any of the following TOML parsers: [tomlkit, tomllib] "
+            "You can install tomlkit via `pip install tomlkit`, "
+            "or use Python 3.11 or above which natively offers the tomllib library."
         )
 
     with open(pyproject_path, "rb") as f:
@@ -80,7 +79,7 @@ if __name__ == "__main__":
         "cmake~=3.24.0",
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
-        "toml",
+        "tomlkit; python_version < '3.11'",
     ]
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")

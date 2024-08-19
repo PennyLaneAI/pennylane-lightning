@@ -58,7 +58,7 @@ jobs:
       - name: Install dependencies
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         run: |
-          python -m pip install tomli
+          python -m pip install tomlkit
 
       - name: Configure pyproject.toml file
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
