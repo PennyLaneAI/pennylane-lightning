@@ -70,7 +70,8 @@ if __name__ == "__main__":
             "or above which natively offers the tomllib library."
         )
 
-    pyproject = tomllib.load(pyproject_path)
+    with open(pyproject_path, "rb") as f:
+        pyproject = tomllib.load(f)
 
     # ------------------------
     # Configure Build.
