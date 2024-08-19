@@ -490,19 +490,22 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             Pennylane::Util::revWireParity(rev_wires);
         PL_ASSERT(nw_tot == parity.size() - 1);
 
-        const std::vector<std::size_t> indices =
-            (n_contr == 0) ? Gates::generateBitPatterns(wires, num_qubits)
-                           : std::vector<std::size_t>{};
-
-        PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            std::size_t offset{0U};
-            if (n_contr == 0) {
+        if (n_contr == 0) {
+            const std::vector<std::size_t> indices =
+                (n_contr == 0) ? Gates::generateBitPatterns(wires, num_qubits)
+                               : std::vector<std::size_t>{};
+            PL_LOOP_PARALLEL(1)
+            for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+                std::size_t offset{0U};
                 for (std::size_t i = 0; i < parity.size(); i++) {
                     offset |= ((k << i) & parity[i]);
                 }
                 core_function(arr, indices, offset);
-            } else {
+            }
+        } else {
+            PL_LOOP_PARALLEL(1)
+            for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+                std::size_t offset{0U};
                 const auto ctrl_indices = parity2indices(
                     k, parity, rev_wire_shifts, n_contr, rev_wires);
                 core_function(arr, ctrl_indices, offset);
@@ -610,10 +613,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const auto count_y = std::popcount(i0 & mask_y) * 2;
             const auto count_z = std::popcount(i0 & mask_z) * 2;
             const auto sign_i0 = count_z + count_mask_y * 3 - count_y;
-            if (mask_xy) {
+            if (mask_xy) [[likely]] {
+                const auto sign_i1 = count_z + count_mask_y + count_y;
                 const ComplexT v0 = arr[i0];
                 const ComplexT v1 = arr[i1];
-                const auto sign_i1 = count_z + count_mask_y + count_y;
                 arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
                 arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
             } else {
