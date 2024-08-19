@@ -814,7 +814,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                                       const std::vector<std::size_t> &indices,
                                       const std::size_t offset) {
             for (std::size_t i = 0; i < num_state; i++) {
-                arr[indices[i] + offset] = state[i];
+                std::size_t arr_index = indices[i] + offset;
+                arr[arr_index] = state[i];
             }
         };
         GateImplementationsLM::applyNCN(this->getData(), total_wire_count,
