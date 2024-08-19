@@ -492,7 +492,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             applyOperation("Identity", {0}, false);
         }
 
-        std::size_t id = gate_cache_->get_cache_head_idx();
+        const std::size_t id = gate_cache_->get_cache_head_idx();
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
