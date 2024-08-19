@@ -45,6 +45,14 @@ jobs:
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
+      - name: Make disk space
+        run: |
+          sudo apt-get autoremove -y && sudo apt-get autoclean -y && sudo apt-get clean -y
+          for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
+            sudo du -sh $DIR || echo $DIR not found
+            sudo rm -rf $DIR
+          done
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:
