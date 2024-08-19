@@ -619,7 +619,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 const ComplexT v1 = arr[i1];
                 arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
                 arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
-            } else {
+            } else [[unlikely]] {
                 arr[i0] *= c + sines[sign_i0 % 4];
             }
         }
