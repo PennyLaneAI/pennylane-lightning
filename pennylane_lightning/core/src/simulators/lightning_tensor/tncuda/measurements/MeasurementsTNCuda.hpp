@@ -115,24 +115,45 @@ template <class TensorNetT> class MeasurementsTNCuda {
                                          d_output_tensor.getLength(), wires,
                                          numHyperSamples);
 
-        getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
-                      length, static_cast<int>(thread_per_block),
-                      tensor_network_.getDevTag().getStreamID());
+        // `7` here means `256` elements to be calculated
+        // LCOV_EXCL_START
+        if (wires.size() > 7) {
+            getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
+                          length, static_cast<int>(thread_per_block),
+                          tensor_network_.getDevTag().getStreamID());
 
-        PrecisionT sum;
+            PrecisionT sum;
 
-        asum_CUDA_device<PrecisionT>(d_output_probs.getData(), length,
-                                     tensor_network_.getDevTag().getDeviceID(),
-                                     tensor_network_.getDevTag().getStreamID(),
-                                     tensor_network_.getCublasCaller(), &sum);
+            asum_CUDA_device<PrecisionT>(
+                d_output_probs.getData(), length,
+                tensor_network_.getDevTag().getDeviceID(),
+                tensor_network_.getDevTag().getStreamID(),
+                tensor_network_.getCublasCaller(), &sum);
 
-        PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
+            PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
 
-        normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
-                            static_cast<int>(thread_per_block),
-                            tensor_network_.getDevTag().getStreamID());
+            normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
+                                static_cast<int>(thread_per_block),
+                                tensor_network_.getDevTag().getStreamID());
 
-        d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
+            d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
+        } else {
+            // LCOV_EXCL_STOP
+            std::vector<ComplexT> h_state_vector(length);
+            d_output_tensor.CopyGpuDataToHost(h_state_vector.data(),
+                                              h_state_vector.size());
+            for (std::size_t i = 0; i < length; i++) {
+                h_res[i] = std::norm(h_state_vector[i]);
+            }
+
+            PrecisionT sum = std::accumulate(h_res.begin(), h_res.end(), 0.0);
+
+            PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
+
+            for (std::size_t i = 0; i < length; i++) {
+                h_res[i] /= sum;
+            }
+        }
 
         return h_res;
     }

@@ -350,7 +350,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::vector<int32_t> projected_modes{};
 
-        for (int32_t idx = 0; idx < BaseType::getNumQubits(); idx++) {
+        for (int32_t idx = 0;
+             idx < static_cast<int32_t>(BaseType::getNumQubits()); idx++) {
             auto it = std::find(stateModes.begin(), stateModes.end(), idx);
             if (it == stateModes.end()) {
                 projected_modes.emplace_back(idx);
