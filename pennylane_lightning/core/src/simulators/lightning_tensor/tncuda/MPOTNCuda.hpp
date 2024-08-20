@@ -60,15 +60,13 @@ namespace Pennylane::LightningTensor::TNCuda {
  * Also note that the life time of the tensor data is designed to be aligned
  with
  * the life time of the tensor network it's applied to.
- * @tparam TensorNetT Tensor network type.
+ * @tparam PrecisionT Floating point type.
  */
-template <class TensorNetT> class MPOTNCuda {
+template <class PrecisionT> class MPOTNCuda {
   private:
-    using ComplexT = typename TensorNetT::ComplexT;
-    using PrecisionT = typename TensorNetT::PrecisionT;
-    using CFP_t = typename TensorNetT::CFP_t;
+    using ComplexT = std::complex<PrecisionT>;
+    using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
 
-    const TensorNetT &tensor_network_;
     std::vector<std::size_t> wires_; // pennylane  wires convention
 
     // To buuld a MPO tensor network, we need: 1. a cutensornetHandle; 2. a
@@ -124,11 +122,12 @@ template <class TensorNetT> class MPOTNCuda {
     }
 
   public:
-    explicit MPOTNCuda(const TensorNetT &tensor_network,
-                       const std::vector<std::vector<ComplexT>> &tensors,
+    explicit MPOTNCuda(const std::vector<std::vector<ComplexT>> &tensors,
                        const std::vector<std::size_t> &wires,
-                       const std::size_t maxBondDim)
-        : tensor_network_(tensor_network) {
+                       const std::size_t maxBondDim,
+                       const cutensornetHandle_t &cutensornetHandle,
+                       const cudaDataType_t &cudaDataType,
+                       const DevTag<int> &dev_tag) {
         PL_ABORT_IF_NOT(tensors.size() == wires.size(),
                         "Number of tensors and wires must match.");
 
@@ -210,8 +209,7 @@ template <class TensorNetT> class MPOTNCuda {
                     wires_[0] + 2 * numSites_ + i};
             }
             tensors_.emplace_back(siteModes.size(), siteModes,
-                                  modesExtents_.back(),
-                                  tensor_network_.getDevTag());
+                                  modesExtents_.back(), dev_tag);
             tensors_.back().getDataBuffer().zeroInit();
         }
 
@@ -244,16 +242,16 @@ template <class TensorNetT> class MPOTNCuda {
 
         // set up MPO tensor network operator
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
-            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* const cutensornetHandle_t */ cutensornetHandle,
             /* int32_t */ static_cast<int32_t>(numSites_),
             /* const int64_t stateModeExtents */
             stateSitesExtents_int64_.data(),
-            /* cudaDataType_t */ tensor_network_.getCudaDataType(),
+            /* cudaDataType_t */ cudaDataType,
             /* */ &networkOperator_));
 
         // append MPO tensor network operator components
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendMPO(
-            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* const cutensornetHandle_t */ cutensornetHandle,
             /* cutensornetNetworkOperator_t */ networkOperator_,
             /* const cuDoubleComplex */ coeff_,
             /* int32_t numStateModes */ static_cast<int32_t>(numSites_),
@@ -266,6 +264,10 @@ template <class TensorNetT> class MPOTNCuda {
                 reinterpret_cast<void **>(getTensorsDataPtr().data())),
             /* cutensornetBoundaryCondition_t */ boundaryCondition_,
             /* int64_t * */ &componentIdx_));
+    }
+
+    auto getMPOOperator() const -> cutensornetNetworkOperator_t {
+        return networkOperator_;
     }
 
     ~MPOTNCuda() {

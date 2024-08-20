@@ -44,6 +44,7 @@ def svd_split(M, bond_dim):
     U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
     return U, S, Vd
 
+
 def split(M):
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     bonds = len(S)
@@ -64,17 +65,18 @@ def dense_to_mpo(psi, n_wires):
     bondL = Vd.shape[0]
     psi = Vd
 
-    for _ in range(n_wires-2):
-        psi = np.reshape(psi, (4*bondL, -1))   # reshape psi[2 * bondL, (2x2x2...)]
-        U, Vd = split(psi)        # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+    for _ in range(n_wires - 2):
+        psi = np.reshape(psi, (4 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
+        U, Vd = split(psi)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
         Ms.append(U)
 
         psi = Vd
         bondL = Vd.shape[0]
 
     Ms.append(Vd)
-    
+
     return Ms
+
 
 def dense_to_mps(psi, n_wires, bond_dim):
     """Convert a dense state vector to a matrix product state."""
@@ -307,7 +309,7 @@ class LightningTensorNet:
                     try:
                         method(qml.matrix(operation), wires, False)
                     except AttributeError:
-                        method(operation.matrix, wires, False)           
+                        method(operation.matrix, wires, False)
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""

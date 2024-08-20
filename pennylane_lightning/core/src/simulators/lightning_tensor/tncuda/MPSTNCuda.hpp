@@ -29,6 +29,7 @@
 
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
+#include "MPOTNCuda.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
 #include "TensornetBase.hpp"
@@ -72,6 +73,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     std::vector<TensorCuda<Precision>> tensors_;
 
     std::vector<TensorCuda<Precision>> tensors_out_;
+
+    std::vector<MPOTNCuda<Precision>> mpos_;
+    std::vector<std::size_t> mpo_ids_;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -235,6 +239,35 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
         }
     };
+
+    /**
+     * @brief Apply a 2+-wire gate to the MPS state. The gate is represented by
+     * a set of tensors. A MPO object will be created and applied to the quantum
+     * state.
+     *
+     * @param tensors The tensor representation of each site of gate.
+     * @param wires The wire indices of the gate acts on.
+     */
+    void applyMPOOperation(const std::vector<std::vector<ComplexT>> &tensors,
+                           const std::vector<std::size_t> &wires,
+                           const std::size_t maxMPOBondDim) {
+        // Create a MPO object based on the host data from the user
+        mpos_.emplace_back(tensors, wires, maxMPOBondDim,
+                           BaseType::getTNCudaHandle(),
+                           BaseType::getCudaDataType(), BaseType::getDevTag());
+
+        // Apply the MPO operator to the quantum state
+        int64_t operatorId;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetNetworkOperator_t */ mpos_.back().getMPOOperator(),
+            /* const int32_t immutable */ 1,
+            /* const int32_t adjoint */ 0,
+            /* const int32_t unitary */ 1,
+            /* int64_t * operatorId*/ &operatorId));
+        mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
+    }
 
     /**
      * @brief Append MPS final state to the quantum circuit.

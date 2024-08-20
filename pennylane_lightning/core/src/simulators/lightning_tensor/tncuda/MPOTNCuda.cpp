@@ -17,5 +17,5 @@
 
 using namespace Pennylane::LightningTensor::TNCuda;
 
-template class Pennylane::LightningTensor::TNCuda::MPOTNCuda<MPSTNCuda<float>>;
-template class Pennylane::LightningTensor::TNCuda::MPOTNCuda<MPSTNCuda<double>>;
+template class Pennylane::LightningTensor::TNCuda::MPOTNCuda<float>;
+template class Pennylane::LightningTensor::TNCuda::MPOTNCuda<double>;
