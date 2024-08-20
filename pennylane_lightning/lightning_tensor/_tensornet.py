@@ -33,7 +33,7 @@ from pennylane.wires import Wires
 
 def get_ranks(lst):
     # Create a sorted list of unique elements
-    sorted_unique = sorted(set(lst))
+    sorted_unique = sorted(set(lst), reverse=True)
 
     # Create a rank dictionary
     rank_dict = {value: rank for rank, value in enumerate(sorted_unique)}
@@ -306,6 +306,7 @@ class LightningTensorNet:
                         gate_ops_data = operation.matrix
                     # Check if gate permutation is required
                     # Decompose the gate into MPOs
+                    gate_data = np.transpose(gate_ops_data, axes=(1, 0)).flatten()
                     gate_data_shape = [4] * len(wires)
                     gate_data = np.array(gate_ops_data).reshape(gate_data_shape)
 
@@ -315,12 +316,12 @@ class LightningTensorNet:
 
                     gate_data = np.transpose(gate_data, axes=ranks).flatten()
 
-                    MPOs = dense_to_mpo(gate_ops_data, len(wires))
+                    MPOs = dense_to_mpo(gate_data, len(wires))
 
                     for i in range(len(MPOs)):
                         if i == 0:
                             MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 1, 0)).flatten()
-                        elif i < len(MPOs) - 1:
+                        elif i < len(MPOs) - 2:
                             MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
                         else:
                             MPOs[i] = MPOs[i].flatten()

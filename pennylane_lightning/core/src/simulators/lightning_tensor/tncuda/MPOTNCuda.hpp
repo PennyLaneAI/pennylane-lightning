@@ -169,7 +169,7 @@ template <class PrecisionT> class MPOTNCuda {
             }
         }
 
-        bondDims_ = targetSitesBondDims;
+        std::vector<std::size_t> bondDims_orderC = targetSitesBondDims;
 
         // Insert bond dimensions of Identity tensors
         if (wires.size() != numSites_) {
@@ -179,12 +179,16 @@ template <class PrecisionT> class MPOTNCuda {
                 if (numIdentitySites > 0) {
                     std::vector<std::size_t> identitySites(
                         numIdentitySites, targetSitesBondDims[i]);
-                    bondDims_.insert(bondDims_.begin() + i + 1,
+                    bondDims_orderC.insert(bondDims_orderC.begin() + i + 1,
                                      identitySites.begin(),
                                      identitySites.end());
                 }
             }
         }
+
+        bondDims_ = std::vector<std::size_t>(bondDims_orderC.rbegin(),
+                                             bondDims_orderC.rend());
+        
         // set up MPO tensor mode extents and initialize MPO tensors
         for (std::size_t i = 0; i < numSites_; i++) {
             std::vector<std::size_t> siteModes;
@@ -228,7 +232,7 @@ template <class PrecisionT> class MPOTNCuda {
         for (std::size_t i = 0; i < tensors_.size(); i++) {
             if (wires_queue.front() == (wires_[0] + i)) {
                 auto tensor_cu = cuUtil::complexToCu<ComplexT>(
-                    tensors[tensors.size() - wires_queue.size()]);
+                    tensors[wires_queue.size() - 1]);
                 tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                               tensor_cu.size());
                 wires_queue.pop();
