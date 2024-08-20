@@ -580,6 +580,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         constexpr auto IMAG = Pennylane::Util::IMAG<PrecisionT>();
         PL_ABORT_IF_NOT(wires.size() == word.size(),
                         "wires and word have incompatible dimensions.")
+        if (std::find_if_not(word.begin(), word.end(), [](const int w) {
+                return w == 'Z';
+            }) == word.end()) {
+            applyMultiRZ(arr, num_qubits, wires, inverse, angle);
+            return;
+        }
         const PrecisionT c = std::cos(angle / 2);
         const ComplexT s = ((inverse) ? IMAG : -IMAG) * std::sin(angle / 2);
         const std::array<ComplexT, 4> sines{s, IMAG * s, -s, -IMAG * s};
@@ -613,15 +619,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const auto count_y = std::popcount(i0 & mask_y) * 2;
             const auto count_z = std::popcount(i0 & mask_z) * 2;
             const auto sign_i0 = count_z + count_mask_y * 3 - count_y;
-            if (mask_xy) [[likely]] {
-                const auto sign_i1 = count_z + count_mask_y + count_y;
-                const ComplexT v0 = arr[i0];
-                const ComplexT v1 = arr[i1];
-                arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
-                arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
-            } else [[unlikely]] {
-                arr[i0] *= c + sines[sign_i0 % 4];
-            }
+            const auto sign_i1 = count_z + count_mask_y + count_y;
+            const ComplexT v0 = arr[i0];
+            const ComplexT v1 = arr[i1];
+            arr[i0] = c * v0 + sines[sign_i0 % 4] * v1;
+            arr[i1] = c * v1 + sines[sign_i1 % 4] * v0;
         }
     }
 
