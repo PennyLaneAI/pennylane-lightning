@@ -142,14 +142,16 @@ template <class TensorNetT> class MeasurementsTNCuda {
             std::vector<ComplexT> h_state_vector(length);
             d_output_tensor.CopyGpuDataToHost(h_state_vector.data(),
                                               h_state_vector.size());
+            // TODO: OMP support
             for (std::size_t i = 0; i < length; i++) {
                 h_res[i] = std::norm(h_state_vector[i]);
             }
 
+            // TODO: OMP support
             PrecisionT sum = std::accumulate(h_res.begin(), h_res.end(), 0.0);
 
             PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
-
+            // TODO: OMP support
             for (std::size_t i = 0; i < length; i++) {
                 h_res[i] /= sum;
             }
