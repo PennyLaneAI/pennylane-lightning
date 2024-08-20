@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add LightningGPU Linux (aarch64+GraceHopper) wheels to PyPI.
+  [(#815)](https://github.com/PennyLaneAI/pennylane-lightning/pull/815)
+
 * Add `qml.state()` measurement support to `lightning.tensor`.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
