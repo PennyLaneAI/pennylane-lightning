@@ -320,11 +320,11 @@ class LightningTensorNet:
 
                     for i in range(len(MPOs)):
                         if i == 0:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 1, 0)).flatten()
+                            MPOs[i] = np.transpose(MPOs[i], axes=(2, 1, 3, 0)).flatten()
                         elif i < len(MPOs) - 2:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
+                            MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
                         else:
-                            MPOs[i] = MPOs[i].flatten()
+                            MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
 
                     # Append the MPOs to the tensor network
                     method(MPOs, sorted_wires)
