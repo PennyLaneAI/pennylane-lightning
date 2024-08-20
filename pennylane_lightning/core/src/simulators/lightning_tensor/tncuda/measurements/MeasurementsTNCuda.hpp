@@ -79,10 +79,16 @@ template <class TensorNetT> class MeasurementsTNCuda {
     /**
      * @brief Probabilities for a subset of the full system.
      *
+     * @tparam thread_per_block Number of threads per block in the CUDA kernel
+     * and is default as `256`. `256` is chosen as a default value because it is
+     * a balance of warp size and occupancy. Note that this number is not
+     * optimal for all cases and may need to be adjusted based on the specific
+     * use case, especially the number of elements in the subset is small.
+     *
      * @param wires Wires will restrict probabilities to a subset
      * of the full system.
-     * @param  numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 1.
+     * @param numHyperSamples Number of hyper samples to be used in the
+     * calculation and is default as 1.
      *
      * @return Floating point std::vector with probabilities.
      */

@@ -350,11 +350,10 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::vector<int32_t> projected_modes{};
 
-        for (std::size_t idx = 0; idx < BaseType::getNumQubits(); idx++) {
-            auto it = std::find(stateModes.begin(), stateModes.end(),
-                                static_cast<int32_t>(idx));
+        for (int32_t idx = 0; idx < BaseType::getNumQubits(); idx++) {
+            auto it = std::find(stateModes.begin(), stateModes.end(), idx);
             if (it == stateModes.end()) {
-                projected_modes.emplace_back(static_cast<int32_t>(idx));
+                projected_modes.emplace_back(idx);
             }
         }
 
@@ -485,7 +484,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * cutensornet library not allowing multiple calls of appendMPSFinalize.
      *
      * This function either appends a new `Identity` gate to the graph when the
-     * gate cache is empty or update the exisisting gate operator by itself.
+     * gate cache is empty or update the existing gate operator by itself.
      */
     void dummy_tensor_update() {
         if (gate_cache_->is_empty()) {

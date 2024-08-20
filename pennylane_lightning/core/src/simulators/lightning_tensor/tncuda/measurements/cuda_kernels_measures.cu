@@ -19,7 +19,7 @@
 namespace Pennylane::LightningTensor::TNCuda::Measures {
 
 /**
- * @brief The CUDA kernel that calculate the probability from a given state
+ * @brief The CUDA kernel that calculates the probability from a given state
  * tensor data on GPU device.
  *
  * @tparam GPUDataT cuComplex data type (cuComplex or cuDoubleComplex).

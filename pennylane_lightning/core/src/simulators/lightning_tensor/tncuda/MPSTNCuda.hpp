@@ -258,7 +258,15 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         // `append_mps_final_state` method as well as appending additional
         // operations to the graph. This is a temporary solution and this line
         // can be removed in the future when the `cutensornet` backend allows
-        // multiple calls to the `cutensornetStateFinalizeMPS` method.
+        // multiple calls to the `cutensornetStateFinalizeMPS` method. For more
+        // details, please see the `cutensornet` high-level API workflow logic
+        // [here]
+        // (https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/functions.html#high-level-tensor-network-api).
+        // In order to proceed with the following gate operations or
+        // measurements after calling the `cutensornetStateCompute()` API, we
+        // have to call the `cutensornetStateUpdateTensor()` API, which is
+        // wrapped inside the `dummy_tensor_update()` method.
+        //
         BaseType::dummy_tensor_update();
     }
 
