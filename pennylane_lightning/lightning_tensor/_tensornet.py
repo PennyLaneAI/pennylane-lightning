@@ -31,6 +31,17 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
+def get_ranks(lst):
+    # Create a sorted list of unique elements
+    sorted_unique = sorted(set(lst))
+
+    # Create a rank dictionary
+    rank_dict = {value: rank for rank, value in enumerate(sorted_unique)}
+
+    # Map the original list elements to their ranks
+    return [rank_dict[value] for value in lst]
+
+
 def svd_split(M, bond_dim):
     """SVD split a matrix into a matrix product state via numpy linalg."""
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
@@ -288,16 +299,34 @@ class LightningTensorNet:
                 else:
                     # Inverse can be set to False since qml.matrix(operation) is already in
                     # inverted form
-                    method = getattr(tensornet, "applyMPOs")
+                    method = getattr(tensornet, "applyMPOOperator")
                     try:
                         gate_ops_data = qml.matrix(operation)
                     except AttributeError:
                         gate_ops_data = operation.matrix
                     # Check if gate permutation is required
                     # Decompose the gate into MPOs
+                    gate_data_shape = [4] * len(wires)
+                    gate_data = np.array(gate_ops_data).reshape(gate_data_shape)
+
+                    ranks = get_ranks(wires)
+
+                    sorted_wires = sorted(wires)
+
+                    gate_data = np.transpose(gate_data, axes=ranks).flatten()
+
                     MPOs = dense_to_mpo(gate_ops_data, len(wires))
+
+                    for i in range(len(MPOs)):
+                        if i == 0:
+                            MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 1, 0)).flatten()
+                        elif i < len(MPOs) - 1:
+                            MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
+                        else:
+                            MPOs[i] = MPOs[i].flatten()
+
                     # Append the MPOs to the tensor network
-                    method(MPOs, wires, False)
+                    method(MPOs, sorted_wires)
             else:
                 if method is not None:
                     param = operation.parameters

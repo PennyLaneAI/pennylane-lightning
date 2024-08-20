@@ -29,6 +29,10 @@
 #include "tncudaError.hpp"
 #include "tncuda_helpers.hpp"
 
+namespace {
+namespace cuUtil = Pennylane::LightningGPU::Util;
+}
+
 namespace Pennylane::LightningTensor::TNCuda {
 
 /**
@@ -82,8 +86,8 @@ template <class PrecisionT> class MPOTNCuda {
 
     std::size_t maxBondDim_;
     std::size_t numSites_;
-    std::vector<std::size_t> stateSitesExtents_;
-    std::vector<int64_t> stateSitesExtents_int64_;
+    std::vector<std::size_t> stateModeExtents_;
+    std::vector<int64_t> stateModeExtents_int64_;
     std::vector<std::size_t> modes_;
     std::vector<int32_t> modes_int32_;
 
@@ -99,12 +103,12 @@ template <class PrecisionT> class MPOTNCuda {
      * @return std::vector<int64_t const *> Note int64_t const* is
      * required by cutensornet backend.
      */
-    [[nodiscard]] auto getSitesExtentsPtr_() -> std::vector<int64_t const *> {
-        std::vector<int64_t const *> sitesExtentsPtr_int64(numSites_);
+    [[nodiscard]] auto getModeExtentsPtr_() -> std::vector<int64_t const *> {
+        std::vector<int64_t const *> modeExtentsPtr_int64(numSites_);
         for (std::size_t i = 0; i < numSites_; i++) {
-            sitesExtentsPtr_int64[i] = modesExtents_int64_[i].data();
+            modeExtentsPtr_int64[i] = modesExtents_int64_[i].data();
         }
-        return sitesExtentsPtr_int64;
+        return modeExtentsPtr_int64;
     }
 
     /**
@@ -125,6 +129,7 @@ template <class PrecisionT> class MPOTNCuda {
     explicit MPOTNCuda(const std::vector<std::vector<ComplexT>> &tensors,
                        const std::vector<std::size_t> &wires,
                        const std::size_t maxBondDim,
+                       const std::size_t numQubits,
                        const cutensornetHandle_t &cutensornetHandle,
                        const cudaDataType_t &cudaDataType,
                        const DevTag<int> &dev_tag) {
@@ -134,8 +139,8 @@ template <class PrecisionT> class MPOTNCuda {
         PL_ABORT_IF(maxBondDim < 2,
                     "Max MPO bond dimension must be at least 2.");
 
-        PL_ABORT_IF(std::is_sorted(wires.begin(), wires.end()),
-                    "Only sorted target wires is accepeted.");
+        PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
+                        "Only sorted target wires is accepeted.");
 
         wires_ = wires;
 
@@ -143,13 +148,13 @@ template <class PrecisionT> class MPOTNCuda {
         maxBondDim_ = maxBondDim;
         numSites_ = wires.back() - wires.front() + 1;
 
-        stateSitesExtents_ = std::vector<std::size_t>(numSites_, 2);
-        stateSitesExtents_int64_ = std::vector<int64_t>(numSites_, 2);
+        stateModeExtents_int64_ = std::vector<int64_t>(numQubits, 2);
 
         // set up MPO target modes
         for (std::size_t i = 0; i < numSites_; ++i) {
             modes_.push_back(wires.front() + i);
-            modes_int32_.push_back(static_cast<int32_t>(wires.front() + i));
+            modes_int32_.push_back(
+                static_cast<int32_t>(numQubits - 1 - modes_.back()));
         }
 
         // set up target bond dimensions
@@ -199,10 +204,11 @@ template <class PrecisionT> class MPOTNCuda {
                     wires_[0] + 2 * numSites_ + i};
 
             } else {
-                modesExtents_.push_back({bondDims_[i], 2, bondDims_[i], 2});
+                modesExtents_.push_back({bondDims_[i - 1], 2, bondDims_[i], 2});
                 modesExtents_int64_.push_back(
-                    {static_cast<int64_t>(bondDims_[i]), 2,
+                    {static_cast<int64_t>(bondDims_[i - 1]), 2,
                      static_cast<int64_t>(bondDims_[i]), 2});
+
                 siteModes = std::vector<std::size_t>{
                     wires_[0] + numSites_ + i, wires_[0] + i,
                     wires_[0] + numSites_ + i + 1,
@@ -221,8 +227,10 @@ template <class PrecisionT> class MPOTNCuda {
 
         for (std::size_t i = 0; i < tensors_.size(); i++) {
             if (wires_queue.front() == (wires_[0] + i)) {
-                tensors_[i].getDataBuffer().CopyHostDataToGpu(
-                    tensors[i].data(), tensors[i].size());
+                auto tensor_cu = cuUtil::complexToCu<ComplexT>(
+                    tensors[tensors.size() - wires_queue.size()]);
+                tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
+                                                              tensor_cu.size());
                 wires_queue.pop();
             } else {
                 CFP_t value_cu =
@@ -232,8 +240,8 @@ template <class PrecisionT> class MPOTNCuda {
                     &tensors_[i].getDataBuffer().getData()[target_idx],
                     &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
 
-                target_idx = 2 * bondDims_[i - 1] *
-                             2; // i - 1 will be always non-negative
+                target_idx = 2 * bondDims_[i - 1] +
+                             1; // i - 1 will be always non-negative
                 PL_CUDA_IS_SUCCESS(cudaMemcpy(
                     &tensors_[i].getDataBuffer().getData()[target_idx],
                     &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
@@ -243,11 +251,11 @@ template <class PrecisionT> class MPOTNCuda {
         // set up MPO tensor network operator
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
             /* const cutensornetHandle_t */ cutensornetHandle,
-            /* int32_t */ static_cast<int32_t>(numSites_),
+            /* int32_t */ static_cast<int32_t>(numQubits),
             /* const int64_t stateModeExtents */
-            stateSitesExtents_int64_.data(),
+            stateModeExtents_int64_.data(),
             /* cudaDataType_t */ cudaDataType,
-            /* */ &networkOperator_));
+            /* cutensornetNetworkOperator_t */ &networkOperator_));
 
         // append MPO tensor network operator components
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendMPO(
@@ -257,7 +265,7 @@ template <class PrecisionT> class MPOTNCuda {
             /* int32_t numStateModes */ static_cast<int32_t>(numSites_),
             /* const int32_t stateModes[] */ modes_int32_.data(),
             /* const int64_t *stateModeExtents[] */
-            getSitesExtentsPtr_().data(),
+            getModeExtentsPtr_().data(),
             /* const int64_t *tensorModeStrides[] */ nullptr,
             /* const void * */
             const_cast<const void **>(

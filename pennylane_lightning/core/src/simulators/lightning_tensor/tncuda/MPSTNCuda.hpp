@@ -250,9 +250,19 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     void applyMPOOperation(const std::vector<std::vector<ComplexT>> &tensors,
                            const std::vector<std::size_t> &wires,
-                           const std::size_t maxMPOBondDim) {
+                           const std::size_t maxMPOBondDim = 0) {
+        // TODO: the following line is for test only
+        std::size_t maxMPOBondDim_ = maxMPOBondDim;
+        if (maxMPOBondDim == 0) {
+            maxMPOBondDim_ = std::size_t{4} << (wires.size());
+        }
+        PL_ABORT_IF_NOT(
+            tensors.size() == wires.size(),
+            "The number of tensors should be equal to the number of "
+            "wires.");
         // Create a MPO object based on the host data from the user
-        mpos_.emplace_back(tensors, wires, maxMPOBondDim,
+        mpos_.emplace_back(tensors, wires, maxMPOBondDim_,
+                           BaseType::getNumQubits(),
                            BaseType::getTNCudaHandle(),
                            BaseType::getCudaDataType(), BaseType::getDevTag());
 
@@ -262,9 +272,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetNetworkOperator_t */ mpos_.back().getMPOOperator(),
-            /* const int32_t immutable */ 1,
+            /* const int32_t immutable */ 0,
             /* const int32_t adjoint */ 0,
-            /* const int32_t unitary */ 1,
+            /* const int32_t unitary */ 0,
             /* int64_t * operatorId*/ &operatorId));
         mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
     }
