@@ -20,15 +20,19 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    # TODO: uncomment it before merge
-    # if: |
-    #   github.event_name != 'pull_request' ||
-    #   contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-    #   github.event_name == 'workflow_dispatch'
-    name: "Set wheel build matrix"
-    uses: ./.github/workflows/set_wheel_build_matrix.yml
-    with:
-      event_name: ${{ github.event_name }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+
+      - name: Python version
+        id: pyver
+        run: |
+          echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
+            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+            --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
+    outputs:
+      python_version: ${{ steps.pyver.outputs.python_version }}
 
   linux-wheels-aarch64:
     needs: [set_wheel_build_matrix]
@@ -65,6 +69,8 @@ jobs:
           CIBW_BUILD: ${{ matrix.cibw_build }}
 
           CIBW_SKIP: "*-musllinux*"
+
+          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="LIGHTNING_RELEASE_TAG=master"
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
