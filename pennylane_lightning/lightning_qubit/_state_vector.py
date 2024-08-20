@@ -251,6 +251,12 @@ class LightningStateVector:
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
+            elif isinstance(operation, qml.PauliRot):
+                method = getattr(state, "applyPauliRot")
+                paulis = operation._hyperparameters["pauli_word"]
+                wires = [i for i, w in zip(wires, paulis) if w != "I"]
+                word = "".join(p for p in paulis if p != "I")  # pylint: disable=protected-access
+                method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
@@ -278,7 +284,6 @@ class LightningStateVector:
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
-
         self._apply_lightning(
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
         )
