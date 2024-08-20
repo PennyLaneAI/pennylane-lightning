@@ -80,10 +80,16 @@ template <class TensorNetT> class MeasurementsTNCuda {
     /**
      * @brief Probabilities for a subset of the full system.
      *
+     * @tparam thread_per_block Number of threads per block in the CUDA kernel
+     * and is default as `256`. `256` is chosen as a default value because it is
+     * a balance of warp size and occupancy. Note that this number is not
+     * optimal for all cases and may need to be adjusted based on the specific
+     * use case, especially the number of elements in the subset is small.
+     *
      * @param wires Wires will restrict probabilities to a subset
      * of the full system.
-     * @param  numHyperSamples Number of hyper samples to use in the calculation
-     * and is default as 1.
+     * @param numHyperSamples Number of hyper samples to be used in the
+     * calculation and is default as 1.
      *
      * @return Floating point std::vector with probabilities.
      */
@@ -110,24 +116,47 @@ template <class TensorNetT> class MeasurementsTNCuda {
                                          d_output_tensor.getLength(), wires,
                                          numHyperSamples);
 
-        getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
-                      length, static_cast<int>(thread_per_block),
-                      tensor_network_.getDevTag().getStreamID());
+        // `7` here means `256` elements to be calculated
+        // LCOV_EXCL_START
+        if (wires.size() > 7) {
+            getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
+                          length, static_cast<int>(thread_per_block),
+                          tensor_network_.getDevTag().getStreamID());
 
-        PrecisionT sum;
+            PrecisionT sum;
 
-        asum_CUDA_device<PrecisionT>(d_output_probs.getData(), length,
-                                     tensor_network_.getDevTag().getDeviceID(),
-                                     tensor_network_.getDevTag().getStreamID(),
-                                     tensor_network_.getCublasCaller(), &sum);
+            asum_CUDA_device<PrecisionT>(
+                d_output_probs.getData(), length,
+                tensor_network_.getDevTag().getDeviceID(),
+                tensor_network_.getDevTag().getStreamID(),
+                tensor_network_.getCublasCaller(), &sum);
 
-        PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
+            PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
 
-        normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
-                            static_cast<int>(thread_per_block),
-                            tensor_network_.getDevTag().getStreamID());
+            normalizeProbs_CUDA(d_output_probs.getData(), length, sum,
+                                static_cast<int>(thread_per_block),
+                                tensor_network_.getDevTag().getStreamID());
 
-        d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
+            d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
+        } else {
+            // LCOV_EXCL_STOP
+            std::vector<ComplexT> h_state_vector(length);
+            d_output_tensor.CopyGpuDataToHost(h_state_vector.data(),
+                                              h_state_vector.size());
+            // TODO: OMP support
+            for (std::size_t i = 0; i < length; i++) {
+                h_res[i] = std::norm(h_state_vector[i]);
+            }
+
+            // TODO: OMP support
+            PrecisionT sum = std::accumulate(h_res.begin(), h_res.end(), 0.0);
+
+            PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
+            // TODO: OMP support
+            for (std::size_t i = 0; i < length; i++) {
+                h_res[i] /= sum;
+            }
+        }
 
         return h_res;
     }

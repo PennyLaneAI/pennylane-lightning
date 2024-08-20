@@ -69,19 +69,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
         run: |
-          cd main
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
           git log -1 --format='%H'
@@ -114,17 +111,25 @@ jobs:
 
       - name: Get required Python packages
         run: |
-          cd main
           python -m pip install -r requirements-dev.txt
 
-      - name: Configure and build device wheel
-        env:
-          PL_BACKEND: ${{ matrix.pl_backend }}
+      # TODO: Update after Release 0.37
+      - name: Create device wheel ${{ inputs.lightning-version }}
+        if: inputs.lightning-version == 'stable'
         run: |
-          cd main
-          python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos -DENABLE_PYTHON=ON -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" \
-          python -m build
+          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
+          python setup.py bdist_wheel
+          cd dist
+          WHEEL_NAME=$(ls *.whl)
+          cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
+          echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
+
+      # TODO: Remove after Release 0.37
+      - name: Create device wheel ${{ inputs.lightning-version }}
+        if: inputs.lightning-version != 'stable'
+        run: |
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
@@ -170,12 +175,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Switch to release tag of Lightning
         if: inputs.lightning-version == 'release'
         run: |
-          cd main
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
@@ -187,7 +190,6 @@ jobs:
       - name: Switch to stable tag of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
           git log -1 --format='%H'
@@ -208,7 +210,6 @@ jobs:
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          cd main
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
@@ -235,7 +236,6 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Install ML libraries for interfaces
@@ -246,7 +246,6 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             # Remove `python -m` to avoid running tests with relative modules
             PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
@@ -268,7 +267,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ubuntu-codecov-results-python
-          path: ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          path: ./.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           if-no-files-found: error
 
   upload-to-codecov-linux-python:
@@ -280,7 +279,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Download coverage reports
         uses: actions/download-artifact@v3

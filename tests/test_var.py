@@ -65,7 +65,7 @@ class TestVar:
             pytest.skip("Device does not support the Projector observable.")
 
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         obs = (
             qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
             if device_name != "lightning.tensor"
