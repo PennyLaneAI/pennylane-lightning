@@ -77,75 +77,68 @@ The following table summarizes the supported platforms and the primary installat
 Lightning-Qubit installation
 ****************************
 
-PyPI wheels (pip)
-=================
-
-Lightning plugins can be installed using ``pip`` as follows
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning
-
-The above command will install the Lightning-Qubit plugin (the default since it is most broadly supported).
-In order to install the Lightning-GPU and Lightning-Kokkos (OpenMP) backends, you can respectively use the following commands:
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning[gpu]
-    $ pip install pennylane-lightning[kokkos]
-
+Lightning-Qubit comes pre-installed with PennyLane. Please follow our 
+`installation instructions <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_ 
+to install PennyLane.
 
 Install from source
 ===================
 
+.. note::
+
+    The below contains instructions for installing Lightning-Qubit ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install>`__.
+    If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
+
 To build Lightning plugins from source you can run
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
+    PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
 
-where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu`` or ``lightning_kokkos``.
+where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
 The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is required to bind the C++ functionality to Python.
 
 A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` is required.
 On Debian-based systems, this can be installed via ``apt``:
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ sudo apt -y update &&
-    $ sudo apt install g++ libomp-dev
+    sudo apt -y update && sudo apt install -y g++ libomp-dev
 
 where ``libomp-dev`` is included to also install OpenMP.
 On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ brew install llvm libomp
+    brew install llvm libomp
 
-The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu12``, etc.), and hence we recommend referring to Lightning-GPU installation section.
-Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the Lightning-Kokkos installation section.
+The Lightning-GPU backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu12``, etc.), and hence we recommend referring to `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_ section.
+Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_ section.
 
 Development installation
 ========================
 
 For development and testing, you can install by cloning the repository:
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-    $ cd pennylane-lightning
-    $ pip install -r requirements.txt
-    $ PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
-    $ pip install -e . -vv
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    pip install -r requirements.txt
+    PL_BACKEND=${PL_BACKEND} python scripts/configure_pyproject_toml.py
+    pip install -e . --config-settings editable_mode=compat -vv
 
 Note that subsequent calls to ``pip install -e .`` will use cached binaries stored in the
 ``build`` folder, and the ``pyproject.toml`` file defined by the configuration script. Run ``make clean`` if you would like to recompile from scratch.
 
 You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . -vv
+    CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . --config-settings editable_mode=compat -vv
+    
+
+Supported options are ``-DENABLE_WARNINGS``, ``-DENABLE_NATIVE`` (for ``-march=native``) ``-DENABLE_BLAS``, ``-DENABLE_OPENMP``,  and ``-DENABLE_CLANG_TIDY``.
 
 Compile MSVC (Windows)
 ======================
@@ -158,97 +151,90 @@ You need `cmake <https://cmake.org/download/>`_ and appropriate Python environme
 We recommend using ``[x64 (or x86)] Native Tools Command Prompt for VS [version]`` to compile the library.
 Be sure that ``cmake`` and ``python`` can be called within the prompt.
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ cmake --version
-    $ python --version
+    cmake --version
+    python --version
 
 Then a common command will work.
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ pip install -r requirements.txt
-    $ pip install -e .
+    pip install -r requirements.txt
+    pip install -e . 
 
 Note that OpenMP and BLAS are disabled on this platform.
 
-CMake support
-=============
-
-One can also build the plugin using CMake:
-
-.. code-block:: console
-
-    $ cmake -S. -B build
-    $ cmake --build build
-
-Supported options are
-
-- ``-DENABLE_WARNINGS:BOOL=ON``
-- ``-DENABLE_NATIVE:BOOL=ON`` (for ``-march=native``)
-- ``-DENABLE_BLAS:BOOL=ON``
-- ``-DENABLE_OPENMP:BOOL=ON``
-- ``-DENABLE_CLANG_TIDY:BOOL=ON``
 
 Testing
 =======
 
-To test that a plugin is working correctly, test the Python code with:
+To test that a plugin is working correctly, one can check both Python and C++ unit tests for each device.
 
-.. code-block:: console
+Python Test
+^^^^^^^^^^^ 
 
-    $ make test-python device=${PL_DEVICE}
+Test the Python code with:
 
-where ``${PL_DEVICE}`` can be ``lightning.qubit`` (default), ``lightning.gpu`` or ``lightning.kokkos``.
-These differ from ``${PL_BACKEND}`` by replacing the underscore by a dot.
+.. code-block:: bash
+
+    make test-python device=${PL.DEVICE}
+
+where ``${PL.DEVICE}`` differ from ``${PL_BACKEND}`` by replacing the underscore by a dot. And can be 
+
+- ``lightning.qubit`` (default) 
+- ``lightning.gpu``  
+- ``lightning.kokkos``
+- ``lightning.tensor``
+
+C++ Test
+^^^^^^^^
+ 
 The C++ code can be tested with
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ PL_BACKEND=${PL_BACKEND} make test-cpp
+    PL_BACKEND=${PL_BACKEND} make test-cpp
 
 .. installation_LQubit-end-inclusion-marker-do-not-remove
 
 .. installation_LGPU-start-inclusion-marker-do-not-remove
 
+
 Lightning-GPU installation
 **************************
 
-Lightning-GPU can be installed using ``pip``:
-
-.. code-block:: console
-
-    pip install pennylane-lightning[gpu]
-
-Lightning-GPU requires CUDA 12 and the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (only the `cuStateVec <https://docs.nvidia.com/cuda/cuquantum/latest/custatevec/index.html>`_ library is required).
-The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
-Please see the `cuQuantum SDK`_ install guide for more information.
+For the majority of cases, Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-GPU from source
 =================================
 
-To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be installed (compilation is not necessary):
+.. note::
 
-.. code-block:: console
+    The below contains instructions for installing Lightning-GPU ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
+
+To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU (compilation is not necessary):
+
+.. code-block:: bash
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install -e . -vv
+    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
-Then the `cuStateVec`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
+Then the `custatevec-cu12 <https://pypi.org/project/cuquantum-cu12/>`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
-.. code-block:: console
+.. code-block:: bash
 
     export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-GPU can then be installed with ``pip``:
 
-.. code-block:: console
+.. code-block:: bash
 
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
-    python -m pip install -e .
+    python -m pip install -e . --config-settings editable_mode=compat -vv
 
 To simplify the build, we recommend using the containerized build process described in Docker support section.
 
@@ -264,12 +250,12 @@ Please consult the `cuQuantum SDK`_ , `mpi4py <https://mpi4py.readthedocs.io/en/
 `MPICH <https://www.mpich.org/static/downloads/4.1.1/mpich-4.1.1-README.txt>`_, or `OpenMPI <https://www.open-mpi.org/faq/?category=buildcuda>`_ install guide for more information.
 
 Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed and the environment variable ``CUQUANTUM_SDK`` is set properly.
-Then Lightning-GPU with MPI support can then be installed with ``pip``:
+Then Lightning-GPU with MPI support can then be installed in the *editable* mode:
 
-.. code-block:: console
+.. code-block:: bash
 
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
-    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e .
+    CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
 
 Test Lightning-GPU with MPI
@@ -277,13 +263,13 @@ Test Lightning-GPU with MPI
 
 You may test the Python layer of the MPI enabled plugin as follows:
 
-.. code-block:: console
+.. code-block:: bash
 
     mpirun -np 2 python -m pytest mpitests --tb=short
 
 The C++ code is tested with
 
-.. code-block:: console
+.. code-block:: bash
 
     rm -rf ./BuildTests
     cmake . -BBuildTests -DBUILD_TESTS=1 -DBUILD_TESTS=1 -DENABLE_MPI=ON -DCUQUANTUM_SDK=<path to sdk>
@@ -298,25 +284,39 @@ The C++ code is tested with
 Lightning-Kokkos installation
 *****************************
 
-On linux systems, ``lightning.kokkos`` with the OpenMP backend can be installed by providing the optional ``[kokkos]`` tag:
-
-.. code-block:: console
-
-    $ pip install pennylane-lightning[kokkos]
+On most Linux systems, Lightning-Kokkos can be installed via Spack or Docker by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-Kokkos from source
 ====================================
 
+.. note::
+
+    The below contains instructions for installing Lightning-Kokkos ***from source***. For most cases, one can install Lightning-Kokkos via Spack or Docker by the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
+
 As Kokkos enables support for many different HPC-targeted hardware platforms, ``lightning.kokkos`` can be built to support any of these platforms when building from source.
+
+Install Kokkos (Optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards
 
-.. code-block:: console
+Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning Kokkos was tested with Kokkos version <= 4.3.01  
+
+.. code-block:: bash
+
+    # Replace x, y, and z by the correct version
+    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz 
+    tar -xvf 4.x.y.z.tar.gz
+    cd kokkos-4.x.y.z
+
+Build Kokkos for NVIDIA A100 cards (``SM80`` architecture)
+
+.. code-block:: bash
 
     cmake -S . -B build -G Ninja \
         -DCMAKE_BUILD_TYPE=RelWithDebugInfo \
-        -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.1.00/AMPERE80 \
+        -DCMAKE_INSTALL_PREFIX=/opt/kokkos/4.x.y.z/AMPERE80 \
         -DCMAKE_CXX_STANDARD=20 \
         -DBUILD_SHARED_LIBS:BOOL=ON \
         -DBUILD_TESTING:BOOL=OFF \
@@ -327,28 +327,44 @@ For example, the following will build Kokkos for NVIDIA A100 cards
         -DKokkos_ENABLE_TESTS:BOOL=OFF \
         -DKokkos_ENABLE_LIBDL:BOOL=OFF
     cmake --build build && cmake --install build
-    echo export CMAKE_PREFIX_PATH=/opt/kokkos/4.1.00/AMPERE80:\$CMAKE_PREFIX_PATH
+    export CMAKE_PREFIX_PATH=/opt/kokkos/4.x.y.z/AMPERE80:$CMAKE_PREFIX_PATH
+
 
 Next, append the install location to ``CMAKE_PREFIX_PATH``.
 Note that the C++20 standard is required (``-DCMAKE_CXX_STANDARD=20`` option), and hence CUDA v12 is required for the CUDA backend.
-If an installation is not found, our builder will clone and install it during the build process.
+
+Install Lightning-Kokkos
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+If an installation of Kokkos is not found, then our builder will clone and install it during the build process. Lightning-Qubit should be installed (compilation is not necessary):
 
 The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
 
-.. code-block:: console
+.. code-block:: bash
 
-   PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
-   CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install .
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
+    PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
+    CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
-To build the plugin directly with CMake as above:
+The supported backend options are 
 
-.. code-block:: console
+.. list-table:: 
+    :align: center
+    :width: 100 %
+    :widths: 20 20 20 20 20
+    :header-rows: 0
 
-   cmake -B build -DKokkos_ENABLE_OPENMP=ON -DPL_BACKEND=lightning_kokkos -G Ninja
-   cmake --build build
+    * - ``SERIAL``
+      - ``OPENMP``
+      - ``THREADS``
+      - ``HIP``
+      - ``CUDA`` 
 
+and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 
-The supported backend options are ``SERIAL``, ``OPENMP``, ``THREADS``, ``HIP`` and ``CUDA`` and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 One can activate simultaneously one serial, one parallel CPU host (e.g. ``OPENMP``, ``THREADS``) and one parallel GPU device backend (e.g. ``HIP``, ``CUDA``), but not two of any category at the same time.
 For ``HIP`` and ``CUDA``, the appropriate software stacks are required to enable compilation and subsequent use.
 Similarly, the CMake option ``-DKokkos_ARCH_{...}=ON`` must also be specified to target a given architecture.
@@ -358,6 +374,7 @@ Note that ``THREADS`` backend is not recommended since `Kokkos does not guarante
 .. installation_LKokkos-end-inclusion-marker-do-not-remove
 
 .. installation_LTensor-start-inclusion-marker-do-not-remove
+
 
 Lightning-Tensor installation
 *****************************
@@ -369,26 +386,26 @@ Install Lightning-Tensor from source
 ====================================
 Lightning-Qubit should be installed before Lightning-Tensor (compilation is not necessary):
 
-.. code-block:: console
+.. code-block:: bash
 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-    SKIP_COMPILATION=True pip install .
+    SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
 
-Then the `cutensornet`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
+Then the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
 
-.. code-block:: console
+.. code-block:: bash
 
     export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-Tensor can then be installed with ``pip``:
 
-.. code-block:: console
+.. code-block:: bash
 
     PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py
-    pip install -e .
+    pip install -e . --config-settings editable_mode=compat -vv
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
@@ -398,6 +415,7 @@ well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for furth
 
 .. docker-start-inclusion-marker-do-not-remove
 
+
 Docker support
 **************
 
@@ -405,11 +423,11 @@ Docker images for the various backends are found on the
 `PennyLane Docker Hub <https://hub.docker.com/u/pennylaneai>`_ page, where there is also a detailed description about PennyLane Docker support.
 Briefly, one can build the Docker Lightning images using:
 
-.. code-block:: console
+.. code-block:: bash
 
-    $ git clone https://github.com/PennyLaneAI/pennylane-lightning.git
-    $ cd pennylane-lightning
-    $ docker build -f docker/Dockerfile --target ${TARGET} .
+    git clone https://github.com/PennyLaneAI/pennylane-lightning.git
+    cd pennylane-lightning
+    docker build -f docker/Dockerfile --target ${TARGET} .
 
 where ``${TARGET}`` is one of the following
 

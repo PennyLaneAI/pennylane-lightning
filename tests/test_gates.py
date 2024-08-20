@@ -563,6 +563,42 @@ def test_paulirot(n_wires, n_targets, tol):
 
 @pytest.mark.skipif(
     device_name != "lightning.qubit",
+    reason="PauliRot operations only implemented in lightning.qubit.",
+)
+@pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
+@pytest.mark.parametrize("n_targets", [1, 2, 3, 4, 5, 10, 15])
+def test_paulirot(n_wires, n_targets, tol):
+    """Test that PauliRot is correctly applied to a state."""
+    pws = dict((k, v) for k, v in enumerate(("X", "Y", "Z")))
+
+    if n_wires < n_targets:
+        pytest.skip("The number of targets cannot exceed the number of wires.")
+    dev = qml.device(device_name, wires=n_wires)
+
+    init_state = np.random.rand(2**n_wires) + 1.0j * np.random.rand(2**n_wires)
+    init_state /= np.linalg.norm(init_state)
+    theta = 0.3
+
+    for _ in range(10):
+        word = "".join(pws[w] for w in np.random.randint(0, 3, n_targets))
+        wires = np.random.permutation(n_wires)[0:n_targets]
+        stateprep = qml.StatePrep(init_state, wires=range(n_wires))
+        op = qml.PauliRot(theta, word, wires=wires)
+
+        tape0 = qml.tape.QuantumScript(
+            [stateprep, op],
+            [qml.state()],
+        )
+
+        tape1 = qml.tape.QuantumScript(
+            [stateprep] + op.decomposition(),
+            [qml.state()],
+        )
+        assert np.allclose(dev.execute(tape1), dev.execute(tape0), tol)
+
+
+@pytest.mark.skipif(
+    device_name != "lightning.qubit",
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize("control_wires", range(4))
