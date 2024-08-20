@@ -171,7 +171,14 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
-
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<ParamT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
     pyclass
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
@@ -179,23 +186,20 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const std::size_t index) {
-                sv.setBasisState(index);
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires) {
+                sv.setBasisState(state, wires);
             },
-            "Create Basis State.")
+            "Set the state vector to a basis state.")
         .def(
             "setStateVector",
-            [](StateVectorT &sv, const std::vector<std::size_t> &indices,
-               const np_arr_c &state) {
+            [](StateVectorT &sv, const np_arr_c &state,
+               const std::vector<std::size_t> &wires) {
                 const auto buffer = state.request();
-                std::vector<ComplexT> state_in;
-                if (buffer.size) {
-                    const auto ptr = static_cast<const ComplexT *>(buffer.ptr);
-                    state_in = std::vector<ComplexT>{ptr, ptr + buffer.size};
-                }
-                sv.setStateVector(indices, state_in);
+                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
+                                  wires);
             },
-            "Set State Vector with values and their corresponding indices")
+            "Set the state vector to the data contained in `state`.")
         .def(
             "getState",
             [](const StateVectorT &sv, np_arr_c &state) {

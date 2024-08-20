@@ -249,7 +249,7 @@ class TestProbs:
         dq = qml.device("default.qubit", wires=n_qubits)
 
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
@@ -349,7 +349,7 @@ class TestExpval:
                     ),
                 ],
                 [0.3, 1.0],
-                0.9319728930156066,
+                0.9319728930156066 if device_name != "lightning.tensor" else 1.0,
             ),
         ],
     )
@@ -368,9 +368,7 @@ class TestExpval:
             qml.RY(-0.2, wires=[1])
             return qml.expval(ham)
 
-        assert np.allclose(
-            circuit(), res, atol=tol, rtol=0 if device_name != "lightning.tensor" else 2e-1
-        )
+        assert np.allclose(circuit(), res, atol=tol, rtol=0)
 
     def test_value(self, dev, tol):
         """Test that the expval interface works"""
@@ -410,10 +408,6 @@ class TestExpval:
         circuit()
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support var()",
-)
 class TestVar:
     """Tests for the var function"""
 
@@ -720,10 +714,6 @@ class TestSample:
         assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.var()",
-)
 class TestWiresInVar:
     """Test different Wires settings in Lightning's var."""
 

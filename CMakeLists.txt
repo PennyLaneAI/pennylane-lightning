@@ -20,16 +20,16 @@ project(pennylane_lightning
 function(set_pennylane_lightning_version VERSION_FILE_PATH)
     file(STRINGS ${VERSION_FILE_PATH} VERSION_FILE_STR)
     foreach (LINE IN LISTS VERSION_FILE_STR)
-    if("${LINE}" MATCHES "__version__.*")
+    if("${LINE}" MATCHES "version.*")
         set(VERSION_LINE_STR "${LINE}")
     endif()
     endforeach()
 
-    string(REGEX REPLACE "__version__ = \"(.*)\"" "\\1" VERSION_STRING ${VERSION_LINE_STR})
+    string(REGEX REPLACE "version = \"(.*)\"" "\\1" VERSION_STRING ${VERSION_LINE_STR})
     set(VERSION_STRING ${VERSION_STRING} PARENT_SCOPE)
 endfunction()
 
-set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/core/_version.py)
+set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pyproject.toml)
 
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
@@ -47,7 +47,7 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 
-option(ENABLE_LAPACK "Enable compilation with scipy/LAPACK" ON)
+option(ENABLE_LAPACK "Enable compilation with scipy/LAPACK" OFF)
 
 # OpenMP
 find_package(OpenMP)
@@ -146,7 +146,7 @@ foreach(BACKEND ${PL_BACKEND})
                                                         "${BACKEND}_measurements"
                                                         )
 endforeach()
-                                                
+
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src;include>")
 
 #####################################################

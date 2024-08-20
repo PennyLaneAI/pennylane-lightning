@@ -15,6 +15,7 @@
 This module contains the LightningQubit class that inherits from the new device interface.
 """
 from dataclasses import replace
+from functools import reduce
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple, Union
@@ -341,7 +342,10 @@ def stopping_condition(op: Operator) -> bool:
     # consistency with `lightning_qubit.toml`
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
-
+    if isinstance(op, qml.PauliRot):
+        word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
+        # decomposes to IsingXX, etc. for n <= 2
+        return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     return op.name in _operations
 
 
@@ -395,6 +399,11 @@ def _supports_adjoint(circuit):
     return True
 
 
+def _adjoint_ops(op: qml.operation.Operator) -> bool:
+    """Specify whether or not an Operator is supported by adjoint differentiation."""
+    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
+
+
 def _add_adjoint_transforms(program: TransformProgram) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
     for adjoint differentiation.
@@ -411,7 +420,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(no_sampling, name=name)
     program.add_transform(
         decompose,
-        stopping_condition=adjoint_ops,
+        stopping_condition=_adjoint_ops,
         stopping_condition_shots=stopping_condition_shots,
         name=name,
         skip_initial_state_prep=False,
@@ -495,7 +504,7 @@ class LightningQubit(Device):
             raise ImportError(
                 "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
         super().__init__(wires=wires, shots=shots)
@@ -589,11 +598,9 @@ class LightningQubit(Device):
         program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
-            mid_circuit_measurements,
-            device=self,
-            mcm_config=exec_config.mcm_config,
-            interface=exec_config.interface,
+            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,

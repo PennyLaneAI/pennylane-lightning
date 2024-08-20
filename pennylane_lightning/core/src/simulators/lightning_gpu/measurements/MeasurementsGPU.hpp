@@ -135,6 +135,8 @@ class Measurements final
             /* const int32_t* */ maskBitString,
             /* const int32_t* */ maskOrdering,
             /* const uint32_t */ maskLen));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
@@ -252,6 +254,8 @@ class Measurements final
             this->_statevector.getCusvHandle(), this->_statevector.getData(),
             data_type, num_qubits, &sampler, num_samples,
             &extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // allocate external workspace if necessary
         if (extraWorkspaceSizeInBytes > 0)
@@ -262,12 +266,16 @@ class Measurements final
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerPreprocess(
             this->_statevector.getCusvHandle(), sampler, extraWorkspace,
             extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // sample bit strings
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
             this->_statevector.getCusvHandle(), sampler, bitStrings.data(),
             bitOrdering.data(), bitStringLen, rand_nums.data(), num_samples,
             CUSTATEVEC_SAMPLER_OUTPUT_ASCENDING_ORDER));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // destroy descriptor and handle
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerDestroy(sampler));
@@ -496,6 +504,9 @@ class Measurements final
             /* const int32_t ** */
             const_cast<const int32_t **>(basisBits_ptr.data()),
             /* const uint32_t */ n_basisBits.data()));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         std::complex<PrecisionT> result{0, 0};
 
@@ -804,6 +815,8 @@ class Measurements final
             /* const uint32_t */ tgtsInt.size(),
             /* custatevecComputeType_t */ compute_type,
             /* std::size_t* */ &extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
@@ -831,6 +844,9 @@ class Measurements final
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* std::size_t */ extraWorkspaceSizeInBytes));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)
