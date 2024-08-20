@@ -679,6 +679,7 @@ class TestControlledOps:
         """Test that multi-controlled gates are correctly applied to a state"""
         threshold = 250
         num_wires = max(operation.num_wires, 1)
+        np.random.seed(0)
 
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -689,7 +690,7 @@ class TestControlledOps:
                 target_wires = all_wires[0:num_wires]
                 control_wires = all_wires[num_wires:]
                 init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-                init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+                init_state /= np.linalg.norm(init_state)
 
                 ops = [
                     qml.StatePrep(init_state, wires=range(n_qubits)),
@@ -760,7 +761,7 @@ class TestControlledOps:
         wires = control_wires + target_wires
         U = qml.matrix(qml.PauliX(target_wires))
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
 
         tape = qml.tape.QuantumScript(
             [
@@ -797,7 +798,7 @@ class TestControlledOps:
                 target_wires = all_wires[0:num_wires]
                 control_wires = all_wires[num_wires:]
                 init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-                init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+                init_state /= np.linalg.norm(init_state)
 
                 tape = qml.tape.QuantumScript(
                     [
