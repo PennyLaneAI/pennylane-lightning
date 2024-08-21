@@ -1,4 +1,4 @@
-git+https://github.com/PennyLaneAI/pennylane.git@ad/facade-wrapper
+git+https://github.com/PennyLaneAI/pennylane.git@master
 build
 ninja
 flaky
