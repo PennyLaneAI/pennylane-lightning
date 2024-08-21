@@ -370,6 +370,10 @@ def _supports_adjoint(circuit):
         return False
     return True
 
+def _adjoint_ops(op: qml.operation.Operator) -> bool:
+    """Specify whether or not an Operator is supported by adjoint differentiation."""
+    return adjoint_ops(op)
+
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
     """Private helper function for ``preprocess`` that adds the transforms specific
@@ -387,7 +391,7 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(no_sampling, name=name)
     program.add_transform(
         decompose,
-        stopping_condition=adjoint_ops,
+        stopping_condition=_adjoint_ops,
         stopping_condition_shots=stopping_condition_shots,
         name=name,
         skip_initial_state_prep=False,

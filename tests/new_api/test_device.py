@@ -47,6 +47,7 @@ if device_name == "lightning.qubit":
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
+        _adjoint_ops,
         _supports_adjoint,
         accepted_observables,
         adjoint_measurements,
