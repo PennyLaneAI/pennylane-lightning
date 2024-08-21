@@ -18,12 +18,17 @@ libs = [
     "libcublas.so",
     "libcublas.so.11",
     "libcublas.so.12",
+    "libcusolver.so.11",
     "libcusparse.so",
     "libcusparse.so.11",
     "libcusparse.so.12",
     "libcustatevec.so",
     "libcustatevec.so.0",
     "libcustatevec.so.1",
+    "libcutensor.so.2",
+    "libcutensornet.so.2",
+    "libgomp.so.1.0.0",
+    "libnvJitLink.so.12",
 ]
 
 print(f"Excluding {libs}")
