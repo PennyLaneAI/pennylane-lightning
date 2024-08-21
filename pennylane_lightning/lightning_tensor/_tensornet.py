@@ -47,24 +47,24 @@ def svd_split(M, bond_dim):
 
 def dense_to_mps(psi, n_wires, bond_dim):
     """Convert a dense state vector to a matrix product state."""
-    Ms = []
+    Ms = [[] for _ in range(n_wires)]
 
     psi = np.reshape(psi, (2, -1))  # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
     U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
 
-    Ms.append(U)
+    Ms[0] = U
     bondL = Vd.shape[0]
     psi = Vd
 
-    for _ in range(n_wires - 2):
+    for i in range(1, n_wires - 1):
         psi = np.reshape(psi, (2 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
         U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
-        Ms.append(U)
+        Ms[i] = U
 
         psi = Vd
         bondL = Vd.shape[0]
 
-    Ms.append(Vd)
+    Ms[n_wires - 1] = Vd
 
     return Ms
 
