@@ -62,7 +62,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
-    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
 
     const std::size_t maxBondDim_;
 
@@ -215,21 +214,18 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     void append_mps_final_state(double cutoff = 0,
                                 std::string cutoff_mode = "abs") {
-        if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
-            MPSFinalized_ = MPSStatus::MPSFinalizedSet;
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
-                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-                /* cutensornetState_t */ BaseType::getQuantumState(),
-                /* cutensornetBoundaryCondition_t */
-                CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-                /* const int64_t *const extentsOut[] */
-                getSitesExtentsPtr().data(),
-                /*strides=*/nullptr));
-        }
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetBoundaryCondition_t */
+            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+            /* const int64_t *const extentsOut[] */
+            getSitesExtentsPtr().data(),
+            /*strides=*/nullptr));
 
         // Optional: SVD
         cutensornetTensorSVDAlgo_t algo =
-            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default
+            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default option
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
@@ -257,6 +253,21 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
             reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
+
+        // TODO: This is a dummy tensor update to allow multiple calls to the
+        // `append_mps_final_state` method as well as appending additional
+        // operations to the graph. This is a temporary solution and this line
+        // can be removed in the future when the `cutensornet` backend allows
+        // multiple calls to the `cutensornetStateFinalizeMPS` method. For more
+        // details, please see the `cutensornet` high-level API workflow logic
+        // [here]
+        // (https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/functions.html#high-level-tensor-network-api).
+        // In order to proceed with the following gate operations or
+        // measurements after calling the `cutensornetStateCompute()` API, we
+        // have to call the `cutensornetStateUpdateTensor()` API, which is
+        // wrapped inside the `dummy_tensor_update()` method.
+        //
+        BaseType::dummy_tensor_update();
     }
 
     /**
@@ -276,7 +287,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
                     "State tensor size exceeds the available GPU memory!");
-        this->get_state_tensor(res);
+        BaseType::get_state_tensor(res);
     }
 
     /**

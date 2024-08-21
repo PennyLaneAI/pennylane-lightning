@@ -25,7 +25,13 @@ from typing import Callable
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMeasurement, VarianceMP
+from pennylane.measurements import (
+    ExpectationMP,
+    MeasurementProcess,
+    ProbabilityMP,
+    StateMeasurement,
+    VarianceMP,
+)
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -74,10 +80,12 @@ class LightningTensorMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         self._tensornet.apply_operations(diagonalizing_gates)
+        self._tensornet.appendMPSFinalState()
         state_array = self._tensornet.state
         wires = Wires(range(self._tensornet.num_wires))
         result = measurementprocess.process_state(state_array, wires)
         self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
+        self._tensornet.appendMPSFinalState()
         return result
 
     # pylint: disable=protected-access
@@ -101,6 +109,27 @@ class LightningTensorMeasurements:
             self._tensornet.device_name, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
+
+    def probs(self, measurementprocess: MeasurementProcess):
+        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Probabilities of the supplied observable or wires
+        """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        if diagonalizing_gates:
+            self._tensornet.apply_operations(diagonalizing_gates)
+            self._tensornet.appendMPSFinalState()
+        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        if diagonalizing_gates:
+            self._tensornet.apply_operations(
+                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            )
+            self._tensornet.appendMPSFinalState()
+        return results
 
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess. Note that the variance is
@@ -145,7 +174,10 @@ class LightningTensorMeasurements:
             if isinstance(measurementprocess, VarianceMP):
                 return self.var
 
-            if measurementprocess.obs is None:
+            if isinstance(measurementprocess, ProbabilityMP):
+                return self.probs
+
+            if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates
 
         raise NotImplementedError("Unsupported measurement type.")
