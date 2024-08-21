@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add the analytic `qml.probs()` measurement support to `lightning.tensor`.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+
 * Add `qml.state()` measurement support to `lightning.tensor`.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
@@ -30,6 +33,9 @@
 
 ### Improvements
 
+* Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+  
 * Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
   [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
 
