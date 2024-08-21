@@ -108,16 +108,16 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
         d_output_tensor.zeroInit();
 
-        DataBuffer<PrecisionT, int> d_output_probs(
-            length, tensor_network_.getDevTag(), true);
-
         tensor_network_.get_state_tensor(d_output_tensor.getData(),
                                          d_output_tensor.getLength(), wires,
                                          numHyperSamples);
 
-        // `7` here means `256` elements to be calculated
+        // `10` here means `1024` elements to be calculated
         // LCOV_EXCL_START
-        if (wires.size() > 7) {
+        if (wires.size() > 10) {
+            DataBuffer<PrecisionT, int> d_output_probs(
+                length, tensor_network_.getDevTag(), true);
+
             getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
                           length, static_cast<int>(thread_per_block),
                           tensor_network_.getDevTag().getStreamID());
@@ -139,6 +139,10 @@ template <class TensorNetT> class MeasurementsTNCuda {
             d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
         } else {
             // LCOV_EXCL_STOP
+            // This branch dispatches the calculation to the CPU for a small
+            // number of wires. The CPU calculation is faster than the GPU
+            // calculation for a small number of wires due to the overhead of
+            // the GPU kernel launch.
             std::vector<ComplexT> h_state_vector(length);
             d_output_tensor.CopyGpuDataToHost(h_state_vector.data(),
                                               h_state_vector.size());
