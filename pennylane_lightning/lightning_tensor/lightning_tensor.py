@@ -29,7 +29,6 @@ from pennylane.devices.preprocess import (
     validate_measurements,
     validate_observables,
 )
-from pennylane.measurements import MidMeasureMP
 from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
@@ -151,7 +150,7 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.tensor``
     with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return stopping_condition(op) or isinstance(op, qml.ops.op_math.Conditional)
 
 
 def simulate(circuit: QuantumScript, tensornet: LightningTensorNet) -> Result:
@@ -381,7 +380,6 @@ class LightningTensor(Device):
 
         This device currently:
 
-        * Does not support finite shots.
         * Does not support derivatives.
         * Does not support vector-Jacobian products.
         """
