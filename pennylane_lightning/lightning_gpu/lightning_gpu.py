@@ -38,7 +38,6 @@ from pennylane_lightning.core._version import __version__
 from pennylane_lightning.core.lightning_base import LightningBase
 
 try:
-
     from pennylane_lightning.lightning_gpu_ops import (
         DevPool,
         MeasurementsC64,
@@ -818,9 +817,9 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
             array[int]: array of samples in binary representation with shape
             ``(dev.shots, dev.num_wires)``
         """
-        return self.measurements.generate_samples(len(self.wires), self.shots).astype(
-            int, copy=False
-        )
+        shots = self.shots if isinstance(self.shots, int) else self.shots.total_shots
+
+        return self.measurements.generate_samples(len(self.wires), shots).astype(int, copy=False)
 
     # pylint: disable=protected-access
     def expval(self, observable, shot_range=None, bin_size=None):
