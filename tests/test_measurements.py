@@ -245,7 +245,7 @@ class TestProbs:
         dq = qml.device("default.qubit", wires=n_qubits)
 
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
@@ -389,7 +389,7 @@ class TestExpval:
             qml.RX(0.52, wires=0)
             return qml.expval(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml._device.DeviceError, match="Observable RX.*not supported"):
+        with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
             circuit()
 
     def test_observable_return_type_is_expectation(self, dev):
@@ -490,7 +490,7 @@ class TestVar:
             qml.RX(0.52, wires=0)
             return qml.var(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml._device.DeviceError, match="Observable RX.*not supported"):
+        with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
             circuit()
 
     def test_observable_return_type_is_variance(self, dev):
@@ -519,7 +519,7 @@ class TestBetaStatisticsError:
             qml.RX(0.52, wires=0)
             return qml.var(qml.RX(0.742, wires=[0]))
 
-        with pytest.raises(qml._device.DeviceError, match="Observable RX.*not supported"):
+        with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
             circuit()
 
 
@@ -643,14 +643,8 @@ class TestSample:
         dev = qubit_device(wires=2, shots=shots)
         ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
         obs = qml.PauliZ(wires=[0])
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s1 = dev.execute(tape)
-        else:
-            dev.apply(ops)
-            dev._wires_measured = wires
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
         assert np.array_equal(s1.shape, (shots,))
 
     def test_sample_values(self, qubit_device, tol):
@@ -661,14 +655,8 @@ class TestSample:
         dev = qubit_device(wires=2, shots=shots)
         ops = [qml.RX(1.5708, wires=[0])]
         obs = qml.PauliZ(0)
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s1 = dev.execute(tape)
-        else:
-            dev.apply(ops)
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(qml.PauliZ(0))
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1

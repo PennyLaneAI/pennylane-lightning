@@ -28,6 +28,7 @@ from pennylane.tape import QuantumScript
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit.lightning_qubit import (
         _add_adjoint_transforms,
+        _adjoint_ops,
         _supports_adjoint,
         accepted_observables,
         adjoint_measurements,
@@ -83,7 +84,7 @@ class TestHelpers:
         is supported by the device."""
         valid_obs = qml.Projector([0], 0)
         invalid_obs = self.DummyOperator(0)
-        result = True
+        result = True if device_name != "lightning.tensor" else False
         assert accepted_observables(valid_obs) is result
         assert accepted_observables(invalid_obs) is False
 
@@ -124,7 +125,7 @@ class TestHelpers:
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(
             decompose,
-            stopping_condition=adjoint_ops,
+            stopping_condition=_adjoint_ops,
             stopping_condition_shots=stopping_condition_shots,
             name=name,
             skip_initial_state_prep=False,
@@ -306,7 +307,7 @@ class TestExecution:
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(
                 decompose,
-                stopping_condition=adjoint_ops,
+                stopping_condition=_adjoint_ops,
                 stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,

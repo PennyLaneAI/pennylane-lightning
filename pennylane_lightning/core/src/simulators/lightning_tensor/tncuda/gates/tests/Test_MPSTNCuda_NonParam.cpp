@@ -74,6 +74,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::Hadamard", "[MPSTNCuda_Nonparam]", float,
             const std::size_t index = GENERATE(0, 1, 2);
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
+            mps_state.append_mps_final_state();
+
             mps_state.applyOperation("Hadamard", {index}, inverse);
 
             mps_state.append_mps_final_state();

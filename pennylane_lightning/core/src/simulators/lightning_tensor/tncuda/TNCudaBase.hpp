@@ -350,11 +350,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::vector<int32_t> projected_modes{};
 
-        for (std::size_t idx = 0; idx < BaseType::getNumQubits(); idx++) {
-            auto it = std::find(stateModes.begin(), stateModes.end(),
-                                static_cast<int32_t>(idx));
+        for (int32_t idx = 0;
+             idx < static_cast<int32_t>(BaseType::getNumQubits()); idx++) {
+            auto it = std::find(stateModes.begin(), stateModes.end(), idx);
             if (it == stateModes.end()) {
-                projected_modes.emplace_back(static_cast<int32_t>(idx));
+                projected_modes.emplace_back(idx);
             }
         }
 
@@ -366,8 +366,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         } else {
             DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
 
-            for (std::size_t idx = 0;
-                 idx < (size_t(1) << projected_modes.size()); idx++) {
+            const std::size_t projected_modes_size = size_t(1)
+                                                     << projected_modes.size();
+            for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
                 for (std::size_t j = 0; j < projected_modes.size(); j++) {
                     projectedModeValues[j] = (idx >> j) & 1;
                 }
@@ -484,14 +485,14 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * cutensornet library not allowing multiple calls of appendMPSFinalize.
      *
      * This function either appends a new `Identity` gate to the graph when the
-     * gate cache is empty or update the exisisting gate operator by itself.
+     * gate cache is empty or update the existing gate operator by itself.
      */
     void dummy_tensor_update() {
-        if (gate_cache_->is_cache_empty()) {
+        if (gate_cache_->is_empty()) {
             applyOperation("Identity", {0}, false);
         }
 
-        std::size_t id = gate_cache_->get_cache_head_idx();
+        const std::size_t id = gate_cache_->get_cache_head_idx();
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),

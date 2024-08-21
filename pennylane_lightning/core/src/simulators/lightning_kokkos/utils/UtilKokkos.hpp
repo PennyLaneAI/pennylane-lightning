@@ -50,6 +50,23 @@ inline auto view2vector(const Kokkos::View<T *> view) -> std::vector<T> {
 }
 
 /**
+ * @brief Copy the content of a pointer to a Kokkos view.
+ *
+ * @tparam T Pointer data type.
+ * @param vec Pointer.
+ * @return Kokkos view pointing to a copy of the pointer.
+ */
+template <typename T>
+inline auto pointer2view(const T *vec, const std::size_t num)
+    -> Kokkos::View<T *> {
+    using UnmanagedView = Kokkos::View<const T *, Kokkos::HostSpace,
+                                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    Kokkos::View<T *> view("vec", num);
+    Kokkos::deep_copy(view, UnmanagedView(vec, num));
+    return view;
+}
+
+/**
  * @brief Copy the content of an `std::vector` to a Kokkos view.
  *
  * @tparam T Vector data type.
@@ -58,11 +75,7 @@ inline auto view2vector(const Kokkos::View<T *> view) -> std::vector<T> {
  */
 template <typename T>
 inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
-    using UnmanagedView = Kokkos::View<const T *, Kokkos::HostSpace,
-                                       Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    Kokkos::View<T *> view("vec", vec.size());
-    Kokkos::deep_copy(view, UnmanagedView(vec.data(), vec.size()));
-    return view;
+    return pointer2view(vec.data(), vec.size());
 }
 
 /**

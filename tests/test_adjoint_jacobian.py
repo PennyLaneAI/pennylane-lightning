@@ -700,13 +700,13 @@ class TestAdjointJacobianQNode:
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_finite_shots_warning(self):
-        """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
+    def test_finite_shots_error(self):
+        """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
 
         dev = qml.device(device_name, wires=1, shots=1)
 
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+        with pytest.raises(
+            qml.QuantumFunctionError, match="does not support adjoint with requested circuit."
         ):
 
             @qml.qnode(dev, diff_method="adjoint")
@@ -714,9 +714,6 @@ class TestAdjointJacobianQNode:
                 qml.RX(x, wires=0)
                 return qml.expval(qml.PauliZ(0))
 
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
-        ):
             qml.grad(circ)(0.1)
 
     def test_qnode(self, mocker, dev):
@@ -741,7 +738,7 @@ class TestAdjointJacobianQNode:
         spy = (
             mocker.spy(dev, "execute_and_compute_derivatives")
             if ld._new_API
-            else mocker.spy(dev, "adjoint_jacobian")
+            else mocker.spy(dev.target_device, "adjoint_jacobian")
         )
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
@@ -790,7 +787,7 @@ class TestAdjointJacobianQNode:
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
 
         num_wires = max(operation.num_wires, 1)
@@ -856,7 +853,7 @@ class TestAdjointJacobianQNode:
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
         num_wires = max(operation.num_wires, 1)
         if num_wires > n_qubits:
@@ -926,7 +923,7 @@ class TestAdjointJacobianQNode:
         if ld._new_API:
             spy = mocker.spy(dev, "execute_and_compute_derivatives")
         else:
-            spy = mocker.spy(dev, "adjoint_jacobian")
+            spy = mocker.spy(dev.target_device, "adjoint_jacobian")
 
         # analytic gradient
         grad_fn = qml.grad(cost)
@@ -968,7 +965,7 @@ class TestAdjointJacobianQNode:
         spy_analytic = (
             mocker.spy(dev, "execute_and_compute_derivatives")
             if ld._new_API
-            else mocker.spy(dev, "adjoint_jacobian")
+            else mocker.spy(dev.target_device, "adjoint_jacobian")
         )
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
@@ -1557,7 +1554,7 @@ def test_qubit_unitary(n_targets):
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
@@ -1599,7 +1596,7 @@ def test_diff_qubit_unitary(n_targets):
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)

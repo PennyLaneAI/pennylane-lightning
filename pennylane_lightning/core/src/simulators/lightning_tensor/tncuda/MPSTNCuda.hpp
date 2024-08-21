@@ -90,7 +90,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
-        setZeroState();
+        reset();
         appendInitialMPSState_();
     }
 
@@ -103,7 +103,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
-        setZeroState();
+        reset();
         appendInitialMPSState_();
     }
 
@@ -169,19 +169,15 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
-     * @brief Set the quantum state to zero state.
-     */
-    void setZeroState() { reset(); }
-
-    /**
-     * @brief Update the ith MPS site.
+     * @brief Update the ith MPS site data.
      *
      * @param site_idx Index of the MPS site.
      * @param host_data Pointer to the data on host.
      * @param host_data_size Length of the data.
      */
-    void updateIthMPSSite(const std::size_t site_idx, const ComplexT *host_data,
-                          std::size_t host_data_size) {
+    void updateIthMPSSiteData(const std::size_t site_idx,
+                              const ComplexT *host_data,
+                              std::size_t host_data_size) {
         PL_ABORT_IF_NOT(
             site_idx < BaseType::getNumQubits(),
             "The site index should be less than the number of qubits.");
@@ -288,7 +284,15 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         // `append_mps_final_state` method as well as appending additional
         // operations to the graph. This is a temporary solution and this line
         // can be removed in the future when the `cutensornet` backend allows
-        // multiple calls to the `cutensornetStateFinalizeMPS` method.
+        // multiple calls to the `cutensornetStateFinalizeMPS` method. For more
+        // details, please see the `cutensornet` high-level API workflow logic
+        // [here]
+        // (https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/functions.html#high-level-tensor-network-api).
+        // In order to proceed with the following gate operations or
+        // measurements after calling the `cutensornetStateCompute()` API, we
+        // have to call the `cutensornetStateUpdateTensor()` API, which is
+        // wrapped inside the `dummy_tensor_update()` method.
+        //
         BaseType::dummy_tensor_update();
     }
 
@@ -338,12 +342,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1,
                                                maxBondDim_);
 
+        const std::size_t ubDim = log2(maxBondDim_);
         for (std::size_t i = 0; i < localBondDims.size(); i++) {
-            std::size_t bondDim =
+            const std::size_t bondDim =
                 std::min(i + 1, BaseType::getNumQubits() - i - 1);
-            if (bondDim > log2(maxBondDim_)) {
-                localBondDims[i] = maxBondDim_;
-            } else {
+
+            if (bondDim <= ubDim) {
                 localBondDims[i] = std::size_t{1} << bondDim;
             }
         }
