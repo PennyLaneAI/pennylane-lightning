@@ -370,6 +370,7 @@ def _supports_adjoint(circuit):
         return False
     return True
 
+
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
     return adjoint_ops(op)
