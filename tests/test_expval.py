@@ -96,6 +96,10 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support qml.Projector()",
+    )
     def test_projector_expectation(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
@@ -106,12 +110,8 @@ class TestExpval:
             pytest.skip("Device does not support the Projector observable.")
 
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
-        obs = (
-            qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
-            if device_name != "lightning.tensor"
-            else qml.Projector(np.array([0, 1]) / np.sqrt(2), wires=[0])
-        )
+        init_state /= np.linalg.norm(init_state)
+        obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
