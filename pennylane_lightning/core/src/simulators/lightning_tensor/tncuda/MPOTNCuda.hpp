@@ -180,45 +180,30 @@ template <class PrecisionT> class MPOTNCuda {
                     std::vector<std::size_t> identitySites(
                         numIdentitySites, targetSitesBondDims[i]);
                     bondDims_orderC.insert(bondDims_orderC.begin() + i + 1,
-                                     identitySites.begin(),
-                                     identitySites.end());
+                                           identitySites.begin(),
+                                           identitySites.end());
                 }
             }
         }
 
         bondDims_ = std::vector<std::size_t>(bondDims_orderC.rbegin(),
                                              bondDims_orderC.rend());
-        
+
         // set up MPO tensor mode extents and initialize MPO tensors
         for (std::size_t i = 0; i < numSites_; i++) {
-            std::vector<std::size_t> siteModes;
             if (i == 0) {
                 modesExtents_.push_back({2, bondDims_[i], 2});
-                modesExtents_int64_.push_back(
-                    {2, static_cast<int64_t>(bondDims_[i]), 2});
-                siteModes = std::vector<std::size_t>{
-                    wires_[0] + i, wires_[0] + numSites_ + i,
-                    wires_[0] + 2 * numSites_ + i};
             } else if (i == numSites_ - 1) {
                 modesExtents_.push_back({bondDims_[i - 1], 2, 2});
-                modesExtents_int64_.push_back(
-                    {static_cast<int64_t>(bondDims_[i - 1]), 2, 2});
-                siteModes = std::vector<std::size_t>{
-                    wires_[0] + numSites_ + i, wires_[0] + i,
-                    wires_[0] + 2 * numSites_ + i};
-
             } else {
                 modesExtents_.push_back({bondDims_[i - 1], 2, bondDims_[i], 2});
-                modesExtents_int64_.push_back(
-                    {static_cast<int64_t>(bondDims_[i - 1]), 2,
-                     static_cast<int64_t>(bondDims_[i]), 2});
-
-                siteModes = std::vector<std::size_t>{
-                    wires_[0] + numSites_ + i, wires_[0] + i,
-                    wires_[0] + numSites_ + i + 1,
-                    wires_[0] + 2 * numSites_ + i};
             }
-            tensors_.emplace_back(siteModes.size(), siteModes,
+
+            modesExtents_int64_.push_back(
+                std::move(Pennylane::Util::cast_vector<std::size_t, int64_t>(
+                    modesExtents_.back())));
+
+            tensors_.emplace_back(modesExtents_.back().size(), modesExtents_.back(),
                                   modesExtents_.back(), dev_tag);
             tensors_.back().getDataBuffer().zeroInit();
         }
@@ -232,7 +217,7 @@ template <class PrecisionT> class MPOTNCuda {
         for (std::size_t i = 0; i < tensors_.size(); i++) {
             if (wires_queue.front() == (wires_[0] + i)) {
                 auto tensor_cu = cuUtil::complexToCu<ComplexT>(
-                    tensors[wires_queue.size() - 1]);
+                    tensors[wires.size() - 1 - i]);
                 tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                               tensor_cu.size());
                 wires_queue.pop();

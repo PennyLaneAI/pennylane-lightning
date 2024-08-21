@@ -317,7 +317,20 @@ class LightningTensorNet:
                     gate_data = np.transpose(gate_data, axes=ranks).flatten()
 
                     MPOs = dense_to_mpo(gate_data, len(wires))
+                    for i in range(len(MPOs)):
+                        if i == 0:
+                            MPOs[i] = MPOs[i].reshape(2, 2, -1)
+                        elif i == len(MPOs) - 1:
+                            MPOs[i] = MPOs[i].reshape(-1, 2, 2)
 
+                        if i == 0:
+                            MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
+                        elif i == len(MPOs) - 1:
+                            MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2)).flatten()
+                        else:
+                            MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
+
+                    """
                     for i in range(len(MPOs)):
                         if i == 0:
                             MPOs[i] = np.transpose(MPOs[i], axes=(2, 1, 3, 0)).flatten()
@@ -325,7 +338,7 @@ class LightningTensorNet:
                             MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
                         else:
                             MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-
+                    """
                     # Append the MPOs to the tensor network
                     method(MPOs, sorted_wires)
             else:

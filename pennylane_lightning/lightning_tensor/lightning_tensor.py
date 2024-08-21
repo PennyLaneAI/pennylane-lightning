@@ -113,6 +113,8 @@ _operations = frozenset(
         "SingleExcitationPlus",
         "SingleExcitationMinus",
         "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
@@ -146,7 +148,7 @@ def stopping_condition(op: Operator) -> bool:
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
-    return op.has_matrix and len(op.wires) <= 2 and op.name in _operations
+    return op.has_matrix and op.name in _operations
 
 
 def stopping_condition_shots(op: Operator) -> bool:
