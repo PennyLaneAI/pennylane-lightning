@@ -30,11 +30,9 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support multi-controlled gates and probs()",
+    @pytest.mark.parametrize(
+        "n_qubits", range(4, 8) if device_name != "lightning.tensor" else range(4, 6)
     )
-    @pytest.mark.parametrize("n_qubits", range(4, 8))
     def test_grover(self, n_qubits):
         np.random.seed(42)
         omega = np.random.rand(n_qubits) > 0.5
@@ -176,7 +174,7 @@ class TestDisplacementSqueezingEmbedding:
 
         X = np.arange(1, n_qubits + 1)
 
-        with pytest.raises(qml._device.DeviceError, match="not supported"):
+        with pytest.raises(qml.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(X)
 
 
@@ -242,7 +240,7 @@ class TestCVNeuralNetLayers:
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
 
-        with pytest.raises(qml._device.DeviceError, match="not supported"):
+        with pytest.raises(qml.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(weights)
 
 
@@ -728,11 +726,7 @@ class TestQuantumPhaseEstimation:
                 estimation_wires=estimation_wires,
             )
 
-            return (
-                qml.probs(estimation_wires)
-                if device_name != "lightning.tensor"
-                else qml.expval(qml.PauliZ(0))
-            )  # lightning.tensor does not support qml.probs()
+            return qml.probs(estimation_wires)
 
         res = qml.QNode(circuit, dev, diff_method=None)()
         ref = qml.QNode(circuit, dq, diff_method=None)()

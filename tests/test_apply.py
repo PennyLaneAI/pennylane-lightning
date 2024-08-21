@@ -566,13 +566,8 @@ class TestExpval:
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
         ops = [stateprep(np.array(input), wires=[0])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops, obs.diagonalizing_gates())
-            res = dev.expval(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+        res = dev.execute(tape)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
@@ -630,13 +625,8 @@ class TestVar:
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
         ops = [stateprep(np.array(input), wires=[0])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops, obs.diagonalizing_gates())
-            res = dev.var(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        res = dev.execute(tape)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
@@ -680,42 +670,22 @@ class TestSample:
 
         shots = 10
         obs = qml.PauliZ(wires=[0])
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s1 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops)
-            dev.shots = shots
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
+
         assert np.array_equal(s1.shape, (shots,))
 
         shots = 12
         obs = qml.PauliZ(wires=[1])
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s2 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.shots = shots
-            dev._wires_measured = {1}
-            dev._samples = dev.generate_samples()
-            s2 = dev.sample(qml.PauliZ(wires=[1]))
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s2 = dev.execute(tape)
         assert np.array_equal(s2.shape, (shots,))
 
         shots = 17
         obs = qml.PauliX(0) @ qml.PauliZ(1)
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s3 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.shots = shots
-            dev._wires_measured = {0, 1}
-            dev._samples = dev.generate_samples()
-            s3 = dev.sample(qml.PauliZ(wires=[1]))
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s3 = dev.execute(tape)
+
         assert np.array_equal(s3.shape, (shots,))
 
     def test_sample_values(self, qubit_device, tol):
@@ -730,18 +700,10 @@ class TestSample:
 
         ops = [qml.RX(1.5708, wires=[0])]
 
-        shots = 1000
+        shots = qml.measurements.Shots(1000)
         obs = qml.PauliZ(0)
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s1 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops)
-            dev.shots = shots
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
@@ -756,13 +718,8 @@ class TestLightningDeviceIntegration:
         """Test that the default plugin loads correctly"""
 
         dev = qml.device(device_name, wires=2)
-        if dev._new_API:
-            assert not dev.shots
-            assert len(dev.wires) == 2
-        else:
-            assert dev.shots is None
-            assert dev.num_wires == 2
-            assert dev.short_name == device_name
+        assert not dev.shots
+        assert len(dev.wires) == 2
 
     @pytest.mark.xfail(ld._new_API, reason="Old device API required.")
     def test_no_backprop(self):
@@ -1276,14 +1233,10 @@ class TestLightningDeviceIntegration:
         def circuit():
             qml.Hadamard(0)
             qml.CNOT(wires=[0, 1])
-            if ld._new_API:
-                return qml.sample(wires=[0, 1])
-            else:
-                return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
+            return qml.sample(wires=[0, 1])
 
         outcomes = circuit()
-        if ld._new_API:
-            outcomes = outcomes.T
+        outcomes = outcomes.T
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
@@ -1305,14 +1258,10 @@ class TestLightningDeviceIntegration:
         def circuit():
             qml.Hadamard(0)
             qml.CNOT(wires=[0, 1])
-            if ld._new_API:
-                return qml.sample(wires=[0, 1])
-            else:
-                return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
+            return qml.sample(wires=[0, 1])
 
         outcomes = circuit()
-        if ld._new_API:
-            outcomes = outcomes.T
+        outcomes = outcomes.T
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
@@ -1350,20 +1299,16 @@ class TestLightningDeviceIntegration:
             qml.Snapshot()
             qml.adjoint(qml.Snapshot())
             qml.CNOT(wires=[0, 1])
-            if ld._new_API:
-                return qml.sample(wires=[0, 1])
-            else:
-                return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
+            return qml.sample(wires=[0, 1])
 
         outcomes = circuit()
-        if ld._new_API:
-            outcomes = outcomes.T
+        outcomes = outcomes.T
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.prob()",
+        reason="lightning.tensor does not support _tensornet.state access",
     )
     def test_apply_qpe(self, qubit_device, tol):
         """Test the application of qml.QuantumPhaseEstimation"""
@@ -1402,7 +1347,7 @@ class TestLightningDeviceIntegration:
     # https://docs.pennylane.ai/en/stable/code/api/pennylane.BlockEncode.html
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.state()",
+        reason="lightning.tensor does not support qml.BlockEncode",
     )
     @pytest.mark.parametrize(
         "op, op_wires",
