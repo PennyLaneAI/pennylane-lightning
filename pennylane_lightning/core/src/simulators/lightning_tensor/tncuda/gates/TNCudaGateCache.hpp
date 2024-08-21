@@ -165,15 +165,13 @@ template <class PrecisionT> class TNCudaGateCache {
      */
     auto get_cache_head_idx() const -> std::size_t {
         auto it = device_gates_.begin();
-        std::size_t idx;
-        idx = it->first;
-        return idx;
+        return it->first;
     }
 
     /**
      * @brief Returns if the `device_gates_` is empty.
      */
-    auto is_cache_empty() const -> bool { return device_gates_.empty(); }
+    auto is_empty() const -> bool { return device_gates_.empty(); }
 
   private:
     const DevTag<int> device_tag_;

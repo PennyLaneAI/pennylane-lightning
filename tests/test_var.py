@@ -42,15 +42,10 @@ class TestVar:
             qml.RX(phi, wires=[0]),
             qml.RY(theta, wires=[0]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            var = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=[*obs.diagonalizing_gates()],
-            )
-            var = dev.var(obs)
+
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        var = dev.execute(tape)
+
         expected = 0.25 * (3 - np.cos(2 * theta) - 2 * np.cos(theta) ** 2 * np.cos(2 * phi))
 
         assert np.allclose(var, expected, tol)
@@ -99,15 +94,8 @@ class TestTensorVar:
             qml.CNOT(wires=[0, 1]),
             qml.CNOT(wires=[1, 2]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=obs.diagonalizing_gates(),
-            )
-            res = dev.var(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        res = dev.execute(tape)
 
         expected = (
             8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
@@ -131,15 +119,8 @@ class TestTensorVar:
             qml.CNOT(wires=[0, 1]),
             qml.CNOT(wires=[1, 2]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=obs.diagonalizing_gates(),
-            )
-            res = dev.var(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        res = dev.execute(tape)
 
         expected = (
             3
