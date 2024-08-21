@@ -27,6 +27,9 @@
 
 ### Improvements
 
+* Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
+  [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
+
 * LightningQubit gains native support for the `PauliRot` gate.
   [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
   
@@ -136,7 +139,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
+Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
 
 ---
 

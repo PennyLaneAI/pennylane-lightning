@@ -21,7 +21,6 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device
-from pennylane import DeviceError
 from pennylane.wires import Wires
 
 if device_name != "lightning.tensor":
@@ -88,6 +87,7 @@ def test_errors_apply_operation_state_preparation(operation, par):
     tensornet = LightningTensorNet(wires, bondDims)
 
     with pytest.raises(
-        DeviceError, match="lightning.tensor does not support initialization with a state vector."
+        qml.DeviceError,
+        match="lightning.tensor does not support initialization with a state vector.",
     ):
         tensornet.apply_operations([operation(np.array(par), Wires(range(wires)))])
