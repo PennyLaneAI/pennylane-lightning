@@ -84,7 +84,7 @@ class TestHelpers:
         is supported by the device."""
         valid_obs = qml.Projector([0], 0)
         invalid_obs = self.DummyOperator(0)
-        result = True
+        result = True if device_name != "lightning.tensor" else False
         assert accepted_observables(valid_obs) is result
         assert accepted_observables(invalid_obs) is False
 

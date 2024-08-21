@@ -94,7 +94,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
-        setZeroState();
+        reset();
         appendInitialMPSState_();
     }
 
@@ -107,7 +107,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
-        setZeroState();
+        reset();
         appendInitialMPSState_();
     }
 
@@ -173,19 +173,15 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
-     * @brief Set the quantum state to zero state.
-     */
-    void setZeroState() { reset(); }
-
-    /**
-     * @brief Update the ith MPS site.
+     * @brief Update the ith MPS site data.
      *
      * @param site_idx Index of the MPS site.
      * @param host_data Pointer to the data on host.
      * @param host_data_size Length of the data.
      */
-    void updateIthMPSSite(const std::size_t site_idx, const ComplexT *host_data,
-                          std::size_t host_data_size) {
+    void updateIthMPSSiteData(const std::size_t site_idx,
+                              const ComplexT *host_data,
+                              std::size_t host_data_size) {
         PL_ABORT_IF_NOT(
             site_idx < BaseType::getNumQubits(),
             "The site index should be less than the number of qubits.");
@@ -389,12 +385,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1,
                                                maxBondDim_);
 
+        const std::size_t ubDim = log2(maxBondDim_);
         for (std::size_t i = 0; i < localBondDims.size(); i++) {
-            std::size_t bondDim =
+            const std::size_t bondDim =
                 std::min(i + 1, BaseType::getNumQubits() - i - 1);
-            if (bondDim > log2(maxBondDim_)) {
-                localBondDims[i] = maxBondDim_;
-            } else {
+
+            if (bondDim <= ubDim) {
                 localBondDims[i] = std::size_t{1} << bondDim;
             }
         }

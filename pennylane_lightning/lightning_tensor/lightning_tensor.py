@@ -128,7 +128,6 @@ _observables = frozenset(
         "PauliX",
         "PauliY",
         "PauliZ",
-        "Projector",
         "Hadamard",
         "Hermitian",
         "Identity",

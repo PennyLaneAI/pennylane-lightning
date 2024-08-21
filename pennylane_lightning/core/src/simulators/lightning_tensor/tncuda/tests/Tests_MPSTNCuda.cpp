@@ -60,40 +60,40 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
 
 TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     SECTION("Set MPS site with wrong site index") {
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = 3;
-        std::size_t siteIdx = 3;
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 3;
+        const std::size_t siteIdx = 3;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
         std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
 
         REQUIRE_THROWS_WITH(
-            mps_state.updateIthMPSSite(siteIdx, site_data.data(),
-                                       site_data.size()),
+            mps_state.updateIthMPSSiteData(siteIdx, site_data.data(),
+                                           site_data.size()),
             Catch::Matchers::Contains(
                 "The site index should be less than the number of qubits."));
     }
 
     SECTION("Set MPS site with wrong site data size") {
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = 3;
-        std::size_t siteIdx = 0;
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 3;
+        const std::size_t siteIdx = 0;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
         std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
 
         REQUIRE_THROWS_WITH(
-            mps_state.updateIthMPSSite(siteIdx, site_data.data(),
-                                       site_data.size()),
+            mps_state.updateIthMPSSiteData(siteIdx, site_data.data(),
+                                           site_data.size()),
             Catch::Matchers::Contains("The length of the host data should "
                                       "match its copy on the device."));
     }
 
     SECTION("Set MPS sites") {
-        std::size_t num_qubits = 2;
-        std::size_t maxBondDim = 3;
+        const std::size_t num_qubits = 2;
+        const std::size_t maxBondDim = 3;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -105,8 +105,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
         site0_data[2] = {1.0, 0.0};
         site1_data[1] = {1.0, 0.0};
 
-        mps_state.updateIthMPSSite(0, site0_data.data(), site0_data.size());
-        mps_state.updateIthMPSSite(1, site1_data.data(), site1_data.size());
+        mps_state.updateIthMPSSiteData(0, site0_data.data(), site0_data.size());
+        mps_state.updateIthMPSSiteData(1, site1_data.data(), site1_data.size());
 
         auto results = mps_state.getDataVector();
 

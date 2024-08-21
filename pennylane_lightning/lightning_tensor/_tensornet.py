@@ -43,7 +43,7 @@ def get_ranks(lst):
 
 
 def svd_split(M, bond_dim):
-    """SVD split a matrix into a matrix product state via numpy linalg."""
+    """SVD split a matrix into a matrix product state via numpy linalg. Note that this function is to be moved to the C++ layer."""
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     U = U @ np.diag(S)  # Append singular values to U
     bonds = len(S)
@@ -53,7 +53,7 @@ def svd_split(M, bond_dim):
     # keep only chi bonds
     chi = np.min([bonds, bond_dim])
     U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
-    return U, S, Vd
+    return U, Vd
 
 
 def split(M):
@@ -94,7 +94,7 @@ def dense_to_mps(psi, n_wires, bond_dim):
     Ms = []
 
     psi = np.reshape(psi, (2, -1))  # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
-    U, S, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+    U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
 
     Ms.append(U)
     bondL = Vd.shape[0]
@@ -102,7 +102,7 @@ def dense_to_mps(psi, n_wires, bond_dim):
 
     for _ in range(n_wires - 2):
         psi = np.reshape(psi, (2 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
-        U, S, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+        U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
         Ms.append(U)
 
         psi = Vd
@@ -226,8 +226,8 @@ class LightningTensorNet:
 
         # get full state vector to be factorized into MPS
         full_state = np.zeros(2**self._num_wires, dtype=self.dtype)
-        for i in range(len(state)):
-            full_state[ravelled_indices[i]] = state[i]
+        for i, value in enumerate(state):
+            full_state[ravelled_indices[i]] = value
         return np.reshape(full_state, output_shape).ravel(order="C")
 
     def _apply_state_vector(self, state, device_wires: Wires):
@@ -242,8 +242,7 @@ class LightningTensorNet:
 
         M = dense_to_mps(state, self._num_wires, self._max_bond_dim)
 
-        for i in range(len(M)):
-            self._tensornet.updateIthSite(i, M[i])
+        self._tensornet.updateMPSSitesData(M)
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
