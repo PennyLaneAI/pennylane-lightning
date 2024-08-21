@@ -156,11 +156,11 @@ class LightningTensorNet:
         """Convert a specified state to a full internal state vector.
 
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
+            state (array[complex]): normalized input state of length ``2**len(device_wires)``
             device_wires (Wires): wires that get initialized in the state
 
         Returns:
-            array[complex]: normalized input state of length ``2**len(wires)``
+            array[complex]: normalized input state of length ``2**len(device_wires)``
         """
         output_shape = [2] * self._num_wires
         # special case for integral types
@@ -189,8 +189,8 @@ class LightningTensorNet:
     def _apply_state_vector(self, state, device_wires: Wires):
         """Convert a specified state to MPS sites.
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            state (array[complex]): normalized input state of length ``2**len(device_wires)``
+                or broadcasted state of shape ``(batch_size, 2**len(device_wires))``
             device_wires (Wires): wires that get initialized in the state
         """
 
