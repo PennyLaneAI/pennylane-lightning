@@ -335,9 +335,6 @@ class LightningTensorMeasurements:
         # apply diagonalizing gates
         self._apply_diagonalizing_gates(mps)
 
-        # if self._mcmc:
-        #    raise NotImplementedError("MCMC sampling is not supported.")
-        # else:
         wires = reduce(sum, (mp.wires for mp in mps))
 
         def _process_single_shot(samples):

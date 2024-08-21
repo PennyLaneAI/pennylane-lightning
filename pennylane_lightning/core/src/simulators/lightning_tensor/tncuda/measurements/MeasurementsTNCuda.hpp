@@ -168,8 +168,10 @@ template <class TensorNetT> class MeasurementsTNCuda {
     /**
      * @brief Utility method for samples.
      *
-     * @param wires Wires will restrict probabilities to a subset
-     * @param num_samples Number of Samples
+     * @param wires Wires can be a subset or the full system.
+     * @param num_samples Number of samples
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
      *
      * @return std::vector<std::size_t> A 1-d array storing the samples.
      * Each sample has a length equal to the number of qubits. Each sample can
@@ -177,7 +179,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
      * number between 0 and num_samples-1.
      */
     auto generate_samples(const std::vector<std::size_t> &wires,
-                          const size_t num_samples)
+                          const size_t num_samples,
+                          const int32_t numHyperSamples = 1)
         -> std::vector<std::size_t> {
         std::vector<int64_t> samples(num_samples * wires.size());
 
@@ -197,9 +200,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         // Configure the quantum circuit sampler
         const cutensornetSamplerAttributes_t samplerAttributes =
             CUTENSORNET_SAMPLER_CONFIG_NUM_HYPER_SAMPLES;
-        const int32_t numHyperSamples =
-            1; // desired number of hyper samples used in the tensor network
-               // contraction path finder
+
         PL_CUTENSORNET_IS_SUCCESS(cutensornetSamplerConfigure(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetStateSampler_t */ sampler,
@@ -220,7 +221,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
             /* cutensornetStateSampler_t */ sampler,
             /* size_t maxWorkspaceSizeDevice */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cudaStream_t */ 0x0));
+            /* cudaStream_t unused as of v24.08 */ 0x0));
 
         std::size_t worksize =
             getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
@@ -242,7 +243,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
             /* int64_t numShots */ num_samples,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* int64_t * */ samples.data(),
-            /* cudaStream_t */ 0));
+            /* cudaStream_t unused as of v24.08  */ 0x0));
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
