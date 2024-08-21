@@ -219,7 +219,6 @@ class LightningTensorMeasurements:
             results = self.measure_with_samples(
                 circuit.measurements,
                 shots=circuit.shots,
-                mid_measurements=None,
             )
 
             if len(circuit.measurements) == 1:
@@ -240,7 +239,6 @@ class LightningTensorMeasurements:
         self,
         measurements: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],
         shots: Shots,
-        mid_measurements=None,
     ) -> List[TensorLike]:
         """
         Returns the samples of the measurement process performed on the given state.
@@ -251,13 +249,11 @@ class LightningTensorMeasurements:
             measurements (List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]]):
                 The sample measurements to perform
             shots (Shots): The number of samples to take
-            mid_measurements (None, dict): Dictionary of mid-circuit measurements
 
         Returns:
             List[TensorLike[Any]]: Sample measurement results
         """
-        # last N measurements are sampling MCMs in ``dynamic_one_shot`` execution mode
-        mps = measurements[0 : -len(mid_measurements)] if mid_measurements else measurements
+        mps = measurements
         groups, indices = _group_measurements(mps)
 
         all_res = []
@@ -288,10 +284,6 @@ class LightningTensorMeasurements:
         sorted_res = tuple(
             res for _, res in sorted(list(enumerate(all_res)), key=lambda r: flat_indices[r[0]])
         )
-
-        # append MCM samples
-        if mid_measurements:
-            raise NotImplementedError("Mid-circuit measurements are not supported.")
 
         # put the shot vector axis before the measurement axis
         if shots.has_partitioned_shots:

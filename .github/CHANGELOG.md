@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add shot measurement support to `lightning.tensor`.
+  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
+
 * Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
   [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
 
