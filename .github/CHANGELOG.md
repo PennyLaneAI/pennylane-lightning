@@ -30,6 +30,9 @@
 * Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
   [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
 
+* LightningQubit gains native support for the `PauliRot` gate.
+  [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+  
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
   [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
 
