@@ -33,6 +33,9 @@
 
 ### Improvements
 
+* Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
+
 * Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
   
