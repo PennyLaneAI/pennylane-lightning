@@ -27,7 +27,6 @@ libs = [
     "libcustatevec.so.1",
     "libcutensor.so.2",
     "libcutensornet.so.2",
-    "libgomp.so.1.0.0",
     "libnvJitLink.so.12",
 ]
 
