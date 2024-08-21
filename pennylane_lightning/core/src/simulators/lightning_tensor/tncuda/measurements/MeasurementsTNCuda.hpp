@@ -109,16 +109,16 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
         d_output_tensor.zeroInit();
 
-        DataBuffer<PrecisionT, int> d_output_probs(
-            length, tensor_network_.getDevTag(), true);
-
         tensor_network_.get_state_tensor(d_output_tensor.getData(),
                                          d_output_tensor.getLength(), wires,
                                          numHyperSamples);
 
-        // `7` here means `256` elements to be calculated
+        // `10` here means `1024` elements to be calculated
         // LCOV_EXCL_START
-        if (wires.size() > 7) {
+        if (wires.size() > 10) {
+            DataBuffer<PrecisionT, int> d_output_probs(
+                length, tensor_network_.getDevTag(), true);
+
             getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
                           length, static_cast<int>(thread_per_block),
                           tensor_network_.getDevTag().getStreamID());
@@ -140,6 +140,10 @@ template <class TensorNetT> class MeasurementsTNCuda {
             d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
         } else {
             // LCOV_EXCL_STOP
+            // This branch dispatches the calculation to the CPU for a small
+            // number of wires. The CPU calculation is faster than the GPU
+            // calculation for a small number of wires due to the overhead of
+            // the GPU kernel launch.
             std::vector<ComplexT> h_state_vector(length);
             d_output_tensor.CopyGpuDataToHost(h_state_vector.data(),
                                               h_state_vector.size());
@@ -159,97 +163,6 @@ template <class TensorNetT> class MeasurementsTNCuda {
         }
 
         return h_res;
-    }
-
-    /**
-     * @brief Utility method for samples.
-     *
-     * @param wires Wires will restrict probabilities to a subset
-     * @param num_samples Number of Samples
-     *
-     * @return std::vector<std::size_t> A 1-d array storing the samples.
-     * Each sample has a length equal to the number of qubits. Each sample can
-     * be accessed using the stride sample_id*num_qubits, where sample_id is a
-     * number between 0 and num_samples-1.
-     */
-    auto generate_samples(const std::vector<std::size_t> &wires,
-                          const size_t num_samples)
-        -> std::vector<std::size_t> {
-        std::vector<int64_t> samples(num_samples * wires.size());
-
-        std::vector<int32_t> modesToSample =
-            cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
-                wires, tensor_network_.getNumQubits());
-
-        cutensornetStateSampler_t sampler;
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateSampler(
-            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
-            /* cutensornetState_t */ tensor_network_.getQuantumState(),
-            /* int32_t numModesToSample */ modesToSample.size(),
-            /* const int32_t *modesToSample */ modesToSample.data(),
-            /* cutensornetStateSampler_t * */ &sampler));
-
-        // Configure the quantum circuit sampler
-        const cutensornetSamplerAttributes_t samplerAttributes =
-            CUTENSORNET_SAMPLER_CONFIG_NUM_HYPER_SAMPLES;
-        const int32_t numHyperSamples =
-            1; // desired number of hyper samples used in the tensor network
-               // contraction path finder
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetSamplerConfigure(
-            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
-            /* cutensornetStateSampler_t */ sampler,
-            /* cutensornetSamplerAttributes_t */ samplerAttributes,
-            /* const void *attributeValue */ &numHyperSamples,
-            /* size_t attributeSize */ sizeof(numHyperSamples)));
-
-        cutensornetWorkspaceDescriptor_t workDesc;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
-            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
-            /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
-
-        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
-
-        // Prepare the quantum circuit sampler for sampling
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetSamplerPrepare(
-            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
-            /* cutensornetStateSampler_t */ sampler,
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* cudaStream_t */ 0x0));
-
-        std::size_t worksize =
-            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
-
-        PL_ABORT_IF(worksize > scratchSize,
-                    "Insufficient workspace size on Device.\n");
-
-        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
-        DataBuffer<size_t, int> d_scratch(d_scratch_length,
-                                          tensor_network_.getDevTag(), true);
-
-        setWorkSpaceMemory(tensor_network_.getTNCudaHandle(), workDesc,
-                           reinterpret_cast<void *>(d_scratch.getData()),
-                           worksize);
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetSamplerSample(
-            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
-            /* cutensornetStateSampler_t */ sampler,
-            /* int64_t numShots */ num_samples,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ samples.data(),
-            /* cudaStream_t */ 0));
-
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyWorkspaceDescriptor(workDesc));
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroySampler(sampler));
-
-        std::vector<std::size_t> samples_size_t(num_samples *
-                                                tensor_network_.getNumQubits());
-
-        std::transform(samples.begin(), samples.end(), samples_size_t.begin(),
-                       [&](int64_t x) { return static_cast<std::size_t>(x); });
-        return samples_size_t;
     }
 
     /**

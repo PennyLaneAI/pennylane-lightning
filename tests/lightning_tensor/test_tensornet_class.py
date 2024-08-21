@@ -21,7 +21,6 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device
-from pennylane import DeviceError
 from pennylane.wires import Wires
 
 if device_name != "lightning.tensor":
