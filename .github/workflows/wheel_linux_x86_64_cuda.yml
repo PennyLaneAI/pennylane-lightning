@@ -19,14 +19,18 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    # if: |
-    #   github.event_name != 'pull_request' ||
-    #   contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-    #   github.event_name == 'workflow_dispatch'
-    name: "Set wheel build matrix"
-    uses: ./.github/workflows/set_wheel_build_matrix.yml
-    with:
-      event_name: ${{ github.event_name }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+      - name: Python version
+        id: pyver
+        run: |
+          echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
+            --min-version=3.9 \
+            --max-version=3.12 --range)" >> $GITHUB_OUTPUT
+    outputs:
+      python_version: ${{ steps.pyver.outputs.python_version }}
 
   determine_runner:
     name: Determine runner type to use
@@ -41,7 +45,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_gpu", "lightning_tensor"]
+        pl_backend: ["lightning_tensor"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
