@@ -58,6 +58,67 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
     }
 }
 
+TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
+    SECTION("Set MPS site with wrong site index") {
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 3;
+        const std::size_t siteIdx = 3;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
+
+        REQUIRE_THROWS_WITH(
+            mps_state.updateMPSSiteData(siteIdx, site_data.data(),
+                                        site_data.size()),
+            Catch::Matchers::Contains(
+                "The site index should be less than the number of qubits."));
+    }
+
+    SECTION("Set MPS site with wrong site data size") {
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 3;
+        const std::size_t siteIdx = 0;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
+
+        REQUIRE_THROWS_WITH(
+            mps_state.updateMPSSiteData(siteIdx, site_data.data(),
+                                        site_data.size()),
+            Catch::Matchers::Contains("The length of the host data should "
+                                      "match its copy on the device."));
+    }
+
+    SECTION("Set MPS sites") {
+        const std::size_t num_qubits = 2;
+        const std::size_t maxBondDim = 3;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        mps_state.reset(); // Reset the state to zero state
+
+        std::vector<std::complex<TestType>> site0_data(4, {0.0, 0.0}); // MSB
+        std::vector<std::complex<TestType>> site1_data(4, {0.0, 0.0}); // LSB
+
+        site0_data[2] = {1.0, 0.0};
+        site1_data[1] = {1.0, 0.0};
+
+        mps_state.updateMPSSiteData(0, site0_data.data(), site0_data.size());
+        mps_state.updateMPSSiteData(1, site1_data.data(), site1_data.size());
+
+        auto results = mps_state.getDataVector();
+
+        std::vector<std::complex<TestType>> expected_state(
+            std::size_t{1} << num_qubits, std::complex<TestType>({0.0, 0.0}));
+
+        expected_state[3] = {1.0, 0.0};
+
+        CHECK(expected_state == Pennylane::Util::approx(results));
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
                    float, double) {
     std::vector<std::vector<std::size_t>> basisStates = {
