@@ -488,7 +488,7 @@ class TestApply:
     def test_apply_errors_qubit_state_vector(self, stateprep, qubit_device):
         """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""
         dev = qubit_device(wires=2)
-        with pytest.raises(ValueError, match="Sum of amplitudes-squared does not equal one."):
+        with pytest.raises(ValueError, match="The state must be a vector of norm 1.0;"):
             dev.apply([stateprep(np.array([1, -1]), wires=[0])])
 
         with pytest.raises(
@@ -500,14 +500,10 @@ class TestApply:
 
     def test_apply_errors_basis_state(self, qubit_device):
         dev = qubit_device(wires=2)
-        with pytest.raises(
-            ValueError, match="BasisState parameter must consist of 0 or 1 integers."
-        ):
+        with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
             dev.apply([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
 
-        with pytest.raises(
-            ValueError, match="BasisState parameter and wires must be of equal length."
-        ):
+        with pytest.raises(ValueError, match="State must be of length 1;"):
             dev.apply([qml.BasisState(np.array([0, 1]), wires=[0])])
 
         with pytest.raises(
