@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
-#include <cucomplex.h>
+#include <cuComplex.h>
 #include <type_traits>
 #include <vector>
 
