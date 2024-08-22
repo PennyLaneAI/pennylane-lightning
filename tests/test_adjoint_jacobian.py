@@ -125,7 +125,7 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        if device_name in ("lightning.qubit", "lightning.kokkos"):
+        if dev._new_API:
             message = "Adjoint differentiation method does not support measurement StateMP."
         elif device_name == "lightning.gpu":
             message = "Adjoint differentiation does not support State measurements."
