@@ -23,7 +23,10 @@
 #include <cuComplex.h>
 #include <cutensornet.h>
 #include <queue>
+#include <variant>
 #include <vector>
+
+#include <iostream>
 
 #include "TensorCuda.hpp"
 #include "tncudaError.hpp"
@@ -150,6 +153,15 @@ template <class PrecisionT> class MPOTNCuda {
 
         stateModeExtents_int64_ = std::vector<int64_t>(numQubits, 2);
 
+        // set up MPO tensor network operator
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
+            /* const cutensornetHandle_t */ cutensornetHandle,
+            /* int32_t */ static_cast<int32_t>(numQubits),
+            /* const int64_t stateModeExtents */
+            stateModeExtents_int64_.data(),
+            /* cudaDataType_t */ cudaDataType,
+            /* cutensornetNetworkOperator_t */ &networkOperator_));
+
         // set up MPO target modes
         for (std::size_t i = 0; i < numSites_; ++i) {
             modes_.push_back(wires.front() + i);
@@ -186,8 +198,13 @@ template <class PrecisionT> class MPOTNCuda {
             }
         }
 
-        bondDims_ = std::vector<std::size_t>(bondDims_orderC.rbegin(),
-                                             bondDims_orderC.rend());
+        bondDims_ = bondDims_orderC;
+
+        std::cout << "numSites " << numSites_ << std::endl;
+
+        PL_ABORT_IF_NOT(bondDims_.size() == numSites_ - 1,
+                        "Number of bond dimensions must match the number of "
+                        "MPO sites.");
 
         // set up MPO tensor mode extents and initialize MPO tensors
         for (std::size_t i = 0; i < numSites_; i++) {
@@ -200,28 +217,31 @@ template <class PrecisionT> class MPOTNCuda {
             }
 
             modesExtents_int64_.push_back(
-                std::move(Pennylane::Util::cast_vector<std::size_t, int64_t>(
-                    modesExtents_.back())));
+                Pennylane::Util::cast_vector<std::size_t, int64_t>(
+                    modesExtents_.back()));
 
-            tensors_.emplace_back(modesExtents_.back().size(), modesExtents_.back(),
-                                  modesExtents_.back(), dev_tag);
+            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+
+            tensors_.emplace_back(modesExtents_.back().size(),
+                                  modesExtents_.back(), modesExtents_.back(),
+                                  dev_tag);
+            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
             tensors_.back().getDataBuffer().zeroInit();
         }
 
         // set up MPO tensor data
-        std::queue<std::size_t> wires_queue;
+        std::vector<std::size_t> target_map(numSites_, numSites_);
+        std::cout << "target_map size: " << target_map.size() << std::endl;
+
         for (std::size_t i = 0; i < wires.size(); i++) {
-            wires_queue.push(wires[i]);
+            auto idx = wires[i] - wires[0];
+            target_map[idx] = i;
         }
 
-        for (std::size_t i = 0; i < tensors_.size(); i++) {
-            if (wires_queue.front() == (wires_[0] + i)) {
-                auto tensor_cu = cuUtil::complexToCu<ComplexT>(
-                    tensors[wires.size() - 1 - i]);
-                tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
-                                                              tensor_cu.size());
-                wires_queue.pop();
-            } else {
+        for (std::size_t i = 0; i < numSites_; i++) {
+            std::cout << "target_map_i: " << i
+                      << " target_map[i]: " << target_map[i] << std::endl;
+            if (target_map[i] == numSites_) {
                 CFP_t value_cu =
                     cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
                 std::size_t target_idx = 0;
@@ -234,17 +254,23 @@ template <class PrecisionT> class MPOTNCuda {
                 PL_CUDA_IS_SUCCESS(cudaMemcpy(
                     &tensors_[i].getDataBuffer().getData()[target_idx],
                     &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+            } else {
+                const std::size_t wire_idx = target_map[i];
+                std::cout << "wire_idx: " << wire_idx << std::endl;
+                auto tensor_cu =
+                    cuUtil::complexToCu<ComplexT>(tensors[wire_idx]);
+
+                tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
+                                                              tensor_cu.size());
             }
+            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         }
 
-        // set up MPO tensor network operator
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
-            /* const cutensornetHandle_t */ cutensornetHandle,
-            /* int32_t */ static_cast<int32_t>(numQubits),
-            /* const int64_t stateModeExtents */
-            stateModeExtents_int64_.data(),
-            /* cudaDataType_t */ cudaDataType,
-            /* cutensornetNetworkOperator_t */ &networkOperator_));
+        std::cout << "MPO tensor data is set." << std::endl;
+
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
 
         // append MPO tensor network operator components
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendMPO(
@@ -261,6 +287,8 @@ template <class PrecisionT> class MPOTNCuda {
                 reinterpret_cast<void **>(getTensorsDataPtr().data())),
             /* cutensornetBoundaryCondition_t */ boundaryCondition_,
             /* int64_t * */ &componentIdx_));
+
+        std::cout << "cutensornetNetworkOperatorAppendMPO is set." << std::endl;
     }
 
     auto getMPOOperator() const -> cutensornetNetworkOperator_t {

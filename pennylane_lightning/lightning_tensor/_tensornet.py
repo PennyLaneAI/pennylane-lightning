@@ -292,8 +292,6 @@ class LightningTensorNet:
             elif i == len(MPOs) - 1:
                 MPOs[i] = MPOs[i].reshape(-1, 2, 2)
 
-            print(MPOs[i].shape)
-
             if i == 0:
                 MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
             elif i == len(MPOs) - 1:
@@ -329,7 +327,7 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if len(wires) <= 2 or self._method != "mps":
+            if len(wires) <= 2:
                 if method is not None:
                     param = operation.parameters
                     method(wires, invert_param, param)
@@ -346,6 +344,8 @@ class LightningTensorNet:
                     gate_ops_matrix = qml.matrix(operation)
                 except AttributeError:
                     gate_ops_matrix = operation.matrix
+
+                print(name)
 
                 self._apply_MPO(gate_ops_matrix, wires)
 
@@ -372,6 +372,7 @@ class LightningTensorNet:
             circuit (QuantumScript): The single circuit to simulate
         """
         self.apply_operations(circuit.operations)
+        self.appendMPSFinalState()
         self.appendMPSFinalState()
 
     def appendMPSFinalState(self):

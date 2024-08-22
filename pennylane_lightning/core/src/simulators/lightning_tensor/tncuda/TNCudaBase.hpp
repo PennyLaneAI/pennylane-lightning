@@ -318,7 +318,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * and is set to 1 by default.
      */
     void get_state_tensor(ComplexT *host_data,
-                          const int32_t numHyperSamples = 1) {
+                          const int32_t numHyperSamples = 8) {
         std::vector<std::size_t> wires(BaseType::getNumQubits());
         std::iota(wires.begin(), wires.end(), 0);
 
@@ -344,7 +344,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     void get_state_tensor(CFP_t *tensor_data,
                           const std::size_t tensor_data_size,
                           const std::vector<std::size_t> &wires,
-                          const int32_t numHyperSamples = 1) const {
+                          const int32_t numHyperSamples = 8) const {
         auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
             wires, BaseType::getNumQubits());
 
@@ -398,7 +398,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
                        const std::vector<int32_t> &projected_modes,
                        const std::vector<int64_t> &projectedModeValues,
-                       const int32_t numHyperSamples = 1) const {
+                       const int32_t numHyperSamples = 8) const {
         cutensornetStateAccessor_t accessor;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateAccessor(
             /* const cutensornetHandle_t */ getTNCudaHandle(),

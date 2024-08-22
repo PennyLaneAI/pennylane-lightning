@@ -268,10 +268,13 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetNetworkOperator_t */ mpos_.back().getMPOOperator(),
-            /* const int32_t immutable */ 0,
+            /* const int32_t immutable */ 1,
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 0,
             /* int64_t * operatorId*/ &operatorId));
+
+        std::cout << "mpos size: " << mpos_.size() << std::endl;
+
         mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
     }
 
@@ -283,6 +286,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     void append_mps_final_state(double cutoff = 0,
                                 std::string cutoff_mode = "abs") {
+        std::cout << "cutoff:~~~~~~~~~~ " << std::endl;
+        // PL_ABORT_IF(cutoff >= 0, "Cutoff value should be non-negative.");
+
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
@@ -292,37 +298,24 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             getSitesExtentsPtr().data(),
             /*strides=*/nullptr));
 
-        // Optional: SVD
-        cutensornetTensorSVDAlgo_t algo =
-            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default option
-
+        cutensornetStateMPOApplication_t mpsApplication =
+            CUTENSORNET_STATE_MPO_APPLICATION_EXACT;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetStateAttributes_t */
-            CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
-            /* const void * */ &algo,
-            /* size_t */ sizeof(algo)));
+            CUTENSORNET_STATE_CONFIG_MPS_MPO_APPLICATION,
+            /* cutensornetStateMPOApplication_t */ &mpsApplication,
+            sizeof(mpsApplication)));
+        std::cout << "cutoff:+++++++ " << std::endl;
 
-        PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
-                        "cutoff_mode should either 'rel' or 'abs'.");
-
-        cutensornetStateAttributes_t svd_cutoff_mode =
-            (cutoff_mode == "abs")
-                ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
-                : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
-            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetStateAttributes_t */ svd_cutoff_mode,
-            /* const void * */ &cutoff,
-            /* size_t */ sizeof(cutoff)));
+        PL_ABORT_IF_NOT(cutoff_mode == "abs" || cutoff_mode == "rel",
+                        "Cutoff mode should be either 'abs' or 'rel'.");
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
             reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
 
+        std::cout << "cutoff:~~~~~~~~~~ " << std::endl;
         // TODO: This is a dummy tensor update to allow multiple calls to the
         // `append_mps_final_state` method as well as appending additional
         // operations to the graph. This is a temporary solution and this line
@@ -337,6 +330,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         // wrapped inside the `dummy_tensor_update()` method.
         //
         BaseType::dummy_tensor_update();
+        std::cout << "cutoff:+++++ " << std::endl;
     }
 
     /**

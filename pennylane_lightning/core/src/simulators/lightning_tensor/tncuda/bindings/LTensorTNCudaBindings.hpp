@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include <iostream>
 #include <vector>
 
 #include "cuda.h"
@@ -95,8 +96,10 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "Create Basis State on GPU.")
         .def(
             "applyMPOOperator",
-            [](TensorNet &tensor_network, const std::vector<np_arr_c> &tensors,
+            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
                std::vector<std::size_t> &wires) {
+                std::cout << "tensors size: ++++ " << tensors.size()
+                          << std::endl;
                 using ComplexT = typename TensorNet::ComplexT;
                 std::vector<std::vector<ComplexT>> conv_tensors;
                 for (const auto &tensor : tensors) {
