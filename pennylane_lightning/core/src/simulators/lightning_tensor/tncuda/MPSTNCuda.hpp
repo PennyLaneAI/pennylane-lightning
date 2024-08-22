@@ -262,6 +262,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                            BaseType::getTNCudaHandle(),
                            BaseType::getCudaDataType(), BaseType::getDevTag());
 
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+
         // Apply the MPO operator to the quantum state
         int64_t operatorId;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
