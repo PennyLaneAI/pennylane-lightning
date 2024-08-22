@@ -44,9 +44,9 @@ if device_name == "lightning.kokkos":
     )
 
 
-if device_name not in ("lightning.qubit", "lightning.kokkos"):
+if not LightningDevice._new_API:
     pytest.skip(
-        "Exclusive tests for new API backends lightning.qubit and lightning.kokkos for LightningAdjointJacobian class. Skipping.",
+        "Exclusive tests for new API backends LightningAdjointJacobian class. Skipping.",
         allow_module_level=True,
     )
 

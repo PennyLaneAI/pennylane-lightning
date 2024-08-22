@@ -37,9 +37,9 @@ if device_name == "lightning.kokkos":
         LightningKokkosStateVector as LightningStateVector,
     )
 
-if device_name not in ("lightning.qubit", "lightning.kokkos"):
+if not LightningDevice._new_API:
     pytest.skip(
-        "Exclusive tests for lightning.qubit or lightning.kokkos. Skipping.",
+        "Exclusive tests for new API devices. Skipping.",
         allow_module_level=True,
     )
 
@@ -484,7 +484,6 @@ class TestMeasurements:
 
         skip_list = (
             qml.ops.Sum,
-            # qml.Hamiltonian,
             qml.SparseHamiltonian,
         )
         do_skip = measurement is qml.var and isinstance(observable, skip_list)

@@ -37,9 +37,9 @@ if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import simulate
 
 
-if device_name != "lightning.qubit" and device_name != "lightning.kokkos":
+if not LightningDevice._new_API:
     pytest.skip(
-        "Exclusive tests for lightning.qubit and lightning.kokkos. Skipping.",
+        "Exclusive tests for new API devices. Skipping.",
         allow_module_level=True,
     )
 
