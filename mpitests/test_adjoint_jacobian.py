@@ -649,14 +649,13 @@ class TestAdjointJacobianQNode:
             batch_obs=request.param[1],
         )
 
-    def test_finite_shots_warning(self):
-        """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
+    def test_finite_shots_error(self):
+        """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
 
         dev = qml.device(device_name, wires=8, mpi=True, shots=1)
 
-        with pytest.warns(
-            UserWarning,
-            match="Requested adjoint differentiation to be computed with finite shots.",
+        with pytest.raises(
+            qml.QuantumFunctionError, match="does not support adjoint with requested circuit."
         ):
 
             @qml.qnode(dev, diff_method="adjoint")
@@ -664,10 +663,6 @@ class TestAdjointJacobianQNode:
                 qml.RX(x, wires=0)
                 return qml.expval(qml.PauliZ(0))
 
-        with pytest.warns(
-            UserWarning,
-            match="Requested adjoint differentiation to be computed with finite shots.",
-        ):
             qml.grad(circ)(0.1)
 
     def test_qnode(self, mocker, dev):
@@ -689,7 +684,7 @@ class TestAdjointJacobianQNode:
             return qml.expval(qml.PauliX(0) @ qml.PauliZ(1))
 
         qnode1 = QNode(circuit, dev, diff_method="adjoint")
-        spy = mocker.spy(dev, "adjoint_jacobian")
+        spy = mocker.spy(dev.target_device, "adjoint_jacobian")
 
         grad_fn = qml.grad(qnode1)
         grad_A = grad_fn(*args)
@@ -731,7 +726,7 @@ class TestAdjointJacobianQNode:
         zero_state = np.array([1.0, 0.0])
         cost(reused_p, other_p)
 
-        spy = mocker.spy(dev, "adjoint_jacobian")
+        spy = mocker.spy(dev.target_device, "adjoint_jacobian")
 
         # analytic gradient
         grad_fn = qml.grad(cost)
@@ -770,7 +765,7 @@ class TestAdjointJacobianQNode:
             qml.Rot(params[1], params[0], 2 * params[0], wires=[0])
             return qml.expval(qml.PauliX(0))
 
-        spy_analytic = mocker.spy(dev, "adjoint_jacobian")
+        spy_analytic = mocker.spy(dev.target_device, "adjoint_jacobian")
 
         h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
         tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
