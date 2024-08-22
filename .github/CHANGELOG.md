@@ -114,6 +114,9 @@
 
 ### Bug fixes
 
+* Update dependencies and `build` command options following changes in the build system.
+  [(#863)](https://github.com/PennyLaneAI/pennylane-lightning/pull/863)
+
 * Replace structured bindings by variables in `GateImplementationsLM.hpp`.
   [(#856)](https://github.com/PennyLaneAI/pennylane-lightning/pull/856)
 
