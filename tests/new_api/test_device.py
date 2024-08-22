@@ -349,8 +349,9 @@ class TestExecution:
         device = LightningDevice(wires=3)
 
         if is_trainable:
-            # Need to decompose twice as the state prep ops we use first decompose into a template
-            decomp = op.decomposition()[0].decomposition()
+            decomp = op.decomposition()
+            # decompose one more time if it's decomposed into a template:
+            decomp = decomp[0].decomposition() if len(decomp) == 1 else decomp
         else:
             decomp = [op]
 
@@ -367,7 +368,7 @@ class TestExecution:
             (qml.StatePrep(np.array([1, 0]), wires=0), 1),
             (qml.BasisState([1, 1], wires=[0, 1]), 1),
             (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), 1),
-            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 2),
+            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 1),
             (qml.MottonenStatePreparation([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 0),
         ],
     )
@@ -378,8 +379,7 @@ class TestExecution:
         )
         device = LightningDevice(wires=3)
 
-        for _ in range(decomp_depth):
-            op = op.decomposition()[0]
+        op = op.decomposition()[0] if decomp_depth and len(op.decomposition()) == 1 else op
         decomp = op.decomposition()
 
         program, _ = device.preprocess()
