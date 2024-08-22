@@ -8,6 +8,9 @@
 * Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
   [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
 
+* Add LightningGPU Linux (aarch64+GraceHopper) wheels to PyPI.
+  [(#815)](https://github.com/PennyLaneAI/pennylane-lightning/pull/815)
+
 * Add the analytic `qml.probs()` measurement support to `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
 
@@ -113,6 +116,9 @@
   [(#818)](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Update dependencies and `build` command options following changes in the build system.
+  [(#863)](https://github.com/PennyLaneAI/pennylane-lightning/pull/863)
 
 * Replace structured bindings by variables in `GateImplementationsLM.hpp`.
   [(#856)](https://github.com/PennyLaneAI/pennylane-lightning/pull/856)
