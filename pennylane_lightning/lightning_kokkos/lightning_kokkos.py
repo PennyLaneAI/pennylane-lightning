@@ -83,7 +83,9 @@ def simulate(
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
     has_mcm = False
-    if circuit.shots and (has_mcm:=any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+    if circuit.shots and (
+        has_mcm := any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+    ):
         results = []
         aux_circ = qml.tape.QuantumScript(
             circuit.operations,
