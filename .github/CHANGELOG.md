@@ -39,6 +39,9 @@
 
 ### Improvements
 
+* Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
+
 * Update Lightning tests to support the generalization of basis state preparation.
   [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
 
