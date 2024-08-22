@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cmath>
+
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_Core.hpp>
 
@@ -139,9 +141,12 @@ void LightningKokkosSimulator::PrintState() {
 
 void LightningKokkosSimulator::SetState(DataView<std::complex<double>, 1> &data,
                                         std::vector<QubitIdType> &wires) {
+    size_t expected_wires = static_cast<size_t>(log2(data.size()));
+    RT_ASSERT(expected_wires == wires.size());
     std::vector<Kokkos::complex<double>> data_vector(data.begin(), data.end());
     std::vector<std::size_t> wires_size_t(wires.begin(), wires.end());
-    this->device_sv->setStateVector(wires_size_t, data_vector);
+
+    this->device_sv->setStateVector(data_vector, wires_size_t);
 }
 
 void LightningKokkosSimulator::SetBasisState(DataView<int8_t, 1> &data,

@@ -667,7 +667,7 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
 
         std::vector<std::complex<double>> data = {{0.5, 0.5}, {0.0, 0.0}};
         DataView<std::complex<double>, 1> data_view(data);
-        std::vector<QubitIdType> wires = {0};
+        std::vector<QubitIdType> wires = {1};
         LKsim->SetState(data_view, wires);
 
         std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
@@ -678,6 +678,8 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         std::complex<double> c2{0.0, 0.0};
         CHECK(state[0] == PLApproxComplex(c1).epsilon(1e-5));
         CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
+        CHECK(state[2] == PLApproxComplex(c2).epsilon(1e-5));
+        CHECK(state[3] == PLApproxComplex(c2).epsilon(1e-5));
     }
 
     SECTION("Test setBasisState") {
