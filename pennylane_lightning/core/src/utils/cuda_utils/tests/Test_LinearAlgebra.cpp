@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the License);
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
+#include <cucomplex.h>
+#include <type_traits>
 #include <vector>
 
 #include <catch2/catch.hpp>
