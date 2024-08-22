@@ -57,10 +57,10 @@ def test_wrong_device_name():
 
 def test_errors_basis_state():
     """Test that errors are raised when applying a BasisState operation."""
-    with pytest.raises(ValueError, match="BasisState parameter must consist of 0 or 1 integers."):
+    with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
         tensornet = LightningTensorNet(3, 5)
         tensornet.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
-    with pytest.raises(ValueError, match="BasisState parameter and wires must be of equal length."):
+    with pytest.raises(ValueError, match="State must be of length 1;"):
         tensornet = LightningTensorNet(3, 5)
         tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
 
