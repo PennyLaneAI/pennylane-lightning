@@ -484,7 +484,6 @@ class TestMeasurements:
 
         skip_list = (
             qml.ops.Sum,
-            # qml.Hamiltonian,
             qml.SparseHamiltonian,
         )
         do_skip = measurement is qml.var and isinstance(observable, skip_list)
