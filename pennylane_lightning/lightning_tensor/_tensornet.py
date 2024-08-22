@@ -265,7 +265,7 @@ class LightningTensorNet:
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         self._tensornet.setBasisState(state)
-    
+
     def _apply_MPO(self, gate_matrix, wires):
         """Apply a matrix product operator to the quantum state.
 
@@ -279,7 +279,7 @@ class LightningTensorNet:
 
         sorted_wires = sorted(wires)
 
-        gate_data_shape = [4]*len(wires)
+        gate_data_shape = [4] * len(wires)
 
         gate_data = gate_matrix.reshape(gate_data_shape)
 
@@ -292,6 +292,8 @@ class LightningTensorNet:
             elif i == len(MPOs) - 1:
                 MPOs[i] = MPOs[i].reshape(-1, 2, 2)
 
+            print(MPOs[i].shape)
+
             if i == 0:
                 MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
             elif i == len(MPOs) - 1:
@@ -301,7 +303,6 @@ class LightningTensorNet:
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(MPOs, sorted_wires)
-
 
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
@@ -328,34 +329,7 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if self._method == "mps":
-                if method is not None:
-                    if len(wires) <= 2:
-                        param = operation.parameters
-                        method(wires, invert_param, param)
-                    else:
-                        try:
-                            gate_ops_data = qml.matrix(operation)
-                        except AttributeError:
-                            gate_ops_data = operation.matrix
-
-                        self._apply_MPO(gate_ops_data, wires)
-                else:
-                    # Inverse can be set to False since qml.matrix(operation) is already in
-                    # inverted form
-                    if len(wires) <= 2:
-                        method = getattr(tensornet, "applyMatrix")
-                        try:
-                            method(qml.matrix(operation), wires, False)
-                        except AttributeError:
-                            method(operation.matrix, wires, False)
-                    else:
-                        try:
-                            gate_ops_data = qml.matrix(operation)
-                        except AttributeError:
-                            gate_ops_data = operation.matrix
-                        self._apply_MPO(gate_ops_data, wires)
-            else:
+            if len(wires) <= 2 or self._method != "mps":
                 if method is not None:
                     param = operation.parameters
                     method(wires, invert_param, param)
@@ -367,6 +341,13 @@ class LightningTensorNet:
                         method(qml.matrix(operation), wires, False)
                     except AttributeError:
                         method(operation.matrix, wires, False)
+            else:
+                try:
+                    gate_ops_matrix = qml.matrix(operation)
+                except AttributeError:
+                    gate_ops_matrix = operation.matrix
+
+                self._apply_MPO(gate_ops_matrix, wires)
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""
