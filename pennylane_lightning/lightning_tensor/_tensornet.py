@@ -265,6 +265,43 @@ class LightningTensorNet:
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         self._tensornet.setBasisState(state)
+    
+    def _apply_MPO(self, gate_matrix, wires):
+        """Apply a matrix product operator to the quantum state.
+
+        Args:
+            gate_matrix (array[complex]): matrix representation of the MPO
+            wires (Wires): wires that the MPO should be applied to
+        Returns:
+            None
+        """
+        ranks = get_ranks(wires)
+
+        sorted_wires = sorted(wires)
+
+        gate_data_shape = [4]*len(wires)
+
+        gate_data = gate_matrix.reshape(gate_data_shape)
+
+        gate_data = np.transpose(gate_data, axes=ranks).flatten()
+
+        MPOs = dense_to_mpo(gate_data, len(wires))
+        for i in range(len(MPOs)):
+            if i == 0:
+                MPOs[i] = MPOs[i].reshape(2, 2, -1)
+            elif i == len(MPOs) - 1:
+                MPOs[i] = MPOs[i].reshape(-1, 2, 2)
+
+            if i == 0:
+                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
+            elif i == len(MPOs) - 1:
+                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2)).flatten()
+            else:
+                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
+
+        # Append the MPOs to the tensor network
+        self._tensornet.applyMPOOperator(MPOs, sorted_wires)
+
 
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
@@ -292,54 +329,32 @@ class LightningTensorNet:
             wires = list(operation.wires)
 
             if self._method == "mps":
-                if method is not None and len(wires) <= 2:
-                    param = operation.parameters
-                    method(wires, invert_param, param)
+                if method is not None:
+                    if len(wires) <= 2:
+                        param = operation.parameters
+                        method(wires, invert_param, param)
+                    else:
+                        try:
+                            gate_ops_data = qml.matrix(operation)
+                        except AttributeError:
+                            gate_ops_data = operation.matrix
+
+                        self._apply_MPO(gate_ops_data, wires)
                 else:
                     # Inverse can be set to False since qml.matrix(operation) is already in
                     # inverted form
-                    method = getattr(tensornet, "applyMPOOperator")
-                    try:
-                        gate_ops_data = qml.matrix(operation)
-                    except AttributeError:
-                        gate_ops_data = operation.matrix
-                    # Check if gate permutation is required
-                    # Decompose the gate into MPOs
-                    gate_data = np.transpose(gate_ops_data, axes=(1, 0)).flatten()
-                    gate_data_shape = [4] * len(wires)
-                    gate_data = np.array(gate_ops_data).reshape(gate_data_shape)
-
-                    ranks = get_ranks(wires)
-
-                    sorted_wires = sorted(wires)
-
-                    gate_data = np.transpose(gate_data, axes=ranks).flatten()
-
-                    MPOs = dense_to_mpo(gate_data, len(wires))
-                    for i in range(len(MPOs)):
-                        if i == 0:
-                            MPOs[i] = MPOs[i].reshape(2, 2, -1)
-                        elif i == len(MPOs) - 1:
-                            MPOs[i] = MPOs[i].reshape(-1, 2, 2)
-
-                        if i == 0:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-                        elif i == len(MPOs) - 1:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2)).flatten()
-                        else:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-
-                    """
-                    for i in range(len(MPOs)):
-                        if i == 0:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(2, 1, 3, 0)).flatten()
-                        elif i < len(MPOs) - 2:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-                        else:
-                            MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-                    """
-                    # Append the MPOs to the tensor network
-                    method(MPOs, sorted_wires)
+                    if len(wires) <= 2:
+                        method = getattr(tensornet, "applyMatrix")
+                        try:
+                            method(qml.matrix(operation), wires, False)
+                        except AttributeError:
+                            method(operation.matrix, wires, False)
+                    else:
+                        try:
+                            gate_ops_data = qml.matrix(operation)
+                        except AttributeError:
+                            gate_ops_data = operation.matrix
+                        self._apply_MPO(gate_ops_data, wires)
             else:
                 if method is not None:
                     param = operation.parameters
