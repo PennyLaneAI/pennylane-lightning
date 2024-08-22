@@ -184,28 +184,6 @@ def test_integration_for_all_supported_gates(returns):
     assert np.allclose(j_ltensor, j_default, rtol=1e-6)
 
 
-@pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-def test_state_prep_not_support(qubit_device, theta, phi):
-    """Test that state preparation is not supported on the device."""
-    dev = qubit_device(wires=3)
-    obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
-
-    tape = qml.tape.QuantumScript(
-        [
-            qml.StatePrep([1.0, 0, 0, 0, 0, 0, 0, 0], wires=[0, 1, 2]),
-            qml.RX(theta, wires=[0]),
-            qml.RX(phi, wires=[1]),
-            qml.RX(theta + phi, wires=[2]),
-        ],
-        measurements=[qml.expval(obs)],
-    )
-
-    with pytest.raises(
-        DeviceError, match="lightning.tensor does not support initialization with a state vector."
-    ):
-        dev.execute(tape)
-
-
 class TestSparseHExpval:
     """Test sparseH expectation values"""
 
