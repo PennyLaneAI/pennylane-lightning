@@ -291,117 +291,7 @@ class LightningTensorNet:
                 MPOs[i] = MPOs[i].reshape(2, 2, -1)
             elif i == len(MPOs) - 1:
                 MPOs[i] = MPOs[i].reshape(-1, 2, 2)
-            
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-            
-            '''
-            #0  nan
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-    
-            # 1 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-            
 
-            # 2 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-            
-
-            # 3 wrong result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-            
-            # 4 wrong result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-
-            # 5 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-
-            # 6 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-
-            # 7 wrong result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-            '''
-
-
-            '''
-            #10  wrong result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 0, 1)).flatten()
-
-            # 11 order result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 0, 1)).flatten()
-            
-            # 12 nan
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 3, 1)).flatten()
-
-            # 13 nan
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 3, 1)).flatten()
-            
-            # 14 wrong result
             if i == 0:
                 MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
             elif i == len(MPOs) - 1:
@@ -409,102 +299,8 @@ class LightningTensorNet:
             else:
                 MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 0, 1)).flatten()
 
-            # 15 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 0, 1)).flatten()
-
-            # 16 nan
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 3, 1)).flatten()
-
-
-            # 17 nan
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 3, 1)).flatten()
-            '''
-
-            
-            #20  nan
-            #if i == 0:
-            #    MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2)).flatten()
-            #elif i == len(MPOs) - 1:
-            #    MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            #else:
-            #    MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-
-            '''
-            # 1 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-            
-
-            # 2 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-            
-
-            # 3 wrong result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-            
-            # 4 wrong result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-
-            # 5 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2)).flatten()
-
-            # 6 order wrong
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-
-            # 7 wrong result
-            if i == 0:
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2)).flatten()
-            elif i == len(MPOs) - 1:
-                MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1)).flatten()
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2)).flatten()
-            '''
-
-            
+            print(MPOs[i].shape)
+        print(sorted_wires)
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(MPOs, sorted_wires)
@@ -554,7 +350,7 @@ class LightningTensorNet:
 
                 print(name)
 
-                gate_ops_matrix = np.transpose(gate_ops_matrix, axes=(1, 0)) 
+                gate_ops_matrix = np.transpose(gate_ops_matrix, axes=(1, 0))
 
                 self._apply_MPO(gate_ops_matrix, wires)
 

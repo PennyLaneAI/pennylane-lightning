@@ -250,7 +250,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         // TODO: the following line is for test only
         std::size_t maxMPOBondDim_ = maxMPOBondDim;
         if (maxMPOBondDim == 0) {
-            maxMPOBondDim_ = std::size_t{4} << (wires.size());
+            maxMPOBondDim_ = std::size_t{2} << (wires.size());
         }
         PL_ABORT_IF_NOT(
             tensors.size() == wires.size(),
