@@ -82,11 +82,11 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                     py::buffer_info numpyArrayInfo = tensors[idx].request();
                     auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
                         numpyArrayInfo.ptr);
-                    tensor_network.updateIthMPSSiteData(idx, data_ptr,
-                                                        tensors[idx].size());
+                    tensor_network.updateMPSSiteData(idx, data_ptr,
+                                                     tensors[idx].size());
                 }
             },
-            "Pass MPS site data to the C++ backend")
+            "Pass MPS site data to the C++ backend.")
         .def(
             "setBasisState",
             [](TensorNet &tensor_network,

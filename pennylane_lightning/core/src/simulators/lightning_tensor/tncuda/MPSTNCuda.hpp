@@ -179,9 +179,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * @param host_data Pointer to the data on host.
      * @param host_data_size Length of the data.
      */
-    void updateIthMPSSiteData(const std::size_t site_idx,
-                              const ComplexT *host_data,
-                              std::size_t host_data_size) {
+    void updateMPSSiteData(const std::size_t site_idx,
+                           const ComplexT *host_data,
+                           std::size_t host_data_size) {
         PL_ABORT_IF_NOT(
             site_idx < BaseType::getNumQubits(),
             "The site index should be less than the number of qubits.");
