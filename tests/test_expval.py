@@ -144,8 +144,7 @@ class TestExpval:
             obs = qml.Hermitian(U, wires=perm)
 
             def circuit():
-                if device_name != "lightning.tensor":
-                    qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.StatePrep(init_state, wires=range(n_qubits))
                 qml.RX(theta, wires=[0])
                 qml.RY(phi, wires=[1])
                 qml.RX(theta, wires=[2])

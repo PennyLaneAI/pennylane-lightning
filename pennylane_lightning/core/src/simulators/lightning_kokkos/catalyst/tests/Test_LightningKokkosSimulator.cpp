@@ -659,4 +659,46 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
             expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
+
+    SECTION("Test setStateVector") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        std::vector<std::complex<double>> data = {{0.5, 0.5}, {0.0, 0.0}};
+        DataView<std::complex<double>, 1> data_view(data);
+        std::vector<QubitIdType> wires = {1};
+        LKsim->SetState(data_view, wires);
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        std::complex<double> c1{0.5, 0.5};
+        std::complex<double> c2{0.0, 0.0};
+        CHECK(state[0] == PLApproxComplex(c1).epsilon(1e-5));
+        CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
+        CHECK(state[2] == PLApproxComplex(c2).epsilon(1e-5));
+        CHECK(state[3] == PLApproxComplex(c2).epsilon(1e-5));
+    }
+
+    SECTION("Test setBasisState") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        constexpr std::size_t n_qubits = 1;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        std::vector<int8_t> data = {0};
+        DataView<int8_t, 1> data_view(data);
+        std::vector<QubitIdType> wires = {0};
+        LKsim->SetBasisState(data_view, wires);
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        std::complex<double> c1{1.0, 0.0};
+        std::complex<double> c2{0.0, 0.0};
+        CHECK(state[0] == PLApproxComplex(c1).epsilon(1e-5));
+        CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
+    }
 }
