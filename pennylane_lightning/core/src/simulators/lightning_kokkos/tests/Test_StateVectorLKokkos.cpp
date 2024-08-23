@@ -129,7 +129,13 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::setState", "[errors]",
                 "wires must take values lower than the number of qubits."));
     }
 
-    SECTION("setStateVector incompatible dimensions") {
+    SECTION("setStateVector incompatible dimensions indices & values") {
+        REQUIRE_THROWS_WITH(
+            sv.setStateVector({0, 1}, std::vector<ComplexT>(4, 0.0)),
+            Catch::Contains("Inconsistent indices and values dimensions."));
+    }
+
+    SECTION("setStateVector incompatible dimensions state & wires") {
         REQUIRE_THROWS_WITH(
             sv.setStateVector(std::vector<ComplexT>(2, 0.0), {0, 1}),
             Catch::Contains("Inconsistent state and wires dimensions."));
