@@ -248,8 +248,8 @@ template <class PrecisionT> class MPOTNCuda {
                     &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
             } else {
                 const std::size_t wire_idx = target_map[i];
-                auto tensor_cu =
-                    cuUtil::complexToCu<ComplexT>(tensors[wire_idx]);
+                auto tensor_cu = cuUtil::complexToCu<ComplexT>(
+                    tensors[wires.size() - 1 - wire_idx]);
 
                 tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                               tensor_cu.size());
