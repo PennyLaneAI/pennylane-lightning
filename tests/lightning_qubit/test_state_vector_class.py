@@ -24,7 +24,6 @@ from conftest import LightningDevice, LightningStateVector, device_name  # teste
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-
 if device_name == "lightning.kokkos":
     try:
         from pennylane_lightning.lightning_kokkos_ops import InitializationSettings

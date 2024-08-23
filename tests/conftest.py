@@ -127,9 +127,15 @@ LightningException = None
 
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
-    from pennylane_lightning.lightning_kokkos._state_vector import LightningKokkosStateVector as LightningStateVector
-    from pennylane_lightning.lightning_kokkos._measurements import LightningKokkosMeasurements as LightningMeasurements
-    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import LightningKokkosAdjointJacobian as LightningAdjointJacobian
+    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import (
+        LightningKokkosAdjointJacobian as LightningAdjointJacobian,
+    )
+    from pennylane_lightning.lightning_kokkos._measurements import (
+        LightningKokkosMeasurements as LightningMeasurements,
+    )
+    from pennylane_lightning.lightning_kokkos._state_vector import (
+        LightningKokkosStateVector as LightningStateVector,
+    )
 
     if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
         import pennylane_lightning.lightning_kokkos_ops as lightning_ops
@@ -148,12 +154,9 @@ elif device_name == "lightning.tensor":
         from pennylane_lightning.lightning_tensor_ops import LightningException
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
     from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-    
-    
-    
+    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
+    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
     if hasattr(pennylane_lightning, "lightning_qubit_ops"):
         import pennylane_lightning.lightning_qubit_ops as lightning_ops

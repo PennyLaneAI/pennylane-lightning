@@ -41,7 +41,6 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-
 class TestSimulate:
     """Tests for the simulate method."""
 

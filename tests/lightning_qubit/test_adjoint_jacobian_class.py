@@ -18,7 +18,12 @@ import math
 
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, LightningStateVector, LightningAdjointJacobian, device_name  # tested device
+from conftest import (  # tested device
+    LightningAdjointJacobian,
+    LightningDevice,
+    LightningStateVector,
+    device_name,
+)
 from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
