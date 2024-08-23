@@ -32,7 +32,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyRY {
 
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire, class ParamT>
+    template <std::size_t rev_wire, class ParamT>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits,
                               [[maybe_unused]] bool inverse, ParamT angle) {

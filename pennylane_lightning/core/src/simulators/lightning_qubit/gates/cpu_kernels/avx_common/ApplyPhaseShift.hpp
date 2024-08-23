@@ -90,7 +90,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyPhaseShift {
         return setValue(arr);
     }
 
-    template <size_t rev_wire, typename ParamT>
+    template <std::size_t rev_wire, typename ParamT>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits, bool inverse,
                               ParamT angle) {

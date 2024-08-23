@@ -42,7 +42,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
     constexpr static auto packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
-    template <size_t control, std::size_t target>
+    template <std::size_t control, std::size_t target>
     static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
 
@@ -58,7 +58,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t control, std::size_t target>
+    template <std::size_t control, std::size_t target>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
@@ -71,7 +71,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
         }
     }
 
-    template <size_t control>
+    template <std::size_t control>
     static consteval auto applyInternalExternalMask() {
         std::array<bool, packed_size> mask{};
         for (std::size_t k = 0; k < packed_size / 2; k++) {
@@ -91,7 +91,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
      * on internal wires (inside of packed bytes) but the target acts on
      * external wires.
      */
-    template <size_t control>
+    template <std::size_t control>
     static void
     applyInternalExternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                           std::size_t target, [[maybe_unused]] bool inverse) {
@@ -124,7 +124,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
     /**
      * @brief Permutation that flip the target bit.
      */
-    template <size_t target>
+    template <std::size_t target>
     static consteval auto applyExternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
         for (std::size_t k = 0; k < packed_size / 2; k++) {
@@ -134,7 +134,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t target>
+    template <std::size_t target>
     static void
     applyExternalInternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                           std::size_t control, [[maybe_unused]] bool inverse) {

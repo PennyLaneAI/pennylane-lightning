@@ -33,7 +33,7 @@ struct MockSymmetricTwoQubitGateWithoutParam {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalInternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, bool inverse) {
@@ -43,7 +43,7 @@ struct MockSymmetricTwoQubitGateWithoutParam {
         return {"applyInternalInternal", rev_wire0, rev_wire1, inverse};
     }
 
-    template <size_t rev_wire0>
+    template <std::size_t rev_wire0>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalExternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, std::size_t rev_wire1,
@@ -71,7 +71,7 @@ struct MockSymmetricTwoQubitGateWithParam {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
-    template <size_t rev_wire0, std::size_t rev_wire1, typename ParamT>
+    template <std::size_t rev_wire0, std::size_t rev_wire1, typename ParamT>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalInternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, bool inverse,
@@ -83,7 +83,7 @@ struct MockSymmetricTwoQubitGateWithParam {
         return {"applyInternalInternal", rev_wire0, rev_wire1, inverse};
     }
 
-    template <size_t rev_wire0, typename ParamT>
+    template <std::size_t rev_wire0, typename ParamT>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalExternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, std::size_t rev_wire1,
@@ -114,7 +114,7 @@ struct MockAsymmetricTwoQubitGateWithoutParam {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalInternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, bool inverse) {
@@ -124,7 +124,7 @@ struct MockAsymmetricTwoQubitGateWithoutParam {
         return {"applyInternalInternal", rev_wire0, rev_wire1, inverse};
     }
 
-    template <size_t control>
+    template <std::size_t control>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalExternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, std::size_t target,
@@ -135,7 +135,7 @@ struct MockAsymmetricTwoQubitGateWithoutParam {
         return {"applyInternalExternal", control, target, inverse};
     }
 
-    template <size_t target>
+    template <std::size_t target>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyExternalInternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, std::size_t control,
@@ -163,7 +163,7 @@ struct MockAsymmetricTwoQubitGateWithParam {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = false;
 
-    template <size_t rev_wire0, std::size_t rev_wire1, typename ParamT>
+    template <std::size_t rev_wire0, std::size_t rev_wire1, typename ParamT>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalInternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, bool inverse,
@@ -175,7 +175,7 @@ struct MockAsymmetricTwoQubitGateWithParam {
         return {"applyInternalInternal", rev_wire0, rev_wire1, inverse};
     }
 
-    template <size_t control, typename ParamT>
+    template <std::size_t control, typename ParamT>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyInternalExternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, std::size_t target,
@@ -187,7 +187,7 @@ struct MockAsymmetricTwoQubitGateWithParam {
         return {"applyInternalExternal", control, target, inverse};
     }
 
-    template <size_t target, typename ParamT>
+    template <std::size_t target, typename ParamT>
     static std::tuple<std::string, std::size_t, std::size_t, bool>
     applyExternalInternal(std::complex<PrecisionT> *arr,
                           const std::size_t num_qubits, std::size_t control,
@@ -326,7 +326,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateHelper template functions",
                    MockAsymmetricTwoQubitGateWithParam<TestType, 4>>);
 }
 
-std::pair<size_t, std::size_t> sort(std::size_t a, std::size_t b) {
+std::pair<std::size_t, std::size_t> sort(std::size_t a, std::size_t b) {
     return {std::min(a, b), std::max(a, b)};
 }
 
@@ -358,7 +358,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyExternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {1, 0} -> rev_wires = {2, 3}
@@ -366,7 +366,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyExternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {0, 3} -> rev_wires = {0, 3}
@@ -374,7 +374,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 0} -> rev_wires = {3, 0}
@@ -382,7 +382,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {2, 3} -> rev_wires = {0, 1}
@@ -390,7 +390,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 1});
+                        std::pair<std::size_t, std::size_t>{0, 1});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 2} -> rev_wires = {1, 0}
@@ -398,7 +398,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 1});
+                        std::pair<std::size_t, std::size_t>{0, 1});
                 REQUIRE(std::get<3>(res) == inverse);
             }
         }
@@ -422,7 +422,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {1, 0} -> rev_wires = {3, 2}
@@ -430,7 +430,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {0, 3} -> rev_wires = {0, 3}
@@ -438,7 +438,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 0} -> rev_wires = {3, 0}
@@ -446,7 +446,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {1, 3} -> rev_wires = {0, 2}
@@ -454,7 +454,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 2});
+                        std::pair<std::size_t, std::size_t>{0, 2});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 1} -> rev_wires = {0, 2}
@@ -462,7 +462,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithoutParamHelper",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 2});
+                        std::pair<std::size_t, std::size_t>{0, 2});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 2, wires = {0, 1} -> fallback
@@ -652,7 +652,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyExternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {1, 0} -> rev_wires = {2, 3}
@@ -660,7 +660,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyExternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {0, 3} -> rev_wires = {0, 3}
@@ -668,7 +668,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 0} -> rev_wires = {3, 0}
@@ -676,7 +676,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {2, 3} -> rev_wires = {0, 1}
@@ -684,7 +684,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 1});
+                        std::pair<std::size_t, std::size_t>{0, 1});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 2} -> rev_wires = {1, 0}
@@ -692,7 +692,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 1});
+                        std::pair<std::size_t, std::size_t>{0, 1});
                 REQUIRE(std::get<3>(res) == inverse);
             }
         }
@@ -716,7 +716,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {1, 0} -> rev_wires = {3, 2}
@@ -724,7 +724,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{2, 3});
+                        std::pair<std::size_t, std::size_t>{2, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {0, 3} -> rev_wires = {0, 3}
@@ -732,7 +732,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 0} -> rev_wires = {3, 0}
@@ -740,7 +740,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalExternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 3});
+                        std::pair<std::size_t, std::size_t>{0, 3});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {1, 3} -> rev_wires = {0, 2}
@@ -748,7 +748,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 2});
+                        std::pair<std::size_t, std::size_t>{0, 2});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 4, wires = {3, 1} -> rev_wires = {0, 2}
@@ -756,7 +756,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateWithParamHelper", "[TwoQubitGateHelper]",
                 REQUIRE(std::get<0>(res) ==
                         std::string("applyInternalInternal"));
                 REQUIRE(sort(std::get<1>(res), std::get<2>(res)) ==
-                        std::pair<size_t, std::size_t>{0, 2});
+                        std::pair<std::size_t, std::size_t>{0, 2});
                 REQUIRE(std::get<3>(res) == inverse);
             }
             { // num_qubits = 2, wires = {0, 1} -> fallback

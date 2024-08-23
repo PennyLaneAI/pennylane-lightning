@@ -30,7 +30,7 @@ struct ApplySingleQubitOp {
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits,
                               const std::complex<PrecisionT> *matrix,

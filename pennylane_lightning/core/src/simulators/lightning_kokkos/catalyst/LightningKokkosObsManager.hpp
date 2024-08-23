@@ -64,7 +64,7 @@ template <typename PrecisionT> class LightningKokkosObsManager final {
     isValidObservables(const std::vector<ObsIdType> &obsKeys) const -> bool {
         return std::all_of(obsKeys.begin(), obsKeys.end(), [this](auto i) {
             return (i >= 0 &&
-                    static_cast<size_t>(i) < this->observables_.size());
+                    static_cast<std::size_t>(i) < this->observables_.size());
         });
     }
 
@@ -97,7 +97,7 @@ template <typename PrecisionT> class LightningKokkosObsManager final {
      * @return ObsIdType
      */
     [[nodiscard]] auto createNamedObs(ObsId obsId,
-                                      const std::vector<size_t> &wires)
+                                      const std::vector<std::size_t> &wires)
         -> ObsIdType {
         auto &&obs_str = std::string(
             Lightning::lookup_obs<Lightning::simulator_observable_support_size>(
@@ -119,7 +119,7 @@ template <typename PrecisionT> class LightningKokkosObsManager final {
      */
     [[nodiscard]] auto
     createHermitianObs(const std::vector<std::complex<PrecisionT>> &matrix,
-                       const std::vector<size_t> &wires) -> ObsIdType {
+                       const std::vector<std::size_t> &wires) -> ObsIdType {
         std::vector<Kokkos::complex<PrecisionT>> matrix_k;
         matrix_k.reserve(matrix.size());
         for (const auto &elem : matrix) {
@@ -151,7 +151,7 @@ template <typename PrecisionT> class LightningKokkosObsManager final {
         obs_vec.reserve(key_size);
 
         for (const auto &key : obsKeys) {
-            RT_FAIL_IF(static_cast<size_t>(key) >= obs_size || key < 0,
+            RT_FAIL_IF(static_cast<std::size_t>(key) >= obs_size || key < 0,
                        "Invalid observable key");
 
             auto &&[obs, type] = this->observables_[key];
@@ -188,7 +188,7 @@ template <typename PrecisionT> class LightningKokkosObsManager final {
         obs_vec.reserve(key_size);
 
         for (auto key : obsKeys) {
-            RT_FAIL_IF(static_cast<size_t>(key) >= obs_size || key < 0,
+            RT_FAIL_IF(static_cast<std::size_t>(key) >= obs_size || key < 0,
                        "Invalid observable key");
 
             auto &&[obs, type] = this->observables_[key];

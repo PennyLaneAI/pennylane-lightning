@@ -223,7 +223,7 @@ class StateVectorCudaManaged
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param param Complex phase generator.
      */
-    template <size_t thread_per_block = 256>
+    template <std::size_t thread_per_block = 256>
     void globalPhaseStateVector(const bool adjoint, const Precision param) {
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
         std::complex<Precision> phase =
@@ -238,7 +238,7 @@ class StateVectorCudaManaged
      *
      * @param phase Controlled complex phase vector.
      */
-    template <size_t thread_per_block = 256>
+    template <std::size_t thread_per_block = 256>
     void cGlobalPhaseStateVector(const bool adjoint,
                                  const std::vector<CFP_t> &phase,
                                  const bool async = false) {

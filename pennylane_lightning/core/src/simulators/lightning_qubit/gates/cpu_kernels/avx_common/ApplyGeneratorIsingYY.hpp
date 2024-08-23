@@ -34,7 +34,7 @@ struct ApplyGeneratorIsingYY {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static auto applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       [[maybe_unused]] bool adj) -> PrecisionT {
@@ -57,7 +57,7 @@ struct ApplyGeneratorIsingYY {
             0.5); // NOLINT(readability-magic-numbers)
     }
 
-    template <size_t min_rev_wire>
+    template <std::size_t min_rev_wire>
     static auto applyInternalExternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       std::size_t max_rev_wire,

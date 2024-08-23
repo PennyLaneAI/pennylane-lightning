@@ -244,7 +244,7 @@ class Measurements final
             rand_nums[n] = dis(this->rng);
         }
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
-        std::unordered_map<size_t, std::size_t> cache;
+        std::unordered_map<std::size_t, std::size_t> cache;
         std::vector<custatevecIndex_t> bitStrings(num_samples);
 
         void *extraWorkspace = nullptr;

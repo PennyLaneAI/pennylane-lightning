@@ -265,7 +265,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
                     "Insufficient workspace size on Device.\n");
 
         const std::size_t d_scratch_length = worksize / sizeof(std::size_t) + 1;
-        DataBuffer<size_t, int> d_scratch(d_scratch_length,
+        DataBuffer<std::size_t, int> d_scratch(d_scratch_length,
                                           tensor_network_.getDevTag(), true);
 
         setWorkSpaceMemory(tensor_network_.getTNCudaHandle(), workDesc,

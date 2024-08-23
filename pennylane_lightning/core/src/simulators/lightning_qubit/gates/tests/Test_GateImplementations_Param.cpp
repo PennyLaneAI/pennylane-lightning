@@ -276,7 +276,7 @@ void testApplyRot() {
         const auto rot_mat = getRot<std::complex, PrecisionT>(
             angles[i][0], angles[i][1], angles[i][2]);
         expected[i][0] = rot_mat[0];
-        expected[i][size_t{1U} << (num_qubits - i - 1)] = rot_mat[2];
+        expected[i][std::size_t{1U} << (num_qubits - i - 1)] = rot_mat[2];
     }
 
     for (std::size_t index = 0; index < num_qubits; index++) {
@@ -1502,7 +1502,7 @@ void testApplyCRot() {
         std::vector<ComplexT> expected(8);
         const auto rot_mat =
             getRot<std::complex, PrecisionT>(angles[0], angles[1], angles[2]);
-        expected[size_t{1U} << (num_qubits - 1)] = rot_mat[0];
+        expected[std::size_t{1U} << (num_qubits - 1)] = rot_mat[0];
         expected[(std::size_t{1U} << num_qubits) - 2] = rot_mat[2];
 
         GateImplementation::applyPauliX(st.data(), num_qubits, {0}, false);

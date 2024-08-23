@@ -208,10 +208,10 @@ constexpr auto set1(PrecisionT val) {
     return Set1<PrecisionT, packed_size>::create(val);
 }
 
-template <size_t packed_size> struct InternalWires {
+template <std::size_t packed_size> struct InternalWires {
     constexpr static auto value = log2PerfectPower(packed_size / 2);
 };
-template <size_t packed_size>
+template <std::size_t packed_size>
 constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 
 #ifdef PL_USE_AVX2

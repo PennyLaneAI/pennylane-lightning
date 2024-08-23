@@ -165,7 +165,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;
     void Gradient(std::vector<DataView<double, 1>> &gradients,
-                  const std::vector<size_t> &trainParams) override;
+                  const std::vector<std::size_t> &trainParams) override;
 
     auto CacheManagerInfo()
         -> std::tuple<std::size_t, std::size_t, std::size_t,

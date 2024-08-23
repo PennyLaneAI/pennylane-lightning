@@ -229,7 +229,7 @@ class OperationKernelMap {
     EnumDispatchKernalMap kernel_map_;
 
     /* TODO: Cache logic can be improved */
-    mutable std::deque<std::tuple<size_t, uint32_t, EnumKernelMap>> cache_;
+    mutable std::deque<std::tuple<std::size_t, uint32_t, EnumKernelMap>> cache_;
     mutable std::mutex cache_mutex_;
 
     /**

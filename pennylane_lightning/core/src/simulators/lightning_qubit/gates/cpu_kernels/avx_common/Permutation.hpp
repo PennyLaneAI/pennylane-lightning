@@ -144,14 +144,14 @@ constexpr bool isWithinLane(const std::array<uint8_t, size> &permutation) {
 }
 
 ///@cond DEV
-template <size_t size>
+template <std::size_t size>
 constexpr uint8_t
 getPermutation2x(const std::array<uint8_t, size> &permutation) {
     uint8_t res = static_cast<uint8_t>(permutation[1] << 1U) | permutation[0];
     // NOLINTNEXTLINE(readability-magic-numbers, hicpp-signed-bitwise)
     return (res << 6U) | (res << 4U) | (res << 2U) | res;
 }
-template <size_t size>
+template <std::size_t size>
 constexpr uint8_t
 getPermutation4x(const std::array<uint8_t, size> &permutation) {
     uint8_t res = 0;
@@ -261,7 +261,7 @@ compilePermutation<double, 8>(const std::array<uint8_t, 8> &permutation)
 // LCOV_EXCL_STOP
 #endif // Specializations for AVX512 end
 
-template <size_t packed_size>
+template <std::size_t packed_size>
 constexpr auto identity() -> std::array<uint8_t, packed_size> {
     std::array<uint8_t, packed_size> res{};
     for (uint8_t i = 0; i < packed_size; i++) {
@@ -278,7 +278,7 @@ constexpr auto identity() -> std::array<uint8_t, packed_size> {
  * @param perm Previous permutation
  * @param rev_wire Reverse wire
  */
-template <size_t packed_size>
+template <std::size_t packed_size>
 constexpr auto flip(const std::array<uint8_t, packed_size> &perm,
                     std::size_t rev_wire) -> std::array<uint8_t, packed_size> {
     std::array<uint8_t, packed_size> res{};
@@ -297,7 +297,7 @@ constexpr auto flip(const std::array<uint8_t, packed_size> &perm,
  * @tparam packed_size Number of elements in a packed type
  * @param perm Previous permutation
  */
-template <size_t packed_size>
+template <std::size_t packed_size>
 constexpr auto swapRealImag(const std::array<uint8_t, packed_size> &perm)
     -> std::array<uint8_t, packed_size> {
     std::array<uint8_t, packed_size> res{};

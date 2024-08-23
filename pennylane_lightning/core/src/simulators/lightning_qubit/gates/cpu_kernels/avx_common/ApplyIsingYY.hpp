@@ -32,7 +32,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingYY {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static consteval auto permutationInternalInternal() {
         std::array<uint8_t, packed_size> perm = {
             0,
@@ -46,7 +46,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingYY {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t rev_wire0, std::size_t rev_wire1, class ParamT>
+    template <std::size_t rev_wire0, std::size_t rev_wire1, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
@@ -81,7 +81,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingYY {
             PrecisionAVXConcept::store(arr + n, prod_cos + prod_sin);
         }
     }
-    template <size_t min_rev_wire, class ParamT>
+    template <std::size_t min_rev_wire, class ParamT>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       std::size_t max_rev_wire, bool inverse,

@@ -39,7 +39,7 @@ struct ApplyControlledPhaseShift {
     /**
      * @brief Permutation applying imaginary `i` to |11>
      */
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static consteval auto applyInternalInternalPermutation() {
         // Swap real and imaginary part of 11
         std::array<uint8_t, packed_size> perm{};
@@ -57,7 +57,7 @@ struct ApplyControlledPhaseShift {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t rev_wire0, std::size_t rev_wire1, class ParamT>
+    template <std::size_t rev_wire0, std::size_t rev_wire1, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
@@ -110,7 +110,7 @@ struct ApplyControlledPhaseShift {
     /**
      * @brief Permutation applying product `i` when the target bit is 1
      */
-    template <size_t min_rev_wire>
+    template <std::size_t min_rev_wire>
     static consteval auto applyInternalExternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
         for (std::size_t k = 0; k < (packed_size / 2); k++) {
@@ -127,7 +127,7 @@ struct ApplyControlledPhaseShift {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t min_rev_wire, class ParamT>
+    template <std::size_t min_rev_wire, class ParamT>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       std::size_t max_rev_wire, bool inverse,

@@ -366,7 +366,7 @@ class MPIManager final {
     /**
      * @brief Get the MPI version.
      */
-    auto getVersion() const -> std::tuple<size_t, std::size_t> {
+    auto getVersion() const -> std::tuple<std::size_t, std::size_t> {
         return {version_, subversion_};
     }
 

@@ -89,7 +89,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyT {
         return PrecisionAVXConcept::loadu(data.data());
     }
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits, bool inverse) {
         constexpr static auto perm = applyInternalPermutation(rev_wire);

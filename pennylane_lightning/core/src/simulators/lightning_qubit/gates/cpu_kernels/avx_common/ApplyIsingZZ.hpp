@@ -34,7 +34,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingZZ {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
-    template <size_t rev_wire0, std::size_t rev_wire1, class ParamT>
+    template <std::size_t rev_wire0, std::size_t rev_wire1, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
@@ -58,7 +58,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingZZ {
         }
     }
 
-    template <size_t min_rev_wire, class ParamT>
+    template <std::size_t min_rev_wire, class ParamT>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       std::size_t max_rev_wire, bool inverse,

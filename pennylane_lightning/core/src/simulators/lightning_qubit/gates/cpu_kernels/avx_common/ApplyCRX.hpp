@@ -61,7 +61,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
      * [Re(v[0]), Im(v[0]), Re(v[1]), Im(v[1]), Im(v[3]), Re(v[3]), Im(v[2]),
      * Re(v[2])]
      */
-    template <size_t control, std::size_t target>
+    template <std::size_t control, std::size_t target>
     static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
         for (std::size_t k = 0; k < packed_size / 2; k++) {
@@ -80,7 +80,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
      * @brief Factor for (2).
      * [0, 0, 0, 0, sin(phi/2), -sin(phi/2), sin(phi/2), -sin(phi/2)]
      */
-    template <size_t control, std::size_t target, class ParamT>
+    template <std::size_t control, std::size_t target, class ParamT>
     static auto applyInternalInternalOffDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
 
@@ -101,7 +101,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
      * @brief Factor for (1)
      * [1, 1, 1, 1, cos(phi/2), cos(phi/2), cos(phi/2), cos(phi/2)]
      */
-    template <size_t control, std::size_t target, class ParamT>
+    template <std::size_t control, std::size_t target, class ParamT>
     static auto applyInternalInternalDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
         PL_LOOP_SIMD
@@ -117,7 +117,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
         return setValue(arr);
     }
 
-    template <size_t control, std::size_t target, class ParamT>
+    template <std::size_t control, std::size_t target, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
@@ -145,7 +145,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
     /**
      * @brief Factor for (1) when the target bit is 0/1.
      */
-    template <size_t control, typename ParamT>
+    template <std::size_t control, typename ParamT>
     static auto applyInternalExternalDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
         PL_LOOP_SIMD
@@ -165,7 +165,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
     /**
      * @brief Factor for (2) when the target bit is 0/1.
      */
-    template <size_t control, typename ParamT>
+    template <std::size_t control, typename ParamT>
     static auto applyInternalExternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
         PL_LOOP_SIMD
@@ -187,7 +187,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
      * on internal wires (inside of packed bytes) but the target acts on
      * external wires.
      */
-    template <size_t control, typename ParamT>
+    template <std::size_t control, typename ParamT>
     static void
     applyInternalExternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                           std::size_t target, bool inverse, ParamT angle) {
@@ -232,7 +232,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
     /**
      * @brief Permutation that flips the target bit.
      */
-    template <size_t target>
+    template <std::size_t target>
     static consteval auto applyExternalInternalOffDiagPerm() {
         std::array<uint8_t, packed_size> arr{};
 
@@ -244,7 +244,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRX {
         return Permutation::compilePermutation<PrecisionT>(arr);
     }
 
-    template <size_t target, typename ParamT>
+    template <std::size_t target, typename ParamT>
     static void
     applyExternalInternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
                           std::size_t control, bool inverse, ParamT angle) {

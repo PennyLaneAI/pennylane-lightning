@@ -31,7 +31,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyPauliX {
 
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits,
                               [[maybe_unused]] bool inverse) {
