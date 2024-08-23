@@ -39,11 +39,18 @@
 
 ### Improvements
 
+* Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
+
+* Update Lightning tests to support the generalization of basis state preparation.
+  [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
+
 * Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
   
 * Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
   [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
+  [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
 
 * LightningQubit gains native support for the `PauliRot` gate.
   [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
