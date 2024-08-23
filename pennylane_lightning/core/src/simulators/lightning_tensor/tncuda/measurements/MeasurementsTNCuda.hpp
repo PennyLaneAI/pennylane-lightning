@@ -26,8 +26,6 @@
 #include <cutensornet.h>
 #include <vector>
 
-#include <iostream>
-
 #include "LinearAlg.hpp"
 #include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
@@ -97,7 +95,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
      */
     template <std::size_t thread_per_block = 256>
     auto probs(const std::vector<std::size_t> &wires,
-               const int32_t numHyperSamples = 8) -> std::vector<PrecisionT> {
+               const int32_t numHyperSamples = 1) -> std::vector<PrecisionT> {
         PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
                         "Invalid wire indices order. Please ensure that the "
                         "wire indices are in the ascending order.");
@@ -270,7 +268,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
      * and is default as 1.
      */
     auto var(ObservableTNCuda<TensorNetT> &obs,
-             const int32_t numHyperSamples = 8) -> PrecisionT {
+             const int32_t numHyperSamples = 1) -> PrecisionT {
         auto expectation_val =
             expval(obs, numHyperSamples); // The cutensornetNetworkOperator_t
                                           // object created in expval() will be
@@ -296,7 +294,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
      * @return Expectation value with respect to the given observable.
      */
     auto expval(ObservableTNCuda<TensorNetT> &obs,
-                const int32_t numHyperSamples = 8) -> PrecisionT {
+                const int32_t numHyperSamples = 1) -> PrecisionT {
         auto tnoperator =
             ObservableTNCudaOperator<TensorNetT>(tensor_network_, obs);
 

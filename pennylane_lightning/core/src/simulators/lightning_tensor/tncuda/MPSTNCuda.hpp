@@ -288,8 +288,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     void append_mps_final_state(double cutoff = 0,
                                 std::string cutoff_mode = "abs") {
-        // PL_ABORT_IF(cutoff >= 0, "Cutoff value should be non-negative.");
-
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
@@ -299,8 +297,32 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             getSitesExtentsPtr().data(),
             /*strides=*/nullptr));
 
-        PL_ABORT_IF_NOT(cutoff_mode == "abs" || cutoff_mode == "rel",
-                        "Cutoff mode should be either 'abs' or 'rel'.");
+        // Optional: SVD
+        cutensornetTensorSVDAlgo_t algo =
+            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default option
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetStateAttributes_t */
+            CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
+            /* const void * */ &algo,
+            /* size_t */ sizeof(algo)));
+
+        PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
+                        "cutoff_mode should either 'rel' or 'abs'.");
+
+        cutensornetStateAttributes_t svd_cutoff_mode =
+            (cutoff_mode == "abs")
+                ? CUTENSORNET_STATE_CONFIG_MPS_SVD_ABS_CUTOFF
+                : CUTENSORNET_STATE_CONFIG_MPS_SVD_REL_CUTOFF;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetStateAttributes_t */ svd_cutoff_mode,
+            /* const void * */ &cutoff,
+            /* size_t */ sizeof(cutoff)));
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),

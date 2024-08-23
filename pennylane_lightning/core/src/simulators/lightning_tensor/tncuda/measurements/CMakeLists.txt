@@ -20,10 +20,6 @@ target_link_libraries(${PL_BACKEND}_measurements PUBLIC  lightning_compile_optio
                                                             ${PL_BACKEND}_observables
                                                             )
 
-add_executable(mpo mpo.cu)
-
-target_link_libraries(mpo PRIVATE lightning_external_libs)
-
 if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
