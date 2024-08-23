@@ -6,6 +6,12 @@ name: Wheel::Linux::x86_64::CUDA
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
   push:
     branches:
       - master
@@ -20,15 +26,15 @@ concurrency:
 jobs:
   set_wheel_build_matrix:
     if: |
-      github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-      github.event_name == 'workflow_dispatch'
+        github.event_name != 'pull_request' ||
+        (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
 
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
