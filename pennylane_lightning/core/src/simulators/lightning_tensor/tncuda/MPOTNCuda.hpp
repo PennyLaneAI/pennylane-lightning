@@ -235,12 +235,12 @@ template <class PrecisionT> class MPOTNCuda {
         for (std::size_t i = 0; i < numSites_; i++) {
             if (target_map[i] == numSites_) {
                 CFP_t value_cu{1.0, 0.0};
-                std::size_t target_idx = tensors_[i].getLength() - 1;
+                std::size_t target_idx = 0;
                 PL_CUDA_IS_SUCCESS(cudaMemcpy(
                     &tensors_[i].getDataBuffer().getData()[target_idx],
                     &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
 
-                target_idx = tensors_[i].getLength() - (2 * bondDims_[i] + 2);
+                target_idx = 2 * bondDims_[i - 1] + 1;
 
                 PL_CUDA_IS_SUCCESS(cudaMemcpy(
                     &tensors_[i].getDataBuffer().getData()[target_idx],
@@ -249,7 +249,6 @@ template <class PrecisionT> class MPOTNCuda {
                 const std::size_t wire_idx = target_map[i];
                 auto tensor_cu = cuUtil::complexToCu<ComplexT>(
                     tensors[wires.size() - 1 - wire_idx]);
-                std::reverse(tensor_cu.begin(), tensor_cu.end());
 
                 tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                               tensor_cu.size());

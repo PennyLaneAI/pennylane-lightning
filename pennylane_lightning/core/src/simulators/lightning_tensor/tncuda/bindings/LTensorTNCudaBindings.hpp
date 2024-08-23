@@ -96,7 +96,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def(
             "applyMPOOperator",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
-               std::vector<std::size_t> &wires) {
+               std::vector<std::size_t> &wires, const std::size_t MPOBondDims) {
                 using ComplexT = typename TensorNet::ComplexT;
                 std::vector<std::vector<ComplexT>> conv_tensors;
                 for (const auto &tensor : tensors) {
@@ -105,7 +105,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                     conv_tensors.push_back(
                         std::vector<ComplexT>{m_ptr, m_ptr + tensor.size()});
                 }
-                tensor_network.applyMPOOperation(conv_tensors, wires);
+                tensor_network.applyMPOOperation(conv_tensors, wires,
+                                                 MPOBondDims);
             },
             "Apply MPO to the state.")
         .def(

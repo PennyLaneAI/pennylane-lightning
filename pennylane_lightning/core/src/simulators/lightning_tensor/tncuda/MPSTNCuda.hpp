@@ -247,18 +247,13 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     void applyMPOOperation(const std::vector<std::vector<ComplexT>> &tensors,
                            const std::vector<std::size_t> &wires,
                            const std::size_t maxMPOBondDim = 0) {
-        // TODO: the following line is for test only
-        std::size_t maxMPOBondDim_ = maxMPOBondDim;
-        if (maxMPOBondDim == 0) {
-            maxMPOBondDim_ = std::size_t{2} << (wires.size());
-        }
         PL_ABORT_IF_NOT(
             tensors.size() == wires.size(),
             "The number of tensors should be equal to the number of "
             "wires.");
         // Create a MPO object based on the host data from the user
         mpos_.emplace_back(std::make_shared<MPOTNCuda<Precision>>(
-            tensors, wires, maxMPOBondDim_, BaseType::getNumQubits(),
+            tensors, wires, maxMPOBondDim, BaseType::getNumQubits(),
             BaseType::getTNCudaHandle(), BaseType::getCudaDataType(),
             BaseType::getDevTag()));
 
