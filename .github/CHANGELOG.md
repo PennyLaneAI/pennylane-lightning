@@ -36,9 +36,6 @@
 
 ### Improvements
 
-* Updated the version of Pybind11 to v2.13.5.
-  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
-
 * Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
   [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
 
