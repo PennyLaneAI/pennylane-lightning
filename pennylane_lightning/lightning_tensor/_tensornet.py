@@ -299,9 +299,6 @@ class LightningTensorNet:
             else:
                 MPOs[i] = np.transpose(MPOs[i], axes=(3, 2, 0, 1)).flatten()
 
-            print(MPOs[i].shape)
-        print(sorted_wires)
-
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(MPOs, sorted_wires)
 
@@ -347,8 +344,6 @@ class LightningTensorNet:
                     gate_ops_matrix = qml.matrix(operation)
                 except AttributeError:
                     gate_ops_matrix = operation.matrix
-
-                print(name)
 
                 gate_ops_matrix = np.transpose(gate_ops_matrix, axes=(1, 0))
 

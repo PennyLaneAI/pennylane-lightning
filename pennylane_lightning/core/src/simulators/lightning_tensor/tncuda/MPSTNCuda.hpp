@@ -275,8 +275,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* const int32_t unitary */ 0,
             /* int64_t * operatorId*/ &operatorId));
 
-        std::cout << "mpos size: " << mpos_.size() << std::endl;
-
         mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
     }
 
