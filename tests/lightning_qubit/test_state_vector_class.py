@@ -20,18 +20,12 @@ import math
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import LightningDevice, LightningStateVector, device_name  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-if device_name == "lightning.qubit":
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
 if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
-
     try:
         from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
     except ImportError:

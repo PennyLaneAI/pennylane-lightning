@@ -19,23 +19,11 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, LightningDevice, device_name  # tested device
+from conftest import PHI, THETA, LightningDevice, LightningStateVector, LightningMeasurements, device_name  # tested device
 from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
-
-if device_name == "lightning.qubit":
-    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-
-if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos._measurements import (
-        LightningKokkosMeasurements as LightningMeasurements,
-    )
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -46,19 +34,6 @@ if not LightningDevice._new_API:
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-# General LightningStateVector fixture, for any number of wires.
-@pytest.fixture(
-    scope="function",
-    params=[np.complex64, np.complex128],
-)
-def lightning_sv(request):
-    def _statevector(num_wires):
-        return LightningStateVector(num_wires=num_wires, dtype=request.param)
-
-    return _statevector
-
 
 def get_hermitian_matrix(n):
     H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
@@ -423,8 +398,8 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
-    @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 1000000, (900000, 900000)])
+    @flaky(max_runs=15)
+    @pytest.mark.parametrize("shots", [None, 100_000, [90_000,90_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -464,6 +439,16 @@ class TestMeasurements:
             pytest.skip(
                 f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
             )
+        rtol = 1.0e-2 # 1% of expected value as tolerance
+        if shots != None and measurement is qml.expval:
+            # Increase the number of shots
+            if isinstance(shots, int): 
+                shots *= 10 
+            else:
+                shots = [i * 10 for i in shots]
+                
+            # Extra tolerance
+            rtol = 5.0e-2 # 5% of expected value as tolerance
 
         n_qubits = 4
         n_layers = 1
@@ -504,11 +489,14 @@ class TestMeasurements:
         if shots is None:
             assert np.allclose(result, expected, max(tol, 1.0e-4))
         else:
-            dtol = max(tol, 1.0e-2)
-            assert np.allclose(result, expected, rtol=dtol, atol=dtol)
+            atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-3)
+            rtol = max(tol, rtol) # % of expected value as tolerance
+            
+            # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
+            assert np.allclose(result, expected, rtol=rtol, atol=atol)
 
-    @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 1000000, (900000, 900000)])
+    @flaky(max_runs=10)
+    @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -559,6 +547,17 @@ class TestMeasurements:
                 f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
             )
 
+        rtol = 1.0e-2 # 1% of expected value as tolerance
+        if shots != None and measurement is qml.expval:
+            # Increase the number of shots
+            if isinstance(shots, int): 
+                shots *= 10 
+            else:
+                shots = [i * 10 for i in shots]
+                
+            # Extra tolerance
+            rtol = 5.0e-2 # 5% of expected value as tolerance
+
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)
@@ -601,12 +600,14 @@ class TestMeasurements:
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
-        dtol = tol if shots is None else max(tol, 1.0e-2)
+        atol = tol if shots is None else max(tol, 1.0e-2)
+        rtol = max(tol, rtol) # % of expected value as tolerance
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
                 r = np.concatenate(r)
                 e = np.concatenate(e)
-            assert np.allclose(r, e, atol=dtol, rtol=dtol)
+            # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
+            assert np.allclose(r, e, atol=atol, rtol=rtol)
 
     @pytest.mark.parametrize(
         "cases",

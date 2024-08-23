@@ -18,22 +18,10 @@ import math
 
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import LightningDevice, LightningStateVector, LightningAdjointJacobian, device_name  # tested device
 from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
-
-if device_name == "lightning.qubit":
-    from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-
-if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import (
-        LightningKokkosAdjointJacobian as LightningAdjointJacobian,
-    )
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -57,18 +45,6 @@ if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
-
-
-# General LightningStateVector fixture, for any number of wires.
-@pytest.fixture(
-    scope="function",
-    params=[np.complex64, np.complex128],
-)
-def lightning_sv(request):
-    def _statevector(num_wires):
-        return LightningStateVector(num_wires=num_wires, dtype=request.param)
-
-    return _statevector
 
 
 def Rx(theta):

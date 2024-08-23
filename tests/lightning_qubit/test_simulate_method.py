@@ -19,23 +19,17 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, LightningDevice, device_name  # tested device
+from conftest import PHI, THETA, LightningDevice, LightningStateVector, device_name  # tested device
 from flaky import flaky
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
 if device_name == "lightning.qubit":
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
     from pennylane_lightning.lightning_qubit.lightning_qubit import simulate
 
-
 if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import simulate
-
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -46,17 +40,6 @@ if not LightningDevice._new_API:
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-
-# General LightningStateVector fixture, for any number of wires.
-@pytest.fixture(
-    scope="module",
-    params=[np.complex64, np.complex128],
-)
-def lightning_sv(request):
-    def _statevector(num_wires):
-        return LightningStateVector(num_wires=num_wires, dtype=request.param)
-
-    return _statevector
 
 
 class TestSimulate:
