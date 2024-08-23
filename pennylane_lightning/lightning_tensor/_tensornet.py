@@ -31,17 +31,6 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-def get_ranks(lst):
-    # Create a sorted list of unique elements
-    sorted_unique = sorted(set(lst), reverse=True)
-
-    # Create a rank dictionary
-    rank_dict = {value: rank for rank, value in enumerate(sorted_unique)}
-
-    # Map the original list elements to their ranks
-    return [rank_dict[value] for value in lst]
-
-
 def svd_split(M, bond_dim):
     """SVD split a matrix into a matrix product state via numpy linalg. Note that this function is to be moved to the C++ layer."""
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
@@ -59,14 +48,10 @@ def svd_split(M, bond_dim):
 def split(M):
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     bonds = len(S)
-    # U = U @ np.diag(S)
+    U = U @ np.diag(S)
     Vd = np.diag(S) @ Vd
     Vd = Vd.reshape(bonds, 2, 2, -1)
     U = U.reshape((-1, 2, 2, bonds))
-
-    # keep only chi bonds
-    # chi = np.min([bonds, bond_dim])
-    # U, S, Vd = U[:, :, :, :chi], S[:chi], Vd[:chi]
 
     return U, Vd
 
@@ -74,16 +59,16 @@ def split(M):
 def dense_to_mpo(psi, n_wires):
     Ms = []
 
-    psi = np.reshape(psi, (2**2, -1))
-    U, Vd = split(psi)  # psi[2, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
+    psi = np.reshape(psi, (4, -1))
+    U, Vd = split(psi)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
 
     Ms.append(U)
     bondL = Vd.shape[0]
     psi = Vd
 
     for _ in range(n_wires - 2):
-        psi = np.reshape(psi, (4 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
-        U, Vd = split(psi)  # psi[2, (2x2x..)] = U[2, mu] S[mu] Vd[mu, (2x2x2x..)]
+        psi = np.reshape(psi, (4 * bondL, -1))  # reshape psi[4 * bondL, (2x2x2...)]
+        U, Vd = split(psi)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
         Ms.append(U)
 
         psi = Vd
@@ -290,10 +275,9 @@ class LightningTensorNet:
         for i in range(len(wires)):
             indices_order.append(i)
             indices_order.append(i + len(wires))
+
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_data = np.transpose(gate_data, axes=indices_order)
-
-        bondDim = 16
 
         MPOs = dense_to_mpo(gate_data, len(wires))
 
@@ -307,10 +291,8 @@ class LightningTensorNet:
             else:
                 MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2, 3))
 
-            print(i, MPOs[i].shape)
-
         # Append the MPOs to the tensor network
-        self._tensornet.applyMPOOperator(MPOs, sorted_wires, bondDim)
+        self._tensornet.applyMPOOperator(MPOs, sorted_wires, 2 ** len(wires))
 
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
