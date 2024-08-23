@@ -2,6 +2,15 @@
 
 ### New features since last release
 
+* Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
+  [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
+
+* Add LightningGPU Linux (aarch64+GraceHopper) wheels to PyPI.
+  [(#815)](https://github.com/PennyLaneAI/pennylane-lightning/pull/815)
+
+* Add the analytic `qml.probs()` measurement support to `lightning.tensor`.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+
 * Add `qml.state()` measurement support to `lightning.tensor`.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
@@ -27,8 +36,30 @@
 
 ### Improvements
 
+* Updated the version of Pybind11 to v2.13.5.
+  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
+
+* Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
+
+* Update Lightning tests to support the generalization of basis state preparation.
+  [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
+
+* Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+  
+* Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
+  [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
+  [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
+
+* LightningQubit gains native support for the `PauliRot` gate.
+  [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+  
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
   [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
+
+* Add `SetState` and `SetBasisState` to `LightningKokkosSimulator`.
+  [(#861)](https://github.com/PennyLaneAI/pennylane-lightning/pull/861)
 
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
@@ -87,10 +118,20 @@
 
 ### Documentation
 
+* The installation instructions for all lightning plugins have been improved.
+  [(#851)](https://github.com/PennyLaneAI/pennylane-lightning/pull/851)
+  [(#858)](https://github.com/PennyLaneAI/pennylane-lightning/pull/858)
+
 * Updated the README and added citation format for Lightning arxiv preprint.
-  [#818](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
+  [(#818)](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
+
+* Update dependencies and `build` command options following changes in the build system.
+  [(#863)](https://github.com/PennyLaneAI/pennylane-lightning/pull/863)
+
+* Replace structured bindings by variables in `GateImplementationsLM.hpp`.
+  [(#856)](https://github.com/PennyLaneAI/pennylane-lightning/pull/856)
 
 * Remove wrong -m when calling setup.py.
   [(#854)](https://github.com/PennyLaneAI/pennylane-lightning/pull/854)
@@ -126,7 +167,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Paul Haochen Wang
+Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
 
 ---
 
