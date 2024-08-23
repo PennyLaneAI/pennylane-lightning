@@ -184,7 +184,8 @@ constexpr auto findGateOpForControlledGenerator() -> ControlledGateOperation {
     return ControlledGateOperation{};
 }
 
-template <std::size_t gntr_idx> constexpr auto controlledGeneratorGatePairsIter() {
+template <std::size_t gntr_idx>
+constexpr auto controlledGeneratorGatePairsIter() {
     if constexpr (gntr_idx < Constant::controlled_generator_names.size()) {
         constexpr auto gntr_op =
             std::get<0>(Constant::controlled_generator_names[gntr_idx]);

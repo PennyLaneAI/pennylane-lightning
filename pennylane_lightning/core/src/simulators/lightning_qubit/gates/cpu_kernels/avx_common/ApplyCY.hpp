@@ -216,7 +216,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCY {
     /**
      * @brief Sign factor when the control bit is 1.
      */
-    template <std::size_t target> static consteval auto applyExternalInternalSign() {
+    template <std::size_t target>
+    static consteval auto applyExternalInternalSign() {
         std::array<Precision, packed_size> signs = {
             1.0,
         };

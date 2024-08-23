@@ -425,8 +425,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param num_shots Number of wires the sampled observable was performed on
      *
-     * @return std::unordered_map<std::size_t, std::size_t> with format ``{'outcome':
-     * num_occurences}``
+     * @return std::unordered_map<std::size_t, std::size_t> with format
+     * ``{'outcome': num_occurences}``
      */
     auto counts(const std::size_t &num_shots)
         -> std::unordered_map<std::size_t, std::size_t> {

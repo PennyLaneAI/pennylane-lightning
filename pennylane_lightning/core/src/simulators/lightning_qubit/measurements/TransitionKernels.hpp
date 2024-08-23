@@ -89,10 +89,11 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
             return std::pair<std::size_t, fp_t>(init_idx, 1);
         }
         if (current_bit == 0) {
-            return std::pair<std::size_t, fp_t>(init_idx + std::pow(2, qubit_site),
-                                           1);
+            return std::pair<std::size_t, fp_t>(
+                init_idx + std::pow(2, qubit_site), 1);
         }
-        return std::pair<std::size_t, fp_t>(init_idx - std::pow(2, qubit_site), 1);
+        return std::pair<std::size_t, fp_t>(init_idx - std::pow(2, qubit_site),
+                                            1);
     }
 };
 

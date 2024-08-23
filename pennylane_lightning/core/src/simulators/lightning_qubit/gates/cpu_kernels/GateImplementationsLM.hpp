@@ -78,7 +78,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return {rev_wires, rev_wire_shifts};
     }
 
-    static std::pair<std::size_t, std::size_t> revWireParity(std::size_t rev_wire) {
+    static std::pair<std::size_t, std::size_t>
+    revWireParity(std::size_t rev_wire) {
         const auto parity = Pennylane::Util::revWireParity(
             std::array<std::size_t, 1>{rev_wire});
         return {parity[1], parity[0]};
