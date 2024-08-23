@@ -189,6 +189,8 @@ class StateVectorKokkos final
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
+        PL_ABORT_IF_NOT(indices.size() == values.size(),
+                        "Inconsistent indices and values dimensions.")
         initZeros();
         auto d_indices = vector2view(indices);
         auto d_values = vector2view(values);
