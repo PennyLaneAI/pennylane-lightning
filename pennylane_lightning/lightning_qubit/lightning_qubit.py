@@ -50,7 +50,8 @@ try:
     from pennylane_lightning.lightning_qubit_ops import backend_info
 
     LQ_CPP_BINARY_AVAILABLE = True
-except ImportError:
+except ImportError as e:
+    print(e)
     LQ_CPP_BINARY_AVAILABLE = False
 
 Result_or_ResultBatch = Union[Result, ResultBatch]

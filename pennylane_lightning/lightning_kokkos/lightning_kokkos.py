@@ -58,7 +58,8 @@ try:
     )
 
     LK_CPP_BINARY_AVAILABLE = True
-except ImportError:
+except ImportError as e:
+    print(e)
     LK_CPP_BINARY_AVAILABLE = False
     backend_info = None
 
