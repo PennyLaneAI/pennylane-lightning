@@ -48,7 +48,7 @@ def svd_split(M, bond_dim):
 def split(M):
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     bonds = len(S)
-    U = U @ np.diag(S)
+    U = U
     Vd = np.diag(S) @ Vd
     Vd = Vd.reshape(bonds, 2, 2, -1)
     U = U.reshape((-1, 2, 2, bonds))
@@ -289,7 +289,7 @@ class LightningTensorNet:
                 MPOs[i] = MPOs[i].reshape(-1, 2, 2)
                 MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2))
             else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2, 3))
+                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2))
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(MPOs, sorted_wires, 2 ** len(wires))
