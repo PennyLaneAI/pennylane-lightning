@@ -118,8 +118,6 @@ def circuit_ansatz(params, wires):
     qml.OrbitalRotation(params[20], wires=[wires[0], wires[1], wires[5], wires[6]])
     qml.QFT(wires=[wires[0]])
     qml.ECR(wires=[wires[1], wires[3]])
-    qml.BlockEncode([[0.1, 0.2], [0.3, 0.4]], wires=[wires[0], wires[3]])
-    qml.ctrl(qml.BlockEncode([0.1], wires=[wires[0]]), control=wires[1])
 
 
 @pytest.mark.parametrize(
@@ -183,29 +181,7 @@ def test_integration_for_all_supported_gates(returns):
     j_ltensor = qnode_ltensor(params)
     j_default = qnode_default(params)
 
-    assert np.allclose(j_ltensor, j_default, rtol=1e-1)
-
-
-@pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-def test_state_prep_not_support(qubit_device, theta, phi):
-    """Test that state preparation is not supported on the device."""
-    dev = qubit_device(wires=3)
-    obs = qml.Hermitian([[1, 0], [0, -1]], wires=[0])
-
-    tape = qml.tape.QuantumScript(
-        [
-            qml.StatePrep([1.0, 0, 0, 0, 0, 0, 0, 0], wires=[0, 1, 2]),
-            qml.RX(theta, wires=[0]),
-            qml.RX(phi, wires=[1]),
-            qml.RX(theta + phi, wires=[2]),
-        ],
-        measurements=[qml.expval(obs)],
-    )
-
-    with pytest.raises(
-        DeviceError, match="lightning.tensor does not support initialization with a state vector."
-    ):
-        dev.execute(tape)
+    assert np.allclose(j_ltensor, j_default, rtol=1e-6)
 
 
 class TestSparseHExpval:
@@ -239,8 +215,8 @@ class TestSparseHExpval:
         with pytest.raises(DeviceError):
             circuit_expval()
 
-    def test_expval_sparseH(self):
-        """Test that expval is chosen for a variety of different expectation values."""
+    def test_expval_sparseH_not_supported(self):
+        """Test that expval of SparseH is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
@@ -249,6 +225,46 @@ class TestSparseHExpval:
 
         with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
             m.expval(q.queue[0])
+
+    def test_var_sparseH_not_supported(self):
+        """Test that var of SparseH is not supported."""
+        with qml.queuing.AnnotatedQueue() as q:
+            qml.var(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
+
+        tensornet = LightningTensorNet(4, 10)
+        m = LightningTensorMeasurements(tensornet)
+
+        with pytest.raises(
+            NotImplementedError,
+            match="The var measurement does not support sparse Hamiltonian observables.",
+        ):
+            m.var(q.queue[0])
+
+    def test_expval_hermitian_not_supported(self):
+        """Test that expval of Hermitian with 1+ wires is not supported."""
+        with qml.queuing.AnnotatedQueue() as q:
+            qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
+
+        tensornet = LightningTensorNet(4, 10)
+        m = LightningTensorMeasurements(tensornet)
+
+        with pytest.raises(
+            ValueError, match="The number of Hermitian observables target wires should be 1."
+        ):
+            m.expval(q.queue[0])
+
+    def test_var_hermitian_not_supported(self):
+        """Test that var of Hermitian with 1+ wires is not supported."""
+        with qml.queuing.AnnotatedQueue() as q:
+            qml.var(qml.Hermitian(np.eye(4), wires=[0, 1]))
+
+        tensornet = LightningTensorNet(4, 10)
+        m = LightningTensorMeasurements(tensornet)
+
+        with pytest.raises(
+            ValueError, match="The number of Hermitian observables target wires should be 1."
+        ):
+            m.var(q.queue[0])
 
     def test_measurement_shot_not_supported(self):
         """Test shots measurement error for measure_tensor_network."""
@@ -260,7 +276,9 @@ class TestSparseHExpval:
         tape = qml.tape.QuantumScript(measurements=obs, shots=1000)
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError, match="Shots are not supported for tensor network"):
+        with pytest.raises(
+            NotImplementedError, match="Shots are not supported for tensor network simulations."
+        ):
             m.measure_tensor_network(tape)
 
     def test_measurement_not_supported(self):
@@ -271,10 +289,7 @@ class TestSparseHExpval:
         tape = qml.tape.QuantumScript(measurements=obs)
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(
-            NotImplementedError,
-            match="Does not support current measurement. Only ExpectationMP measurements are supported.",
-        ):
+        with pytest.raises(NotImplementedError, match="Unsupported measurement type."):
             m.measure_tensor_network(tape)
 
 

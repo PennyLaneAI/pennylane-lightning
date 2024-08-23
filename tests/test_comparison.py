@@ -59,14 +59,14 @@ def one_qubit_block(wires=None):
     qml.PauliX(wires=wires)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor device dose not support state return",
-)
 class TestComparison:
     """A test that compares the output states of the lightning device and ``default.qubit`` for a
     variety of different circuits. This uses ``default.qubit`` as a reference."""
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support one-qubit circuits",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
     @pytest.mark.parametrize(
@@ -102,10 +102,15 @@ class TestComparison:
         assert np.allclose(lightning_state, default_state)
         assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support direct access to the state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
+        "lightning_dev_version",
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_two_qubit_circuit(
@@ -138,17 +143,22 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
         assert np.allclose(lightning_state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support the direct access to state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
+        "lightning_dev_version",
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_three_qubit_circuit(
@@ -189,17 +199,22 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
         assert np.allclose(lightning_state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support the direct access to state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
+        "lightning_dev_version",
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_four_qubit_circuit(
@@ -245,13 +260,17 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
 
         default_state = default(qml.state)
 
+        # pylint: disable=protected-access
+        lightning_state = dev_l._statevector.state if dev_l._new_API else dev_l.state
         assert np.allclose(lightning_state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support does not support the direct access to state",
+    )
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )

@@ -17,6 +17,8 @@ This module contains the :class:`~.LightningQubit` class, a PennyLane simulator 
 interfaces with C++ for fast linear algebra calculations.
 """
 
+import os
+import sys
 from os import getenv
 from pathlib import Path
 from typing import List
@@ -247,17 +249,6 @@ class LightningKokkos(LightningBase):
             arr = new_arr
         return arr
 
-    def _create_basis_state(self, index):
-        """Return a computational basis state over all wires.
-        Args:
-            index (int): integer representing the computational basis state
-        Returns:
-            array[complex]: complex array of shape ``[2]*self.num_wires``
-            representing the statevector of the basis state
-        Note: This function does not support broadcasted inputs yet.
-        """
-        self._kokkos_state.setBasisState(index)
-
     def reset(self):
         """Reset the device"""
         super().reset()
@@ -355,18 +346,15 @@ class LightningKokkos(LightningBase):
             state.DeviceToHost(state_data)
             state = state_data
 
-        ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
-
         # translate to wire labels used by device
         device_wires = self.map_wires(device_wires)
-        output_shape = [2] * self.num_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
+            output_shape = (2,) * self.num_wires
             # Initialize the entire device state with the input state
             self.sync_h2d(self._reshape(state, output_shape))
             return
-
-        self._kokkos_state.setStateVector(ravelled_indices, state)  # this operation on device
+        self._kokkos_state.setStateVector(state, list(device_wires))  # this operation on device
 
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
@@ -378,8 +366,13 @@ class LightningKokkos(LightningBase):
 
         Note: This function does not support broadcasted inputs yet.
         """
-        num = self._get_basis_state_index(state, wires)
-        self._create_basis_state(num)
+        if not set(state.tolist()).issubset({0, 1}):
+            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
+
+        if len(state) != len(wires):
+            raise ValueError("BasisState parameter and wires must be of equal length.")
+
+        self._kokkos_state.setBasisState(state, list(wires))
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -621,6 +614,9 @@ class LightningKokkos(LightningBase):
             ``(dev.shots, dev.num_wires)``
         """
         shots = self.shots if shots is None else shots
+
+        shots = shots.total_shots if isinstance(shots, qml.measurements.Shots) else shots
+
         measure = (
             MeasurementsC64(self._kokkos_state)
             if self.use_csingle
@@ -834,3 +830,45 @@ class LightningKokkos(LightningBase):
                 return self.adjoint_jacobian(new_tape, starting_state, use_device_state)
 
             return processing_fn
+
+    @staticmethod
+    def get_c_interface():
+        """Returns a tuple consisting of the device name, and
+        the location to the shared object with the C/C++ device implementation.
+        """
+
+        # The shared object file extension varies depending on the underlying operating system
+        file_extension = ""
+        OS = sys.platform
+        if OS == "linux":
+            file_extension = ".so"
+        elif OS == "darwin":
+            file_extension = ".dylib"
+        else:
+            raise RuntimeError(
+                f"'LightningKokkosSimulator' shared library not available for '{OS}' platform"
+            )
+
+        lib_name = "liblightning_kokkos_catalyst" + file_extension
+        package_root = Path(__file__).parent
+
+        # The absolute path of the plugin shared object varies according to the installation mode.
+
+        # Wheel mode:
+        # Fixed location at the root of the project
+        wheel_mode_location = package_root.parent / lib_name
+        if wheel_mode_location.is_file():
+            return "LightningKokkosSimulator", wheel_mode_location.as_posix()
+
+        # Editable mode:
+        # The build directory contains a folder which varies according to the platform:
+        #   lib.<system>-<architecture>-<python-id>"
+        # To avoid mismatching the folder name, we search for the shared object instead.
+        # TODO: locate where the naming convention of the folder is decided and replicate it here.
+        editable_mode_path = package_root.parent.parent / "build"
+        for path, _, files in os.walk(editable_mode_path):
+            if lib_name in files:
+                lib_location = (Path(path) / lib_name).as_posix()
+                return "LightningKokkosSimulator", lib_location
+
+        raise RuntimeError("'LightningKokkosSimulator' shared library not found")

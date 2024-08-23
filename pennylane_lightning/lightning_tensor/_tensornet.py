@@ -21,12 +21,52 @@ try:
 except ImportError:
     pass
 
+from itertools import product
 
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
+from pennylane.wires import Wires
+
+
+def svd_split(M, bond_dim):
+    """SVD split a matrix into a matrix product state via numpy linalg. Note that this function is to be moved to the C++ layer."""
+    U, S, Vd = np.linalg.svd(M, full_matrices=False)
+    U = U @ np.diag(S)  # Append singular values to U
+    bonds = len(S)
+    Vd = Vd.reshape(bonds, 2, -1)
+    U = U.reshape((-1, 2, bonds))
+
+    # keep only chi bonds
+    chi = np.min([bonds, bond_dim])
+    U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
+    return U, Vd
+
+
+def dense_to_mps(psi, n_wires, bond_dim):
+    """Convert a dense state vector to a matrix product state."""
+    Ms = [[] for _ in range(n_wires)]
+
+    psi = np.reshape(psi, (2, -1))  # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
+    U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
+
+    Ms[0] = U
+    bondL = Vd.shape[0]
+    psi = Vd
+
+    for i in range(1, n_wires - 1):
+        psi = np.reshape(psi, (2 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
+        U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
+        Ms[i] = U
+
+        psi = Vd
+        bondL = Vd.shape[0]
+
+    Ms[n_wires - 1] = Vd
+
+    return Ms
 
 
 # pylint: disable=too-many-instance-attributes
@@ -67,6 +107,9 @@ class LightningTensorNet:
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
+        if num_wires < 2:
+            raise ValueError("Number of wires must be greater than 1.")
+
         self._device_name = device_name
         self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
 
@@ -90,6 +133,13 @@ class LightningTensorNet:
         """Returns a handle to the tensor network."""
         return self._tensornet
 
+    @property
+    def state(self):
+        """Copy the state vector data to a numpy array."""
+        state = np.zeros(2**self._num_wires, dtype=self.dtype)
+        self._tensornet.getState(state)
+        return state
+
     def _tensornet_dtype(self):
         """Binding to Lightning Managed tensor network C++ class.
 
@@ -101,6 +151,54 @@ class LightningTensorNet:
         """Reset the device's initial quantum state"""
         # init the quantum state to |00..0>
         self._tensornet.reset()
+
+    def _preprocess_state_vector(self, state, device_wires):
+        """Convert a specified state to a full internal state vector.
+
+        Args:
+            state (array[complex]): normalized input state of length ``2**len(device_wires)``
+            device_wires (Wires): wires that get initialized in the state
+
+        Returns:
+            array[complex]: normalized input state of length ``2**len(device_wires)``
+        """
+        output_shape = [2] * self._num_wires
+        # special case for integral types
+        if state.dtype.kind == "i":
+            state = np.array(state, dtype=self.dtype)
+
+        if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
+            return np.reshape(state, output_shape).ravel(order="C")
+
+        # generate basis states on subset of qubits via the cartesian product
+        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
+
+        # get basis states to alter on full set of qubits
+        unravelled_indices = np.zeros((2 ** len(device_wires), self._num_wires), dtype=int)
+        unravelled_indices[:, device_wires] = basis_states
+
+        # get indices for which the state is changed to input state vector elements
+        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
+
+        # get full state vector to be factorized into MPS
+        full_state = np.zeros(2**self._num_wires, dtype=self.dtype)
+        for i, value in enumerate(state):
+            full_state[ravelled_indices[i]] = value
+        return np.reshape(full_state, output_shape).ravel(order="C")
+
+    def _apply_state_vector(self, state, device_wires: Wires):
+        """Convert a specified state to MPS sites.
+        Args:
+            state (array[complex]): normalized input state of length ``2**len(device_wires)``
+                or broadcasted state of shape ``(batch_size, 2**len(device_wires))``
+            device_wires (Wires): wires that get initialized in the state
+        """
+
+        state = self._preprocess_state_vector(state, device_wires)
+
+        M = dense_to_mps(state, self._num_wires, self._max_bond_dim)
+
+        self._tensornet.updateMPSSitesData(M)
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
@@ -167,10 +265,9 @@ class LightningTensorNet:
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                raise DeviceError(
-                    "lightning.tensor does not support initialization with a state vector."
-                )
-            if isinstance(operations[0], BasisState):
+                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
+                operations = operations[1:]
+            elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
 
@@ -184,11 +281,14 @@ class LightningTensorNet:
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
-
-        Returns:
-            LightningTensorNet: Lightning final state class.
-
         """
         self.apply_operations(circuit.operations)
+        self.appendMPSFinalState()
+
+    def appendMPSFinalState(self):
+        """
+        Append the final state to the tensor network for the MPS backend. This is an function to be called
+        by once apply_operations is called.
+        """
         if self._method == "mps":
             self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)

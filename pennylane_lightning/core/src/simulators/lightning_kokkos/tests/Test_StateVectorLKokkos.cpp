@@ -109,6 +109,46 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",
     }
 }
 
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::setState", "[errors]",
+                           (StateVectorKokkos), (float, double)) {
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+    const std::size_t num_qubits = 2;
+    StateVectorT sv(num_qubits);
+
+    SECTION("setBasisState incompatible dimensions") {
+        REQUIRE_THROWS_WITH(
+            sv.setBasisState({0}, {0, 1}),
+            Catch::Contains("state and wires must have equal dimensions."));
+    }
+
+    SECTION("setBasisState high wire index") {
+        REQUIRE_THROWS_WITH(
+            sv.setBasisState({0, 0, 0}, {0, 1, 2}),
+            Catch::Contains(
+                "wires must take values lower than the number of qubits."));
+    }
+
+    SECTION("setStateVector incompatible dimensions indices & values") {
+        REQUIRE_THROWS_WITH(
+            sv.setStateVector({0, 1}, std::vector<ComplexT>(4, 0.0)),
+            Catch::Contains("Inconsistent indices and values dimensions."));
+    }
+
+    SECTION("setStateVector incompatible dimensions state & wires") {
+        REQUIRE_THROWS_WITH(
+            sv.setStateVector(std::vector<ComplexT>(2, 0.0), {0, 1}),
+            Catch::Contains("Inconsistent state and wires dimensions."));
+    }
+
+    SECTION("setStateVector high wire index") {
+        REQUIRE_THROWS_WITH(
+            sv.setStateVector(std::vector<ComplexT>(8, 0.0), {0, 1, 2}),
+            Catch::Contains(
+                "wires must take values lower than the number of qubits."));
+    }
+}
+
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
                            "[applyMatrix]", (StateVectorKokkos),
                            (float, double)) {

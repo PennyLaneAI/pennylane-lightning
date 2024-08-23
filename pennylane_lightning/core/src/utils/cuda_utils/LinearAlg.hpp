@@ -81,6 +81,60 @@ class CublasCaller {
 };
 
 /**
+ * @brief cuBLAS backed matrix-matrix multiply for GPU data.
+ *
+ * @tparam T Complex data-type. Accepts cuFloatComplex and cuDoubleComplex
+ * @param A Device data pointer of matrix A.
+ * @param B Device data pointer of matrix B.
+ * @param C Device data pointer of matrix C.
+ * @param m Row size of the matrix A.
+ * @param n Column size of the matrix B.
+ * @param k Column size of the matrix A and row size of the matrix B.
+ * @param dev_id the device on which the function should be executed.
+ * @param stream_id the CUDA stream on which the operation should be executed.
+ * @param cublas the CublasCaller object that manages the cuBLAS handle.
+ */
+template <class T = cuDoubleComplex, class DevTypeID = int>
+inline void GEMM_CUDA_device(T *A, T *B, T *C, const int m, const int k,
+                             const int n, DevTypeID dev_id,
+                             cudaStream_t stream_id,
+                             const CublasCaller &cublas) {
+    const T alpha{1.0, 0.0};
+    const T beta{0.0, 0.0};
+    if constexpr (std::is_same_v<T, cuFloatComplex>) {
+        cublas.call(cublasCgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N, m,
+                    n, k, &alpha, A, m, B, n, &beta, C, m);
+    } else if constexpr (std::is_same_v<T, cuDoubleComplex>) {
+        cublas.call(cublasZgemm, dev_id, stream_id, CUBLAS_OP_N, CUBLAS_OP_N, m,
+                    n, k, &alpha, A, m, B, n, &beta, C, m);
+    }
+}
+
+/**
+ * @brief cuBLAS backed sum of the absolute value of a vector for GPU data.
+ *
+ * @tparam T  Float data-type. Accepts float and double
+ * @tparam DevTypeID Integer type of device id.
+ *
+ * @param A Device data pointer of vector A.
+ * @param n Length of the vector.
+ * @param dev_id the device on which the function should be executed.
+ * @param stream_id the CUDA stream on which the operation should be executed.
+ * @param cublas the CublasCaller object that manages the cuBLAS handle.
+ * @param res Device data pointer to store the result.
+ */
+template <class T = double, class DevTypeID = int>
+inline void asum_CUDA_device(const T *A, const int n, DevTypeID dev_id,
+                             cudaStream_t stream_id, const CublasCaller &cublas,
+                             T *res) {
+    if constexpr (std::is_same_v<T, float>) {
+        cublas.call(cublasSasum, dev_id, stream_id, n, A, 1, res);
+    } else if constexpr (std::is_same_v<T, double>) {
+        cublas.call(cublasDasum, dev_id, stream_id, n, A, 1, res);
+    }
+}
+
+/**
  * @brief cuBLAS backed inner product for GPU data.
  *
  * @tparam T Complex data-type. Accepts cuFloatComplex and cuDoubleComplex

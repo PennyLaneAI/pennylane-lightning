@@ -30,6 +30,7 @@
 #include "KernelType.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
 
 /// @cond DEV
 namespace {
@@ -326,9 +327,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-            kernel, arr, this->getNumQubits(), opName, wires, inverse, params);
+            kernel, arr, BaseType::getNumQubits(), opName, wires, inverse,
+            params);
     }
 
     /**
@@ -343,12 +345,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToGateOp(opName);
         dispatcher.applyOperation(getKernelForGate(gate_op), arr,
-                                  this->getNumQubits(), gate_op, wires, inverse,
-                                  params);
+                                  BaseType::getNumQubits(), gate_op, wires,
+                                  inverse, params);
     }
 
     /**
@@ -370,12 +372,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToControlledGateOp(opName);
         const auto kernel = getKernelForControlledGate(gate_op);
         dispatcher.applyControlledGate(
-            kernel, arr, this->getNumQubits(), opName, controlled_wires,
+            kernel, arr, BaseType::getNumQubits(), opName, controlled_wires,
             controlled_values, wires, inverse, params);
     }
     /**
@@ -435,6 +437,25 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    void applyPauliRot(const std::vector<std::size_t> &wires,
+                       const bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.");
+        GateImplementationsLM::applyPauliRot<PrecisionT>(
+            BaseType::getData(), BaseType::getNumQubits(), wires, inverse,
+            params[0], word);
+    }
+
+    /**
      * @brief Apply a single generator to the state-vector using a given
      * kernel.
      *
@@ -446,9 +467,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline auto applyGenerator(
         Pennylane::Gates::KernelType kernel, const std::string &opName,
         const std::vector<std::size_t> &wires, bool adj = false) -> PrecisionT {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
-            kernel, arr, this->getNumQubits(), opName, wires, adj);
+            kernel, arr, BaseType::getNumQubits(), opName, wires, adj);
     }
 
     /**
@@ -461,12 +482,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] auto applyGenerator(const std::string &opName,
                                       const std::vector<std::size_t> &wires,
                                       bool adj = false) -> PrecisionT {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gen_op = dispatcher.strToGeneratorOp(opName);
         return dispatcher.applyGenerator(getKernelForGenerator(gen_op), arr,
-                                         this->getNumQubits(), opName, wires,
-                                         adj);
+                                         BaseType::getNumQubits(), opName,
+                                         wires, adj);
     }
 
     /**
@@ -484,12 +505,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                    const std::vector<bool> &controlled_values,
                    const std::vector<std::size_t> &wires, bool adj = false)
         -> PrecisionT {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto generator_op = dispatcher.strToControlledGeneratorOp(opName);
         const auto kernel = getKernelForControlledGenerator(generator_op);
         return dispatcher.applyControlledGenerator(
-            kernel, arr, this->getNumQubits(), opName, controlled_wires,
+            kernel, arr, BaseType::getNumQubits(), opName, controlled_wires,
             controlled_values, wires, adj);
     }
 
@@ -509,7 +530,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                           const std::vector<std::size_t> &wires,
                           bool inverse = false) {
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
@@ -527,7 +548,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                     ControlledMatrixOperation::NCMultiQubitOp);
             }
         }();
-        dispatcher.applyControlledMatrix(kernel, arr, this->getNumQubits(),
+        dispatcher.applyControlledMatrix(kernel, arr, BaseType::getNumQubits(),
                                          matrix, controlled_wires,
                                          controlled_values, wires, inverse);
     }
@@ -566,12 +587,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
 
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
-        dispatcher.applyMatrix(kernel, arr, this->getNumQubits(), matrix, wires,
-                               inverse);
+        dispatcher.applyMatrix(kernel, arr, BaseType::getNumQubits(), matrix,
+                               wires, inverse);
     }
 
     /**
@@ -650,9 +671,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param branch Branch 0 or 1.
      */
     void collapse(const std::size_t wire, const bool branch) {
-        auto *arr = this->getData();
-        const std::size_t stride = pow(2, this->num_qubits_ - (1 + wire));
-        const std::size_t vec_size = pow(2, this->num_qubits_);
+        auto *arr = BaseType::getData();
+        const std::size_t stride =
+            pow(2, BaseType::getNumQubits() - (1 + wire));
+        const std::size_t vec_size = pow(2, BaseType::getNumQubits());
         const auto section_size = vec_size / stride;
         const auto half_section_size = section_size / 2;
 
@@ -676,16 +698,131 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @brief Normalize vector (to have norm 1).
      */
     void normalize() {
-        auto *arr = this->getData();
-        PrecisionT norm = std::sqrt(squaredNorm(arr, this->getLength()));
+        auto *arr = BaseType::getData();
+        PrecisionT norm = std::sqrt(squaredNorm(arr, BaseType::getLength()));
 
         PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
                     "vector has norm close to zero and can't be normalized");
 
-        std::complex<PrecisionT> inv_norm = 1. / norm;
-        for (size_t k = 0; k < this->getLength(); k++) {
+        ComplexT inv_norm = 1. / norm;
+        for (size_t k = 0; k < BaseType::getLength(); k++) {
             arr[k] *= inv_norm;
         }
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param index Index of the target element.
+     */
+    void setBasisState(const std::size_t index) {
+        auto length = BaseType::getLength();
+        PL_ABORT_IF(index > length - 1, "Invalid index");
+
+        auto *arr = BaseType::getData();
+        std::fill(arr, arr + length, 0.0);
+        arr[index] = {1.0, 0.0};
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        const auto n_wires = wires.size();
+        const auto num_qubits = BaseType::getNumQubits();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        setBasisState(index);
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     *
+     */
+    void resetStateVector() {
+        if (BaseType::getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        const auto num_indices = indices.size();
+        PL_ABORT_IF(num_indices != values.size(),
+                    "Indices and values length must match");
+
+        auto *arr = BaseType::getData();
+        const auto length = BaseType::getLength();
+        std::fill(arr, arr + length, 0.0);
+        for (std::size_t i = 0; i < num_indices; i++) {
+            PL_ABORT_IF(i >= length, "Invalid index");
+            arr[indices[i]] = values[i];
+        }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const std::vector<ComplexT> &state,
+                        const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.")
+        setStateVector(state.data(), wires);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const ComplexT *state,
+                        const std::vector<std::size_t> &wires) {
+        const std::size_t num_state = exp2(wires.size());
+        const auto total_wire_count = BaseType::getNumQubits();
+
+        std::vector<std::size_t> reversed_sorted_wires(wires);
+        std::sort(reversed_sorted_wires.begin(), reversed_sorted_wires.end());
+        std::reverse(reversed_sorted_wires.begin(),
+                     reversed_sorted_wires.end());
+        std::vector<std::size_t> controlled_wires(total_wire_count);
+        std::iota(std::begin(controlled_wires), std::end(controlled_wires), 0);
+        for (auto wire : reversed_sorted_wires) {
+            // Reverse guarantees that we start erasing at the end of the array.
+            // Maybe this can be optimized.
+            controlled_wires.erase(controlled_wires.begin() + wire);
+        }
+
+        const std::vector<bool> controlled_values(controlled_wires.size(),
+                                                  false);
+        auto core_function = [num_state,
+                              &state](ComplexT *arr,
+                                      const std::vector<std::size_t> &indices,
+                                      const std::size_t offset) {
+            for (std::size_t i = 0; i < num_state; i++) {
+                const std::size_t index = indices[i] + offset;
+                arr[index] = state[i];
+            }
+        };
+        GateImplementationsLM::applyNCN(BaseType::getData(), total_wire_count,
+                                        controlled_wires, controlled_values,
+                                        wires, core_function);
     }
 };
 } // namespace Pennylane::LightningQubit

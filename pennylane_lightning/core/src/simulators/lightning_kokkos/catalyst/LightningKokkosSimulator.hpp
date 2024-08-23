@@ -26,6 +26,7 @@
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <random>
 #include <span>
 #include <stdexcept>
 #include <unordered_map>
@@ -62,6 +63,8 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     bool tape_recording{false};
 
     std::size_t device_shots;
+
+    std::mt19937 *gen{nullptr};
 
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningKokkosObsManager<double> obs_manager{};
@@ -115,8 +118,13 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     [[nodiscard]] auto GetNumQubits() const -> size_t override;
     void StartTapeRecording() override;
     void StopTapeRecording() override;
-    void SetDeviceShots(size_t shots) override;
-    [[nodiscard]] auto GetDeviceShots() const -> size_t override;
+    void SetDeviceShots(std::size_t shots) override;
+    void SetDevicePRNG(std::mt19937 *) override;
+    void SetState(DataView<std::complex<double>, 1> &,
+                  std::vector<QubitIdType> &) override;
+    void SetBasisState(DataView<int8_t, 1> &,
+                       std::vector<QubitIdType> &) override;
+    [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
     void PrintState() override;
     [[nodiscard]] auto Zero() const -> Result override;
     [[nodiscard]] auto One() const -> Result override;

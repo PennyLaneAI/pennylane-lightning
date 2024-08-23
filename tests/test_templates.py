@@ -30,11 +30,9 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support multi-controlled gates and probs()",
+    @pytest.mark.parametrize(
+        "n_qubits", range(4, 8) if device_name != "lightning.tensor" else range(4, 6)
     )
-    @pytest.mark.parametrize("n_qubits", range(4, 8))
     def test_grover(self, n_qubits):
         np.random.seed(42)
         omega = np.random.rand(n_qubits) > 0.5
@@ -98,7 +96,7 @@ class TestAngleEmbedding:
 
         def circuit(feature_vector):
             qml.AngleEmbedding(features=feature_vector, wires=range(n_qubits), rotation="Z")
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         X = np.random.rand(n_qubits)
 
@@ -111,10 +109,6 @@ class TestAngleEmbedding:
 class TestAmplitudeEmbedding:
     """Test the AmplitudeEmbedding algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support QubitStateVector.",
-    )
     @pytest.mark.parametrize("first_op", [False, True])
     @pytest.mark.parametrize("n_qubits", range(2, 10, 2))
     def test_amplitudeembedding(self, first_op, n_qubits):
@@ -131,7 +125,7 @@ class TestAmplitudeEmbedding:
             if not first_op:
                 qml.Hadamard(0)
             qml.AmplitudeEmbedding(features=f, wires=range(n_qubits))
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         X = np.random.rand(2**n_qubits)
         X /= np.linalg.norm(X)
@@ -151,7 +145,7 @@ class TestBasisEmbedding:
 
         def circuit(feature_vector):
             qml.BasisEmbedding(features=feature_vector, wires=range(n_qubits))
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         X = np.ones(n_qubits)
 
@@ -172,11 +166,11 @@ class TestDisplacementSqueezingEmbedding:
         def circuit(feature_vector):
             template(features=feature_vector, wires=range(n_qubits))
             qml.QuadraticPhase(0.1, wires=1)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         X = np.arange(1, n_qubits + 1)
 
-        with pytest.raises(qml._device.DeviceError, match="not supported"):
+        with pytest.raises(qml.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(X)
 
 
@@ -237,12 +231,12 @@ class TestCVNeuralNetLayers:
 
         def circuit(weights):
             qml.CVNeuralNetLayers(*weights, wires=[0, 1])
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         shapes = qml.CVNeuralNetLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = [np.random.random(shape) for shape in shapes]
 
-        with pytest.raises(qml._device.DeviceError, match="not supported"):
+        with pytest.raises(qml.DeviceError, match="not supported"):
             _ = qml.QNode(circuit, dev, diff_method=None)(weights)
 
 
@@ -256,7 +250,7 @@ class TestRandomLayers:
 
         def circuit(weights):
             qml.RandomLayers(weights=weights, wires=range(n_qubits))
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         weights = np.array([[0.1, -2.1, 1.4]])
 
@@ -276,7 +270,7 @@ class TestStronglyEntanglingLayers:
 
         def circuit(weights):
             qml.StronglyEntanglingLayers(weights=weights, wires=range(n_qubits))
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         shape = qml.StronglyEntanglingLayers.shape(n_layers=2, n_wires=n_qubits)
         weights = np.random.random(size=shape)
@@ -419,7 +413,7 @@ class TestAllSinglesDoubles:
 
         def circuit(weights, hf_state, singles, doubles):
             qml.templates.AllSinglesDoubles(weights, range(n_qubits), hf_state, singles, doubles)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         weights = np.random.normal(0, np.pi, len(singles) + len(doubles))
         res = qml.QNode(circuit, dev, diff_method=None)(weights, hf_state, singles, doubles)
@@ -442,7 +436,7 @@ class TestBasisRotation:
                 wires=range(3),
                 unitary_matrix=unitary_matrix,
             )
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         unitary_matrix = np.array(
             [
@@ -475,7 +469,7 @@ class TestGateFabric:
 
         def circuit(weights):
             qml.GateFabric(weights, wires=[0, 1, 2, 3], init_state=ref_state, include_pi=True)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         layers = 2
         shape = qml.GateFabric.shape(n_layers=layers, n_wires=n_qubits)
@@ -520,7 +514,7 @@ class TestUCCSD:
 
         def circuit(weights):
             qml.UCCSD(weights, range(n_qubits), s_wires, d_wires, hf_state)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         weights = np.random.random(len(singles) + len(doubles))
 
@@ -559,7 +553,7 @@ class TestkUpCCGSD:
 
         def circuit(weights):
             qml.kUpCCGSD(weights, range(n_qubits), k=1, delta_sz=0, init_state=hf_state)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         # Get the shape of the weights for this template
         layers = 1
@@ -593,7 +587,7 @@ class TestParticleConservingU1:
         # Define the cost function
         def circuit(params):
             ansatz(params)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         layers = 2
         shape = qml.ParticleConservingU1.shape(layers, n_qubits)
@@ -626,7 +620,7 @@ class TestParticleConservingU2:
         # Define the cost function
         def circuit(params):
             ansatz(params)
-            return qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
+            return qml.state()
 
         layers = 2
         shape = qml.ParticleConservingU2.shape(layers, n_qubits)
@@ -652,9 +646,7 @@ class TestApproxTimeEvolution:
 
         def circuit(time):
             qml.ApproxTimeEvolution(hamiltonian, time, 1)
-            return (
-                qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
-            )  # lightning.tensor does not support qml.state()
+            return qml.state()
 
         res = qml.QNode(circuit, dev, diff_method=None)(1.3)
         ref = qml.QNode(circuit, dq, diff_method=None)(1.3)
@@ -676,9 +668,7 @@ class TestQDrift:
 
         def circuit(time):
             qml.QDrift(hamiltonian, time=time, n=10, seed=10)
-            return (
-                qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
-            )  # lightning.tensor does not support qml.state()
+            return qml.state()
 
         res = qml.QNode(circuit, dev, diff_method=None)(1.3)
         ref = qml.QNode(circuit, dq, diff_method=None)(1.3)
@@ -700,9 +690,7 @@ class TestTrotterProduct:
 
         def circuit(time):
             qml.TrotterProduct(hamiltonian, time=time, order=2)
-            return (
-                qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
-            )  # lightning.tensor does not support qml.state()
+            return qml.state()
 
         res = qml.QNode(circuit, dev, diff_method=None)(1.3)
         ref = qml.QNode(circuit, dq, diff_method=None)(1.3)
@@ -734,11 +722,7 @@ class TestQuantumPhaseEstimation:
                 estimation_wires=estimation_wires,
             )
 
-            return (
-                qml.probs(estimation_wires)
-                if device_name != "lightning.tensor"
-                else qml.expval(qml.PauliZ(0))
-            )  # lightning.tensor does not support qml.probs()
+            return qml.probs(estimation_wires)
 
         res = qml.QNode(circuit, dev, diff_method=None)()
         ref = qml.QNode(circuit, dq, diff_method=None)()
@@ -757,9 +741,7 @@ class TestQFT:
         def circuit(basis_state):
             qml.BasisState(basis_state, wires=range(n_qubits))
             qml.QFT(wires=range(n_qubits))
-            return (
-                qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
-            )  # lightning.tensor does not support qml.state()
+            return qml.state()
 
         basis_state = [0] * n_qubits
         basis_state[0] = 1
@@ -797,9 +779,7 @@ class TestAQFT:
         def circuit(basis_state):
             qml.BasisState(basis_state, wires=range(n_qubits))
             qml.AQFT(order=1, wires=range(n_qubits))
-            return (
-                qml.state() if device_name != "lightning.tensor" else qml.expval(qml.PauliZ(0))
-            )  # lightning.tensor does not support qml.state()
+            return qml.state()
 
         basis_state = [0] * n_qubits
         basis_state[0] = 1
@@ -812,6 +792,10 @@ class TestAQFT:
 class TestQSVT:
     """Test the QSVT algorithm."""
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support BlockEncode",
+    )
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qsvt(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)

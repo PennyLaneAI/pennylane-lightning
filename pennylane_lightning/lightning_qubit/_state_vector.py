@@ -24,8 +24,6 @@ try:
 except ImportError:
     pass
 
-from itertools import product
-
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
@@ -111,74 +109,10 @@ class LightningStateVector:
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-    def _create_basis_state(self, index):
-        """Return a computational basis state over all wires.
-
-        Args:
-            index (int): integer representing the computational basis state.
-        """
-        self._qubit_state.setBasisState(index)
-
     def reset_state(self):
         """Reset the device's state"""
         # init the state vector to |00..0>
         self._qubit_state.resetStateVector()
-
-    def _preprocess_state_vector(self, state, device_wires):
-        """Initialize the internal state vector in a specified state.
-
-        Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-            device_wires (Wires): wires that get initialized in the state
-
-        Returns:
-            array[int]: indices for which the state is changed to input state vector elements
-            array[complex]: normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-        """
-        # special case for integral types
-        if state.dtype.kind == "i":
-            state = np.array(state, dtype=self.dtype)
-
-        if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
-            return None, state
-
-        # generate basis states on subset of qubits via the cartesian product
-        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
-
-        # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2 ** len(device_wires), self._num_wires), dtype=int)
-        unravelled_indices[:, device_wires] = basis_states
-
-        # get indices for which the state is changed to input state vector elements
-        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
-        return ravelled_indices, state
-
-    def _get_basis_state_index(self, state, wires):
-        """Returns the basis state index of a specified computational basis state.
-
-        Args:
-            state (array[int]): computational basis state of shape ``(wires,)``
-                consisting of 0s and 1s
-            wires (Wires): wires that the provided computational state should be initialized on
-
-        Returns:
-            int: basis state index
-        """
-        # length of basis state parameter
-        n_basis_state = len(state)
-
-        if not set(state.tolist()).issubset({0, 1}):
-            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
-
-        if n_basis_state != len(wires):
-            raise ValueError("BasisState parameter and wires must be of equal length.")
-
-        # get computational basis state number
-        basis_states = 2 ** (self._num_wires - 1 - np.array(wires))
-        basis_states = qml.math.convert_like(basis_states, state)
-        return int(qml.math.dot(state, basis_states))
 
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
@@ -193,18 +127,14 @@ class LightningStateVector:
             state.getState(state_data)
             state = state_data
 
-        ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
-
-        # translate to wire labels used by device
-        output_shape = [2] * self._num_wires
-
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
+            output_shape = (2,) * self._num_wires
             state = np.reshape(state, output_shape).ravel(order="C")
             self._qubit_state.UpdateData(state)
             return
 
-        self._qubit_state.setStateVector(ravelled_indices, state)
+        self._qubit_state.setStateVector(state, list(device_wires))
 
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
@@ -217,8 +147,13 @@ class LightningStateVector:
 
         Note: This function does not support broadcasted inputs yet.
         """
-        num = self._get_basis_state_index(state, wires)
-        self._create_basis_state(num)
+        if not set(state.tolist()).issubset({0, 1}):
+            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
+
+        if len(state) != len(wires):
+            raise ValueError("BasisState parameter and wires must be of equal length.")
+
+        self._qubit_state.setBasisState(list(state), list(wires))
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
@@ -316,6 +251,12 @@ class LightningStateVector:
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
+            elif isinstance(operation, qml.PauliRot):
+                method = getattr(state, "applyPauliRot")
+                paulis = operation._hyperparameters["pauli_word"]
+                wires = [i for i, w in zip(wires, paulis) if w != "I"]
+                word = "".join(p for p in paulis if p != "I")  # pylint: disable=protected-access
+                method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
@@ -343,7 +284,6 @@ class LightningStateVector:
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
-
         self._apply_lightning(
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
         )

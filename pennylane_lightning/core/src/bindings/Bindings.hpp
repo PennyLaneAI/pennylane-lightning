@@ -727,12 +727,26 @@ template <class TensorNetT, class PyClass>
 void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
     using MeasurementsT = MeasurementsTNCuda<TensorNetT>;
     using ObservableT = ObservableTNCuda<TensorNetT>;
-    pyclass.def(
-        "expval",
-        [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
-            return M.expval(*ob);
-        },
-        "Expected value of an observable object.");
+    pyclass
+        .def(
+            "expval",
+            [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+                return M.expval(*ob);
+            },
+            "Expected value of an observable object.")
+        .def(
+            "probs",
+            [](MeasurementsT &M, const std::vector<std::size_t> &wires) {
+                return py::array_t<typename TensorNetT::PrecisionT>(
+                    py::cast(M.probs(wires)));
+            },
+            "Probabilities of a set of wires.")
+        .def(
+            "var",
+            [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+                return M.var(*ob);
+            },
+            "Variance of an observable object.");
 }
 
 /**

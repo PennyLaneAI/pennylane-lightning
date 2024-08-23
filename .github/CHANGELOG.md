@@ -2,7 +2,25 @@
 
 ### New features since last release
 
+* Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
+  [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
+
+* Add LightningGPU Linux (aarch64+GraceHopper) wheels to PyPI.
+  [(#815)](https://github.com/PennyLaneAI/pennylane-lightning/pull/815)
+
+* Add the analytic `qml.probs()` measurement support to `lightning.tensor`.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+
+* Add `qml.state()` measurement support to `lightning.tensor`.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
+
+* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
+  [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804)
+
 ### Breaking changes
+
+* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector.
+  [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
 * Remove `NDpermuter.hpp` which is no longer required.
   [(#795)](https://github.com/PennyLaneAI/pennylane-lightning/pull/795)
@@ -13,10 +31,44 @@
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
+
 ### Improvements
 
+* Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
+
+* Update Lightning tests to support the generalization of basis state preparation.
+  [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
+
+* Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+  
+* Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
+  [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
+  [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
+
+* LightningQubit gains native support for the `PauliRot` gate.
+  [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+  
+* The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
+  [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
+
+* Add `SetState` and `SetBasisState` to `LightningKokkosSimulator`.
+  [(#861)](https://github.com/PennyLaneAI/pennylane-lightning/pull/861)
+
+* `ENABLE_LAPACK` is off by default for all Lightning backends.
+  [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
+
+* Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
+  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
+
+* Update the Catalyst-specific wrapping class for Lightning Kokkos to track Catalyst's new support for MCM seeding.
+  [(#819)](https://github.com/PennyLaneAI/pennylane-lightning/pull/819)
+
 * Shot batching is made more efficient by executing all the shots in one go on LightningQubit.
-  [#814](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
+  [(#814)](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
 
 * LightningQubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
   [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
@@ -50,10 +102,48 @@
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
+  [(#837)](https://github.com/PennyLaneAI/pennylane-lightning/pull/837)
+
+* Add `initial_state_prep` option to Catalyst TOML file.
+  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
+
+* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
+  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
+
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
+  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
 
 ### Documentation
 
+* The installation instructions for all lightning plugins have been improved.
+  [(#851)](https://github.com/PennyLaneAI/pennylane-lightning/pull/851)
+  [(#858)](https://github.com/PennyLaneAI/pennylane-lightning/pull/858)
+
+* Updated the README and added citation format for Lightning arxiv preprint.
+  [(#818)](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
+
 ### Bug fixes
+
+* Update dependencies and `build` command options following changes in the build system.
+  [(#863)](https://github.com/PennyLaneAI/pennylane-lightning/pull/863)
+
+* Replace structured bindings by variables in `GateImplementationsLM.hpp`.
+  [(#856)](https://github.com/PennyLaneAI/pennylane-lightning/pull/856)
+
+* Remove wrong -m when calling setup.py.
+  [(#854)](https://github.com/PennyLaneAI/pennylane-lightning/pull/854)
+
+* Fix plugin-test-matrix CI/CD workflows.
+  [(#850)](https://github.com/PennyLaneAI/pennylane-lightning/pull/850)
+
+* Set the `immutable` parameter value as `false` for the `cutensornetStateApplyTensorOperator` to allow the following `cutensornetStateUpdateTensorOperator` call.
+  [(#845)](https://github.com/PennyLaneAI/pennylane-lightning/pull/845)
+
+* Fix cuQuantum SDK path pass-though in CMake.
+  [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
+
+* Fix CUDA sync issues on aarch64+GraceHopper.
+  [(#823)](https://github.com/PennyLaneAI/pennylane-lightning/pull/823)
 
 * Check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of `cuTensorNet-v24.03.0`.
   [(#806)](https://github.com/PennyLaneAI/pennylane-lightning/pull/806)
@@ -74,7 +164,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Shuli Shu
+Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
 
 ---
 

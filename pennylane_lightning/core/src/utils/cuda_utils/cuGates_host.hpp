@@ -30,12 +30,12 @@ using namespace cuUtil;
 namespace Pennylane::LightningGPU::cuGates {
 
 /**
- * @brief Create a matrix representation of the PauliX gate data in row-major
+ * @brief Create a matrix representation of the Identity gate data in row-major
  * format.
  *
  * @tparam CFP_t Required precision of gate (`float` or `double`).
  * @return constexpr std::vector<CFP_t> Return constant expression
- * of PauliX data.
+ * of Identity data.
  */
 template <class CFP_t>
 static constexpr auto getIdentity() -> std::vector<CFP_t> {
@@ -1472,6 +1472,162 @@ static constexpr auto getP1111_CU() -> std::vector<CFP_t> {
             cuUtil::ONE<CFP_t>()};
 }
 
+/**
+ * @brief Create a matrix representation of the PauliX@PauliY data in row-major
+ * format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliX@PauliY data.
+ */
+template <class CFP_t> static constexpr auto getXY() -> std::vector<CFP_t> {
+    auto &&PauliY = getPauliY<CFP_t>();
+    return {PauliY[2], PauliY[3], PauliY[0], PauliY[1]};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliX@PauliZ data in row-major
+ * format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliX@PauliZ data.
+ */
+template <class CFP_t> static constexpr auto getXZ() -> std::vector<CFP_t> {
+    auto &&PauliZ = getPauliZ<CFP_t>();
+    return {PauliZ[2], PauliZ[3], PauliZ[0], PauliZ[1]};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliX@Hadamard data in
+ * row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliX@Hadamard data.
+ */
+template <class CFP_t> static constexpr auto getXH() -> std::vector<CFP_t> {
+    auto &&Hadamard = getHadamard<CFP_t>();
+    return {Hadamard[2], Hadamard[3], Hadamard[0], Hadamard[1]};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliY@PauliX data in row-major
+ * format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliY@PauliX data.
+ */
+template <class CFP_t> static constexpr auto getYX() -> std::vector<CFP_t> {
+    auto &&PauliY = getPauliY<CFP_t>();
+    return {PauliY[1], PauliY[0], PauliY[3], PauliY[2]};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliZ@PauliX data in row-major
+ * format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliZ@PauliX data.
+ */
+template <class CFP_t> static constexpr auto getZX() -> std::vector<CFP_t> {
+    auto &&PauliZ = getPauliZ<CFP_t>();
+    return {PauliZ[1], PauliZ[0], PauliZ[3], PauliZ[2]};
+}
+
+/**
+ * @brief Create a matrix representation of the Hadamard@PauliX data in
+ * row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of Hadamard@PauliX data.
+ */
+template <class CFP_t> static constexpr auto getHX() -> std::vector<CFP_t> {
+    auto &&Hadamard = getHadamard<CFP_t>();
+    return {Hadamard[1], Hadamard[0], Hadamard[3], Hadamard[2]};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliY@PauliZ data in row-major
+ * format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliY@PauliZ data.
+ */
+template <class CFP_t> static constexpr auto getYZ() -> std::vector<CFP_t> {
+    auto &&PauliY = getPauliY<CFP_t>();
+    return {PauliY[0], -PauliY[1], PauliY[2], -PauliY[3]};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliY@Hadamard data in
+ * row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliY@Hadamard data.
+ */
+template <class CFP_t> static constexpr auto getYH() -> std::vector<CFP_t> {
+    return {-cuUtil::INVSQRT2IMAG<CFP_t>(), cuUtil::INVSQRT2IMAG<CFP_t>(),
+            cuUtil::INVSQRT2IMAG<CFP_t>(), cuUtil::INVSQRT2IMAG<CFP_t>()};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliZ@PauliY data in row-major
+ * format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliZ@PauliY data.
+ */
+template <class CFP_t> static constexpr auto getZY() -> std::vector<CFP_t> {
+    auto &&PauliY = getPauliY<CFP_t>();
+    return {PauliY[0], PauliY[1], -PauliY[2], -PauliY[3]};
+}
+
+/**
+ * @brief Create a matrix representation of the PauliZ@Hadamard data in
+ * row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of PauliZ@Hadamard data.
+ */
+template <class CFP_t> static constexpr auto getZH() -> std::vector<CFP_t> {
+    auto &&Hadamard = getHadamard<CFP_t>();
+    return {Hadamard[0], Hadamard[1], -Hadamard[2], -Hadamard[3]};
+}
+
+/**
+ * @brief Create a matrix representation of the Hadamard@PauliY data in
+ * row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of Hadamard@PauliY data.
+ */
+template <class CFP_t> static constexpr auto getHY() -> std::vector<CFP_t> {
+    return {cuUtil::INVSQRT2IMAG<CFP_t>(), -cuUtil::INVSQRT2IMAG<CFP_t>(),
+            -cuUtil::INVSQRT2IMAG<CFP_t>(), -cuUtil::INVSQRT2IMAG<CFP_t>()};
+}
+
+/**
+ * @brief Create a matrix representation of the Hadamard@PauliZ data in
+ * row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of Hadamard@PauliZ data.
+ */
+template <class CFP_t> static constexpr auto getHZ() -> std::vector<CFP_t> {
+    auto &&Hadamard = getHadamard<CFP_t>();
+    return {Hadamard[0], -Hadamard[1], Hadamard[2], -Hadamard[3]};
+}
+
 /*
  * @brief Dyanmical access the gate data based on the gate name and parameters.
  *
@@ -1541,6 +1697,44 @@ template <class PrecisionT> class DynamicGateDataAccess {
          []() -> std::vector<CFP_t> { return cuGates::getToffoli<CFP_t>(); }},
         {"CY", []() -> std::vector<CFP_t> { return cuGates::getCY<CFP_t>(); }},
         {"CZ", []() -> std::vector<CFP_t> { return cuGates::getCZ<CFP_t>(); }},
+        {"I@I",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"I@X",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliX<CFP_t>(); }},
+        {"I@Y",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliY<CFP_t>(); }},
+        {"I@Z",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
+        {"I@H",
+         []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
+        {"X@I",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliX<CFP_t>(); }},
+        {"X@X",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"X@Y", []() -> std::vector<CFP_t> { return cuGates::getXY<CFP_t>(); }},
+        {"X@Z", []() -> std::vector<CFP_t> { return cuGates::getXZ<CFP_t>(); }},
+        {"X@H", []() -> std::vector<CFP_t> { return cuGates::getXH<CFP_t>(); }},
+        {"Y@I",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliY<CFP_t>(); }},
+        {"Y@X", []() -> std::vector<CFP_t> { return cuGates::getYX<CFP_t>(); }},
+        {"Y@Y",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"Y@Z", []() -> std::vector<CFP_t> { return cuGates::getYZ<CFP_t>(); }},
+        {"Y@H", []() -> std::vector<CFP_t> { return cuGates::getYH<CFP_t>(); }},
+        {"Z@I",
+         []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
+        {"Z@X", []() -> std::vector<CFP_t> { return cuGates::getZX<CFP_t>(); }},
+        {"Z@Y", []() -> std::vector<CFP_t> { return cuGates::getZY<CFP_t>(); }},
+        {"Z@Z",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
+        {"Z@H", []() -> std::vector<CFP_t> { return cuGates::getZH<CFP_t>(); }},
+        {"H@I",
+         []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
+        {"H@X", []() -> std::vector<CFP_t> { return cuGates::getHX<CFP_t>(); }},
+        {"H@Y", []() -> std::vector<CFP_t> { return cuGates::getHY<CFP_t>(); }},
+        {"H@Z", []() -> std::vector<CFP_t> { return cuGates::getHZ<CFP_t>(); }},
+        {"H@H",
+         []() -> std::vector<CFP_t> { return cuGates::getIdentity<CFP_t>(); }},
         {"CSWAP",
          []() -> std::vector<CFP_t> { return cuGates::getCSWAP<CFP_t>(); }}};
 
