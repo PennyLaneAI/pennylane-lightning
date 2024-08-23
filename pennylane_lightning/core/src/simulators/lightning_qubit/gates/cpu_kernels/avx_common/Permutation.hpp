@@ -120,21 +120,21 @@ constexpr bool isWithinLane(const std::array<uint8_t, size> &permutation) {
     std::array<uint32_t, size_within_lane> lane = {
         0,
     };
-    for (size_t i = 0; i < size_within_lane; i++) {
+    for (std::size_t i = 0; i < size_within_lane; i++) {
         lane[i] = permutation[i];
     }
     {
         auto lane2 = lane;
         std::sort(lane2.begin(), lane2.end());
-        for (size_t i = 0; i < size_within_lane; i++) {
+        for (std::size_t i = 0; i < size_within_lane; i++) {
             if (lane2[i] != i) {
                 return false;
             }
         }
     }
 
-    for (size_t k = 0; k < permutation.size(); k += size_within_lane) {
-        for (size_t idx = 0; idx < size_within_lane; idx++) {
+    for (std::size_t k = 0; k < permutation.size(); k += size_within_lane) {
+        for (std::size_t idx = 0; idx < size_within_lane; idx++) {
             if (lane[idx] + k != permutation[idx + k]) {
                 return false;
             }
@@ -283,7 +283,7 @@ constexpr auto flip(const std::array<uint8_t, packed_size> &perm,
                     std::size_t rev_wire) -> std::array<uint8_t, packed_size> {
     std::array<uint8_t, packed_size> res{};
 
-    for (size_t k = 0; k < packed_size / 2; k++) {
+    for (std::size_t k = 0; k < packed_size / 2; k++) {
         res[2 * k + 0] = perm[2 * (k ^ (1U << rev_wire)) + 0];
         res[2 * k + 1] = perm[2 * (k ^ (1U << rev_wire)) + 1];
     }

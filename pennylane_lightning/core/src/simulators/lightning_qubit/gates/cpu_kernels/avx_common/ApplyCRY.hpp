@@ -61,7 +61,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
     template <size_t control, std::size_t target>
     static consteval auto applyInternalInternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 0;
                 perm[2 * k + 1] = 2 * (k ^ (1U << target)) + 1;
@@ -81,7 +81,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
     static auto applyInternalInternalOffDiagFactor(ParamT angle) {
         std::array<PrecisionT, packed_size> arr{};
         PL_LOOP_SIMD
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 if ((k >> target) & 1U) {
                     // if target bit is 1 (was 0) -> sin(phi/2)
@@ -105,7 +105,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
         std::array<PrecisionT, packed_size> arr{};
 
         PL_LOOP_SIMD
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 arr[2 * k + 0] = std::cos(angle / 2);
                 arr[2 * k + 1] = std::cos(angle / 2);
@@ -133,7 +133,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
         const auto diag_factor =
             applyInternalInternalDiagFactor<control, target>(angle);
         PL_LOOP_PARALLEL(1)
-        for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
+        for (std::size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             const auto diag_w = diag_factor * v;
             const auto off_diag_w =
@@ -150,7 +150,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
     static auto applyInternalExternalDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
         PL_LOOP_SIMD
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
                 arr[2 * k + 0] = std::cos(angle / 2);
@@ -170,7 +170,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
     static auto applyInternalExternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
         PL_LOOP_SIMD
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 // if control is 1
                 arr[2 * k + 0] = std::sin(angle / 2);
@@ -211,7 +211,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
             applyInternalExternalOffDiagFactor<control>(angle);
         const auto off_diag_factor_m = -off_diag_factor_p;
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & target_wire_parity_inv) | (target_wire_parity & k);
             const std::size_t i1 = i0 | target_rev_wire_shift;
@@ -233,7 +233,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
     static auto applyExternalInternalOffDiagFactor(ParamT angle) {
         std::array<Precision, packed_size> arr{};
         PL_LOOP_SIMD
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> target) & 1U) { // target bit is 1 (was 0)
                 arr[2 * k + 0] = std::sin(angle / 2);
                 arr[2 * k + 1] = std::sin(angle / 2);
@@ -269,7 +269,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
             applyExternalInternalOffDiagFactor<target>(angle);
 
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | control_shift;
@@ -310,7 +310,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCRY {
         const auto sin_factor =
             set1<PrecisionT, packed_size>(std::sin(angle / 2));
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);

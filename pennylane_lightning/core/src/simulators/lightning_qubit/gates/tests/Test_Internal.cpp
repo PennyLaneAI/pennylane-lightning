@@ -116,21 +116,21 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
     }
 }
 
-size_t binomialCeff(size_t n, std::size_t r) {
+size_t binomialCeff(std::size_t n, std::size_t r) {
     std::size_t num = 1;
     std::size_t dem = 1;
-    for (size_t k = 0; k < r; k++) {
+    for (std::size_t k = 0; k < r; k++) {
         num *= (n - k);
     }
-    for (size_t k = 1; k <= r; k++) {
+    for (std::size_t k = 1; k <= r; k++) {
         dem *= k;
     }
     return num / dem;
 }
 
-size_t permSize(size_t n, std::size_t r) {
+size_t permSize(std::size_t n, std::size_t r) {
     std::size_t res = 1;
-    for (size_t k = 0; k < r; k++) {
+    for (std::size_t k = 0; k < r; k++) {
         res *= (n - k);
     }
     return res;
@@ -161,7 +161,7 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
                           return std::lexicographical_compare(
                               v1.begin(), v1.end(), v2.begin(), v2.end());
                       }); // sort lexicographically
-            for (size_t i = 0; i < v.size() - 1; i++) {
+            for (std::size_t i = 0; i < v.size() - 1; i++) {
                 REQUIRE(v[i] != v[i + 1]); // all combinations must be different
             }
         }
@@ -184,7 +184,7 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
                           return std::lexicographical_compare(
                               v1.begin(), v1.end(), v2.begin(), v2.end());
                       }); // sort lexicographically
-            for (size_t i = 0; i < v.size() - 1; i++) {
+            for (std::size_t i = 0; i < v.size() - 1; i++) {
                 REQUIRE(v[i] != v[i + 1]); // all permutations must be different
             }
         }

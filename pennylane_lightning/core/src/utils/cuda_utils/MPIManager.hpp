@@ -815,7 +815,7 @@ class MPIManager final {
      * @param key Rank assignment control.
      * @return new MPIManager object.
      */
-    auto split(size_t color, std::size_t key) -> MPIManager {
+    auto split(std::size_t color, std::size_t key) -> MPIManager {
         MPI_Comm newcomm;
         int colorInt = static_cast<int>(color);
         int keyInt = static_cast<int>(key);

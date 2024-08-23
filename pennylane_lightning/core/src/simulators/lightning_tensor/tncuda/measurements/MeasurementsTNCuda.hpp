@@ -240,7 +240,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
             /* cutensornetExpectationAttributes_t */
             CUTENSORNET_EXPECTATION_CONFIG_NUM_HYPER_SAMPLES,
             /* const void * */ &numHyperSamples,
-            /* size_t */ sizeof(numHyperSamples)));
+            /* std::size_t */ sizeof(numHyperSamples)));
 
         cutensornetWorkspaceDescriptor_t workDesc;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
@@ -254,7 +254,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetExpectationPrepare(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetStateExpectation_t */ expectation,
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* std::size_t maxWorkspaceSizeDevice */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t [unused] */ 0x0));
 
@@ -264,7 +264,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         PL_ABORT_IF(worksize > scratchSize,
                     "Insufficient workspace size on Device.\n");
 
-        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        const std::size_t d_scratch_length = worksize / sizeof(std::size_t) + 1;
         DataBuffer<size_t, int> d_scratch(d_scratch_length,
                                           tensor_network_.getDevTag(), true);
 

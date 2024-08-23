@@ -128,7 +128,7 @@ void testApplyPhaseShift() {
         scaleVector(vec, coef);
     }
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyPhaseShift(st.data(), num_qubits, {index},
@@ -153,7 +153,7 @@ void testApplyRX() {
         std::vector<ComplexT>{{0.49757104789172696, 0.0},
                               {0, -0.867423225594017}}};
 
-    for (size_t index = 0; index < angles.size(); index++) {
+    for (std::size_t index = 0; index < angles.size(); index++) {
         auto st = createZeroState<ComplexT>(num_qubits);
 
         GateImplementation::applyRX(st.data(), num_qubits, {0}, false,
@@ -190,7 +190,7 @@ void testApplyRY() {
         getBestAllocator<ComplexT>()};
     DYNAMIC_SECTION(GateImplementation::name
                     << ", RY - " << PrecisionToName<PrecisionT>::value) {
-        for (size_t index = 0; index < angles.size(); index++) {
+        for (std::size_t index = 0; index < angles.size(); index++) {
             auto st = init_state;
             GateImplementation::applyRY(st.data(), num_qubits, {0}, false,
                                         {angles[index]});
@@ -237,7 +237,7 @@ void testApplyRZ() {
         scaleVector(vec, coef);
     }
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyRZ(st.data(), num_qubits, {index}, false,
@@ -246,7 +246,7 @@ void testApplyRZ() {
         CHECK(st == approx(expected[index]));
     }
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyRZ(st.data(), num_qubits, {index}, true,
@@ -272,14 +272,14 @@ void testApplyRot() {
         std::vector<ComplexT>(1U << num_qubits),
         std::vector<ComplexT>(1U << num_qubits)};
 
-    for (size_t i = 0; i < angles.size(); i++) {
+    for (std::size_t i = 0; i < angles.size(); i++) {
         const auto rot_mat = getRot<std::complex, PrecisionT>(
             angles[i][0], angles[i][1], angles[i][2]);
         expected[i][0] = rot_mat[0];
         expected[i][size_t{1U} << (num_qubits - i - 1)] = rot_mat[2];
     }
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createZeroState<ComplexT>(num_qubits);
         GateImplementation::applyRot(st.data(), num_qubits, {index}, false,
                                      angles[index][0], angles[index][1],
@@ -1503,7 +1503,7 @@ void testApplyCRot() {
         const auto rot_mat =
             getRot<std::complex, PrecisionT>(angles[0], angles[1], angles[2]);
         expected[size_t{1U} << (num_qubits - 1)] = rot_mat[0];
-        expected[(size_t{1U} << num_qubits) - 2] = rot_mat[2];
+        expected[(std::size_t{1U} << num_qubits) - 2] = rot_mat[2];
 
         GateImplementation::applyPauliX(st.data(), num_qubits, {0}, false);
 
@@ -2888,7 +2888,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyGlobalPhase",
         reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
     sv.applyOperation("GlobalPhase", {index}, inverse, {param});
     auto result_sv = sv.getDataVector();
-    for (size_t j = 0; j < exp2(num_qubits); j++) {
+    for (std::size_t j = 0; j < exp2(num_qubits); j++) {
         ComplexT tmp = phase * ComplexT(sv_data[j]);
         CHECK((real(result_sv[j])) == Approx(real(tmp)));
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
@@ -2922,7 +2922,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyControlledGlobalPhase",
         reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
     sv.applyOperation("GlobalPhase", {0, 1}, {0, 1}, {2}, inverse, {-pi2});
     auto result_sv = sv.getDataVector();
-    for (size_t j = 0; j < exp2(num_qubits); j++) {
+    for (std::size_t j = 0; j < exp2(num_qubits); j++) {
         ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
         tmp *= ComplexT(sv_data[j]);
         CHECK((real(result_sv[j])) == Approx(real(tmp)));

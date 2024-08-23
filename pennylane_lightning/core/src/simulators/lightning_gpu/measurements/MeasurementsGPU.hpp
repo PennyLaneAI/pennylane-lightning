@@ -157,7 +157,7 @@ class Measurements final
      */
     auto probs() -> std::vector<PrecisionT> {
         std::vector<std::size_t> wires;
-        for (size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
+        for (std::size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
             wires.push_back(i);
         }
         return this->probs(wires);
@@ -185,7 +185,7 @@ class Measurements final
      *
      * @return Floating point std::vector with probabilities.
      */
-    std::vector<PrecisionT> probs(size_t num_shots) {
+    std::vector<PrecisionT> probs(std::size_t num_shots) {
         return BaseType::probs(num_shots);
     }
 
@@ -218,7 +218,7 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -240,7 +240,7 @@ class Measurements final
 
         this->setRandomSeed();
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
-        for (size_t n = 0; n < num_samples; n++) {
+        for (std::size_t n = 0; n < num_samples; n++) {
             rand_nums[n] = dis(this->rng);
         }
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
@@ -281,7 +281,7 @@ class Measurements final
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerDestroy(sampler));
 
         // Pick samples
-        for (size_t i = 0; i < num_samples; i++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
             auto idx = bitStrings[i];
             // If cached, retrieve sample from cache
             if (cache.count(idx) != 0) {
@@ -292,7 +292,7 @@ class Measurements final
             }
             // If not cached, compute
             else {
-                for (size_t j = 0; j < num_qubits; j++) {
+                for (std::size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
                         (idx >> j) & 1U;
                 }
@@ -382,7 +382,7 @@ class Measurements final
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
         }
@@ -636,7 +636,7 @@ class Measurements final
 
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -665,7 +665,7 @@ class Measurements final
                    const std::complex<PrecisionT> *values_ptr,
                    const int64_t numNNZ) {
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(csrOffsets_size) - 1)),
+            (this->_statevector.getLength() != (std::size_t(csrOffsets_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
 
         StateVectorT ob_sv(this->_statevector.getData(),

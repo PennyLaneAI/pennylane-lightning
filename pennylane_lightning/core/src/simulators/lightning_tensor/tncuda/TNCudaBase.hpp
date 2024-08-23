@@ -366,7 +366,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         } else {
             DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
 
-            const std::size_t projected_modes_size = size_t(1)
+            const std::size_t projected_modes_size = std::size_t(1)
                                                      << projected_modes.size();
             for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
                 for (std::size_t j = 0; j < projected_modes.size(); j++) {
@@ -417,7 +417,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetStateAccessor_t */ accessor,
             /* cutensornetAccessorAttributes_t */ accessor_attribute,
             /* const void * */ &numHyperSamples,
-            /* size_t */ sizeof(numHyperSamples)));
+            /* std::size_t */ sizeof(numHyperSamples)));
 
         // prepare the computation
         cutensornetWorkspaceDescriptor_t workDesc;
@@ -431,7 +431,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetAccessorPrepare(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetStateAccessor_t*/ accessor,
-            /* size_t */ scratchSize,
+            /* std::size_t */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t unused as of v24.03 */ 0x0));
 
@@ -520,7 +520,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* std::size_t maxWorkspaceSizeDevice */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused as of v24.03*/ 0x0));
 

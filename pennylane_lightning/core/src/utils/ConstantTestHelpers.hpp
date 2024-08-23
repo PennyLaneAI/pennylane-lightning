@@ -81,9 +81,9 @@ template <typename T, std::size_t size>
 constexpr std::size_t count_unique(const std::array<T, size> &arr) {
     std::size_t res = 0;
 
-    for (size_t i = 0; i < size; i++) {
+    for (std::size_t i = 0; i < size; i++) {
         bool counted = false;
-        for (size_t j = 0; j < i; j++) {
+        for (std::size_t j = 0; j < i; j++) {
             if (arr[j] == arr[i]) {
                 counted = true;
                 break;
@@ -111,7 +111,7 @@ constexpr std::size_t count_unique(const std::array<T, size> &arr) {
     auto arr_cpd = arr;
     std::size_t dup_cnt = 0;
     std::sort(std::begin(arr_cpd), std::end(arr_cpd));
-    for (size_t i = 0; i < size - 1; i++) {
+    for (std::size_t i = 0; i < size - 1; i++) {
         if (arr_cpd[i] == arr_cpd[i + 1]) {
             dup_cnt++;
         }

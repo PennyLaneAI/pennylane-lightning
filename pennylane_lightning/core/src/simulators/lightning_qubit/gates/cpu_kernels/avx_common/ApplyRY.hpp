@@ -49,7 +49,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyRY {
         constexpr static auto perm = compilePermutation<PrecisionT>(
             flip(identity<packed_size>(), rev_wire));
         PL_LOOP_PARALLEL(1)
-        for (size_t n = 0; n < (1U << num_qubits); n += packed_size / 2) {
+        for (std::size_t n = 0; n < (1U << num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             const auto w_diag = diag_real * v;
             const auto w_offdiag = offdiag_real * permute<perm>(v);
@@ -76,7 +76,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyRY {
         const auto p_sin_factor = set1<PrecisionT, packed_size>(sin);
         const auto m_sin_factor = set1<PrecisionT, packed_size>(-sin);
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;

@@ -46,7 +46,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyHadamard {
             compilePermutation<PrecisionT>(
                 flip(identity<packed_size>(), rev_wire));
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
 
             const auto w_diag = mat_diag * v;
@@ -70,7 +70,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyHadamard {
         const auto p_isqrt2 = set1<PrecisionT, packed_size>(isqrt2);
         const auto m_isqrt2 = set1<PrecisionT, packed_size>(-isqrt2);
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;

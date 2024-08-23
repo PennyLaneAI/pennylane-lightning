@@ -42,7 +42,7 @@ The following simple (C++ style) pseudocode shows how the algorithm is implement
 
 .. code-block::
 
-   template<typename PrecisionT, size_t packed_size>
+   template<typename PrecisionT, std::size_t packed_size>
    class ApplyPauliX {
       template<size_t wire>
       void applyInternal(...) {
@@ -54,7 +54,7 @@ The following simple (C++ style) pseudocode shows how the algorithm is implement
             save row to the memory
          }
       }
-      void applyExternal(size_t wire, ...) {
+      void applyExternal(std::size_t wire, ...) {
          // Between rows
          for proper index k {
             row1 = load k-th row

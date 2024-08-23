@@ -131,7 +131,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
         init_state =
             std::vector<cp_t>(st.begin(), st.end(), init_state.get_allocator());
         expected_state = init_state;
-        for (size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
+        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
             std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
             indices[i * 2] = i * 2 + 1;
             indices[i * 2 + 1] = i * 2;

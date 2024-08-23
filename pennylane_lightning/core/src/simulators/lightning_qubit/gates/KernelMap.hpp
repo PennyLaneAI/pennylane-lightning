@@ -167,7 +167,7 @@ class PriorityDispatchSet {
         ordered_vec_.insert(iter_to_insert, elem);
     }
 
-    [[nodiscard]] KernelType getKernel(size_t num_qubits) const {
+    [[nodiscard]] KernelType getKernel(std::size_t num_qubits) const {
         for (const auto &elem : ordered_vec_) {
             if (elem.getIntegerInterval()(num_qubits)) {
                 return elem.getKernelType();
@@ -417,7 +417,7 @@ class OperationKernelMap {
      * @param memory_model Memory model of the underlying data
      * @return A kernel map for given keys
      */
-    [[nodiscard]] auto getKernelMap(size_t num_qubits, Threading threading,
+    [[nodiscard]] auto getKernelMap(std::size_t num_qubits, Threading threading,
                                     CPUMemoryModel memory_model) const
         -> EnumKernelMap {
         const uint32_t dispatch_key = toDispatchKey(threading, memory_model);

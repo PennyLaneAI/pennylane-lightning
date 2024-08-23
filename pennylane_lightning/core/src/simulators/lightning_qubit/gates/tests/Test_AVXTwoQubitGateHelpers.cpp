@@ -326,7 +326,7 @@ TEMPLATE_TEST_CASE("Test TwoQubitGateHelper template functions",
                    MockAsymmetricTwoQubitGateWithParam<TestType, 4>>);
 }
 
-std::pair<size_t, std::size_t> sort(size_t a, std::size_t b) {
+std::pair<size_t, std::size_t> sort(std::size_t a, std::size_t b) {
     return {std::min(a, b), std::max(a, b)};
 }
 

@@ -123,7 +123,7 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op,
         }
 
         // And compare them
-        for (size_t i = 0; i < res.size() - 1; i++) {
+        for (std::size_t i = 0; i < res.size() - 1; i++) {
             REQUIRE(res[i] ==
                     approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
         }
@@ -143,7 +143,7 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for gates",
             }
             return lookup(Pennylane::Gates::Constant::gate_wires, gate_op);
         }();
-        for (size_t num_qubits = min_num_qubits; num_qubits <= max_num_qubits;
+        for (std::size_t num_qubits = min_num_qubits; num_qubits <= max_num_qubits;
              num_qubits++) {
             testApplyGate<TestType>(re, gate_op, num_qubits);
         }
@@ -198,7 +198,7 @@ void testMatrixOp(RandomEngine &re, std::size_t num_qubits,
             }
 
             // And compare them
-            for (size_t idx = 0; idx < implementing_kernels.size() - 1; idx++) {
+            for (std::size_t idx = 0; idx < implementing_kernels.size() - 1; idx++) {
                 REQUIRE(res[idx] == approx(res[idx + 1]).margin(1e-7));
             }
         }
@@ -212,7 +212,7 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for matrices",
     const std::size_t num_qubits = 5;
 
     for (bool inverse : {true, false}) {
-        for (size_t num_wires = 1; num_wires <= 5; num_wires++) {
+        for (std::size_t num_wires = 1; num_wires <= 5; num_wires++) {
             testMatrixOp<TestType>(re, num_qubits, num_wires, inverse);
         }
     }

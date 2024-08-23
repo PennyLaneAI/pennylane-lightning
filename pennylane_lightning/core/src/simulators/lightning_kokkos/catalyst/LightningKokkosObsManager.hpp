@@ -83,9 +83,9 @@ template <typename PrecisionT> class LightningKokkosObsManager final {
     /**
      * @brief Get the number of observables.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    [[nodiscard]] auto numObservables() const -> size_t {
+    [[nodiscard]] auto numObservables() const -> std::size_t {
         return this->observables_.size();
     }
 

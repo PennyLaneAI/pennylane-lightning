@@ -249,7 +249,7 @@ template <class StateVectorT> class OpsData {
     [[nodiscard]] auto getTotalNumParams() const -> std::size_t {
         return std::accumulate(
             ops_params_.begin(), ops_params_.end(), std::size_t{0U},
-            [](size_t acc, auto &params) { return acc + params.size(); });
+            [](std::size_t acc, auto &params) { return acc + params.size(); });
     }
 };
 
@@ -306,7 +306,7 @@ template <class StateVectorT> class JacobianData {
      * (e.g. StatePrep) or Hamiltonian coefficients.
      * @endrst
      */
-    JacobianData(size_t num_params, std::size_t num_elem, const CFP_t *sv_ptr,
+    JacobianData(std::size_t num_params, std::size_t num_elem, const CFP_t *sv_ptr,
                  std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
                  OpsData<StateVectorT> ops, std::vector<std::size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(sv_ptr),

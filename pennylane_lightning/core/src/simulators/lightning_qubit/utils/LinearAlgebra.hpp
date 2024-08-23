@@ -95,7 +95,7 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
     shared(v1, v2, data_size) reduction(sm : result)
 #endif
-    for (size_t i = 0; i < data_size; i++) {
+    for (std::size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMult(*(v1 + i), *(v2 + i)));
     }
 }
@@ -169,7 +169,7 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
     shared(v1, v2, data_size) reduction(sm : result)
 #endif
-    for (size_t i = 0; i < data_size; i++) {
+    for (std::size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMultConj(*(v1 + i), *(v2 + i)));
     }
 }
@@ -632,9 +632,9 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 #pragma omp parallel for default(none) shared(m_left, m_right, m_out)          \
     firstprivate(m, n, k)
 #endif
-        for (size_t row = 0; row < m; row++) {
-            for (size_t col = 0; col < n; col++) {
-                for (size_t blk = 0; blk < k; blk++) {
+        for (std::size_t row = 0; row < m; row++) {
+            for (std::size_t col = 0; col < n; col++) {
+                for (std::size_t blk = 0; blk < k; blk++) {
                     m_out[row * n + col] +=
                         m_left[row * k + blk] * m_right[col * n + blk];
                 }
@@ -646,9 +646,9 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 #pragma omp parallel for default(none) shared(m_left, m_right, m_out)          \
     firstprivate(m, n, k)
 #endif
-        for (size_t row = 0; row < m; row++) {
-            for (size_t col = 0; col < n; col++) {
-                for (size_t blk = 0; blk < k; blk++) {
+        for (std::size_t row = 0; row < m; row++) {
+            for (std::size_t col = 0; col < n; col++) {
+                for (std::size_t blk = 0; blk < k; blk++) {
                     m_out[row * n + col] += m_left[row * k + blk] *
                                             std::conj(m_right[col * n + blk]);
                 }
@@ -660,13 +660,13 @@ inline void omp_matrixMatProd(const std::complex<T> *m_left,
 #pragma omp parallel for default(none) shared(m_left, m_right, m_out)          \
     firstprivate(m, n, k)
 #endif
-        for (size_t row = 0; row < m; row += STRIDE) {
+        for (std::size_t row = 0; row < m; row += STRIDE) {
             std::size_t i;
             std::size_t j;
             std::size_t l;
             std::complex<T> t;
-            for (size_t col = 0; col < n; col += STRIDE) {
-                for (size_t blk = 0; blk < k; blk += STRIDE) {
+            for (std::size_t col = 0; col < n; col += STRIDE) {
+                for (std::size_t blk = 0; blk < k; blk += STRIDE) {
                     // cache-blocking:
                     for (i = row; i < std::min(row + STRIDE, m); i++) {
                         for (j = col; j < std::min(col + STRIDE, n); j++) {
@@ -779,17 +779,17 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
 template <
     class T,
     std::size_t STD_CROSSOVER = 1U << 12U> // NOLINT(readability-magic-numbers)
-void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+void omp_scaleAndAdd(std::size_t dim, std::complex<T> a, const std::complex<T> *x,
                      std::complex<T> *y) {
     if (dim < STD_CROSSOVER) {
-        for (size_t i = 0; i < dim; i++) {
+        for (std::size_t i = 0; i < dim; i++) {
             y[i] += a * x[i];
         }
     } else {
 #if defined(_OPENMP)
 #pragma omp parallel for default(none) firstprivate(a, dim, x, y)
 #endif
-        for (size_t i = 0; i < dim; i++) {
+        for (std::size_t i = 0; i < dim; i++) {
             y[i] += a * x[i];
         }
     }
@@ -807,7 +807,7 @@ void omp_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
  * @param y Vector to be added
  */
 template <class T>
-void blas_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+void blas_scaleAndAdd(std::size_t dim, std::complex<T> a, const std::complex<T> *x,
                       std::complex<T> *y) {
     if constexpr (std::is_same_v<T, float>) {
         cblas_caxpy(dim, &a, x, 1, y, 1);
@@ -834,7 +834,7 @@ void blas_scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
  * @param y Vector to be added
  */
 template <class T>
-void scaleAndAdd(size_t dim, std::complex<T> a, const std::complex<T> *x,
+void scaleAndAdd(std::size_t dim, std::complex<T> a, const std::complex<T> *x,
                  std::complex<T> *y) {
     if constexpr (USE_CBLAS) {
         blas_scaleAndAdd(dim, a, x, y);

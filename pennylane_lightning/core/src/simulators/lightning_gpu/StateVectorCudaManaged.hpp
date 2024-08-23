@@ -107,7 +107,7 @@ class StateVectorCudaManaged
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorCudaManaged() = delete;
-    StateVectorCudaManaged(size_t num_qubits)
+    StateVectorCudaManaged(std::size_t num_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaManaged<Precision>>(
               num_qubits),
           handle_(make_shared_cusv_handle()),

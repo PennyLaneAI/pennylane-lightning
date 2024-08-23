@@ -37,9 +37,9 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyT {
      *
      * FIXME: clang++-12 currently does not accept consteval here.
      */
-    static constexpr auto applyInternalPermutation(size_t rev_wire) {
+    static constexpr auto applyInternalPermutation(std::size_t rev_wire) {
         std::array<uint8_t, packed_size> perm{};
-        for (size_t n = 0; n < packed_size / 2; n++) {
+        for (std::size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
                 perm[2 * n + 0] = 2 * n + 0;
                 perm[2 * n + 1] = 2 * n + 1;
@@ -52,11 +52,11 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyT {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    static auto applyInternalRealFactor(size_t rev_wire)
+    static auto applyInternalRealFactor(std::size_t rev_wire)
         -> AVXIntrinsicType<PrecisionT, packed_size> {
         std::array<PrecisionT, packed_size> data{};
         PL_LOOP_SIMD
-        for (size_t n = 0; n < packed_size / 2; n++) {
+        for (std::size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
                 data[2 * n + 0] = 1.0;
                 data[2 * n + 1] = 1.0;
@@ -68,11 +68,11 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyT {
         return PrecisionAVXConcept::loadu(data.data());
     }
 
-    static auto applyInternalImagFactor(size_t rev_wire, bool inverse)
+    static auto applyInternalImagFactor(std::size_t rev_wire, bool inverse)
         -> AVXIntrinsicType<PrecisionT, packed_size> {
         std::array<PrecisionT, packed_size> data{};
         PL_LOOP_SIMD
-        for (size_t n = 0; n < packed_size / 2; n++) {
+        for (std::size_t n = 0; n < packed_size / 2; n++) {
             if (((n >> rev_wire) & 1U) == 0) {
                 data[2 * n + 0] = 0.0;
                 data[2 * n + 1] = 0.0;
@@ -97,7 +97,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyT {
         const auto cos_factor = applyInternalRealFactor(rev_wire);
         const auto isin_factor = applyInternalImagFactor(rev_wire, inverse);
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
+        for (std::size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             const auto w =
                 cos_factor * v + isin_factor * Permutation::permute<perm>(v);
@@ -121,7 +121,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyT {
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;

@@ -42,10 +42,10 @@ template <class Precision, class index_type> class CSRMatrix {
     std::vector<std::complex<Precision>> values_;
 
   public:
-    CSRMatrix(size_t num_rows, std::size_t nnz)
+    CSRMatrix(std::size_t num_rows, std::size_t nnz)
         : columns_(nnz, 0), csrOffsets_(num_rows + 1, 0), values_(nnz){};
 
-    CSRMatrix(size_t num_rows, std::size_t nnz, index_type *column_ptr,
+    CSRMatrix(std::size_t num_rows, std::size_t nnz, index_type *column_ptr,
               index_type *csrOffsets_ptr, std::complex<Precision> *value_ptr)
         : columns_(column_ptr, column_ptr + nnz),
           csrOffsets_(csrOffsets_ptr, csrOffsets_ptr + num_rows + 1),
@@ -109,8 +109,8 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
     std::size_t current_global_row, current_global_col;
     std::size_t block_row_id, block_col_id;
     std::size_t local_row_id, local_col_id;
-    for (size_t row = 0; row < num_rows; row++) {
-        for (size_t col_idx = static_cast<std::size_t>(csrOffsets_ptr[row]);
+    for (std::size_t row = 0; row < num_rows; row++) {
+        for (std::size_t col_idx = static_cast<std::size_t>(csrOffsets_ptr[row]);
              col_idx < static_cast<std::size_t>(csrOffsets_ptr[row + 1]);
              col_idx++) {
             current_global_row = row;
@@ -141,14 +141,14 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
     }
 
     // Add OpenMP support here later.
-    for (size_t block_row_id = 0; block_row_id < num_row_blocks;
+    for (std::size_t block_row_id = 0; block_row_id < num_row_blocks;
          block_row_id++) {
-        for (size_t block_col_id = 0; block_col_id < num_col_blocks;
+        for (std::size_t block_col_id = 0; block_col_id < num_col_blocks;
              block_col_id++) {
             auto &localSpMat = splitSparseMatrix[block_row_id][block_col_id];
             std::size_t local_csr_offset_size =
                 localSpMat.getCsrOffsets().size();
-            for (size_t i0 = 1; i0 < local_csr_offset_size; i0++) {
+            for (std::size_t i0 = 1; i0 < local_csr_offset_size; i0++) {
                 localSpMat.getCsrOffsets()[i0] +=
                     localSpMat.getCsrOffsets()[i0 - 1];
             }
@@ -179,7 +179,7 @@ auto scatterCSRMatrix(MPIManager &mpi_manager,
 
     if (mpi_manager.getRank() == root) {
         nnzs.reserve(matrix.size());
-        for (size_t j = 0; j < matrix.size(); j++) {
+        for (std::size_t j = 0; j < matrix.size(); j++) {
             nnzs.push_back(matrix[j].getValues().size());
         }
     }
@@ -194,7 +194,7 @@ auto scatterCSRMatrix(MPIManager &mpi_manager,
         localCSRMatrix.getColumns() = matrix[0].getColumns();
     }
 
-    for (size_t k = 1; k < num_col_blocks; k++) {
+    for (std::size_t k = 1; k < num_col_blocks; k++) {
         std::size_t dest = k;
         std::size_t source = root;
 
