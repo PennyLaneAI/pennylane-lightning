@@ -192,8 +192,6 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
         cutensornetStateSampler_t sampler;
 
-        std::cout << "generate_samples" << std::endl;
-
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateSampler(
             /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
             /* cutensornetState_t */ tensor_network_.getQuantumState(),

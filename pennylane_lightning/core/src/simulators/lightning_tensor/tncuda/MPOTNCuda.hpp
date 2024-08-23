@@ -272,7 +272,7 @@ template <class PrecisionT> class MPOTNCuda {
             /* int64_t * */ &componentIdx_));
     }
 
-    auto getMPOOperator() -> cutensornetNetworkOperator_t {
+    auto getMPOOperator() const -> const cutensornetNetworkOperator_t & {
         return networkOperator_;
     }
 
