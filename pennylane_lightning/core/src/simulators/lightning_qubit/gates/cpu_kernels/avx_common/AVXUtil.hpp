@@ -65,7 +65,8 @@ template <typename PrecisionT, std::size_t packed_size>
 constexpr auto internalParity(std::size_t rev_wire)
     -> AVXIntrinsicType<PrecisionT, packed_size>;
 #ifdef PL_USE_AVX2
-template <> constexpr auto internalParity<float, 8>(std::size_t rev_wire) -> __m256 {
+template <>
+constexpr auto internalParity<float, 8>(std::size_t rev_wire) -> __m256 {
     switch (rev_wire) {
     case 0:
         // When Z is applied to the 0th qubit

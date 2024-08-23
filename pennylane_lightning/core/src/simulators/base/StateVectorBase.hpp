@@ -55,7 +55,8 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      *
      * @param num_qubits Number of qubits
      */
-    explicit StateVectorBase(std::size_t num_qubits) : num_qubits_{num_qubits} {}
+    explicit StateVectorBase(std::size_t num_qubits)
+        : num_qubits_{num_qubits} {}
 
     /**
      * @brief Get the number of qubits represented by the statevector data.

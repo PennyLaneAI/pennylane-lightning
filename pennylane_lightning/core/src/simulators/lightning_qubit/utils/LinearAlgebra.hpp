@@ -779,8 +779,8 @@ inline auto matrixMatProd(const std::vector<std::complex<T>> m_left,
 template <
     class T,
     std::size_t STD_CROSSOVER = 1U << 12U> // NOLINT(readability-magic-numbers)
-void omp_scaleAndAdd(std::size_t dim, std::complex<T> a, const std::complex<T> *x,
-                     std::complex<T> *y) {
+void omp_scaleAndAdd(std::size_t dim, std::complex<T> a,
+                     const std::complex<T> *x, std::complex<T> *y) {
     if (dim < STD_CROSSOVER) {
         for (std::size_t i = 0; i < dim; i++) {
             y[i] += a * x[i];
@@ -807,8 +807,8 @@ void omp_scaleAndAdd(std::size_t dim, std::complex<T> a, const std::complex<T> *
  * @param y Vector to be added
  */
 template <class T>
-void blas_scaleAndAdd(std::size_t dim, std::complex<T> a, const std::complex<T> *x,
-                      std::complex<T> *y) {
+void blas_scaleAndAdd(std::size_t dim, std::complex<T> a,
+                      const std::complex<T> *x, std::complex<T> *y) {
     if constexpr (std::is_same_v<T, float>) {
         cblas_caxpy(dim, &a, x, 1, y, 1);
     } else if (std::is_same_v<T, double>) {

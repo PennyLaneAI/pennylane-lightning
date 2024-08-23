@@ -90,7 +90,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         return {parity[2], parity[1], parity[0]};
     }
     template <const std::size_t wire_size = 3>
-    static constexpr auto revWireParity(std::size_t rev_wire0, std::size_t rev_wire1,
+    static constexpr auto revWireParity(std::size_t rev_wire0,
+                                        std::size_t rev_wire1,
                                         std::size_t rev_wire2)
         -> std::array<size_t, wire_size + 1> {
         return Pennylane::Util::revWireParity(
@@ -98,9 +99,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                                rev_wire2});
     }
     template <const std::size_t wire_size = 4>
-    static constexpr auto revWireParity(std::size_t rev_wire0, std::size_t rev_wire1,
-                                        std::size_t rev_wire2,
-                                        std::size_t rev_wire3)
+    static constexpr auto
+    revWireParity(std::size_t rev_wire0, std::size_t rev_wire1,
+                  std::size_t rev_wire2, std::size_t rev_wire3)
         -> std::array<size_t, wire_size + 1> {
         return Pennylane::Util::revWireParity(
             std::array<std::size_t, wire_size>{rev_wire0, rev_wire1, rev_wire2,

@@ -461,7 +461,8 @@ inline auto generateBitsPatterns(const std::vector<std::size_t> &qubitIndices,
     indices.reserve(exp2(qubitIndices.size()));
     indices.emplace_back(0);
 
-    for (std::size_t index_it0 = 0; index_it0 < qubitIndices.size(); index_it0++) {
+    for (std::size_t index_it0 = 0; index_it0 < qubitIndices.size();
+         index_it0++) {
         std::size_t index_it = qubitIndices.size() - 1 - index_it0;
         const std::size_t value =
             maxDecimalForQubit(qubitIndices[index_it], num_qubits);

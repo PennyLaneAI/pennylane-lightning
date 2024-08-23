@@ -39,9 +39,10 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingZZ {
                                       std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
         const auto isin = inverse ? std::sin(angle / 2) : -std::sin(angle / 2);
-        const auto parity = toParity<PrecisionT, packed_size>([=](std::size_t idx) {
-            return ((idx >> rev_wire0) & 1U) ^ ((idx >> rev_wire1) & 1U);
-        });
+        const auto parity =
+            toParity<PrecisionT, packed_size>([=](std::size_t idx) {
+                return ((idx >> rev_wire0) & 1U) ^ ((idx >> rev_wire1) & 1U);
+            });
         const auto real_cos =
             set1<PrecisionT, packed_size>(std::cos(angle / 2));
         const auto imag_sin =
@@ -77,7 +78,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingZZ {
             imag_sin * internalParity<PrecisionT, packed_size>(min_rev_wire);
         const auto imag_sin_parity1 = imag_sin_parity0 * -1.0;
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | max_rev_wire_shift;
@@ -126,7 +128,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyIsingZZ {
         const auto p_isin = imagFactor<PrecisionT, packed_size>(isin);
         const auto m_isin = imagFactor<PrecisionT, packed_size>(-isin);
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);

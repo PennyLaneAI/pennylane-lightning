@@ -195,7 +195,8 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
                                                 sv.getDataBuffer().getDevTag());
         buffer->zeroInit();
 
-        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
+        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
+             term_idx++) {
             StateVectorT tmp(sv);
             this->obs_[term_idx]->applyInPlace(tmp);
             scaleAndAddC_CUDA(

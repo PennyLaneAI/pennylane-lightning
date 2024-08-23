@@ -149,7 +149,8 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
 
         auto expected_state = init_state;
 
-        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
+        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
+             i++) {
             std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
         }
 

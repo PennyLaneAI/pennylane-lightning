@@ -107,7 +107,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
 
         constexpr static auto mask = applyInternalExternalMask<control>();
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | max_rev_wire_shift;
@@ -146,7 +147,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
 
         constexpr static auto perm = applyExternalInternalPermutation<target>();
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | control_shift;
@@ -174,7 +176,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCNOT {
         const std::size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);

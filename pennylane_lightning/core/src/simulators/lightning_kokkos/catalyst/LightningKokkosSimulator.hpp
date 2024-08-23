@@ -112,7 +112,8 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     LightningKokkosSimulator &operator=(LightningKokkosSimulator &&) = delete;
 
     auto AllocateQubit() -> QubitIdType override;
-    auto AllocateQubits(std::size_t num_qubits) -> std::vector<QubitIdType> override;
+    auto AllocateQubits(std::size_t num_qubits)
+        -> std::vector<QubitIdType> override;
     void ReleaseQubit(QubitIdType q) override;
     void ReleaseAllQubits() override;
     [[nodiscard]] auto GetNumQubits() const -> std::size_t override;

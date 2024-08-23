@@ -494,7 +494,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             // Get a slice of samples based on the shot_range vector
             std::size_t shot_idx = 0;
             for (const auto &i : shot_range) {
-                for (std::size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
+                for (std::size_t j = i * num_qubits; j < (i + 1) * num_qubits;
+                     j++) {
                     // TODO some extra work to make it cache-friendly
                     sub_samples[shot_idx * num_qubits + j - i * num_qubits] =
                         samples[j];

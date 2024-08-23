@@ -220,7 +220,8 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
               Pennylane::Util::exp2(num_qubits), device_id, stream_id,
               device_alloc)} {}
 
-    StateVectorCudaBase(std::size_t num_qubits, LightningGPU::DevTag<int> dev_tag,
+    StateVectorCudaBase(std::size_t num_qubits,
+                        LightningGPU::DevTag<int> dev_tag,
                         bool device_alloc = true)
         : StateVectorBase<Precision, Derived>(num_qubits),
           data_buffer_{std::make_unique<LightningGPU::DataBuffer<CFP_t>>(

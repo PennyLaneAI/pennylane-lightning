@@ -110,7 +110,8 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
     std::size_t block_row_id, block_col_id;
     std::size_t local_row_id, local_col_id;
     for (std::size_t row = 0; row < num_rows; row++) {
-        for (std::size_t col_idx = static_cast<std::size_t>(csrOffsets_ptr[row]);
+        for (std::size_t col_idx =
+                 static_cast<std::size_t>(csrOffsets_ptr[row]);
              col_idx < static_cast<std::size_t>(csrOffsets_ptr[row + 1]);
              col_idx++) {
             current_global_row = row;

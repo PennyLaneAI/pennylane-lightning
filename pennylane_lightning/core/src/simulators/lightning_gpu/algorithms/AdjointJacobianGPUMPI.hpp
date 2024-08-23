@@ -330,7 +330,8 @@ class AdjointJacobianMPI final
                 current_param_idx--;
             }
 
-            for (std::size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+            for (std::size_t obs_idx = 0; obs_idx < num_observables;
+                 obs_idx++) {
                 BaseType::applyOperationAdj(*H_lambda[obs_idx], ops, op_idx);
             }
         }

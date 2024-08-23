@@ -54,7 +54,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyPauliZ {
 
         const auto factor = set1<PrecisionT, packed_size>(-1.0);
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;

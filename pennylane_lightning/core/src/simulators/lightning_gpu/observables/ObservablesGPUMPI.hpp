@@ -197,7 +197,8 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
                                       sv.getDataBuffer().getDevTag());
         buffer.zeroInit();
 
-        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
+        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
+             term_idx++) {
             DevTag<int> dt_local(sv.getDataBuffer().getDevTag());
             dt_local.refresh();
             StateVectorT tmp(dt_local, sv.getNumGlobalQubits(),

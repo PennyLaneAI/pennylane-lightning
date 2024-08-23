@@ -664,9 +664,9 @@ class Measurements final
                    const int64_t csrOffsets_size, const index_type *columns_ptr,
                    const std::complex<PrecisionT> *values_ptr,
                    const int64_t numNNZ) {
-        PL_ABORT_IF(
-            (this->_statevector.getLength() != (std::size_t(csrOffsets_size) - 1)),
-            "Statevector and Hamiltonian have incompatible sizes.");
+        PL_ABORT_IF((this->_statevector.getLength() !=
+                     (std::size_t(csrOffsets_size) - 1)),
+                    "Statevector and Hamiltonian have incompatible sizes.");
 
         StateVectorT ob_sv(this->_statevector.getData(),
                            this->_statevector.getLength());

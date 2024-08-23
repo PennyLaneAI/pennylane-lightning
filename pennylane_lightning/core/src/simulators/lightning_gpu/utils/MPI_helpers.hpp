@@ -143,8 +143,9 @@ inline void tgtsVecProcess(const std::size_t numLocalQubits,
                 tgtsSwapStatus.push_back(WiresSwapStatus::Swappable);
 
                 std::vector<int> localVec(vec.size());
-                std::transform(vec.begin(), vec.end(), localVec.begin(),
-                               [&](std::size_t x) { return static_cast<int>(x); });
+                std::transform(
+                    vec.begin(), vec.end(), localVec.begin(),
+                    [&](std::size_t x) { return static_cast<int>(x); });
                 auto wirePairs = createWirePairs(numLocalQubits, numTotalQubits,
                                                  localVec, statusWires);
                 std::vector<std::size_t> localVecSizeT(localVec.size());

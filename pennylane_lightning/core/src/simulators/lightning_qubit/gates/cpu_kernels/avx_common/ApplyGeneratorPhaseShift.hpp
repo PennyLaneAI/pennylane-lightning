@@ -71,7 +71,8 @@ struct ApplyGeneratorPhaseShift {
         constexpr auto zero =
             typename PrecisionAVXConcept::IntrinsicType{PrecisionT{0.0}};
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             PrecisionAVXConcept::store(arr + i0, zero);

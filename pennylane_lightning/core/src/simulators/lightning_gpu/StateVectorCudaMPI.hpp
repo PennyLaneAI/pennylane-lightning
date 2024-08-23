@@ -299,7 +299,8 @@ class StateVectorCudaMPI final
         std::vector<index_type> indices_local;
         std::vector<std::complex<Precision>> values_local;
 
-        for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices); i++) {
+        for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices);
+             i++) {
             int index = indices[i];
             PL_ASSERT(index >= 0);
             std::size_t rankId =
@@ -1189,7 +1190,8 @@ class StateVectorCudaMPI final
                         this->getNumGlobalQubits(), this->getNumLocalQubits(),
                         this->getData());
 
-                    for (std::size_t opsIdx = 0; opsIdx < tgts[i].size(); opsIdx++) {
+                    for (std::size_t opsIdx = 0; opsIdx < tgts[i].size();
+                         opsIdx++) {
                         std::vector<std::size_t> wires = {tgts[i][opsIdx]};
                         tmp.applyOperation({opsNames[opsIdx]},
                                            {tgts[i][opsIdx]}, {false});

@@ -90,8 +90,8 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                 auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
-                std::complex<TestType> expected_result(std::size_t{1U} << (i + 1),
-                                                       0);
+                std::complex<TestType> expected_result(
+                    std::size_t{1U} << (i + 1), 0);
                 std::complex<TestType> result = Util::innerProdC(data1, data2);
                 CAPTURE(result);
                 CAPTURE(expected_result);
@@ -119,8 +119,8 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
                 auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
-                std::complex<TestType> expected_result(std::size_t{1U} << (i + 1),
-                                                       0);
+                std::complex<TestType> expected_result(
+                    std::size_t{1U} << (i + 1), 0);
                 std::complex<TestType> result = Util::innerProdC<TestType, 1>(
                     data1.data(), data2.data(), sz);
                 CAPTURE(result);

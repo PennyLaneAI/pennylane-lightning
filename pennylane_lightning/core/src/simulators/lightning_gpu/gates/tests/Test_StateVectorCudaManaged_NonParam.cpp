@@ -1077,7 +1077,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto expected_state = init_state;
 
-        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
+        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
+             i++) {
             std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
         }
 
@@ -1116,7 +1117,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto expected_state = init_state;
 
-        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
+        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
+             i++) {
             std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
         }
 

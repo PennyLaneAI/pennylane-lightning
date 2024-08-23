@@ -35,9 +35,10 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCZ {
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
-        const auto parity = toParity<PrecisionT, packed_size>([](std::size_t idx) {
-            return ((idx >> rev_wire0) & 1U) & ((idx >> rev_wire1) & 1U);
-        });
+        const auto parity =
+            toParity<PrecisionT, packed_size>([](std::size_t idx) {
+                return ((idx >> rev_wire0) & 1U) & ((idx >> rev_wire1) & 1U);
+            });
 
         PL_LOOP_PARALLEL(1)
         for (std::size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
@@ -60,7 +61,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCZ {
         const auto parity =
             internalParity<PrecisionT, packed_size>(min_rev_wire);
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | max_rev_wire_shift;
@@ -90,7 +92,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyCZ {
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);

@@ -105,8 +105,8 @@ void testGeneratorEqualsGateDerivativeForKernel(
 
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
                                          << kernel_name) {
-        for (std::size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
-             num_qubits++) {
+        for (std::size_t num_qubits = min_num_qubits;
+             num_qubits < max_num_qubits; num_qubits++) {
             const auto wires = createWires(gate_op, num_qubits);
             const auto ini_st =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -233,8 +233,8 @@ void testControlledGeneratorEqualsGateDerivativeForKernel(
 
     DYNAMIC_SECTION("Test controlled generator of "
                     << gate_name << " for kernel " << kernel_name) {
-        for (std::size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
-             num_qubits++) {
+        for (std::size_t num_qubits = min_num_qubits;
+             num_qubits < max_num_qubits; num_qubits++) {
             const auto wires = createWires(gate_op, num_qubits);
             const std::vector<std::size_t> controls = {num_qubits - 1};
             const std::vector<bool> values = {true};

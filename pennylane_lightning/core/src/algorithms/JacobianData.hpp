@@ -306,7 +306,8 @@ template <class StateVectorT> class JacobianData {
      * (e.g. StatePrep) or Hamiltonian coefficients.
      * @endrst
      */
-    JacobianData(std::size_t num_params, std::size_t num_elem, const CFP_t *sv_ptr,
+    JacobianData(std::size_t num_params, std::size_t num_elem,
+                 const CFP_t *sv_ptr,
                  std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
                  OpsData<StateVectorT> ops, std::vector<std::size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(sv_ptr),

@@ -40,10 +40,11 @@ struct ApplyGeneratorIsingZZ {
                                       [[maybe_unused]] bool adj) -> PrecisionT {
         using namespace Permutation;
 
-        const auto signs = toParity<Precision, packed_size>([](std::size_t idx) {
-            return (((idx >> rev_wire0) & std::size_t{1U}) ^
-                    ((idx >> rev_wire1) & std::size_t{1U}));
-        });
+        const auto signs =
+            toParity<Precision, packed_size>([](std::size_t idx) {
+                return (((idx >> rev_wire0) & std::size_t{1U}) ^
+                        ((idx >> rev_wire1) & std::size_t{1U}));
+            });
         PL_LOOP_PARALLEL(1)
         for (std::size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
@@ -70,7 +71,8 @@ struct ApplyGeneratorIsingZZ {
         const auto sign1 =
             -internalParity<Precision, packed_size>(min_rev_wire);
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | max_rev_wire_shift;
@@ -105,7 +107,8 @@ struct ApplyGeneratorIsingZZ {
         const std::size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         PL_LOOP_PARALLEL(1)
-        for (std::size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);
