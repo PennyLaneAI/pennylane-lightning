@@ -202,11 +202,6 @@ class TestApply:
                     [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
                 ),
             ]
-            if device_name != "lightning.tensor"
-            else [
-                (qml.BasisState, [0, 0, 1, 0], [1, 0]),
-                (qml.BasisState, [0, 0, 0, 1], [1, 1]),
-            ]
         ),
     )
     def test_apply_operation_state_preparation(
@@ -488,7 +483,7 @@ class TestApply:
     def test_apply_errors_qubit_state_vector(self, stateprep, qubit_device):
         """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""
         dev = qubit_device(wires=2)
-        with pytest.raises(ValueError, match="Sum of amplitudes-squared does not equal one."):
+        with pytest.raises(ValueError, match="The state must be a vector of norm 1.0;"):
             dev.apply([stateprep(np.array([1, -1]), wires=[0])])
 
         with pytest.raises(
@@ -500,14 +495,10 @@ class TestApply:
 
     def test_apply_errors_basis_state(self, qubit_device):
         dev = qubit_device(wires=2)
-        with pytest.raises(
-            ValueError, match="BasisState parameter must consist of 0 or 1 integers."
-        ):
+        with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
             dev.apply([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
 
-        with pytest.raises(
-            ValueError, match="BasisState parameter and wires must be of equal length."
-        ):
+        with pytest.raises(ValueError, match="State must be of length 1;"):
             dev.apply([qml.BasisState(np.array([0, 1]), wires=[0])])
 
         with pytest.raises(
@@ -847,11 +838,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    # This test is ran against the state |Phi+> with two Z expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.Stateprep()",
-    )
     @pytest.mark.parametrize(
         "name,expected_output",
         [
@@ -910,33 +896,9 @@ class TestLightningDeviceIntegration:
             ("BasisState", [0, 0], [1, 1]),
             ("BasisState", [1, 0], [-1, 1]),
             ("BasisState", [0, 1], [1, -1]),
-            pytest.param(
-                "QubitStateVector",
-                [1, 0, 0, 0],
-                [1, 1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
-            pytest.param(
-                "QubitStateVector",
-                [0, 0, 1, 0],
-                [-1, 1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
-            pytest.param(
-                "QubitStateVector",
-                [0, 1, 0, 0],
-                [1, -1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
+            ("QubitStateVector", [1, 0, 0, 0], [1, 1]),
+            ("QubitStateVector", [0, 0, 1, 0], [-1, 1]),
+            ("QubitStateVector", [0, 1, 0, 0], [1, -1]),
         ],
     )
     def test_supported_state_preparation(self, qubit_device, tol, name, par, expected_output):
@@ -1025,10 +987,6 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is run with three expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector()",
-    )
     @pytest.mark.parametrize(
         "name,par,wires,expected_output",
         [
@@ -1103,10 +1061,6 @@ class TestLightningDeviceIntegration:
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is ran against the state 1/2|00>+sqrt(3)/2|11> with two Z expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
-    )
     @pytest.mark.parametrize(
         "name,par,expected_output",
         [
@@ -1152,7 +1106,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
+        reason="lightning.tensor does not support a single wire device",
     )
     @pytest.mark.parametrize(
         "name,state,expected_output",
@@ -1191,7 +1145,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "name,state,expected_output,par",
@@ -1421,10 +1375,6 @@ class TestApplyLightningMethod:
         with pytest.raises(ValueError, match="Unsupported operation"):
             dev.apply_lightning([EmptyGate(0)])
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support StatePrep",
-    )
     @pytest.mark.parametrize(
         "ops0",
         [
@@ -1490,11 +1440,7 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     init_state /= np.linalg.norm(init_state)
 
     def circuit():
-        (
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            if device_name != "lightning.tensor"
-            else qml.BasisState([0, 0, 0, 0, 0], wires=[0, 1, 2, 3, 4])
-        )
+        qml.StatePrep(init_state, wires=range(n_qubits))
         qml.RY(theta, wires=[0])
         qml.RY(phi, wires=[1])
         qml.CNOT(wires=[0, 1])
