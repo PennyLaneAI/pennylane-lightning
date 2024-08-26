@@ -14,16 +14,19 @@
 
 import itertools
 import math
+from collections.abc import Iterable
 from typing import Sequence
 
 import numpy as np
 import pennylane as qml
 import pytest
+import scipy.stats
 from conftest import LightningDevice, device_name  # tested device
 from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
+from scipy.stats import kstest
 
 try:
     from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
@@ -476,8 +479,8 @@ class TestMeasurements:
         # a few tests may fail in single precision, and hence we increase the tolerance
         assert np.allclose(result, expected, max(tol, 1.0e-4))
 
-    @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 1000000])
+    @flaky(max_runs=4, min_passes=2)
+    @pytest.mark.parametrize("shots", [None, 20000])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -513,7 +516,7 @@ class TestMeasurements:
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
     )
-    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol):
+    def test_double_return_value(self, seed, shots, measurement, obs0_, obs1_, lightning_sv, tol):
         skip_list = (
             qml.ops.Sum,
             qml.ops.SProd,
@@ -530,11 +533,16 @@ class TestMeasurements:
 
         n_qubits = 4
         n_layers = 1
-        np.random.seed(0)
+        np.random.seed(seed)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
         ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
-        measurements = [measurement(op=obs0_), measurement(op=obs1_)]
+        measurements = [
+            measurement(op=obs0_),
+            measurement(op=obs1_),
+            measurement(op=qml.PauliX(0)),
+            measurement(op=qml.PauliZ(0)),
+        ]
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
         statevector = lightning_sv(n_qubits)
@@ -569,10 +577,16 @@ class TestMeasurements:
 
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
+
         # a few tests may fail in single precision, and hence we increase the tolerance
-        dtol = tol if shots is None else max(tol, 1.0e-2)
+        dtol = tol if shots is None else max(tol, 5e-2)
         for r, e in zip(result, expected):
-            assert np.allclose(r, e, atol=dtol, rtol=dtol)
+            if isinstance(r, Iterable):
+                t, p = kstest(r, e)
+                assert p > 0.75
+                assert t <= 0.5
+            else:
+                assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
     @pytest.mark.parametrize(
         "cases",

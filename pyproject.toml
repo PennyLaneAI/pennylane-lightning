@@ -26,3 +26,11 @@ Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
 
 [project.entry-points."pennylane.plugins"]
 "lightning.qubit" = "pennylane_lightning.lightning_qubit:LightningQubit"
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-W error"
+testpaths = [
+    "tests",
+]
+rng_salt = "v0.38.0"

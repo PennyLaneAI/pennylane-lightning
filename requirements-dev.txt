@@ -7,6 +7,7 @@ pytest~=8.0.0
 pytest-benchmark
 pytest-cov
 pytest-mock
+pytest-rng
 pytest-split
 pytest-xdist
 pre-commit>=2.19.0
