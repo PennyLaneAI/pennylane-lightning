@@ -86,7 +86,7 @@ if __name__ == "__main__":
         "cmake~=3.24.0",
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
-        "tomlkit",
+        "tomli",
     ]
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")
