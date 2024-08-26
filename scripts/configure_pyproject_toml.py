@@ -31,7 +31,7 @@ with open(path_to_version, encoding="utf-8") as f:
 # Find the toml parser.
 # ------------------------
 has_toml = False
-toml_libs = ["tomlkit"]  # "tomllib" and "tomli" do not implement 'dump'.
+toml_libs = ["tomlkit", "toml"]  # "tomllib" and "tomli" do not implement 'dump'.
 for pkg in toml_libs:
     spec = find_spec(pkg)
     if spec:
