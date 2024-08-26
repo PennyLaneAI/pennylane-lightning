@@ -30,6 +30,8 @@ if device_name == "lightning.kokkos":
     except ImportError:
         pass
 
+if device_name == "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if not LightningDevice._new_API:
     pytest.skip(
