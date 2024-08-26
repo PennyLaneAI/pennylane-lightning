@@ -142,6 +142,9 @@ if device_name == "lightning.kokkos":
         from pennylane_lightning.lightning_kokkos_ops import LightningException
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+    LightningAdjointJacobian = None
+    LightningMeasurements = None
+    LightningStateVector = None
 
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops
