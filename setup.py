@@ -42,9 +42,12 @@ if not has_toml:
         "or use Python 3.11 or above which natively offers the tomllib library."
     )
 
-
-with open("pyproject.toml", "rb") as f:
-    project_name = toml.load(f)['project']['name']
+try:
+    with open("pyproject.toml", "rb") as f:
+        project_name = toml.load(f)['project']['name']
+except TypeError:
+    # To support toml and tomli APIs
+    project_name = toml.load("pyproject.toml")['project']['name']
 
 backend = project_name.replace("PennyLane_", "").lower()
 if (backend == "lightning"): backend = "lightning_qubit"

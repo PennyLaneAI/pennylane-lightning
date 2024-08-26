@@ -72,8 +72,12 @@ if __name__ == "__main__":
             "You can install tomlkit via `pip install tomlkit`."
         )
 
-    with open(pyproject_path, "rb") as f:
-        pyproject = toml.load(f)
+    try:
+        with open(pyproject_path, "rb") as f:
+            pyproject = toml.load(f)
+    except TypeError:
+        # To support toml and tomli APIs
+        pyproject = toml.load(pyproject_path)
 
     # ------------------------
     # Configure Build.
