@@ -292,8 +292,6 @@ class LightningTensorNet:
         print("tests:   ", mpos[0].flatten())
         print("tests:   ", mpos[1].flatten())
 
-        # mpos = [np.transpose(MPOs[1], axes=(1, 0, 2)), np.transpose(MPOs[0], axes=(2, 0, 1))]
-
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(mpos, sorted_wires, 2 ** len(wires))
 
