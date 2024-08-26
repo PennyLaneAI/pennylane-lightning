@@ -14,7 +14,6 @@
 r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
-from os import getenv
 from typing import List
 
 import numpy as np
@@ -23,6 +22,7 @@ from pennylane import BasisState, QuantumFunctionError, StatePrep
 from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
+from scipy.sparse import coo_matrix
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from pennylane_lightning.core.lightning_base import _chunk_iterable
@@ -75,6 +75,11 @@ class LightningAdjointJacobian:
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
+
+    @property
+    def batch_obs(self):
+        """Returns the observable batching parameter."""
+        return self._batch_obs
 
     @staticmethod
     def _get_return_type(
@@ -214,41 +219,30 @@ class LightningAdjointJacobian:
                 "mixed with other return types"
             )
 
-        processed_data = self._process_jacobian_tape(tape)
+        processed_data = self._process_jacobian_tape(tape, split_obs=self.batch_obs)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self._dtype)
 
         trainable_params = processed_data["tp_shift"]
 
-        # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
-        # This will allow use of Lightning with adjoint for large-qubit numbers AND large
-        # numbers of observables, enabling choice between compute time and memory use.
-        requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
-
-        if self._batch_obs and requested_threads > 1:
-            obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
-            jac = []
-            for obs_chunk in obs_partitions:
-                jac_local = self._jacobian_lightning(
-                    processed_data["state_vector"],
-                    obs_chunk,
-                    processed_data["ops_serialized"],
-                    trainable_params,
-                )
-                jac.extend(jac_local)
-        else:
-            jac = self._jacobian_lightning(
-                processed_data["state_vector"],
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
+        jac = self._jacobian_lightning(
+            processed_data["state_vector"],
+            processed_data["obs_serialized"],
+            processed_data["ops_serialized"],
+            trainable_params,
+        )
         jac = np.array(jac)
+
+        num_obs = len(np.unique(processed_data["obs_idx_offsets"]))
+        rows = processed_data["obs_idx_offsets"]
+        cols = np.arange(len(rows), dtype=int)
+        data = (np.ones(len(rows)), (rows, cols))
+        red_mat = coo_matrix(data, shape=(num_obs, len(rows)))
+        jac = red_mat @ jac.reshape((len(rows), -1))
         jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
-
         return self._adjoint_jacobian_processing(jac_r)
 
     # pylint: disable=inconsistent-return-statements
