@@ -19,6 +19,9 @@
 
 ### Breaking changes
 
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
+
 * Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
@@ -31,13 +34,22 @@
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
-* Update python packaging to follow PEP 517/518/621/660 standards.
-  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
-
 ### Improvements
 
+* Prefer `tomlkit` over `toml` in Lightning setup build.
+  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
+
 * Updated calls of ``size_t`` to ``std::size_t`` everywhere.
-  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
+  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816)
+
+* Add `initial_state_prep` option to Catalyst TOML file.
+  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
+
+* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
+  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
+
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
+  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
 
 * Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
   [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
@@ -106,15 +118,6 @@
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
   [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
   [(#837)](https://github.com/PennyLaneAI/pennylane-lightning/pull/837)
-
-* Add `initial_state_prep` option to Catalyst TOML file.
-  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
-
-* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
-  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
-
-* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
-  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
 
 ### Documentation
 
