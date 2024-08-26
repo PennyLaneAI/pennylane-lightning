@@ -18,28 +18,24 @@ import math
 
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import (  # tested device
+    LightningAdjointJacobian,
+    LightningDevice,
+    LightningStateVector,
+    device_name,
+)
 from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-if device_name == "lightning.qubit":
-    from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-
-if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import (
-        LightningKokkosAdjointJacobian as LightningAdjointJacobian,
-    )
-    from pennylane_lightning.lightning_kokkos._state_vector import (
-        LightningKokkosStateVector as LightningStateVector,
-    )
-
-if device_name not in ("lightning.qubit", "lightning.kokkos"):
+if not LightningDevice._new_API:
     pytest.skip(
-        "Exclusive tests for new API backends lightning.qubit and lightning.kokkos for LightningAdjointJacobian class. Skipping.",
+        "Exclusive tests for new API backends LightningAdjointJacobian class. Skipping.",
         allow_module_level=True,
     )
+
+if device_name == "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -57,18 +53,6 @@ if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
-
-
-# General LightningStateVector fixture, for any number of wires.
-@pytest.fixture(
-    scope="function",
-    params=[np.complex64, np.complex128],
-)
-def lightning_sv(request):
-    def _statevector(num_wires):
-        return LightningStateVector(num_wires=num_wires, dtype=request.param)
-
-    return _statevector
 
 
 def Rx(theta):

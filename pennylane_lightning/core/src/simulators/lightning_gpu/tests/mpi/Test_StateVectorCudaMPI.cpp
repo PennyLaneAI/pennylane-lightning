@@ -63,12 +63,12 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
     }
     SECTION(
         "StateVectorBackend<TestType> {MPIManager, DevTag<int>, std::size_t, "
-        "size_t, std::size_t}") {
+        "std::size_t, std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, MPIManager, DevTag<int>,
                                         std::size_t, std::size_t, std::size_t>);
     }
     SECTION("StateVectorBackend<TestType> {MPI_Comm, DevTag<int>, std::size_t, "
-            "size_t, std::size_t}") {
+            "std::size_t, std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, MPI_Comm, DevTag<int>,
                                         std::size_t, std::size_t, std::size_t>);
     }

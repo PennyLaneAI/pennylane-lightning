@@ -11,6 +11,12 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lkcpu_python.yml'
@@ -28,7 +34,7 @@ on:
 env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
@@ -40,12 +46,14 @@ concurrency:
 jobs:
 
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
       default_runner: ubuntu-22.04
 
   build_and_cache_Kokkos:
+    if: github.event.pull_request.draft == false
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:

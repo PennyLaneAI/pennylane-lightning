@@ -72,7 +72,7 @@ def simulate(
 
     Args:
         circuit (QuantumTape): The single circuit to simulate
-        state (LightningStateVector): handle to Lightning state vector
+        state (LightningKokkosStateVector): handle to Lightning state vector
         postselect_mode (str): Configuration for handling shots with mid-circuit measurement
             postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
             keep the same number of shots. Default is ``None``.
@@ -82,8 +82,7 @@ def simulate(
 
     Note that this function can return measurements for non-commuting observables simultaneously.
     """
-    has_mcm = any(isinstance(op, MidMeasureMP) for op in circuit.operations)
-    if circuit.shots and has_mcm:
+    if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
         results = []
         aux_circ = qml.tape.QuantumScript(
             circuit.operations,

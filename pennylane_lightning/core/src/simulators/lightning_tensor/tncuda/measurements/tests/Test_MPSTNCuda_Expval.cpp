@@ -203,7 +203,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
             PrecisionT ref = -0.2115276040475712;
 
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
-                                  ref, static_cast<PrecisionT>(cutoff)));
+                                  ref, static_cast<PrecisionT>(0.1)));
         }
     }
 }

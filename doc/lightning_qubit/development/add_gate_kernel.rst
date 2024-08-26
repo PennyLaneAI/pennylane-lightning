@@ -21,12 +21,12 @@ In this case, you may first create a file and add a class:
         /* This defines the required alignment for this kernel. If there is no special requirement,
            using std::alignment_of_v is sufficient. */
         template <typename PrecisionT>
-        constexpr static size_t required_alignment = std::alignment_of_v<PrecisionT>;
+        constexpr static std::size_t required_alignment = std::alignment_of_v<PrecisionT>;
 
         template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
-                                size_t num_qubits,
-                                const std::vector<size_t>& wires,
+                                std::size_t num_qubits,
+                                const std::vector<std::size_t>& wires,
                                 [[maybe_unused]] bool inverse) {
             /* Write your implementation */
             ...
