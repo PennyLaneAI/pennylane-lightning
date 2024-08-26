@@ -151,6 +151,9 @@ elif device_name == "lightning.gpu":
         from pennylane_lightning.lightning_gpu_ops import LightningException
 elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
+    LightningAdjointJacobian = None
+    LightningMeasurements = None
+    LightningStateVector = None
 
     if hasattr(pennylane_lightning, "lightning_tensor_ops"):
         import pennylane_lightning.lightning_tensor_ops as lightning_ops
