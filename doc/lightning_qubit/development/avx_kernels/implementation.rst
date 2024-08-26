@@ -44,7 +44,7 @@ The following simple (C++ style) pseudocode shows how the algorithm is implement
 
    template<typename PrecisionT, std::size_t packed_size>
    class ApplyPauliX {
-      template<size_t wire>
+      template<std::size_t wire>
       void applyInternal(...) {
          // Within a row
          permutation = compute a permutation within a row for a given wire
