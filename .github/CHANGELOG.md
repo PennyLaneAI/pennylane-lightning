@@ -36,7 +36,7 @@
 
 ### Improvements
 
-* Prefer `tomlkit` over `toml` in Lightning setup build.
+* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
   [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
 
 * Updated calls of ``size_t`` to ``std::size_t`` everywhere.
