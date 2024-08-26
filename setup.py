@@ -26,7 +26,7 @@ from setuptools.command.build_ext import build_ext
 
 
 has_toml = False
-toml_libs = ["tomllib", "tomli", "tomlkit"]
+toml_libs = ["tomlkit", "tomllib", "tomli"]
 for pkg in toml_libs:
     spec = find_spec(pkg)
     if spec:
