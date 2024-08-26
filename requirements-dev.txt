@@ -1,4 +1,4 @@
-git+https://github.com/PennyLaneAI/pennylane.git@master
+git+https://github.com/PennyLaneAI/pennylane.git@deprecate-BasisStatePreparation
 build
 ninja
 flaky
