@@ -4,4 +4,4 @@ pytest-cov
 pytest-mock
 pytest-xdist
 flaky
-git+https://github.com/PennyLaneAI/pennylane.git@master
+git+https://github.com/PennyLaneAI/pennylane.git@v0.38.0-rc0
