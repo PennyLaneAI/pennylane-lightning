@@ -48,8 +48,7 @@ def svd_split(M, bond_dim):
 def split(M):
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     bonds = len(S)
-    U = U
-    Vd = np.diag(S) @ Vd
+    U = U @ np.diag(S)
     Vd = Vd.reshape(bonds, 2, 2, -1)
     U = U.reshape((-1, 2, 2, bonds))
 
@@ -57,24 +56,24 @@ def split(M):
 
 
 def dense_to_mpo(psi, n_wires):
-    Ms = []
+    Ms = [[] for _ in range(n_wires)]
 
     psi = np.reshape(psi, (4, -1))
     U, Vd = split(psi)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
 
-    Ms.append(U)
+    Ms[0] = U
     bondL = Vd.shape[0]
     psi = Vd
 
-    for _ in range(n_wires - 2):
+    for i in range(1, n_wires - 1):
         psi = np.reshape(psi, (4 * bondL, -1))  # reshape psi[4 * bondL, (2x2x2...)]
         U, Vd = split(psi)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
-        Ms.append(U)
+        Ms[i] = U
 
         psi = Vd
         bondL = Vd.shape[0]
 
-    Ms.append(Vd)
+    Ms[n_wires - 1] = Vd
 
     return Ms
 
@@ -273,26 +272,30 @@ class LightningTensorNet:
 
         indices_order = []
         for i in range(len(wires)):
-            indices_order.append(i)
-            indices_order.append(i + len(wires))
+            indices_order.append(2*i)
+            indices_order.append(2*i + 1)
+            #indices_order.append(i + len(wires))
 
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_data = np.transpose(gate_data, axes=indices_order)
 
         MPOs = dense_to_mpo(gate_data, len(wires))
 
-        for i in range(len(wires)):
-            if i == 0:
-                MPOs[i] = MPOs[i].reshape(2, 2, -1)
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2))
-            elif i == len(wires) - 1:
-                MPOs[i] = MPOs[i].reshape(-1, 2, 2)
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2))
-            else:
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2))
+        MPOs[0] = MPOs[0].reshape(2, 2, -1)
+        MPOs[1] = MPOs[1].reshape(-1, 2, 2)
+
+        mpos = [
+            np.transpose(MPOs[0], axes=(0, 2, 1)).astype(np.complex128),
+            np.transpose(MPOs[1], axes=(0, 1, 2)).astype(np.complex128),
+        ]
+
+        print("tests:   ", mpos[0].flatten())
+        print("tests:   ", mpos[1].flatten())
+
+        # mpos = [np.transpose(MPOs[1], axes=(1, 0, 2)), np.transpose(MPOs[0], axes=(2, 0, 1))]
 
         # Append the MPOs to the tensor network
-        self._tensornet.applyMPOOperator(MPOs, sorted_wires, 2 ** len(wires))
+        self._tensornet.applyMPOOperator(mpos, sorted_wires, 2 ** len(wires))
 
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
@@ -319,7 +322,7 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if len(wires) <= 2:
+            if len(wires) <= 1:
                 if method is not None:
                     param = operation.parameters
                     method(wires, invert_param, param)
