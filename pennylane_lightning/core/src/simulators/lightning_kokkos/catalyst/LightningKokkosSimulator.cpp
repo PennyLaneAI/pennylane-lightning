@@ -139,7 +139,6 @@ void LightningKokkosSimulator::PrintState() {
 
 void LightningKokkosSimulator::SetState(DataView<std::complex<double>, 1> &data,
                                         std::vector<QubitIdType> &wires) {
-    std::cout << "here!\n";
     std::size_t expected_wires = static_cast<std::size_t>(log2(data.size()));
     RT_ASSERT(expected_wires == wires.size());
     std::vector<Kokkos::complex<double>> data_vector(data.begin(), data.end());
