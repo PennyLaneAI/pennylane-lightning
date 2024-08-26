@@ -11,6 +11,12 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lgpu_python.yml'
@@ -38,6 +44,7 @@ concurrency:
 
 jobs:
   builddeps:
+    if: github.event.pull_request.draft == false
     runs-on:
       - self-hosted
       - ubuntu-22.04

@@ -36,9 +36,6 @@
 
 ### Improvements
 
-* Updated the version of Pybind11 to v2.13.5.
-  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
-
 * Updated calls of ``size_t`` to ``std::size_t`` everywhere.
   [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
 
