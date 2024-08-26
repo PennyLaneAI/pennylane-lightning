@@ -3,7 +3,7 @@ name: Compat Check Docker - Lightning@release
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 23 * * 0-6"  # Run daily at 23pm everyday
+    - cron: "0 5 * * 0-6"  # Run daily at 5am UTC everyday
 
 concurrency:
   group: docker_linux_x86_64-release
