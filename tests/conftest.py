@@ -142,6 +142,7 @@ if device_name == "lightning.kokkos":
         from pennylane_lightning.lightning_kokkos_ops import LightningException
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+
     LightningAdjointJacobian = None
     LightningMeasurements = None
     LightningStateVector = None
@@ -151,6 +152,7 @@ elif device_name == "lightning.gpu":
         from pennylane_lightning.lightning_gpu_ops import LightningException
 elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
+
     LightningAdjointJacobian = None
     LightningMeasurements = None
     LightningStateVector = None
