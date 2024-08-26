@@ -49,11 +49,11 @@ TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
                                     blasLoader.getBLASLib(),
                                     blasLoader.getScipyPrefix());
 
-        for (size_t i = 0; i < expectedEigenVals.size(); i++) {
+        for (std::size_t i = 0; i < expectedEigenVals.size(); i++) {
             CHECK(eigenVals[i] == Approx(expectedEigenVals[i]).margin(1e-6));
         }
 
-        for (size_t i = 0; i < Unitaries.size(); i++) {
+        for (std::size_t i = 0; i < Unitaries.size(); i++) {
             CHECK(Unitaries[i].real() ==
                   Approx(expectedUnitaries[i].real()).margin(1e-6));
             CHECK(Unitaries[i].imag() ==

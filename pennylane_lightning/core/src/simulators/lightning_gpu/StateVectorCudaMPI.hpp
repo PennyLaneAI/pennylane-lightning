@@ -299,7 +299,8 @@ class StateVectorCudaMPI final
         std::vector<index_type> indices_local;
         std::vector<std::complex<Precision>> values_local;
 
-        for (size_t i = 0; i < static_cast<std::size_t>(num_indices); i++) {
+        for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices);
+             i++) {
             int index = indices[i];
             PL_ASSERT(index >= 0);
             std::size_t rankId =
@@ -1173,7 +1174,7 @@ class StateVectorCudaMPI final
         auto threshold = WiresSwapStatus::Swappable;
         bool isAllTargetsLocal = std::all_of(
             tgtsSwapStatus.begin(), tgtsSwapStatus.end(),
-            [&threshold](size_t status) { return status < threshold; });
+            [&threshold](std::size_t status) { return status < threshold; });
 
         mpi_manager_.Barrier();
 
@@ -1181,7 +1182,7 @@ class StateVectorCudaMPI final
             expvalOnPauliBasis(pauli_words, localTgts, expect_local);
         } else {
             std::size_t wirePairsIdx = 0;
-            for (size_t i = 0; i < pauli_words.size(); i++) {
+            for (std::size_t i = 0; i < pauli_words.size(); i++) {
                 if (tgtsSwapStatus[i] == WiresSwapStatus::UnSwappable) {
                     auto opsNames = pauliStringToOpNames(pauli_words[i]);
                     StateVectorCudaMPI<Precision> tmp(
@@ -1189,7 +1190,8 @@ class StateVectorCudaMPI final
                         this->getNumGlobalQubits(), this->getNumLocalQubits(),
                         this->getData());
 
-                    for (size_t opsIdx = 0; opsIdx < tgts[i].size(); opsIdx++) {
+                    for (std::size_t opsIdx = 0; opsIdx < tgts[i].size();
+                         opsIdx++) {
                         std::vector<std::size_t> wires = {tgts[i][opsIdx]};
                         tmp.applyOperation({opsNames[opsIdx]},
                                            {tgts[i][opsIdx]}, {false});
@@ -1665,11 +1667,11 @@ class StateVectorCudaMPI final
                                      WireStatus::Default);
 
         // Update wire status based on the gate information
-        for (size_t i = 0; i < ctrlsInt.size(); i++) {
+        for (std::size_t i = 0; i < ctrlsInt.size(); i++) {
             statusWires[ctrlsInt[i]] = WireStatus::Control;
         }
         // Update wire status based on the gate information
-        for (size_t i = 0; i < tgtsInt.size(); i++) {
+        for (std::size_t i = 0; i < tgtsInt.size(); i++) {
             statusWires[tgtsInt[i]] = WireStatus::Target;
         }
 
@@ -1825,11 +1827,11 @@ class StateVectorCudaMPI final
                                      WireStatus::Default);
 
         // Update wire status based on the gate information
-        for (size_t i = 0; i < ctrlsInt.size(); i++) {
+        for (std::size_t i = 0; i < ctrlsInt.size(); i++) {
             statusWires[ctrlsInt[i]] = WireStatus::Control;
         }
         // Update wire status based on the gate information
-        for (size_t i = 0; i < tgtsInt.size(); i++) {
+        for (std::size_t i = 0; i < tgtsInt.size(); i++) {
             statusWires[tgtsInt[i]] = WireStatus::Target;
         }
 
@@ -1966,7 +1968,7 @@ class StateVectorCudaMPI final
                                      WireStatus::Default);
 
         // Update wire status based on the gate information
-        for (size_t i = 0; i < tgtsInt.size(); i++) {
+        for (std::size_t i = 0; i < tgtsInt.size(); i++) {
             statusWires[tgtsInt[i]] = WireStatus::Target;
         }
 
@@ -2055,7 +2057,7 @@ class StateVectorCudaMPI final
         // the main loop of index bit swaps
         //
         constexpr std::size_t nLoops = 2;
-        for (size_t loop = 0; loop < nLoops; loop++) {
+        for (std::size_t loop = 0; loop < nLoops; loop++) {
             for (int swapBatchIndex = 0;
                  swapBatchIndex < static_cast<int>(nSwapBatches);
                  swapBatchIndex++) {

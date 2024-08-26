@@ -48,7 +48,7 @@ template <class T, class Alloc = std::allocator<T>> struct PLApprox {
             return false;
         }
 
-        for (size_t i = 0; i < lhs.size(); i++) {
+        for (std::size_t i = 0; i < lhs.size(); i++) {
             if constexpr (Util::is_complex_v<T>) {
                 if (lhs[i].real() != Approx(comp_[i].real())
                                          .epsilon(epsilon_)
@@ -226,7 +226,7 @@ isApproxEqual(const Data_t *data1, const std::size_t length1,
         return false;
     }
 
-    for (size_t idx = 0; idx < length1; idx++) {
+    for (std::size_t idx = 0; idx < length1; idx++) {
         if (!isApproxEqual(data1[idx], data2[idx], eps)) {
             return false;
         }
@@ -281,8 +281,8 @@ void scaleVector(std::vector<std::complex<Data_t>, Alloc> &data,
  * @brief create |0>^N
  */
 template <typename ComplexT>
-auto createZeroState(size_t num_qubits) -> TestVector<ComplexT> {
-    TestVector<ComplexT> res(size_t{1U} << num_qubits, {0.0, 0.0},
+auto createZeroState(std::size_t num_qubits) -> TestVector<ComplexT> {
+    TestVector<ComplexT> res(std::size_t{1U} << num_qubits, {0.0, 0.0},
                              getBestAllocator<ComplexT>());
     res[0] = ComplexT{1.0, 0.0};
     return res;
@@ -292,8 +292,8 @@ auto createZeroState(size_t num_qubits) -> TestVector<ComplexT> {
  * @brief create |+>^N
  */
 template <typename ComplexT>
-auto createPlusState_(size_t num_qubits) -> TestVector<ComplexT> {
-    TestVector<ComplexT> res(size_t{1U} << num_qubits, 1.0,
+auto createPlusState_(std::size_t num_qubits) -> TestVector<ComplexT> {
+    TestVector<ComplexT> res(std::size_t{1U} << num_qubits, 1.0,
                              getBestAllocator<ComplexT>());
     for (auto &elem : res) {
         elem /= std::sqrt(1U << num_qubits);
@@ -305,7 +305,7 @@ auto createPlusState_(size_t num_qubits) -> TestVector<ComplexT> {
  * @brief create |+>^N
  */
 template <typename PrecisionT>
-auto createPlusState(size_t num_qubits)
+auto createPlusState(std::size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
         std::size_t{1U} << num_qubits, 1.0,
@@ -326,7 +326,7 @@ auto createRandomStateVectorData(RandomEngine &re, std::size_t num_qubits)
         std::size_t{1U} << num_qubits, 0.0,
         getBestAllocator<std::complex<PrecisionT>>());
     std::uniform_real_distribution<PrecisionT> dist;
-    for (size_t idx = 0; idx < (size_t{1U} << num_qubits); idx++) {
+    for (std::size_t idx = 0; idx < (std::size_t{1U} << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
     }
 
@@ -355,9 +355,9 @@ auto createProductState(std::string_view str) -> TestVector<ComplexT> {
     std::vector<PrecisionT> minus{INVSQRT2<PrecisionT>(),
                                   -INVSQRT2<PrecisionT>()};
 
-    for (size_t k = 0; k < (size_t{1U} << str.length()); k++) {
+    for (std::size_t k = 0; k < (std::size_t{1U} << str.length()); k++) {
         PrecisionT elem = 1.0;
-        for (size_t n = 0; n < str.length(); n++) {
+        for (std::size_t n = 0; n < str.length(); n++) {
             char c = str[n];
             const std::size_t wire = str.length() - 1 - n;
             switch (c) {
@@ -390,7 +390,7 @@ auto createProductState(std::string_view str) -> TestVector<ComplexT> {
  * @return std::vector<typename StateVectorT::ComplexT>>
  */
 template <class StateVectorT>
-auto createNonTrivialState(size_t num_qubits = 3) {
+auto createNonTrivialState(std::size_t num_qubits = 3) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
@@ -406,7 +406,7 @@ auto createNonTrivialState(size_t num_qubits = 3) {
     std::vector<std::vector<PrecisionT>> phase;
 
     PrecisionT initial_phase = 0.7;
-    for (size_t n_qubit = 0; n_qubit < num_qubits; n_qubit++) {
+    for (std::size_t n_qubit = 0; n_qubit < num_qubits; n_qubit++) {
         gates.emplace_back("RX");
         gates.emplace_back("RY");
 
@@ -498,7 +498,7 @@ bool operator==(const std::vector<T, AllocA> &lhs,
     if (lhs.size() != rhs.size()) {
         return false;
     }
-    for (size_t idx = 0; idx < lhs.size(); idx++) {
+    for (std::size_t idx = 0; idx < lhs.size(); idx++) {
         if (lhs[idx] != rhs[idx]) {
             return false;
         }
@@ -519,7 +519,7 @@ template <class T>
 auto linspace(T start, T end, std::size_t num_points) -> std::vector<T> {
     std::vector<T> data(num_points);
     T step = (end - start) / (num_points - 1);
-    for (size_t i = 0; i < num_points; i++) {
+    for (std::size_t i = 0; i < num_points; i++) {
         data[i] = start + (step * i);
     }
     return data;
@@ -532,7 +532,7 @@ std::vector<int> randomIntVector(RandomEngine &re, std::size_t size, int min,
     std::vector<int> res;
 
     res.reserve(size);
-    for (size_t i = 0; i < size; i++) {
+    for (std::size_t i = 0; i < size; i++) {
         res.emplace_back(dist(re));
     }
     return res;
@@ -566,9 +566,9 @@ auto randomUnitary(RandomEngine &re, std::size_t num_qubits)
     // This algorithm is unstable but works for a small matrix.
     // Use QR decomposition when we have LAPACK support.
 
-    for (size_t row2 = 0; row2 < dim; row2++) {
+    for (std::size_t row2 = 0; row2 < dim; row2++) {
         ComplexT *row2_p = res.data() + row2 * dim;
-        for (size_t row1 = 0; row1 < row2; row1++) {
+        for (std::size_t row1 = 0; row1 < row2; row1++) {
             const ComplexT *row1_p = res.data() + row1 * dim;
             ComplexT dot12 = std::inner_product(
                 row1_p, row1_p + dim, row2_p, std::complex<PrecisionT>(),
@@ -586,7 +586,7 @@ auto randomUnitary(RandomEngine &re, std::size_t num_qubits)
     }
 
     // Normalize each row
-    for (size_t row = 0; row < dim; row++) {
+    for (std::size_t row = 0; row < dim; row++) {
         ComplexT *row_p = res.data() + row * dim;
         PrecisionT norm2 = std::sqrt(squaredNorm(row_p, dim));
 

@@ -70,8 +70,8 @@ void compute_diagonalizing_gates(int n, int lda,
     std::vector<std::complex<T>> ah(n * lda, {0.0, 0.0});
 
     // TODO optmize transpose
-    for (size_t i = 0; i < static_cast<std::size_t>(n); i++) {
-        for (size_t j = 0; j <= i; j++) {
+    for (std::size_t i = 0; i < static_cast<std::size_t>(n); i++) {
+        for (std::size_t j = 0; j <= i; j++) {
             ah[j * n + i] = Ah[i * lda + j];
         }
     }

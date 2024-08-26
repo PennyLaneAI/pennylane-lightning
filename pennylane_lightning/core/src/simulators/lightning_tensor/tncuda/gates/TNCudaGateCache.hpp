@@ -161,7 +161,7 @@ template <class PrecisionT> class TNCudaGateCache {
      * @brief Returns the key (index of the gate) of the first element in the
      * `device_gates_`.
      *
-     * @return size_t Key of the first element in the `device_gates_`.
+     * @return std::size_t Key of the first element in the `device_gates_`.
      */
     auto get_cache_head_idx() const -> std::size_t {
         auto it = device_gates_.begin();

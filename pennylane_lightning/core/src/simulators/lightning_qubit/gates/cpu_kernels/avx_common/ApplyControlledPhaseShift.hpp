@@ -39,11 +39,11 @@ struct ApplyControlledPhaseShift {
     /**
      * @brief Permutation applying imaginary `i` to |11>
      */
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static consteval auto applyInternalInternalPermutation() {
         // Swap real and imaginary part of 11
         std::array<uint8_t, packed_size> perm{};
-        for (size_t k = 0; k < (packed_size / 2); k++) {
+        for (std::size_t k = 0; k < (packed_size / 2); k++) {
             if ((((k >> rev_wire0) & 1U) & ((k >> rev_wire1) & 1U)) == 1) {
                 // Only swap real and image for 11
                 perm[2 * k + 0] = 2 * k + 1;
@@ -57,7 +57,7 @@ struct ApplyControlledPhaseShift {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t rev_wire0, std::size_t rev_wire1, class ParamT>
+    template <std::size_t rev_wire0, std::size_t rev_wire1, class ParamT>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits, bool inverse,
                                       ParamT angle) {
@@ -66,7 +66,7 @@ struct ApplyControlledPhaseShift {
         const auto real_factor = [angle]() {
             std::array<PrecisionT, packed_size> arr{};
             PL_LOOP_SIMD
-            for (size_t k = 0; k < (packed_size / 2); k++) {
+            for (std::size_t k = 0; k < (packed_size / 2); k++) {
                 if ((((k >> rev_wire0) & 1U) & ((k >> rev_wire1) & 1U)) == 1) {
                     // for 11
                     arr[2 * k + 0] = std::cos(angle);
@@ -81,7 +81,7 @@ struct ApplyControlledPhaseShift {
         const auto imag_factor = [isin]() {
             std::array<PrecisionT, packed_size> arr{};
             PL_LOOP_SIMD
-            for (size_t k = 0; k < (packed_size / 2); k++) {
+            for (std::size_t k = 0; k < (packed_size / 2); k++) {
                 if ((((k >> rev_wire0) & 1U) & ((k >> rev_wire1) & 1U)) == 1) {
                     // for 11
                     arr[2 * k + 0] = -isin;
@@ -97,7 +97,7 @@ struct ApplyControlledPhaseShift {
         constexpr static auto perm =
             applyInternalInternalPermutation<rev_wire0, rev_wire1>();
         PL_LOOP_PARALLEL(1)
-        for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
+        for (std::size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
 
             const auto prod_cos = real_factor * v;
@@ -110,10 +110,10 @@ struct ApplyControlledPhaseShift {
     /**
      * @brief Permutation applying product `i` when the target bit is 1
      */
-    template <size_t min_rev_wire>
+    template <std::size_t min_rev_wire>
     static consteval auto applyInternalExternalPermutation() {
         std::array<uint8_t, packed_size> perm{};
-        for (size_t k = 0; k < (packed_size / 2); k++) {
+        for (std::size_t k = 0; k < (packed_size / 2); k++) {
             if (((k >> min_rev_wire) & 1U) == 1) {
                 // Only swap real and imag when 1
                 perm[2 * k + 0] = 2 * k + 1;
@@ -127,7 +127,7 @@ struct ApplyControlledPhaseShift {
         return Permutation::compilePermutation<PrecisionT>(perm);
     }
 
-    template <size_t min_rev_wire, class ParamT>
+    template <std::size_t min_rev_wire, class ParamT>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       std::size_t max_rev_wire, bool inverse,
@@ -142,7 +142,7 @@ struct ApplyControlledPhaseShift {
         const auto real_factor = [angle]() {
             std::array<Precision, packed_size> arr{};
             PL_LOOP_SIMD
-            for (size_t k = 0; k < (packed_size / 2); k++) {
+            for (std::size_t k = 0; k < (packed_size / 2); k++) {
                 if (((k >> min_rev_wire) & 1U) == 1) {
                     // for 11
                     arr[2 * k + 0] = std::cos(angle);
@@ -159,7 +159,7 @@ struct ApplyControlledPhaseShift {
         const auto imag_factor = [isin]() {
             std::array<Precision, packed_size> arr{};
             PL_LOOP_SIMD
-            for (size_t k = 0; k < (packed_size / 2); k++) {
+            for (std::size_t k = 0; k < (packed_size / 2); k++) {
                 if (((k >> min_rev_wire) & 1U) == 1) {
                     // for 11
                     arr[2 * k + 0] = -isin;
@@ -176,7 +176,8 @@ struct ApplyControlledPhaseShift {
         constexpr static auto perm =
             applyInternalExternalPermutation<min_rev_wire>();
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | max_rev_wire_shift;
@@ -218,7 +219,8 @@ struct ApplyControlledPhaseShift {
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(identity<packed_size>()));
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);

@@ -1741,7 +1741,7 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
 }
 
 TEST_CASE("Measurement with a seeded device", "[Measures]") {
-    for (size_t _ = 0; _ < 5; _++) {
+    for (std::size_t _ = 0; _ < 5; _++) {
         std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
         std::unique_ptr<LKSimulator> sim1 = std::make_unique<LKSimulator>();
 
