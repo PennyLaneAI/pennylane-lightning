@@ -14,7 +14,6 @@
 """
 This module contains the LightningQubit class that inherits from the new device interface.
 """
-import os
 from dataclasses import replace
 from functools import reduce
 from numbers import Number
@@ -522,7 +521,7 @@ class LightningQubit(Device):
         self._rng = np.random.default_rng(seed)
 
         self._c_dtype = c_dtype
-        self._batch_obs = int(os.getenv("OMP_NUM_THREADS", "1")) if batch_obs else False
+        self._batch_obs = batch_obs
         self._mcmc = mcmc
         if self._mcmc:
             if kernel_name not in [

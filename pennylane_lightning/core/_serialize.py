@@ -360,17 +360,17 @@ class QuantumScriptSerializer:
         """
 
         serialized_obs = []
-        offset_indices = []
+        obs_indices = []
 
         for i, observable in enumerate(tape.observables):
             ser_ob = self._ob(observable, wires_map)
             if isinstance(ser_ob, list):
                 serialized_obs.extend(ser_ob)
-                offset_indices.extend([i] * len(ser_ob))
+                obs_indices.extend([i] * len(ser_ob))
             else:
                 serialized_obs.append(ser_ob)
-                offset_indices.append(i)
-        return serialized_obs, offset_indices
+                obs_indices.append(i)
+        return serialized_obs, obs_indices
 
     def serialize_ops(self, tape: QuantumTape, wires_map: dict = None) -> Tuple[
         List[List[str]],

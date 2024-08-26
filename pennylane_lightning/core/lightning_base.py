@@ -266,7 +266,7 @@ class LightningBase(QubitDevice):
     ):
         state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
 
-        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
+        obs_serialized, obs_indices = QuantumScriptSerializer(
             self.short_name, self.use_csingle, use_mpi, split_obs
         ).serialize_observables(tape, self.wire_map)
 
@@ -309,7 +309,7 @@ class LightningBase(QubitDevice):
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
-            "obs_idx_offsets": obs_idx_offsets,
+            "obs_indices": obs_indices,
         }
 
     @staticmethod

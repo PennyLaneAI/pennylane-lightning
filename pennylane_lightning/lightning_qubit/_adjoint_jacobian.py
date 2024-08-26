@@ -14,6 +14,7 @@
 r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
+import os
 from typing import List
 
 import numpy as np
@@ -25,7 +26,6 @@ from pennylane.tape import QuantumTape
 from scipy.sparse import coo_matrix
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
-from pennylane_lightning.core.lightning_base import _chunk_iterable
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
@@ -117,7 +117,7 @@ class LightningAdjointJacobian:
         """
         use_csingle = self._dtype == np.complex64
 
-        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
+        obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)
 
@@ -160,7 +160,7 @@ class LightningAdjointJacobian:
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
-            "obs_idx_offsets": obs_idx_offsets,
+            "obs_indices": obs_indices,
         }
 
     @staticmethod
@@ -219,7 +219,9 @@ class LightningAdjointJacobian:
                 "mixed with other return types"
             )
 
-        processed_data = self._process_jacobian_tape(tape, split_obs=self.batch_obs)
+        split_obs = os.getenv("OMP_NUM_THREADS", None) if self.batch_obs else False
+        split_obs = int(split_obs) if split_obs else False
+        processed_data = self._process_jacobian_tape(tape, split_obs=split_obs)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self._dtype)
@@ -234,8 +236,8 @@ class LightningAdjointJacobian:
         )
         jac = np.array(jac)
 
-        num_obs = len(np.unique(processed_data["obs_idx_offsets"]))
-        rows = processed_data["obs_idx_offsets"]
+        num_obs = len(np.unique(processed_data["obs_indices"]))
+        rows = processed_data["obs_indices"]
         cols = np.arange(len(rows), dtype=int)
         data = (np.ones(len(rows)), (rows, cols))
         red_mat = coo_matrix(data, shape=(num_obs, len(rows)))
