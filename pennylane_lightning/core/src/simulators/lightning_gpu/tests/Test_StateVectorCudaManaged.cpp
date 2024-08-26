@@ -237,7 +237,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::StateVectorCudaManaged",
     using ComplexT = typename StateVectorT::ComplexT;
     std::mt19937_64 re{1337};
 
-    SECTION("StateVectorCudaManaged<TestType> {size_t}") {
+    SECTION("StateVectorCudaManaged<TestType> {std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, std::size_t>);
         const std::size_t num_qubits = 4;
         StateVectorT sv(num_qubits);

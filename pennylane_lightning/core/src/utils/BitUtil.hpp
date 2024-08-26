@@ -31,7 +31,7 @@ namespace Pennylane::Util {
  * @param val Size of the state vector. Expected to be a power of 2.
  * @return std::size_t Log2(val), or the state vector's number of qubits.
  */
-inline auto constexpr log2PerfectPower(size_t val) -> std::size_t {
+inline auto constexpr log2PerfectPower(std::size_t val) -> std::size_t {
     return static_cast<std::size_t>(std::countr_zero(val));
 }
 
@@ -42,7 +42,7 @@ inline auto constexpr log2PerfectPower(size_t val) -> std::size_t {
  * @return true
  * @return false
  */
-inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
+inline auto constexpr isPerfectPowerOf2(std::size_t value) -> bool {
     return std::has_single_bit(value);
 }
 
@@ -54,7 +54,7 @@ inline auto constexpr isPerfectPowerOf2(size_t value) -> bool {
  * @param nbits Number of bits to fill
  */
 template <class IntegerType = std::size_t>
-inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
+inline auto constexpr fillTrailingOnes(std::size_t nbits) -> IntegerType {
     static_assert(std::is_integral_v<IntegerType> &&
                   std::is_unsigned_v<IntegerType>);
 
@@ -70,7 +70,7 @@ inline auto constexpr fillTrailingOnes(size_t nbits) -> IntegerType {
  * @param pos Position up to which bit one is filled.
  */
 template <class IntegerType = std::size_t>
-inline auto constexpr fillLeadingOnes(size_t pos) -> std::size_t {
+inline auto constexpr fillLeadingOnes(std::size_t pos) -> std::size_t {
     static_assert(std::is_integral_v<IntegerType> &&
                   std::is_unsigned_v<IntegerType>);
 
@@ -80,7 +80,7 @@ inline auto constexpr fillLeadingOnes(size_t pos) -> std::size_t {
 /**
  * @brief Swap bits in i-th and j-th position in place
  */
-inline auto constexpr bitswap(size_t bits, const std::size_t i,
+inline auto constexpr bitswap(std::size_t bits, const std::size_t i,
                               const std::size_t j) -> std::size_t {
     std::size_t x = ((bits >> i) ^ (bits >> j)) & 1U;
     return bits ^ ((x << i) | (x << j));

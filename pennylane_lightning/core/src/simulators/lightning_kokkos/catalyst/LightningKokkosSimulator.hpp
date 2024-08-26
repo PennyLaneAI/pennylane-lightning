@@ -112,10 +112,11 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     LightningKokkosSimulator &operator=(LightningKokkosSimulator &&) = delete;
 
     auto AllocateQubit() -> QubitIdType override;
-    auto AllocateQubits(size_t num_qubits) -> std::vector<QubitIdType> override;
+    auto AllocateQubits(std::size_t num_qubits)
+        -> std::vector<QubitIdType> override;
     void ReleaseQubit(QubitIdType q) override;
     void ReleaseAllQubits() override;
-    [[nodiscard]] auto GetNumQubits() const -> size_t override;
+    [[nodiscard]] auto GetNumQubits() const -> std::size_t override;
     void StartTapeRecording() override;
     void StopTapeRecording() override;
     void SetDeviceShots(std::size_t shots) override;
@@ -154,21 +155,21 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     void Probs(DataView<double, 1> &probs) override;
     void PartialProbs(DataView<double, 1> &probs,
                       const std::vector<QubitIdType> &wires) override;
-    void Sample(DataView<double, 2> &samples, size_t shots) override;
+    void Sample(DataView<double, 2> &samples, std::size_t shots) override;
     void PartialSample(DataView<double, 2> &samples,
                        const std::vector<QubitIdType> &wires,
-                       size_t shots) override;
+                       std::size_t shots) override;
     void Counts(DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
-                size_t shots) override;
+                std::size_t shots) override;
     void PartialCounts(DataView<double, 1> &eigvals,
                        DataView<int64_t, 1> &counts,
                        const std::vector<QubitIdType> &wires,
-                       size_t shots) override;
+                       std::size_t shots) override;
     auto Measure(QubitIdType wire,
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;
     void Gradient(std::vector<DataView<double, 1>> &gradients,
-                  const std::vector<size_t> &trainParams) override;
+                  const std::vector<std::size_t> &trainParams) override;
 
     auto CacheManagerInfo()
         -> std::tuple<std::size_t, std::size_t, std::size_t,
