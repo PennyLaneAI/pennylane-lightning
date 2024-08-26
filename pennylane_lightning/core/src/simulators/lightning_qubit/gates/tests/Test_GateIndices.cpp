@@ -31,7 +31,7 @@ TEST_CASE("generateBitPatterns", "[GateUtil]") {
         CHECK(bit_pattern == std::vector<std::size_t>{0});
     }
     SECTION("Qubit indices {i}") {
-        for (size_t i = 0; i < num_qubits; i++) {
+        for (std::size_t i = 0; i < num_qubits; i++) {
             std::vector<std::size_t> expected{0, std::size_t{1U}
                                                      << (num_qubits - i - 1)};
             auto bit_pattern = generateBitPatterns({i}, num_qubits);
@@ -68,7 +68,7 @@ TEST_CASE("getIndicesAfterExclusion", "[GateUtil]") {
         CHECK(indices == expected);
     }
     SECTION("Qubit indices {i}") {
-        for (size_t i = 0; i < num_qubits; i++) {
+        for (std::size_t i = 0; i < num_qubits; i++) {
             std::vector<std::size_t> expected{0, 1, 2, 3};
             expected.erase(expected.begin() + i);
 

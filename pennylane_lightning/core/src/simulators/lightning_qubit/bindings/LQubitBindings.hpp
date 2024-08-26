@@ -327,7 +327,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
             const std::size_t ndim = 2;
             const std::vector<std::size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(size_t);
+            constexpr auto sz = sizeof(std::size_t);
             const std::vector<std::size_t> strides{sz * num_wires, sz};
             // return 2-D NumPy array
             return py::array(py::buffer_info(

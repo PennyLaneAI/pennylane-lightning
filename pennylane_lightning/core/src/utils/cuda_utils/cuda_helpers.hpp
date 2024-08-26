@@ -372,7 +372,7 @@ static std::pair<int, int> getGPUArch(int device_number = 0) {
 /**
  * @brief Get free memory size on GPU device
  *
- * @return size_t
+ * @return std::size_t
  */
 inline std::size_t getFreeMemorySize() {
     std::size_t freeBytes{0}, totalBytes{0};

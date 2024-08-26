@@ -281,23 +281,23 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
             // Apply + scatter
             if (inverse) {
-                for (size_t i = 0; i < indices.size(); i++) {
+                for (std::size_t i = 0; i < indices.size(); i++) {
                     std::size_t index = indices[i];
                     shiftedState[index] = 0;
 
-                    for (size_t j = 0; j < indices.size(); j++) {
+                    for (std::size_t j = 0; j < indices.size(); j++) {
                         const std::size_t baseIndex = j * indices.size();
                         shiftedState[index] +=
                             std::conj(matrix[baseIndex + i]) * v[j];
                     }
                 }
             } else {
-                for (size_t i = 0; i < indices.size(); i++) {
+                for (std::size_t i = 0; i < indices.size(); i++) {
                     std::size_t index = indices[i];
                     shiftedState[index] = 0;
 
                     const std::size_t baseIndex = i * indices.size();
-                    for (size_t j = 0; j < indices.size(); j++) {
+                    for (std::size_t j = 0; j < indices.size(); j++) {
                         shiftedState[index] += matrix[baseIndex + j] * v[j];
                     }
                 }
@@ -876,7 +876,7 @@ class GateImplementationsPI : public PauliGenerator<GateImplementationsPI> {
 
         for (const std::size_t &externalIndex : externalIndices) {
             std::complex<PrecisionT> *shiftedState = arr + externalIndex;
-            for (size_t k = 0; k < indices.size(); k++) {
+            for (std::size_t k = 0; k < indices.size(); k++) {
                 shiftedState[indices[k]] *= shifts[std::popcount(k) % 2];
             }
         }
