@@ -26,7 +26,7 @@ In this case, you may first create a file and add a class:
         template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
                                 std::size_t num_qubits,
-                                const std::vector<size_t>& wires,
+                                const std::vector<std::size_t>& wires,
                                 [[maybe_unused]] bool inverse) {
             /* Write your implementation */
             ...
