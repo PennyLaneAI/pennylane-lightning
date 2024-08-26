@@ -20,7 +20,6 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
-from pennylane._device import DeviceError
 
 if device_name not in ("lightning.qubit", "lightning.kokkos"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
@@ -86,7 +85,7 @@ def test_unsupported_measurement():
 
     if device_name == "lightning.qubit":
         with pytest.raises(
-            DeviceError,
+            qml.DeviceError,
             match=f"not accepted with finite shots on lightning.qubit",
         ):
             func(*params)

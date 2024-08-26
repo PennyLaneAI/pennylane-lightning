@@ -336,21 +336,21 @@ class TestExecution:
                 (qml.BasisState([1, 1], wires=[0, 1]), False),
                 (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
             ]
-            if device_name != "lightning.tensor"
-            else [
-                (qml.BasisState([1, 1], wires=[0, 1]), False),
-            ]
         ),
     )
     def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
         """Test that state prep ops in the beginning of a tape are decomposed with adjoint
         but not otherwise."""
+        if device_name == "lightning.tensor" and is_trainable:
+            pytest.skip("StatePrep trainable not supported in lightning.tensor")
+
         tape = qml.tape.QuantumScript([op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))])
         device = LightningDevice(wires=3)
 
         if is_trainable:
-            # Need to decompose twice as the state prep ops we use first decompose into a template
-            decomp = op.decomposition()[0].decomposition()
+            decomp = op.decomposition()
+            # decompose one more time if it's decomposed into a template:
+            decomp = decomp[0].decomposition() if len(decomp) == 1 else decomp
         else:
             decomp = [op]
 
@@ -367,7 +367,7 @@ class TestExecution:
             (qml.StatePrep(np.array([1, 0]), wires=0), 1),
             (qml.BasisState([1, 1], wires=[0, 1]), 1),
             (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), 1),
-            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 2),
+            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 1),
             (qml.MottonenStatePreparation([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 0),
         ],
     )
@@ -378,8 +378,7 @@ class TestExecution:
         )
         device = LightningDevice(wires=3)
 
-        for _ in range(decomp_depth):
-            op = op.decomposition()[0]
+        op = op.decomposition()[0] if decomp_depth and len(op.decomposition()) == 1 else op
         decomp = op.decomposition()
 
         program, _ = device.preprocess()
@@ -421,8 +420,6 @@ class TestExecution:
         if device_name == "lightning.tensor":
             if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
                 pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
-            if isinstance(mp, ProbabilityMP):
-                pytest.skip("qml.probs() not supported in lightning.tensor")
 
         if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
@@ -466,10 +463,6 @@ class TestExecution:
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
-        if device_name == "lightning.tensor":
-            if isinstance(mp1, ProbabilityMP) or isinstance(mp2, ProbabilityMP):
-                pytest.skip("qml.probs() not supported in lightning.tensor")
-
         if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
 
@@ -511,6 +504,10 @@ class TestExecution:
         assert np.allclose(result[0], np.cos(phi))
         assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support out of order probs",
+    )
     @pytest.mark.parametrize(
         "wires, wire_order", [(3, (0, 1, 2)), (("a", "b", "c"), ("a", "b", "c"))]
     )

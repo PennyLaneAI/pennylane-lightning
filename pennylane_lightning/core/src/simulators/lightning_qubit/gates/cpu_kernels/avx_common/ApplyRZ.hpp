@@ -32,7 +32,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyRZ {
 
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire, class ParamT>
+    template <std::size_t rev_wire, class ParamT>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits,
                               [[maybe_unused]] bool inverse, ParamT angle) {
@@ -48,7 +48,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyRZ {
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
         PL_LOOP_PARALLEL(1)
-        for (size_t n = 0; n < (1U << num_qubits); n += packed_size / 2) {
+        for (std::size_t n = 0; n < (1U << num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             const auto w = permute<perm>(v);
             PrecisionAVXConcept::store(arr + n,
@@ -78,7 +78,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyRZ {
         constexpr static auto perm = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;

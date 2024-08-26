@@ -7,6 +7,12 @@ name: Wheel::Any::None
 
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
   push:
     branches:
       - master
@@ -20,6 +26,7 @@ concurrency:
 
 jobs:
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:

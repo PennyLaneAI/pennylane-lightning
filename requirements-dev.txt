@@ -20,3 +20,4 @@ custatevec-cu12
 cutensornet-cu12
 pylint
 scipy
+tomlkit
