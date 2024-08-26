@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 OLDVER=0.37.0
 LVER=0.38.0
 rreplace(){
