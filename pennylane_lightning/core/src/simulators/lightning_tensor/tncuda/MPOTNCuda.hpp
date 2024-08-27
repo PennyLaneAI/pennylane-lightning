@@ -81,22 +81,20 @@ template <class PrecisionT> class MPOTNCuda {
     // with the appended operator component. 4. Number of MPO sites; 5. MPO
     // tensor mode extents for each MPO tensor;
     // 6. Boundary conditions;
-    cutensornetNetworkOperator_t networkOperator_;
+    cutensornetNetworkOperator_t MPOOperator_;
     cuDoubleComplex coeff_{1.0, 0.0}; // default coefficient
     cutensornetBoundaryCondition_t boundaryCondition_{
         CUTENSORNET_BOUNDARY_CONDITION_OPEN}; // open boundary condition
     int64_t componentIdx_;
 
     std::size_t maxBondDim_;
-    std::size_t numSites_;
-    std::vector<std::size_t> stateModeExtents_;
-    std::vector<int64_t> stateModeExtents_int64_;
-    std::vector<std::size_t> modes_;
-    std::vector<int32_t> modes_int32_;
-
     std::vector<std::size_t> bondDims_;
 
-    std::vector<std::vector<std::size_t>> modesExtents_;
+    std::size_t numMPOSites_;
+    std::vector<std::size_t> modes_;
+    std::vector<int32_t> MPO_modes_int32_;
+
+    // std::vector<std::vector<std::size_t>> modesExtents_;
     std::vector<std::vector<int64_t>> modesExtents_int64_;
     std::vector<TensorCuda<PrecisionT>> tensors_;
 
@@ -107,8 +105,8 @@ template <class PrecisionT> class MPOTNCuda {
      * required by cutensornet backend.
      */
     [[nodiscard]] auto getModeExtentsPtr_() -> std::vector<int64_t const *> {
-        std::vector<int64_t const *> modeExtentsPtr_int64(numSites_);
-        for (std::size_t i = 0; i < numSites_; i++) {
+        std::vector<int64_t const *> modeExtentsPtr_int64(numMPOSites_);
+        for (std::size_t i = 0; i < numMPOSites_; i++) {
             modeExtentsPtr_int64[i] = modesExtents_int64_[i].data();
         }
         return modeExtentsPtr_int64;
@@ -120,8 +118,8 @@ template <class PrecisionT> class MPOTNCuda {
      * @return std::vector<uint64_t *>
      */
     [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
-        std::vector<void *> tensorsDataPtr(numSites_);
-        for (std::size_t i = 0; i < numSites_; i++) {
+        std::vector<void *> tensorsDataPtr(numMPOSites_);
+        for (std::size_t i = 0; i < numMPOSites_; i++) {
             tensorsDataPtr[i] =
                 reinterpret_cast<void *>(tensors_[i].getDataBuffer().getData());
         }
@@ -145,148 +143,95 @@ template <class PrecisionT> class MPOTNCuda {
         PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
                         "Only sorted target wires is accepeted.");
 
-        wires_ = wires;
-
-        // set up max bond dimensions and number of MPO sites
-        maxBondDim_ = maxBondDim;
-        numSites_ = wires.back() - wires.front() + 1;
-
-        stateModeExtents_int64_ = std::vector<int64_t>(numQubits, 2);
-
-        // set up MPO tensor network operator
+        // Create an empty MPO tensor network operator. Note that the state
+        // extents are aligned with the quantum state.
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
             /* const cutensornetHandle_t */ cutensornetHandle,
             /* int32_t */ static_cast<int32_t>(numQubits),
             /* const int64_t stateModeExtents */
-            stateModeExtents_int64_.data(),
+            std::vector<int64_t>(numQubits, 2).data(),
             /* cudaDataType_t */ cudaDataType,
-            /* cutensornetNetworkOperator_t */ &networkOperator_));
+            /* cutensornetNetworkOperator_t */ &MPOOperator_));
 
-        // set up MPO target modes
-        modes_.resize(numSites_);
-        std::iota(modes_.begin(), modes_.end(), wires[0]);
-        modes_int32_ = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
-            modes_, numQubits);
+        // set up the number of MPO sites
+        wires_ = wires;
+        numMPOSites_ = wires.back() - wires.front() + 1;
 
-        // set up target bond dimensions
-        std::vector<std::size_t> targetSitesBondDims(wires.size() - 1,
-                                                     maxBondDim);
-        for (std::size_t i = 0; i < targetSitesBondDims.size(); i++) {
-            std::size_t bondDim =
-                std::min(i + 1, targetSitesBondDims.size() - i) *
-                2; // 1+1 (1 for bra and 1 for ket)
-            if (bondDim <= log2(maxBondDim_)) {
-                targetSitesBondDims[i] = (std::size_t{1} << bondDim);
-            }
-        }
+        MPO_modes_int32_.resize(numMPOSites_);
+        std::iota(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
+                  static_cast<int32_t>(wires.front()));
 
-        bondDims_ = targetSitesBondDims;
+        std::transform(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
+                       MPO_modes_int32_.begin(), [numQubits](int32_t mode) {
+                           return static_cast<int32_t>(numQubits) - 1 - mode;
+                       });
 
-        PL_ABORT_IF_NOT(bondDims_.size() == numSites_ - 1,
-                        "Number of bond dimensions must match the number of "
-                        "MPO sites.");
-
-        // set up MPO tensor mode extents and initialize MPO tensors
-        for (std::size_t i = 0; i < numSites_; i++) {
-            if (i == 0) {
-                modesExtents_.push_back({2, bondDims_[i], 2});
-            } else if (i == numSites_ - 1) {
-                modesExtents_.push_back({bondDims_[i - 1], 2, 2});
-            } else {
-                modesExtents_.push_back({bondDims_[i - 1], 2, bondDims_[i], 2});
-            }
-
-            modesExtents_int64_.emplace_back(
-                Pennylane::Util::cast_vector<std::size_t, int64_t>(
-                    modesExtents_.back()));
-
-            tensors_.emplace_back(modesExtents_.back().size(),
-                                  modesExtents_.back(), modesExtents_.back(),
-                                  dev_tag);
-            tensors_.back().getDataBuffer().zeroInit();
-        }
-
-        for (std::size_t i = 0; i < numSites_; i++) {
-            auto tensor_cu =
-                cuUtil::complexToCu<ComplexT>(tensors[wires.size() - 1 - i]);
-            tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
-                                                          tensor_cu.size());
-        }
-
-        /*
-
-        // set up MPO target modes
-        for (std::size_t i = 0; i < numSites_; i++) {
-            modes_.push_back(wires.front() + i);
-            modes_int32_.push_back(
-                static_cast<int32_t>(numQubits - 1 - modes_.back()));
-        }
+        // set up max bond dimensions
+        maxBondDim_ = maxBondDim;
 
         // set up target bond dimensions
-        std::vector<std::size_t> targetSitesBondDims(wires.size() - 1,
-                                                     maxBondDim);
-        for (std::size_t i = 0; i < targetSitesBondDims.size(); i++) {
-            std::size_t bondDim =
-                std::min(i + 1, targetSitesBondDims.size() - i) *
-                2; // 1+1 (1 for bra and 1 for ket)
+        std::vector<std::size_t> BondDims(wires.size() - 1, maxBondDim);
+        for (std::size_t i = 0; i < BondDims.size(); i++) {
+            std::size_t bondDim = std::min(i + 1, BondDims.size() - i) *
+                                  2; // 1+1 (1 for bra and 1 for ket)
             if (bondDim <= log2(maxBondDim_)) {
-                targetSitesBondDims[i] = (std::size_t{1} << bondDim);
+                BondDims[i] = (std::size_t{1} << bondDim);
             }
         }
 
-        std::vector<std::size_t> bondDims_orderC = targetSitesBondDims;
-
+        bondDims_ = BondDims;
         // Insert bond dimensions of Identity tensors
-        if (wires.size() != numSites_) {
+        if (wires.size() != numMPOSites_) {
             for (std::size_t i = 0; i < wires.size() - 1; i++) {
-                const std::size_t numIdentitySites =
-                    wires[i + 1] - wires[i] - 1;
-                if (numIdentitySites > 0) {
-                    std::vector<std::size_t> identitySites(
-                        numIdentitySites, targetSitesBondDims[i]);
-                    bondDims_orderC.insert(bondDims_orderC.begin() + i + 1,
-                                           identitySites.begin(),
-                                           identitySites.end());
+                const std::size_t numISites = wires[i + 1] - wires[i] - 1;
+                if (numISites > 0) {
+                    std::vector<std::size_t> ISites(numISites, BondDims[i]);
+                    bondDims_.insert(bondDims_.begin() + i + 1, ISites.begin(),
+                                     ISites.end());
                 }
             }
         }
 
-        bondDims_ = bondDims_orderC;
-
-        PL_ABORT_IF_NOT(bondDims_.size() == numSites_ - 1,
+        PL_ABORT_IF_NOT(bondDims_.size() == numMPOSites_ - 1,
                         "Number of bond dimensions must match the number of "
                         "MPO sites.");
 
         // set up MPO tensor mode extents and initialize MPO tensors
-        for (std::size_t i = 0; i < numSites_; i++) {
+        for (std::size_t i = 0; i < numMPOSites_; i++) {
+            std::vector<std::size_t> localModesExtents;
             if (i == 0) {
-                modesExtents_.push_back({2, bondDims_[i], 2});
-            } else if (i == numSites_ - 1) {
-                modesExtents_.push_back({bondDims_[i - 1], 2, 2});
+                localModesExtents = {2, bondDims_[i], 2};
+            } else if (i == numMPOSites_ - 1) {
+                localModesExtents = {bondDims_[i - 1], 2, 2};
             } else {
-                modesExtents_.push_back({bondDims_[i - 1], 2, bondDims_[i], 2});
+                localModesExtents = {bondDims_[i - 1], 2, bondDims_[i], 2};
             }
 
             modesExtents_int64_.emplace_back(
                 Pennylane::Util::cast_vector<std::size_t, int64_t>(
-                    modesExtents_.back()));
+                    localModesExtents));
 
-            tensors_.emplace_back(modesExtents_.back().size(),
-                                  modesExtents_.back(), modesExtents_.back(),
-                                  dev_tag);
-            tensors_.back().getDataBuffer().zeroInit();
+            tensors_.emplace_back(localModesExtents.size(), localModesExtents,
+                                  localModesExtents, dev_tag);
         }
 
-        // set up MPO tensor data
-        std::vector<std::size_t> target_map(numSites_, numSites_);
+        std::vector<std::size_t> mpo_site_tag(numMPOSites_, numMPOSites_);
 
         for (std::size_t i = 0; i < wires.size(); i++) {
             auto idx = wires[i] - wires[0];
-            target_map[idx] = i;
+            mpo_site_tag[idx] = i;
         }
 
-        for (std::size_t i = 0; i < numSites_; i++) {
-            if (target_map[i] == numSites_) {
+        // Update MPO tensors
+        for (std::size_t i = 0; i < numMPOSites_; i++) {
+            std::size_t site_tag = mpo_site_tag[i];
+            if (site_tag < numMPOSites_) {
+                auto tensor_cu = cuUtil::complexToCu<ComplexT>(
+                    tensors[wires.size() - 1 - site_tag]);
+
+                tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
+                                                              tensor_cu.size());
+            } else {
                 CFP_t value_cu{1.0, 0.0};
                 std::size_t target_idx = 0;
                 PL_CUDA_IS_SUCCESS(cudaMemcpy(
@@ -298,24 +243,16 @@ template <class PrecisionT> class MPOTNCuda {
                 PL_CUDA_IS_SUCCESS(cudaMemcpy(
                     &tensors_[i].getDataBuffer().getData()[target_idx],
                     &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
-            } else {
-                const std::size_t wire_idx = target_map[i];
-                auto tensor_cu = cuUtil::complexToCu<ComplexT>(
-                    tensors[wires.size() - 1 - wire_idx]);
-
-                tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
-                                                              tensor_cu.size());
             }
         }
-        */
 
         // append MPO tensor network operator components
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendMPO(
             /* const cutensornetHandle_t */ cutensornetHandle,
-            /* cutensornetNetworkOperator_t */ networkOperator_,
+            /* cutensornetNetworkOperator_t */ MPOOperator_,
             /* const cuDoubleComplex */ coeff_,
-            /* int32_t numStateModes */ static_cast<int32_t>(numSites_),
-            /* const int32_t stateModes[] */ modes_int32_.data(),
+            /* int32_t numStateModes */ static_cast<int32_t>(numMPOSites_),
+            /* const int32_t stateModes[] */ MPO_modes_int32_.data(),
             /* const int64_t *stateModeExtents[] */
             getModeExtentsPtr_().data(),
             /* const int64_t *tensorModeStrides[] */ nullptr,
@@ -326,12 +263,12 @@ template <class PrecisionT> class MPOTNCuda {
     }
 
     auto getMPOOperator() const -> const cutensornetNetworkOperator_t & {
-        return networkOperator_;
+        return MPOOperator_;
     }
 
     ~MPOTNCuda() {
         PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyNetworkOperator(networkOperator_));
+            cutensornetDestroyNetworkOperator(MPOOperator_));
     };
 };
 } // namespace Pennylane::LightningTensor::TNCuda

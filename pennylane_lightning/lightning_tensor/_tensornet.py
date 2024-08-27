@@ -48,7 +48,9 @@ def svd_split(M, bond_dim):
 def split(M):
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     bonds = len(S)
-    Vd = np.diag(S) @ Vd # Append singular values to Vd to ensure the decomposed data is aligned with the Quimb package
+    Vd = (
+        np.diag(S) @ Vd
+    )  # Append singular values to Vd to ensure the decomposed data is aligned with the Quimb package
     Vd = Vd.reshape(bonds, 2, 2, -1)
     U = U.reshape((-1, 2, 2, bonds))
 
@@ -61,19 +63,19 @@ def dense_to_mpo(psi, n_wires):
     psi = np.reshape(psi, (4, -1))
     U, Vd = split(psi)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
 
-    Ms[0] = U # Indices order: ket, bra, bond
+    Ms[0] = U  # Indices order: ket, bra, bond
     bondL = Vd.shape[0]
     psi = Vd
 
     for i in range(1, n_wires - 1):
         psi = np.reshape(psi, (4 * bondL, -1))  # reshape psi[4 * bondL, (2x2x2...)]
         U, Vd = split(psi)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
-        Ms[i] = U # Indices order: bond, ket, bra, bond
+        Ms[i] = U  # Indices order: bond, ket, bra, bond
 
         psi = Vd
         bondL = Vd.shape[0]
 
-    Ms[n_wires - 1] = Vd # Indices order: bond, ket, bra
+    Ms[n_wires - 1] = Vd  # Indices order: bond, ket, bra
 
     Ms[0] = Ms[0].reshape(2, 2, -1)
     Ms[n_wires - 1] = Ms[n_wires - 1].reshape(-1, 2, 2)
@@ -287,14 +289,20 @@ class LightningTensorNet:
 
         for i in range(len(MPOs)):
             if i == 0:
-                #ket, bra, bond -> bond, ket, bra
+                # [ket, bra, bond] -> [bond, ket, bra]
                 MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1))
+                # [ket, bra, bond] -> [ket, bond, bra]
+                # MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 1))
             elif i == len(MPOs) - 1:
-                #bond, ket, bra -> ket, bond, bra
+                # [bond, ket, bra] -> [ket, bond, bra]
                 MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2))
+                # [bond, ket, bra] -> [bond, ket, bra]
+                # MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2))
             else:
-                #bond, ket, bra, bond -> bond, ket, bond, bra
+                # [bondL, ket, bra, bondR] -> [bondR, ket, bondL, bra]
                 MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2))
+                # [bondL, ket, bra, bondR] -> [bondL, ket, bondR, bra]
+                # MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2))
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(MPOs, sorted_wires, 2 ** len(wires))
