@@ -15,12 +15,6 @@
 Class implementation for state vector measurements.
 """
 
-# pylint: disable=import-error, no-name-in-module, ungrouped-imports
-try:
-    from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
-    pass
-
 from typing import Callable, List, Union, Any
 
 import numpy as np
@@ -61,8 +55,8 @@ class LightningBaseMeasurements:
     ) -> None:
         self._qubit_state = qubit_state
         self._dtype = qubit_state.dtype
-        # self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
         
+        # self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
         self._measurement_lightning = None
 
     @property

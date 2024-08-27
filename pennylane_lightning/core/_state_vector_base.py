@@ -21,7 +21,6 @@ from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-
 class LightningBaseStateVector:
     """Lightning state-vector class.
 
@@ -83,6 +82,7 @@ class LightningBaseStateVector:
         [0.+0.j 1.+0.j]
         """
         pass
+    
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
 

@@ -28,6 +28,7 @@ except ImportError:
 import numpy as np
 
 from ._state_vector import LightningKokkosStateVector
+
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
 
 class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
@@ -35,13 +36,19 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
     def __init__(self, qubit_state: LightningKokkosStateVector, batch_obs: bool = False) -> None:
         super().__init__(qubit_state, batch_obs)
         
-        # Initialize the C++ bind
-        self._set_jacobian_lightning()
+        # Initialize the C++ binds
+        self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
+
         
-    def _set_jacobian_lightning(self):
-        self._jacobian_lightning = (
+    def _adjoint_jacobian_dtype(self):
+        """Binding to Lightning Kokkos Adjoint Jacobian C++ class.
+
+        Returns: the AdjointJacobian class
+        """
+        jacobian_lightning = (
             AdjointJacobianC64() if self._dtype == np.complex64 else AdjointJacobianC128()
         )
-        self._create_ops_list_lightning = (
+        create_ops_list_lightning = (
             create_ops_listC64 if self._dtype == np.complex64 else create_ops_listC128
         )
+        return jacobian_lightning, create_ops_list_lightning

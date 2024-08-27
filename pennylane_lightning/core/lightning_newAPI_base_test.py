@@ -103,38 +103,43 @@ class LightningBase(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        if device_name == "lightning.qubit":
-            from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-            from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-            from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+        # if device_name == "lightning.qubit":
+        #     from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
+        #     from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
+        #     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
-        elif device_name == "lightning.kokkos":
-            from pennylane_lightning.lightning_kokkos._adjoint_jacobian import LightningKokkosAdjointJacobian as LightningAdjointJacobian
-            from pennylane_lightning.lightning_kokkos._measurements import LightningKokkosMeasurements as LightningMeasurements
-            from pennylane_lightning.lightning_kokkos._state_vector import LightningKokkosStateVector  as LightningStateVector 
+        # elif device_name == "lightning.kokkos":
+        #     from pennylane_lightning.lightning_kokkos._adjoint_jacobian import LightningKokkosAdjointJacobian as LightningAdjointJacobian
+        #     from pennylane_lightning.lightning_kokkos._measurements import LightningKokkosMeasurements as LightningMeasurements
+        #     from pennylane_lightning.lightning_kokkos._state_vector import LightningKokkosStateVector  as LightningStateVector 
 
-        elif device_name == "lightning.gpu":
-            pass
+        # elif device_name == "lightning.gpu":
+        #     pass
 
-        elif device_name == "lightning.tensor":
-            pass
-        else:
-            raise DeviceError(f'The device name "{device_name}" is not a valid option.')
+        # elif device_name == "lightning.tensor":
+        #     pass
+        # else:
+        #     raise DeviceError(f'The device name "{device_name}" is not a valid option.')
         
-        self.LightningStateVector = LightningStateVector
-        self.LightningAdjointJacobian = LightningAdjointJacobian
+        self.LightningStateVector = None
+        self.LightningMeasurements = None
+        self.LightningAdjointJacobian = None
         
-
-
+    
     @property
     def c_dtype(self):
         """State vector complex data type."""
         return self._c_dtype
     
     dtype = c_dtype
+
+    def _set_Lightning_classes(self):
+        pass
+
     
     def simulate(self,
         circuit: QuantumScript,
+        # state: LightningStateVector,
         state,
         postselect_mode: str = None,
     ) -> Result:

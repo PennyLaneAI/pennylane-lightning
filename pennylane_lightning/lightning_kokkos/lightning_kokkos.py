@@ -313,13 +313,16 @@ class LightningKokkos(LightningBase):
             )
 
         super().__init__(device_name='lightning.kokkos' ,wires=wires,c_dtype=c_dtype, shots=shots,batch_obs=batch_obs)
+        
+        # Set the attributes to call the Lightning classes 
+        self._set_Lightning_classes()
 
         # Kokkos specific options
         self._kokkos_args = kokkos_args
         self._sync = sync
 
         # Creating the state vector
-        self._statevector = LightningKokkosStateVector(
+        self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args, sync=sync
         )
 
@@ -330,6 +333,11 @@ class LightningKokkos(LightningBase):
     def name(self):
         """The name of the device."""
         return "lightning.kokkos"
+
+    def _set_Lightning_classes(self):
+        self.LightningStateVector = LightningKokkosStateVector
+        self.LightningMeasurements = LightningKokkosMeasurements
+        self.LightningAdjointJacobian = LightningKokkosAdjointJacobian
 
     def _setup_execution_config(self, config):
         """

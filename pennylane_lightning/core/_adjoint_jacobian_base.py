@@ -15,16 +15,6 @@ r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
 
-try:
-    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
-        AdjointJacobianC64,
-        AdjointJacobianC128,
-        create_ops_listC64,
-        create_ops_listC128,
-    )
-except ImportError:
-    pass
-
 from os import getenv
 from typing import Any, List
 
@@ -35,7 +25,6 @@ from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
-# pylint: disable=import-error, no-name-in-module, ungrouped-imports
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from pennylane_lightning.core.lightning_base import _chunk_iterable
 
@@ -54,7 +43,9 @@ class LightningBaseAdjointJacobian:
         self._dtype = qubit_state.dtype
         self._batch_obs = batch_obs
 
+        # Dummy for the C++ bindings 
         self._jacobian_lightning = None
+        self._create_ops_list_lightning = None
 
     @property
     def qubit_state(self):
@@ -70,6 +61,13 @@ class LightningBaseAdjointJacobian:
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
+
+    def _adjoint_jacobian_dtype(self):
+        """Binding to Lightning [Device] Adjoint Jacobian C++ class.
+
+        Returns: the AdjointJacobian class
+        """
+        pass
 
     @staticmethod
     def _get_return_type(
@@ -90,10 +88,6 @@ class LightningBaseAdjointJacobian:
             return State
 
         return Expectation
-
-    def _set_jacobian_lightning(self):
-        """Virtual method to create the C++ frontend _jacobian_lightning."""
-        pass
 
     def _process_jacobian_tape(
         self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False

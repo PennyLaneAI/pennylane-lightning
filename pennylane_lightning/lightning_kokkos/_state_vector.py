@@ -40,10 +40,7 @@ from pennylane_lightning.core._serialize import global_phase_diagonal
 from ._measurements import LightningKokkosMeasurements
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
-
-
-
-class LightningKokkosStateVector(LightningBaseStateVector):  # pylint: disable=too-few-public-methods
+class LightningKokkosStateVector(LightningBaseStateVector):
     """Lightning Kokkos state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
@@ -66,7 +63,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):  # pylint: disable=t
         device_name="lightning.kokkos",
         kokkos_args=None,
         sync=True,
-    ):  # pylint: disable=too-many-arguments
+    ): 
 
         if device_name != "lightning.kokkos":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')

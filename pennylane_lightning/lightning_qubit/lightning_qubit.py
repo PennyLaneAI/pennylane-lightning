@@ -510,8 +510,11 @@ class LightningQubit(LightningBase):
             )
 
         super().__init__(device_name='lightning.qubit' ,wires=wires,c_dtype=c_dtype, shots=shots,batch_obs=batch_obs)
-
-        self._statevector = LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
+        
+        # Set the attributes to call the Lightning classes 
+        self._set_Lightning_classes()
+        
+        self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
 
         # TODO: Investigate usefulness of creating numpy random generator
         seed = np.random.randint(0, high=10000000) if seed == "global" else seed
@@ -542,6 +545,12 @@ class LightningQubit(LightningBase):
     def name(self):
         """The name of the device."""
         return "lightning.qubit"
+    
+    def _set_Lightning_classes(self):
+        self.LightningStateVector = LightningStateVector
+        self.LightningMeasurements = LightningMeasurements
+        self.LightningAdjointJacobian = LightningAdjointJacobian
+
 
     def _setup_execution_config(self, config):
         """
