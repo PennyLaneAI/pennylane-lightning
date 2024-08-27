@@ -177,7 +177,6 @@ template <class PrecisionT> class MPOTNCuda {
                 2; // 1+1 (1 for bra and 1 for ket)
             if (bondDim <= log2(maxBondDim_)) {
                 targetSitesBondDims[i] = (std::size_t{1} << bondDim);
-                std::cout << "bondDim: " << bondDim << std::endl;
             }
         }
 
@@ -209,13 +208,7 @@ template <class PrecisionT> class MPOTNCuda {
 
         for (std::size_t i = 0; i < numSites_; i++) {
             auto tensor_cu =
-                cuUtil::complexToCu<ComplexT>(tensors[numSites_ - 1 - i]);
-            std::cout << "tensor_cu: ";
-            for (auto t : tensor_cu) {
-                std::cout << " " << t.x << " + " << t.y << "j; ";
-            }
-            std::cout << std::endl;
-
+                cuUtil::complexToCu<ComplexT>(tensors[wires.size() - 1 - i]);
             tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                           tensor_cu.size());
         }

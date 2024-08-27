@@ -272,9 +272,7 @@ class LightningTensorNet:
 
         indices_order = []
         for i in range(len(wires)):
-            indices_order.append(2*i)
-            indices_order.append(2*i + 1)
-            #indices_order.append(i + len(wires))
+            indices_order.extend([2 * i, 2 * i + 1])
 
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_data = np.transpose(gate_data, axes=indices_order)
@@ -288,9 +286,6 @@ class LightningTensorNet:
             np.transpose(MPOs[0], axes=(0, 2, 1)).astype(np.complex128),
             np.transpose(MPOs[1], axes=(0, 1, 2)).astype(np.complex128),
         ]
-
-        print("tests:   ", mpos[0].flatten())
-        print("tests:   ", mpos[1].flatten())
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(mpos, sorted_wires, 2 ** len(wires))
