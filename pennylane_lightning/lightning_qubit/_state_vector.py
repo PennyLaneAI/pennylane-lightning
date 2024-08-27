@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state-vector manipulation.
+Class implementation for lightning_qubit state-vector manipulation.
 """
 
 try:
@@ -36,10 +36,8 @@ from pennylane.wires import Wires
 from ._measurements import LightningMeasurements
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
-
-
 class LightningStateVector(LightningBaseStateVector):
-    """Lightning state-vector class.
+    """Lightning Qubit state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
 
@@ -56,8 +54,9 @@ class LightningStateVector(LightningBaseStateVector):
 
         super().__init__(num_wires, dtype)
 
-
         self._device_name = device_name
+
+        # Initialize the state vector 
         self._qubit_state = self._state_dtype()(self._num_wires)
 
 

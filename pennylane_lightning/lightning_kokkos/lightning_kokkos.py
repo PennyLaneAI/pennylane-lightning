@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 r"""
 This module contains the :class:`~.LightningKokkos` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
@@ -19,13 +18,12 @@ interfaces with C++ for fast linear algebra calculations.
 import os
 import sys
 from dataclasses import replace
-from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Optional, Sequence
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -48,10 +46,16 @@ from ._adjoint_jacobian import LightningKokkosAdjointJacobian
 from ._measurements import LightningKokkosMeasurements
 from ._state_vector import LightningKokkosStateVector
 
-from pennylane_lightning.core.lightning_newAPI_base_test import LightningBase
+from pennylane_lightning.core.lightning_newAPI_base import (
+    LightningBase,
+    Result_or_ResultBatch,
+    QuantumTapeBatch,
+    QuantumTape_or_Batch,
+    PostprocessingFn,
+)
+
 
 try:
-    # pylint: disable=import-error, no-name-in-module
     from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
 
     LK_CPP_BINARY_AVAILABLE = True
@@ -59,11 +63,12 @@ except ImportError:
     LK_CPP_BINARY_AVAILABLE = False
     backend_info = None
 
-Result_or_ResultBatch = Union[Result, ResultBatch]
-QuantumTapeBatch = Sequence[QuantumTape]
-QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
-PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
+# Result_or_ResultBatch = Union[Result, ResultBatch]
+# QuantumTapeBatch = Sequence[QuantumTape]
+# QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+# PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
+# The set of supported operations.
 _operations = frozenset(
     {
         "Identity",
@@ -126,8 +131,9 @@ _operations = frozenset(
         "C(BlockEncode)",
     }
 )
-# The set of supported operations.
+# End the set of supported operations.
 
+# The set of supported observables.
 _observables = frozenset(
     {
         "PauliX",
@@ -146,12 +152,10 @@ _observables = frozenset(
         "Exp",
     }
 )
-# The set of supported observables.
 
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
-    # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
     if isinstance(op, qml.QFT):
@@ -245,10 +249,9 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
-
+# Kokkos specific methods
 def _kokkos_configuration():
     return print_configuration()
-
 
 @simulator_tracking
 @single_tape_support
@@ -263,18 +266,17 @@ class LightningKokkos(LightningBase):
 
     Args:
         wires (int): the number of wires to initialize the device with
-        sync (bool): immediately sync with host-sv after applying operations
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        sync (bool): immediately sync with host-sv after applying operations
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
     """
 
-    # pylint: disable=too-many-instance-attributes
 
     # General device options
     _device_options = ("c_dtype", "batch_obs")
@@ -309,7 +311,7 @@ class LightningKokkos(LightningBase):
             raise ImportError(
                 "Pre-compiled binaries for lightning.kokkos are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
         super().__init__(device_name='lightning.kokkos' ,wires=wires,c_dtype=c_dtype, shots=shots,batch_obs=batch_obs)
@@ -335,6 +337,7 @@ class LightningKokkos(LightningBase):
         return "lightning.kokkos"
 
     def _set_Lightning_classes(self):
+        """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         self.LightningStateVector = LightningKokkosStateVector
         self.LightningMeasurements = LightningKokkosMeasurements
         self.LightningAdjointJacobian = LightningKokkosAdjointJacobian
@@ -390,6 +393,7 @@ class LightningKokkos(LightningBase):
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
+
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
@@ -459,7 +463,7 @@ class LightningKokkos(LightningBase):
 
     def simulate(self,
         circuit: QuantumScript,
-        state,
+        state: LightningKokkosStateVector,
         postselect_mode: str = None,
     ) -> Result:
         """Simulate a single quantum script.
@@ -496,6 +500,7 @@ class LightningKokkos(LightningBase):
                     )
                 )
             return tuple(results)
+        
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return LightningKokkosMeasurements(final_state).measure_final_state(circuit)

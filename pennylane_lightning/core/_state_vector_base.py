@@ -16,6 +16,7 @@ Class implementation for state-vector manipulation.
 """
 
 import numpy as np
+import pennylane as qml
 from pennylane import BasisState, StatePrep
 from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript
@@ -30,7 +31,6 @@ class LightningBaseStateVector:
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.qubit"]
     """
 
     def __init__(self, num_wires, dtype=np.complex128):
@@ -42,7 +42,9 @@ class LightningBaseStateVector:
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
 
+        # Dummy for the device name
         self._device_name = None
+        # Dummy for the C++ bindings 
         self._qubit_state = None
 
     @property
@@ -204,7 +206,7 @@ class LightningBaseStateVector:
                 keep the same number of shots. Default is ``None``.
 
         Returns:
-            LightningStateVector: Lightning final state class.
+            Lightning[Device]StateVector: Lightning final state class.
 
         """
         self.apply_operations(

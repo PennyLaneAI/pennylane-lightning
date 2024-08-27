@@ -69,12 +69,13 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         super().__init__(num_wires, dtype)
-        
+
         self._device_name = device_name
 
         self._kokkos_config = {}
         self._sync = sync
 
+        # Initialize the state vector 
         if kokkos_args is None:
             self._qubit_state = self._state_dtype()(self.num_wires)
         elif isinstance(kokkos_args, InitializationSettings):
@@ -105,6 +106,13 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
         self.sync_d2h(state)
         return state
+
+    def _state_dtype(self):
+        """Binding to Lightning Managed state vector C++ class.
+
+        Returns: the state vector class
+        """
+        return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
     def sync_h2d(self, state_vector):
         """Copy the state vector data on host provided by the user to the state
@@ -154,12 +162,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         return print_configuration()
 
-    def _state_dtype(self):
-        """Binding to Lightning Managed state vector C++ class.
-
-        Returns: the state vector class
-        """
-        return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
@@ -181,7 +183,8 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             self.sync_h2d(np.reshape(state, output_shape))
             return
 
-        self._qubit_state.setStateVector(state, list(device_wires))  # this operation on device
+        # This operate on device
+        self._qubit_state.setStateVector(state, list(device_wires))
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.

@@ -36,7 +36,7 @@ from pennylane_lightning.core._measurements_base import LightningBaseMeasurement
 
 
 class LightningMeasurements(LightningBaseMeasurements):
-    """Lightning Measurements class
+    """Lightning Qubit Measurements class
 
     Measures the state provided by the LightningStateVector class.
 

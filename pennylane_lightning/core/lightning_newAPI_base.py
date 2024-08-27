@@ -16,39 +16,15 @@ r"""
 This module contains the :class:`~.LightningKokkos` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-import os
-import sys
-from dataclasses import replace
 from numbers import Number
-from pathlib import Path
 from typing import Callable, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.devices.preprocess import (
-    decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    validate_adjoint_trainable_params,
-    validate_device_wires,
-    validate_measurements,
-    validate_observables,
-)
-from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
-from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
-
-
-# from ._adjoint_jacobian import LightningKokkosAdjointJacobian
-# from ._measurements import LightningKokkosMeasurements
-# from ._state_vector import LightningKokkosStateVector
 
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
@@ -103,24 +79,7 @@ class LightningBase(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        # if device_name == "lightning.qubit":
-        #     from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-        #     from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-        #     from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-
-        # elif device_name == "lightning.kokkos":
-        #     from pennylane_lightning.lightning_kokkos._adjoint_jacobian import LightningKokkosAdjointJacobian as LightningAdjointJacobian
-        #     from pennylane_lightning.lightning_kokkos._measurements import LightningKokkosMeasurements as LightningMeasurements
-        #     from pennylane_lightning.lightning_kokkos._state_vector import LightningKokkosStateVector  as LightningStateVector 
-
-        # elif device_name == "lightning.gpu":
-        #     pass
-
-        # elif device_name == "lightning.tensor":
-        #     pass
-        # else:
-        #     raise DeviceError(f'The device name "{device_name}" is not a valid option.')
-        
+        # Dummy for LightningStateVector, LightningMeasurements, LightningAdjointJacobian        
         self.LightningStateVector = None
         self.LightningMeasurements = None
         self.LightningAdjointJacobian = None
@@ -134,6 +93,7 @@ class LightningBase(Device):
     dtype = c_dtype
 
     def _set_Lightning_classes(self):
+        """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         pass
 
     

@@ -22,7 +22,6 @@ import pennylane as qml
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
-    CountsMP,
     ExpectationMP,
     MeasurementProcess,
     ProbabilityMP,
@@ -41,7 +40,7 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
 class LightningBaseMeasurements:
-    """Lightning Kokkos Measurements class
+    """Lightning [Device] Measurements class
 
     Measures the state provided by the Lightning[Device]StateVector class.
 
@@ -56,7 +55,7 @@ class LightningBaseMeasurements:
         self._qubit_state = qubit_state
         self._dtype = qubit_state.dtype
         
-        # self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
+        # Dummy for the C++ bindings 
         self._measurement_lightning = None
 
     @property
@@ -68,11 +67,13 @@ class LightningBaseMeasurements:
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
-    
-    def _set_measurement_lightning(self):
-        """Virtual method to create the C++ frontend _measurement_lightning."""
-        pass
+        
+    def _measurement_dtype(self):
+        """Binding to Lightning Kokkos Measurements C++ class.
 
+        Returns: the Measurements class
+        """
+        pass
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
