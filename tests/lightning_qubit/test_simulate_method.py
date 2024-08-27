@@ -19,17 +19,8 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, LightningDevice, LightningStateVector, device_name  # tested device
-from flaky import flaky
+from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit
-from pennylane.measurements import VarianceMP
-from scipy.sparse import csr_matrix, random_array
-
-if device_name == "lightning.qubit":
-    from pennylane_lightning.lightning_qubit.lightning_qubit import simulate
-
-if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos.lightning_kokkos import simulate
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -54,6 +45,11 @@ class TestSimulate:
         tapes, transf_fn = program([tape])
         results = dev.execute(tapes)
         return transf_fn(results)
+    
+    @staticmethod
+    def calculate_result(wires, tape, statevector):
+        dev = LightningDevice(wires)
+        return dev.simulate(circuit=tape, state=statevector)
 
     def test_simple_circuit(self, lightning_sv, tol):
         """Tests the simulate method for a simple circuit."""
@@ -63,7 +59,7 @@ class TestSimulate:
             shots=None,
         )
         statevector = lightning_sv(num_wires=2)
-        result = simulate(circuit=tape, state=statevector)
+        result = self.calculate_result(2, tape, statevector)
         reference = self.calculate_reference(tape)
 
         assert np.allclose(result, reference, tol)
@@ -81,7 +77,7 @@ class TestSimulate:
         tape = qml.tape.QuantumScript(ops, [qml.sample(op=operation)], shots=num_shots)
 
         statevector = lightning_sv(num_wires=2)
-        result = simulate(circuit=tape, state=statevector)
+        result = self.calculate_result(2, tape, statevector)
 
         assert np.array_equal(result.shape, (shape,))
 
@@ -92,7 +88,7 @@ class TestSimulate:
 
         statevector = lightning_sv(num_wires=1)
 
-        result = simulate(circuit=tape, state=statevector)
+        result = self.calculate_result(1, tape, statevector)
 
         assert np.allclose(result**2, 1, atol=tol, rtol=0)
 
@@ -117,7 +113,8 @@ class TestSimulate:
 
         execution_config = DefaultExecutionConfig
 
-        result = simulate(
+        dev = LightningDevice(wires=1)
+        result = dev.simulate(
             circuit=tape, state=statevector, mcmc=mcmc_param, postselect_mode=execution_config
         )
 
