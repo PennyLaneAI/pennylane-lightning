@@ -5,19 +5,22 @@
 * Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
   [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
 
-* Add Lightning-GPU Linux (AArch64 + GraceHopper) wheels to PyPI.
-  [(#815)](https://github.com/PennyLaneAI/pennylane-lightning/pull/815)
-
 * Add analytic `qml.probs()` measurement support to `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
 
 * Add `qml.state()` measurement support to `lightning.tensor`.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
+* Add Lightning-GPU Linux (AArch64 + GraceHopper) wheels to PyPI.
+  [(#815)](https://github.com/PennyLaneAI/pennylane-lightning/pull/815)
+
 * Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales as `O(num_obs**2)`.
   [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804)
 
 ### Breaking changes
+
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
 
 * Add `getData()` in the `lightning.tensor` C++ backend. Users are responsible for ensuring sufficient host memory is allocated for the full state vector.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
@@ -31,50 +34,59 @@
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
-* Update python packaging to follow PEP 517/518/621/660 standards.
-  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
-
 ### Improvements
-
-* Replace ``size_t`` by ``std::size_t`` everywhere.
-  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
-
-* Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
-  [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
 
 * Update Lightning tests to support the generalization of basis state preparation.
   [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
 
-* Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
-  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+* Add `SetState` and `SetBasisState` to `LightningKokkosSimulator`.
+  [(#861)](https://github.com/PennyLaneAI/pennylane-lightning/pull/861)
 
-* Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
-  [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
-  [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
-
-* Lightning-Qubit natively supports the `PauliRot` gate.
-  [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
+  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
 
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
   [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
 
-* Add `SetState` and `SetBasisState` to `LightningKokkosSimulator`.
-  [(#861)](https://github.com/PennyLaneAI/pennylane-lightning/pull/861)
+* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
+  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
+
+* Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
+  [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
+
+* Add a Catalyst-specific wrapping class for Lightning Kokkos.
+  [(#837)](https://github.com/PennyLaneAI/pennylane-lightning/pull/837)
+  [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
+
+* Lightning-Qubit natively supports the `PauliRot` gate.
+  [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
+
+* Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
+  [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
+
+* Add `initial_state_prep` option to Catalyst TOML file.
+  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
 
 * `ENABLE_LAPACK` is `OFF` by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
 
-* Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
-  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
+* Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
+  [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
 
 * Update the Catalyst-specific wrapping class for Lightning Kokkos to track Catalyst's new support for MCM seeding.
   [(#819)](https://github.com/PennyLaneAI/pennylane-lightning/pull/819)
+
+* Replace ``size_t`` by ``std::size_t`` everywhere.
+  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
 
 * Shot batching is made more efficient by executing all the shots in one go on Lightning-Qubit.
   [(#814)](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
 
 * Lightning-Qubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
   [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
+
+* Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
+  [(#812)](https://github.com/PennyLaneAI/pennylane-lightning/pull/812)
 
 * Avoid unnecessary memory reset in Lightning-Qubit's state vector class constructor.
   [(#811)](https://github.com/PennyLaneAI/pennylane-lightning/pull/811)
@@ -103,24 +115,11 @@
 * Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
 
-* Add a Catalyst-specific wrapping class for Lightning Kokkos.
-  [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
-  [(#837)](https://github.com/PennyLaneAI/pennylane-lightning/pull/837)
-
-* Add `initial_state_prep` option to Catalyst TOML file.
-  [(#826)](https://github.com/PennyLaneAI/pennylane-lightning/pull/826)
-
-* Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
-  [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
-
-* Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
-  [(#846)](https://github.com/PennyLaneAI/pennylane-lightning/pull/846)
-
 ### Documentation
 
 * The installation instructions for all lightning plugins have been improved.
-  [(#851)](https://github.com/PennyLaneAI/pennylane-lightning/pull/851)
   [(#858)](https://github.com/PennyLaneAI/pennylane-lightning/pull/858)
+  [(#851)](https://github.com/PennyLaneAI/pennylane-lightning/pull/851)
 
 * Updated the README and added citation format for Lightning arXiv preprint.
   [(#818)](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
