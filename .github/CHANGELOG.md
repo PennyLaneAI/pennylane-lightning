@@ -1,25 +1,25 @@
-# Release 0.38.0-dev
+# Release 0.38.0
 
 ### New features since last release
 
 * Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
   [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
 
-* Add LightningGPU Linux (aarch64+GraceHopper) wheels to PyPI.
+* Add Lightning-GPU Linux (AArch64 + GraceHopper) wheels to PyPI.
   [(#815)](https://github.com/PennyLaneAI/pennylane-lightning/pull/815)
 
-* Add the analytic `qml.probs()` measurement support to `lightning.tensor`.
+* Add analytic `qml.probs()` measurement support to `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
 
 * Add `qml.state()` measurement support to `lightning.tensor`.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
-* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales `O(num_obs**2)`.
+* Add `var` support to `lightning.tensor`. Note that `var` support is added via `obs**2` and this implementation scales as `O(num_obs**2)`.
   [(#804)](https://github.com/PennyLaneAI/pennylane-lightning/pull/804)
 
 ### Breaking changes
 
-* Add `getData()` in `lightning.tensor` C++ backend. Users should be responsible for ensuring sufficient host memory is allocated for the full state vector.
+* Add `getData()` in the `lightning.tensor` C++ backend. Users are responsible for ensuring sufficient host memory is allocated for the full state vector.
   [(#827)](https://github.com/PennyLaneAI/pennylane-lightning/pull/827)
 
 * Remove `NDpermuter.hpp` which is no longer required.
@@ -36,7 +36,7 @@
 
 ### Improvements
 
-* Updated calls of ``size_t`` to ``std::size_t`` everywhere.
+* Replace ``size_t`` by ``std::size_t`` everywhere.
   [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
 
 * Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
@@ -52,7 +52,7 @@
   [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
   [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
 
-* LightningQubit gains native support for the `PauliRot` gate.
+* Lightning-Qubit natively supports the `PauliRot` gate.
   [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
 
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
@@ -61,7 +61,7 @@
 * Add `SetState` and `SetBasisState` to `LightningKokkosSimulator`.
   [(#861)](https://github.com/PennyLaneAI/pennylane-lightning/pull/861)
 
-* `ENABLE_LAPACK` is off by default for all Lightning backends.
+* `ENABLE_LAPACK` is `OFF` by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
 
 * Update `LightingQubit.preprocess` to work with changes to preprocessing for mid-circuit measurements.
@@ -70,16 +70,16 @@
 * Update the Catalyst-specific wrapping class for Lightning Kokkos to track Catalyst's new support for MCM seeding.
   [(#819)](https://github.com/PennyLaneAI/pennylane-lightning/pull/819)
 
-* Shot batching is made more efficient by executing all the shots in one go on LightningQubit.
+* Shot batching is made more efficient by executing all the shots in one go on Lightning-Qubit.
   [(#814)](https://github.com/PennyLaneAI/pennylane-lightning/pull/814)
 
-* LightningQubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
+* Lightning-Qubit calls `generate_samples(wires)` on a minimal subset of wires when executing in finite-shot mode.
   [(#813)](https://github.com/PennyLaneAI/pennylane-lightning/pull/813)
 
-* Avoid unnecessary memory reset in LightningQubit's state vector class constructor.
+* Avoid unnecessary memory reset in Lightning-Qubit's state vector class constructor.
   [(#811)](https://github.com/PennyLaneAI/pennylane-lightning/pull/811)
 
-* Add `generate_samples(wires)` support in LightningQubit.
+* Add `generate_samples(wires)` support in Lightning-Qubit, which samples faster for a subset of wires.
   [(#809)](https://github.com/PennyLaneAI/pennylane-lightning/pull/809)
 
 * Optimize the OpenMP parallelization of Lightning-Qubit's `probs` for all number of targets.
@@ -122,7 +122,7 @@
   [(#851)](https://github.com/PennyLaneAI/pennylane-lightning/pull/851)
   [(#858)](https://github.com/PennyLaneAI/pennylane-lightning/pull/858)
 
-* Updated the README and added citation format for Lightning arxiv preprint.
+* Updated the README and added citation format for Lightning arXiv preprint.
   [(#818)](https://github.com/PennyLaneAI/pennylane-lightning/pull/818)
 
 ### Bug fixes
@@ -133,7 +133,7 @@
 * Replace structured bindings by variables in `GateImplementationsLM.hpp`.
   [(#856)](https://github.com/PennyLaneAI/pennylane-lightning/pull/856)
 
-* Remove wrong -m when calling setup.py.
+* Remove wrong `-m` when calling `setup.py`.
   [(#854)](https://github.com/PennyLaneAI/pennylane-lightning/pull/854)
 
 * Fix plugin-test-matrix CI/CD workflows.
@@ -145,7 +145,7 @@
 * Fix cuQuantum SDK path pass-though in CMake.
   [(#831)](https://github.com/PennyLaneAI/pennylane-lightning/pull/831)
 
-* Fix CUDA sync issues on aarch64+GraceHopper.
+* Fix CUDA sync issues on AArch64 + GraceHopper.
   [(#823)](https://github.com/PennyLaneAI/pennylane-lightning/pull/823)
 
 * Check for the number of wires for Hermitian observables in Lightning-Tensor. Only 1-wire Hermitian observables are supported as of `cuTensorNet-v24.03.0`.
@@ -212,7 +212,7 @@ Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Eric
 * Release candidate branches automatically use the new large GitHub runner pool.
   [(#769)](https://github.com/PennyLaneAI/pennylane-lightning/pull/769)
 
-* Lightning-Kokkos dev wheels for MacOS (x86_64, ARM64) and Linux (aarch64) are uploaded to TestPyPI upon merging a pull request.
+* Lightning-Kokkos dev wheels for MacOS (x86_64, ARM64) and Linux (AArch64) are uploaded to TestPyPI upon merging a pull request.
   [(#765)](https://github.com/PennyLaneAI/pennylane-lightning/pull/765)
 
 * Lightning-Kokkos Linux (x86_64) dev wheels are pushed to [Test PyPI](https://test.pypi.org/project/PennyLane-Lightning-Kokkos/) upon merging a pull request.
@@ -267,7 +267,7 @@ Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Eric
 * Remove the daily schedule from the "Compat Check w/PL - release/release" GitHub action.
   [(#746)](https://github.com/PennyLaneAI/pennylane-lightning/pull/746)
 
-* Remove the required `scipy` config file for LightningQubit. The support is now maintained by passing `SCIPY_LIBS_PATH` to the compiler.
+* Remove the required `scipy` config file for Lightning-Qubit. The support is now maintained by passing `SCIPY_LIBS_PATH` to the compiler.
   [(#775)](https://github.com/PennyLaneAI/pennylane-lightning/pull/775)
 
 ### Documentation
@@ -307,7 +307,7 @@ Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Eric
 * The `tests_lkcpu_python.yml` workflow properly checks out the release or stable version of Lightning-Qubit during the test job.
   [(#723)](https://github.com/PennyLaneAI/pennylane-lightning/pull/723)
 
-* Fix PennyLane Lightning-Kokkos and LightningQubit tests for stable/stable configuration.
+* Fix PennyLane Lightning-Kokkos and Lightning-Qubit tests for stable/stable configuration.
   [(#734)](https://github.com/PennyLaneAI/pennylane-lightning/pull/734)
 
 * Remove the Autoray dependency from requirement files.
