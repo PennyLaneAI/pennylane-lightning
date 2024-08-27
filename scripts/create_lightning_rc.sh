@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 OLDVER=0.37.0
 LVER=0.38.0
 rreplace(){
@@ -6,10 +7,11 @@ rreplace(){
 }
 
 # clean up and checkout master
-git reset . && git checkout .
+git reset .
+git checkout .
 git fetch
 git checkout master
-git pull
+git pull origin master
 
 # create local branch
 git branch -d v${LVER}_rc
@@ -31,27 +33,27 @@ for file in requirements-dev.txt requirements-tests.txt; do
     git add -u $file
 done
 git commit -m "Target PennyLane v${LVER}-rc0 in requirements-tests.txt."
-git push 
+git push
 
 # upload wheel artifacts
-cd .github/workflows
+pushd .github/workflows
 rreplace "          github.event_name == 'release'" "          github.event_name == 'pull_request'"
-cd -
+popd
 git add -u .github/workflows
 git commit -m "Change trigger to upload wheel artifacts."
-git push 
+git push
 
 # update compate workflows
 cat > cron<<EOF
   schedule:
-    - cron: "0 23 * * 0-6"  # Run daily at 23pm everyday
+    - cron: "0 23 * * 0-6"  # Run daily at 11pm everyday
 EOF
 sed -i '/  workflow_dispatch:/ r cron' .github/workflows/compat-check-release-release.yml
 sed -i '/  workflow_dispatch:/ r cron' .github/workflows/compat-docker-release.yml
 sed -i "s|$OLDVER|$LVER|g" .github/workflows/compat-docker-release.yml
 git add -u .github/workflows
-git commit -m "Set compat workflow and docker builds to run every night at 23pm."
-git push 
+git commit -m "Set compat workflow and docker builds to run every night at 11pm."
+git push
 
 # create PR
 git checkout master
