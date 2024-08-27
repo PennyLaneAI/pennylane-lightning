@@ -21,7 +21,7 @@ from pathlib import Path
 import toml
 from backend_support import backend, device_name
 
-path_to_version = Path("pennylane_lightning").absolute() / "core" / "_version.py"
+path_to_version = Path(__file__).parent.parent / Path("pennylane_lightning") / "core" / "_version.py"
 with open(path_to_version, encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
