@@ -207,6 +207,12 @@ template <class PrecisionT> class MPOTNCuda {
                 localModesExtents = {bondDims_[i - 1], 2, bondDims_[i], 2};
             }
 
+            std::cout << "MPO sites: " << i << " MPO tensor mode extents: ";
+            for (auto &extent : localModesExtents) {
+                std::cout << extent << " ";
+            }
+            std::cout << std::endl;
+
             modesExtents_int64_.emplace_back(
                 Pennylane::Util::cast_vector<std::size_t, int64_t>(
                     localModesExtents));
@@ -232,17 +238,20 @@ template <class PrecisionT> class MPOTNCuda {
                 tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                               tensor_cu.size());
             } else {
-                CFP_t value_cu{1.0, 0.0};
-                std::size_t target_idx = 0;
-                PL_CUDA_IS_SUCCESS(cudaMemcpy(
-                    &tensors_[i].getDataBuffer().getData()[target_idx],
-                    &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
-
-                target_idx = 2 * bondDims_[i - 1] + 1;
-
-                PL_CUDA_IS_SUCCESS(cudaMemcpy(
-                    &tensors_[i].getDataBuffer().getData()[target_idx],
-                    &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+                tensors_[numMPOSites_ - 1 - i].getDataBuffer().zeroInit();
+                CFP_t value_cu =
+                    cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
+                std::size_t length = tensors_[numMPOSites_ - 1 - i].getLength();
+                std::vector<std::size_t> target_ids = {
+                    0, 2 * bondDims_[i] + 1, length - (2 * bondDims_[i] + 2),
+                    length - 1};
+                for (auto target_idx : target_ids) {
+                    PL_CUDA_IS_SUCCESS(cudaMemcpy(
+                        &tensors_[numMPOSites_ - 1 - i]
+                             .getDataBuffer()
+                             .getData()[target_idx],
+                        &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+                }
             }
         }
 
