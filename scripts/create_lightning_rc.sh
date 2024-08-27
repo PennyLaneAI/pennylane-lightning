@@ -71,6 +71,8 @@ for backend in qubit gpu kokkos tensor; do
     make python backend=lightning_\$backend
 done
 python -c "import pennylane as qml; qml.about(); exit()"
+CMAKE_ARGS="-DKokkos_ENABLE_CUDA=ON" make python backend=lightning_kokkos
+python -c "import pennylane as qml; qml.about(); exit()"
 EOF
 bash -e install.sh
 
