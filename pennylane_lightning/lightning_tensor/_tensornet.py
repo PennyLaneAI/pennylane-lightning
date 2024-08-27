@@ -283,7 +283,6 @@ class LightningTensorNet:
 
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_data = np.transpose(gate_data, axes=indices_order)
-
         # TODO: Reorder the gate data with the target wire
         MPOs = dense_to_mpo(gate_data, len(wires))
 
@@ -291,18 +290,12 @@ class LightningTensorNet:
             if i == 0:
                 # [ket, bra, bond] -> [bond, ket, bra]
                 MPOs[i] = np.transpose(MPOs[i], axes=(2, 0, 1))
-                # [ket, bra, bond] -> [ket, bond, bra]
-                # MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 1))
             elif i == len(MPOs) - 1:
                 # [bond, ket, bra] -> [ket, bond, bra]
                 MPOs[i] = np.transpose(MPOs[i], axes=(1, 0, 2))
-                # [bond, ket, bra] -> [bond, ket, bra]
-                # MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2))
             else:
                 # [bondL, ket, bra, bondR] -> [bondR, ket, bondL, bra]
                 MPOs[i] = np.transpose(MPOs[i], axes=(3, 1, 0, 2))
-                # [bondL, ket, bra, bondR] -> [bondL, ket, bondR, bra]
-                # MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2))
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(MPOs, sorted_wires, 2 ** len(wires))
