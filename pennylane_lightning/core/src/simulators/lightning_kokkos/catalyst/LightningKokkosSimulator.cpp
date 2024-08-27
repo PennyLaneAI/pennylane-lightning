@@ -142,18 +142,13 @@ void LightningKokkosSimulator::SetState(DataView<std::complex<double>, 1> &data,
     std::size_t expected_wires = static_cast<std::size_t>(log2(data.size()));
     RT_ASSERT(expected_wires == wires.size());
     std::vector<Kokkos::complex<double>> data_vector(data.begin(), data.end());
-    auto &&dev_wires = getDeviceWires(wires);
-    std::vector<std::size_t> wires_size_t(dev_wires.begin(), dev_wires.end());
-
-    this->device_sv->setStateVector(data_vector, wires_size_t);
+    this->device_sv->setStateVector(data_vector, getDeviceWires(wires));
 }
 
 void LightningKokkosSimulator::SetBasisState(DataView<int8_t, 1> &data,
                                              std::vector<QubitIdType> &wires) {
     std::vector<std::size_t> basis_state(data.begin(), data.end());
-    auto &&dev_wires = getDeviceWires(wires);
-    std::vector<std::size_t> wires_size_t(dev_wires.begin(), dev_wires.end());
-    this->device_sv->setBasisState(basis_state, wires_size_t);
+    this->device_sv->setBasisState(basis_state, getDeviceWires(wires));
 }
 
 auto LightningKokkosSimulator::Zero() const -> Result {
