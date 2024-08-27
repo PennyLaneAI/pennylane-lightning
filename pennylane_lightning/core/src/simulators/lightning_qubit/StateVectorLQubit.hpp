@@ -92,7 +92,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param threading Threading option
      * @param memory_model Memory model
      */
-    void setKernels(size_t num_qubits, Threading threading,
+    void setKernels(std::size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
         using KernelMap::OperationKernelMap;
         kernel_for_gates_ =
@@ -260,7 +260,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
   protected:
-    explicit StateVectorLQubit(size_t num_qubits, Threading threading,
+    explicit StateVectorLQubit(std::size_t num_qubits, Threading threading,
                                CPUMemoryModel memory_model)
         : BaseType(num_qubits), threading_{threading},
           memory_model_{memory_model} {
@@ -684,9 +684,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         // **__**__ for stride 2
         // ****____ for stride 4
         const std::size_t k = branch ? 0 : 1;
-        for (size_t idx = 0; idx < half_section_size; idx++) {
+        for (std::size_t idx = 0; idx < half_section_size; idx++) {
             const std::size_t offset = stride * (k + 2 * idx);
-            for (size_t ids = 0; ids < stride; ids++) {
+            for (std::size_t ids = 0; ids < stride; ids++) {
                 arr[offset + ids] = {0., 0.};
             }
         }
@@ -705,7 +705,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                     "vector has norm close to zero and can't be normalized");
 
         ComplexT inv_norm = 1. / norm;
-        for (size_t k = 0; k < BaseType::getLength(); k++) {
+        for (std::size_t k = 0; k < BaseType::getLength(); k++) {
             arr[k] *= inv_norm;
         }
     }

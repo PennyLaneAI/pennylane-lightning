@@ -108,7 +108,7 @@ class AdjointJacobian final
             {
                 #pragma omp for
             #endif
-                for (size_t h_i = 0; h_i < num_observables; h_i++) {
+                for (std::size_t h_i = 0; h_i < num_observables; h_i++) {
                     try {
                         states[h_i].updateData(reference_state.getData(),
                                                reference_state.getLength());
@@ -164,7 +164,7 @@ class AdjointJacobian final
         {
             #pragma omp for
         #endif
-            for (size_t st_idx = 0; st_idx < num_states; st_idx++) {
+            for (std::size_t st_idx = 0; st_idx < num_states; st_idx++) {
                 try {
                     BaseType::applyOperationAdj(states[st_idx], operations, op_idx);
                 } catch (...) {
@@ -271,7 +271,7 @@ class AdjointJacobian final
                 std::make_unique<std::vector<std::vector<ComplexT>>>(
                     num_observables, std::vector<ComplexT>(lambda.getLength()));
             H_lambda = std::make_unique<std::vector<StateVectorT>>();
-            for (size_t ind = 0; ind < num_observables; ind++) {
+            for (std::size_t ind = 0; ind < num_observables; ind++) {
                 (*H_lambda_storage)[ind][0] = {1.0, 0};
 
                 StateVectorT sv((*H_lambda_storage)[ind].data(),
@@ -334,7 +334,7 @@ class AdjointJacobian final
                 #endif
                     // clang-format on
 
-                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                    for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
                         updateJacobian(*H_lambda, mu, jac, scalingFactor,
                                        obs_idx, mat_row_idx);

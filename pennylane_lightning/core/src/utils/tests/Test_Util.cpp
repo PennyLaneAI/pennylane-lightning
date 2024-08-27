@@ -70,13 +70,13 @@ TEMPLATE_TEST_CASE("Constant values", "[Util]", float, double) {
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     SECTION("exp2: 2^n") {
-        for (size_t i = 0; i < 10; i++) {
+        for (std::size_t i = 0; i < 10; i++) {
             CHECK(Util::exp2(i) == static_cast<std::size_t>(std::pow(2, i)));
         }
     }
     SECTION("maxDecimalForQubit") {
-        for (size_t num_qubits = 0; num_qubits < 4; num_qubits++) {
-            for (size_t index = 0; index < num_qubits; index++) {
+        for (std::size_t num_qubits = 0; num_qubits < 4; num_qubits++) {
+            for (std::size_t index = 0; index < num_qubits; index++) {
                 CHECK(Util::maxDecimalForQubit(index, num_qubits) ==
                       static_cast<std::size_t>(
                           std::pow(2, num_qubits - index - 1)));

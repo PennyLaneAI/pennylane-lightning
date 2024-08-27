@@ -55,7 +55,8 @@ template <class PrecisionT, class Derived> class StateVectorBase {
      *
      * @param num_qubits Number of qubits
      */
-    explicit StateVectorBase(size_t num_qubits) : num_qubits_{num_qubits} {}
+    explicit StateVectorBase(std::size_t num_qubits)
+        : num_qubits_{num_qubits} {}
 
     /**
      * @brief Get the number of qubits represented by the statevector data.
@@ -141,7 +142,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
             numOperations != ops_params.size(),
             "Invalid arguments: number of operations, wires, inverses, and "
             "parameters must all be equal");
-        for (size_t i = 0; i < numOperations; i++) {
+        for (std::size_t i = 0; i < numOperations; i++) {
             this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i],
                                  ops_params[i]);
         }
@@ -168,7 +169,7 @@ template <class PrecisionT, class Derived> class StateVectorBase {
             numOperations == ops_adjoint.size(),
             "Invalid arguments: number of operations, wires and inverses"
             "must all be equal");
-        for (size_t i = 0; i < numOperations; i++) {
+        for (std::size_t i = 0; i < numOperations; i++) {
             this->applyOperation(ops[i], ops_wires[i], ops_adjoint[i], {});
         }
     }

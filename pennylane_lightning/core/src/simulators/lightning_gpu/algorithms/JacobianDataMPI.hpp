@@ -60,7 +60,7 @@ class JacobianDataMPI final : public JacobianData<StateVectorT> {
      * (e.g. StatePrep) or Hamiltonian coefficients.
      * @endrst
      */
-    JacobianDataMPI(size_t num_params, const StateVectorT &sv,
+    JacobianDataMPI(std::size_t num_params, const StateVectorT &sv,
                     std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
                     OpsData<StateVectorT> ops, std::vector<std::size_t> trainP)
         : JacobianData<StateVectorT>(num_params, sv.getLength(), sv.getData(),

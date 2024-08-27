@@ -332,7 +332,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
             return false;
         }
 
-        for (size_t i = 0; i < obs_.size(); i++) {
+        for (std::size_t i = 0; i < obs_.size(); i++) {
             if (*obs_[i] != *other_cast.obs_[i]) {
                 return false;
             }
@@ -460,7 +460,7 @@ class TensorProdObsBase : public Observable<StateVectorT> {
         using Util::operator<<;
         std::ostringstream obs_stream;
         const auto obs_size = obs_.size();
-        for (size_t idx = 0; idx < obs_size; idx++) {
+        for (std::size_t idx = 0; idx < obs_size; idx++) {
             obs_stream << obs_[idx]->getObsName();
             if (idx != obs_size - 1) {
                 obs_stream << " @ ";
@@ -495,7 +495,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
             return false;
         }
 
-        for (size_t i = 0; i < obs_.size(); i++) {
+        for (std::size_t i = 0; i < obs_.size(); i++) {
             if (*obs_[i] != *other_cast.obs_[i]) {
                 return false;
             }
@@ -566,7 +566,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
         std::ostringstream ss;
         ss << "Hamiltonian: { 'coeffs' : " << coeffs_ << ", 'observables' : [";
         const auto term_size = coeffs_.size();
-        for (size_t t = 0; t < term_size; t++) {
+        for (std::size_t t = 0; t < term_size; t++) {
             ss << obs_[t]->getObsName();
             if (t != term_size - 1) {
                 ss << ", ";

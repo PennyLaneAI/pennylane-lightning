@@ -88,7 +88,7 @@ template <typename PrecisionT, class GateImplementation>
 void testApplyIdentity() {
     using ComplexT = std::complex<PrecisionT>;
     const std::size_t num_qubits = 3;
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);
         auto st_post = createZeroState<ComplexT>(num_qubits);
 
@@ -96,7 +96,7 @@ void testApplyIdentity() {
                                           false);
         CHECK(std::equal(st_pre.begin(), st_pre.end(), st_post.begin()));
     }
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st_pre = createZeroState<ComplexT>(num_qubits);
         auto st_post = createZeroState<ComplexT>(num_qubits);
         GateImplementation::applyHadamard(st_pre.data(), num_qubits, {index},
@@ -117,7 +117,7 @@ void testApplyPauliX() {
     const std::size_t num_qubits = 3;
     DYNAMIC_SECTION(GateImplementation::name
                     << ", PauliX - " << PrecisionToName<PrecisionT>::value) {
-        for (size_t index = 0; index < num_qubits; index++) {
+        for (std::size_t index = 0; index < num_qubits; index++) {
             auto st = createZeroState<ComplexT>(num_qubits);
 
             GateImplementation::applyPauliX(st.data(), num_qubits, {index},
@@ -146,7 +146,7 @@ void testApplyPauliY() {
         {m, m, p, p, m, m, p, p},
         {m, p, m, p, m, p, m, p}};
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyPauliY(st.data(), num_qubits, {index}, false);
@@ -169,7 +169,7 @@ void testApplyPauliZ() {
         {p, p, m, m, p, p, m, m},
         {p, m, p, m, p, m, p, m}};
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createPlusState<PrecisionT>(num_qubits);
         GateImplementation::applyPauliZ(st.data(), num_qubits, {index}, false);
 
@@ -182,7 +182,7 @@ template <typename PrecisionT, class GateImplementation>
 void testApplyHadamard() {
     using ComplexT = std::complex<PrecisionT>;
     const std::size_t num_qubits = 3;
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createZeroState<ComplexT>(num_qubits);
 
         GateImplementation::applyHadamard(st.data(), num_qubits, {index},
@@ -211,7 +211,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyS() {
         {r, r, i, i, r, r, i, i},
         {r, i, r, i, r, i, r, i}};
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyS(st.data(), num_qubits, {index}, false);
@@ -234,7 +234,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyT() {
         {r, r, i, i, r, r, i, i},
         {r, i, r, i, r, i, r, i}};
 
-    for (size_t index = 0; index < num_qubits; index++) {
+    for (std::size_t index = 0; index < num_qubits; index++) {
         auto st = createPlusState<PrecisionT>(num_qubits);
 
         GateImplementation::applyT(st.data(), num_qubits, {index}, false);
@@ -274,7 +274,7 @@ template <typename PrecisionT, class GateImplementation> void testApplyCNOT() {
         auto st = createProductState<PrecisionT>("+00");
 
         // Test using |+00> state to generate 3-qubit GHZ state
-        for (size_t index = 1; index < num_qubits; index++) {
+        for (std::size_t index = 1; index < num_qubits; index++) {
             GateImplementation::applyCNOT(st.data(), num_qubits,
                                           {index - 1, index}, false);
         }
