@@ -2,6 +2,8 @@ name: Compat Check Docker - Lightning@release
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 0-6"  # Run daily at 5am UTC everyday
 
 concurrency:
   group: docker_linux_x86_64-release
@@ -12,7 +14,7 @@ jobs:
     name: Docker release - Linux::x86_64
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
-      lightning-version: v0.37.0
-      pennylane-version: v0.37.0-rc0
+      lightning-version: v0.38.0_rc
+      pennylane-version: v0.38.0-rc0
       push-to-dockerhub: false
     secrets: inherit # pass all secrets
