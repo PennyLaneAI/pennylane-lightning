@@ -635,7 +635,6 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         self._check_adjdiff_supported_operations(tape.operations)
 
         split_obs = self._dp.getTotalDevices() if self._batch_obs else False
-        split_obs = int(split_obs) if split_obs else False
         processed_data = self._process_jacobian_tape(
             tape, starting_state, use_device_state, self._mpi, split_obs
         )
@@ -674,8 +673,8 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         num_obs = len(np.unique(processed_data["obs_indices"]))
         rows = processed_data["obs_indices"]
         cols = np.arange(len(rows), dtype=int)
-        data = (np.ones(len(rows)), (rows, cols))
-        red_mat = coo_matrix(data, shape=(num_obs, len(rows)))
+        data = np.ones(len(rows))
+        red_mat = coo_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
         jac = red_mat @ jac.reshape((len(rows), -1))
         jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))

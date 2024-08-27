@@ -239,8 +239,8 @@ class LightningAdjointJacobian:
         num_obs = len(np.unique(processed_data["obs_indices"]))
         rows = processed_data["obs_indices"]
         cols = np.arange(len(rows), dtype=int)
-        data = (np.ones(len(rows)), (rows, cols))
-        red_mat = coo_matrix(data, shape=(num_obs, len(rows)))
+        data = np.ones(len(rows))
+        red_mat = coo_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
         jac = red_mat @ jac.reshape((len(rows), -1))
         jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
