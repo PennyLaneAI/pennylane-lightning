@@ -219,8 +219,14 @@ class LightningAdjointJacobian:
                 "mixed with other return types"
             )
 
-        split_obs = os.getenv("OMP_NUM_THREADS", None) if self.batch_obs else False
-        split_obs = int(split_obs) if split_obs else False
+        split_obs = (
+            len(tape.measurements) > 1
+        )  # lightning already parallelizes applying a single Hamiltonian
+        if split_obs:
+            # split linear combinations into num_threads
+            # this isn't the best load-balance in general, but well-rounded enough
+            split_obs = os.getenv("OMP_NUM_THREADS", None) if self.batch_obs else False
+            split_obs = int(split_obs) if split_obs else False
         processed_data = self._process_jacobian_tape(tape, split_obs=split_obs)
 
         if not processed_data:  # training_params is empty

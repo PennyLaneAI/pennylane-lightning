@@ -17,7 +17,7 @@ This module contains the base class for all PennyLane Lightning simulator device
 and interfaces with C++ for improved performance.
 """
 from itertools import islice, product
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import pennylane as qml
@@ -262,7 +262,12 @@ class LightningBase(QubitDevice):
 
     # pylint: disable=too-many-function-args, assignment-from-no-return, too-many-arguments
     def _process_jacobian_tape(
-        self, tape, starting_state, use_device_state, use_mpi: bool = False, split_obs: bool = False
+        self,
+        tape,
+        starting_state,
+        use_device_state,
+        use_mpi: bool = False,
+        split_obs: Union[bool, int] = False,
     ):
         state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
 

@@ -634,7 +634,10 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         # Check adjoint diff support
         self._check_adjdiff_supported_operations(tape.operations)
 
-        split_obs = self._dp.getTotalDevices() if self._batch_obs else False
+        if self._mpi:
+            split_obs = False  # with MPI batched means compute Jacobian one observables at a time, no point splitting linear combinations
+        else:
+            split_obs = self._dp.getTotalDevices() if self._batch_obs else False
         processed_data = self._process_jacobian_tape(
             tape, starting_state, use_device_state, self._mpi, split_obs
         )
