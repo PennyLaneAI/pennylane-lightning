@@ -227,7 +227,7 @@ template <class PrecisionT> class MPOTNCuda {
             std::size_t site_tag = mpo_site_tag[i];
             if (site_tag < numMPOSites_) {
                 auto tensor_cu = cuUtil::complexToCu<ComplexT>(
-                    tensors[wires.size() - 1 - site_tag]);
+                    tensors[/*wires.size() - 1 - */ site_tag]);
 
                 tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                               tensor_cu.size());
@@ -236,9 +236,9 @@ template <class PrecisionT> class MPOTNCuda {
                 CFP_t value_cu =
                     cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
                 std::size_t length = tensors_[i].getLength();
+                std::size_t bond = bondDims_[i];
                 std::vector<std::size_t> target_ids{
-                    0, 2 * bondDims_[i] + 1, length - (2 * bondDims_[i] + 2),
-                    length - 1};
+                    0, 2 * bond + 1, length - (2 * bond + 2), length - 1};
                 for (auto target_idx : target_ids) {
                     PL_CUDA_IS_SUCCESS(cudaMemcpy(
                         &tensors_[i].getDataBuffer().getData()[target_idx],
