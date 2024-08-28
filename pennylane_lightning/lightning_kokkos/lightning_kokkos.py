@@ -19,7 +19,6 @@ interfaces with C++ for fast linear algebra calculations.
 
 import os
 import sys
-from os import getenv
 from pathlib import Path
 from typing import List
 from warnings import warn
@@ -34,7 +33,7 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 from pennylane_lightning.core._version import __version__
-from pennylane_lightning.core.lightning_base import LightningBase, _chunk_iterable
+from pennylane_lightning.core.lightning_base import LightningBase
 
 try:
     # pylint: disable=import-error, no-name-in-module
