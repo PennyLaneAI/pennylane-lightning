@@ -115,6 +115,48 @@ class TestMeasurements:
         m = LightningTensorMeasurements(tensornet)
         return m.measure_tensor_network(tape)
 
+    def test_unsupported_classicalshadowmp_measurement(self):
+        """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.tensor``."""
+
+        dev = qml.device(device_name, wires=2, shots=1000)
+        ops = [qml.RX(1.5708, wires=[0])]
+        tape = qml.tape.QuantumScript(ops, [qml.classical_shadow(wires=0)], shots=1000)
+
+        with pytest.raises(TypeError):
+            dev.execute(tape)
+
+    def test_unsupported_sparseH_measurement(self):
+        """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.tensor``."""
+
+        dev = qml.device(device_name, wires=3, shots=1000)
+        ops = [qml.RX(1.5708, wires=[0])]
+        obs = qml.SparseHamiltonian(
+            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(wire_order=[0, 1, 2]),
+            wires=[0, 1, 2],
+        )
+        tape = qml.tape.QuantumScript(ops, [qml.var(obs)], shots=1000)
+
+        with pytest.raises(TypeError):
+            dev.execute(tape)
+
+    def test_Hamiltonian_shot_measurment(self):
+        """Test the Hamiltonian measurement with sampling."""
+        dev_shot = qml.device(device_name, wires=3, shots=1000000)
+        dev = qml.device(device_name, wires=3)
+        ops = [
+            qml.RX(1.5708, wires=[0]),
+            qml.Hadamard(wires=[0]),
+            qml.Hadamard(wires=[1]),
+            qml.Hadamard(wires=[2]),
+        ]
+        obs = qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)])
+        tape_shot = qml.tape.QuantumScript(ops, [qml.expval(obs)], shots=1000000)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(obs)])
+
+        shot_expval = dev_shot.execute(tape_shot)
+        expval = dev.execute(tape)
+        assert np.allclose(shot_expval, expval, atol=1e-2, rtol=1e-2)
+
     @flaky(max_runs=5)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
