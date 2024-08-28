@@ -313,6 +313,7 @@ class LightningQubit(LightningBase):
             computing the jacobian. This value is only relevant when the lightning
             qubit is built with OpenMP.
     """
+
     # pylint: disable=too-many-instance-attributes
 
     # General device options

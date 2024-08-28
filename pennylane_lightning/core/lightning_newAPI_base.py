@@ -97,7 +97,7 @@ class LightningBase(Device):
     def simulate(
         self,
         circuit: QuantumScript,
-        state, # LightningStateVector
+        state,  # LightningStateVector
         postselect_mode: str = None,
     ) -> Result:
         """Simulate a single quantum script.
@@ -160,7 +160,7 @@ class LightningBase(Device):
         jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
         return res, jac
 
-    def vjp( # pylint: disable=too-many-arguments
+    def vjp(  # pylint: disable=too-many-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
@@ -192,7 +192,7 @@ class LightningBase(Device):
             circuit, cotangents
         )
 
-    def simulate_and_vjp( # pylint: disable=too-many-arguments
+    def simulate_and_vjp(  # pylint: disable=too-many-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],

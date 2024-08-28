@@ -57,7 +57,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
     """
 
-    def __init__( # pylint: disable=too-many-arguments
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         num_wires,
         dtype=np.complex128,
