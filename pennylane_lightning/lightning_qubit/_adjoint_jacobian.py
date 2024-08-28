@@ -36,7 +36,7 @@ class LightningAdjointJacobian(LightningBaseAdjointJacobian):
     """Check and execute the adjoint Jacobian differentiation method.
 
     Args:
-        qubit_state(Lightning[Device]StateVector): State Vector to calculate the adjoint Jacobian with.
+        qubit_state(LightningStateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
