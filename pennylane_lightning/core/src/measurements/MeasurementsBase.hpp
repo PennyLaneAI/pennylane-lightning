@@ -134,7 +134,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      * @return 1-D vector of samples in binary with each sample
      * separated by a stride equal to the number of qubits.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         return static_cast<Derived *>(this)->generate_samples(num_samples);
     };
 
@@ -160,7 +160,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         } else if (obs.getObsName().find("Hamiltonian") != std::string::npos) {
             auto coeffs = obs.getCoeffs();
             auto obsTerms = obs.getObs();
-            for (size_t obs_term_idx = 0; obs_term_idx < coeffs.size();
+            for (std::size_t obs_term_idx = 0; obs_term_idx < coeffs.size();
                  obs_term_idx++) {
                 result += coeffs[obs_term_idx] * expval(*obsTerms[obs_term_idx],
                                                         num_shots, shot_range);
@@ -202,11 +202,11 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         std::vector<PrecisionT> eigenVals = eigenValues[0];
 
-        for (size_t i = 1; i < eigenValues.size(); i++) {
+        for (std::size_t i = 1; i < eigenValues.size(); i++) {
             eigenVals = kronProd(eigenVals, eigenValues[i]);
         }
 
-        for (size_t i = 0; i < num_samples; i++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
             std::size_t idx = 0;
             std::size_t wire_idx = 0;
             for (auto &obs_wire : obs_wires) {
@@ -319,11 +319,11 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
         std::size_t num_wires = _statevector.getTotalNumQubits();
 
-        std::vector<PrecisionT> prob_shots(size_t{1} << wires.size(), 0.0);
+        std::vector<PrecisionT> prob_shots(std::size_t{1} << wires.size(), 0.0);
 
         for (auto &it : counts_map) {
             std::size_t bitVal = 0;
-            for (size_t bit = 0; bit < wires.size(); bit++) {
+            for (std::size_t bit = 0; bit < wires.size(); bit++) {
                 // Mapping the value of wires[bit]th bit to local [bit]th bit of
                 // the output
                 bitVal +=
@@ -346,12 +346,12 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @return Floating point std::vector with probabilities.
      */
-    auto probs(size_t num_shots) -> std::vector<PrecisionT> {
+    auto probs(std::size_t num_shots) -> std::vector<PrecisionT> {
         auto counts_map = counts(num_shots);
 
         std::size_t num_wires = _statevector.getTotalNumQubits();
 
-        std::vector<PrecisionT> prob_shots(size_t{1} << num_wires, 0.0);
+        std::vector<PrecisionT> prob_shots(std::size_t{1} << num_wires, 0.0);
 
         for (auto &it : counts_map) {
             prob_shots[it.first] =
@@ -407,7 +407,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         -> std::unordered_map<PrecisionT, std::size_t> {
         std::unordered_map<PrecisionT, std::size_t> outcome_map;
         auto sample_data = sample(obs, num_shots);
-        for (size_t i = 0; i < num_shots; i++) {
+        for (std::size_t i = 0; i < num_shots; i++) {
             auto key = sample_data[i];
             auto it = outcome_map.find(key);
             if (it != outcome_map.end()) {
@@ -425,18 +425,18 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param num_shots Number of wires the sampled observable was performed on
      *
-     * @return std::unordered_map<size_t, std::size_t> with format ``{'outcome':
-     * num_occurences}``
+     * @return std::unordered_map<std::size_t, std::size_t> with format
+     * ``{'outcome': num_occurences}``
      */
     auto counts(const std::size_t &num_shots)
-        -> std::unordered_map<size_t, std::size_t> {
-        std::unordered_map<size_t, std::size_t> outcome_map;
+        -> std::unordered_map<std::size_t, std::size_t> {
+        std::unordered_map<std::size_t, std::size_t> outcome_map;
         auto sample_data = sample(num_shots);
 
         std::size_t num_wires = _statevector.getTotalNumQubits();
-        for (size_t i = 0; i < num_shots; i++) {
+        for (std::size_t i = 0; i < num_shots; i++) {
             std::size_t key = 0;
-            for (size_t j = 0; j < num_wires; j++) {
+            for (std::size_t j = 0; j < num_wires; j++) {
                 key += sample_data[i * num_wires + j] << (num_wires - 1 - j);
             }
 
@@ -494,7 +494,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             // Get a slice of samples based on the shot_range vector
             std::size_t shot_idx = 0;
             for (const auto &i : shot_range) {
-                for (size_t j = i * num_qubits; j < (i + 1) * num_qubits; j++) {
+                for (std::size_t j = i * num_qubits; j < (i + 1) * num_qubits;
+                     j++) {
                     // TODO some extra work to make it cache-friendly
                     sub_samples[shot_idx * num_qubits + j - i * num_qubits] =
                         samples[j];

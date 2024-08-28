@@ -37,11 +37,11 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
     /**
      * @brief Permutation that swaps bits in two wires
      */
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static consteval auto applyInternalInternalPermutation() {
         const auto identity_perm = Permutation::identity<packed_size>();
         std::array<uint8_t, packed_size> perm{};
-        for (size_t i = 0; i < packed_size / 2; i++) {
+        for (std::size_t i = 0; i < packed_size / 2; i++) {
             // swap rev_wire1 and rev_wire0 bits
             const std::size_t b = ((i >> rev_wire0) ^ (i >> rev_wire1)) & 1U;
             const std::size_t j = i ^ ((b << rev_wire0) | (b << rev_wire1));
@@ -51,7 +51,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
         return Permutation::compilePermutation<PrecisionT, packed_size>(perm);
     }
 
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
@@ -59,7 +59,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
         constexpr static auto perm =
             applyInternalInternalPermutation<rev_wire0, rev_wire1>();
         PL_LOOP_PARALLEL(1)
-        for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
+        for (std::size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n, permute<perm>(v));
         }
@@ -68,9 +68,9 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
     /**
      * @brief Setting a mask. Mask is 1 if bits in min_rev_wire is set
      */
-    template <size_t min_rev_wire> static consteval auto createMask0() {
+    template <std::size_t min_rev_wire> static consteval auto createMask0() {
         std::array<bool, packed_size> m{};
-        for (size_t i = 0; i < packed_size / 2; i++) {
+        for (std::size_t i = 0; i < packed_size / 2; i++) {
             if ((i & (1U << min_rev_wire)) != 0) {
                 m[2 * i + 0] = true;
                 m[2 * i + 1] = true;
@@ -85,9 +85,9 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
     /**
      * @brief Setting a mask. Mask is 1 if bits in min_rev_wire is unset
      */
-    template <size_t min_rev_wire> static consteval auto createMask1() {
+    template <std::size_t min_rev_wire> static consteval auto createMask1() {
         std::array<bool, packed_size> m = {};
-        for (size_t i = 0; i < packed_size / 2; i++) {
+        for (std::size_t i = 0; i < packed_size / 2; i++) {
             if ((i & (1U << min_rev_wire)) != 0) {
                 m[2 * i + 0] = false;
                 m[2 * i + 1] = false;
@@ -99,7 +99,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
         return compileMask<PrecisionT, packed_size>(m);
     }
 
-    template <size_t min_rev_wire>
+    template <std::size_t min_rev_wire>
     static void applyInternalExternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       std::size_t max_rev_wire,
@@ -117,7 +117,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
         constexpr static auto compiled_perm = compilePermutation<PrecisionT>(
             flip(identity<packed_size>(), min_rev_wire));
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | max_rev_wire_shift;
@@ -151,7 +152,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplySWAP {
         const std::size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);

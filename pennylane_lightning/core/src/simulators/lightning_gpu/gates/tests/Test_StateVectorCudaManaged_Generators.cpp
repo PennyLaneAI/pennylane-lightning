@@ -1692,7 +1692,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGeneratorGlobalPhase",
         auto result_gate_svp = gate_svp.getDataVector();
         auto result_gate_svm = gate_svm.getDataVector();
 
-        for (size_t j = 0; j < exp2(num_qubits); j++) {
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
             CHECK(-scale * imag(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
