@@ -246,7 +246,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     void applyMPOOperation(const std::vector<std::vector<ComplexT>> &tensors,
                            const std::vector<std::size_t> &wires,
-                           const std::size_t maxMPOBondDim = 0) {
+                           const std::size_t maxMPOBondDim) {
         PL_ABORT_IF_NOT(
             tensors.size() == wires.size(),
             "The number of tensors should be equal to the number of "
@@ -266,8 +266,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetNetworkOperator_t */ mpos_.back()->getMPOOperator(),
             /* const int32_t immutable */ 1,
-            /* const int32_t adjoint */ 0,
-            /* const int32_t unitary */ 0,
+            /* const int32_t adjoint */ 1,
+            /* const int32_t unitary */ 1,
             /* int64_t * operatorId*/ &operatorId));
 
         mpo_ids_.push_back(static_cast<std::size_t>(operatorId));

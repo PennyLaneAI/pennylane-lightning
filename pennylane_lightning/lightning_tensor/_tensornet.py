@@ -286,7 +286,7 @@ class LightningTensorNet:
         # Create the correct order of indices for the gate data to be decomposed
         indices_order = []
         for i in range(len(wires)):
-            indices_order.extend([len(wires) - 1 - i, 2 * len(wires) - 1 - i])
+            indices_order.extend([i, i + len(wires)])
 
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_data = np.transpose(gate_data, axes=indices_order)
@@ -297,13 +297,13 @@ class LightningTensorNet:
         for i in range(len(MPOs)):
             if i == 0:
                 # [ket, bra, bond] -> [bond, ket, bra]
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 1))
+                MPOs[i] = np.transpose(MPOs[i], axes=(1, 2, 0))
             elif i == len(MPOs) - 1:
                 # [bond, ket, bra] -> [ket, bond, bra]
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 2))
+                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 1))
             else:
                 # [bondL, ket, bra, bondR] -> [bondR, ket, bondL, bra]
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 1, 3, 2))
+                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 3, 1))
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(MPOs, sorted_wires, max_mpo_bond_dim)
