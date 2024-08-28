@@ -15,7 +15,7 @@ r"""
 Helper functions for serializing quantum tapes.
 """
 from itertools import islice
-from typing import List, Sequence, Tuple, Union
+from typing import List, Sequence, Tuple
 
 import numpy as np
 import pennylane as qml
@@ -223,7 +223,7 @@ class QuantumScriptSerializer:
         obs = observable.obs if isinstance(observable, Tensor) else observable.operands
         return self.tensor_obs([self._ob(o, wires_map) for o in obs])
 
-    def _chunk_ham_terms(self, coeffs, ops, wires_map: dict = None, split_num: int = 1) -> List:
+    def _chunk_ham_terms(self, coeffs, ops, split_num: int = 1) -> List:
         "Create split_num sub-Hamiltonians from a single high term-count Hamiltonian"
         num_terms = len(coeffs)
         step_size = num_terms // split_num + bool(num_terms % split_num)
@@ -242,7 +242,7 @@ class QuantumScriptSerializer:
                     ops_l.extend(term_cpp)
                 else:
                     ops_l.append(term_cpp)
-            c, o = self._chunk_ham_terms(coeffs, ops_l, wires_map, self.split_obs)
+            c, o = self._chunk_ham_terms(coeffs, ops_l, self.split_obs)
             hams = [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
             return hams
 
@@ -312,7 +312,7 @@ class QuantumScriptSerializer:
         coeffs = np.array(coeffs).astype(self.rtype)
 
         if self.split_obs:
-            c, o = self._chunk_ham_terms(coeffs, terms, wires_map, self.split_obs)
+            c, o = self._chunk_ham_terms(coeffs, terms, self.split_obs)
             psentences = [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
             return psentences
 

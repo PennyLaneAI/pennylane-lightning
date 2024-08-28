@@ -16,7 +16,7 @@ r"""
 This module contains the base class for all PennyLane Lightning simulator devices,
 and interfaces with C++ for improved performance.
 """
-from itertools import islice, product
+from itertools import product
 from typing import List, Union
 
 import numpy as np

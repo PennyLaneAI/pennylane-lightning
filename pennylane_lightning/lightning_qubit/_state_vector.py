@@ -215,7 +215,7 @@ class LightningStateVector:
 
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
-    ):
+    ):  # pylint: disable=protected-access
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -253,9 +253,7 @@ class LightningStateVector:
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                paulis = operation._hyperparameters[
-                    "pauli_word"
-                ]  # pylint: disable=protected-access
+                paulis = operation._hyperparameters["pauli_word"]
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
                 word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, operation.parameters, word)
