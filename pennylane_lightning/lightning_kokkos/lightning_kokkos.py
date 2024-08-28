@@ -725,7 +725,7 @@ class LightningKokkos(LightningBase):
             trainable_params,
         )
         jac = np.array(jac)
-        jac = jac.reshape(-1, len(trainable_params))
+        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
         if hasattr(qml, "active_return"):  # pragma: no cover

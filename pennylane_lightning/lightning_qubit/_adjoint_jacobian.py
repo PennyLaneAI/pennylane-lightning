@@ -236,6 +236,7 @@ class LightningAdjointJacobian:
             trainable_params,
         )
         jac = np.array(jac)
+        has_shape0 = bool(len(jac))
 
         num_obs = len(np.unique(processed_data["obs_indices"]))
         rows = processed_data["obs_indices"]
@@ -243,7 +244,7 @@ class LightningAdjointJacobian:
         data = np.ones(len(rows))
         red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
         jac = red_mat @ jac.reshape((len(rows), -1))
-        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
+        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
         return self._adjoint_jacobian_processing(jac_r)
