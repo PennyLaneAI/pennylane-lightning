@@ -409,7 +409,7 @@ class TestMeasurements:
         return m.measure_final_state(tape)
 
     @flaky(max_runs=15)
-    @pytest.mark.parametrize("shots", [None, 100_000, [90_000, 90_000]])
+    @pytest.mark.parametrize("shots", [None, 100_000, [190_000, 190_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
