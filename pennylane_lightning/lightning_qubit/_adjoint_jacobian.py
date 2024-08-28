@@ -76,11 +76,6 @@ class LightningAdjointJacobian:
         """Returns the simulation data type."""
         return self._dtype
 
-    @property
-    def batch_obs(self):
-        """Returns the observable batching parameter."""
-        return self._batch_obs
-
     @staticmethod
     def _get_return_type(
         measurements: List[MeasurementProcess],
@@ -225,7 +220,7 @@ class LightningAdjointJacobian:
         if split_obs:
             # split linear combinations into num_threads
             # this isn't the best load-balance in general, but well-rounded enough
-            split_obs = os.getenv("OMP_NUM_THREADS", None) if self.batch_obs else False
+            split_obs = os.getenv("OMP_NUM_THREADS", None) if self._batch_obs else False
             split_obs = int(split_obs) if split_obs else False
         processed_data = self._process_jacobian_tape(tape, split_obs=split_obs)
 
