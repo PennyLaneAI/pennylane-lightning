@@ -36,6 +36,9 @@
 
 ### Improvements
 
+* Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
+  [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
+
 * Updated calls of ``size_t`` to ``std::size_t`` everywhere.
   [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
 
