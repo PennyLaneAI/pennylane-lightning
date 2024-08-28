@@ -23,7 +23,7 @@ from pennylane import BasisState, QuantumFunctionError, StatePrep
 from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
-from scipy.sparse import coo_matrix
+from scipy.sparse import csr_matrix
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
@@ -240,7 +240,7 @@ class LightningAdjointJacobian:
         rows = processed_data["obs_indices"]
         cols = np.arange(len(rows), dtype=int)
         data = np.ones(len(rows))
-        red_mat = coo_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
+        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
         jac = red_mat @ jac.reshape((len(rows), -1))
         jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))

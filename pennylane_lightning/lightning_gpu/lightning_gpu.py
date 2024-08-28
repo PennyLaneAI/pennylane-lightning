@@ -30,7 +30,7 @@ from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StateP
 from pennylane.measurements import Expectation, State
 from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
-from scipy.sparse import coo_matrix
+from scipy.sparse import csr_matrix
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 from pennylane_lightning.core._version import __version__
@@ -674,7 +674,7 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         rows = processed_data["obs_indices"]
         cols = np.arange(len(rows), dtype=int)
         data = np.ones(len(rows))
-        red_mat = coo_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
+        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
         jac = red_mat @ jac.reshape((len(rows), -1))
         jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
