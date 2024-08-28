@@ -49,9 +49,7 @@ PAULI_NAME_MAP = {
 
 
 def _chunk_iterable(iteration, num_chunks):
-    """Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226
-    Replicated from lightning_base to avoid circular import
-    """
+    """Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"""
     iteration = iter(iteration)
     return iter(lambda: tuple(islice(iteration, num_chunks)), ())
 
