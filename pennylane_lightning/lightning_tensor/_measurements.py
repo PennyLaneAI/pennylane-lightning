@@ -270,8 +270,6 @@ class LightningTensorMeasurements:
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
                 )
-            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
-                all_res.extend(self._measure_hamiltonian_with_samples(group, shots))
             elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
                 all_res.extend(self._measure_sum_with_samples(group, shots))
             else:
@@ -361,26 +359,6 @@ class LightningTensorMeasurements:
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
-
-    def _measure_hamiltonian_with_samples(
-        self,
-        mp: List[SampleMeasurement],
-        shots: Shots,
-    ):
-        # the list contains only one element based on how we group measurements
-        mp = mp[0]
-
-        # if the measurement process involves a Hamiltonian, measure each
-        # of the terms separately and sum
-        def _sum_for_single_shot(s):
-            results = self.measure_with_samples(
-                [ExpectationMP(t) for t in mp.obs.terms()[1]],
-                s,
-            )
-            return sum(c * res for c, res in zip(mp.obs.terms()[0], results))
-
-        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
-        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]
 
     def _measure_sum_with_samples(
         self,
