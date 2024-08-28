@@ -128,9 +128,7 @@ class TestMeasurements:
             qml.sum(qml.PauliX(0), qml.PauliY(0)),
             qml.prod(qml.PauliX(0), qml.PauliY(1)),
             qml.s_prod(2.0, qml.PauliX(0)),
-            qml.Hamiltonian(
-                [2.0], [qml.PauliZ(2)]
-            ),
+            qml.Hamiltonian([2.0], [qml.PauliZ(2)]),
         ),
     )
     def test_single_return_value(self, measurement, observable, lightning_tn, tol):
@@ -179,9 +177,7 @@ class TestMeasurements:
             qml.prod(qml.PauliX(0), qml.PauliY(1)),
             qml.s_prod(2.0, qml.PauliX(0)),
             qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
-            qml.Hamiltonian(
-                [2.0], [qml.PauliX(0)]
-            ),
+            qml.Hamiltonian([2.0], [qml.PauliX(0)]),
         ),
     )
     @pytest.mark.parametrize(
