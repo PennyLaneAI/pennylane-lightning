@@ -226,7 +226,7 @@ class LightningTensorMeasurements:
                     return tuple(res[0] for res in results)
 
                 return results[0]
-
+    
             return results
         # analytic case
         if len(circuit.measurements) == 1:

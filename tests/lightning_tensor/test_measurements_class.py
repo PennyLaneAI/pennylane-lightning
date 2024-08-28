@@ -115,7 +115,7 @@ class TestMeasurements:
         m = LightningTensorMeasurements(tensornet)
         return m.measure_tensor_network(tape)
 
-    # @flaky(max_runs=5)
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -128,6 +128,9 @@ class TestMeasurements:
             qml.sum(qml.PauliX(0), qml.PauliY(0)),
             qml.prod(qml.PauliX(0), qml.PauliY(1)),
             qml.s_prod(2.0, qml.PauliX(0)),
+            qml.Hamiltonian(
+                [2.0], [qml.PauliZ(2)]
+            ),
         ),
     )
     def test_single_return_value(self, measurement, observable, lightning_tn, tol):
@@ -176,9 +179,9 @@ class TestMeasurements:
             qml.prod(qml.PauliX(0), qml.PauliY(1)),
             qml.s_prod(2.0, qml.PauliX(0)),
             qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
-            # qml.Hamiltonian(
-            #    [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
-            # ),
+            qml.Hamiltonian(
+                [2.0], [qml.PauliX(0)]
+            ),
         ),
     )
     @pytest.mark.parametrize(
