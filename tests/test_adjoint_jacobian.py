@@ -1245,7 +1245,7 @@ def test_integration(returns):
 
     def circuit(params):
         circuit_ansatz(params, wires=range(4))
-        return qml.expval(returns), qml.expval(qml.PauliY(1))
+        return np.array([qml.expval(returns), qml.expval(qml.PauliY(1))])
 
     n_params = 30
     params = np.linspace(0, 10, n_params)
@@ -1253,14 +1253,8 @@ def test_integration(returns):
     qnode_def = qml.QNode(circuit, dev_def)
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
 
-    def casted_to_array_def(params):
-        return np.array(qnode_def(params))
-
-    def casted_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
-
-    j_def = qml.jacobian(casted_to_array_def)(params)
-    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
 
@@ -1335,7 +1329,7 @@ def test_integration_custom_wires(returns):
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
-        return qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))
+        return np.array([qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))])
 
     n_params = 30
     params = np.linspace(0, 10, n_params)
@@ -1343,14 +1337,8 @@ def test_integration_custom_wires(returns):
     qnode_def = qml.QNode(circuit, dev_def)
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
 
-    def casted_to_array_def(params):
-        return np.array(qnode_def(params))
-
-    def casted_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
-
-    j_def = qml.jacobian(casted_to_array_def)(params)
-    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
 
