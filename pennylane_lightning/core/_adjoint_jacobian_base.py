@@ -16,7 +16,7 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from os import getenv
-from typing import Any, List
+from typing import Any, Callable, List
 
 import numpy as np
 import pennylane as qml
@@ -44,8 +44,8 @@ class LightningBaseAdjointJacobian:
         self._batch_obs = batch_obs
 
         # Dummy for the C++ bindings
-        self._jacobian_lightning = None
-        self._create_ops_list_lightning = None
+        self._jacobian_lightning: Callable = None
+        self._create_ops_list_lightning: Callable = None
 
     @property
     def qubit_state(self):

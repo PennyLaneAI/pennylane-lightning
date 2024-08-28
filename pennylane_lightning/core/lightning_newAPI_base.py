@@ -62,7 +62,6 @@ class LightningBase(Device):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        device_name,
         wires,
         *,
         c_dtype=np.complex128,
@@ -80,9 +79,9 @@ class LightningBase(Device):
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
         # Dummy for LightningStateVector, LightningMeasurements, LightningAdjointJacobian
-        self.LightningStateVector = None
-        self.LightningMeasurements = None
-        self.LightningAdjointJacobian = None
+        self.LightningStateVector: Callable = None
+        self.LightningMeasurements: Callable = None
+        self.LightningAdjointJacobian: Callable = None
 
     @property
     def c_dtype(self):
@@ -98,10 +97,23 @@ class LightningBase(Device):
     def simulate(
         self,
         circuit: QuantumScript,
-        # state: LightningStateVector,
-        state,
+        state, # LightningStateVector
         postselect_mode: str = None,
     ) -> Result:
+        """Simulate a single quantum script.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning[Device]StateVector): handle to Lightning state vector
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
         pass
 
     def jacobian(self, circuit: QuantumTape, state, batch_obs=False, wire_map=None):
@@ -148,7 +160,7 @@ class LightningBase(Device):
         jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
         return res, jac
 
-    def vjp(
+    def vjp( # pylint: disable=too-many-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
@@ -180,7 +192,7 @@ class LightningBase(Device):
             circuit, cotangents
         )
 
-    def simulate_and_vjp(
+    def simulate_and_vjp( # pylint: disable=too-many-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],

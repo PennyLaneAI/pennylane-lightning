@@ -33,6 +33,12 @@ from ._state_vector import LightningStateVector
 
 
 class LightningAdjointJacobian(LightningBaseAdjointJacobian):
+    """Check and execute the adjoint Jacobian differentiation method.
+
+    Args:
+        qubit_state(Lightning[Device]StateVector): State Vector to calculate the adjoint Jacobian with.
+        batch_obs(bool): If serialized tape is to be batched or not.
+    """
 
     def __init__(self, qubit_state: LightningStateVector, batch_obs: bool = False) -> None:
         super().__init__(qubit_state, batch_obs)

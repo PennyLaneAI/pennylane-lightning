@@ -37,15 +37,13 @@ from pennylane.devices.preprocess import (
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
 from pennylane.ops import Prod, SProd, Sum
-from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result, ResultBatch
+from pennylane.typing import Result
 
 from pennylane_lightning.core.lightning_newAPI_base import (
     LightningBase,
-    PostprocessingFn,
     QuantumTape_or_Batch,
-    QuantumTapeBatch,
     Result_or_ResultBatch,
 )
 
@@ -315,6 +313,7 @@ class LightningQubit(LightningBase):
             computing the jacobian. This value is only relevant when the lightning
             qubit is built with OpenMP.
     """
+    # pylint: disable=too-many-instance-attributes
 
     # General device options
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
@@ -353,7 +352,6 @@ class LightningQubit(LightningBase):
             )
 
         super().__init__(
-            device_name="lightning.qubit",
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,

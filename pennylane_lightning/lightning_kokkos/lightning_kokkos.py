@@ -19,7 +19,7 @@ import os
 import sys
 from dataclasses import replace
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Optional
 
 import numpy as np
 import pennylane as qml
@@ -38,15 +38,13 @@ from pennylane.devices.preprocess import (
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
 from pennylane.ops import Prod, SProd, Sum
-from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result, ResultBatch
+from pennylane.typing import Result
 
 from pennylane_lightning.core.lightning_newAPI_base import (
     LightningBase,
-    PostprocessingFn,
     QuantumTape_or_Batch,
-    QuantumTapeBatch,
     Result_or_ResultBatch,
 )
 
@@ -314,7 +312,6 @@ class LightningKokkos(LightningBase):
             )
 
         super().__init__(
-            device_name="lightning.kokkos",
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
