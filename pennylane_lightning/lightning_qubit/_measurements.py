@@ -21,17 +21,14 @@ try:
 except ImportError:
     pass
 
-from typing import List
 from functools import reduce
+from typing import List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import (
-    CountsMP,
-    SampleMeasurement,
-    Shots,
-)
+from pennylane.measurements import CountsMP, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
+
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 
 
@@ -61,9 +58,9 @@ class LightningMeasurements(LightningBaseMeasurements):
         kernel_name: str = None,
         num_burnin: int = None,
     ) -> None:
-        
+
         super().__init__(qubit_state)
-        
+
         self._mcmc = mcmc
         self._kernel_name = kernel_name
         self._num_burnin = num_burnin

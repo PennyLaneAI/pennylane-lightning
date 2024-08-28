@@ -33,8 +33,10 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-from ._measurements import LightningMeasurements
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
+
+from ._measurements import LightningMeasurements
+
 
 class LightningStateVector(LightningBaseStateVector):
     """Lightning Qubit state-vector class.
@@ -56,9 +58,8 @@ class LightningStateVector(LightningBaseStateVector):
 
         self._device_name = device_name
 
-        # Initialize the state vector 
+        # Initialize the state vector
         self._qubit_state = self._state_dtype()(self._num_wires)
-
 
     @property
     def state(self):
@@ -220,4 +221,3 @@ class LightningStateVector(LightningBaseStateVector):
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(operation.matrix, wires, False)
-

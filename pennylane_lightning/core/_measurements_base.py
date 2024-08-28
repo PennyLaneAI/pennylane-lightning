@@ -15,7 +15,7 @@
 Class implementation for state vector measurements.
 """
 
-from typing import Callable, List, Union, Any
+from typing import Any, Callable, List, Union
 
 import numpy as np
 import pennylane as qml
@@ -54,8 +54,8 @@ class LightningBaseMeasurements:
     ) -> None:
         self._qubit_state = qubit_state
         self._dtype = qubit_state.dtype
-        
-        # Dummy for the C++ bindings 
+
+        # Dummy for the C++ bindings
         self._measurement_lightning = None
 
     @property
@@ -67,7 +67,7 @@ class LightningBaseMeasurements:
     def dtype(self):
         """Returns the simulation data type."""
         return self._dtype
-        
+
     def _measurement_dtype(self):
         """Binding to Lightning Kokkos Measurements C++ class.
 

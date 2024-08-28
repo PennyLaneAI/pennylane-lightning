@@ -27,19 +27,19 @@ except ImportError:
 
 import numpy as np
 
-from ._state_vector import LightningStateVector
-
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
 
+from ._state_vector import LightningStateVector
+
+
 class LightningAdjointJacobian(LightningBaseAdjointJacobian):
-    
+
     def __init__(self, qubit_state: LightningStateVector, batch_obs: bool = False) -> None:
         super().__init__(qubit_state, batch_obs)
-        
+
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
-        
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning Qubit Adjoint Jacobian C++ class.
 

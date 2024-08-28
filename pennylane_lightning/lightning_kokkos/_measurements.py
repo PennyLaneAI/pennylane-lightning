@@ -25,12 +25,9 @@ from typing import List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import (
-    CountsMP,
-    SampleMeasurement,
-    Shots,
-)
+from pennylane.measurements import CountsMP, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
+
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 
 
@@ -47,9 +44,9 @@ class LightningKokkosMeasurements(LightningBaseMeasurements):
         self,
         kokkos_state,
     ) -> None:
-        
+
         super().__init__(kokkos_state)
-        
+
         self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)
 
     def _measurement_dtype(self):

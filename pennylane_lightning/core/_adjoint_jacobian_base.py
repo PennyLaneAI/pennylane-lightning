@@ -43,7 +43,7 @@ class LightningBaseAdjointJacobian:
         self._dtype = qubit_state.dtype
         self._batch_obs = batch_obs
 
-        # Dummy for the C++ bindings 
+        # Dummy for the C++ bindings
         self._jacobian_lightning = None
         self._create_ops_list_lightning = None
 

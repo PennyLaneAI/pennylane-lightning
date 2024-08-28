@@ -31,6 +31,8 @@ if device_name == "lightning.tensor":
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
+
 class TestJacobian:
     """Unit tests for the jacobian method with the new device API."""
 
@@ -86,7 +88,7 @@ class TestJacobian:
         )
 
         statevector = lightning_sv(num_wires=3)
-        res, jac = self.process_and_execute(3,statevector, qs, execute_and_derivatives)
+        res, jac = self.process_and_execute(3, statevector, qs, execute_and_derivatives)
 
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
@@ -164,8 +166,8 @@ class TestVJP:
 
         dy = 1.0
         statevector = lightning_sv(num_wires=3)
-        res, jac = self.process_and_execute(3,
-            statevector, qs, dy, execute_and_derivatives=execute_and_derivatives
+        res, jac = self.process_and_execute(
+            3, statevector, qs, dy, execute_and_derivatives=execute_and_derivatives
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(

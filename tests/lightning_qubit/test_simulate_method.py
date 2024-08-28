@@ -45,7 +45,7 @@ class TestSimulate:
         tapes, transf_fn = program([tape])
         results = dev.execute(tapes)
         return transf_fn(results)
-    
+
     @staticmethod
     def calculate_result(wires, tape, statevector):
         dev = LightningDevice(wires)

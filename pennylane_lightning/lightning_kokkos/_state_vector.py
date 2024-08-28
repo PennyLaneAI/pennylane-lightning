@@ -36,9 +36,10 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import global_phase_diagonal
+from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningKokkosMeasurements
-from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
+
 
 class LightningKokkosStateVector(LightningBaseStateVector):
     """Lightning Kokkos state-vector class.
@@ -63,7 +64,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         device_name="lightning.kokkos",
         kokkos_args=None,
         sync=True,
-    ): 
+    ):
 
         if device_name != "lightning.kokkos":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
@@ -75,7 +76,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self._kokkos_config = {}
         self._sync = sync
 
-        # Initialize the state vector 
+        # Initialize the state vector
         if kokkos_args is None:
             self._qubit_state = self._state_dtype()(self.num_wires)
         elif isinstance(kokkos_args, InitializationSettings):
@@ -87,7 +88,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         if not self._kokkos_config:
             self._kokkos_config = self._kokkos_configuration()
-
 
     @property
     def state(self):
@@ -161,7 +161,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         Returns: The `lightning.kokkos` device configuration
         """
         return print_configuration()
-
 
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
@@ -291,4 +290,3 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(operation.matrix, wires, False)
-

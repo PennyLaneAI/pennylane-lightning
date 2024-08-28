@@ -42,18 +42,17 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
+from pennylane_lightning.core.lightning_newAPI_base import (
+    LightningBase,
+    PostprocessingFn,
+    QuantumTape_or_Batch,
+    QuantumTapeBatch,
+    Result_or_ResultBatch,
+)
+
 from ._adjoint_jacobian import LightningKokkosAdjointJacobian
 from ._measurements import LightningKokkosMeasurements
 from ._state_vector import LightningKokkosStateVector
-
-from pennylane_lightning.core.lightning_newAPI_base import (
-    LightningBase,
-    Result_or_ResultBatch,
-    QuantumTapeBatch,
-    QuantumTape_or_Batch,
-    PostprocessingFn,
-)
-
 
 try:
     from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
@@ -249,14 +248,15 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     program.add_transform(qml.transforms.broadcast_expand)
     program.add_transform(validate_adjoint_trainable_params)
 
+
 # Kokkos specific methods
 def _kokkos_configuration():
     return print_configuration()
 
+
 @simulator_tracking
 @single_tape_support
 class LightningKokkos(LightningBase):
-    
     """PennyLane Lightning Kokkos device.
 
     A device that interfaces with C++ to perform fast linear algebra calculations.
@@ -276,7 +276,6 @@ class LightningKokkos(LightningBase):
         kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
             (threading parameters).
     """
-
 
     # General device options
     _device_options = ("c_dtype", "batch_obs")
@@ -314,9 +313,15 @@ class LightningKokkos(LightningBase):
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
-        super().__init__(device_name='lightning.kokkos' ,wires=wires,c_dtype=c_dtype, shots=shots,batch_obs=batch_obs)
-        
-        # Set the attributes to call the Lightning classes 
+        super().__init__(
+            device_name="lightning.kokkos",
+            wires=wires,
+            c_dtype=c_dtype,
+            shots=shots,
+            batch_obs=batch_obs,
+        )
+
+        # Set the attributes to call the Lightning classes
         self._set_Lightning_classes()
 
         # Kokkos specific options
@@ -461,7 +466,8 @@ class LightningKokkos(LightningBase):
             return True
         return _supports_adjoint(circuit=circuit)
 
-    def simulate(self,
+    def simulate(
+        self,
         circuit: QuantumScript,
         state: LightningKokkosStateVector,
         postselect_mode: str = None,
@@ -500,11 +506,10 @@ class LightningKokkos(LightningBase):
                     )
                 )
             return tuple(results)
-        
+
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return LightningKokkosMeasurements(final_state).measure_final_state(circuit)
-
 
     @staticmethod
     def get_c_interface():

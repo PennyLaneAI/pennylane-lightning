@@ -41,18 +41,17 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
+from pennylane_lightning.core.lightning_newAPI_base import (
+    LightningBase,
+    PostprocessingFn,
+    QuantumTape_or_Batch,
+    QuantumTapeBatch,
+    Result_or_ResultBatch,
+)
+
 from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
-
-from pennylane_lightning.core.lightning_newAPI_base import (
-    LightningBase,
-    Result_or_ResultBatch,
-    QuantumTapeBatch,
-    QuantumTape_or_Batch,
-    PostprocessingFn,
-)
-
 
 try:
     from pennylane_lightning.lightning_qubit_ops import backend_info
@@ -317,7 +316,6 @@ class LightningQubit(LightningBase):
             qubit is built with OpenMP.
     """
 
-
     # General device options
     _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     # Device specific options
@@ -354,9 +352,15 @@ class LightningQubit(LightningBase):
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
-        super().__init__(device_name='lightning.qubit' ,wires=wires,c_dtype=c_dtype, shots=shots,batch_obs=batch_obs)
-        
-        # Set the attributes to call the Lightning classes 
+        super().__init__(
+            device_name="lightning.qubit",
+            wires=wires,
+            c_dtype=c_dtype,
+            shots=shots,
+            batch_obs=batch_obs,
+        )
+
+        # Set the attributes to call the Lightning classes
         self._set_Lightning_classes()
 
         # Markov Chain Monte Carlo (MCMC) sampling method specific options
@@ -518,7 +522,8 @@ class LightningQubit(LightningBase):
             return True
         return _supports_adjoint(circuit=circuit)
 
-    def simulate(self,
+    def simulate(
+        self,
         circuit: QuantumScript,
         state: LightningStateVector,
         mcmc: dict = None,
@@ -563,9 +568,7 @@ class LightningQubit(LightningBase):
                     )
                 )
             return tuple(results)
-        
+
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
-
-

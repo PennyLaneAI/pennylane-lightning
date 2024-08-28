@@ -22,6 +22,7 @@ from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
+
 class LightningBaseStateVector:
     """Lightning state-vector class.
 
@@ -44,7 +45,7 @@ class LightningBaseStateVector:
 
         # Dummy for the device name
         self._device_name = None
-        # Dummy for the C++ bindings 
+        # Dummy for the C++ bindings
         self._qubit_state = None
 
     @property
@@ -84,7 +85,7 @@ class LightningBaseStateVector:
         [0.+0.j 1.+0.j]
         """
         pass
-    
+
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
 
@@ -105,7 +106,7 @@ class LightningBaseStateVector:
             device_wires (Wires): wires that get initialized in the state
         """
         pass
-    
+
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
 
@@ -136,7 +137,7 @@ class LightningBaseStateVector:
             None
         """
         pass
-    
+
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
     ):
@@ -152,8 +153,8 @@ class LightningBaseStateVector:
         Returns:
             None
         """
-        pass 
-    
+        pass
+
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):

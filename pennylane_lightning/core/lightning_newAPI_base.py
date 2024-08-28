@@ -26,11 +26,11 @@ from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch
 
-
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
 PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
+
 
 @simulator_tracking
 @single_tape_support
@@ -70,7 +70,7 @@ class LightningBase(Device):
         batch_obs=False,
     ):
         super().__init__(wires=wires, shots=shots)
-        
+
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
 
@@ -79,35 +79,32 @@ class LightningBase(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        # Dummy for LightningStateVector, LightningMeasurements, LightningAdjointJacobian        
+        # Dummy for LightningStateVector, LightningMeasurements, LightningAdjointJacobian
         self.LightningStateVector = None
         self.LightningMeasurements = None
         self.LightningAdjointJacobian = None
-        
-    
+
     @property
     def c_dtype(self):
         """State vector complex data type."""
         return self._c_dtype
-    
+
     dtype = c_dtype
 
     def _set_Lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         pass
 
-    
-    def simulate(self,
+    def simulate(
+        self,
         circuit: QuantumScript,
         # state: LightningStateVector,
         state,
         postselect_mode: str = None,
     ) -> Result:
         pass
-    
-    def jacobian(self,
-        circuit: QuantumTape, state, batch_obs=False, wire_map=None
-    ):
+
+    def jacobian(self, circuit: QuantumTape, state, batch_obs=False, wire_map=None):
         """Compute the Jacobian for a single quantum script.
 
         Args:
@@ -129,10 +126,7 @@ class LightningBase(Device):
             circuit
         )
 
-
-    def simulate_and_jacobian(self,
-        circuit: QuantumTape, state, batch_obs=False, wire_map=None
-    ):
+    def simulate_and_jacobian(self, circuit: QuantumTape, state, batch_obs=False, wire_map=None):
         """Simulate a single quantum script and compute its Jacobian.
 
         Args:
@@ -154,8 +148,8 @@ class LightningBase(Device):
         jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
         return res, jac
 
-
-    def vjp(self,
+    def vjp(
+        self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
         state,
@@ -186,8 +180,8 @@ class LightningBase(Device):
             circuit, cotangents
         )
 
-
-    def simulate_and_vjp(self,
+    def simulate_and_vjp(
+        self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
         state,
@@ -340,4 +334,3 @@ class LightningBase(Device):
             for circuit, cots in zip(circuits, cotangents)
         )
         return tuple(zip(*results))
-
