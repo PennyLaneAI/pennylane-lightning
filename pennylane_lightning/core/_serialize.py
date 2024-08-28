@@ -249,9 +249,6 @@ class QuantumScriptSerializer:
         # to be passed where `_ob` expects an observable.
         terms = [t[0] if isinstance(t, Sequence) and len(t) == 1 else t for t in terms]
 
-        if self.split_obs:
-            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
-
         return self.hamiltonian_obs(coeffs, terms)
 
     def _sparse_hamiltonian(self, observable, wires_map: dict = None):
@@ -317,8 +314,6 @@ class QuantumScriptSerializer:
         if len(terms) == 1 and coeffs[0] == 1.0:
             return terms[0]
 
-        if self.split_obs:
-            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
         return self.hamiltonian_obs(coeffs, terms)
 
     # pylint: disable=protected-access, too-many-return-statements
