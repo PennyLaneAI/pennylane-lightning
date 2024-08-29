@@ -14,13 +14,11 @@
 """
 Unit tests for the serialization helper functions.
 """
-import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 
-import pennylane_lightning
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 if not ld._CPP_BINARY_AVAILABLE:
