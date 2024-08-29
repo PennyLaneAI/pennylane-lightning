@@ -126,6 +126,9 @@
 
 ### Bug fixes
 
+* Point to the right Lightning root folder independently from the invocation location, when configuring the project.
+  [(#874)](https://github.com/PennyLaneAI/pennylane-lightning/pull/874)
+
 * Update dependencies and `build` command options following changes in the build system.
   [(#863)](https://github.com/PennyLaneAI/pennylane-lightning/pull/863)
 
