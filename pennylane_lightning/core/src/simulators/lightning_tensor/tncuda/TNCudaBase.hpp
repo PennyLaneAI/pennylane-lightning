@@ -273,12 +273,12 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
 
         if (!gate_matrix.empty()) {
-            auto gate_key = std::make_pair(opName, par);
+            auto gate_key = std::make_pair(baseOpName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
         } else {
-            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
+            gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
         }
 
         int64_t id;
@@ -299,13 +299,14 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int64_t *stateControlValues*/ nullptr,
             /* int32_t numTargetModes */ targetWires.size(),
             /* const int32_t * stateTargetModes */ targetModes.data(),
-            /* void * */ static_cast<void *>(dummy_device_data.getData()),
+            /* void * */
+            static_cast<void *>(gate_cache_->get_gate_device_ptr(dummy_id)),
             /* const int64_t *tensorModeStrides */ nullptr,
             /* const int32_t immutable */ 1,
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t tensorId* */ &id));
-        
+
         if (dummy_id != id) {
             gate_cache_->update_key(dummy_id, id);
         }
