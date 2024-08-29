@@ -288,6 +288,6 @@ class TestMeasurements:
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
-        dtol = tol if shots is None else max(tol, 1.0e-2)
+        dtol = 1.0e-4 if shots is None else max(tol, 1.0e-2)
         for r, e in zip(result, expected):
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
