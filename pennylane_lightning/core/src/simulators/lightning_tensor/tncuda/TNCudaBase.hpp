@@ -252,6 +252,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      *
      * @param baseOpName Base gate's name.
      * @param controlledWires Controlled wires for the gate.
+     * @param controlled_values Controlled values for the gate.
      * @param targetWires Target wires for the gate.
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
@@ -260,6 +261,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     void
     applyControlledOperation(const std::string &baseOpName,
                              const std::vector<std::size_t> &controlledWires,
+                             const std::vector<bool> &controlled_values,
                              const std::vector<std::size_t> &targetWires,
                              bool adjoint = false,
                              const std::vector<PrecisionT> &params = {0.0},
@@ -287,6 +289,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                 controlledWires, BaseType::getNumQubits());
 
+        std::vector<int64_t> controlled_values_int64(controlled_values.size());
+        std::transform(controlled_values.begin(), controlled_values.end(),
+                       controlled_values_int64.begin(),
+                       [](bool val) { return static_cast<int64_t>(val); });
+
         std::vector<int32_t> targetModes =
             cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                 targetWires, BaseType::getNumQubits());
@@ -296,7 +303,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetState_t */ getQuantumState(),
             /* int32_t numControlModes */ controlledWires.size(),
             /* const int32_t * stateControlModes */ controlledModes.data(),
-            /* const int64_t *stateControlValues*/ nullptr,
+            /* const int64_t *stateControlValues*/
+            controlled_values_int64.data(),
             /* int32_t numTargetModes */ targetWires.size(),
             /* const int32_t * stateTargetModes */ targetModes.data(),
             /* void * */

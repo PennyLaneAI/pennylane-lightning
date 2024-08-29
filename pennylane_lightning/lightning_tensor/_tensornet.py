@@ -26,7 +26,7 @@ from itertools import product
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
-from pennylane.ops.op_math import Adjoint, ControlledOp
+from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -222,6 +222,36 @@ class LightningTensorNet:
 
         self._tensornet.setBasisState(state)
 
+    def _apply_lightning_controlled(self, operation):
+        """Apply an arbitrary controlled operation to the state tensor.
+
+        Args:
+            operation (~pennylane.operation.Operation): controlled operation to apply
+
+        Returns:
+            None
+        """
+        tensornet = self._tensornet
+
+        basename = operation.base.name
+        method = getattr(tensornet, f"{basename}", None)
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        target_wires = list(operation.target_wires)
+        if method is not None:  # apply n-controlled specialized gate
+            inv = False
+            param = operation.parameters
+            method(control_wires, control_values, target_wires, inv, param)
+        else:  # apply gate as an n-controlled matrix
+            method = getattr(tensornet, "applyControlledMatrix")
+            method(
+                qml.matrix(operation.base),
+                control_wires,
+                control_values,
+                target_wires,
+                False,
+            )
+
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
 
@@ -247,22 +277,8 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if isinstance(operation, ControlledOp) and len(list(operation.target_wires)) == 1:
-                # Only one wire target controlled gates are supported by cutensornet
-                target_wires = list(operation.target_wires)
-                control_wires = list(operation.control_wires)
-
-                base_name = operation.base.name
-                base_method = getattr(tensornet, base_name, None)
-                if base_method is not None:
-                    base_method(control_wires, target_wires, invert_param)
-                else:
-                    method = getattr(tensornet, "applyMatrix")
-                    try:
-                        method(qml.matrix(operation), control_wires, target_wires, False)
-                    except AttributeError:  # pragma: no cover
-                        # To support older versions of PL
-                        method(operation.matrix, control_wires, target_wires, False)
+            if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
+                self._apply_lightning_controlled(operation)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
