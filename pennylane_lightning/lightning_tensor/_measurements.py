@@ -270,7 +270,7 @@ class LightningTensorMeasurements:
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
                 )
-            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
+            elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
                 all_res.extend(self._measure_sum_with_samples(group, shots))
             else:
                 all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
