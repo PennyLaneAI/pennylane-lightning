@@ -223,10 +223,11 @@ class QuantumScriptSerializer:
 
     def _chunk_ham_terms(self, coeffs, ops, split_num: int = 1) -> List:
         "Create split_num sub-Hamiltonians from a single high term-count Hamiltonian"
-        num_terms = len(coeffs)
-        step_size = num_terms // split_num + bool(num_terms % split_num)
-        c_coeffs = list(_chunk_iterable(coeffs, step_size))
-        c_ops = list(_chunk_iterable(ops, step_size))
+        iperm = np.argsort(np.array([len(op.get_wires()) for op in ops]))
+        coeffs = [coeffs[i] for i in iperm]
+        ops = [ops[i] for i in iperm]
+        c_coeffs = [tuple(coeffs[slice(i, None, split_num)]) for i in range(split_num)]
+        c_ops = [tuple(ops[slice(i, None, split_num)]) for i in range(split_num)]
         return c_coeffs, c_ops
 
     def _hamiltonian(self, observable, wires_map: dict = None):

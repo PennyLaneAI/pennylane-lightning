@@ -1134,8 +1134,9 @@ def test_tape_qchem(tol):
 
     circuit_ld = qml.QNode(circuit, dev_ld, diff_method="adjoint")
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
-
-    assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
+    res = qml.grad(circuit_ld)(params)
+    ref = qml.grad(circuit_dq)(params)
+    assert np.allclose(res, ref, tol)
 
 
 @pytest.mark.usefixtures("use_legacy_and_new_opmath")
