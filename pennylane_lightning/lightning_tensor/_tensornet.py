@@ -25,7 +25,6 @@ from itertools import product
 
 import numpy as np
 import pennylane as qml
-import quimb.tensor as qtn
 from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript

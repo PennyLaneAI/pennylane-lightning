@@ -154,6 +154,92 @@ template <class PrecisionT> class MPOTNCuda {
             /* cutensornetNetworkOperator_t */ &MPOOperator_));
 
         // set up the number of MPO sites
+        numMPOSites_ = 2;
+
+        MPO_modes_int32_ = {0, 1};
+
+        // MPO_modes_int32_.resize(2);
+
+        // std::iota(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
+        //           static_cast<int32_t>(0));
+
+        // std::transform(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
+        //                MPO_modes_int32_.begin(), [numQubits](int32_t mode) {
+        //                   return static_cast<int32_t>(numQubits) - 1 - mode;
+        //               });
+
+        // set up max bond dimensions
+        maxBondDim_ = maxBondDim;
+
+        // set up target bond dimensions
+        std::vector<std::size_t> BondDims(numMPOSites_ - 1, maxBondDim);
+        for (std::size_t i = 0; i < BondDims.size(); i++) {
+            std::size_t bondDim = std::min(i + 1, BondDims.size() - i) *
+                                  2; // 1+1 (1 for bra and 1 for ket)
+            if (bondDim <= log2(maxBondDim_)) {
+                BondDims[i] = (std::size_t{1} << bondDim);
+            }
+
+            std::cout << "BondDims[" << i << "] = " << BondDims[i] << std::endl;
+        }
+
+        bondDims_ = BondDims;
+
+        for (std::size_t i = 0; i < numMPOSites_; i++) {
+            std::vector<std::size_t> localModesExtents;
+            if (i == 0) {
+                localModesExtents =
+                    std::vector<std::size_t>({2, bondDims_[i], 2});
+            } else if (i == numMPOSites_ - 1) {
+                localModesExtents =
+                    std::vector<std::size_t>({bondDims_[i - 1], 2, 2});
+            } else {
+                localModesExtents = std::vector<std::size_t>(
+                    {bondDims_[i - 1], 2, bondDims_[i], 2});
+            }
+
+            std::cout << i << "th localModesExtents size: "
+                      << localModesExtents.size() << std::endl;
+
+            modesExtents_int64_.emplace_back(
+                Pennylane::Util::cast_vector<std::size_t, int64_t>(
+                    localModesExtents));
+
+            std::cout << "i" << i << std::endl;
+
+            tensors_.emplace_back(localModesExtents.size(), localModesExtents,
+                                  localModesExtents, dev_tag);
+        }
+        std::cout << "pass" << std::endl;
+
+        // Update MPO tensors
+        for (std::size_t i = 0; i < numMPOSites_; i++) {
+            PrecisionT sqrt2 = std::sqrt(2.0);
+            std::vector<CFP_t> tensor0{
+                CFP_t{-1.0 / sqrt2, 0.0}, CFP_t{0.0, 0.0},
+                CFP_t{0.0, 0.0},          CFP_t{0.0, 0.0},
+                CFP_t{-1.0 / sqrt2, 0.0}, CFP_t{0.0, 0.0},
+                CFP_t{0.0, 0.0},          CFP_t{1.0, 0.0},
+                CFP_t{0.0, 0.0},          CFP_t{-1.0 / sqrt2, 0.0},
+                CFP_t{1.0, 0.0},          CFP_t{0.0, 0.0},
+                CFP_t{0.0, 0.0},          CFP_t{1.0 / sqrt2, 0.0},
+                CFP_t{0.0, 0.0},          CFP_t{0.0, 0.0}};
+
+            std::vector<CFP_t> tensor1{
+                CFP_t{-sqrt2, 0.0}, CFP_t{0.0, 0.0}, CFP_t{-sqrt2, 0.0},
+                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+                CFP_t{0.0, 0.0}};
+
+            tensors_[0].getDataBuffer().CopyHostDataToGpu(tensor0.data(),
+                                                          tensor0.size());
+            tensors_[1].getDataBuffer().CopyHostDataToGpu(tensor1.data(),
+                                                          tensor1.size());
+        }
+
+        /*
         wires_ = wires;
         numMPOSites_ = wires.back() - wires.front() + 1;
 
@@ -227,7 +313,7 @@ template <class PrecisionT> class MPOTNCuda {
             std::size_t site_tag = mpo_site_tag[i];
             if (site_tag < numMPOSites_) {
                 auto tensor_cu = cuUtil::complexToCu<ComplexT>(
-                    tensors[/*wires.size() - 1 - */ site_tag]);
+                    tensors[wires.size() - 1 -  site_tag]);
 
                 tensors_[i].getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                               tensor_cu.size());
@@ -246,6 +332,7 @@ template <class PrecisionT> class MPOTNCuda {
                 }
             }
         }
+        */
 
         // append MPO tensor network operator components
         PL_CUTENSORNET_IS_SUCCESS(cutensornetNetworkOperatorAppendMPO(

@@ -257,8 +257,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             BaseType::getTNCudaHandle(), BaseType::getCudaDataType(),
             BaseType::getDevTag()));
 
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-
         // Apply the MPO operator to the quantum state
         int64_t operatorId;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
@@ -266,7 +264,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetNetworkOperator_t */ mpos_.back()->getMPOOperator(),
             /* const int32_t immutable */ 1,
-            /* const int32_t adjoint */ 1,
+            /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t * operatorId*/ &operatorId));
 
