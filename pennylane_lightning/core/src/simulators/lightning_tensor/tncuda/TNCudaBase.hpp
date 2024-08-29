@@ -304,7 +304,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
 
-        if(dummy_id != id){
+        if (dummy_id != id) {
             gate_cache_->update_key(dummy_id, id);
         }
 
