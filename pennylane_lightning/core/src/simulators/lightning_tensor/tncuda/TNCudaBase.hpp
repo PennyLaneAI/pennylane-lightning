@@ -21,6 +21,7 @@
 
 #include <complex>
 #include <memory>
+#include <set>
 #include <type_traits>
 #include <vector>
 
@@ -70,6 +71,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                                        // states as v24.03
 
     std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
+    std::set<int64_t> gate_ids_;
 
   public:
     TNCudaBase() = delete;
@@ -267,8 +269,18 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                         "supports 1-wire target controlled gates");
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
-        DataBuffer<PrecisionT, int> dummy_device_data(
-            Pennylane::Util::exp2(targetWires.size()), getDevTag());
+
+        int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
+
+        if (!gate_matrix.empty()) {
+            auto gate_key = std::make_pair(opName, par);
+            std::vector<CFP_t> matrix_cu =
+                cuUtil::complexToCu<ComplexT>(gate_matrix);
+            gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
+        } else {
+            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
+        }
+
         int64_t id;
 
         std::vector<int32_t> controlledModes =
@@ -293,14 +305,12 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t tensorId* */ &id));
-
-        if (!gate_matrix.empty()) {
-            auto gate_key = std::make_pair(baseOpName, par);
-            std::vector<CFP_t> matrix_cu =
-                cuUtil::complexToCu<ComplexT>(gate_matrix);
-            gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
-                                  matrix_cu, adjoint);
+        
+        if (dummy_id != id) {
+            gate_cache_->update_key(dummy_id, id);
         }
+
+        gate_ids_.insert(id);
     }
 
     /**
@@ -326,8 +336,18 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             "Unsupported gate: MPS method only supports 1, 2-wires gates");
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
-        DataBuffer<PrecisionT, int> dummy_device_data(
-            Pennylane::Util::exp2(wires.size()), getDevTag());
+
+        int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
+
+        if (!gate_matrix.empty()) {
+            auto gate_key = std::make_pair(opName, par);
+            std::vector<CFP_t> matrix_cu =
+                cuUtil::complexToCu<ComplexT>(gate_matrix);
+            gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
+        } else {
+            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
+        }
+
         int64_t id;
 
         std::vector<int32_t> stateModes =
@@ -345,32 +365,19 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetState_t */ getQuantumState(),
             /* int32_t numStateModes */ stateModes.size(),
             /* const int32_t * stateModes */ stateModes.data(),
-            /* void * */ static_cast<void *>(dummy_device_data.getData()),
+            /* void * */
+            static_cast<void *>(gate_cache_->get_gate_device_ptr(dummy_id)),
             /* const int64_t *tensorModeStrides */ nullptr,
             /* const int32_t immutable */ 0,
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
 
-        if (!gate_matrix.empty()) {
-            auto gate_key = std::make_pair(opName, par);
-            std::vector<CFP_t> matrix_cu =
-                cuUtil::complexToCu<ComplexT>(gate_matrix);
-            gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
-                                  matrix_cu, adjoint);
-        } else {
-            gate_cache_->add_gate(static_cast<std::size_t>(id), opName, par,
-                                  adjoint);
+        if (dummy_id != id) {
+            gate_cache_->update_key(dummy_id, id);
         }
 
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetState_t */ getQuantumState(),
-            /* int64_t tensorId*/ id,
-            /* void* */
-            static_cast<void *>(
-                gate_cache_->get_gate_device_ptr(static_cast<std::size_t>(id))),
-            /* int32_t unitary*/ 1));
+        gate_ids_.insert(id);
     }
 
     /**
