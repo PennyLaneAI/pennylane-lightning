@@ -26,7 +26,7 @@ from itertools import product
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
-from pennylane.ops.op_math import Adjoint
+from pennylane.ops.op_math import Adjoint, ControlledOp
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -247,7 +247,23 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if method is not None:  # apply specialized gate
+            if isinstance(operation, ControlledOp) and len(list(operation.target_wires)) == 1:
+                # Only one wire target controlled gates are supported by cutensornet
+                target_wires = list(operation.target_wires)
+                control_wires = list(operation.control_wires)
+
+                base_name = operation.base.name
+                base_method = getattr(tensornet, base_name, None)
+                if base_method is not None:
+                    base_method(control_wires, target_wires, invert_param)
+                else:
+                    method = getattr(tensornet, "applyMatrix")
+                    try:
+                        method(qml.matrix(operation), control_wires, target_wires, False)
+                    except AttributeError:  # pragma: no cover
+                        # To support older versions of PL
+                        method(operation.matrix, control_wires, target_wires, False)
+            elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
             else:  # apply gate as a matrix
