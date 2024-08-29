@@ -14,7 +14,6 @@
 r"""
 Helper functions for serializing quantum tapes.
 """
-from itertools import islice
 from typing import List, Sequence, Tuple
 
 import numpy as np
