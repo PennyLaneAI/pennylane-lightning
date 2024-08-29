@@ -166,6 +166,9 @@
 * Fix checkout command in test workflows for rc branches.
   [(#777)](https://github.com/PennyLaneAI/pennylane-lightning/pull/777)
 
+* Point to the right Lightning root folder independently from the invocation location, when configuring the project.
+  [(#874)](https://github.com/PennyLaneAI/pennylane-lightning/pull/874)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
