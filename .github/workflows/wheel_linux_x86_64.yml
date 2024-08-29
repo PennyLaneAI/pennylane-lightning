@@ -214,7 +214,7 @@ jobs:
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'release' ||
+      github.event_name == 'pull_request' ||
       github.ref == 'refs/heads/master'
 
     steps:
