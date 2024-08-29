@@ -31,6 +31,8 @@ from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
+from scipy.stats import kruskal
+from scipy import stats
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -408,8 +410,8 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
-    @flaky(max_runs=15)
-    @pytest.mark.parametrize("shots", [None, 100_000, [90_000, 90_000]])
+    @flaky(max_runs=2)
+    @pytest.mark.parametrize("shots", [None, 900_000, [980_000, 980_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -490,15 +492,64 @@ class TestMeasurements:
             with pytest.raises(TypeError):
                 _ = m.measure_final_state(tape)
             return
-        else:
-            result = m.measure_final_state(tape)
 
+        result = m.measure_final_state(tape)
         expected = self.calculate_reference(tape, lightning_sv)
 
         # a few tests may fail in single precision, and hence we increase the tolerance
         if shots is None:
             assert np.allclose(result, expected, max(tol, 1.0e-4))
         else:
+
+            # atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-4)
+            # rtol = max(tol, 1.0e-2)  # % of expected value as tolerance
+            if shots != None:
+                # Increase the number of shots
+                if isinstance(shots, int):
+                    short_shots = shots // 1
+                else:
+                    short_shots = [i // 1 for i in shots]
+
+            expected_np = np.array(expected).flatten()
+            print()
+            print("Test:",end='\n')
+            print(measurement)
+            print(observable)
+
+            accumulate_result = []
+
+            tape_short = qml.tape.QuantumScript(ops, measurements, shots=short_shots)
+            
+            for _ in range(5):
+
+                statevector = lightning_sv(n_qubits)
+                statevector = statevector.get_final_state(tape_short)
+                m = LightningMeasurements(statevector)
+                result = m.measure_final_state(tape_short)
+                result_np = np.array(result).flatten()
+                # result_np *= np.random.random(len(result_np))
+                
+                accumulate_result.append(result_np)
+                
+            statistic, p_value = kruskal(*accumulate_result, expected_np)
+            print(f" ref kruskal: {len(expected_np):3d} | stat: {statistic:.4f} p_value: {p_value:.5f} | shots: {short_shots}")
+            significance_level = 0.1
+            if p_value < significance_level:
+                print('Results')
+                [print('res:',r) for r in accumulate_result]
+                print('exp:',expected_np)
+            statistic, p_value = kruskal(*accumulate_result)
+            print(f"test Kruskal: {len(expected_np):3d} | stat: {statistic:.4f} p_value: {p_value:.5f} | shots: {short_shots}")
+            # t_stat, p_value = stats.ttest_1samp(accumulate_result, expected_np)
+            # print(f"test   1samp: {len(expected_np):3d} | stat: {t_stat} p_value: {p_value} | shots: {short_shots}")
+            # statistic, p_value, _, _ = stats.median_test(*accumulate_result, expected_np)
+            # print(f"test  median: {len(expected_np):3d} | stat: {statistic:.4f} p_value: {p_value:.5f} | shots: {short_shots}")
+            t_stat, p_value = stats.kstest(accumulate_result[-1], expected_np)
+            print(f"test  KStest: {len(expected_np):3d} | stat: {t_stat:.4f} p_value: {p_value:.4f} | shots: {short_shots}")
+
+            print('*'*100)
+            
+                
             atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-3)
             rtol = max(tol, rtol)  # % of expected value as tolerance
 
