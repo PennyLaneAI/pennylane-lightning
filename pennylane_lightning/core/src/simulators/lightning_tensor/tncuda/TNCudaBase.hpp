@@ -272,7 +272,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         if (gate_matrix.empty()) [[likely]] {
             gate_cache_->add_gate(dummy_id, opName, par, adjoint);
-        } else {
+        } else [[unlikely]] {
             auto gate_key = std::make_pair(opName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
