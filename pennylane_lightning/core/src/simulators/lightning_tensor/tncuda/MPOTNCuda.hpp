@@ -213,31 +213,34 @@ template <class PrecisionT> class MPOTNCuda {
         std::cout << "pass" << std::endl;
 
         // Update MPO tensors
-        for (std::size_t i = 0; i < numMPOSites_; i++) {
-            PrecisionT sqrt2 = std::sqrt(2.0);
-            std::vector<CFP_t> tensor0{
-                CFP_t{-1.0 / sqrt2, 0.0}, CFP_t{0.0, 0.0},
-                CFP_t{0.0, 0.0},          CFP_t{0.0, 0.0},
-                CFP_t{-1.0 / sqrt2, 0.0}, CFP_t{0.0, 0.0},
-                CFP_t{0.0, 0.0},          CFP_t{1.0, 0.0},
-                CFP_t{0.0, 0.0},          CFP_t{-1.0 / sqrt2, 0.0},
-                CFP_t{1.0, 0.0},          CFP_t{0.0, 0.0},
-                CFP_t{0.0, 0.0},          CFP_t{1.0 / sqrt2, 0.0},
-                CFP_t{0.0, 0.0},          CFP_t{0.0, 0.0}};
+        // for (std::size_t i = 0; i < numMPOSites_; i++) {
+        PrecisionT sqrt2 = static_cast<PrecisionT>(std::sqrt(2.0));
+        PrecisionT inv_sqrt2 = static_cast<PrecisionT>(1.0 / std::sqrt(2.0));
+        std::vector<CFP_t> tensor0{
+            CFP_t{-inv_sqrt2, 0.0}, CFP_t{0.0, 0.0},        CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0},        CFP_t{-inv_sqrt2, 0.0}, CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0},        CFP_t{1.0, 0.0},        CFP_t{0.0, 0.0},
+            CFP_t{-inv_sqrt2, 0.0}, CFP_t{1.0, 0.0},        CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0},        CFP_t{inv_sqrt2, 0.0},  CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0}};
 
-            std::vector<CFP_t> tensor1{
-                CFP_t{-sqrt2, 0.0}, CFP_t{0.0, 0.0}, CFP_t{-sqrt2, 0.0},
-                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-                CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-                CFP_t{0.0, 0.0}};
+        std::cout << "pass tensor0" << std::endl;
 
-            tensors_[0].getDataBuffer().CopyHostDataToGpu(tensor0.data(),
-                                                          tensor0.size());
-            tensors_[1].getDataBuffer().CopyHostDataToGpu(tensor1.data(),
-                                                          tensor1.size());
-        }
+        std::vector<CFP_t> tensor1{
+            CFP_t{-sqrt2, 0.0}, CFP_t{0.0, 0.0}, CFP_t{-sqrt2, 0.0},
+            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
+            CFP_t{0.0, 0.0}};
+
+        std::cout << "pass tensor1" << std::endl;
+
+        tensors_[0].getDataBuffer().CopyHostDataToGpu(tensor0.data(),
+                                                      tensor0.size());
+        tensors_[1].getDataBuffer().CopyHostDataToGpu(tensor1.data(),
+                                                      tensor1.size());
+        //}
 
         /*
         wires_ = wires;
