@@ -75,7 +75,7 @@ void applyControlledMatrix(
 template <class TensorNet, class PyClass>
 void registerControlledGate(PyClass &pyclass) {
     using PrecisionT =
-        typename TensorNet::PrecisionT; // TensorNet's precision
+        typename TensorNet::PrecisionT; // Statevector's precision
     using ParamT = PrecisionT;          // Parameter's data precision
 
     using Pennylane::Gates::ControlledGateOperation;
@@ -87,23 +87,18 @@ void registerControlledGate(PyClass &pyclass) {
             using Pennylane::Util::lookup;
             const auto gate_name =
                 std::string(lookup(Constant::controlled_gate_names, gate_op));
-            const std::size_t num_target_wires = lookup(
-                Pennylane::Gates::Constant::controlled_gate_wires, gate_op);
-            if (num_target_wires) {
-                const std::string doc = "Apply the " + gate_name + " gate.";
-                auto func =
-                    [gate_name = gate_name](
-                        TensorNet &tensor_network,
-                        const std::vector<std::size_t> &controlled_wires,
-                        const std::vector<bool> &controlled_values,
-                        const std::vector<std::size_t> &wires, bool inverse,
-                        const std::vector<ParamT> &params) {
-                        tensor_network.applyControlledOperation(
-                            gate_name, controlled_wires, controlled_values,
-                            wires, inverse, params);
-                    };
-                pyclass.def(gate_name.c_str(), func, doc.c_str());
-            }
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            TensorNet &tensor_network,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &target_wires,
+                            bool inverse, const std::vector<ParamT> &params) {
+                tensor_network.applyControlledOperation(
+                    gate_name, controlled_wires, controlled_values,
+                    target_wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
         });
 }
 
@@ -113,7 +108,7 @@ void registerControlledGate(PyClass &pyclass) {
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     registerGatesForTensorNet<TensorNet>(pyclass);
-    registerControlledGate<TensorNet>(pyclass);
+    registerControlledGate<TensorNet, PyClass>(pyclass);
     using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
     using ParamT = PrecisionT; // Parameter's data precision
 
@@ -125,8 +120,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                       const std::size_t>()) // num_qubits, max_bond_dim
         .def(py::init<const std::size_t, const std::size_t,
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
-        .def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
-             "Apply controlled operation")
         .def(
             "getState",
             [](TensorNet &tensor_network, np_arr_c &state) {

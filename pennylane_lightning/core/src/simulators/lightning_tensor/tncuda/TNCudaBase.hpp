@@ -73,6 +73,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
     std::set<int64_t> gate_ids_;
 
+    std::size_t identiy_gate_id_{0};
+
   public:
     TNCudaBase() = delete;
 
@@ -386,6 +388,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             gate_cache_->update_key(dummy_id, id);
         }
 
+        // one time initialization of the identity gate id
+        if (gate_cache_->size() == 1) {
+            identiy_gate_id_ = id;
+        }
+
         gate_ids_.insert(id);
     }
 
@@ -567,18 +574,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * gate cache is empty or update the existing gate operator by itself.
      */
     void dummy_tensor_update() {
-        if (gate_cache_->is_empty()) {
-            applyOperation("Identity", {0}, false);
-        }
-
-        const std::size_t id = gate_cache_->get_cache_head_idx();
-
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
-            /* int64_t tensorId*/ static_cast<int64_t>(id),
+            /* int64_t tensorId*/ static_cast<int64_t>(identiy_gate_id_),
             /* void* */
-            static_cast<void *>(gate_cache_->get_gate_device_ptr(id)),
+            static_cast<void *>(
+                gate_cache_->get_gate_device_ptr(identiy_gate_id_)),
             /* int32_t unitary*/ 1));
     }
 

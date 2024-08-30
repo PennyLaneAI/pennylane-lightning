@@ -92,6 +92,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         initTensors_();
         reset();
         appendInitialMPSState_();
+        BaseType::applyOperation("Identity", {0}, false);
     }
 
     // TODO: Add method to the constructor to allow users to select methods at
@@ -105,6 +106,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         initTensors_();
         reset();
         appendInitialMPSState_();
+        BaseType::applyOperation("Identity", {0}, false);
     }
 
     ~MPSTNCuda() = default;
