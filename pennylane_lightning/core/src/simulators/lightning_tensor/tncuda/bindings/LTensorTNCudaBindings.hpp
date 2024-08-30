@@ -74,9 +74,8 @@ void applyControlledMatrix(
 
 template <class TensorNet, class PyClass>
 void registerControlledGate(PyClass &pyclass) {
-    using PrecisionT =
-        typename TensorNet::PrecisionT; // TensorNet's precision
-    using ParamT = PrecisionT;          // Parameter's data precision
+    using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
+    using ParamT = PrecisionT; // Parameter's data precision
 
     using Pennylane::Gates::ControlledGateOperation;
     using Pennylane::Util::for_each_enum;

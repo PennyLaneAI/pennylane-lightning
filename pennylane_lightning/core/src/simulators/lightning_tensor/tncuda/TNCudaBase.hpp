@@ -250,7 +250,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @brief Append a single controlled gate tensor to the compute graph.
      *
      * NOTE: This function does not update the quantum state but only appends
-     * gate tensor operator to the graph.
+     * gate tensor operator to the graph. The controlled gate should be
+     * immutable as v24.08.
      *
      * @param baseOpName Base gate's name.
      * @param controlledWires Controlled wires for the gate.
@@ -276,13 +277,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
 
-        if (!gate_matrix.empty()) {
+        if (gate_matrix.empty()) {
+            gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
+        } else {
             auto gate_key = std::make_pair(baseOpName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
-        } else {
-            gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
         }
 
         int64_t id;
@@ -351,12 +352,12 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
 
         if (!gate_matrix.empty()) {
+            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
+        } else {
             auto gate_key = std::make_pair(opName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
-        } else {
-            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
         }
 
         int64_t id;
@@ -365,8 +366,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                 wires, BaseType::getNumQubits());
 
-        // TODO: Need changes to support to the controlled gate tensor API once
-        // the API is finalized in cutensornet lib.
         //  Note `adjoint` in the cutensornet context indicates whether or not
         //  all tensor elements of the tensor operator will be complex
         //  conjugated. `adjoint` in the following API is not equivalent to
