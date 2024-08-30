@@ -15,6 +15,7 @@ r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
 
+from abc import ABC, abstractmethod
 from os import getenv
 from typing import Any, Callable, List
 
@@ -29,18 +30,19 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 from pennylane_lightning.core.lightning_base import _chunk_iterable
 
 
-class LightningBaseAdjointJacobian:
-    """Check and execute the adjoint Jacobian differentiation method.
+class LightningBaseAdjointJacobian(ABC):
+    """ Lightning [Device] Adjoint Jacobian class
+    
+    A class that serves as a base class for Lightning state-vector simulators.
+    Check and execute the adjoint Jacobian differentiation method.
 
     Args:
         qubit_state(Lightning[Device]StateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(self, qubit_state: Any, batch_obs: bool = False) -> None:
+    def __init__(self, qubit_state: Any, batch_obs: bool) -> None:
         self._qubit_state = qubit_state
-        self._state = qubit_state.state_vector
-        self._dtype = qubit_state.dtype
         self._batch_obs = batch_obs
 
         # Dummy for the C++ bindings
@@ -55,12 +57,12 @@ class LightningBaseAdjointJacobian:
     @property
     def state(self):
         """Returns a handle to the Lightning internal data object."""
-        return self._state
+        return self._qubit_state.state_vector
 
     @property
     def dtype(self):
         """Returns the simulation data type."""
-        return self._dtype
+        return self._qubit_state.dtype
 
     @abstractmethod
     def _adjoint_jacobian_dtype(self):
@@ -69,7 +71,7 @@ class LightningBaseAdjointJacobian:
         Returns: the AdjointJacobian class
         """
         pass
-
+    
     @staticmethod
     def _get_return_type(
         measurements: List[MeasurementProcess],
@@ -104,7 +106,7 @@ class LightningBaseAdjointJacobian:
         Returns:
             dictionary: dictionary providing serialized data for Jacobian calculation.
         """
-        use_csingle = self._dtype == np.complex64
+        use_csingle = self._qubit_state.dtype == np.complex64
 
         obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
@@ -216,7 +218,7 @@ class LightningBaseAdjointJacobian:
 
             statevector = Lightning[Device]StateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            jacobian = LightningKokkosAdjointJacobian(statevector).calculate_jacobian(tape)
+            jacobian = Lightning[Device]AdjointJacobian(statevector).calculate_jacobian(tape)
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
@@ -228,12 +230,12 @@ class LightningBaseAdjointJacobian:
         empty_array = self._handle_raises(tape, is_jacobian=True)
 
         if empty_array:
-            return np.array([], dtype=self._dtype)
+            return np.array([], dtype=self._qubit_state.dtype)
 
         processed_data = self._process_jacobian_tape(tape)
 
         if not processed_data:  # training_params is empty
-            return np.array([], dtype=self._dtype)
+            return np.array([], dtype=self._qubit_state.dtype)
 
         trainable_params = processed_data["tp_shift"]
 
@@ -275,7 +277,7 @@ class LightningBaseAdjointJacobian:
 
             statevector = Lightning[Device]StateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            vjp = LightningKokkosAdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
+            vjp = Lightning[Device]AdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
 
         computes :math:`\\pmb{w} = (w_1,\\cdots,w_m)` where
 

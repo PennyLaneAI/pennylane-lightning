@@ -52,9 +52,9 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
         Returns: the AdjointJacobian class
         """
         jacobian_lightning = (
-            AdjointJacobianC64() if self._dtype == np.complex64 else AdjointJacobianC128()
+            AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
         )
         create_ops_list_lightning = (
-            create_ops_listC64 if self._dtype == np.complex64 else create_ops_listC128
+            create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
         )
         return jacobian_lightning, create_ops_list_lightning

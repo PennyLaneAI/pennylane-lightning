@@ -15,6 +15,7 @@
 Class implementation for state vector measurements.
 """
 
+from abc import ABC, abstractmethod
 from typing import Any, Callable, List, Union
 
 import numpy as np
@@ -39,9 +40,10 @@ from pennylane.wires import Wires
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
-class LightningBaseMeasurements:
+class LightningBaseMeasurements(ABC):
     """Lightning [Device] Measurements class
 
+    A class that serves as a base class for Lightning state-vector simulators.
     Measures the state provided by the Lightning[Device]StateVector class.
 
     Args:
@@ -53,7 +55,6 @@ class LightningBaseMeasurements:
         qubit_state: Any,
     ) -> None:
         self._qubit_state = qubit_state
-        self._dtype = qubit_state.dtype
 
         # Dummy for the C++ bindings
         self._measurement_lightning = None
@@ -66,10 +67,11 @@ class LightningBaseMeasurements:
     @property
     def dtype(self):
         """Returns the simulation data type."""
-        return self._dtype
+        return self._qubit_state.dtype
 
+    @abstractmethod
     def _measurement_dtype(self):
-        """Binding to Lightning Kokkos Measurements C++ class.
+        """Binding to Lightning [Device] Measurements C++ class.
 
         Returns: the Measurements class
         """
@@ -227,7 +229,7 @@ class LightningBaseMeasurements:
         """
         Perform the measurements required by the circuit on the provided state.
 
-        This is an internal function that will be called by the successor to ``lightning.kokkos``.
+        This is an internal function that will be called by the successor to ``lightning.[device]``.
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
@@ -263,7 +265,7 @@ class LightningBaseMeasurements:
         self,
         measurements: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],
         shots: Shots,
-        mid_measurements=None,
+        mid_measurements: dict = None,
     ) -> List[TensorLike]:
         """
         Returns the samples of the measurement process performed on the given state.
@@ -337,6 +339,7 @@ class LightningBaseMeasurements:
 
         self._qubit_state.apply_operations(diagonalizing_gates)
 
+    @abstractmethod
     def _measure_with_samples_diagonalizing_gates(
         self,
         mps: List[SampleMeasurement],

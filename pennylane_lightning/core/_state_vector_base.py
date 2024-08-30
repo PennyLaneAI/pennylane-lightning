@@ -15,6 +15,10 @@
 Class implementation for state-vector manipulation.
 """
 
+from abc import ABC, abstractmethod
+from typing import Union
+
+
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, StatePrep
@@ -23,9 +27,10 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-class LightningBaseStateVector:
-    """Lightning state-vector class.
+class LightningBaseStateVector(ABC):
+    """Lightning [Device] state-vector class.
 
+    A class that serves as a base class for Lightning state-vector simulators.
     Interfaces with C++ python binding methods for state-vector manipulation.
 
     Args:
@@ -34,7 +39,7 @@ class LightningBaseStateVector:
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
     """
 
-    def __init__(self, num_wires, dtype=np.complex128):
+    def __init__(self, num_wires: int, dtype: Union[np.complex128,np.complex64]):
 
         if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -74,18 +79,20 @@ class LightningBaseStateVector:
         return self._qubit_state
 
     @property
+    @abstractmethod
     def state(self):
         """Copy the state vector data to a numpy array.
 
         **Example**
 
-        >>> dev = qml.device('lightning.qubit', wires=1)
+        >>> dev = qml.device('lightning.[Device]', wires=1)
         >>> dev.apply([qml.PauliX(wires=[0])])
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
         pass
 
+    @abstractmethod
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
 
@@ -98,6 +105,7 @@ class LightningBaseStateVector:
         # init the state vector to |00..0>
         self._qubit_state.resetStateVector()
 
+    @abstractmethod
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
@@ -127,6 +135,7 @@ class LightningBaseStateVector:
         # Return a computational basis state over all wires.
         self._qubit_state.setBasisState(list(state), list(wires))
 
+    @abstractmethod
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
 
@@ -138,6 +147,7 @@ class LightningBaseStateVector:
         """
         pass
 
+    @abstractmethod
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
     ):
@@ -155,6 +165,7 @@ class LightningBaseStateVector:
         """
         pass
 
+    @abstractmethod
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
@@ -197,7 +208,7 @@ class LightningBaseStateVector:
         """
         Get the final state that results from executing the given quantum script.
 
-        This is an internal function that will be called by the successor to ``lightning.qubit``.
+        This is an internal function that will be called by the successor to ``lightning.[Device]``.
 
         Args:
             circuit (QuantumScript): The single circuit to simulate

@@ -16,8 +16,9 @@ r"""
 This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
 interfaces with C++ for fast linear algebra calculations.
 """
+from abc import ABC, abstractmethod
 from numbers import Number
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Callable, Optional, Sequence, Tuple, Union, List
 
 import numpy as np
 import pennylane as qml
@@ -39,13 +40,12 @@ class LightningBase(Device):
 
     A class that serves as a base class for Lightning state-vector simulators.
 
-
     Args:
-        wires (int): the number of wires to initialize the device with
+        wires (int or list): number or list of wires to initialize the device with
         sync (bool): immediately sync with host-sv after applying operations
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
+        shots (int or list): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
@@ -58,11 +58,11 @@ class LightningBase(Device):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires,
+        wires: Union[int, List],
         *,
-        c_dtype=np.complex128,
-        shots=None,
-        batch_obs=False,
+        c_dtype: Union[np.complex64, np.complex128],
+        shots: Union[int, List],
+        batch_obs: bool,
     ):
         super().__init__(wires=wires, shots=shots)
 
@@ -86,14 +86,16 @@ class LightningBase(Device):
 
     dtype = c_dtype
 
+    @abstractmethod
     def _set_Lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         pass
 
+    @abstractmethod
     def simulate(
         self,
         circuit: QuantumScript,
-        state,  # LightningStateVector
+        state,  # Lightning[Device]StateVector
         postselect_mode: str = None,
     ) -> Result:
         """Simulate a single quantum script.
@@ -112,15 +114,20 @@ class LightningBase(Device):
         """
         pass
 
-    def jacobian(self, circuit: QuantumTape, state, batch_obs=False, wire_map=None):
+    def jacobian(
+        self, 
+        circuit: QuantumTape, 
+        state, # Lightning[Device]StateVector
+        batch_obs:bool=False, 
+        wire_map:dict=None
+    ):
         """Compute the Jacobian for a single quantum script.
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (LightningKokkosStateVector): handle to the Lightning state vector
+            state (Lightning[Device]StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the jacobian. This value is only relevant when the lightning
-                kokkos is built with OpenMP. Default is False.
+                computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
 
         Returns:
@@ -134,15 +141,20 @@ class LightningBase(Device):
             circuit
         )
 
-    def simulate_and_jacobian(self, circuit: QuantumTape, state, batch_obs=False, wire_map=None):
+    def simulate_and_jacobian(
+        self, 
+        circuit: QuantumTape, 
+        state, # Lightning[Device]StateVector
+        batch_obs:bool=False, 
+        wire_map:dict=None
+        )->Tuple:
         """Simulate a single quantum script and compute its Jacobian.
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (LightningKokkosStateVector): handle to the Lightning state vector
+            state (Lightning[Device]StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the jacobian. This value is only relevant when the lightning
-                kokkos is built with OpenMP. Default is False.
+                computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
 
         Returns:
@@ -160,9 +172,9 @@ class LightningBase(Device):
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
-        state,
-        batch_obs=False,
-        wire_map=None,
+        state, # Lightning[Device]StateVector
+        batch_obs:bool=False,
+        wire_map:dict=None,
     ):
         """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
         Args:
@@ -171,10 +183,9 @@ class LightningBase(Device):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (LightningKokkosStateVector): handle to the Lightning state vector
+            state (Lightning[Device]StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the VJP. This value is only relevant when the lightning
-                kokkos is built with OpenMP.
+                computing the VJP. 
             wire_map (Optional[dict]): a map from wire labels to simulation indices
 
         Returns:
@@ -193,9 +204,9 @@ class LightningBase(Device):
         circuit: QuantumTape,
         cotangents: Tuple[Number],
         state,
-        batch_obs=False,
-        wire_map=None,
-    ):
+        batch_obs:bool=False,
+        wire_map:dict=None,
+    ) -> Tuple:
         """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
         Args:
             circuit (QuantumTape): The single circuit to simulate
@@ -203,10 +214,9 @@ class LightningBase(Device):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (LightningKokkosStateVector): handle to the Lightning state vector
+            state (Lightning[Device]StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the jacobian. This value is only relevant when the lightning
-                kokkos is built with OpenMP.
+                computing the jacobian.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
 
         Returns:
@@ -246,7 +256,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
+    )->Tuple:
         """Compute the results and jacobians of circuits at the same time.
 
         Args:
@@ -254,7 +264,7 @@ class LightningBase(Device):
             execution_config (ExecutionConfig): a datastructure with all additional information required for execution
 
         Returns:
-            tuple: A numeric result of the computation and the gradient.
+            Tuple: A numeric result of the computation and the gradient.
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
@@ -271,7 +281,7 @@ class LightningBase(Device):
         circuit: Optional[QuantumTape] = None,
     ) -> bool:
         """Whether or not this device defines a custom vector jacobian product.
-        ``LightningKokkos`` supports adjoint differentiation with analytic results.
+        ``Lightning[Device]`` will check if supports adjoint differentiation with analytic results.
         Args:
             execution_config (ExecutionConfig): The configuration of the desired derivative calculation
             circuit (QuantumTape): An optional circuit to check derivatives support for.
@@ -286,7 +296,7 @@ class LightningBase(Device):
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig = DefaultExecutionConfig,
     ):
-        r"""The vector jacobian product used in reverse-mode differentiation. ``LightningKokkos`` uses the
+        r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
         adjoint differentiation method to compute the VJP.
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits
@@ -323,7 +333,7 @@ class LightningBase(Device):
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
+    )->Tuple:
         """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits to be executed
