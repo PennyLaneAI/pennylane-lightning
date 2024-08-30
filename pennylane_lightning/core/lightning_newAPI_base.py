@@ -35,12 +35,10 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 @simulator_tracking
 @single_tape_support
 class LightningBase(Device):
-    """PennyLane Lightning Kokkos device.
+    """PennyLane Lightning Base device.
 
-    A device that interfaces with C++ to perform fast linear algebra calculations.
+    A class that serves as a base class for Lightning state-vector simulators.
 
-    Use of this device requires pre-built binaries or compilation from source. Check out the
-    :doc:`/lightning_kokkos/installation` guide for more details.
 
     Args:
         wires (int): the number of wires to initialize the device with
@@ -51,8 +49,6 @@ class LightningBase(Device):
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
-            (threading parameters).
     """
 
     # pylint: disable=too-many-instance-attributes
