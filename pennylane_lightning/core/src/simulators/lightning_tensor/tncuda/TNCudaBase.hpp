@@ -270,7 +270,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
 
-        if (gate_matrix.empty()) {
+        if (gate_matrix.empty()) [[likely]] {
             gate_cache_->add_gate(dummy_id, opName, par, adjoint);
         } else {
             auto gate_key = std::make_pair(opName, par);
