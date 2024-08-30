@@ -482,34 +482,22 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         all_wires.insert(all_wires.begin() + wires.size(),
                          controlled_wires.begin(), controlled_wires.end());
 
-        const auto revs =
-            reverseWires(num_qubits, all_wires, controlled_values);
+        const auto revs = reverseWires(num_qubits, all_wires, {});
         const auto &rev_wires = revs.first;
-        const auto &rev_wire_shifts = revs.second;
         const std::vector<std::size_t> parity =
             Pennylane::Util::revWireParity(rev_wires);
-        PL_ASSERT(nw_tot == parity.size() - 1);
 
-        if (n_contr == 0) {
-            const std::vector<std::size_t> indices =
-                (n_contr == 0) ? Gates::generateBitPatterns(wires, num_qubits)
-                               : std::vector<std::size_t>{};
-            PL_LOOP_PARALLEL(1)
-            for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t offset{0U};
-                for (std::size_t i = 0; i < parity.size(); i++) {
-                    offset |= ((k << i) & parity[i]);
-                }
-                core_function(arr, indices, offset);
+        std::vector<std::size_t> indices =
+            Gates::generateBitPatterns(wires, num_qubits);
+        Gates::controlBitPatterns(indices, num_qubits, controlled_wires,
+                                  controlled_values);
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+            std::size_t offset{0U};
+            for (std::size_t i = 0; i < parity.size(); i++) {
+                offset |= ((k << i) & parity[i]);
             }
-        } else {
-            PL_LOOP_PARALLEL(1)
-            for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t offset{0U};
-                const auto ctrl_indices = parity2indices(
-                    k, parity, rev_wire_shifts, n_contr, rev_wires);
-                core_function(arr, ctrl_indices, offset);
-            }
+            core_function(arr, indices, offset);
         }
     }
 
@@ -670,25 +658,23 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
             all_wires.insert(all_wires.begin() + wires.size(),
                              controlled_wires.begin(), controlled_wires.end());
-            const auto revs =
-                reverseWires(num_qubits, all_wires, controlled_values);
+            const auto revs = reverseWires(num_qubits, all_wires, {});
             const auto &rev_wires = revs.first;
-            const auto &rev_wire_shifts = revs.second;
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
-
+            std::vector<std::size_t> indices =
+                Gates::generateBitPatterns(wires, num_qubits);
+            Gates::controlBitPatterns(indices, num_qubits, controlled_wires,
+                                      controlled_values);
+            const std::size_t i0 = indices[0];
+            const std::size_t i1 = indices[1];
             PL_LOOP_PARALLEL(1)
             for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t i0 = (k & parity[0]);
-                for (std::size_t i = 1; i < parity.size(); i++) {
-                    i0 |= ((k << i) & parity[i]);
+                std::size_t offset{0U};
+                for (std::size_t i = 0; i < parity.size(); i++) {
+                    offset |= ((k << i) & parity[i]);
                 }
-                for (std::size_t i = 0; i < n_contr; i++) {
-                    i0 &= ~(one << rev_wires[i]);
-                    i0 |= rev_wire_shifts[i];
-                }
-                const std::size_t i1 = i0 | rev_wire_shifts[n_contr];
-                core_function(arr, i0, i1);
+                core_function(arr, i0 + offset, i1 + offset);
             }
         } else {
             const std::size_t rev_wire = num_qubits - wires[0] - 1;
@@ -1285,7 +1271,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
              const std::vector<std::size_t> &controlled_wires,
              const std::vector<bool> &controlled_values,
              const std::vector<std::size_t> &wires, FuncT core_function) {
-        constexpr std::size_t one{1U};
         const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
@@ -1301,27 +1286,26 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
             all_wires.insert(all_wires.begin() + wires.size(),
                              controlled_wires.begin(), controlled_wires.end());
-            const auto revs =
-                reverseWires(num_qubits, all_wires, controlled_values);
+            const auto revs = reverseWires(num_qubits, all_wires, {});
             const auto &rev_wires = revs.first;
-            const auto &rev_wire_shifts = revs.second;
             const std::vector<std::size_t> parity =
                 Pennylane::Util::revWireParity(rev_wires);
+            std::vector<std::size_t> indices =
+                Gates::generateBitPatterns(wires, num_qubits);
+            Gates::controlBitPatterns(indices, num_qubits, controlled_wires,
+                                      controlled_values);
+            const std::size_t i00 = indices[0B00];
+            const std::size_t i01 = indices[0B01];
+            const std::size_t i10 = indices[0B10];
+            const std::size_t i11 = indices[0B11];
             PL_LOOP_PARALLEL(1)
             for (size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t i00 = (k & parity[0]);
-                for (std::size_t i = 1; i < parity.size(); i++) {
-                    i00 |= ((k << i) & parity[i]);
+                std::size_t offset{0U};
+                for (std::size_t i = 0; i < parity.size(); i++) {
+                    offset |= ((k << i) & parity[i]);
                 }
-                for (std::size_t i = 0; i < n_contr; i++) {
-                    i00 &= ~(one << rev_wires[i]);
-                    i00 |= rev_wire_shifts[i];
-                }
-                const std::size_t i01 = i00 | rev_wire_shifts[n_contr];
-                const std::size_t i10 = i00 | rev_wire_shifts[n_contr + 1];
-                const std::size_t i11 = i00 | rev_wire_shifts[n_contr] |
-                                        rev_wire_shifts[n_contr + 1];
-                core_function(arr, i00, i01, i10, i11);
+                core_function(arr, i00 + offset, i01 + offset, i10 + offset,
+                              i11 + offset);
             }
         } else {
             const std::size_t rev_wire0 = num_qubits - wires[1] - 1;
