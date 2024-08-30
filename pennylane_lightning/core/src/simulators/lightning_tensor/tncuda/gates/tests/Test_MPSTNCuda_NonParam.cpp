@@ -120,6 +120,33 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliX", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::applyOperation-gatematrix",
+                   "[MPSTNCuda_Nonparam]", float, double) {
+    std::size_t num_qubits = 3;
+    std::size_t maxExtent = 2;
+    DevTag<int> dev_tag{0, 0};
+
+    SECTION("Apply different wire indices") {
+        const std::size_t index = GENERATE(0, 1, 2);
+        MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+
+        std::vector<std::complex<TestType>> gate_matrix = {
+            cuUtil::ZERO<std::complex<TestType>>(),
+            cuUtil::ONE<std::complex<TestType>>(),
+            cuUtil::ONE<std::complex<TestType>>(),
+            cuUtil::ZERO<std::complex<TestType>>()};
+
+        mps_state.applyOperation("applyMatrix", {index}, false, {},
+                                 gate_matrix);
+
+        auto results = mps_state.getDataVector();
+
+        CHECK(results[0] == cuUtil::ZERO<std::complex<TestType>>());
+        CHECK(results[0b1 << (num_qubits - index - 1)] ==
+              cuUtil::ONE<std::complex<TestType>>());
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliY", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false, true);
