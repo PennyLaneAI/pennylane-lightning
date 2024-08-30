@@ -130,6 +130,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 tensor_network.getData(data_ptr, state.size());
             },
             "Copy StateVector data into a Numpy array.")
+        .def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
+             "Apply controlled operation")
         .def(
             "updateMPSSitesData",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
