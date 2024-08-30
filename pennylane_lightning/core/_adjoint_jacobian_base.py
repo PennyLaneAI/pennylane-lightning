@@ -31,8 +31,8 @@ from pennylane_lightning.core.lightning_base import _chunk_iterable
 
 
 class LightningBaseAdjointJacobian(ABC):
-    """ Lightning [Device] Adjoint Jacobian class
-    
+    """Lightning [Device] Adjoint Jacobian class
+
     A class that serves as a base class for Lightning state-vector simulators.
     Check and execute the adjoint Jacobian differentiation method.
 
@@ -71,7 +71,7 @@ class LightningBaseAdjointJacobian(ABC):
         Returns: the AdjointJacobian class
         """
         pass
-    
+
     @staticmethod
     def _get_return_type(
         measurements: List[MeasurementProcess],

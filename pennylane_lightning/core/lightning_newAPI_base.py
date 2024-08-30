@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 """
 from abc import ABC, abstractmethod
 from numbers import Number
-from typing import Callable, Optional, Sequence, Tuple, Union, List
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
@@ -115,11 +115,11 @@ class LightningBase(Device):
         pass
 
     def jacobian(
-        self, 
-        circuit: QuantumTape, 
-        state, # Lightning[Device]StateVector
-        batch_obs:bool=False, 
-        wire_map:dict=None
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning[Device]StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
     ):
         """Compute the Jacobian for a single quantum script.
 
@@ -142,12 +142,12 @@ class LightningBase(Device):
         )
 
     def simulate_and_jacobian(
-        self, 
-        circuit: QuantumTape, 
-        state, # Lightning[Device]StateVector
-        batch_obs:bool=False, 
-        wire_map:dict=None
-        )->Tuple:
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning[Device]StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ) -> Tuple:
         """Simulate a single quantum script and compute its Jacobian.
 
         Args:
@@ -172,9 +172,9 @@ class LightningBase(Device):
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
-        state, # Lightning[Device]StateVector
-        batch_obs:bool=False,
-        wire_map:dict=None,
+        state,  # Lightning[Device]StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
     ):
         """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
         Args:
@@ -185,7 +185,7 @@ class LightningBase(Device):
                 not an iterable of numbers.
             state (Lightning[Device]StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the VJP. 
+                computing the VJP.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
 
         Returns:
@@ -204,8 +204,8 @@ class LightningBase(Device):
         circuit: QuantumTape,
         cotangents: Tuple[Number],
         state,
-        batch_obs:bool=False,
-        wire_map:dict=None,
+        batch_obs: bool = False,
+        wire_map: dict = None,
     ) -> Tuple:
         """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
         Args:
@@ -256,7 +256,7 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    )->Tuple:
+    ) -> Tuple:
         """Compute the results and jacobians of circuits at the same time.
 
         Args:
@@ -333,7 +333,7 @@ class LightningBase(Device):
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    )->Tuple:
+    ) -> Tuple:
         """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits to be executed

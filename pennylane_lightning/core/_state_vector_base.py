@@ -18,7 +18,6 @@ Class implementation for state-vector manipulation.
 from abc import ABC, abstractmethod
 from typing import Union
 
-
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, StatePrep
@@ -39,7 +38,7 @@ class LightningBaseStateVector(ABC):
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
     """
 
-    def __init__(self, num_wires: int, dtype: Union[np.complex128,np.complex64]):
+    def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64]):
 
         if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
