@@ -158,10 +158,14 @@ template <class PrecisionT> class MPOTNCuda {
 
         MPO_modes_int32_.resize(numMPOSites_);
 
-        std::transform(wires.begin(), wires.end(), MPO_modes_int32_.begin(),
-                       [numQubits](std::size_t mode) {
+        std::iota(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
+                  wires.front());
+
+        std::transform(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
+                       MPO_modes_int32_.begin(), [numQubits](std::size_t mode) {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
+
         std::reverse(MPO_modes_int32_.begin(), MPO_modes_int32_.end());
 
         // set up max bond dimensions
@@ -223,9 +227,31 @@ template <class PrecisionT> class MPOTNCuda {
 
         // Update MPO tensors
         for (std::size_t i = 0; i < numMPOSites_; i++) {
-            auto tensor_cu = cuUtil::complexToCu<ComplexT>(tensors[i]);
-            tensors_[i]->getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
-                                                           tensor_cu.size());
+            auto idx = mpo_site_tag[i];
+            if (idx < numMPOSites_) {
+                auto tensor_cu = cuUtil::complexToCu<ComplexT>(tensors[idx]);
+                tensors_[i]->getDataBuffer().CopyHostDataToGpu(
+                    tensor_cu.data(), tensor_cu.size());
+            } else {
+                tensors_[i]->getDataBuffer().zeroInit();
+                std::size_t length = tensors_[i]->getDataBuffer().getLength();
+                std::vector<std::size_t> target_idx;
+                CFP_t value_cu =
+                    cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
+
+                std::size_t idx = 0;
+
+                while (idx < length) {
+                    target_idx.push_back(idx);
+                    idx += bondDims_[i - 1] * 2 + 1;
+                }
+
+                for (auto idx : target_idx) {
+                    PL_CUDA_IS_SUCCESS(cudaMemcpy(
+                        &tensors_[i]->getDataBuffer().getData()[idx], &value_cu,
+                        sizeof(CFP_t), cudaMemcpyHostToDevice));
+                }
+            }
         }
 
         // append MPO tensor network operator components
