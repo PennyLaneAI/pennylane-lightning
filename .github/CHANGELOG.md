@@ -39,8 +39,11 @@
 
 ### Improvements
 
+* Optimize gate cache recording for `lightning.tensor` C++ layer.
+  [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
+
 * Updated calls of ``size_t`` to ``std::size_t`` everywhere.
-  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
+  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816)
 
 * Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
   [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
