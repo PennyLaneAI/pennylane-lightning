@@ -62,6 +62,7 @@ class LightningBaseAdjointJacobian:
         """Returns the simulation data type."""
         return self._dtype
 
+    @abstractmethod
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning [Device] Adjoint Jacobian C++ class.
 
