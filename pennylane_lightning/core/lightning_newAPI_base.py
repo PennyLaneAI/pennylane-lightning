@@ -13,7 +13,7 @@
 # limitations under the License.
 
 r"""
-This module contains the :class:`~.LightningKokkos` class, a PennyLane simulator device that
+This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
 interfaces with C++ for fast linear algebra calculations.
 """
 from numbers import Number
