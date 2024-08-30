@@ -56,7 +56,7 @@ TEST_CASE("Test default kernels for gates are well defined", "[KernelMap]") {
         OperationKernelMap<Pennylane::Gates::GateOperation>::getInstance();
     for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
-            for (size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
+            for (std::size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
                 REQUIRE_NOTHROW(
                     instance.getKernelMap(num_qubits, threading, memory_model));
             }
@@ -69,7 +69,7 @@ TEST_CASE("Test default kernels for generators are well defined",
         OperationKernelMap<Pennylane::Gates::GeneratorOperation>::getInstance();
     for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
-            for (size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
+            for (std::size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
                 REQUIRE_NOTHROW(
                     instance.getKernelMap(num_qubits, threading, memory_model));
             }
@@ -82,7 +82,7 @@ TEST_CASE("Test default kernels for matrix operation are well defined",
         OperationKernelMap<Pennylane::Gates::MatrixOperation>::getInstance();
     for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
-            for (size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
+            for (std::size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
                 REQUIRE_NOTHROW(
                     instance.getKernelMap(num_qubits, threading, memory_model));
             }
@@ -216,7 +216,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp for
 #endif
-        for (size_t i = 0; i < num_iter; i++) {
+        for (std::size_t i = 0; i < num_iter; i++) {
             const auto num_qubit = num_qubits[num_qubit_dist(re)];
             const auto threading = threadings[threading_dist(re)];
             const auto memory_model = memory_models[memory_model_dist(re)];

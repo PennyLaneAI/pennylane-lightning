@@ -96,6 +96,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         initTensors_();
         reset();
         appendInitialMPSState_();
+        BaseType::applyOperation("Identity", {0}, false);
     }
 
     // TODO: Add method to the constructor to allow users to select methods at
@@ -109,6 +110,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         initTensors_();
         reset();
         appendInitialMPSState_();
+        BaseType::applyOperation("Identity", {0}, false);
     }
 
     ~MPSTNCuda() = default;
@@ -298,7 +300,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* cutensornetStateAttributes_t */
             CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
             /* const void * */ &algo,
-            /* size_t */ sizeof(algo)));
+            /* std::size_t */ sizeof(algo)));
 
         PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
                         "cutoff_mode should either 'rel' or 'abs'.");
@@ -313,7 +315,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetStateAttributes_t */ svd_cutoff_mode,
             /* const void * */ &cutoff,
-            /* size_t */ sizeof(cutoff)));
+            /* std::size_t */ sizeof(cutoff)));
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),

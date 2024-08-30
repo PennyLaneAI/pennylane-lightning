@@ -330,7 +330,7 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
  * alpha*SparseMat*X + beta)
  *
  * @tparam index_type Integer type for offsets, indices and number of elements
- * (size_t for the moment).
+ * (std::size_t for the moment).
  * @tparam Precision Floating data-type.
  * @tparam DevTypeID Integer type of device id.
  *
@@ -461,7 +461,7 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
  * alpha*SparseMat*X + beta)
  *
  * @tparam index_type Integer type for offsets, indices and number of elements
- * (size_t for the moment).
+ * (std::size_t for the moment).
  * @tparam Precision Floating data-type.
  * @tparam DevTypeID Integer type of device id.
  *

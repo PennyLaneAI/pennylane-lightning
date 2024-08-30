@@ -39,6 +39,12 @@
 
 ### Improvements
 
+* Optimize gate cache recording for `lightning.tensor` C++ layer.
+  [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879/)
+
+* Updated calls of ``size_t`` to ``std::size_t`` everywhere.
+  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816/)
+
 * Update `ctrl_decomp_zyz` tests with `len(control_wires) > 1`.
   [(#821)](https://github.com/PennyLaneAI/pennylane-lightning/pull/821)
 
@@ -47,16 +53,19 @@
 
 * Multiple calls to the `append_mps_final_state()` API is allowed in `lightning.tensor`.
   [(#830)](https://github.com/PennyLaneAI/pennylane-lightning/pull/830)
-  
+
 * Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
   [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
   [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
 
 * LightningQubit gains native support for the `PauliRot` gate.
   [(#834)](https://github.com/PennyLaneAI/pennylane-lightning/pull/834)
-  
+
 * The `setBasisState` and `setStateVector` methods of `StateVectorLQubit` and `StateVectorKokkos` are overloaded to support PennyLane-like parameters.
   [(#843)](https://github.com/PennyLaneAI/pennylane-lightning/pull/843)
+
+* Add `SetState` and `SetBasisState` to `LightningKokkosSimulator`.
+  [(#861)](https://github.com/PennyLaneAI/pennylane-lightning/pull/861)
 
 * `ENABLE_LAPACK` is off by default for all Lightning backends.
   [(#825)](https://github.com/PennyLaneAI/pennylane-lightning/pull/825)
@@ -159,6 +168,9 @@
 
 * Fix checkout command in test workflows for rc branches.
   [(#777)](https://github.com/PennyLaneAI/pennylane-lightning/pull/777)
+
+* Point to the right Lightning root folder independently from the invocation location, when configuring the project.
+  [(#874)](https://github.com/PennyLaneAI/pennylane-lightning/pull/874)
 
 ### Contributors
 
