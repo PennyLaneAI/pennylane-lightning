@@ -290,22 +290,23 @@ class LightningTensorNet:
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_data = np.transpose(gate_data, axes=indices_order)
         # TODO: Reorder the gate data with the target wire
-        max_mpo_bond_dim = 4
+        max_mpo_bond_dim = 2 ** len(wires)
         MPOs = dense_to_mpo(gate_data, len(wires), max_mpo_bond_dim)
 
+        mpos = []
         for i in range(len(MPOs)):
             if i == 0:
                 # [ket, bra, bond] -> [bond, ket, bra]
-                MPOs[i] = np.transpose(MPOs[i], axes=(1, 2, 0))
+                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
             elif i == len(MPOs) - 1:
                 # [bond, ket, bra] -> [ket, bond, bra]
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 1))
+                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
             else:
                 # [bondL, ket, bra, bondR] -> [bondR, ket, bondL, bra]
-                MPOs[i] = np.transpose(MPOs[i], axes=(0, 2, 3, 1))
+                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(3, 1, 0, 2)))
 
         # Append the MPOs to the tensor network
-        self._tensornet.applyMPOOperator(MPOs, sorted_wires, max_mpo_bond_dim)
+        self._tensornet.applyMPOOperator(mpos, sorted_wires, max_mpo_bond_dim)
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor. Note that `cutensornet` only supports controlled gates with a single wire target.
@@ -382,8 +383,6 @@ class LightningTensorNet:
                     gate_ops_matrix = operation.matrix
 
                 gate_ops_matrix = np.transpose(gate_ops_matrix, axes=(1, 0))
-
-                print(gate_ops_matrix)
 
                 self._apply_MPO(gate_ops_matrix, wires)
 
