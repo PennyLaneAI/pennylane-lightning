@@ -73,7 +73,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
     std::set<int64_t> gate_ids_;
 
-    std::size_t identiy_gate_id_{0};
+    std::vector<std::size_t> identiy_gate_ids_;
 
   public:
     TNCudaBase() = delete;
@@ -250,7 +250,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @brief Append a single controlled gate tensor to the compute graph.
      *
      * NOTE: This function does not update the quantum state but only appends
-     * gate tensor operator to the graph.
+     * gate tensor operator to the graph. The controlled gate should be
+     * immutable as v24.08.
      *
      * @param baseOpName Base gate's name.
      * @param controlledWires Controlled wires for the gate.
@@ -276,13 +277,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
 
-        if (!gate_matrix.empty()) {
+        if (gate_matrix.empty()) {
+            gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
+        } else {
             auto gate_key = std::make_pair(baseOpName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
-        } else {
-            gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
         }
 
         int64_t id;
@@ -351,12 +352,12 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
 
         if (!gate_matrix.empty()) {
+            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
+        } else {
             auto gate_key = std::make_pair(opName, par);
             std::vector<CFP_t> matrix_cu =
                 cuUtil::complexToCu<ComplexT>(gate_matrix);
             gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
-        } else {
-            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
         }
 
         int64_t id;
@@ -365,8 +366,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                 wires, BaseType::getNumQubits());
 
-        // TODO: Need changes to support to the controlled gate tensor API once
-        // the API is finalized in cutensornet lib.
         //  Note `adjoint` in the cutensornet context indicates whether or not
         //  all tensor elements of the tensor operator will be complex
         //  conjugated. `adjoint` in the following API is not equivalent to
@@ -389,8 +388,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         }
 
         // one time initialization of the identity gate id
-        if (gate_cache_->size() == 1) {
-            identiy_gate_id_ = id;
+        if (identiy_gate_ids_.empty() && opName == "Identity") {
+            identiy_gate_ids_.push_back(static_cast<std::size_t>(id));
         }
 
         gate_ids_.insert(id);
@@ -574,13 +573,18 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * gate cache is empty or update the existing gate operator by itself.
      */
     void dummy_tensor_update() {
+        if (identiy_gate_ids_.empty()) {
+            applyOperation("Identity", {0}, false);
+        }
+
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
-            /* int64_t tensorId*/ static_cast<int64_t>(identiy_gate_id_),
+            /* int64_t tensorId*/
+            static_cast<int64_t>(identiy_gate_ids_.front()),
             /* void* */
             static_cast<void *>(
-                gate_cache_->get_gate_device_ptr(identiy_gate_id_)),
+                gate_cache_->get_gate_device_ptr(identiy_gate_ids_.front())),
             /* int32_t unitary*/ 1));
     }
 

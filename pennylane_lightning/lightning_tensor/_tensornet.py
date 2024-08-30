@@ -308,7 +308,7 @@ class LightningTensorNet:
         self._tensornet.applyMPOOperator(MPOs, sorted_wires, max_mpo_bond_dim)
 
     def _apply_lightning_controlled(self, operation):
-        """Apply an arbitrary controlled operation to the state tensor.
+        """Apply an arbitrary controlled operation to the state tensor. Note that `cutensornet` only supports controlled gates with a single wire target.
 
         Args:
             operation (~pennylane.operation.Operation): controlled operation to apply
