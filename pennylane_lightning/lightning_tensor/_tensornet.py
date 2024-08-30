@@ -383,6 +383,8 @@ class LightningTensorNet:
 
                 gate_ops_matrix = np.transpose(gate_ops_matrix, axes=(1, 0))
 
+                print(gate_ops_matrix)
+
                 self._apply_MPO(gate_ops_matrix, wires)
 
     def apply_operations(self, operations):

@@ -96,7 +96,7 @@ template <class PrecisionT> class MPOTNCuda {
 
     // std::vector<std::vector<std::size_t>> modesExtents_;
     std::vector<std::vector<int64_t>> modesExtents_int64_;
-    std::vector<TensorCuda<PrecisionT>> tensors_;
+    std::vector<std::shared_ptr<TensorCuda<PrecisionT>>> tensors_;
 
     /**
      * @brief Get a vector of pointers to extents of each site.
@@ -120,8 +120,8 @@ template <class PrecisionT> class MPOTNCuda {
     [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
         std::vector<void *> tensorsDataPtr(numMPOSites_);
         for (std::size_t i = 0; i < numMPOSites_; i++) {
-            tensorsDataPtr[i] =
-                reinterpret_cast<void *>(tensors_[i].getDataBuffer().getData());
+            tensorsDataPtr[i] = reinterpret_cast<void *>(
+                tensors_[i]->getDataBuffer().getData());
         }
         return tensorsDataPtr;
     }
@@ -179,8 +179,6 @@ template <class PrecisionT> class MPOTNCuda {
             if (bondDim <= log2(maxBondDim_)) {
                 BondDims[i] = (std::size_t{1} << bondDim);
             }
-
-            std::cout << "BondDims[" << i << "] = " << BondDims[i] << std::endl;
         }
 
         bondDims_ = BondDims;
@@ -198,48 +196,55 @@ template <class PrecisionT> class MPOTNCuda {
                     {bondDims_[i - 1], 2, bondDims_[i], 2});
             }
 
-            std::cout << i << "th localModesExtents size: "
-                      << localModesExtents.size() << std::endl;
-
             modesExtents_int64_.emplace_back(
                 Pennylane::Util::cast_vector<std::size_t, int64_t>(
                     localModesExtents));
-
-            std::cout << "i" << i << std::endl;
-
-            tensors_.emplace_back(localModesExtents.size(), localModesExtents,
-                                  localModesExtents, dev_tag);
+            tensors_.emplace_back(std::make_shared<TensorCuda<PrecisionT>>(
+                localModesExtents.size(), localModesExtents, localModesExtents,
+                dev_tag));
         }
         std::cout << "pass" << std::endl;
 
         // Update MPO tensors
         // for (std::size_t i = 0; i < numMPOSites_; i++) {
         PrecisionT sqrt2 = static_cast<PrecisionT>(std::sqrt(2.0));
-        PrecisionT inv_sqrt2 = static_cast<PrecisionT>(1.0 / std::sqrt(2.0));
+
+        CFP_t zero = cuUtil::complexToCu<ComplexT>(ComplexT{0.0, 0.0});
+        CFP_t one = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
+        CFP_t minus_inv_sqrt2 = cuUtil::complexToCu<ComplexT>(
+            ComplexT{-static_cast<PrecisionT>(std::sqrt(0.5)), 0.0});
+        CFP_t inv_sqrt2 = cuUtil::complexToCu<ComplexT>(
+            ComplexT{static_cast<PrecisionT>(std::sqrt(0.5)), 0.0});
+        CFP_t minus_sqrt2 =
+            cuUtil::complexToCu<ComplexT>(ComplexT{-sqrt2, 0.0});
+
         std::vector<CFP_t> tensor0{
-            CFP_t{-inv_sqrt2, 0.0}, CFP_t{0.0, 0.0},        CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0},        CFP_t{-inv_sqrt2, 0.0}, CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0},        CFP_t{1.0, 0.0},        CFP_t{0.0, 0.0},
-            CFP_t{-inv_sqrt2, 0.0}, CFP_t{1.0, 0.0},        CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0},        CFP_t{inv_sqrt2, 0.0},  CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0}};
+            minus_sqrt2, zero,        zero, zero, zero, zero, zero, zero,
+            zero,        minus_sqrt2, zero, zero, zero, zero, zero, zero};
 
-        std::cout << "pass tensor0" << std::endl;
-
-        std::vector<CFP_t> tensor1{
-            CFP_t{-sqrt2, 0.0}, CFP_t{0.0, 0.0}, CFP_t{-sqrt2, 0.0},
-            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0},    CFP_t{0.0, 0.0}, CFP_t{0.0, 0.0},
-            CFP_t{0.0, 0.0}};
+        std::vector<CFP_t> tensor1{minus_inv_sqrt2,
+                                   zero,
+                                   minus_inv_sqrt2,
+                                   zero,
+                                   zero,
+                                   one,
+                                   zero,
+                                   zero,
+                                   zero,
+                                   zero,
+                                   zero,
+                                   one,
+                                   minus_inv_sqrt2,
+                                   zero,
+                                   inv_sqrt2,
+                                   zero};
 
         std::cout << "pass tensor1" << std::endl;
 
-        tensors_[0].getDataBuffer().CopyHostDataToGpu(tensor0.data(),
-                                                      tensor0.size());
-        tensors_[1].getDataBuffer().CopyHostDataToGpu(tensor1.data(),
-                                                      tensor1.size());
+        tensors_[0]->getDataBuffer().CopyHostDataToGpu(tensor0.data(),
+                                                       tensor0.size());
+        tensors_[1]->getDataBuffer().CopyHostDataToGpu(tensor1.data(),
+                                                       tensor1.size());
         //}
 
         /*
