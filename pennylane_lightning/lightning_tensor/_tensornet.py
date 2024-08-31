@@ -368,7 +368,9 @@ class LightningTensorNet:
 
             wires = list(operation.wires)
 
-            if len(wires) <= 1:
+            if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
+                self._apply_lightning_controlled(operation)
+            elif len(wires) <= 2:
                 if method is not None:
                     param = operation.parameters
                     method(wires, invert_param, param)
@@ -385,6 +387,11 @@ class LightningTensorNet:
                     gate_ops_matrix = qml.matrix(operation)
                 except AttributeError:
                     gate_ops_matrix = operation.matrix
+
+                if 4**len(wires) != len(gate_ops_matrix):
+                    raise ValueError(
+                        f"Operation matrix of {operation.name} must be of shape (2**len(wires), 2**len(wires))."
+                    )
 
                 gate_ops_matrix = np.transpose(gate_ops_matrix, axes=(1, 0))
 
