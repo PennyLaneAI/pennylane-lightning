@@ -273,25 +273,28 @@ class LightningTensorNet:
         Returns:
             None
         """
-        sorted_wires = sorted(wires)
+        sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
+
+        sorted_wires = [wire for index, wire in sorted_indexed_wires]
+        original_axes = [index for index, wire in sorted_indexed_wires]
 
         matrix = gate_matrix.astype(self._c_dtype)
 
-        gate_data_shape = [2] * len(wires) * 2
+        tensor_shape = [2] * len(wires) * 2
 
         # Convert the gate matrix to the correct shape and complex dtype
-        gate_data = matrix.reshape(gate_data_shape)
+        gate_tensor = matrix.reshape(tensor_shape)
 
-        # Create the correct order of indices for the gate data to be decomposed
+        # Create the correct order of indices for the gate tensor to be decomposed
         indices_order = []
         for i in range(len(wires)):
-            indices_order.extend([i, i + len(wires)])
+            indices_order.extend([original_axes[i], original_axes[i] + len(wires)])
 
         # Transpose the gate data to the correct order for the tensor network contraction
-        gate_data = np.transpose(gate_data, axes=indices_order)
+        gate_tensor = np.transpose(gate_tensor, axes=indices_order)
         # TODO: Reorder the gate data with the target wire
         max_mpo_bond_dim = 2 ** len(wires)
-        MPOs = dense_to_mpo(gate_data, len(wires), max_mpo_bond_dim)
+        MPOs = dense_to_mpo(gate_tensor, len(wires), max_mpo_bond_dim)
 
         mpos = []
         for i in range(len(MPOs)):
@@ -303,11 +306,8 @@ class LightningTensorNet:
                 mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
             else:
                 # [bondL, ket, bra, bondR] -> [bondR, ket, bondL, bra]
-                # mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2, 3))) ##keep this test error at the order of 1.0e-1
-                mpos.append(
-                    np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3))
-                )  ##keep this order with the best result at the order of 1.0e-15
-            print(mpos[i].shape)
+                ## The following order (2,0,1,3) gives the best result at the order of 1.0e-15
+                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(mpos, sorted_wires, max_mpo_bond_dim)
