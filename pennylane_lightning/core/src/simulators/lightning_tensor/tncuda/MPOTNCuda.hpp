@@ -154,7 +154,7 @@ template <class PrecisionT> class MPOTNCuda {
             /* cutensornetNetworkOperator_t */ &MPOOperator_));
 
         wires_ = wires;
-        
+
         numMPOSites_ = wires.back() - wires.front() + 1;
 
         MPO_modes_int32_.resize(numMPOSites_);
@@ -213,6 +213,11 @@ template <class PrecisionT> class MPOTNCuda {
             modesExtents_int64_.emplace_back(
                 Pennylane::Util::cast_vector<std::size_t, int64_t>(
                     localModesExtents));
+
+            for (auto x : localModesExtents) {
+                std::cout << x << " ";
+            }
+            std::cout << std::endl;
 
             tensors_.emplace_back(std::make_shared<TensorCuda<PrecisionT>>(
                 localModesExtents.size(), localModesExtents, localModesExtents,

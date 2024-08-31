@@ -303,7 +303,11 @@ class LightningTensorNet:
                 mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
             else:
                 # [bondL, ket, bra, bondR] -> [bondR, ket, bondL, bra]
-                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(3, 1, 0, 2)))
+                # mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2, 3))) ##keep this test error at the order of 1.0e-1
+                mpos.append(
+                    np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3))
+                )  ##keep this order with the best result at the order of 1.0e-15
+            print(mpos[i].shape)
 
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(mpos, sorted_wires, max_mpo_bond_dim)
