@@ -120,6 +120,33 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliX", "[MPSTNCuda_Nonparam]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("MPSTNCuda::Gates::applyOperation-gatematrix",
+                   "[MPSTNCuda_Nonparam]", float, double) {
+    std::size_t num_qubits = 3;
+    std::size_t maxExtent = 2;
+    DevTag<int> dev_tag{0, 0};
+
+    SECTION("Apply different wire indices") {
+        const std::size_t index = GENERATE(0, 1, 2);
+        MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+
+        std::vector<std::complex<TestType>> gate_matrix = {
+            cuUtil::ZERO<std::complex<TestType>>(),
+            cuUtil::ONE<std::complex<TestType>>(),
+            cuUtil::ONE<std::complex<TestType>>(),
+            cuUtil::ZERO<std::complex<TestType>>()};
+
+        mps_state.applyOperation("applyMatrix", {index}, false, {},
+                                 gate_matrix);
+
+        auto results = mps_state.getDataVector();
+
+        CHECK(results[0] == cuUtil::ZERO<std::complex<TestType>>());
+        CHECK(results[0b1 << (num_qubits - index - 1)] ==
+              cuUtil::ONE<std::complex<TestType>>());
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSTNCuda::Gates::PauliY", "[MPSTNCuda_Nonparam]", float,
                    double) {
     const bool inverse = GENERATE(false, true);
@@ -494,40 +521,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Non_Param_Gates::2+_wires",
             REQUIRE_THROWS_AS(
                 mps_state.applyOperation("CSWAP", {0, 1, 2}, inverse),
                 LightningException);
-        }
-    }
-}
-
-TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledOperation non-param "
-                   "one-qubit with controls",
-                   "[MPSTNCuda]", float, double) {
-    using PrecisionT = TestType;
-    const int num_qubits = 4;
-    std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
-
-    const auto margin = PrecisionT{1e-5};
-    const std::size_t control = GENERATE(0, 1, 2, 3);
-    const std::size_t wire = GENERATE(0, 1, 2, 3);
-
-    MPSTNCuda<PrecisionT> mps_state0{num_qubits, maxExtent, dev_tag};
-    MPSTNCuda<PrecisionT> mps_state1{num_qubits, maxExtent, dev_tag};
-
-    DYNAMIC_SECTION("N-controlled Hadamard - "
-                    << "controls = {" << control << "} "
-                    << ", wires = {" << wire << "} - "
-                    << PrecisionToName<PrecisionT>::value) {
-        if (control != wire) {
-            const auto matrix = getHadamard<std::complex, PrecisionT>();
-
-            mps_state0.applyControlledMatrix(
-                matrix, std::vector<std::size_t>{control},
-                std::vector<bool>{true}, std::vector<std::size_t>{wire});
-            mps_state0.applyOperation(
-                "Hadamard", std::vector<std::size_t>{control},
-                std::vector<bool>{true}, std::vector<std::size_t>{wire});
-            REQUIRE(mps_state0.getDataVector() ==
-                    approx(mps_state0.getDataVector()).margin(margin));
         }
     }
 }
