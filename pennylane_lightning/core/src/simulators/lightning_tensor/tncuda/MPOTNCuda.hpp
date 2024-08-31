@@ -154,6 +154,7 @@ template <class PrecisionT> class MPOTNCuda {
             /* cutensornetNetworkOperator_t */ &MPOOperator_));
 
         wires_ = wires;
+        
         numMPOSites_ = wires.back() - wires.front() + 1;
 
         MPO_modes_int32_.resize(numMPOSites_);
@@ -216,6 +217,7 @@ template <class PrecisionT> class MPOTNCuda {
             tensors_.emplace_back(std::make_shared<TensorCuda<PrecisionT>>(
                 localModesExtents.size(), localModesExtents, localModesExtents,
                 dev_tag));
+            tensors_[i]->getDataBuffer().zeroInit();
         }
 
         std::vector<std::size_t> mpo_site_tag(numMPOSites_, numMPOSites_);
@@ -233,7 +235,7 @@ template <class PrecisionT> class MPOTNCuda {
                 tensors_[i]->getDataBuffer().CopyHostDataToGpu(
                     tensor_cu.data(), tensor_cu.size());
             } else {
-                tensors_[i]->getDataBuffer().zeroInit();
+                // Initialize Identity tensors
                 std::size_t length = tensors_[i]->getDataBuffer().getLength();
                 std::vector<std::size_t> target_idx;
                 CFP_t value_cu =
