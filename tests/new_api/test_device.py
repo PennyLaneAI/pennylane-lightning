@@ -46,7 +46,7 @@ if device_name == "lightning.qubit":
 
 if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
-    
+
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
