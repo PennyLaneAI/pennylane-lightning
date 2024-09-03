@@ -148,7 +148,7 @@ jobs:
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
           retention-days: 1
-          if-no-files-found: warn
+          if-no-files-found: error
           include-hidden-files: true
           path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
 
@@ -157,7 +157,7 @@ jobs:
         with:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
           retention-days: 1
-          if-no-files-found: warn
+          if-no-files-found: error
           include-hidden-files: true
           path: |
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl

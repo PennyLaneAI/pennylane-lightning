@@ -120,7 +120,7 @@ jobs:
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
           retention-days: 1
-          if-no-files-found: warn
+          if-no-files-found: error
           include-hidden-files: true
           path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
 
@@ -129,7 +129,7 @@ jobs:
         with:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           retention-days: 1
-          if-no-files-found: warn
+          if-no-files-found: error
           include-hidden-files: true
           path: |
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
@@ -228,7 +228,7 @@ jobs:
           name: ubuntu-codecov-results-python
           path: |
             ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
-          if-no-files-found: warn
+          if-no-files-found: error
           include-hidden-files: true
 
   upload-to-codecov-linux-python:
