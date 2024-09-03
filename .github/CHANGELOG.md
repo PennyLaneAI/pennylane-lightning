@@ -1,3 +1,26 @@
+# Release 0.39.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* Optimize gate cache recording for `lightning.tensor` C++ layer.
+  [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Shuli Shu
+
+---
+
 # Release 0.38.0
 
 ### New features since last release
@@ -35,6 +58,9 @@
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
 ### Improvements
+
+* Updated calls of ``size_t`` to ``std::size_t`` everywhere.
+  [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816)
 
 * Update Lightning tests to support the generalization of basis state preparation.
   [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
@@ -164,6 +190,9 @@
 
 * Fix checkout command in test workflows for rc branches.
   [(#777)](https://github.com/PennyLaneAI/pennylane-lightning/pull/777)
+
+* Point to the right Lightning root folder independently from the invocation location, when configuring the project.
+  [(#874)](https://github.com/PennyLaneAI/pennylane-lightning/pull/874)
 
 ### Contributors
 
