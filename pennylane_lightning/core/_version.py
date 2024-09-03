@@ -16,8 +16,4 @@
    Version number (major.minor.patch[-label])
 """
 
-<<<<<<< HEAD
-__version__ = "0.38.0-dev54"
-=======
 __version__ = "0.39.0-dev0"
->>>>>>> origin/master
