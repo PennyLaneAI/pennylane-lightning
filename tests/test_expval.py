@@ -41,15 +41,8 @@ class TestExpval:
         O1 = qml.Identity(wires=[0])
         O2 = qml.Identity(wires=[1])
         ops = [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-            )
-            res = np.array([dev.expval(O1), dev.expval(O2)])
+        tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+        res = dev.execute(tape)
         assert np.allclose(res, np.array([1, 1]), tol)
 
     def test_pauliz_expectation(self, theta, phi, qubit_device, tol):
@@ -59,16 +52,8 @@ class TestExpval:
         O1 = qml.PauliZ(wires=[0])
         O2 = qml.PauliZ(wires=[1])
         ops = [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-            )
-
-            res = np.array([dev.expval(O1), dev.expval(O2)])
+        tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+        res = dev.execute(tape)
         assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
 
     def test_paulix_expectation(self, theta, phi, qubit_device, tol):
@@ -78,17 +63,9 @@ class TestExpval:
         O1 = qml.PauliX(wires=[0])
         O2 = qml.PauliX(wires=[1])
         ops = [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
-            res = dev.execute(tape)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+        res = dev.execute(tape)
 
-        else:
-            dev.apply(
-                ops,
-                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-            )
-
-            res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
         assert np.allclose(
             res,
             np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.dtype),
@@ -102,17 +79,9 @@ class TestExpval:
         O1 = qml.PauliY(wires=[0])
         O2 = qml.PauliY(wires=[1])
         ops = [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
-            res = dev.execute(tape)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+        res = dev.execute(tape)
 
-        else:
-            dev.apply(
-                ops,
-                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-            )
-
-            res = np.array([dev.expval(O1), dev.expval(O2)])
         assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
 
     def test_hadamard_expectation(self, theta, phi, qubit_device, tol):
@@ -122,17 +91,9 @@ class TestExpval:
         O1 = qml.Hadamard(wires=[0])
         O2 = qml.Hadamard(wires=[1])
         ops = [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
-            res = dev.execute(tape)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(O1), qml.expval(O2)])
+        res = dev.execute(tape)
 
-        else:
-            dev.apply(
-                ops,
-                rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-            )
-
-            res = np.array([dev.expval(O1), dev.expval(O2)])
         expected = np.array(
             [np.sin(theta) * np.sin(phi) + np.cos(theta), np.cos(theta) * np.cos(phi) + np.sin(phi)]
         ) / np.sqrt(2)
@@ -152,7 +113,7 @@ class TestExpval:
             pytest.skip("Device does not support the Projector observable.")
 
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         obs = qml.Projector(np.array([0, 1, 0, 0]) / np.sqrt(2), wires=[0, 1])
 
         def circuit():
@@ -179,15 +140,14 @@ class TestExpval:
         wires = list(range((n_qubits - n_wires), (n_qubits - n_wires) + n_wires))
         perms = list(itertools.permutations(wires))
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         if n_wires > 4:
             perms = perms[0::30]
         for perm in perms:
             obs = qml.Hermitian(U, wires=perm)
 
             def circuit():
-                if device_name != "lightning.tensor":
-                    qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.StatePrep(init_state, wires=range(n_qubits))
                 qml.RX(theta, wires=[0])
                 qml.RY(phi, wires=[1])
                 qml.RX(theta, wires=[2])
@@ -200,12 +160,15 @@ class TestExpval:
 
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
-            if device_name == "lightning.tensor" and n_wires > 1:
-                with pytest.raises(
-                    ValueError,
-                    match="The number of Hermitian observables target wires should be 1.",
-                ):
-                    assert np.allclose(circ(), circ_def(), tol)
+            if device_name == "lightning.tensor":
+                if n_wires > 1:
+                    with pytest.raises(
+                        ValueError,
+                        match="The number of Hermitian observables target wires should be 1.",
+                    ):
+                        assert np.allclose(circ(), circ_def(), tol)
+                else:
+                    np.allclose(circ(), circ_def(), rtol=1e-6)
             else:
                 assert np.allclose(circ(), circ_def(), tol)
 
@@ -325,12 +288,8 @@ class TestTensorExpval:
             qml.CNOT(wires=[0, 1]),
             qml.CNOT(wires=[1, 2]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(ops, rotations=obs.diagonalizing_gates())
-            res = dev.expval(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+        res = dev.execute(tape)
 
         expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
 
@@ -348,16 +307,8 @@ class TestTensorExpval:
             qml.CNOT(wires=[0, 1]),
             qml.CNOT(wires=[1, 2]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=obs.diagonalizing_gates(),
-            )
-
-            res = dev.expval(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+        res = dev.execute(tape)
 
         expected = np.cos(varphi) * np.cos(phi)
 
@@ -375,15 +326,8 @@ class TestTensorExpval:
             qml.CNOT(wires=[0, 1]),
             qml.CNOT(wires=[1, 2]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=obs.diagonalizing_gates(),
-            )
-            res = dev.expval(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+        res = dev.execute(tape)
         expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
 
         assert np.allclose(res, expected, tol)

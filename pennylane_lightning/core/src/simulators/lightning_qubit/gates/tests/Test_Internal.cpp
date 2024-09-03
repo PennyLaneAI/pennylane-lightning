@@ -116,21 +116,21 @@ TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
     }
 }
 
-size_t binomialCeff(size_t n, std::size_t r) {
+std::size_t binomialCeff(std::size_t n, std::size_t r) {
     std::size_t num = 1;
     std::size_t dem = 1;
-    for (size_t k = 0; k < r; k++) {
+    for (std::size_t k = 0; k < r; k++) {
         num *= (n - k);
     }
-    for (size_t k = 1; k <= r; k++) {
+    for (std::size_t k = 1; k <= r; k++) {
         dem *= k;
     }
     return num / dem;
 }
 
-size_t permSize(size_t n, std::size_t r) {
+std::size_t permSize(std::size_t n, std::size_t r) {
     std::size_t res = 1;
-    for (size_t k = 0; k < r; k++) {
+    for (std::size_t k = 0; k < r; k++) {
         res *= (n - k);
     }
     return res;
@@ -141,7 +141,7 @@ size_t permSize(size_t n, std::size_t r) {
  */
 TEST_CASE("createAllWires", "[Test_Internal]") {
     SECTION("order = false") {
-        const std::vector<std::pair<size_t, std::size_t>> test_pairs{
+        const std::vector<std::pair<std::size_t, std::size_t>> test_pairs{
             {4, 2},  {8, 3},  {12, 1}, {12, 2}, {12, 3},  {12, 4},  {12, 5},
             {12, 6}, {12, 7}, {12, 8}, {12, 9}, {12, 10}, {12, 11}, {12, 12}};
 
@@ -161,13 +161,13 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
                           return std::lexicographical_compare(
                               v1.begin(), v1.end(), v2.begin(), v2.end());
                       }); // sort lexicographically
-            for (size_t i = 0; i < v.size() - 1; i++) {
+            for (std::size_t i = 0; i < v.size() - 1; i++) {
                 REQUIRE(v[i] != v[i + 1]); // all combinations must be different
             }
         }
     }
     SECTION("order = true") {
-        const std::vector<std::pair<size_t, std::size_t>> test_pairs{
+        const std::vector<std::pair<std::size_t, std::size_t>> test_pairs{
             {4, 2}, {8, 3}, {12, 1}, {12, 2}, {12, 3}, {12, 4}, {12, 5}};
 
         for (const auto &[n, r] : test_pairs) {
@@ -184,7 +184,7 @@ TEST_CASE("createAllWires", "[Test_Internal]") {
                           return std::lexicographical_compare(
                               v1.begin(), v1.end(), v2.begin(), v2.end());
                       }); // sort lexicographically
-            for (size_t i = 0; i < v.size() - 1; i++) {
+            for (std::size_t i = 0; i < v.size() - 1; i++) {
                 REQUIRE(v[i] != v[i + 1]); // all permutations must be different
             }
         }

@@ -11,6 +11,12 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
   push:
     branches:
       - master
@@ -29,6 +35,7 @@ concurrency:
 
 jobs:
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
@@ -45,6 +52,14 @@ jobs:
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
+      - name: Make disk space
+        run: |
+          sudo apt-get autoremove -y && sudo apt-get autoclean -y && sudo apt-get clean -y
+          for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
+            sudo du -sh $DIR || echo $DIR not found
+            sudo rm -rf $DIR
+          done
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:

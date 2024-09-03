@@ -50,7 +50,7 @@ template <typename fp_t> class TransitionKernel {
 
   public:
     //  outputs the next state and the qratio
-    virtual std::pair<size_t, fp_t> operator()(size_t) = 0;
+    virtual std::pair<std::size_t, fp_t> operator()(std::size_t) = 0;
     virtual ~TransitionKernel() = default;
 };
 
@@ -72,13 +72,13 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
     std::uniform_int_distribution<std::size_t> distrib_binary_;
 
   public:
-    explicit LocalTransitionKernel(size_t num_qubits)
+    explicit LocalTransitionKernel(std::size_t num_qubits)
         : num_qubits_(num_qubits), gen_(std::mt19937(rd_())),
           distrib_num_qubits_(
               std::uniform_int_distribution<std::size_t>(0, num_qubits - 1)),
           distrib_binary_(std::uniform_int_distribution<std::size_t>(0, 1)) {}
 
-    std::pair<size_t, fp_t> operator()(size_t init_idx) final {
+    std::pair<std::size_t, fp_t> operator()(std::size_t init_idx) final {
         std::size_t qubit_site = distrib_num_qubits_(gen_);
         std::size_t qubit_value = distrib_binary_(gen_);
         std::size_t current_bit = (static_cast<unsigned>(init_idx) >>
@@ -86,13 +86,14 @@ class LocalTransitionKernel : public TransitionKernel<fp_t> {
                                   1U;
 
         if (qubit_value == current_bit) {
-            return std::pair<size_t, fp_t>(init_idx, 1);
+            return std::pair<std::size_t, fp_t>(init_idx, 1);
         }
         if (current_bit == 0) {
-            return std::pair<size_t, fp_t>(init_idx + std::pow(2, qubit_site),
-                                           1);
+            return std::pair<std::size_t, fp_t>(
+                init_idx + std::pow(2, qubit_site), 1);
         }
-        return std::pair<size_t, fp_t>(init_idx - std::pow(2, qubit_site), 1);
+        return std::pair<std::size_t, fp_t>(init_idx - std::pow(2, qubit_site),
+                                            1);
     }
 };
 
@@ -119,7 +120,7 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
         auto data = sv;
         sv_length_ = sv_length;
         // find nonzero candidates
-        for (size_t i = 0; i < sv_length_; i++) {
+        for (std::size_t i = 0; i < sv_length_; i++) {
             if (std::abs(data[i]) > min_error) {
                 non_zeros_.push_back(i);
             }
@@ -128,10 +129,10 @@ class NonZeroRandomTransitionKernel : public TransitionKernel<fp_t> {
         distrib_ = std::uniform_int_distribution<std::size_t>(
             0, non_zeros_.size() - 1);
     }
-    std::pair<size_t, fp_t>
+    std::pair<std::size_t, fp_t>
     operator()([[maybe_unused]] std::size_t init_idx) final {
         auto trans_idx = distrib_(gen_);
-        return std::pair<size_t, fp_t>(non_zeros_[trans_idx], 1);
+        return std::pair<std::size_t, fp_t>(non_zeros_[trans_idx], 1);
     }
 };
 

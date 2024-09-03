@@ -55,7 +55,7 @@ constexpr auto generatorNamesWithoutPrefix() {
     std::array<std::pair<GeneratorOperation, std::string_view>,
                GateConstant::generator_names.size()>
         res{};
-    for (size_t i = 0; i < GateConstant::generator_names.size(); i++) {
+    for (std::size_t i = 0; i < GateConstant::generator_names.size(); i++) {
         // NOLINTBEGIN(cppcoreguidelines-pro-bounds-constant-array-index)
         const auto [gntr_op, gntr_name] = GateConstant::generator_names[i];
         res[i].first = gntr_op;
@@ -634,7 +634,7 @@ template <typename PrecisionT> class DynamicDispatcher {
                         numOperations != params.size(),
                     "Invalid arguments: number of operations, wires, and "
                     "parameters must all be equal");
-        for (size_t i = 0; i < numOperations; i++) {
+        for (std::size_t i = 0; i < numOperations; i++) {
             applyOperation(kernel, data, num_qubits, ops[i], wires[i],
                            inverse[i], params[i]);
         }
@@ -658,7 +658,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         PL_ABORT_IF(numOperations != wires.size(),
                     "Invalid arguments: number of operations, wires, and "
                     "parameters must all be equal");
-        for (size_t i = 0; i < numOperations; i++) {
+        for (std::size_t i = 0; i < numOperations; i++) {
             applyOperation(kernel, data, num_qubits, ops[i], wires[i],
                            inverse[i], {});
         }

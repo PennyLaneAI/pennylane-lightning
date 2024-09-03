@@ -24,7 +24,9 @@ if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
 if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+    pytest.skip(
+        f"Device {device_name} does not have an mcmc option. Skipping.", allow_module_level=True
+    )
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -49,15 +51,8 @@ class TestMCMCSample:
         the correct dimensions
         """
         ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=operation)], shots=num_shots)
-            s1 = dev.execute(tape)
-        else:
-            dev.apply(ops)
-            dev.shots = num_shots
-            dev._wires_measured = measured_wires
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(operation)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=operation)], shots=num_shots)
+        s1 = dev.execute(tape)
 
         assert np.array_equal(s1.shape, (shape,))
 
@@ -70,14 +65,8 @@ class TestMCMCSample:
             device_name, wires=2, shots=1000, mcmc=True, kernel_name=kernel, num_burnin=100
         )
         ops = [qml.RX(1.5708, wires=[0])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
-            s1 = dev.execute(tape)
-        else:
-            dev.apply([qml.RX(1.5708, wires=[0])])
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(qml.PauliZ(0))
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=qml.PauliZ(0))], shots=1000)
+        s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1

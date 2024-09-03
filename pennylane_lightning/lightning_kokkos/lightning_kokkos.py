@@ -11,149 +11,249 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 r"""
-This module contains the :class:`~.LightningQubit` class, a PennyLane simulator device that
+This module contains the :class:`~.LightningKokkos` class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-
 import os
 import sys
-from os import getenv
+from dataclasses import replace
 from pathlib import Path
-from typing import List
-from warnings import warn
+from typing import Optional
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StatePrep, math
-from pennylane.measurements import Expectation, MidMeasureMP, State
-from pennylane.ops import Conditional
-from pennylane.ops.op_math import Adjoint
-from pennylane.wires import Wires
+from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.devices.preprocess import (
+    decompose,
+    mid_circuit_measurements,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
+from pennylane.measurements import MidMeasureMP
+from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.ops import Prod, SProd, Sum
+from pennylane.tape import QuantumScript
+from pennylane.transforms.core import TransformProgram
+from pennylane.typing import Result
 
-from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
-from pennylane_lightning.core._version import __version__
-from pennylane_lightning.core.lightning_base import LightningBase, _chunk_iterable
+from pennylane_lightning.core.lightning_newAPI_base import (
+    LightningBase,
+    QuantumTape_or_Batch,
+    Result_or_ResultBatch,
+)
+
+from ._adjoint_jacobian import LightningKokkosAdjointJacobian
+from ._measurements import LightningKokkosMeasurements
+from ._state_vector import LightningKokkosStateVector
 
 try:
-    # pylint: disable=import-error, no-name-in-module
-    from pennylane_lightning.lightning_kokkos_ops import (
-        InitializationSettings,
-        MeasurementsC64,
-        MeasurementsC128,
-        StateVectorC64,
-        StateVectorC128,
-        allocate_aligned_array,
-        backend_info,
-        print_configuration,
-    )
-
-    # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
-        AdjointJacobianC64,
-        AdjointJacobianC128,
-        create_ops_listC64,
-        create_ops_listC128,
-    )
+    from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
 
     LK_CPP_BINARY_AVAILABLE = True
 except ImportError:
     LK_CPP_BINARY_AVAILABLE = False
     backend_info = None
 
+# Result_or_ResultBatch = Union[Result, ResultBatch]
+# QuantumTapeBatch = Sequence[QuantumTape]
+# QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+# PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
-def _kokkos_dtype(dtype):
-    if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
-        raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
-    return StateVectorC128 if dtype == np.complex128 else StateVectorC64
+# The set of supported operations.
+_operations = frozenset(
+    {
+        "Identity",
+        "QubitStateVector",
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "GlobalPhase",
+        "C(GlobalPhase)",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "QFT",
+        "ECR",
+        "BlockEncode",
+        "C(BlockEncode)",
+    }
+)
+# End the set of supported operations.
+
+# The set of supported observables.
+_observables = frozenset(
+    {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "Hermitian",
+        "Identity",
+        "Projector",
+        "SparseHamiltonian",
+        "Hamiltonian",
+        "LinearCombination",
+        "Sum",
+        "SProd",
+        "Prod",
+        "Exp",
+    }
+)
 
 
+def stopping_condition(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
+    # To avoid building matrices beyond the given thresholds.
+    # This should reduce runtime overheads for larger systems.
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+
+    return op.name in _operations
+
+
+def stopping_condition_shots(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.kokkos``
+    with finite shots."""
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+
+
+def accepted_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.kokkos``."""
+    return obs.name in _observables
+
+
+def adjoint_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.kokkos``
+    when using the adjoint differentiation method."""
+    if isinstance(obs, qml.Projector):
+        return False
+
+    if isinstance(obs, Tensor):
+        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
+            return False
+        return True
+
+    if isinstance(obs, SProd):
+        return adjoint_observables(obs.base)
+
+    if isinstance(obs, (Sum, Prod)):
+        return all(adjoint_observables(o) for o in obs)
+
+    return obs.name in _observables
+
+
+def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
+    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
+    return isinstance(mp, qml.measurements.ExpectationMP)
+
+
+def _supports_adjoint(circuit):
+    if circuit is None:
+        return True
+
+    prog = TransformProgram()
+    _add_adjoint_transforms(prog)
+
+    try:
+        prog((circuit,))
+    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
+        return False
+    return True
+
+
+def _adjoint_ops(op: qml.operation.Operator) -> bool:
+    """Specify whether or not an Operator is supported by adjoint differentiation."""
+    return adjoint_ops(op)
+
+
+def _add_adjoint_transforms(program: TransformProgram) -> None:
+    """Private helper function for ``preprocess`` that adds the transforms specific
+    for adjoint differentiation.
+
+    Args:
+        program (TransformProgram): where we will add the adjoint differentiation transforms
+
+    Side Effects:
+        Adds transforms to the input program.
+
+    """
+
+    name = "adjoint + lightning.kokkos"
+    program.add_transform(no_sampling, name=name)
+    program.add_transform(
+        decompose,
+        stopping_condition=_adjoint_ops,
+        stopping_condition_shots=stopping_condition_shots,
+        name=name,
+        skip_initial_state_prep=False,
+    )
+    program.add_transform(validate_observables, accepted_observables, name=name)
+    program.add_transform(
+        validate_measurements, analytic_measurements=adjoint_measurements, name=name
+    )
+    program.add_transform(qml.transforms.broadcast_expand)
+    program.add_transform(validate_adjoint_trainable_params)
+
+
+# Kokkos specific methods
 def _kokkos_configuration():
     return print_configuration()
 
 
-allowed_operations = {
-    "Identity",
-    "BasisState",
-    "QubitStateVector",
-    "StatePrep",
-    "QubitUnitary",
-    "ControlledQubitUnitary",
-    "MultiControlledX",
-    "DiagonalQubitUnitary",
-    "PauliX",
-    "PauliY",
-    "PauliZ",
-    "MultiRZ",
-    "GlobalPhase",
-    "C(GlobalPhase)",
-    "Hadamard",
-    "S",
-    "Adjoint(S)",
-    "T",
-    "Adjoint(T)",
-    "SX",
-    "Adjoint(SX)",
-    "CNOT",
-    "SWAP",
-    "ISWAP",
-    "PSWAP",
-    "Adjoint(ISWAP)",
-    "SISWAP",
-    "Adjoint(SISWAP)",
-    "SQISW",
-    "CSWAP",
-    "Toffoli",
-    "CY",
-    "CZ",
-    "PhaseShift",
-    "ControlledPhaseShift",
-    "RX",
-    "RY",
-    "RZ",
-    "Rot",
-    "CRX",
-    "CRY",
-    "CRZ",
-    "CRot",
-    "IsingXX",
-    "IsingYY",
-    "IsingZZ",
-    "IsingXY",
-    "SingleExcitation",
-    "SingleExcitationPlus",
-    "SingleExcitationMinus",
-    "DoubleExcitation",
-    "DoubleExcitationPlus",
-    "DoubleExcitationMinus",
-    "QubitCarry",
-    "QubitSum",
-    "OrbitalRotation",
-    "QFT",
-    "ECR",
-    "BlockEncode",
-    "C(BlockEncode)",
-}
-
-allowed_observables = {
-    "PauliX",
-    "PauliY",
-    "PauliZ",
-    "Hadamard",
-    "Hermitian",
-    "Identity",
-    "Projector",
-    "SparseHamiltonian",
-    "Hamiltonian",
-    "LinearCombination",
-    "Sum",
-    "SProd",
-    "Prod",
-    "Exp",
-}
-
-
+@simulator_tracking
+@single_tape_support
 class LightningKokkos(LightningBase):
     """PennyLane Lightning Kokkos device.
 
@@ -164,669 +264,249 @@ class LightningKokkos(LightningBase):
 
     Args:
         wires (int): the number of wires to initialize the device with
-        sync (bool): immediately sync with host-sv after applying operations
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
-            (threading parameters).
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        sync (bool): immediately sync with host-sv after applying operations
+        kokkos_args (InitializationSettings): binding for Kokkos::InitializationSettings
+            (threading parameters).
     """
 
-    name = "Lightning Kokkos PennyLane plugin"
-    short_name = "lightning.kokkos"
-    kokkos_config = {}
-    operations = allowed_operations
-    observables = allowed_observables
-    _backend_info = backend_info
-    config = Path(__file__).parent / "lightning_kokkos.toml"
-    _CPP_BINARY_AVAILABLE = LK_CPP_BINARY_AVAILABLE
+    # General device options
+    _device_options = ("c_dtype", "batch_obs")
 
-    def __init__(
+    # Device specific options
+    _CPP_BINARY_AVAILABLE = LK_CPP_BINARY_AVAILABLE
+    _backend_info = backend_info if LK_CPP_BINARY_AVAILABLE else None
+    kokkos_config = {}
+
+    # This `config` is used in Catalyst-Frontend
+    config = Path(__file__).parent / "lightning_kokkos.toml"
+
+    # TODO: Move supported ops/obs to TOML file
+    operations = _operations
+    # The names of the supported operations.
+
+    observables = _observables
+    # The names of the supported observables.
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         wires,
         *,
-        sync=True,
         c_dtype=np.complex128,
         shots=None,
         batch_obs=False,
+        # Kokkos arguments
+        sync=True,
         kokkos_args=None,
-    ):  # pylint: disable=unused-argument, too-many-arguments
-        super().__init__(wires, shots=shots, c_dtype=c_dtype)
-
-        if kokkos_args is None:
-            self._kokkos_state = _kokkos_dtype(c_dtype)(self.num_wires)
-        elif isinstance(kokkos_args, InitializationSettings):
-            self._kokkos_state = _kokkos_dtype(c_dtype)(self.num_wires, kokkos_args)
-        else:
-            type0 = type(InitializationSettings())
-            raise TypeError(
-                f"Argument kokkos_args must be of type {type0} but it is of {type(kokkos_args)}."
+    ):
+        if not self._CPP_BINARY_AVAILABLE:
+            raise ImportError(
+                "Pre-compiled binaries for lightning.kokkos are not available. "
+                "To manually compile from source, follow the instructions at "
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
+
+        super().__init__(
+            wires=wires,
+            c_dtype=c_dtype,
+            shots=shots,
+            batch_obs=batch_obs,
+        )
+
+        # Set the attributes to call the Lightning classes
+        self._set_Lightning_classes()
+
+        # Kokkos specific options
+        self._kokkos_args = kokkos_args
         self._sync = sync
+
+        # Creating the state vector
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args, sync=sync
+        )
 
         if not LightningKokkos.kokkos_config:
             LightningKokkos.kokkos_config = _kokkos_configuration()
 
     @property
-    def stopping_condition(self):
-        """.BooleanFn: Returns the stopping condition for the device. The returned
-        function accepts a queueable object (including a PennyLane operation
-        and observable) and returns ``True`` if supported by the device."""
-        fun = super().stopping_condition
+    def name(self):
+        """The name of the device."""
+        return "lightning.kokkos"
 
-        def accepts_obj(obj):
-            return fun(obj) or isinstance(obj, (qml.measurements.MidMeasureMP, qml.ops.Conditional))
+    def _set_Lightning_classes(self):
+        """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
+        self.LightningStateVector = LightningKokkosStateVector
+        self.LightningMeasurements = LightningKokkosMeasurements
+        self.LightningAdjointJacobian = LightningKokkosAdjointJacobian
 
-        return qml.BooleanFn(accepts_obj)
+    def _setup_execution_config(self, config):
+        """
+        Update the execution config with choices for how the device should be used and the device options.
+        """
+        updated_values = {}
+        if config.gradient_method == "best":
+            updated_values["gradient_method"] = "adjoint"
+        if config.use_device_gradient is None:
+            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+        if config.grad_on_execution is None:
+            updated_values["grad_on_execution"] = True
 
-    # pylint: disable=missing-function-docstring
-    @classmethod
-    def capabilities(cls):
-        capabilities = super().capabilities().copy()
-        capabilities.update(supports_mid_measure=True)
-        return capabilities
+        new_device_options = dict(config.device_options)
+        for option in self._device_options:
+            if option not in new_device_options:
+                new_device_options[option] = getattr(self, f"_{option}", None)
 
-    @staticmethod
-    def _asarray(arr, dtype=None):
-        arr = np.asarray(arr)  # arr is not copied
+        # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
+        mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0, "rng": None}
+        new_device_options.update(mcmc_default)
 
-        if arr.dtype.kind not in ["f", "c"]:
-            return arr
+        return replace(config, **updated_values, device_options=new_device_options)
 
-        if not dtype:
-            dtype = arr.dtype
-
-        # We allocate a new aligned memory and copy data to there if alignment
-        # or dtype mismatches
-        # Note that get_alignment does not necessarily return CPUMemoryModel(Unaligned) even for
-        # numpy allocated memory as the memory location happens to be aligned.
-        if arr.dtype != dtype:
-            new_arr = allocate_aligned_array(arr.size, np.dtype(dtype), False).reshape(arr.shape)
-            np.copyto(new_arr, arr)
-            arr = new_arr
-        return arr
-
-    def reset(self):
-        """Reset the device"""
-        super().reset()
-
-        # init the state vector to |00..0>
-        self._kokkos_state.resetStateVector()  # Sync reset
-
-    def sync_h2d(self, state_vector):
-        """Copy the state vector data on host provided by the user to the state
-        vector on the device
+    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
-            state_vector(array[complex]): the state vector array on host.
-
-
-        **Example**
-
-        >>> dev = qml.device('lightning.kokkos', wires=3)
-        >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
-        >>> obs1 = qml.Identity(1)
-        >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
-        >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j, 0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64)
-        >>> dev.sync_h2d(state_vector)
-        >>> res = dev.expval(H)
-        >>> print(res)
-        1.0
-        """
-        self._kokkos_state.HostToDevice(state_vector.ravel(order="C"))
-
-    def sync_d2h(self, state_vector):
-        """Copy the state vector data on device to a state vector on the host provided
-        by the user
-
-        Args:
-            state_vector(array[complex]): the state vector array on host
-
-
-        **Example**
-
-        >>> dev = qml.device('lightning.kokkos', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
-        >>> dev.sync_d2h(state_vector)
-        >>> print(state_vector)
-        [0.+0.j 1.+0.j]
-        """
-        self._kokkos_state.DeviceToHost(state_vector.ravel(order="C"))
-
-    @property
-    def create_ops_list(self):
-        """Returns create_ops_list function of the matching precision."""
-        return create_ops_listC64 if self.use_csingle else create_ops_listC128
-
-    @property
-    def measurements(self):
-        """Returns Measurements constructor of the matching precision."""
-        state_vector = self.state_vector
-        return MeasurementsC64(state_vector) if self.use_csingle else MeasurementsC128(state_vector)
-
-    @property
-    def state(self):
-        """Copy the state vector data from the device to the host.
-
-        A state vector Numpy array is explicitly allocated on the host to store and return
-        the data.
-
-        **Example**
-
-        >>> dev = qml.device('lightning.kokkos', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> print(dev.state)
-        [0.+0.j 1.+0.j]
-        """
-        state = np.zeros(2**self.num_wires, dtype=self.C_DTYPE)
-        state = self._asarray(state, dtype=self.C_DTYPE)
-        self.sync_d2h(state)
-        return state
-
-    @property
-    def state_vector(self):
-        """Returns a handle to the statevector."""
-        return self._kokkos_state
-
-    def _apply_state_vector(self, state, device_wires):
-        """Initialize the internal state vector in a specified state.
-
-        Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-            device_wires (Wires): wires that get initialized in the state
-        """
-
-        if isinstance(state, self._kokkos_state.__class__):
-            state_data = allocate_aligned_array(state.size, np.dtype(self.C_DTYPE), True)
-            state.DeviceToHost(state_data)
-            state = state_data
-
-        # translate to wire labels used by device
-        device_wires = self.map_wires(device_wires)
-
-        if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
-            output_shape = (2,) * self.num_wires
-            # Initialize the entire device state with the input state
-            self.sync_h2d(self._reshape(state, output_shape))
-            return
-        self._kokkos_state.setStateVector(state, list(device_wires))  # this operation on device
-
-    def _apply_basis_state(self, state, wires):
-        """Initialize the state vector in a specified computational basis state.
-
-        Args:
-            state (array[int]): computational basis state of shape ``(wires,)``
-                consisting of 0s and 1s.
-            wires (Wires): wires that the provided computational state should be initialized on
-
-        Note: This function does not support broadcasted inputs yet.
-        """
-        if not set(state.tolist()).issubset({0, 1}):
-            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
-
-        if len(state) != len(wires):
-            raise ValueError("BasisState parameter and wires must be of equal length.")
-
-        self._kokkos_state.setBasisState(state, list(wires))
-
-    def _apply_lightning_midmeasure(
-        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
-    ):
-        """Execute a MidMeasureMP operation and return the sample in mid_measurements.
-
-        Args:
-            operation (~pennylane.operation.Operation): mid-circuit measurement
+            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
+                parameters needed to fully describe the execution.
 
         Returns:
-            None
+            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
+            with unset specifications filled in.
+
+        This device:
+
+        * Supports any qubit operations that provide a matrix
+        * Currently does not support finite shots
+        * Currently does not intrinsically support parameter broadcasting
+
         """
-        wires = self.wires.indices(operation.wires)
-        wire = list(wires)[0]
-        if postselect_mode == "fill-shots" and operation.postselect is not None:
-            sample = operation.postselect
-        else:
-            sample = qml.math.reshape(self.generate_samples(shots=1), (-1,))[wire]
-        mid_measurements[operation] = sample
-        getattr(self.state_vector, "collapse")(wire, bool(sample))
-        if operation.reset and bool(sample):
-            self.apply([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
+        exec_config = self._setup_execution_config(execution_config)
+        program = TransformProgram()
 
-    def apply_lightning(self, operations, mid_measurements=None, postselect_mode=None):
-        """Apply a list of operations to the state tensor.
+        program.add_transform(validate_measurements, name=self.name)
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        program.add_transform(
+            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
+        )
 
-        Args:
-            operations (list[~pennylane.operation.Operation]): operations to apply
-            dtype (type): Type of numpy ``complex`` to be used. Can be important
-            to specify for large systems for memory allocation purposes.
+        program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
+            skip_initial_state_prep=True,
+            name=self.name,
+        )
+        program.add_transform(qml.transforms.broadcast_expand)
 
-        Returns:
-            array[complex]: the output state tensor
-        """
-        # Skip over identity operations instead of performing
-        # matrix multiplication with the identity.
-        state = self.state_vector
-
-        for ops in operations:
-            if isinstance(ops, Adjoint):
-                name = ops.base.name
-                invert_param = True
-            else:
-                name = ops.name
-                invert_param = False
-            if isinstance(ops, qml.Identity):
-                continue
-            method = getattr(state, name, None)
-            wires = self.wires.indices(ops.wires)
-
-            if isinstance(ops, Conditional):
-                if ops.meas_val.concretize(mid_measurements):
-                    self.apply_lightning([ops.base])
-            elif isinstance(ops, MidMeasureMP):
-                self._apply_lightning_midmeasure(ops, mid_measurements, postselect_mode)
-            elif isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
-                ops.base, qml.GlobalPhase
-            ):
-                controls = ops.control_wires
-                control_values = ops.control_values
-                param = ops.base.parameters[0]
-                matrix = global_phase_diagonal(param, self.wires, controls, control_values)
-                state.apply(name, wires, False, [[param]], matrix)
-            elif method is None:
-                # Inverse can be set to False since qml.matrix(ops) is already in inverted form
-                try:
-                    mat = qml.matrix(ops)
-                except AttributeError:  # pragma: no cover
-                    # To support older versions of PL
-                    mat = ops.matrix
-
-                if len(mat) == 0:
-                    raise ValueError("Unsupported operation")
-                state.apply(
-                    name,
-                    wires,
-                    False,
-                    [],
-                    mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
-                )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
-            else:
-                param = ops.parameters
-                method(wires, invert_param, param)
+        if exec_config.gradient_method == "adjoint":
+            _add_adjoint_transforms(program)
+        return program, exec_config
 
     # pylint: disable=unused-argument
-    def apply(self, operations, rotations=None, mid_measurements=None, **kwargs):
-        """Applies a list of operations to the state tensor."""
-        # State preparation is currently done in Python
-        if operations:  # make sure operations[0] exists
-            if isinstance(operations[0], StatePrep):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
-                operations = operations[1:]
-            elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
-                operations = operations[1:]
-
-        postselect_mode = kwargs.get("postselect_mode", None)
-
-        for operation in operations:
-            if isinstance(operation, (StatePrep, BasisState)):
-                raise DeviceError(
-                    f"Operation {operation.name} cannot be used after other "
-                    + f"Operations have already been applied on a {self.short_name} device."
-                )
-
-        self.apply_lightning(
-            operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-        )
-
-    # pylint: disable=protected-access
-    def expval(self, observable, shot_range=None, bin_size=None):
-        """Expectation value of the supplied observable.
+    def execute(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Result_or_ResultBatch:
+        """Execute a circuit or a batch of circuits and turn it into results.
 
         Args:
-            observable: A PennyLane observable.
-            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
-                to use. If not specified, all samples are used.
-            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
-                returns the measurement statistic separately over each bin. If not
-                provided, the entire shot range is treated as a single bin.
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            execution_config (ExecutionConfig): a datastructure with additional information required for execution
 
         Returns:
-            Expectation value of the observable
+            TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        if isinstance(observable, qml.Projector):
-            diagonalizing_gates = observable.diagonalizing_gates()
-            if self.shots is None and diagonalizing_gates:
-                self.apply(diagonalizing_gates)
-            results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-            if self.shots is None and diagonalizing_gates:
-                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
-            return results
-
-        if self.shots is not None:
-            # estimate the expectation value
-            # LightningQubit doesn't support sampling yet
-            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
-            return np.squeeze(np.mean(samples, axis=0))
-
-        # Initialization of state
-        measure = (
-            MeasurementsC64(self.state_vector)
-            if self.use_csingle
-            else MeasurementsC128(self.state_vector)
-        )
-        if isinstance(observable, qml.SparseHamiltonian):
-            csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
-            return measure.expval(
-                csr_hamiltonian.indptr,
-                csr_hamiltonian.indices,
-                csr_hamiltonian.data,
+        results = []
+        for circuit in circuits:
+            if self._wire_map is not None:
+                [circuit], _ = qml.map_wires(circuit, self._wire_map)
+            results.append(
+                self.simulate(
+                    circuit,
+                    self._statevector,
+                    postselect_mode=execution_config.mcm_config.postselect_mode,
+                )
             )
 
-        # use specialized functors to compute expval(Hermitian)
-        if isinstance(observable, qml.Hermitian):
-            observable_wires = self.map_wires(observable.wires)
-            matrix = observable.matrix()
-            return measure.expval(matrix, observable_wires)
+        return tuple(results)
 
-        if (
-            isinstance(observable, qml.ops.Hamiltonian)
-            or (observable.arithmetic_depth > 0)
-            or isinstance(observable.name, List)
-        ):
-            ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                observable, self.wire_map
-            )
-            return measure.expval(ob_serialized)
+    def supports_derivatives(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
+    ) -> bool:
+        """Check whether or not derivatives are available for a given configuration and circuit.
 
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(observable.wires)
-
-        return measure.expval(observable.name, observable_wires)
-
-    def var(self, observable, shot_range=None, bin_size=None):
-        """Variance of the supplied observable.
+        ``LightningKokkos`` supports adjoint differentiation with analytic results.
 
         Args:
-            observable: A PennyLane observable.
-            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
-                to use. If not specified, all samples are used.
-            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
-                returns the measurement statistic separately over each bin. If not
-                provided, the entire shot range is treated as a single bin.
+            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
+            circuit (QuantumTape): An optional circuit to check derivatives support for.
 
         Returns:
-            Variance of the observable
+            Bool: Whether or not a derivative can be calculated provided the given information
+
         """
-        if isinstance(observable, qml.Projector):
-            diagonalizing_gates = observable.diagonalizing_gates()
-            if self.shots is None and diagonalizing_gates:
-                self.apply(diagonalizing_gates)
-            results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
-            if self.shots is None and diagonalizing_gates:
-                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
-            return results
+        if execution_config is None and circuit is None:
+            return True
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
+        if circuit is None:
+            return True
+        return _supports_adjoint(circuit=circuit)
 
-        if self.shots is not None:
-            # estimate the var
-            # LightningKokkos doesn't support sampling yet
-            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
-            return np.squeeze(np.var(samples, axis=0))
-
-        # Initialization of state
-        measure = (
-            MeasurementsC64(self.state_vector)
-            if self.use_csingle
-            else MeasurementsC128(self.state_vector)
-        )
-
-        if isinstance(observable, qml.SparseHamiltonian):
-            csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
-            return measure.var(
-                csr_hamiltonian.indptr,
-                csr_hamiltonian.indices,
-                csr_hamiltonian.data,
-            )
-
-        if (
-            isinstance(observable, (qml.Hamiltonian, qml.Hermitian))
-            or (observable.arithmetic_depth > 0)
-            or isinstance(observable.name, List)
-        ):
-            ob_serialized = QuantumScriptSerializer(self.short_name, self.use_csingle)._ob(
-                observable, self.wire_map
-            )
-            return measure.var(ob_serialized)
-
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(observable.wires)
-
-        return measure.var(observable.name, observable_wires)
-
-    def generate_samples(self, shots=None):
-        """Generate samples
-
-        Returns:
-            array[int]: array of samples in binary representation with shape
-            ``(dev.shots, dev.num_wires)``
-        """
-        shots = self.shots if shots is None else shots
-        measure = (
-            MeasurementsC64(self._kokkos_state)
-            if self.use_csingle
-            else MeasurementsC128(self._kokkos_state)
-        )
-        return measure.generate_samples(len(self.wires), shots).astype(int, copy=False)
-
-    def probability_lightning(self, wires):
-        """Return the probability of each computational basis state.
+    def simulate(
+        self,
+        circuit: QuantumScript,
+        state: LightningKokkosStateVector,
+        postselect_mode: str = None,
+    ) -> Result:
+        """Simulate a single quantum script.
 
         Args:
-            wires (Iterable[Number, str], Number, str, Wires): wires to return
-                marginal probabilities for. Wires not provided are traced out of the system.
+            circuit (QuantumTape): The single circuit to simulate
+            state (LightningKokkosStateVector): handle to Lightning state vector
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
 
         Returns:
-            array[float]: list of the probabilities
+            Tuple[TensorLike]: The results of the simulation
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        return self.measurements.probs(wires)
-
-    # pylint: disable=attribute-defined-outside-init
-    def sample(self, observable, shot_range=None, bin_size=None, counts=False):
-        """Return samples of an observable."""
-        diagonalizing_gates = observable.diagonalizing_gates()
-        if diagonalizing_gates:
-            self.apply(diagonalizing_gates)
-        if not isinstance(observable, qml.PauliZ):
-            self._samples = self.generate_samples()
-        results = super().sample(
-            observable, shot_range=shot_range, bin_size=bin_size, counts=counts
-        )
-        if diagonalizing_gates:
-            self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
-        return results
-
-    @staticmethod
-    def _check_adjdiff_supported_operations(operations):
-        """Check Lightning adjoint differentiation method support for a tape.
-
-        Raise ``QuantumFunctionError`` if ``tape`` contains not supported measurements,
-        observables, or operations by the Lightning adjoint differentiation method.
-
-        Args:
-            tape (.QuantumTape): quantum tape to differentiate.
-        """
-        for operation in operations:
-            if operation.num_params > 1 and not isinstance(operation, Rot):
-                raise QuantumFunctionError(
-                    f"The {operation.name} operation is not supported using "
-                    'the "adjoint" differentiation method'
-                )
-
-    def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
-        """Generate an initial state vector for ``_process_jacobian_tape``."""
-        if starting_state is not None:
-            if starting_state.size != 2 ** len(self.wires):
-                raise QuantumFunctionError(
-                    "The number of qubits of starting_state must be the same as "
-                    "that of the device."
-                )
-            self._apply_state_vector(starting_state, self.wires)
-        elif not use_device_state:
-            self.reset()
-            self.apply(tape.operations)
-        return self.state_vector
-
-    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
-        """Implements the adjoint method outlined in
-        `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
-
-        After a forward pass, the circuit is reversed by iteratively applying adjoint
-        gates to scan backwards through the circuit.
-        """
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint "
-                "differentiation method.",
-                UserWarning,
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            results = []
+            aux_circ = qml.tape.QuantumScript(
+                circuit.operations,
+                circuit.measurements,
+                shots=[1],
+                trainable_params=circuit.trainable_params,
             )
-
-        tape_return_type = self._check_adjdiff_supported_measurements(tape.measurements)
-
-        if not tape_return_type:  # the tape does not have measurements
-            return np.array([], dtype=self.state.dtype)
-
-        if tape_return_type is State:  # pragma: no cover
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support measurement StateMP."
-                "Use vjp method instead for this purpose."
-            )
-
-        self._check_adjdiff_supported_operations(tape.operations)
-
-        processed_data = self._process_jacobian_tape(tape, starting_state, use_device_state)
-
-        if not processed_data:  # training_params is empty
-            return np.array([], dtype=self.state.dtype)
-
-        trainable_params = processed_data["tp_shift"]
-
-        # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
-        # This will allow use of Lightning with adjoint for large-qubit numbers AND large
-        # numbers of observables, enabling choice between compute time and memory use.
-        requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
-
-        adjoint_jacobian = AdjointJacobianC64() if self.use_csingle else AdjointJacobianC128()
-
-        if self._batch_obs and requested_threads > 1:  # pragma: no cover
-            obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
-            jac = []
-            for obs_chunk in obs_partitions:
-                jac_local = adjoint_jacobian(
-                    processed_data["state_vector"],
-                    obs_chunk,
-                    processed_data["ops_serialized"],
-                    trainable_params,
+            for _ in range(circuit.shots.total_shots):
+                state.reset_state()
+                mid_measurements = {}
+                final_state = state.get_final_state(
+                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                 )
-                jac.extend(jac_local)
-        else:
-            jac = adjoint_jacobian(
-                processed_data["state_vector"],
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
-        jac = np.array(jac)
-        jac = jac.reshape(-1, len(trainable_params))
-        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-        jac_r[:, processed_data["record_tp_rows"]] = jac
-        if hasattr(qml, "active_return"):  # pragma: no cover
-            return self._adjoint_jacobian_processing(jac_r) if qml.active_return() else jac_r
-        return self._adjoint_jacobian_processing(jac_r)
-
-    # pylint: disable=inconsistent-return-statements, line-too-long
-    def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
-        """Generate the processing function required to compute the vector-Jacobian products
-        of a tape.
-
-        This function can be used with multiple expectation values or a quantum state.
-        When a quantum state is given,
-
-        .. code-block:: python
-
-            vjp_f = dev.vjp([qml.state()], grad_vec)
-            vjp = vjp_f(tape)
-
-        computes :math:`w = (w_1,\\cdots,w_m)` where
-
-        .. math::
-
-            w_k = \\langle v| \\frac{\\partial}{\\partial \\theta_k} | \\psi_{\\pmb{\\theta}} \\rangle.
-
-        Here, :math:`m` is the total number of trainable parameters,
-        :math:`\\pmb{\\theta}` is the vector of trainable parameters and
-        :math:`\\psi_{\\pmb{\\theta}}` is the output quantum state.
-
-        Args:
-            measurements (list): List of measurement processes for vector-Jacobian product.
-                Now it must be expectation values or a quantum state.
-            grad_vec (tensor_like): Gradient-output vector. Must have shape matching the output
-                shape of the corresponding tape, i.e. number of measurements if the return
-                type is expectation or :math:`2^N` if the return type is statevector
-            starting_state (tensor_like): post-forward pass state to start execution with.
-                It should be complex-valued. Takes precedence over ``use_device_state``.
-            use_device_state (bool): use current device state to initialize.
-                A forward pass of the same circuit should be the last thing the device
-                has executed. If a ``starting_state`` is provided, that takes precedence.
-
-        Returns:
-            The processing function required to compute the vector-Jacobian products of a tape.
-        """
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint "
-                "differentiation method.",
-                UserWarning,
-            )
-
-        tape_return_type = self._check_adjdiff_supported_measurements(measurements)
-
-        if math.allclose(grad_vec, 0) or tape_return_type is None:
-            return lambda tape: math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
-
-        if tape_return_type is Expectation:
-            if len(grad_vec) != len(measurements):
-                raise ValueError(
-                    "Number of observables in the tape must be the same as the "
-                    "length of grad_vec in the vjp method"
+                results.append(
+                    LightningKokkosMeasurements(final_state).measure_final_state(
+                        aux_circ, mid_measurements=mid_measurements
+                    )
                 )
+            return tuple(results)
 
-            if np.iscomplexobj(grad_vec):
-                raise ValueError(
-                    "The vjp method only works with a real-valued grad_vec when "
-                    "the tape is returning an expectation value"
-                )
-
-            ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
-
-            # pylint: disable=protected-access
-            def processing_fn(tape):
-                nonlocal ham
-                num_params = len(tape.trainable_params)
-
-                if num_params == 0:
-                    return np.array([], dtype=self.state.dtype)
-
-                new_tape = tape.copy()
-                new_tape._measurements = [qml.expval(ham)]
-
-                return self.adjoint_jacobian(new_tape, starting_state, use_device_state)
-
-            return processing_fn
+        state.reset_state()
+        final_state = state.get_final_state(circuit)
+        return LightningKokkosMeasurements(final_state).measure_final_state(circuit)
 
     @staticmethod
     def get_c_interface():

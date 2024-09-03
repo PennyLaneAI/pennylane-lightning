@@ -28,6 +28,7 @@ from pennylane.tape import QuantumScript
 if device_name == "lightning.qubit":
     from pennylane_lightning.lightning_qubit.lightning_qubit import (
         _add_adjoint_transforms,
+        _adjoint_ops,
         _supports_adjoint,
         accepted_observables,
         adjoint_measurements,
@@ -45,6 +46,26 @@ if device_name == "lightning.qubit":
 
 if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
+    
+if device_name == "lightning.kokkos":
+    from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
+        _add_adjoint_transforms,
+        _adjoint_ops,
+        _supports_adjoint,
+        accepted_observables,
+        adjoint_measurements,
+        adjoint_observables,
+        decompose,
+        mid_circuit_measurements,
+        no_sampling,
+        stopping_condition,
+        stopping_condition_shots,
+        validate_adjoint_trainable_params,
+        validate_device_wires,
+        validate_measurements,
+        validate_observables,
+    )
+
 
 if device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor.lightning_tensor import (
@@ -123,11 +144,11 @@ class TestHelpers:
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
         expected_program = qml.transforms.core.TransformProgram()
 
-        name = "adjoint + lightning.qubit"
+        name = f"adjoint + {device_name}"
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(
             decompose,
-            stopping_condition=adjoint_ops,
+            stopping_condition=_adjoint_ops,
             stopping_condition_shots=stopping_condition_shots,
             name=name,
             skip_initial_state_prep=False,
@@ -165,8 +186,8 @@ class TestHelpers:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shots or mcmc",
+    device_name != "lightning.qubit",
+    reason=f"The device {device_name} does not support mcmc",
 )
 class TestInitialization:
     """Unit tests for device initialization"""
@@ -240,7 +261,7 @@ class TestExecution:
                     device_options=_default_device_options,
                 ),
             ),
-            (
+            pytest.param(
                 ExecutionConfig(
                     device_options={
                         "c_dtype": np.complex64,
@@ -257,6 +278,10 @@ class TestExecution:
                         "kernel_name": None,
                         "num_burnin": 0,
                     },
+                ),
+                marks=pytest.mark.skipif(
+                    device_name != "lightning.qubit",
+                    reason=f"The device {device_name} does not support mcmc",
                 ),
             ),
             (
@@ -305,11 +330,11 @@ class TestExecution:
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
         if adjoint:
-            name = "adjoint + lightning.qubit"
+            name = f"adjoint + {device_name}"
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(
                 decompose,
-                stopping_condition=adjoint_ops,
+                stopping_condition=_adjoint_ops,
                 stopping_condition_shots=stopping_condition_shots,
                 name=name,
                 skip_initial_state_prep=False,
@@ -338,21 +363,21 @@ class TestExecution:
                 (qml.BasisState([1, 1], wires=[0, 1]), False),
                 (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), True),
             ]
-            if device_name != "lightning.tensor"
-            else [
-                (qml.BasisState([1, 1], wires=[0, 1]), False),
-            ]
         ),
     )
     def test_preprocess_state_prep_first_op_decomposition(self, op, is_trainable):
         """Test that state prep ops in the beginning of a tape are decomposed with adjoint
         but not otherwise."""
+        if device_name == "lightning.tensor" and is_trainable:
+            pytest.skip("StatePrep trainable not supported in lightning.tensor")
+
         tape = qml.tape.QuantumScript([op, qml.RX(1.23, wires=0)], [qml.expval(qml.PauliZ(0))])
         device = LightningDevice(wires=3)
 
         if is_trainable:
-            # Need to decompose twice as the state prep ops we use first decompose into a template
-            decomp = op.decomposition()[0].decomposition()
+            decomp = op.decomposition()
+            # decompose one more time if it's decomposed into a template:
+            decomp = decomp[0].decomposition() if len(decomp) == 1 else decomp
         else:
             decomp = [op]
 
@@ -369,7 +394,7 @@ class TestExecution:
             (qml.StatePrep(np.array([1, 0]), wires=0), 1),
             (qml.BasisState([1, 1], wires=[0, 1]), 1),
             (qml.BasisState(qml.numpy.array([1, 1]), wires=[0, 1]), 1),
-            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 2),
+            (qml.AmplitudeEmbedding([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 1),
             (qml.MottonenStatePreparation([1 / np.sqrt(2), 1 / np.sqrt(2)], wires=0), 0),
         ],
     )
@@ -380,8 +405,7 @@ class TestExecution:
         )
         device = LightningDevice(wires=3)
 
-        for _ in range(decomp_depth):
-            op = op.decomposition()[0]
+        op = op.decomposition()[0] if decomp_depth and len(op.decomposition()) == 1 else op
         decomp = op.decomposition()
 
         program, _ = device.preprocess()
@@ -423,8 +447,6 @@ class TestExecution:
         if device_name == "lightning.tensor":
             if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
                 pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
-            if isinstance(mp, ProbabilityMP):
-                pytest.skip("qml.probs() not supported in lightning.tensor")
 
         if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
@@ -468,10 +490,6 @@ class TestExecution:
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
-        if device_name == "lightning.tensor":
-            if isinstance(mp1, ProbabilityMP) or isinstance(mp2, ProbabilityMP):
-                pytest.skip("qml.probs() not supported in lightning.tensor")
-
         if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
 
@@ -492,7 +510,7 @@ class TestExecution:
 
     @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
     @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_custom_wires(self, phi, theta, wires):
+    def test_custom_wires_execute(self, phi, theta, wires):
         """Test execution with custom wires"""
         device = LightningDevice(wires=wires)
         qs = QuantumScript(
@@ -513,6 +531,10 @@ class TestExecution:
         assert np.allclose(result[0], np.cos(phi))
         assert np.allclose(result[1], np.cos(phi) * np.cos(theta))
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support out of order probs",
+    )
     @pytest.mark.parametrize(
         "wires, wire_order", [(3, (0, 1, 2)), (("a", "b", "c"), ("a", "b", "c"))]
     )
@@ -827,11 +849,11 @@ class TestDerivatives:
         tapes."""
         device = LightningDevice(wires=4, batch_obs=batch_obs)
 
-        ops = [
-            qml.X(0),
-            qml.X(1),
-            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
-        ]
+        ops = [qml.X(0), qml.X(1)]
+        if device_name == "lightning.qubit":
+            ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
+        else:
+            ops.append(qml.RX(phi, 2))
 
         qs1 = QuantumScript(
             ops,
@@ -847,6 +869,7 @@ class TestDerivatives:
 
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_derivatives((qs1, qs2))
+
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_derivatives((qs1, qs2))
@@ -875,6 +898,33 @@ class TestDerivatives:
         assert len(jacs[0]) == len(expected_jac[0])
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
+    def test_derivatives_custom_wires(
+        self, theta, phi, dev, execute_and_derivatives, batch_obs, wires
+    ):
+        """Test that the jacobian is correct when set custom wires"""
+        device = LightningDevice(wires=wires)
+
+        qs = QuantumScript(
+            [qml.RX(theta, wires[0]), qml.CNOT([wires[0], wires[1]]), qml.RY(phi, wires[1])],
+            [qml.expval(qml.Z(wires[1]))],
+            trainable_params=[0, 1],
+        )
+
+        res, jac = self.process_and_execute(
+            device, qs, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+        expected, expected_jac = self.calculate_reference(
+            qs, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
 @pytest.mark.skipif(
@@ -1168,8 +1218,11 @@ class TestVJP:
         ops = [
             qml.X(0),
             qml.X(1),
-            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
         ]
+        if device_name == "lightning.qubit":
+            ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
+        else:
+            ops.append(qml.RX(phi, 2))
 
         qs1 = QuantumScript(
             ops,
@@ -1186,6 +1239,7 @@ class TestVJP:
 
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_vjp((qs1, qs2), dy)
+
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_vjp((qs1, qs2), dy)
@@ -1213,3 +1267,31 @@ class TestVJP:
         assert len(jacs) == len(expected_jac) == 2
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
+    def test_vjp_custom_wires(self, theta, phi, dev, wires, execute_and_derivatives, batch_obs):
+        """Test that the VJP is correct when set a custom wires"""
+
+        device = LightningDevice(wires=wires)
+
+        qs = QuantumScript(
+            [qml.RX(theta, wires[0]), qml.CNOT([wires[0], wires[1]]), qml.RY(phi, wires[1])],
+            [qml.expval(qml.Z(wires[1]))],
+            trainable_params=[0, 1],
+        )
+
+        dy = 1.0
+        res, jac = self.process_and_execute(
+            device, qs, dy, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+
+        expected, expected_jac = self.calculate_reference(
+            qs, dy, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)

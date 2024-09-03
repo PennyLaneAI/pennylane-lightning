@@ -171,7 +171,14 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
-
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<ParamT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
     pyclass
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
@@ -320,7 +327,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
             const std::size_t ndim = 2;
             const std::vector<std::size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(size_t);
+            constexpr auto sz = sizeof(std::size_t);
             const std::vector<std::size_t> strides{sz * num_wires, sz};
             // return 2-D NumPy array
             return py::array(py::buffer_info(

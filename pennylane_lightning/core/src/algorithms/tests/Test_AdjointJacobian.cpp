@@ -453,7 +453,7 @@ template <typename TypeList> void testAdjointJacobian() {
             const auto obs = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliZ", std::vector<std::size_t>{0});
 
-            for (size_t i = 0; i < thetas.size(); i++) {
+            for (std::size_t i = 0; i < thetas.size(); i++) {
                 const PrecisionT theta = thetas[i];
                 std::vector<PrecisionT> local_params{
                     theta, std::pow(theta, (PrecisionT)3),

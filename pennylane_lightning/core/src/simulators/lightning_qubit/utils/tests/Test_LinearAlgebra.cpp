@@ -36,7 +36,7 @@ using Pennylane::Util::randomUnitary;
 TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     SECTION("innerProd") {
         SECTION("Iterative increment") {
-            for (size_t i = 0; i < 12; i++) {
+            for (std::size_t i = 0; i < 12; i++) {
                 auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
@@ -60,7 +60,7 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     }
     SECTION("innerProd-inline") {
         SECTION("Iterative increment") {
-            for (size_t i = 0; i < 12; i++) {
+            for (std::size_t i = 0; i < 12; i++) {
                 auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
@@ -86,12 +86,12 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     }
     SECTION("innerProdC") {
         SECTION("Iterative increment") {
-            for (size_t i = 0; i < 12; i++) {
+            for (std::size_t i = 0; i < 12; i++) {
                 auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
-                std::complex<TestType> expected_result(size_t{1U} << (i + 1),
-                                                       0);
+                std::complex<TestType> expected_result(
+                    std::size_t{1U} << (i + 1), 0);
                 std::complex<TestType> result = Util::innerProdC(data1, data2);
                 CAPTURE(result);
                 CAPTURE(expected_result);
@@ -115,12 +115,12 @@ TEMPLATE_TEST_CASE("Inner product", "[Util][LinearAlgebra]", float, double) {
     }
     SECTION("innerProdC-inline") {
         SECTION("Iterative increment") {
-            for (size_t i = 0; i < 12; i++) {
+            for (std::size_t i = 0; i < 12; i++) {
                 auto sz = static_cast<std::size_t>(1U << i);
                 std::vector<std::complex<TestType>> data1(sz, {1.0, 1.0});
                 std::vector<std::complex<TestType>> data2(sz, {1.0, 1.0});
-                std::complex<TestType> expected_result(size_t{1U} << (i + 1),
-                                                       0);
+                std::complex<TestType> expected_result(
+                    std::size_t{1U} << (i + 1), 0);
                 std::complex<TestType> result = Util::innerProdC<TestType, 1>(
                     data1.data(), data2.data(), sz);
                 CAPTURE(result);
@@ -151,7 +151,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
     using Util::Trans;
     SECTION("matrixVecProd") {
         SECTION("Simple Iterative with NoTranspose") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<TestType>> mat(m * m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> v_in(m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> v_expected(
@@ -165,7 +165,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             }
         }
         SECTION("Simple Iterative with Transpose") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<TestType>> mat(m * m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> v_in(m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> v_expected(
@@ -295,7 +295,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
     }
     SECTION("vecMatrixProd") {
         SECTION("Simple Iterative") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<TestType> mat(m * m, TestType{1.0});
                 std::vector<TestType> v_in(m, TestType{1.0});
                 std::vector<TestType> v_expected(m, static_cast<TestType>(m));
@@ -309,7 +309,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             }
         }
         SECTION("Zero Vector") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<TestType> mat(m * m, 1);
                 std::vector<TestType> v_in(m, 0);
                 std::vector<TestType> v_expected(m, 0);
@@ -388,7 +388,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
     }
     SECTION("matrixMatProd") {
         SECTION("Simple Iterative (Trans::Transpose)") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<TestType>> m_left(m * m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> m_right(m * m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> m_out_exp(
@@ -403,7 +403,7 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
             }
         }
         SECTION("Simple Iterative (Trans::Adjoint)") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<TestType>> m_left(m * m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> m_right(m * m, {1.0, 1.0});
                 std::vector<std::complex<TestType>> m_out_exp(
@@ -582,9 +582,9 @@ TEMPLATE_TEST_CASE("Product", "[Util][LinearAlgebra]", float, double) {
 TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
     SECTION("CFTranspose") {
         SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 10; m++) {
+            for (std::size_t m = 2; m < 10; m++) {
                 std::vector<TestType> mat(m * m, {0});
-                for (size_t i = 0; i < m; i++) {
+                for (std::size_t i = 0; i < m; i++) {
                     mat[i * m + i] = 1.0;
                 }
                 std::vector<TestType> mat_t(m * m);
@@ -635,9 +635,9 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
     }
     SECTION("Transpose") {
         SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<TestType>> mat(m * m, {0, 0});
-                for (size_t i = 0; i < m; i++) {
+                for (std::size_t i = 0; i < m; i++) {
                     mat[i * m + i] = {1, 1};
                 }
                 std::vector<std::complex<TestType>> mat_t =
@@ -690,9 +690,9 @@ TEMPLATE_TEST_CASE("Transpose", "[Util][LinearAlgebra]", float, double) {
     }
     SECTION("Transpose<complex<T>>") {
         SECTION("Simple Matrix") {
-            for (size_t m = 2; m < 8; m++) {
+            for (std::size_t m = 2; m < 8; m++) {
                 std::vector<std::complex<TestType>> mat(m * m, {0, 0});
-                for (size_t i = 0; i < m; i++) {
+                for (std::size_t i = 0; i < m; i++) {
                     mat[i * m + i] = {1.0, 1.0};
                 }
                 std::vector<std::complex<TestType>> mat_t =
@@ -831,7 +831,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util][LinearAlgebra]", float, double) {
 
     std::mt19937 re{1337};
 
-    for (size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
+    for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
         const std::size_t dim = (1U << num_qubits);
         const auto unitary = randomUnitary<PrecisionT>(re, num_qubits);
 
@@ -847,7 +847,7 @@ TEMPLATE_TEST_CASE("randomUnitary", "[Util][LinearAlgebra]", float, double) {
 
         std::vector<std::complex<PrecisionT>> identity(
             dim * dim, std::complex<PrecisionT>{});
-        for (size_t i = 0; i < dim; i++) {
+        for (std::size_t i = 0; i < dim; i++) {
             identity[i * dim + i] = std::complex<PrecisionT>{1.0, 0.0};
         }
 
