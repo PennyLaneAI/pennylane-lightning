@@ -279,6 +279,7 @@ jobs:
           if-no-files-found: warn
 
   upload-to-codecov-linux-python:
+    if: github.event_name == 'pull_request'
     needs: [determine_runner, test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
