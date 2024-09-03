@@ -277,7 +277,7 @@ jobs:
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           path: ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           if-no-files-found: error
           include-hidden-files: true
@@ -294,9 +294,10 @@ jobs:
           fetch-tags: true
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          pattern: .coverage*
+          merge-multiple: true
 
       - name: Combine coverage files
         run: |

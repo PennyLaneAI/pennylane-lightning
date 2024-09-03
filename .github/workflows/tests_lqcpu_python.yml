@@ -221,9 +221,9 @@ jobs:
           mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           path: |
             ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           if-no-files-found: error
@@ -243,7 +243,8 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v3
         with:
-          name: ubuntu-codecov-results-python
+          pattern: .coverage*
+          merge-multiple: true
 
       - name: Combine coverage files
         run: |
