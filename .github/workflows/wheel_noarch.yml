@@ -93,12 +93,6 @@ jobs:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist/*.whl
 
-      - uses: actions/upload-artifact@v3
-        if: ${{ matrix.pl_backend != 'lightning_qubit' && (github.event_name == 'release' || github.ref == 'refs/heads/master') }}
-        with:
-          name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
-          path: dist/*.tar.gz
-
   upload-pypi:
     needs: build-pure-python-wheel
     strategy:
@@ -120,9 +114,3 @@ jobs:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
-
-      - uses: actions/download-artifact@v3
-        if: ${{ matrix.pl_backend != 'lightning_qubit' && github.event_name == 'release' }}
-        with:
-          name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
-          path: dist
