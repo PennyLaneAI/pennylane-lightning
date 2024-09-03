@@ -98,6 +98,6 @@ echo '__version__ = "'${LVER}'"' >> pennylane_lightning/core/_version.py
 pushd .github/workflows
 sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" wheel_*
 popd
-git add -u . 
+git add -u .
 git commit -m "Forked as v${LVER}_release to be released with tag v${LVER}."
 git push --set-upstream origin v${LVER}_release

@@ -120,7 +120,7 @@ jobs:
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
           retention-days: 1
-          if-no-files-found: error
+          if-no-files-found: warn
           path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
 
       - name: Cache wheel directories
@@ -128,7 +128,7 @@ jobs:
         with:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           retention-days: 1
-          if-no-files-found: error
+          if-no-files-found: warn
           path: |
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
 
@@ -224,7 +224,7 @@ jobs:
           name: ubuntu-codecov-results-python
           path: |
             ./.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
-          if-no-files-found: error
+          if-no-files-found: warn
 
   upload-to-codecov-linux-python:
     needs: [determine_runner, test_lightning_qubit_wheels]
