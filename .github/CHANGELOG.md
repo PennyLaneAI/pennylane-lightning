@@ -34,7 +34,7 @@
 * Update python packaging to follow PEP 517/518/621/660 standards.
   [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
 
-* Lightning Kokkos migrated to new device API.
+* Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
 ### Improvements
