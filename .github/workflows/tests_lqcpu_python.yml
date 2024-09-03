@@ -121,6 +121,7 @@ jobs:
           name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
           retention-days: 1
           if-no-files-found: warn
+          include-hidden-files: true
           path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
 
       - name: Cache wheel directories
@@ -129,6 +130,7 @@ jobs:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           retention-days: 1
           if-no-files-found: warn
+          include-hidden-files: true
           path: |
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
 
@@ -219,7 +221,7 @@ jobs:
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           set +x
-          
+
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
@@ -227,6 +229,7 @@ jobs:
           path: |
             ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           if-no-files-found: warn
+          include-hidden-files: true
 
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
