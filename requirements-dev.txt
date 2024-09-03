@@ -1,4 +1,4 @@
-git+https://github.com/PennyLaneAI/pennylane.git@v0.38.0-rc0
+git+https://github.com/PennyLaneAI/pennylane.git@master
 build
 ninja
 flaky
