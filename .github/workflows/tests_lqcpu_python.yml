@@ -209,6 +209,7 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
+          set -x
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" \
             $COVERAGE_FLAGS --splits 4 --group ${{ matrix.group }} \
@@ -217,7 +218,8 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
-
+          set +x
+          
       - name: Upload code coverage results
         uses: actions/upload-artifact@v3
         with:
