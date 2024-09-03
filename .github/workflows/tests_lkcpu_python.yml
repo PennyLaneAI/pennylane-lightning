@@ -206,12 +206,12 @@ jobs:
           git status
 
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
           path: ${{ github.workspace }}
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4.1.7
         with:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
           path: ${{ github.workspace }}
@@ -294,7 +294,7 @@ jobs:
           fetch-tags: true
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.1.7
         with:
           pattern: .coverage*
           merge-multiple: true
