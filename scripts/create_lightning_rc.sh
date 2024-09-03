@@ -92,12 +92,21 @@ python validate_attrs.py
 
 # Create release
 
-git checkout v${LVER}_release
+git checkout -b v${LVER}_release
 sed -i "/$LVER/d" pennylane_lightning/core/_version.py
 echo '__version__ = "'${LVER}'"' >> pennylane_lightning/core/_version.py
 pushd .github/workflows
 sed -i "s|event_name == 'pull_request'|event_name == 'release'|g" wheel_*
 popd
-git add -u .
+git add -u .github/workflows pennylane_lightning
 git commit -m "Forked as v${LVER}_release to be released with tag v${LVER}."
 git push --set-upstream origin v${LVER}_release
+
+# Create source dists
+
+for backend in qubit gpu kokkos tensor; do
+    PL_BACKEND=lightning_${backend} python scripts/configure_pyproject_toml.py
+    PL_BACKEND=lightning_${backend} python setup.py sdist
+done
+# upload ./dist/* to release
+
