@@ -34,7 +34,7 @@ on:
 env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --log-cli-level=debug --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"

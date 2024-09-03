@@ -45,16 +45,15 @@ jobs:
       - name: Python version
         id: pyver
         run: |
-          # FIXME: use `set-builder-matrix` in `set_wheel_build_matrix.yml` before merging to master!
-          # if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-          #   echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
-          #     --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-          #     --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
-          # else
-          echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
-            --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
-            --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
-          # fi
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }})" >> $GITHUB_OUTPUT
+          else
+            echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
+              --min-version=3.${{ env.PYTHON3_MIN_VERSION }} \
+              --max-version=3.${{ env.PYTHON3_MAX_VERSION }} --range)" >> $GITHUB_OUTPUT
+          fi
 
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
