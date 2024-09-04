@@ -151,8 +151,8 @@ jobs:
             -G Ninja
           cmake --build ./Build
           cd ./Build
-          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
+          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
+          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}/report_$file.xml; done;
           lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}.info
