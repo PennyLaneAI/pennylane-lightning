@@ -35,6 +35,7 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
+# pylint: ungrouped-imports
 from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
@@ -64,7 +65,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         device_name="lightning.kokkos",
         kokkos_args=None,
         sync=True,
-    ):
+    ): # pylint: disable=too-many-arguments
 
         if device_name != "lightning.kokkos":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
