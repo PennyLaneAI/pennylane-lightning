@@ -101,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release' }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
