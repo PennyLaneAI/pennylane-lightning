@@ -18,10 +18,12 @@ Internal methods for adjoint Jacobian differentiation method.
 import numpy as np
 import pennylane as qml
 
+from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
+
 from ._state_vector import LightningGPUStateVector
 
 
-class LightningGPUAdjointJacobian:
+class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
     """Check and execute the adjoint Jacobian differentiation method.
 
     Args:
@@ -30,22 +32,4 @@ class LightningGPUAdjointJacobian:
     """
 
     def __init__(self, lgpu_state: LightningGPUStateVector, batch_obs: bool = False) -> None:
-        self._qubit_state = lgpu_state
-        self._state = lgpu_state.state_vector
-        self._dtype = lgpu_state.dtype
-        self._batch_obs = batch_obs
-
-    @property
-    def qubit_state(self):
-        """Returns a handle to the LightningGPUStateVector class."""
-        return self._qubit_state
-
-    @property
-    def state(self):
-        """Returns a handle to the Lightning internal data class."""
-        return self._state
-
-    @property
-    def dtype(self):
-        """Returns the simulation data type."""
-        return self._dtype
+        super().__init__(lgpu_state, batch_obs)

@@ -18,11 +18,13 @@ Class implementation for state vector measurements.
 import numpy as np
 import pennylane as qml
 
+from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
+from pennylane.typing import TensorLike
 
-class LightningGPUMeasurements:
-    """Lightning Measurements class
+class LightningGPUMeasurements(LightningBaseMeasurements):
+    """Lightning GPU Measurements class
 
-    Measures the state provided by the LightningStateVector class.
+    Measures the state provided by the LightningGPUStateVector class.
 
     Args:
         qubit_state(LightningGPUStateVector): Lightning state-vector class containing the state vector to be measured.
@@ -31,16 +33,7 @@ class LightningGPUMeasurements:
     def __init__(
         self,
         lgpu_state,
-    ) -> None:
-        self._qubit_state = lgpu_state
-        self._dtype = lgpu_state.dtype
-
-    @property
-    def qubit_state(self):
-        """Returns a handle to the LightningGPUStateVector class."""
-        return self._qubit_state
-
-    @property
-    def dtype(self):
-        """Returns the simulation data type."""
-        return self._dtype
+    ) -> TensorLike:
+        
+        super().__init__(lgpu_state)
+        

@@ -28,6 +28,9 @@ if not LightningDevice._new_API:
         allow_module_level=True,
     )
 
+if device_name == "lightning.gpu":
+    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
+
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 

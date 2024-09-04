@@ -21,14 +21,27 @@ from ctypes.util import find_library
 from importlib import util as imp_util
 from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional, Sequence, Tuple, Union
+from typing import Optional, Tuple
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.typing import Result, ResultBatch
+from pennylane.tape import QuantumTape
+import numpy as np
+import pennylane as qml
+from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.operation import Operator
+from pennylane.tape import QuantumScript
+from pennylane.transforms.core import TransformProgram
+from pennylane.typing import Result
+
+from pennylane_lightning.core.lightning_newAPI_base import (
+    LightningBase,
+    QuantumTape_or_Batch,
+    Result_or_ResultBatch,
+)
 
 from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
@@ -46,9 +59,9 @@ try:
     except ImportError:
         MPI_SUPPORT = False
 
-    if find_library("custatevec") is None and not imp_util.find_spec(
-        "cuquantum"
-    ):  # pragma: no cover
+    if ( find_library("custatevec") is None 
+    and not imp_util.find_spec("cuquantum")
+    ): 
         raise ImportError(
             "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
         )
@@ -64,130 +77,8 @@ except (ImportError, ValueError) as e:
     backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
 
-# Types definitions
-Result_or_ResultBatch = Union[Result, ResultBatch]
-QuantumTapeBatch = Sequence[QuantumTape]
-QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
-PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
-
-
-def simulate(
-    circuit: QuantumScript,
-    state: LightningGPUStateVector,
-    postselect_mode: str = None,
-) -> Result:
-    """Simulate a single quantum script.
-
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        state (LightningGPUStateVector): handle to LightningGPU state vector
-        postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-            postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-            keep the same number of shots. Default is ``None``.
-
-    Returns:
-        Tuple[TensorLike]: The results of the simulation
-
-    Note that this function can return measurements for non-commuting observables simultaneously.
-    """
-    return 0
-
-
-def jacobian(circuit: QuantumTape, state: LightningGPUStateVector, batch_obs=False, wire_map=None):
-    """Compute the Jacobian for a single quantum script.
-
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        state (LightningGPUStateVector): handle to Lightning state vector
-        batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu
-            is built with MPI. Default is False.
-
-        wire_map (Optional[dict]): a map from wire labels to simulation indices
-
-    Returns:
-        TensorLike: The Jacobian of the quantum script
-    """
-    return 0
-
-
-def simulate_and_jacobian(
-    circuit: QuantumTape, state: LightningGPUStateVector, batch_obs=False, wire_map=None
-):
-    """Simulate a single quantum script and compute its Jacobian.
-
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        state (LightningGPUStateVector): handle to Lightning state vector
-        batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu
-            is built with MPI. Default is False.
-        wire_map (Optional[dict]): a map from wire labels to simulation indices
-
-    Returns:
-        Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
-
-    Note that this function can return measurements for non-commuting observables simultaneously.
-    """
-    return 0
-
-
-def vjp(
-    circuit: QuantumTape,
-    cotangents: Tuple[Number],
-    state: LightningGPUStateVector,
-    batch_obs=False,
-    wire_map=None,
-):
-    """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
-            have shape matching the output shape of the corresponding circuit. If
-            the circuit has a single output, ``cotangents`` may be a single number,
-            not an iterable of numbers.
-        state (LightningGPUStateVector): handle to Lightning state vector
-        batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu
-            is built with MPI. Default is False.
-        wire_map (Optional[dict]): a map from wire labels to simulation indices
-
-    Returns:
-        TensorLike: The VJP of the quantum script
-    """
-    return 0
-
-
-def simulate_and_vjp(
-    circuit: QuantumTape,
-    cotangents: Tuple[Number],
-    state: LightningGPUStateVector,
-    batch_obs=False,
-    wire_map=None,
-):
-    """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
-    Args:
-        circuit (QuantumTape): The single circuit to simulate
-        cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
-            have shape matching the output shape of the corresponding circuit. If
-            the circuit has a single output, ``cotangents`` may be a single number,
-            not an iterable of numbers.
-        state (LightningGPUStateVector): handle to Lightning state vector
-        batch_obs (bool): Determine whether we process observables in parallel when
-            computing the jacobian. This value is only relevant when the lightning.gpu
-            is built with MPI. Default is False.
-        wire_map (Optional[dict]): a map from wire labels to simulation indices
-
-    Returns:
-        Tuple[TensorLike]: The results of the simulation and the calculated VJP
-    Note that this function can return measurements for non-commuting observables simultaneously.
-    """
-    return 0
-
-
 def _mebibytesToBytes(mebibytes):
     return mebibytes * 1024 * 1024
-
 
 _operations = frozenset(
     {
@@ -281,10 +172,62 @@ gate_cache_needs_hash = (
     qml.QubitUnitary,
 )
 
+def stopping_condition(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
+    # To avoid building matrices beyond the given thresholds.
+    # This should reduce runtime overheads for larger systems.
+    return 0
+
+
+def stopping_condition_shots(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.gpu``
+    with finite shots."""
+    return 0
+
+
+def accepted_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
+    return 0
+
+
+def adjoint_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.gpu``
+    when using the adjoint differentiation method."""
+    return 0
+
+
+def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
+    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
+    return 0
+
+
+def _supports_adjoint(circuit):
+    return 0
+
+def _adjoint_ops(op: qml.operation.Operator) -> bool:
+    """Specify whether or not an Operator is supported by adjoint differentiation."""
+    return 0
+
+
+def _add_adjoint_transforms(program: TransformProgram) -> None:
+    """Private helper function for ``preprocess`` that adds the transforms specific
+    for adjoint differentiation.
+
+    Args:
+        program (TransformProgram): where we will add the adjoint differentiation transforms
+
+    Side Effects:
+        Adds transforms to the input program.
+
+    """
+
+    name = "adjoint + lightning.gpu"
+    return 0
+
 
 @simulator_tracking
 @single_tape_support
-class LightningGPU(Device):
+class LightningGPU(LightningBase):
     """PennyLane Lightning GPU device.
 
     A device that interfaces with C++ to perform fast linear algebra calculations.
@@ -305,11 +248,11 @@ class LightningGPU(Device):
             is built with MPI. Default is False.
     """
 
-    # pylint: disable=too-many-instance-attributes
+    # General device options
+    _device_options = ("c_dtype", "batch_obs")
 
-    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+    # Device specific options
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
-    _new_API = True
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
     # This `config` is used in Catalyst-Frontend
@@ -329,6 +272,7 @@ class LightningGPU(Device):
         c_dtype=np.complex128,
         shots=None,
         batch_obs=False,
+        # GPU arguments
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -337,29 +281,26 @@ class LightningGPU(Device):
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
-        super().__init__(wires=wires, shots=shots)
+        super().__init__(
+            wires=wires,
+            c_dtype=c_dtype,
+            shots=shots,
+            batch_obs=batch_obs,
+        )
 
-        if isinstance(wires, int):
-            self._wire_map = None  # should just use wires as is
-        else:
-            self._wire_map = {w: i for i, w in enumerate(self.wires)}
-
-        self._statevector = LightningGPUStateVector(num_wires=len(self.wires), dtype=c_dtype)
-
-        self._c_dtype = c_dtype
-        self._batch_obs = batch_obs
+        # Set the attributes to call the LightningGPU classes
+        
+        # GPU specific options
+        
+        # Creating the state vector
 
     @property
     def name(self):
         """The name of the device."""
         return "lightning.gpu"
-
-    @property
-    def c_dtype(self):
-        """State vector complex data type."""
-        return self._c_dtype
-
-    dtype = c_dtype
+    def _set_Lightning_classes(self):
+        """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
+        return 0
 
     def _setup_execution_config(self, config):
         """
@@ -423,102 +364,25 @@ class LightningGPU(Device):
         """
         return 0
 
-    def compute_derivatives(
+    def simulate(
         self,
-        circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
-        """Calculate the jacobian of either a single or a batch of circuits on the device.
+        circuit: QuantumScript,
+        state: LightningGPUStateVector,
+        postselect_mode: str = None,
+    ) -> Result:
+        """Simulate a single quantum script.
 
         Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+            circuit (QuantumTape): The single circuit to simulate
+            state (LightningGPUStateVector): handle to Lightning state vector
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
 
         Returns:
-            Tuple: The jacobian for each trainable parameter
-        """
-        return 0
+            Tuple[TensorLike]: The results of the simulation
 
-    def execute_and_compute_derivatives(
-        self,
-        circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
-        """Compute the results and jacobians of circuits at the same time.
-
-        Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
-
-        Returns:
-            tuple: A numeric result of the computation and the gradient.
-        """
-        return 0
-
-    def supports_vjp(
-        self,
-        execution_config: Optional[ExecutionConfig] = None,
-        circuit: Optional[QuantumTape] = None,
-    ) -> bool:
-        """Whether or not this device defines a custom vector jacobian product.
-        ``LightningGPU`` supports adjoint differentiation with analytic results.
-        Args:
-            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
-            circuit (QuantumTape): An optional circuit to check derivatives support for.
-        Returns:
-            Bool: Whether or not a derivative can be calculated provided the given information
-        """
-        return 0
-
-    def compute_vjp(
-        self,
-        circuits: QuantumTape_or_Batch,
-        cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
-        r"""The vector jacobian product used in reverse-mode differentiation. ``LightningGPU`` uses the
-        adjoint differentiation method to compute the VJP.
-        Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits
-            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
-                corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
-                of numbers.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
-        Returns:
-            tensor-like: A numeric result of computing the vector jacobian product
-        **Definition of vjp:**
-        If we have a function with jacobian:
-        .. math::
-            \vec{y} = f(\vec{x}) \qquad J_{i,j} = \frac{\partial y_i}{\partial x_j}
-        The vector jacobian product is the inner product of the derivatives of the output ``y`` with the
-        Jacobian matrix. The derivatives of the output vector are sometimes called the **cotangents**.
-        .. math::
-            \text{d}x_i = \Sigma_{i} \text{d}y_i J_{i,j}
-        **Shape of cotangents:**
-        The value provided to ``cotangents`` should match the output of :meth:`~.execute`. For computing the full Jacobian,
-        the cotangents can be batched to vectorize the computation. In this case, the cotangents can have the following
-        shapes. ``batch_size`` below refers to the number of entries in the Jacobian:
-        * For a state measurement, the cotangents must have shape ``(batch_size, 2 ** n_wires)``
-        * For ``n`` expectation values, the cotangents must have shape ``(n, batch_size)``. If ``n = 1``,
-          then the shape must be ``(batch_size,)``.
+        Note that this function can return measurements for non-commuting observables simultaneously.
         """
 
-        return 0
 
-    def execute_and_compute_vjp(
-        self,
-        circuits: QuantumTape_or_Batch,
-        cotangents: Tuple[Number],
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
-        """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
-        Args:
-            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits to be executed
-            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
-                corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
-                of numbers.
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
-        Returns:
-            Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
-        """
-        return 0
