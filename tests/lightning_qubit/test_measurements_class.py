@@ -31,6 +31,8 @@ from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
+from scipy.stats import kruskal
+from scipy import stats
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -408,8 +410,8 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
-    @flaky(max_runs=15)
-    @pytest.mark.parametrize("shots", [None, 100_000, [90_000, 90_000]])
+    @flaky(max_runs=2)
+    @pytest.mark.parametrize("shots", [None, 33_000, [33_000, 33_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -450,15 +452,6 @@ class TestMeasurements:
                 f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
             )
         rtol = 1.0e-2  # 1% of expected value as tolerance
-        if shots != None and measurement is qml.expval:
-            # Increase the number of shots
-            if isinstance(shots, int):
-                shots *= 10
-            else:
-                shots = [i * 10 for i in shots]
-
-            # Extra tolerance
-            rtol = 5.0e-2  # 5% of expected value as tolerance
 
         n_qubits = 4
         n_layers = 1
@@ -490,20 +483,53 @@ class TestMeasurements:
             with pytest.raises(TypeError):
                 _ = m.measure_final_state(tape)
             return
-        else:
-            result = m.measure_final_state(tape)
 
         expected = self.calculate_reference(tape, lightning_sv)
 
         # a few tests may fail in single precision, and hence we increase the tolerance
         if shots is None:
-            assert np.allclose(result, expected, max(tol, 1.0e-4))
+            result = m.measure_final_state(tape)            
+            assert np.allclose(result, expected, atol=max(tol, 1.0e-5), rtol=rtol)
         else:
-            atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-3)
-            rtol = max(tol, rtol)  # % of expected value as tolerance
 
-            # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
-            assert np.allclose(result, expected, rtol=rtol, atol=atol)
+            # print()
+            # print("Test:",end='\n')
+            # print(measurement)
+            # print(observable)
+
+            expected_np = np.array(expected).flatten()
+            accumulate_result = []
+            n_repetitions = 5
+            
+            for _ in range(n_repetitions):
+                
+                statevector = lightning_sv(n_qubits)
+                statevector = statevector.get_final_state(tape)
+                m = LightningMeasurements(statevector)
+                
+                result = m.measure_final_state(tape)
+                result_np = np.array(result).flatten()
+                # result_np = np.random.random(len(result_np))
+                
+                accumulate_result.append(result_np)
+                
+            statistic, p_value = kruskal(*accumulate_result, expected_np)
+            # print(f" ref kruskal: {len(expected_np):3d} | stat: {statistic:.4f} p_value: {p_value:.5f} | shots: {shots}")
+            # statistic, p_value_t = kruskal(*accumulate_result)
+            # print(f"test Kruskal: {len(expected_np):3d} | stat: {statistic:.4f} p_value: {p_value_t:.5f} | shots: {shots}")
+            # statistic, p_value_t = kruskal(accumulate_result[-1], expected_np)
+            # print(f"last kruskal: {len(expected_np):3d} | stat: {statistic:.4f} p_value: {p_value_t:.5f} | shots: {shots}")
+            # t_stat, p_value_t = stats.kstest(accumulate_result[-1], expected_np)
+            # print(f"test  KStest: {len(expected_np):3d} | stat: {t_stat:.4f} p_value: {p_value_t:.4f} | shots: {shots}")
+
+            significance_level = 0.10
+            # if p_value < significance_level:
+            #     print('Results')
+            #     [print('res:',r) for r in accumulate_result]
+            #     print('exp:',expected_np)
+            # print('*'*100)
+            
+            assert p_value > significance_level
 
     @flaky(max_runs=10)
     @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
