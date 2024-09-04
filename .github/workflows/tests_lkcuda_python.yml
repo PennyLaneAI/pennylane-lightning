@@ -292,7 +292,7 @@ jobs:
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml

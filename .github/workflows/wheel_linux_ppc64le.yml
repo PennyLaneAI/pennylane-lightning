@@ -164,7 +164,7 @@ jobs:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||

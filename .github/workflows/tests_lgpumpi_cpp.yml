@@ -153,7 +153,7 @@ jobs:
           mv coverage.info coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports
@@ -161,7 +161,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info

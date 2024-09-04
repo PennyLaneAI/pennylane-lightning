@@ -156,7 +156,7 @@ jobs:
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
@@ -164,7 +164,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
@@ -246,7 +246,7 @@ jobs:
             Move-Item -Path .\coverage.xml -Destination .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
@@ -254,7 +254,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml

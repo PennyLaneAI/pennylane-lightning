@@ -157,7 +157,7 @@ jobs:
           coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python
           path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
