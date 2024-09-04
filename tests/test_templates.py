@@ -64,10 +64,6 @@ class TestGrover:
         assert np.allclose(np.sum(prob), 1.0)
         assert prob[index] > 0.95
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not have full support of multi-controlled gates.",
-    )
     @pytest.mark.skipif(not LightningDevice._new_API, reason="New API required.")
     @pytest.mark.parametrize("wires", [5, 10, 13, 15])
     def test_preprocess_grover_operator_decomposition(self, wires):
@@ -327,10 +323,6 @@ class TestBasicEntanglerLayers:
 class TestMottonenStatePreparation:
     """Test the MottonenStatePreparation algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support GlobalPhase and 2+ wires gates.",
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_mottonenstatepreparation(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
@@ -345,6 +337,7 @@ class TestMottonenStatePreparation:
 
         res = qml.QNode(circuit, dev, diff_method=None)(state)
         ref = qml.QNode(circuit, dq, diff_method=None)(state)
+        # dtol = 1e-1 if device_name == "lightning.tensor" else 1e-6
 
         assert np.allclose(res, ref)
 
@@ -376,10 +369,6 @@ class TestArbitraryStatePreparation:
 class TestCosineWindow:
     """Test the CosineWindow algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support 2+ wires gates that can't be decomposed into 1,2 wires gates.",
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_cosinewindow(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)

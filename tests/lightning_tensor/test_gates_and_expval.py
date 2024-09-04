@@ -92,7 +92,7 @@ def circuit_ansatz(params, wires):
     qml.adjoint(qml.SISWAP(wires=[wires[0], wires[1]]))
     qml.SISWAP(wires=[wires[4], wires[5]])
     qml.SQISW(wires=[wires[1], wires[0]])
-    #qml.CSWAP(wires=[wires[2], wires[4], wires[5]])
+    # qml.CSWAP(wires=[wires[2], wires[4], wires[5]])
     qml.Toffoli(wires=[wires[0], wires[1], wires[2]])
     qml.CY(wires=[wires[0], wires[2]])
     qml.CZ(wires=[wires[1], wires[3]])
@@ -112,10 +112,12 @@ def circuit_ansatz(params, wires):
     qml.SingleExcitation(params[16], wires=[wires[2], wires[0]])
     qml.SingleExcitationPlus(params[17], wires=[wires[3], wires[1]])
     qml.SingleExcitationMinus(params[18], wires=[wires[4], wires[2]])
-    #qml.DoubleExcitation(params[19], wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.DoubleExcitation(params[19], wires=[wires[0], wires[1], wires[2], wires[3]])
+    qml.DoubleExcitationPlus(params[20], wires=[wires[1], wires[2], wires[3], wires[4]])
+    qml.DoubleExcitationMinus(params[21], wires=[wires[2], wires[3], wires[4], wires[5]])
     qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
     qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
-    #qml.OrbitalRotation(params[20], wires=[wires[0], wires[1], wires[5], wires[6]])
+    # qml.OrbitalRotation(params[20], wires=[wires[0], wires[1], wires[5], wires[6]])
     qml.QFT(wires=[wires[0]])
     qml.ECR(wires=[wires[1], wires[3]])
 
@@ -162,14 +164,14 @@ def test_integration_for_all_supported_gates(returns):
     operations"""
     num_wires = 8
     dev_default = qml.device("default.qubit", wires=range(num_wires))
-    dev_ltensor = LightningTensor(wires=range(num_wires), max_bond_dim=16, c_dtype=np.complex128)
+    dev_ltensor = LightningTensor(wires=range(num_wires), max_bond_dim=128, c_dtype=np.complex128)
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
         circuit_ansatz(params, wires=range(num_wires))
         return qml.math.hstack([qml.expval(r) for r in returns])
 
-    n_params = 22
+    n_params = 30
     np.random.seed(1337)
     params_init = np.random.rand(n_params)
 
