@@ -384,5 +384,6 @@ class LightningGPU(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
+        return 0
 
 
