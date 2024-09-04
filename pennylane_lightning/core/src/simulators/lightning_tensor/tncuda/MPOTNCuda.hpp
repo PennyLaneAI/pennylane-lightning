@@ -96,6 +96,11 @@ template <class PrecisionT> class MPOTNCuda {
     std::vector<int32_t> MPO_modes_int32_;
 
     std::vector<std::vector<int64_t>> modesExtents_int64_;
+    //TODO: move tensors_ to MPSTNCuda to allow sharing tensors across different MPO
+    // operators. A singleton class managing MPO tensors is a better solution. These tensors
+    // can be stored in an hashtable and be access with a std::pair key storing tensors's name and wires-order.
+    // Consider storing connecting Identity tensors in a separte singleton class. This would avoid excessive 
+    // MPO decompositions for the same gate.
     std::vector<std::shared_ptr<TensorCuda<PrecisionT>>> tensors_;
 
     /**

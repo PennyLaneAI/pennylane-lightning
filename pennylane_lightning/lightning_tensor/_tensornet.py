@@ -273,6 +273,8 @@ class LightningTensorNet:
         Returns:
             None
         """
+        #TODO: check if the gate_matrix has been already decomposed before
+        # This requires a check API in the C++ layer
         sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
         sorted_wires = []
@@ -393,6 +395,7 @@ class LightningTensorNet:
                     gate_ops_matrix = operation.matrix
 
                 if gate_ops_matrix.shape != (2 ** len(wires), 2 ** len(wires)):
+                    # TODO: get the full matrix reprensentation of the gate, epscially for the controlled gates and others
                     raise ValueError(
                         f"Operation matrix of {operation.name} must be of shape (2**len(wires), 2**len(wires))."
                     )
