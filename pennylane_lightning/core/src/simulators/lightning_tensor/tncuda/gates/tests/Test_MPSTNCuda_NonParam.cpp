@@ -578,4 +578,10 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledOperation non-param "
                     approx(mps_state1.getDataVector()).margin(margin));
         }
     }
+
+    SECTION("Throw exception for 1+ target wires gates") {
+        REQUIRE_THROWS_AS(mps_state0.applyControlledOperation(
+                              "CSWAP", {0}, {true, true}, {1, 2}),
+                          LightningException);
+    }
 }
