@@ -114,7 +114,7 @@ _operations = frozenset(
         "OrbitalRotation",
         "QFT",
         "ECR",
-        "BlockEncode"
+        "BlockEncode",
     }
 )
 
@@ -146,7 +146,7 @@ def stopping_condition(op: Operator) -> bool:
         return len(op.wires) < 10
     if isinstance(op, qml.GroverOperator):
         return len(op.wires) < 13
-    
+
     return op.has_matrix and op.name in _operations
 
 

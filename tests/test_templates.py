@@ -210,7 +210,7 @@ class TestQAOAEmbedding:
 
         res = qml.QNode(circuit, dev, diff_method=None)(X, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(X, weights)
-        
+
         dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
         assert np.allclose(res, ref, atol=dtol, rtol=dtol)
 

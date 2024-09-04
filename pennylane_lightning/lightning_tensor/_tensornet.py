@@ -377,9 +377,11 @@ class LightningTensorNet:
             if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
                 self._apply_lightning_controlled(operation)
             elif isinstance(operation, qml.GlobalPhase):
-                matrix = np.eye(2)*operation.matrix().flatten()[0]
+                matrix = np.eye(2) * operation.matrix().flatten()[0]
                 method = getattr(tensornet, "applyMatrix")
-                method(matrix, [0], False) # GlobalPhase is always applied to the first wire in the tensor network
+                method(
+                    matrix, [0], False
+                )  # GlobalPhase is always applied to the first wire in the tensor network
             elif len(wires) <= 2:
                 if method is not None:
                     param = operation.parameters
