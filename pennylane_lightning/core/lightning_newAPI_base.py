@@ -16,7 +16,7 @@ r"""
 This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
 interfaces with C++ for fast linear algebra calculations.
 """
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from numbers import Number
 from typing import Callable, List, Optional, Sequence, Tuple, Union
 
@@ -35,7 +35,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 @simulator_tracking
 @single_tape_support
-class LightningBase(Device, ABC):
+class LightningBase(Device):
     """PennyLane Lightning Base device.
 
     A class that serves as a base class for Lightning state-vector simulators.
