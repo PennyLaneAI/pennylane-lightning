@@ -49,7 +49,7 @@ def test_create_device_with_unsupported_dtype():
     reason="Only lightning.kokkos has a kwarg kokkos_args.",
 )
 def test_create_device_with_unsupported_kokkos_args():
-    with pytest.raises(TypeError, match="Argument kokkos_args must be of type"):
+    with pytest.raises(TypeError, match="Argument kokkos_args must be of type .* but it is of .*."):
         dev = qml.device(device_name, wires=1, kokkos_args=np.complex256)
 
 
