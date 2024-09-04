@@ -63,7 +63,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and export to Docker
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           load: true
           push: false
@@ -80,7 +80,7 @@ jobs:
           docker run --rm test:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
 
       - name: Build and push version
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         if: ${{ inputs.push-to-dockerhub }}
         with:
           push: ${{ inputs.push-to-dockerhub }}
