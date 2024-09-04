@@ -61,7 +61,7 @@ jobs:
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
           pushd . &> /dev/null
 
-      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-qemu-action@v3
         name: Set up QEMU
 
       - name: Build Kokkos core library
@@ -130,7 +130,7 @@ jobs:
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
 
-      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-qemu-action@v3
         name: Set up QEMU
 
       - name: Build wheels

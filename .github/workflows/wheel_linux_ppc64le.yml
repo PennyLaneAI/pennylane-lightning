@@ -61,7 +61,7 @@ jobs:
           git clone --branch ${{ matrix.kokkos_version }} https://github.com/kokkos/kokkos.git
           pushd . &> /dev/null
 
-      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-qemu-action@v3
         name: Set up QEMU
 
       - name: Build Kokkos core library
@@ -126,7 +126,7 @@ jobs:
       - name: Install dependencies
         run: python -m pip install cibuildwheel~=2.16.0 toml
 
-      - uses: docker/setup-qemu-action@v2
+      - uses: docker/setup-qemu-action@v3
         name: Set up QEMU
 
       - name: Configure pyproject.toml file
