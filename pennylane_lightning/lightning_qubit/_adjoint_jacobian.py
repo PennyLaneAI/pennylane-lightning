@@ -33,7 +33,9 @@ from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjoint
 from ._state_vector import LightningStateVector
 
 
-class LightningAdjointJacobian(LightningBaseAdjointJacobian):
+class LightningAdjointJacobian(
+    LightningBaseAdjointJacobian
+):  # pylint: disable=too-few-public-methods
     """Check and execute the adjoint Jacobian differentiation method.
 
     Args:

@@ -19,7 +19,6 @@ from abc import ABC, abstractmethod
 from typing import Union
 
 import numpy as np
-import pennylane as qml
 from pennylane import BasisState, StatePrep
 from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript
