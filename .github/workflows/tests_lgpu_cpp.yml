@@ -116,7 +116,7 @@ jobs:
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
-          
+
           # Adding venv site-packages to output for subsequent step to referecen if needed
           echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
 
@@ -126,7 +126,7 @@ jobs:
           py_path=$(which python)
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
-          
+
           pip_path=$(which pip)
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
@@ -149,25 +149,30 @@ jobs:
             -G Ninja
           cmake --build ./Build
           cd ./Build
-          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
+          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
+          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}/report_$file.xml; done;
           lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}.info
+
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
-          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
+          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
-          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          name: ubuntu-codecov-results-cpp-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
+          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-cpp:
     needs: [cpptestswithLGPU]
@@ -178,9 +183,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
+          pattern: ubuntu-codecov*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
@@ -188,7 +194,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
-      
+
       - name: Cleanup
         if: always()
         run: |

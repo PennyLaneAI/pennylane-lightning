@@ -205,7 +205,7 @@ jobs:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||
@@ -214,6 +214,8 @@ jobs:
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
     needs: win-wheels
@@ -227,7 +229,7 @@ jobs:
       github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: Windows-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: dist
