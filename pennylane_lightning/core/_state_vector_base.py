@@ -89,7 +89,6 @@ class LightningBaseStateVector(ABC):
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
-        pass
 
     @abstractmethod
     def _state_dtype(self):
@@ -97,7 +96,6 @@ class LightningBaseStateVector(ABC):
 
         Returns: the state vector class
         """
-        pass
 
     def reset_state(self):
         """Reset the device's state"""
@@ -112,7 +110,6 @@ class LightningBaseStateVector(ABC):
                 or broadcasted state of shape ``(batch_size, 2**len(wires))``
             device_wires (Wires): wires that get initialized in the state
         """
-        pass
 
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
@@ -144,7 +141,6 @@ class LightningBaseStateVector(ABC):
         Returns:
             None
         """
-        pass
 
     @abstractmethod
     def _apply_lightning_midmeasure(
@@ -162,7 +158,6 @@ class LightningBaseStateVector(ABC):
         Returns:
             None
         """
-        pass
 
     @abstractmethod
     def _apply_lightning(
@@ -180,7 +175,6 @@ class LightningBaseStateVector(ABC):
         Returns:
             None
         """
-        pass
 
     def apply_operations(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None

@@ -89,7 +89,6 @@ class LightningBase(Device):
     @abstractmethod
     def _set_Lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
-        pass
 
     @abstractmethod
     def simulate(
@@ -112,7 +111,6 @@ class LightningBase(Device):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        pass
 
     def jacobian(
         self,

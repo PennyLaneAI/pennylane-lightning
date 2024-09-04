@@ -75,7 +75,6 @@ class LightningBaseMeasurements(ABC):
 
         Returns: the Measurements class
         """
-        pass
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
@@ -357,7 +356,6 @@ class LightningBaseMeasurements(ABC):
         Returns:
             TensorLike[Any]: Sample measurement results
         """
-        pass
 
     def _measure_hamiltonian_with_samples(
         self,
