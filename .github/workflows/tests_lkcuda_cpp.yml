@@ -92,14 +92,12 @@ jobs:
         env:
           CMAKE_PREFIX_PATH: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
         run: |
-          set -x
           sudo apt-get update && sudo apt-get -y -q install gfortran-$GCC_VERSION
           cd kokkos_${{ matrix.exec_model }}/example/build_cmake_installed
           which -a gfortran || which -a gfortran-$GCC_VERSION
           cmake -B build -DCMAKE_Fortran_COMPILER=gfortran-$GCC_VERSION
           cmake --build build
           cmake --build build --target test
-          set +x
 
       - name: Cache installation directories
         id: kokkos-cache
