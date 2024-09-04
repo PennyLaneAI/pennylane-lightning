@@ -165,7 +165,7 @@ jobs:
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
+          name: ubuntu-codecov-results-cpp-${{ matrix.mpilib }}
           path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
           retention-days: 1
           if-no-files-found: error
@@ -189,7 +189,8 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
+          pattern: ubuntu-codecov*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
