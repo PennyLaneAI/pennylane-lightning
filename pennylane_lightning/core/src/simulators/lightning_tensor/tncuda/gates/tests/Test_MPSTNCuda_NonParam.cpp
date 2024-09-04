@@ -529,6 +529,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledOperation non-param "
                    "one-qubit with controls",
                    "[MPSTNCuda]", float, double) {
     using PrecisionT = TestType;
+    using ComplexT = std::complex<PrecisionT>;
     const int num_qubits = 4;
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
@@ -548,6 +549,27 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledOperation non-param "
             mps_state0.applyControlledOperation(
                 "PauliX", std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
+
+            mps_state1.applyOperation(
+                "CNOT", std::vector<std::size_t>{control, wire}, false);
+
+            REQUIRE(mps_state0.getDataVector() ==
+                    approx(mps_state1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("Controlled gates with a target matrix - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            std::vector<ComplexT> gate_matrix = {
+                ComplexT{0.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
+                ComplexT{0.0, 0.0}};
+            mps_state0.applyControlledOperation(
+                "applyControlledGates", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire}, false,
+                {}, gate_matrix);
 
             mps_state1.applyOperation(
                 "CNOT", std::vector<std::size_t>{control, wire}, false);
