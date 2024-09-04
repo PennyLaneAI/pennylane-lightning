@@ -513,21 +513,20 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyControlledOperation non-param "
     MPSTNCuda<PrecisionT> mps_state0{num_qubits, maxExtent, dev_tag};
     MPSTNCuda<PrecisionT> mps_state1{num_qubits, maxExtent, dev_tag};
 
-    DYNAMIC_SECTION("N-controlled Hadamard - "
+    DYNAMIC_SECTION("Controlled gates with base operation - "
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
         if (control != wire) {
-            const auto matrix = getHadamard<std::complex, PrecisionT>();
+            mps_state0.applyControlledOperation(
+                "PauliX", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
 
-            mps_state0.applyControlledMatrix(
-                matrix, std::vector<std::size_t>{control},
-                std::vector<bool>{true}, std::vector<std::size_t>{wire});
-            mps_state0.applyOperation(
-                "Hadamard", std::vector<std::size_t>{control},
-                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            mps_state1.applyOperation(
+                "CNOT", std::vector<std::size_t>{control, wire}, false);
+
             REQUIRE(mps_state0.getDataVector() ==
-                    approx(mps_state0.getDataVector()).margin(margin));
+                    approx(mps_state1.getDataVector()).margin(margin));
         }
     }
 }
