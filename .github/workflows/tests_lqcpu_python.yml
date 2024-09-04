@@ -121,6 +121,7 @@ jobs:
           name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
           path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
 
       - name: Cache wheel directories
@@ -129,6 +130,7 @@ jobs:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
           path: |
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
 
@@ -216,17 +218,19 @@ jobs:
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
           path: |
-            ./.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+            ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-python:
+    if: github.event_name == 'pull_request'
     needs: [determine_runner, test_lightning_qubit_wheels]
     name: Upload python coverage data to codecov
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
@@ -237,9 +241,10 @@ jobs:
           fetch-tags: true
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          pattern: .coverage*
+          merge-multiple: true
 
       - name: Combine coverage files
         run: |
