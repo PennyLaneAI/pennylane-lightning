@@ -275,8 +275,11 @@ class LightningTensorNet:
         """
         sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
-        sorted_wires = [wire for index, wire in sorted_indexed_wires]
-        original_axes = [index for index, wire in sorted_indexed_wires]
+        sorted_wires = []
+        original_axes = []
+        for index, wire in sorted_indexed_wires:
+            sorted_wires.append(wire)
+            original_axes.append(index)
 
         matrix = gate_matrix.astype(self._c_dtype)
 
@@ -288,12 +291,13 @@ class LightningTensorNet:
         # Create the correct order of indices for the gate tensor to be decomposed
         indices_order = []
         for i in range(len(wires)):
-            indices_order.extend([original_axes[i], original_axes[i] + len(wires)])
+            indices_order.extend([original_axes[i] + len(wires), original_axes[i]])
 
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_tensor = np.transpose(gate_tensor, axes=indices_order)
-        # TODO: Reorder the gate data with the target wire
-        max_mpo_bond_dim = 2 ** len(wires)
+
+        max_mpo_bond_dim = 2 ** len(wires)  # Full decomposition
+
         MPOs = dense_to_mpo(gate_tensor, len(wires), max_mpo_bond_dim)
 
         mpos = []
@@ -388,12 +392,10 @@ class LightningTensorNet:
                 except AttributeError:
                     gate_ops_matrix = operation.matrix
 
-                if 4**len(wires) != len(gate_ops_matrix):
+                if gate_ops_matrix.shape != (2 ** len(wires), 2 ** len(wires)):
                     raise ValueError(
                         f"Operation matrix of {operation.name} must be of shape (2**len(wires), 2**len(wires))."
                     )
-
-                gate_ops_matrix = np.transpose(gate_ops_matrix, axes=(1, 0))
 
                 self._apply_MPO(gate_ops_matrix, wires)
 

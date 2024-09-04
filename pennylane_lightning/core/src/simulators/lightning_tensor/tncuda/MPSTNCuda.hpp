@@ -315,6 +315,18 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* const void * */ &cutoff,
             /* std::size_t */ sizeof(cutoff)));
 
+        // MPO configurations
+        cutensornetStateMPOApplication_t mpo_attribute =
+            CUTENSORNET_STATE_MPO_APPLICATION_EXACT;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetStateAttributes_t */
+            CUTENSORNET_STATE_CONFIG_MPS_MPO_APPLICATION,
+            /* const void * */ &mpo_attribute,
+            /* std::size_t */ sizeof(mpo_attribute)));
+
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
             reinterpret_cast<void **>(getTensorsOutDataPtr().data()));

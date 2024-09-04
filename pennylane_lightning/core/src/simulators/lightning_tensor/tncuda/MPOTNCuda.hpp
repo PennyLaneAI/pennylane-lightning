@@ -115,7 +115,7 @@ template <class PrecisionT> class MPOTNCuda {
     /**
      * @brief Get a vector of pointers to tensor data of each site.
      *
-     * @return std::vector<uint64_t *>
+     * @return std::vector<void *>
      */
     [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
         std::vector<void *> tensorsDataPtr(numMPOSites_);
@@ -167,6 +167,7 @@ template <class PrecisionT> class MPOTNCuda {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
 
+        // Ensure the modes are in ascending order
         std::reverse(MPO_modes_int32_.begin(), MPO_modes_int32_.end());
 
         // set up max bond dimensions
@@ -178,7 +179,7 @@ template <class PrecisionT> class MPOTNCuda {
             std::size_t bondDim = std::min(i + 1, BondDims.size() - i) *
                                   2; // 1+1 (1 for bra and 1 for ket)
             if (bondDim <= log2(maxBondDim_)) {
-                BondDims[i] = (std::size_t{1} << bondDim);
+                BondDims[i] = std::size_t{1} << bondDim;
             }
         }
 
@@ -214,11 +215,6 @@ template <class PrecisionT> class MPOTNCuda {
                 Pennylane::Util::cast_vector<std::size_t, int64_t>(
                     localModesExtents));
 
-            for (auto x : localModesExtents) {
-                std::cout << x << " ";
-            }
-            std::cout << std::endl;
-
             tensors_.emplace_back(std::make_shared<TensorCuda<PrecisionT>>(
                 localModesExtents.size(), localModesExtents, localModesExtents,
                 dev_tag));
@@ -240,7 +236,7 @@ template <class PrecisionT> class MPOTNCuda {
                 tensors_[i]->getDataBuffer().CopyHostDataToGpu(
                     tensor_cu.data(), tensor_cu.size());
             } else {
-                // Initialize Identity tensors
+                // Initialize connecting Identity tensors
                 std::size_t length = tensors_[i]->getDataBuffer().getLength();
                 std::vector<std::size_t> target_idx;
                 CFP_t value_cu =
