@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Lightning-Kokkos migrated to the new device API.
+  [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
+
 ### Breaking changes
 
 ### Improvements
@@ -17,7 +20,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Shuli Shu
+Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
@@ -59,6 +62,9 @@ Shuli Shu
 
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
+
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
 
 ### Improvements
 
@@ -201,7 +207,7 @@ Shuli Shu
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
+Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Luis Alfredo Nuñez Meneses, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
 
 ---
 
