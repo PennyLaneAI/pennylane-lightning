@@ -269,7 +269,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                              bool adjoint = false,
                              const std::vector<PrecisionT> &params = {0.0},
                              const std::vector<ComplexT> &gate_matrix = {}) {
-        // TODO: Need to revisit this line of code once `cutensornet` supports 
+        // TODO: Need to revisit this line of code once `cutensornet` supports
         // multi-target wire controlled gates
         PL_ABORT_IF_NOT(targetWires.size() == 1,
                         "Unsupported controlled gate: cutensornet only "
