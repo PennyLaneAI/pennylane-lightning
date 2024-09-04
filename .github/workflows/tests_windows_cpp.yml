@@ -271,7 +271,7 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          pattern: .coverage*
+          pattern: windows-coverage*
           merge-multiple: true
 
       - name: Upload to Codecov

@@ -97,13 +97,13 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
+          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}
           path: |
             ./Build/tests/results/
 
@@ -112,8 +112,8 @@ jobs:
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
+          name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}.info
           if-no-files-found: error
 
   cpptestswithOpenBLAS:
@@ -251,7 +251,7 @@ jobs:
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
+          name: ubuntu-codecov-results-cpp-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
           if-no-files-found: error
 
@@ -266,7 +266,8 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
+          pattern: ubuntu-codecov*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
@@ -334,6 +335,6 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
+          name: ubuntu-tests-reports-${{ github.job }}-multiple-backends-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ./Build/tests/results_multiple_backends/
           if-no-files-found: error
