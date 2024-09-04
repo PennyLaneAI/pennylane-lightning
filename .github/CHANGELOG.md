@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wires should be converted to dense matrix to get it work.
+  [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
+
 ### Breaking changes
 
 ### Improvements
@@ -58,9 +61,6 @@ Shuli Shu
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
 ### Improvements
-
-* Optimize gate cache recording for `lightning.tensor` C++ layer.
-  [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879/)
 
 * Updated calls of ``size_t`` to ``std::size_t`` everywhere.
   [(#816)](https://github.com/PennyLaneAI/pennylane-lightning/pull/816)
