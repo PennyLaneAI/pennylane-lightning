@@ -17,9 +17,10 @@ Class implementation for state vector measurements.
 
 import numpy as np
 import pennylane as qml
+from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
-from pennylane.typing import TensorLike
+
 
 class LightningGPUMeasurements(LightningBaseMeasurements):
     """Lightning GPU Measurements class
@@ -34,6 +35,5 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         self,
         lgpu_state,
     ) -> TensorLike:
-        
+
         super().__init__(lgpu_state)
-        

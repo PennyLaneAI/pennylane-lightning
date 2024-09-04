@@ -27,13 +27,8 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.tape import QuantumTape
-import numpy as np
-import pennylane as qml
-from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
-from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.operation import Operator
-from pennylane.tape import QuantumScript
+from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
@@ -59,9 +54,7 @@ try:
     except ImportError:
         MPI_SUPPORT = False
 
-    if ( find_library("custatevec") is None 
-    and not imp_util.find_spec("cuquantum")
-    ): 
+    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
         raise ImportError(
             "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
         )
@@ -77,8 +70,10 @@ except (ImportError, ValueError) as e:
     backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
 
+
 def _mebibytesToBytes(mebibytes):
     return mebibytes * 1024 * 1024
+
 
 _operations = frozenset(
     {
@@ -172,6 +167,7 @@ gate_cache_needs_hash = (
     qml.QubitUnitary,
 )
 
+
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     # To avoid building matrices beyond the given thresholds.
@@ -203,6 +199,7 @@ def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
 
 def _supports_adjoint(circuit):
     return 0
+
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
@@ -289,15 +286,16 @@ class LightningGPU(LightningBase):
         )
 
         # Set the attributes to call the LightningGPU classes
-        
+
         # GPU specific options
-        
+
         # Creating the state vector
 
     @property
     def name(self):
         """The name of the device."""
         return "lightning.gpu"
+
     def _set_Lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         return 0
@@ -385,5 +383,3 @@ class LightningGPU(LightningBase):
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
         return 0
-
-

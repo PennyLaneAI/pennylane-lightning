@@ -24,6 +24,7 @@ from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningGPUMeasurements
 
+
 class LightningGPUStateVector(LightningBaseStateVector):
     """Lightning GPU state-vector class.
 
