@@ -35,7 +35,7 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-# pylint: ungrouped-imports
+# pylint: disable=ungrouped-imports
 from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 

@@ -38,7 +38,7 @@ from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 from ._measurements import LightningMeasurements
 
 
-class LightningStateVector(LightningBaseStateVector):
+class LightningStateVector(LightningBaseStateVector): # pylint: disable=too-few-public-methods
     """Lightning Qubit state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
