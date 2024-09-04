@@ -34,7 +34,7 @@ on:
 env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
@@ -149,6 +149,7 @@ jobs:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
           path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
 
       - name: Cache wheel directories
@@ -157,6 +158,7 @@ jobs:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
           path: |
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
 
@@ -255,13 +257,13 @@ jobs:
       - name: Run PennyLane-Lightning unit tests
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            # Remove `python -m` to avoid running tests with relative modules
-            PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
-              --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
-            mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+          # Remove `python -m` to avoid running tests with relative modules
+          PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
+            --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
+          mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
 
       - name: Upload test durations
         uses: actions/upload-artifact@v4
@@ -269,16 +271,19 @@ jobs:
           name: .test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
           path: ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
-          path: ./.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          name: .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          path: ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-python:
+    if: github.event_name == 'pull_request'
     needs: [determine_runner, test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
@@ -289,9 +294,10 @@ jobs:
           fetch-tags: true
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          pattern: .coverage*
+          merge-multiple: true
 
       - name: Combine coverage files
         run: |
