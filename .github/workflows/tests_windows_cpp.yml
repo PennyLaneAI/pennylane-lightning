@@ -256,7 +256,7 @@ jobs:
       - name: Upload coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: windows-coverage-report
+          name: windows-coverage-report-${{ matrix.pl_backend }}
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           if-no-files-found: error
 
@@ -271,7 +271,8 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          name: windows-coverage-report
+          pattern: .coverage*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
