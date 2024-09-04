@@ -188,7 +188,9 @@ jobs:
         with:
           name: ubuntu-codecov-results-python
           path: coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
 
   upload-to-codecov-linux-python:

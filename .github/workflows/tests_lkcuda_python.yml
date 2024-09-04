@@ -296,4 +296,6 @@ jobs:
         with:
           name: ubuntu-codecov-results-python-${{ matrix.pl_backend }}
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true

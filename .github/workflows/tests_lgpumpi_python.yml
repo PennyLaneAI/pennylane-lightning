@@ -161,7 +161,9 @@ jobs:
         with:
           name: ubuntu-codecov-results-python-${{ matrix.mpilib }}
           path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Cleanup
         if: always()

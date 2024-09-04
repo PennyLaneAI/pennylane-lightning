@@ -279,6 +279,7 @@ jobs:
         with:
           name: .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
           path: ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
 

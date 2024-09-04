@@ -161,14 +161,18 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload coverage results
         uses: actions/upload-artifact@v4
         with:
           name: windows-coverage-report
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   cpptestswithkokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
@@ -251,14 +255,18 @@ jobs:
         with:
           name: windows-test-report-${{ github.job }}-${{ matrix.pl_backend }}
           path: .\Build\tests\results\
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload coverage results
         uses: actions/upload-artifact@v4
         with:
           name: windows-coverage-report-${{ matrix.pl_backend }}
           path: .\coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-windows:
     needs: [cpptests, cpptestswithkokkos]

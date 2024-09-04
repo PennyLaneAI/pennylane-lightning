@@ -158,14 +158,18 @@ jobs:
         with:
           name: ubuntu-tests-reports
           path: ./Build/tests/results/
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./Build/coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Cleanup
         if: always()

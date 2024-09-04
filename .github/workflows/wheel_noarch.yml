@@ -92,6 +92,8 @@ jobs:
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist/*.whl
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
     needs: build-pure-python-wheel

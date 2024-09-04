@@ -162,14 +162,18 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
           path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp-${{ matrix.pl_backend }}
           path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-cpp:
     needs: [cpptestswithLGPU]

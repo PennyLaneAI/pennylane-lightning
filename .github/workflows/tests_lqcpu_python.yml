@@ -226,8 +226,9 @@ jobs:
           name: .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
           path: |
             ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
-          if-no-files-found: error
-          include-hidden-files: true
+            retention-days: 1
+            if-no-files-found: error
+            include-hidden-files: true
 
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'

@@ -104,6 +104,8 @@ jobs:
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}
+          retention-days: 1
+          include-hidden-files: true
           path: |
             ./Build/tests/results/
 
@@ -164,14 +166,18 @@ jobs:
         with:
           name: ubuntu-tests-reports-blas-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-blas-${{ matrix.pl_backend }}
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
@@ -246,14 +252,18 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results-${{ github.job }}-${{ matrix.pl_backend }}
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-cpp:
     needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
@@ -337,4 +347,6 @@ jobs:
         with:
           name: ubuntu-tests-reports-${{ github.job }}-multiple-backends-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ./Build/tests/results_multiple_backends/
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true

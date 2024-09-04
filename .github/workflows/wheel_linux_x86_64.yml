@@ -205,6 +205,8 @@ jobs:
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
     needs: linux-wheels-x86-64
