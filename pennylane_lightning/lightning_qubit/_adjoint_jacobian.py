@@ -27,6 +27,7 @@ except ImportError:
 
 import numpy as np
 
+# pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
 
 from ._state_vector import LightningStateVector

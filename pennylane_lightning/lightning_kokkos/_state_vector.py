@@ -65,7 +65,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         device_name="lightning.kokkos",
         kokkos_args=None,
         sync=True,
-    ): # pylint: disable=too-many-arguments
+    ):  # pylint: disable=too-many-arguments
 
         if device_name != "lightning.kokkos":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
