@@ -74,6 +74,7 @@ _operations = frozenset(
         "PauliY",
         "PauliZ",
         "Hadamard",
+        "GlobalPhase",
         "S",
         "Adjoint(S)",
         "T",
@@ -113,6 +114,7 @@ _operations = frozenset(
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "BlockEncode"
     }
 )
 
@@ -140,6 +142,11 @@ def stopping_condition(op: Operator) -> bool:
     # These thresholds are adapted from `lightning_base.py`
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+    
     return op.has_matrix and op.name in _operations
 
 

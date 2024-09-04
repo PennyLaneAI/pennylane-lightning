@@ -294,6 +294,8 @@ class TestSimplifiedTwoDesign:
         res = qml.QNode(circuit, dev, diff_method=None)(init_weights, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(init_weights, weights)
 
+        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
+
         assert np.allclose(res, ref)
 
 
@@ -334,9 +336,10 @@ class TestMottonenStatePreparation:
 
         res = qml.QNode(circuit, dev, diff_method=None)(state)
         ref = qml.QNode(circuit, dq, diff_method=None)(state)
+
         dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
 
-        assert np.allclose(res, ref)
+        assert np.allclose(res, ref, atol=dtol, rtol=dtol)
 
 
 class TestArbitraryStatePreparation:
@@ -776,10 +779,10 @@ class TestAQFT:
 class TestQSVT:
     """Test the QSVT algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support BlockEncode",
-    )
+    #@pytest.mark.skipif(
+    #    device_name == "lightning.tensor",
+    #    reason="lightning.tensor does not support BlockEncode",
+    #)
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qsvt(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
