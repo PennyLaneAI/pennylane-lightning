@@ -387,12 +387,12 @@ class LightningTensorNet:
                     try:
                         method(qml.matrix(operation), wires, False)
                     except AttributeError:
-                        method(operation.matrix, wires, False)
+                        method(operation.matrix(), wires, False)
             else:
                 try:
                     gate_ops_matrix = qml.matrix(operation)
                 except AttributeError:
-                    gate_ops_matrix = operation.matrix
+                    gate_ops_matrix = operation.matrix()
 
                 if gate_ops_matrix.shape != (2 ** len(wires), 2 ** len(wires)):
                     # TODO: get the full matrix reprensentation of the gate, epscially for the controlled gates and others

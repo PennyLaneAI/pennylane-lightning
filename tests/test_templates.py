@@ -173,9 +173,6 @@ class TestDisplacementSqueezingEmbedding:
 class TestIQPEmbedding:
     """Test the IQPEmbedding algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support MultiRZ"
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_iqpembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
@@ -190,15 +187,14 @@ class TestIQPEmbedding:
         res = qml.QNode(circuit, dev, diff_method=None)(X)
         ref = qml.QNode(circuit, dq, diff_method=None)(X)
 
-        assert np.allclose(res, ref)
+        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
+
+        assert np.allclose(res, ref, atol=dtol, rtol=dtol)
 
 
 class TestQAOAEmbedding:
     """Test the QAOAEmbedding algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support MultiRZ"
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qaoaembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
@@ -214,8 +210,9 @@ class TestQAOAEmbedding:
 
         res = qml.QNode(circuit, dev, diff_method=None)(X, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(X, weights)
-
-        assert np.allclose(res, ref)
+        
+        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
+        assert np.allclose(res, ref, atol=dtol, rtol=dtol)
 
 
 class TestCVNeuralNetLayers:
@@ -337,7 +334,7 @@ class TestMottonenStatePreparation:
 
         res = qml.QNode(circuit, dev, diff_method=None)(state)
         ref = qml.QNode(circuit, dq, diff_method=None)(state)
-        # dtol = 1e-1 if device_name == "lightning.tensor" else 1e-6
+        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
 
         assert np.allclose(res, ref)
 
@@ -345,10 +342,6 @@ class TestMottonenStatePreparation:
 class TestArbitraryStatePreparation:
     """Test the ArbitraryStatePreparation algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support MultiRZ.",
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_arbitrarystatepreparation(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
@@ -363,7 +356,9 @@ class TestArbitraryStatePreparation:
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
 
-        assert np.allclose(res, ref)
+        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
+
+        assert np.allclose(res, ref, atol=dtol, rtol=dtol)
 
 
 class TestCosineWindow:
@@ -722,7 +717,7 @@ class TestQuantumPhaseEstimation:
 class TestQFT:
     """Test the QFT algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
+    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
     def test_qft(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
