@@ -16,7 +16,7 @@ r"""
 This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
 interfaces with C++ for fast linear algebra calculations.
 """
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from numbers import Number
 from typing import Callable, List, Optional, Sequence, Tuple, Union
 
@@ -89,7 +89,6 @@ class LightningBase(Device):
     @abstractmethod
     def _set_Lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
-        pass
 
     @abstractmethod
     def simulate(
@@ -112,7 +111,6 @@ class LightningBase(Device):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        pass
 
     def jacobian(
         self,

@@ -33,12 +33,13 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
+# pylint: disable=ungrouped-imports
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningMeasurements
 
 
-class LightningStateVector(LightningBaseStateVector):
+class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few-public-methods
     """Lightning Qubit state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
@@ -203,9 +204,11 @@ class LightningStateVector(LightningBaseStateVector):
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                paulis = operation._hyperparameters["pauli_word"]
+                paulis = operation._hyperparameters[  # pylint: disable=protected-access
+                    "pauli_word"
+                ]
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
-                word = "".join(p for p in paulis if p != "I")  # pylint: disable=protected-access
+                word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters

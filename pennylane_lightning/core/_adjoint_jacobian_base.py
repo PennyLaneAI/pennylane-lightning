@@ -70,7 +70,6 @@ class LightningBaseAdjointJacobian(ABC):
 
         Returns: the AdjointJacobian class
         """
-        pass
 
     @staticmethod
     def _get_return_type(

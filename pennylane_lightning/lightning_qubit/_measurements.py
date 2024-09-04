@@ -32,7 +32,7 @@ from pennylane.typing import TensorLike
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 
 
-class LightningMeasurements(LightningBaseMeasurements):
+class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-few-public-methods
     """Lightning Qubit Measurements class
 
     Measures the state provided by the LightningStateVector class.

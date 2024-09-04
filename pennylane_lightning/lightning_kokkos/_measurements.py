@@ -31,7 +31,9 @@ from pennylane.typing import TensorLike
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 
 
-class LightningKokkosMeasurements(LightningBaseMeasurements):
+class LightningKokkosMeasurements(
+    LightningBaseMeasurements
+):  # pylint: disable=too-few-public-methods
     """Lightning Kokkos Measurements class
 
     Measures the state provided by the LightningKokkosStateVector class.
