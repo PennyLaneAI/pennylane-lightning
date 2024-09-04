@@ -35,7 +35,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 @simulator_tracking
 @single_tape_support
-class LightningBase(ABC, Device):
+class LightningBase(Device, ABC):
     """PennyLane Lightning Base device.
 
     A class that serves as a base class for Lightning state-vector simulators.
