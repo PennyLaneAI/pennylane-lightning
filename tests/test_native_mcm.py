@@ -71,7 +71,7 @@ def test_all_invalid_shots_circuit():
 
 
 def test_unsupported_measurement():
-    """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.qubit``."""
+    """Test unsupported ``qml.classical_shadow`` measurement on ``lightning.qubit`` or ``lightning.kokkos`` ."""
 
     dev = qml.device(device_name, wires=2, shots=1000)
     params = np.pi / 4 * np.ones(2)
@@ -89,10 +89,12 @@ def test_unsupported_measurement():
             match=f"not accepted with finite shots on lightning.qubit",
         ):
             func(*params)
-    else:
+    if device_name == "lightning.kokkos":
+
         with pytest.raises(
-            TypeError,
-            match=f"Native mid-circuit measurement mode does not support ClassicalShadowMP measurements.",
+            qml.DeviceError,
+            match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "
+            + device_name,
         ):
             func(*params)
 

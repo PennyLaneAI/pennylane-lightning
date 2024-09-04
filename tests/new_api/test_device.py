@@ -44,6 +44,26 @@ if device_name == "lightning.qubit":
         validate_observables,
     )
 
+if device_name == "lightning.kokkos":
+    from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
+        _add_adjoint_transforms,
+        _adjoint_ops,
+        _supports_adjoint,
+        accepted_observables,
+        adjoint_measurements,
+        adjoint_observables,
+        decompose,
+        mid_circuit_measurements,
+        no_sampling,
+        stopping_condition,
+        stopping_condition_shots,
+        validate_adjoint_trainable_params,
+        validate_device_wires,
+        validate_measurements,
+        validate_observables,
+    )
+
+
 if device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor.lightning_tensor import (
         accepted_observables,
@@ -121,7 +141,7 @@ class TestHelpers:
         """Test that the correct transforms are added to the program by _add_adjoint_transforms"""
         expected_program = qml.transforms.core.TransformProgram()
 
-        name = "adjoint + lightning.qubit"
+        name = f"adjoint + {device_name}"
         expected_program.add_transform(no_sampling, name=name)
         expected_program.add_transform(
             decompose,
@@ -163,8 +183,8 @@ class TestHelpers:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shots or mcmc",
+    device_name != "lightning.qubit",
+    reason=f"The device {device_name} does not support mcmc",
 )
 class TestInitialization:
     """Unit tests for device initialization"""
@@ -238,7 +258,7 @@ class TestExecution:
                     device_options=_default_device_options,
                 ),
             ),
-            (
+            pytest.param(
                 ExecutionConfig(
                     device_options={
                         "c_dtype": np.complex64,
@@ -255,6 +275,10 @@ class TestExecution:
                         "kernel_name": None,
                         "num_burnin": 0,
                     },
+                ),
+                marks=pytest.mark.skipif(
+                    device_name != "lightning.qubit",
+                    reason=f"The device {device_name} does not support mcmc",
                 ),
             ),
             (
@@ -303,7 +327,7 @@ class TestExecution:
         expected_program.add_transform(qml.transforms.broadcast_expand)
 
         if adjoint:
-            name = "adjoint + lightning.qubit"
+            name = f"adjoint + {device_name}"
             expected_program.add_transform(no_sampling, name=name)
             expected_program.add_transform(
                 decompose,
@@ -483,7 +507,7 @@ class TestExecution:
 
     @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
     @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
-    def test_custom_wires(self, phi, theta, wires):
+    def test_custom_wires_execute(self, phi, theta, wires):
         """Test execution with custom wires"""
         device = LightningDevice(wires=wires)
         qs = QuantumScript(
@@ -822,11 +846,11 @@ class TestDerivatives:
         tapes."""
         device = LightningDevice(wires=4, batch_obs=batch_obs)
 
-        ops = [
-            qml.X(0),
-            qml.X(1),
-            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
-        ]
+        ops = [qml.X(0), qml.X(1)]
+        if device_name == "lightning.qubit":
+            ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
+        else:
+            ops.append(qml.RX(phi, 2))
 
         qs1 = QuantumScript(
             ops,
@@ -842,6 +866,7 @@ class TestDerivatives:
 
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_derivatives((qs1, qs2))
+
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_derivatives((qs1, qs2))
@@ -870,6 +895,33 @@ class TestDerivatives:
         assert len(jacs[0]) == len(expected_jac[0])
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
+    def test_derivatives_custom_wires(
+        self, theta, phi, dev, execute_and_derivatives, batch_obs, wires
+    ):
+        """Test that the jacobian is correct when set custom wires"""
+        device = LightningDevice(wires=wires)
+
+        qs = QuantumScript(
+            [qml.RX(theta, wires[0]), qml.CNOT([wires[0], wires[1]]), qml.RY(phi, wires[1])],
+            [qml.expval(qml.Z(wires[1]))],
+            trainable_params=[0, 1],
+        )
+
+        res, jac = self.process_and_execute(
+            device, qs, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+        expected, expected_jac = self.calculate_reference(
+            qs, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
 
 
 @pytest.mark.skipif(
@@ -1163,8 +1215,11 @@ class TestVJP:
         ops = [
             qml.X(0),
             qml.X(1),
-            qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]),
         ]
+        if device_name == "lightning.qubit":
+            ops.append(qml.ctrl(qml.RX(phi, 2), (0, 1, 3), control_values=[1, 1, 0]))
+        else:
+            ops.append(qml.RX(phi, 2))
 
         qs1 = QuantumScript(
             ops,
@@ -1181,6 +1236,7 @@ class TestVJP:
 
         if execute_and_derivatives:
             results, jacs = device.execute_and_compute_vjp((qs1, qs2), dy)
+
         else:
             results = device.execute((qs1, qs2))
             jacs = device.compute_vjp((qs1, qs2), dy)
@@ -1208,3 +1264,31 @@ class TestVJP:
         assert len(jacs) == len(expected_jac) == 2
         assert np.allclose(jacs[0], expected_jac[0])
         assert np.allclose(jacs[1], expected_jac[1])
+
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize("execute_and_derivatives", [True, False])
+    @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
+    def test_vjp_custom_wires(self, theta, phi, dev, wires, execute_and_derivatives, batch_obs):
+        """Test that the VJP is correct when set a custom wires"""
+
+        device = LightningDevice(wires=wires)
+
+        qs = QuantumScript(
+            [qml.RX(theta, wires[0]), qml.CNOT([wires[0], wires[1]]), qml.RY(phi, wires[1])],
+            [qml.expval(qml.Z(wires[1]))],
+            trainable_params=[0, 1],
+        )
+
+        dy = 1.0
+        res, jac = self.process_and_execute(
+            device, qs, dy, execute_and_derivatives=execute_and_derivatives, obs_batch=batch_obs
+        )
+
+        expected, expected_jac = self.calculate_reference(
+            qs, dy, execute_and_derivatives=execute_and_derivatives
+        )
+
+        tol = 1e-5 if dev.c_dtype == np.complex64 else 1e-7
+        assert len(res) == len(jac) == 1
+        assert np.allclose(res, expected, atol=tol, rtol=0)
+        assert np.allclose(jac, expected_jac, atol=tol, rtol=0)
