@@ -305,14 +305,14 @@ class LightningTensorNet:
         mpos = []
         for i in range(len(MPOs)):
             if i == 0:
-                # [ket, bra, bond] -> [bond, ket, bra]
+                # [bond, bra, ket] -> [ket, bond, bra]
                 mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
             elif i == len(MPOs) - 1:
-                # [bond, ket, bra] -> [ket, bond, bra]
+                # [bra, ket, bond] -> [ket, bra, bond]
                 mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
             else:
-                # [bondL, ket, bra, bondR] -> [bondR, ket, bondL, bra]
-                ## The following order (2,0,1,3) gives the best result at the order of 1.0e-15
+                # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
+                # To match the order of cutensornet backend
                 mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
 
         # Append the MPOs to the tensor network
