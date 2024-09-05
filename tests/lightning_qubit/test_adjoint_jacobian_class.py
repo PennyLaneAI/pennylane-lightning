@@ -18,16 +18,24 @@ import math
 
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import (  # tested device
+    LightningAdjointJacobian,
+    LightningDevice,
+    LightningStateVector,
+    device_name,
+)
 from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+if not LightningDevice._new_API:
+    pytest.skip(
+        "Exclusive tests for new API backends LightningAdjointJacobian class. Skipping.",
+        allow_module_level=True,
+    )
 
-if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if device_name == "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -40,17 +48,11 @@ I, X, Y, Z = (
     qml.PauliZ.compute_matrix(),
 )
 
+kokkos_args = [None]
+if device_name == "lightning.kokkos":
+    from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
 
-# General LightningStateVector fixture, for any number of wires.
-@pytest.fixture(
-    scope="function",
-    params=[np.complex64, np.complex128],
-)
-def lightning_sv(request):
-    def _statevector(num_wires):
-        return LightningStateVector(num_wires=num_wires, dtype=request.param)
-
-    return _statevector
+    kokkos_args += [InitializationSettings().set_num_threads(2)]
 
 
 def Rx(theta):
@@ -138,6 +140,35 @@ class TestAdjointJacobian:
         jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
         assert len(jac) == 0
 
+    def test_empty_trainable_params(self, lightning_sv):
+        """Tests if an empty array is returned when the number trainable params is zero."""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.X(wires=[0])
+            qml.expval(qml.PauliZ(0))
+
+        jac = self.calculate_jacobian(lightning_sv(num_wires=3), tape)
+        assert len(jac) == 0
+
+    def test_not_expectation_return_type(self, lightning_sv):
+        """Tests if an empty array is returned when the number trainable params is zero."""
+
+        with qml.tape.QuantumTape() as tape:
+            qml.X(wires=[0])
+            qml.RX(0.4, wires=[0])
+            qml.var(qml.PauliZ(1))
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="Adjoint differentiation method does not support expectation return type "
+            "mixed with other return types",
+        ):
+            self.calculate_jacobian(lightning_sv(num_wires=1), tape)
+
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="N-controlled operations only implemented in lightning.qubit.",
+    )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_phaseshift_gradient(self, n_qubits, par, tol, lightning_sv):
@@ -527,6 +558,26 @@ class TestVectorJacobianProduct:
         vjp = self.calculate_vjp(statevector, tape, dy)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
+
+    def test_empty_dy(self, tol, lightning_sv):
+        """A zero dy vector will return no tapes and a zero matrix"""
+        statevector = lightning_sv(num_wires=2)
+        x = 0.543
+        y = -0.654
+
+        with qml.tape.QuantumTape() as tape:
+            qml.RX(x, wires=[0])
+            qml.RY(y, wires=[1])
+            qml.CNOT(wires=[0, 1])
+            qml.expval(qml.PauliZ(0) @ qml.PauliX(1))
+
+        tape.trainable_params = {0, 1}
+        dy = np.array(1.0)
+
+        vjp = self.calculate_vjp(statevector, tape, dy)
+
+        expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
+        assert np.allclose(vjp, expected, atol=tol, rtol=0)
 
     def test_single_expectation_value(self, tol, lightning_sv):
         """Tests correct output shape and evaluation for a tape
