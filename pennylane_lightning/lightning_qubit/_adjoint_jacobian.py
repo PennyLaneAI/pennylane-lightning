@@ -28,8 +28,8 @@ except ImportError:
 from os import getenv
 
 import numpy as np
-from scipy.sparse import csr_matrix
 from pennylane.tape import QuantumTape
+from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
@@ -65,7 +65,7 @@ class LightningAdjointJacobian(
             create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
         )
         return jacobian_lightning, create_ops_list_lightning
-    
+
     def calculate_jacobian(self, tape: QuantumTape):
         """Computes the Jacobian with the adjoint method.
 
@@ -87,9 +87,9 @@ class LightningAdjointJacobian(
         if empty_array:
             return np.array([], dtype=self.dtype)
 
-        split_obs = True if len(tape.measurements) > 1 else False  
+        split_obs = True if len(tape.measurements) > 1 else False
         # lightning already parallelizes applying a single Hamiltonian
-        
+
         if split_obs:
             # split linear combinations into num_threads
             # this isn't the best load-balance in general, but well-rounded enough
@@ -108,7 +108,7 @@ class LightningAdjointJacobian(
             processed_data["ops_serialized"],
             trainable_params,
         )
-        
+
         jac = np.array(jac)
         has_shape0 = True if len(jac) > 0 else False
 
