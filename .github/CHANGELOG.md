@@ -66,6 +66,9 @@ Amintor Dusko, Luis Alfredo Nuñez Meneses, Shuli Shu
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
 
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
+
 ### Improvements
 
 * Updated calls of ``size_t`` to ``std::size_t`` everywhere.
