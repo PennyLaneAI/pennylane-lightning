@@ -166,7 +166,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
-    ):
+    ):  # pylint: disable=protected-access
         """Apply a list of operations to the state tensor.
 
         Args:
