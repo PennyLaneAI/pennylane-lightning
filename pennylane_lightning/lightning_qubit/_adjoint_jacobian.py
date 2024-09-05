@@ -25,7 +25,11 @@ try:
 except ImportError:
     pass
 
+from os import getenv
+
 import numpy as np
+from scipy.sparse import csr_matrix
+from pennylane.tape import QuantumTape
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
@@ -61,3 +65,62 @@ class LightningAdjointJacobian(
             create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
         )
         return jacobian_lightning, create_ops_list_lightning
+    
+    def calculate_jacobian(self, tape: QuantumTape):
+        """Computes the Jacobian with the adjoint method.
+
+        .. code-block:: python
+
+            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            jacobian = LightningAdjointJacobian(statevector).calculate_jacobian(tape)
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+
+        Returns:
+            The Jacobian of a tape.
+        """
+
+        empty_array = self._handle_raises(tape, is_jacobian=True)
+
+        if empty_array:
+            return np.array([], dtype=self.dtype)
+
+        split_obs = True if len(tape.measurements) > 1 else False  
+        # lightning already parallelizes applying a single Hamiltonian
+        
+        if split_obs:
+            # split linear combinations into num_threads
+            # this isn't the best load-balance in general, but well-rounded enough
+            split_obs = getenv("OMP_NUM_THREADS", None) if self._batch_obs else False
+            split_obs = int(split_obs) if split_obs else False
+        processed_data = self._process_jacobian_tape(tape, split_obs=split_obs)
+
+        if not processed_data:  # training_params is empty
+            return np.array([], dtype=self.dtype)
+
+        trainable_params = processed_data["tp_shift"]
+
+        jac = self._jacobian_lightning(
+            processed_data["state_vector"],
+            processed_data["obs_serialized"],
+            processed_data["ops_serialized"],
+            trainable_params,
+        )
+        
+        jac = np.array(jac)
+        has_shape0 = True if len(jac) > 0 else False
+
+        num_obs = len(np.unique(processed_data["obs_indices"]))
+
+        rows = processed_data["obs_indices"]
+        cols = np.arange(len(rows), dtype=int)
+        data = np.ones(len(rows))
+        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
+
+        jac = red_mat @ jac.reshape((len(rows), -1))
+        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
+        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
+        jac_r[:, processed_data["record_tp_rows"]] = jac
+        return self._adjoint_jacobian_processing(jac_r)

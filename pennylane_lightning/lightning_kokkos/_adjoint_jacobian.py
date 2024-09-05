@@ -26,6 +26,7 @@ except ImportError:
     pass
 
 import numpy as np
+from pennylane.tape import QuantumTape
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
@@ -35,7 +36,7 @@ from ._state_vector import LightningKokkosStateVector
 
 class LightningKokkosAdjointJacobian(
     LightningBaseAdjointJacobian
-):  # pylint: disable=too-few-public-methods
+):  
     """Check and execute the adjoint Jacobian differentiation method.
 
     Args:
@@ -61,3 +62,43 @@ class LightningKokkosAdjointJacobian(
             create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
         )
         return jacobian_lightning, create_ops_list_lightning
+
+    def calculate_jacobian(self, tape: QuantumTape):
+        """Computes the Jacobian with the adjoint method.
+
+        .. code-block:: python
+
+            statevector = LightningKokkosStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            jacobian = LightningKokkosAdjointJacobian(statevector).calculate_jacobian(tape)
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+
+        Returns:
+            The Jacobian of a tape.
+        """
+
+        empty_array = self._handle_raises(tape, is_jacobian=True)
+
+        if empty_array:
+            return np.array([], dtype=self.dtype)
+
+        processed_data = self._process_jacobian_tape(tape)
+
+        if not processed_data:  # training_params is empty
+            return np.array([], dtype=self.dtype)
+
+        trainable_params = processed_data["tp_shift"]
+        jac = self._jacobian_lightning(
+            processed_data["state_vector"],
+            processed_data["obs_serialized"],
+            processed_data["ops_serialized"],
+            trainable_params,
+        )
+        jac = np.array(jac)
+        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
+        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
+        jac_r[:, processed_data["record_tp_rows"]] = jac
+
+        return self._adjoint_jacobian_processing(jac_r)
