@@ -165,9 +165,10 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
             auto allocator = sv.allocator();
             std::vector<ComplexT, decltype(allocator)> res(
                 sv.getLength(), ComplexT{0.0, 0.0}, allocator);
+            StateVectorT tmp(sv);
             for (std::size_t term_idx = 0; term_idx < coeffs.size();
                  term_idx++) {
-                StateVectorT tmp(sv);
+                tmp.updateData(sv.getDataVector());
                 terms[term_idx]->applyInPlace(tmp);
                 scaleAndAdd(tmp.getLength(), ComplexT{coeffs[term_idx], 0.0},
                             tmp.getData(), res.data());

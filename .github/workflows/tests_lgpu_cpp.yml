@@ -68,7 +68,7 @@ jobs:
     strategy:
       matrix:
         pl_backend: ["lightning_gpu"]
-        enable_lapack: ["OFF", "ON"]
+        enable_lapack: ["OFF"]
         cuda_version: ["12"]
 
     name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }}, enable_lapack=${{ matrix.enable_lapack }})

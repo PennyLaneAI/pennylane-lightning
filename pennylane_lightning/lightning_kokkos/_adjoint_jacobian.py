@@ -37,7 +37,6 @@ from pennylane.tape import QuantumTape
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
-from pennylane_lightning.core.lightning_base import _chunk_iterable
 
 from ._state_vector import LightningKokkosStateVector
 
@@ -243,30 +242,12 @@ class LightningKokkosAdjointJacobian:
             return np.array([], dtype=self._dtype)
 
         trainable_params = processed_data["tp_shift"]
-
-        # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
-        # This will allow use of Lightning with adjoint for large-qubit numbers AND large
-        # numbers of observables, enabling choice between compute time and memory use.
-        requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
-
-        if self._batch_obs and requested_threads > 1:
-            obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
-            jac = []
-            for obs_chunk in obs_partitions:
-                jac_local = self._jacobian_lightning(
-                    processed_data["state_vector"],
-                    obs_chunk,
-                    processed_data["ops_serialized"],
-                    trainable_params,
-                )
-                jac.extend(jac_local)
-        else:
-            jac = self._jacobian_lightning(
-                processed_data["state_vector"],
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
+        jac = self._jacobian_lightning(
+            processed_data["state_vector"],
+            processed_data["obs_serialized"],
+            processed_data["ops_serialized"],
+            trainable_params,
+        )
         jac = np.array(jac)
         jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
