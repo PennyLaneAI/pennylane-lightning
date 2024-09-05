@@ -9,8 +9,14 @@
 
 ### Improvements
 
+* Update GitHub actions in response to a high-severity vulnerability.
+  [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
+
 * Optimize gate cache recording for `lightning.tensor` C++ layer.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
+
+* Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
+  [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
 ### Documentation
 
@@ -20,7 +26,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses, Shuli Shu
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
