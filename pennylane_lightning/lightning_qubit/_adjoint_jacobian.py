@@ -14,7 +14,7 @@
 r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
-import os
+from os import getenv
 from typing import List
 
 import numpy as np
@@ -220,7 +220,7 @@ class LightningAdjointJacobian:
         if split_obs:
             # split linear combinations into num_threads
             # this isn't the best load-balance in general, but well-rounded enough
-            split_obs = os.getenv("OMP_NUM_THREADS", None) if self._batch_obs else False
+            split_obs = getenv("OMP_NUM_THREADS", None) if self._batch_obs else False
             split_obs = int(split_obs) if split_obs else False
         processed_data = self._process_jacobian_tape(tape, split_obs=split_obs)
 
