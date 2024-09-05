@@ -30,6 +30,7 @@ from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StateP
 from pennylane.measurements import Expectation, State
 from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
+from scipy.sparse import csr_matrix
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
 from pennylane_lightning.core._version import __version__
@@ -633,8 +634,12 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         # Check adjoint diff support
         self._check_adjdiff_supported_operations(tape.operations)
 
+        if self._mpi:
+            split_obs = False  # with MPI batched means compute Jacobian one observables at a time, no point splitting linear combinations
+        else:
+            split_obs = self._dp.getTotalDevices() if self._batch_obs else False
         processed_data = self._process_jacobian_tape(
-            tape, starting_state, use_device_state, self._mpi, self._batch_obs
+            tape, starting_state, use_device_state, self._mpi, split_obs
         )
 
         if not processed_data:  # training_params is empty
@@ -653,31 +658,12 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
 
         if self._batch_obs:  # Batching of Measurements
-            if not self._mpi:  # Single-node path, controlled batching over available GPUs
-                num_obs = len(processed_data["obs_serialized"])
-                batch_size = (
-                    num_obs
-                    if isinstance(self._batch_obs, bool)
-                    else self._batch_obs * self._dp.getTotalDevices()
-                )
-                jac = []
-                for chunk in range(0, num_obs, batch_size):
-                    obs_chunk = processed_data["obs_serialized"][chunk : chunk + batch_size]
-                    jac_chunk = adjoint_jacobian.batched(
-                        self._gpu_state,
-                        obs_chunk,
-                        processed_data["ops_serialized"],
-                        trainable_params,
-                    )
-                    jac.extend(jac_chunk)
-            else:  # MPI path, restrict memory per known GPUs
-                jac = adjoint_jacobian.batched(
-                    self._gpu_state,
-                    processed_data["obs_serialized"],
-                    processed_data["ops_serialized"],
-                    trainable_params,
-                )
-
+            jac = adjoint_jacobian.batched(
+                self._gpu_state,
+                processed_data["obs_serialized"],
+                processed_data["ops_serialized"],
+                trainable_params,
+            )
         else:
             jac = adjoint_jacobian(
                 self._gpu_state,
@@ -685,36 +671,18 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
                 processed_data["ops_serialized"],
                 trainable_params,
             )
+        jac = np.array(jac)
+        has_shape0 = bool(len(jac))
 
-        jac = np.array(jac)  # only for parameters differentiable with the adjoint method
-        jac = jac.reshape(-1, len(trainable_params))
-        jac_r = np.zeros((len(tape.observables), processed_data["all_params"]))
-        if not self._batch_obs:
-            jac_r[:, processed_data["record_tp_rows"]] = jac
-        else:
-            # Reduce over decomposed expval(H), if required.
-            for idx in range(len(processed_data["obs_idx_offsets"][0:-1])):
-                if (
-                    processed_data["obs_idx_offsets"][idx + 1]
-                    - processed_data["obs_idx_offsets"][idx]
-                ) > 1:
-                    jac_r[idx, :] = np.sum(
-                        jac[
-                            processed_data["obs_idx_offsets"][idx] : processed_data[
-                                "obs_idx_offsets"
-                            ][idx + 1],
-                            :,
-                        ],
-                        axis=0,
-                    )
-                else:
-                    jac_r[idx, :] = jac[
-                        processed_data["obs_idx_offsets"][idx] : processed_data["obs_idx_offsets"][
-                            idx + 1
-                        ],
-                        :,
-                    ]
-
+        num_obs = len(np.unique(processed_data["obs_indices"]))
+        rows = processed_data["obs_indices"]
+        cols = np.arange(len(rows), dtype=int)
+        data = np.ones(len(rows))
+        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
+        jac = red_mat @ jac.reshape((len(rows), -1))
+        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
+        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
+        jac_r[:, processed_data["record_tp_rows"]] = jac
         return self._adjoint_jacobian_processing(jac_r)
 
     # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
