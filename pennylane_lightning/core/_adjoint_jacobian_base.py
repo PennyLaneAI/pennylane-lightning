@@ -16,7 +16,6 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from abc import ABC, abstractmethod
-from os import getenv
 from typing import Any, Callable, List
 
 import numpy as np

@@ -87,7 +87,7 @@ class LightningAdjointJacobian(
         if empty_array:
             return np.array([], dtype=self.dtype)
 
-        split_obs = True if len(tape.measurements) > 1 else False
+        split_obs: bool = len(tape.measurements) > 1
         # lightning already parallelizes applying a single Hamiltonian
 
         if split_obs:
@@ -110,7 +110,7 @@ class LightningAdjointJacobian(
         )
 
         jac = np.array(jac)
-        has_shape0 = True if len(jac) > 0 else False
+        has_shape0: bool = len(jac) > 0
 
         num_obs = len(np.unique(processed_data["obs_indices"]))
 
