@@ -299,11 +299,7 @@ def test_qubit_RY(theta, phi, tol):
     init_state /= np.linalg.norm(init_state)
 
     def circuit():
-        (
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            if device_name != "lightning.tensor"
-            else qml.BasisState([0] * n_qubits, wires=range(n_qubits))
-        )
+        qml.StatePrep(init_state, wires=range(n_qubits))
         qml.RY(theta, wires=[0])
         qml.RY(phi, wires=[1])
         qml.RY(theta, wires=[2])
@@ -334,11 +330,7 @@ def test_qubit_unitary(n_wires, theta, phi, tol):
     for perm in perms:
 
         def circuit():
-            (
-                qml.StatePrep(init_state, wires=range(n_qubits))
-                if device_name != "lightning.tensor"
-                else qml.BasisState([0] * n_qubits, wires=range(n_qubits))
-            )
+            qml.StatePrep(init_state, wires=range(n_qubits))
             qml.RY(theta, wires=[0])
             qml.RY(phi, wires=[1])
             qml.RY(theta, wires=[2])
@@ -380,7 +372,7 @@ def test_state_prep(n_targets, tol):
             [qml.state()],
         )
         ref = dq.execute([tape])[0]
-        res = dev.execute([tape])[0] if ld._new_API else dev.execute(tape)
+        res = dev.execute([tape])[0]
         assert np.allclose(res.ravel(), ref.ravel(), tol)
 
 

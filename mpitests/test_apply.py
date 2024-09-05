@@ -672,29 +672,30 @@ class TestGenerateSample:
         """
         num_wires = numQubits
 
-        dev = qml.device("lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE)
+        dev = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE)
 
-        dev.apply([qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])])
+        ops = [qml.RX(1.5708, wires=[0]), qml.RX(1.5708, wires=[1])]
 
-        dev.shots = 10
-        dev._wires_measured = {0}
-        dev._samples = dev.generate_samples()
-        s1 = dev.sample(qml.PauliZ(wires=[0]))
-        assert np.array_equal(s1.shape, (10,))
+        shots = 10
+        obs = qml.PauliZ(wires=[0])
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
 
-        dev.reset()
-        dev.shots = 12
-        dev._wires_measured = {1}
-        dev._samples = dev.generate_samples()
-        s2 = dev.sample(qml.PauliZ(wires=[1]))
-        assert np.array_equal(s2.shape, (12,))
+        assert np.array_equal(s1.shape, (shots,))
 
-        dev.reset()
-        dev.shots = 17
-        dev._wires_measured = {0, 1}
-        dev._samples = dev.generate_samples()
-        s3 = dev.sample(qml.PauliX(0) @ qml.PauliZ(1))
-        assert np.array_equal(s3.shape, (17,))
+        shots = 12
+        obs = qml.PauliZ(wires=[1])
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s2 = dev.execute(tape)
+
+        assert np.array_equal(s2.shape, (shots,))
+
+        shots = 17
+        obs = qml.PauliX(0) @ qml.PauliZ(1)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s3 = dev.execute(tape)
+
+        assert np.array_equal(s3.shape, (shots,))
 
     @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
     def test_sample_values(self, tol, C_DTYPE):
@@ -703,13 +704,13 @@ class TestGenerateSample:
         """
         num_wires = numQubits
 
-        dev = qml.device("lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE)
-        dev.reset()
-        dev.apply([qml.RX(1.5708, wires=[0])])
-        dev._wires_measured = {0}
-        dev._samples = dev.generate_samples()
+        dev = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE)
 
-        s1 = dev.sample(qml.PauliZ(0))
+        shots = qml.measurements.Shots(1000)
+        ops = [qml.RX(1.5708, wires=[0])]
+        obs = qml.PauliZ(0)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1

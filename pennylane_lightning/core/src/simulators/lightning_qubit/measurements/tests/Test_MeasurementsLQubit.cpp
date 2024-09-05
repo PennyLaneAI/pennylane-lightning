@@ -643,8 +643,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
     std::vector<std::size_t> samples_decimal(num_samples, 0);
 
     // convert samples to decimal and then bin them in counts
-    for (size_t i = 0; i < num_samples; i++) {
-        for (size_t j = 0; j < num_qubits; j++) {
+    for (std::size_t i = 0; i < num_samples; i++) {
+        for (std::size_t j = 0; j < num_qubits; j++) {
             if (samples[i * num_qubits + j] != 0) {
                 samples_decimal[i] += twos[(num_qubits - 1 - j)];
             }
@@ -654,7 +654,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Sample with Metropolis (Local Kernel)",
 
     // compute estimated probabilities from histogram
     std::vector<PrecisionT> probabilities(counts.size());
-    for (size_t i = 0; i < counts.size(); i++) {
+    for (std::size_t i = 0; i < counts.size(); i++) {
         probabilities[i] = counts[i] / (PrecisionT)num_samples;
     }
 

@@ -14,6 +14,12 @@ on:
     branches:
       - main
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lgpumpi_python.yml'
@@ -35,7 +41,7 @@ concurrency:
 jobs:
 
   python_tests:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+    if: ${{ github.event.pull_request.draft == false && (contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name)) }}
     runs-on:
       - self-hosted
       - linux
@@ -151,11 +157,13 @@ jobs:
           coverage xml -o coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-main.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: ubuntu-codecov-results-python-${{ matrix.mpilib }}
           path: coverage-${{ github.job }}-lightning_gpu_${{ matrix.mpilib }}_cu${{ matrix.cuda_version_maj }}-*.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Cleanup
         if: always()
@@ -173,9 +181,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          pattern: ubuntu-codecov*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4

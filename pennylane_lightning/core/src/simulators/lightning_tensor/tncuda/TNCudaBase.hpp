@@ -21,6 +21,7 @@
 
 #include <complex>
 #include <memory>
+#include <set>
 #include <type_traits>
 #include <vector>
 
@@ -60,6 +61,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     using ComplexT = std::complex<PrecisionT>;
     using BaseType = TensornetBase<PrecisionT, Derived>;
     SharedTNCudaHandle handle_;
+    SharedCublasCaller cublascaller_;
     cudaDataType_t typeData_;
     DevTag<int> dev_tag_;
     cutensornetComputeType_t typeCompute_;
@@ -69,6 +71,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                                        // states as v24.03
 
     std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
+    std::set<int64_t> gate_ids_;
 
   public:
     TNCudaBase() = delete;
@@ -78,6 +81,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
                         cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
+          cublascaller_(make_shared_cublas_caller()),
           dev_tag_({device_id, stream_id}),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
@@ -108,7 +112,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     // runtime in the C++ layer
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
-          dev_tag_(dev_tag),
+          cublascaller_(make_shared_cublas_caller()), dev_tag_(dev_tag),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
         // TODO this code block could be moved to base class and need to revisit
         // when working on copy ctor
@@ -153,6 +157,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      */
     [[nodiscard]] auto getTNCudaHandle() const -> cutensornetHandle_t {
         return handle_.get();
+    }
+
+    /**
+     * @brief Access the CublasCaller the object is using.
+     *
+     * @return a reference to the object's CublasCaller object.
+     */
+    auto getCublasCaller() const -> const CublasCaller & {
+        return *cublascaller_;
     }
 
     /**
@@ -254,8 +267,18 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             "Unsupported gate: MPS method only supports 1, 2-wires gates");
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
-        DataBuffer<PrecisionT, int> dummy_device_data(
-            Pennylane::Util::exp2(wires.size()), getDevTag());
+
+        int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
+
+        if (gate_matrix.empty()) [[likely]] {
+            gate_cache_->add_gate(dummy_id, opName, par, adjoint);
+        } else [[unlikely]] {
+            auto gate_key = std::make_pair(opName, par);
+            std::vector<CFP_t> matrix_cu =
+                cuUtil::complexToCu<ComplexT>(gate_matrix);
+            gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
+        }
+
         int64_t id;
 
         std::vector<int32_t> stateModes =
@@ -273,33 +296,21 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetState_t */ getQuantumState(),
             /* int32_t numStateModes */ stateModes.size(),
             /* const int32_t * stateModes */ stateModes.data(),
-            /* void * */ static_cast<void *>(dummy_device_data.getData()),
+            /* void * */
+            static_cast<void *>(gate_cache_->get_gate_device_ptr(dummy_id)),
             /* const int64_t *tensorModeStrides */ nullptr,
             /* const int32_t immutable */ 0,
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t * */ &id));
-        if (!gate_matrix.empty()) {
-            auto gate_key = std::make_pair(opName, par);
-            std::vector<CFP_t> matrix_cu =
-                cuUtil::complexToCu<ComplexT>(gate_matrix);
-            gate_cache_->add_gate(static_cast<std::size_t>(id), gate_key,
-                                  matrix_cu, adjoint);
-        } else {
-            gate_cache_->add_gate(static_cast<std::size_t>(id), opName, par,
-                                  adjoint);
+
+        if (dummy_id != id) {
+            gate_cache_->update_key(dummy_id, id);
         }
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
-            /* const cutensornetHandle_t */ getTNCudaHandle(),
-            /* cutensornetState_t */ getQuantumState(),
-            /* int64_t tensorId*/ id,
-            /* void* */
-            static_cast<void *>(
-                gate_cache_->get_gate_device_ptr(static_cast<std::size_t>(id))),
-            /* int32_t unitary*/ 1));
+
+        gate_ids_.insert(id);
     }
 
-  protected:
     /**
      * @brief Get the state vector representation of a tensor network.
      *
@@ -323,7 +334,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get a slice of the state tensor
+     * @brief Get a slice of the full state tensor
      *
      * @param tensor_data Pointer to the device memory for state tensor data.
      * @param tensor_data_size Size of the state tensor data.
@@ -334,17 +345,61 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     void get_state_tensor(CFP_t *tensor_data,
                           const std::size_t tensor_data_size,
                           const std::vector<std::size_t> &wires,
-                          const int32_t numHyperSamples = 1) {
-        // NOTE: this is a solution to get the full state tensor
-        // TODO: projected_modes and projectedModeValues are to be updated for
-        // prob() support.
+                          const int32_t numHyperSamples = 1) const {
         auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
             wires, BaseType::getNumQubits());
 
         std::vector<int32_t> projected_modes{};
 
-        std::vector<int64_t> projectedModeValues{};
+        for (int32_t idx = 0;
+             idx < static_cast<int32_t>(BaseType::getNumQubits()); idx++) {
+            auto it = std::find(stateModes.begin(), stateModes.end(), idx);
+            if (it == stateModes.end()) {
+                projected_modes.emplace_back(idx);
+            }
+        }
 
+        std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
+
+        if (projected_modes.empty()) {
+            get_accessor_(tensor_data, tensor_data_size, projected_modes,
+                          projectedModeValues, numHyperSamples);
+        } else {
+            DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
+
+            const std::size_t projected_modes_size = std::size_t(1)
+                                                     << projected_modes.size();
+            for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
+                for (std::size_t j = 0; j < projected_modes.size(); j++) {
+                    projectedModeValues[j] = (idx >> j) & 1;
+                }
+
+                get_accessor_(tmp.getData(), tensor_data_size, projected_modes,
+                              projectedModeValues, numHyperSamples);
+                // Copy the data to the output tensor
+                scaleAndAddC_CUDA(std::complex<PrecisionT>{1.0, 0.0},
+                                  tmp.getData(), tensor_data, tmp.getLength(),
+                                  getDevTag().getDeviceID(),
+                                  getDevTag().getStreamID(), getCublasCaller());
+            }
+        }
+    }
+
+  private:
+    /**
+     * @brief Get accessor of a state tensor
+     *
+     * @param tensor_data Pointer to the device memory for state tensor data.
+     * @param tensor_data_size Size of the tensor data.
+     * @param projected_modes Projected modes to get the state tensor for.
+     * @param projectedModeValues Values of the projected modes.
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is set to 1 by default.
+     */
+    void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
+                       const std::vector<int32_t> &projected_modes,
+                       const std::vector<int64_t> &projectedModeValues,
+                       const int32_t numHyperSamples = 1) const {
         cutensornetStateAccessor_t accessor;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateAccessor(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
@@ -363,7 +418,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cutensornetStateAccessor_t */ accessor,
             /* cutensornetAccessorAttributes_t */ accessor_attribute,
             /* const void * */ &numHyperSamples,
-            /* size_t */ sizeof(numHyperSamples)));
+            /* std::size_t */ sizeof(numHyperSamples)));
 
         // prepare the computation
         cutensornetWorkspaceDescriptor_t workDesc;
@@ -377,7 +432,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetAccessorPrepare(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetStateAccessor_t*/ accessor,
-            /* size_t */ scratchSize,
+            /* std::size_t */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* cudaStream_t unused as of v24.03 */ 0x0));
 
@@ -415,15 +470,38 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         CFP_t scale_scalar_cu{scale_scalar.real(), scale_scalar.imag()};
 
-        SharedCublasCaller cublascaller = make_shared_cublas_caller();
-
         scaleC_CUDA<CFP_t, CFP_t>(scale_scalar_cu, tensor_data,
                                   tensor_data_size, getDevTag().getDeviceID(),
-                                  getDevTag().getStreamID(), *cublascaller);
+                                  getDevTag().getStreamID(), getCublasCaller());
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyAccessor(accessor));
+    }
+
+  protected:
+    /**
+     * @brief Dummy tensor operator update to allow multiple calls of
+     * appendMPSFinalize. This is a workaround to avoid the issue of the
+     * cutensornet library not allowing multiple calls of appendMPSFinalize.
+     *
+     * This function either appends a new `Identity` gate to the graph when the
+     * gate cache is empty or update the existing gate operator by itself.
+     */
+    void dummy_tensor_update() {
+        if (gate_cache_->is_empty()) {
+            applyOperation("Identity", {0}, false);
+        }
+
+        const std::size_t id = gate_cache_->get_cache_head_idx();
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* int64_t tensorId*/ static_cast<int64_t>(id),
+            /* void* */
+            static_cast<void *>(gate_cache_->get_gate_device_ptr(id)),
+            /* int32_t unitary*/ 1));
     }
 
     /**
@@ -443,7 +521,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
-            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* std::size_t maxWorkspaceSizeDevice */ scratchSize,
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /*  cudaStream_t unused as of v24.03*/ 0x0));
 

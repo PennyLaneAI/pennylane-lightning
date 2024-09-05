@@ -32,11 +32,11 @@ struct ApplyGeneratorPhaseShift {
 
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static consteval auto factorInternal() ->
         typename PrecisionAVXConcept::IntrinsicType {
         std::array<PrecisionT, packed_size> factors{};
-        for (size_t k = 0; k < packed_size_ / 2; k++) {
+        for (std::size_t k = 0; k < packed_size_ / 2; k++) {
             if (((k >> rev_wire) & std::size_t{1U}) == 0) {
                 factors[2 * k + 0] = 0.0;
                 factors[2 * k + 1] = 0.0;
@@ -48,13 +48,13 @@ struct ApplyGeneratorPhaseShift {
         return setValue(factors);
     }
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static auto applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits,
                               [[maybe_unused]] bool inverse) -> PrecisionT {
         constexpr auto factor = factorInternal<rev_wire>();
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
+        for (std::size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             PrecisionAVXConcept::store(arr + k, factor * v);
         }
@@ -71,7 +71,8 @@ struct ApplyGeneratorPhaseShift {
         constexpr auto zero =
             typename PrecisionAVXConcept::IntrinsicType{PrecisionT{0.0}};
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             PrecisionAVXConcept::store(arr + i0, zero);

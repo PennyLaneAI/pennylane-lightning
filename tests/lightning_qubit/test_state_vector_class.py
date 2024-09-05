@@ -20,14 +20,24 @@ import math
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import LightningDevice, LightningStateVector, device_name  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
+if device_name == "lightning.kokkos":
+    try:
+        from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+    except ImportError:
+        pass
 
-if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if device_name == "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
+
+if not LightningDevice._new_API:
+    pytest.skip(
+        "Exclusive tests for new API devices. Skipping.",
+        allow_module_level=True,
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -35,13 +45,29 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 @pytest.mark.parametrize("num_wires", range(4))
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-@pytest.mark.parametrize("device_name", ["lightning.qubit"])
-def test_device_name_and_init(num_wires, dtype, device_name):
+def test_device_name_and_init(num_wires, dtype):
     """Test the class initialization and returned properties."""
     state_vector = LightningStateVector(num_wires, dtype=dtype, device_name=device_name)
     assert state_vector.dtype == dtype
     assert state_vector.device_name == device_name
     assert state_vector.wires == Wires(range(num_wires))
+
+    if device_name == "lightning.kokkos":
+        bad_kokkos_args = np.array([33])
+        with pytest.raises(
+            TypeError,
+            match=f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(bad_kokkos_args)}.",
+        ):
+            assert LightningStateVector(
+                num_wires, dtype=dtype, device_name=device_name, kokkos_args=bad_kokkos_args
+            )
+
+        set_kokkos_args = InitializationSettings().set_num_threads(2)
+        state_vector_3 = LightningStateVector(
+            num_wires, dtype=dtype, device_name=device_name, kokkos_args=set_kokkos_args
+        )
+
+        assert type(state_vector) == type(state_vector_3)
 
 
 def test_wrong_device_name():
@@ -58,10 +84,10 @@ def test_wrong_dtype(dtype):
 
 
 def test_errors_basis_state():
-    with pytest.raises(ValueError, match="BasisState parameter must consist of 0 or 1 integers."):
+    with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
         state_vector = LightningStateVector(2)
         state_vector.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
-    with pytest.raises(ValueError, match="BasisState parameter and wires must be of equal length."):
+    with pytest.raises(ValueError, match="State must be of length 1;"):
         state_vector = LightningStateVector(1)
         state_vector.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
 

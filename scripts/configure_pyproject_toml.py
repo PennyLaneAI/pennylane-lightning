@@ -21,7 +21,9 @@ from pathlib import Path
 import toml
 from backend_support import backend, device_name
 
-path_to_version = Path("pennylane_lightning").absolute() / "core" / "_version.py"
+path_to_project = Path(__file__).parent.parent.absolute()
+
+path_to_version = path_to_project / Path("pennylane_lightning") / "core" / "_version.py"
 with open(path_to_version, encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
 
@@ -49,6 +51,10 @@ def parse_args():
 
 if __name__ == "__main__":
     parsed_args = parse_args()
+
+    if parsed_args.path.strip() == "":
+        parsed_args.path = path_to_project.as_posix()
+
     pyproject_path = os.path.join(parsed_args.path, "pyproject.toml")
 
     pyproject = toml.load(pyproject_path)

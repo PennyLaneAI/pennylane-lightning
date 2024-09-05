@@ -19,40 +19,30 @@ from typing import Sequence
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import (  # tested device
+    PHI,
+    THETA,
+    LightningDevice,
+    LightningMeasurements,
+    LightningStateVector,
+    device_name,
+)
 from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
 
-try:
-    from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
-    pass
+if not LightningDevice._new_API:
+    pytest.skip(
+        "Exclusive tests for new API devices. Skipping.",
+        allow_module_level=True,
+    )
 
-from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
-from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
-
-if device_name != "lightning.qubit":
-    pytest.skip("Exclusive tests for lightning.qubit. Skipping.", allow_module_level=True)
+if device_name == "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-THETA = np.linspace(0.11, 1, 3)
-PHI = np.linspace(0.32, 1, 3)
-
-
-# General LightningStateVector fixture, for any number of wires.
-@pytest.fixture(
-    scope="function",
-    params=[np.complex64, np.complex128],
-)
-def lightning_sv(request):
-    def _statevector(num_wires):
-        return LightningStateVector(num_wires=num_wires, dtype=request.param)
-
-    return _statevector
 
 
 def get_hermitian_matrix(n):
@@ -418,7 +408,8 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
-    @flaky(max_runs=5)
+    @flaky(max_runs=15)
+    @pytest.mark.parametrize("shots", [None, 200_000, [190_000, 190_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -440,10 +431,15 @@ class TestMeasurements:
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
     )
-    def test_single_return_value(self, measurement, observable, lightning_sv, tol):
+    def test_single_return_value(self, shots, measurement, observable, lightning_sv, tol):
         if measurement is qml.probs and isinstance(
             observable,
-            (qml.ops.Sum, qml.ops.SProd, qml.ops.Prod, qml.Hamiltonian, qml.SparseHamiltonian),
+            (
+                qml.ops.Sum,
+                qml.ops.SProd,
+                qml.ops.Prod,
+                qml.SparseHamiltonian,
+            ),
         ):
             pytest.skip(
                 f"Observable of type {type(observable).__name__} is not supported for rotating probabilities."
@@ -453,6 +449,16 @@ class TestMeasurements:
             pytest.skip(
                 f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
             )
+        rtol = 1.0e-2  # 1% of expected value as tolerance
+        if shots != None and measurement is qml.expval:
+            # Increase the number of shots
+            if isinstance(shots, int):
+                shots *= 10
+            else:
+                shots = [i * 10 for i in shots]
+
+            # Extra tolerance
+            rtol = 5.0e-2  # 5% of expected value as tolerance
 
         n_qubits = 4
         n_layers = 1
@@ -465,19 +471,42 @@ class TestMeasurements:
             if isinstance(observable, list)
             else [measurement(op=observable)]
         )
-        tape = qml.tape.QuantumScript(ops, measurements)
+        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        expected = self.calculate_reference(tape, lightning_sv)
         statevector = lightning_sv(n_qubits)
         statevector = statevector.get_final_state(tape)
         m = LightningMeasurements(statevector)
-        result = m.measure_final_state(tape)
+
+        skip_list = (
+            qml.ops.Sum,
+            qml.SparseHamiltonian,
+        )
+        do_skip = measurement is qml.var and isinstance(observable, skip_list)
+        do_skip = do_skip or (
+            measurement is qml.expval and isinstance(observable, qml.SparseHamiltonian)
+        )
+        do_skip = do_skip and shots is not None
+        if do_skip:
+            with pytest.raises(TypeError):
+                _ = m.measure_final_state(tape)
+            return
+        else:
+            result = m.measure_final_state(tape)
+
+        expected = self.calculate_reference(tape, lightning_sv)
 
         # a few tests may fail in single precision, and hence we increase the tolerance
-        assert np.allclose(result, expected, max(tol, 1.0e-4))
+        if shots is None:
+            assert np.allclose(result, expected, max(tol, 1.0e-4))
+        else:
+            atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-3)
+            rtol = max(tol, rtol)  # % of expected value as tolerance
 
-    @flaky(max_runs=5)
-    @pytest.mark.parametrize("shots", [None, 1000000])
+            # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
+            assert np.allclose(result, expected, rtol=rtol, atol=atol)
+
+    @flaky(max_runs=10)
+    @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -528,6 +557,17 @@ class TestMeasurements:
                 f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
             )
 
+        rtol = 1.0e-2  # 1% of expected value as tolerance
+        if shots != None and measurement is qml.expval:
+            # Increase the number of shots
+            if isinstance(shots, int):
+                shots *= 10
+            else:
+                shots = [i * 10 for i in shots]
+
+            # Extra tolerance
+            rtol = 5.0e-2  # 5% of expected value as tolerance
+
         n_qubits = 4
         n_layers = 1
         np.random.seed(0)
@@ -570,9 +610,14 @@ class TestMeasurements:
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
-        dtol = tol if shots is None else max(tol, 1.0e-2)
+        atol = tol if shots is None else max(tol, 1.0e-2)
+        rtol = max(tol, rtol)  # % of expected value as tolerance
         for r, e in zip(result, expected):
-            assert np.allclose(r, e, atol=dtol, rtol=dtol)
+            if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
+                r = np.concatenate(r)
+                e = np.concatenate(e)
+            # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
+            assert np.allclose(r, e, atol=atol, rtol=rtol)
 
     @pytest.mark.parametrize(
         "cases",

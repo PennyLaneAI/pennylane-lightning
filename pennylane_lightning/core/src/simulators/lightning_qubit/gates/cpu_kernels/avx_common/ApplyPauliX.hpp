@@ -31,7 +31,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyPauliX {
 
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
                               const std::size_t num_qubits,
                               [[maybe_unused]] bool inverse) {
@@ -40,7 +40,7 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyPauliX {
             compilePermutation<PrecisionT>(
                 flip(identity<packed_size>(), rev_wire));
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
+        for (std::size_t k = 0; k < (1U << num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             PrecisionAVXConcept::store(arr + k,
                                        permute<compiled_permutation>(v));
@@ -56,7 +56,8 @@ template <typename PrecisionT, std::size_t packed_size> struct ApplyPauliX {
         const std::size_t wire_parity = fillTrailingOnes(rev_wire);
         const std::size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & wire_parity_inv) | (wire_parity & k);
             const std::size_t i1 = i0 | rev_wire_shift;

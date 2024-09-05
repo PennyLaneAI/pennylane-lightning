@@ -21,7 +21,6 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device
-from pennylane import DeviceError
 from pennylane.wires import Wires
 
 if device_name != "lightning.tensor":
@@ -58,36 +57,9 @@ def test_wrong_device_name():
 
 def test_errors_basis_state():
     """Test that errors are raised when applying a BasisState operation."""
-    with pytest.raises(ValueError, match="BasisState parameter must consist of 0 or 1 integers."):
+    with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
         tensornet = LightningTensorNet(3, 5)
         tensornet.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
-    with pytest.raises(ValueError, match="BasisState parameter and wires must be of equal length."):
+    with pytest.raises(ValueError, match="State must be of length 1;"):
         tensornet = LightningTensorNet(3, 5)
         tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
-
-
-@pytest.mark.parametrize(
-    "operation,par",
-    [
-        (qml.StatePrep, [0, 0, 1, 0]),
-        (qml.StatePrep, [0, 0, 0, 1]),
-        (
-            qml.StatePrep,
-            [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-        ),
-        (
-            qml.StatePrep,
-            [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-        ),
-    ],
-)
-def test_errors_apply_operation_state_preparation(operation, par):
-    """Test that errors are raised when applying a StatePreparation operation."""
-    wires = 2
-    bondDims = 5
-    tensornet = LightningTensorNet(wires, bondDims)
-
-    with pytest.raises(
-        DeviceError, match="lightning.tensor does not support initialization with a state vector."
-    ):
-        tensornet.apply_operations([operation(np.array(par), Wires(range(wires)))])
