@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Remove support for Python 3.9.
+  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+
 ### Improvements
 
 * Update GitHub actions in response to a high-severity vulnerability.
