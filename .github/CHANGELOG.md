@@ -29,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
