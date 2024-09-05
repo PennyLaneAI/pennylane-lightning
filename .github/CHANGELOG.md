@@ -5,9 +5,15 @@
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wires should be converted to dense matrix to get it work.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
 
+* Lightning-Kokkos migrated to the new device API.
+  [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
+
 ### Breaking changes
 
 ### Improvements
+
+* Update GitHub actions in response to a high-severity vulnerability.
+  [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
 * Optimize gate cache recording for `lightning.tensor` C++ layer.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
@@ -20,7 +26,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Shuli Shu
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
@@ -59,6 +65,9 @@ Shuli Shu
 
 * Do not run GPU tests and Docker workflows on release.
   [(#788)](https://github.com/PennyLaneAI/pennylane-lightning/pull/788)
+
+* Update python packaging to follow PEP 517/518/621/660 standards.
+  [(#832)](https://github.com/PennyLaneAI/pennylane-lightning/pull/832)
 
 ### Improvements
 
@@ -201,7 +210,7 @@ Shuli Shu
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
+Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Luis Alfredo Nuñez Meneses, Erick Ochoa Lopez, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Paul Haochen Wang
 
 ---
 

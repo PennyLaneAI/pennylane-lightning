@@ -105,7 +105,7 @@ jobs:
 
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
@@ -139,7 +139,7 @@ jobs:
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -292,8 +292,10 @@ jobs:
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: ubuntu-codecov-results-python-${{ matrix.pl_backend }}
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
