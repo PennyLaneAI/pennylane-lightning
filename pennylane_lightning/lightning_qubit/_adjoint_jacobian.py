@@ -23,9 +23,9 @@ from pennylane import BasisState, QuantumFunctionError, StatePrep
 from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
+from scipy.sparse import csr_matrix
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
-from pennylane_lightning.core.lightning_base import _chunk_iterable
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
@@ -112,7 +112,7 @@ class LightningAdjointJacobian:
         """
         use_csingle = self._dtype == np.complex64
 
-        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
+        obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)
 
@@ -155,7 +155,7 @@ class LightningAdjointJacobian:
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
-            "obs_idx_offsets": obs_idx_offsets,
+            "obs_indices": obs_indices,
         }
 
     @staticmethod
@@ -214,41 +214,39 @@ class LightningAdjointJacobian:
                 "mixed with other return types"
             )
 
-        processed_data = self._process_jacobian_tape(tape)
+        split_obs = (
+            len(tape.measurements) > 1
+        )  # lightning already parallelizes applying a single Hamiltonian
+        if split_obs:
+            # split linear combinations into num_threads
+            # this isn't the best load-balance in general, but well-rounded enough
+            split_obs = getenv("OMP_NUM_THREADS", None) if self._batch_obs else False
+            split_obs = int(split_obs) if split_obs else False
+        processed_data = self._process_jacobian_tape(tape, split_obs=split_obs)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self._dtype)
 
         trainable_params = processed_data["tp_shift"]
 
-        # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
-        # This will allow use of Lightning with adjoint for large-qubit numbers AND large
-        # numbers of observables, enabling choice between compute time and memory use.
-        requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
-
-        if self._batch_obs and requested_threads > 1:
-            obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
-            jac = []
-            for obs_chunk in obs_partitions:
-                jac_local = self._jacobian_lightning(
-                    processed_data["state_vector"],
-                    obs_chunk,
-                    processed_data["ops_serialized"],
-                    trainable_params,
-                )
-                jac.extend(jac_local)
-        else:
-            jac = self._jacobian_lightning(
-                processed_data["state_vector"],
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
+        jac = self._jacobian_lightning(
+            processed_data["state_vector"],
+            processed_data["obs_serialized"],
+            processed_data["ops_serialized"],
+            trainable_params,
+        )
         jac = np.array(jac)
-        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
+        has_shape0 = bool(len(jac))
+
+        num_obs = len(np.unique(processed_data["obs_indices"]))
+        rows = processed_data["obs_indices"]
+        cols = np.arange(len(rows), dtype=int)
+        data = np.ones(len(rows))
+        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
+        jac = red_mat @ jac.reshape((len(rows), -1))
+        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
-
         return self._adjoint_jacobian_processing(jac_r)
 
     # pylint: disable=inconsistent-return-statements
