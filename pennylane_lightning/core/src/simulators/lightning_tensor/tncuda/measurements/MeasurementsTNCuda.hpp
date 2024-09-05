@@ -249,8 +249,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroySampler(sampler));
 
-        std::vector<std::size_t> samples_size_t(num_samples *
-                                                tensor_network_.getNumQubits());
+        std::vector<std::size_t> samples_size_t(samples.size());
 
         std::transform(samples.begin(), samples.end(), samples_size_t.begin(),
                        [&](int64_t x) { return static_cast<std::size_t>(x); });
