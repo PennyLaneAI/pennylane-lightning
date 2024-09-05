@@ -254,7 +254,7 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python-${{ matrix.pl_backend }}
+          name: ubuntu-codecov*
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
