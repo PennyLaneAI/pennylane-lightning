@@ -17,7 +17,14 @@ Class implementation for tensornet manipulation.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import TensorNetC64, TensorNetC128
+    from pennylane_lightning.lightning_tensor_ops import (
+        TensorNetC64,
+        TensorNetC128,
+        add_mpo_to_cache_c64,
+        add_mpo_to_cache_c128,
+        is_decomposed_c64,
+        is_decomposed_c128,
+    )
 except ImportError:
     pass
 

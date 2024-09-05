@@ -14,8 +14,7 @@
 
 #include "TNCudaMPOCache.hpp"
 
-using namespace Pennylane::LightningTensor::TNCuda::Gates;
+using namespace Pennylane::LightningTensor::TNCuda::MPO;
 
-template class Pennylane::LightningTensor::TNCuda::Gates::TNCudaMPOCache<float>;
-template class Pennylane::LightningTensor::TNCuda::Gates::TNCudaMPOCache<
-    double>;
+template class Pennylane::LightningTensor::TNCuda::MPO::TNCudaMPOCache<float>;
+template class Pennylane::LightningTensor::TNCuda::MPO::TNCudaMPOCache<double>;

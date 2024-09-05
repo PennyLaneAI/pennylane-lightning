@@ -23,6 +23,7 @@
 #include <complex>
 #include <functional>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -48,7 +49,7 @@ using namespace Pennylane::LightningTensor::TNCuda;
 } // namespace
 /// @endcond
 
-namespace Pennylane::LightningTensor::TNCuda::Gates {
+namespace Pennylane::LightningTensor::TNCuda::MPO {
 
 /**
  * @brief Memory management for MPO tensor data on device and its id in the
@@ -99,6 +100,7 @@ template <class PrecisionT> class TNCudaMPOCache {
                  const std::vector<std::size_t> &extents,
                  const std::vector<std::vector<ComplexT>> &mpo_data,
                  const std::vector<ComplexT> &matrix_data = {}) {
+        std::lock_guard<std::mutex> lock(mutex_);
         std::size_t hash_val =
             matrix_data.empty() ? 0 : MatrixHasher()(matrix_data);
         const mpo_info mpo_key = std::make_tuple(opsName, param, wire_order,
@@ -159,11 +161,12 @@ template <class PrecisionT> class TNCudaMPOCache {
             identity_mpo_cache_.at(identity_key)->getDataBuffer().getData());
     }
 
-    bool hasMPO(const std::string &opsName,
-                const std::vector<PrecisionT> &param,
-                const std::vector<std::size_t> &wire_order,
-                const std::size_t maxMPOBondDim,
-                const std::vector<ComplexT> &matrix_data = {}) const {
+    bool
+    is_gate_decomposed(const std::string &opsName,
+                       const std::vector<PrecisionT> &param,
+                       const std::vector<std::size_t> &wire_order,
+                       const std::size_t maxMPOBondDim,
+                       const std::vector<ComplexT> &matrix_data = {}) const {
         std::size_t hash_val =
             matrix_data.empty() ? 0 : MatrixHasher()(matrix_data);
 
@@ -176,6 +179,7 @@ template <class PrecisionT> class TNCudaMPOCache {
   private:
     void add_Idenity_MPO_(const std::size_t bondDimL,
                           const std::size_t bondDimR) {
+        std::lock_guard<std::mutex> lock(mutex_);
         const identity_mpo_info identity_key =
             std::make_tuple("Identity", bondDimL, bondDimR);
 
@@ -205,6 +209,7 @@ template <class PrecisionT> class TNCudaMPOCache {
 
   private:
     const DevTag<int> device_tag_;
+    static std::mutex mutex_;
 
     // Follow the boost::hash_combine pattern(as shown
     // [here](https://stackoverflow.com/a/2595226).
@@ -248,4 +253,4 @@ template <class PrecisionT> class TNCudaMPOCache {
                        identity_mpo_hash>
         identity_mpo_cache_;
 };
-} // namespace Pennylane::LightningTensor::TNCuda::Gates
+} // namespace Pennylane::LightningTensor::TNCuda::MPO
