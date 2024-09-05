@@ -121,23 +121,10 @@ jobs:
         run: |
           python -m pip install -r requirements-dev.txt
 
-      # TODO: Update after Release 0.37
       - name: Create device wheel ${{ inputs.lightning-version }}
-        if: inputs.lightning-version == 'stable'
         run: |
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
           python setup.py bdist_wheel
-          cd dist
-          WHEEL_NAME=$(ls *.whl)
-          cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
-          echo $WHEEL_NAME > ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
-
-      # TODO: Remove after Release 0.37
-      - name: Create device wheel ${{ inputs.lightning-version }}
-        if: inputs.lightning-version != 'stable'
-        run: |
-          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
