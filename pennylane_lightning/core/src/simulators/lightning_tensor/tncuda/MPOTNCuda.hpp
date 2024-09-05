@@ -245,22 +245,17 @@ template <class PrecisionT> class MPOTNCuda {
             } else {
                 // Initialize connecting Identity tensors
                 std::size_t length = tensors_[i]->getDataBuffer().getLength();
-                std::vector<std::size_t> target_idx;
-                CFP_t value_cu =
-                    cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
-                std::size_t idx = 0;
-
-                while (idx < length) {
-                    target_idx.push_back(idx);
-                    idx += bondDims_[i - 1] * 2 + 1;
+                std::vector<CFP_t> identity_tensor_host(length,
+                                                        CFP_t{0.0, 0.0});
+                for (std::size_t idx = 0; idx < length;
+                     idx += 2 * bondDims_[i - 1] + 1) {
+                    identity_tensor_host[idx] =
+                        cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
                 }
 
-                for (auto idx : target_idx) {
-                    PL_CUDA_IS_SUCCESS(cudaMemcpy(
-                        &tensors_[i]->getDataBuffer().getData()[idx], &value_cu,
-                        sizeof(CFP_t), cudaMemcpyHostToDevice));
-                }
+                tensors_[i]->getDataBuffer().CopyHostDataToGpu(
+                    identity_tensor_host.data(), identity_tensor_host.size());
             }
         }
 
