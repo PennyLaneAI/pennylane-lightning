@@ -41,6 +41,7 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
         qubit_state(LightningKokkosStateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
     """
+
     # pylint: disable=too-few-public-methods
 
     def __init__(self, qubit_state: LightningKokkosStateVector, batch_obs: bool = False) -> None:
