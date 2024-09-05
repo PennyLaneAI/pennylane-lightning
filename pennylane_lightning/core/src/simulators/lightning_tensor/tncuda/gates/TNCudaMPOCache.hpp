@@ -22,6 +22,7 @@
 
 #include <complex>
 #include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -31,6 +32,12 @@
 #include "DevTag.hpp"
 #include "TensorCuda.hpp"
 #include "cuGates_host.hpp"
+#include "cuda_helpers.hpp"
+
+// Golden Ratio constant used for better hash. For more
+// details, please check
+// [here](https://softwareengineering.stackexchange.com/a/402543).
+#define GOLDEN_RATIO 0x9e3779b9U
 
 /// @cond DEV
 namespace {
@@ -56,15 +63,20 @@ template <class PrecisionT> class TNCudaMPOCache {
   public:
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using ComplexT = std::complex<PrecisionT>;
+    // OpsName(Identity), BondDimL, BondDimR
+    // Note: No need to specify KeyEqual for std::unordered_map with std::tuple
+    // objects as keys.
     using identity_mpo_info =
-        std::tuple<const std::string, const std::size_t bondDimL,
-                   const std::size_t bondDimR>;
+        std::tuple<const std::string, const std::size_t, const std::size_t>;
+    // OpsName, Param, WireOrder, Extents, maxMPOBondDim, HashValue
     using mpo_info =
         std::tuple<const std::string, const std::vector<PrecisionT>,
-                   const std::vector<std::size_t> wires_order,
-                   const std::size_t hash_value>;
-    using mpo_data = std::vector<std::share_ptr<TensorCuda<PrecisionT>>>;
-    using identity_data = std::share_ptr<TensorCuda<PrecisionT>>;
+                   const std::vector<std::size_t>, const std::size_t,
+                   const std::size_t>;
+    // MPO tensor data vector for each MPO sites
+    using mpo_data = std::vector<std::shared_ptr<TensorCuda<PrecisionT>>>;
+    // Identity MPO tensor data
+    using identity_data = std::shared_ptr<TensorCuda<PrecisionT>>;
 
     TNCudaMPOCache(TNCudaMPOCache &&) = delete;
     TNCudaMPOCache(const TNCudaMPOCache &) = delete;
@@ -83,48 +95,82 @@ template <class PrecisionT> class TNCudaMPOCache {
     void add_MPO(const std::string &opsName,
                  const std::vector<PrecisionT> &param,
                  const std::vector<std::size_t> &wire_order,
+                 const std::size_t maxMPOBondDim,
                  const std::vector<std::size_t> &extents,
                  const std::vector<std::vector<ComplexT>> &mpo_data,
                  const std::vector<ComplexT> &matrix_data = {}) {
-        // auto tensor = std::make_shared<TensorCuda<PrecisionT>>(
-        //     modes.size(), modes, extents, dev_tag, true);
-        // tensor->setData(data);
-        // mpoCache_[id] = tensor;
+        std::size_t hash_val =
+            matrix_data.empty() ? 0 : MatrixHasher()(matrix_data);
+        const mpo_info mpo_key = std::make_tuple(opsName, param, wire_order,
+                                                 maxMPOBondDim, hash_val);
+
+        // Allocate memory on device and copy host data to device
+        std::vector<std::shared_ptr<TensorCuda<PrecisionT>>> mpo_tensors;
+        for (std::size_t i = 0; i < mpo_data.size(); ++i) {
+            const std::size_t tensor_rank = extents.size();
+            std::vector<std::size_t> modes(tensor_rank);
+            std::iota(modes.begin(), modes.end(), 0);
+
+            auto tensor = std::make_shared<TensorCuda<PrecisionT>>(
+                tensor_rank, modes, extents, device_tag_, true);
+            tensor->getDataBuffer().CopyHostDataToGpu(mpo_data[i].data(),
+                                                      mpo_data[i].size());
+            mpo_tensors.emplace_back(tensor);
+        }
+
+        mpo_cache_.emplace(std::piecewise_construct,
+                           std::forward_as_tuple(mpo_key),
+                           std::forward_as_tuple(mpo_tensors));
     }
 
-    auto get_MPO_device_Ptr(const std::string &id) const
-        -> std::shared_ptr<TensorCuda<PrecisionT>> {
-        if (mpoCache_.find(id) == mpoCache_.end()) {
-            throw TNCudaError("MPO tensor not found in cache.");
+    auto get_MPO_device_Ptr(const std::string &opsName,
+                            const std::vector<PrecisionT> &param,
+                            std::vector<std::size_t> &wire_order,
+                            const std::size_t maxMPOBondDim,
+                            const std::vector<ComplexT> &matrix_data = {}) const
+        -> std::vector<const void *> {
+        std::size_t hash_val =
+            matrix_data.empty() ? 0 : MatrixHasher()(matrix_data);
+        const mpo_info mpo_key = std::make_tuple(opsName, param, wire_order,
+                                                 maxMPOBondDim, hash_val);
+        if (mpo_cache_.find(mpo_key) == mpo_cache_.end()) {
+            throw std::runtime_error(
+                "MPO tensor not found in cache. Please ensure "
+                "that the MPO tensor is added to the cache.");
         }
-        return mpoCache_.at(id);
+        std::vector<const void *> mpo_data_ptr;
+        for (const auto &tensor : mpo_cache_.at(mpo_key)) {
+            mpo_data_ptr.emplace_back(tensor->getDataBuffer().getData());
+        }
+        return mpo_data_ptr;
     }
 
     auto get_Identity_MPO_device_Ptr(const std::size_t bondDimL,
-                                     const std::size_t bondDimR) const
-        -> std::shared_ptr<TensorCuda<PrecisionT>> {
-        if (identity_mpo_cache_.find(id) == identity_mpo_cache_.end()) {
-            add_Idenity_MPO_(bondDimL, bondDimR);
-        }
+                                     const std::size_t bondDimR) -> const
+        void * {
         const identity_mpo_info identity_key =
             std::make_tuple("Identity", bondDimL, bondDimR);
-        return identity_mpo_cache_.at(identity_key);
+        if (identity_mpo_cache_.find(identity_key) ==
+            identity_mpo_cache_.end()) {
+            add_Idenity_MPO_(bondDimL, bondDimR);
+        }
+
+        return static_cast<void *>(
+            identity_mpo_cache_.at(identity_key)->getDataBuffer().getData());
     }
 
     bool hasMPO(const std::string &opsName,
                 const std::vector<PrecisionT> &param,
                 const std::vector<std::size_t> &wire_order,
-                const std::vector<std::size_t> &extents,
+                const std::size_t maxMPOBondDim,
                 const std::vector<ComplexT> &matrix_data = {}) const {
-        std::size_t hash_value = 0;
-        if (!matrix_data.empty()) {
-            hash_value = std::hash<std::string>()(matrix_data);
-        }
+        std::size_t hash_val =
+            matrix_data.empty() ? 0 : MatrixHasher()(matrix_data);
 
-        const mpo_info mpo_key =
-            std::make_tuple(opsName, param, wire_order, hash_value);
+        const mpo_info mpo_key = std::make_tuple(opsName, param, wire_order,
+                                                 maxMPOBondDim, hash_val);
 
-        return mpoCache_.find(id) != mpoCache_.end();
+        return mpo_cache_.find(mpo_key) != mpo_cache_.end();
     }
 
   private:
@@ -144,8 +190,7 @@ template <class PrecisionT> class TNCudaMPOCache {
 
         std::size_t length = tensor->getDataBuffer().getLength();
         std::vector<CFP_t> identity_tensor_host(length, CFP_t{0.0, 0.0});
-        for (std::size_t idx = 0; idx < length;
-             idx += 2 * bondDims_[i - 1] + 1) {
+        for (std::size_t idx = 0; idx < length; idx += 2 * bondDimL + 1) {
             identity_tensor_host[idx] =
                 cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
         }
@@ -155,41 +200,52 @@ template <class PrecisionT> class TNCudaMPOCache {
 
         identity_mpo_cache_.emplace(std::piecewise_construct,
                                     std::forward_as_tuple(identity_key),
-                                    tensor);
+                                    std::forward_as_tuple(std::move(tensor)));
     }
 
   private:
     const DevTag<int> device_tag_;
 
+    // Follow the boost::hash_combine pattern(as shown
+    // [here](https://stackoverflow.com/a/2595226).
     struct mpo_hash {
         std::size_t operator()(const mpo_info &key) const {
-            return std::hash<std::size_t>()(key);
-        }
-    };
-
-    struct mpo_equal {
-        bool operator()(const mpo_info &first, const mpo_info &second) const {
-            return lhs == rhs;
+            std::size_t seed = 0;
+            seed ^= std::hash<std::string>()(std::get<0>(key)) + GOLDEN_RATIO +
+                    (seed << 6) + (seed >> 2);
+            for (const auto &param : std::get<1>(key)) {
+                seed ^= std::hash<PrecisionT>()(param) + GOLDEN_RATIO +
+                        (seed << 6) + (seed >> 2);
+            }
+            for (const auto &order : std::get<2>(key)) {
+                seed ^= std::hash<std::size_t>()(order) + GOLDEN_RATIO +
+                        (seed << 6) + (seed >> 2);
+            }
+            seed ^= std::hash<std::size_t>()(std::get<3>(key)) + GOLDEN_RATIO +
+                    (seed << 6) + (seed >> 2);
+            seed ^= std::hash<std::size_t>()(std::get<4>(key)) + GOLDEN_RATIO +
+                    (seed << 6) + (seed >> 2);
+            return seed;
         }
     };
 
     struct identity_mpo_hash {
         std::size_t operator()(const identity_mpo_info &key) const {
-            return std::hash<std::size_t>()(key_id);
+            std::size_t seed = 0;
+            seed ^= std::hash<std::string>()(std::get<0>(key)) + GOLDEN_RATIO +
+                    (seed << 6) + (seed >> 2);
+            seed ^= std::hash<std::size_t>()(std::get<1>(key)) + GOLDEN_RATIO +
+                    (seed << 6) + (seed >> 2);
+            seed ^= std::hash<std::size_t>()(std::get<2>(key)) + GOLDEN_RATIO +
+                    (seed << 6) + (seed >> 2);
+            return seed;
         }
     };
 
-    struct identity_mpo_equal {
-        bool operator()(const identity_mpo_info &first,
-                        const identity_mpo_info &second) const {
-            return lhs == rhs;
-        }
-    };
-
-    std::unordered_map<const mpo_info, mpo_data, mpo_hash, mpo_equal> mpoCache_;
+    std::unordered_map<const mpo_info, mpo_data, mpo_hash> mpo_cache_;
 
     std::unordered_map<const identity_mpo_info, identity_data,
-                       identity_mpo_hash, identity_mpo_equal>
+                       identity_mpo_hash>
         identity_mpo_cache_;
 };
 } // namespace Pennylane::LightningTensor::TNCuda::Gates
