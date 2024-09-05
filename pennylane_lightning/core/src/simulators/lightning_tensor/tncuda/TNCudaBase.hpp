@@ -263,7 +263,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      */
     void
     applyControlledOperation(const std::string &baseOpName,
-                             const std::vector<std::size_t> &controlledWires,
+                             const std::vector<std::size_t> &controlled_wires,
                              const std::vector<bool> &controlled_values,
                              const std::vector<std::size_t> &targetWires,
                              bool adjoint = false,
