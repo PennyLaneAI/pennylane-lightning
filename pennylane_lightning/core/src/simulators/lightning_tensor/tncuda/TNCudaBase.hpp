@@ -254,7 +254,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * immutable as v24.08.
      *
      * @param baseOpName Base gate's name.
-     * @param controlledWires Controlled wires for the gate.
+     * @param controlled_wires Controlled wires for the gate.
      * @param controlled_values Controlled values for the gate.
      * @param targetWires Target wires for the gate.
      * @param adjoint Indicates whether to use adjoint of gate.
@@ -292,7 +292,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::vector<int32_t> controlledModes =
             cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
-                controlledWires, BaseType::getNumQubits());
+                controlled_wires, BaseType::getNumQubits());
 
         std::vector<int64_t> controlled_values_int64(controlled_values.size());
         std::transform(controlled_values.begin(), controlled_values.end(),
@@ -306,7 +306,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
-            /* int32_t numControlModes */ controlledWires.size(),
+            /* int32_t numControlModes */ controlled_wires.size(),
             /* const int32_t * stateControlModes */ controlledModes.data(),
             /* const int64_t *stateControlValues*/
             controlled_values_int64.data(),
