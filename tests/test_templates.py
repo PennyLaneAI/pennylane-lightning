@@ -173,7 +173,9 @@ class TestDisplacementSqueezingEmbedding:
 class TestIQPEmbedding:
     """Test the IQPEmbedding algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
+    @pytest.mark.parametrize(
+        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
+    )
     def test_iqpembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -187,15 +189,15 @@ class TestIQPEmbedding:
         res = qml.QNode(circuit, dev, diff_method=None)(X)
         ref = qml.QNode(circuit, dq, diff_method=None)(X)
 
-        dtol = 1e-1 if device_name == "lightning.tensor" else 1e-6
-
-        assert np.allclose(res, ref, atol=dtol)
+        assert np.allclose(res, ref)
 
 
 class TestQAOAEmbedding:
     """Test the QAOAEmbedding algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
+    @pytest.mark.parametrize(
+        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
+    )
     def test_qaoaembedding(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -211,8 +213,7 @@ class TestQAOAEmbedding:
         res = qml.QNode(circuit, dev, diff_method=None)(X, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(X, weights)
 
-        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
-        assert np.allclose(res, ref, atol=dtol, rtol=dtol)
+        assert np.allclose(res, ref)
 
 
 class TestCVNeuralNetLayers:
@@ -256,7 +257,9 @@ class TestRandomLayers:
 class TestStronglyEntanglingLayers:
     """Test the StronglyEntanglingLayers algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
+    @pytest.mark.parametrize(
+        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
+    )
     def test_stronglyentanglinglayers(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -271,15 +274,15 @@ class TestStronglyEntanglingLayers:
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
 
-        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
-
-        assert np.allclose(res, ref, atol=dtol)
+        assert np.allclose(res, ref)
 
 
 class TestSimplifiedTwoDesign:
     """Test the SimplifiedTwoDesign algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
+    @pytest.mark.parametrize(
+        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
+    )
     def test_simplifiedtwodesign(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -295,8 +298,6 @@ class TestSimplifiedTwoDesign:
 
         res = qml.QNode(circuit, dev, diff_method=None)(init_weights, weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(init_weights, weights)
-
-        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
 
         assert np.allclose(res, ref)
 
@@ -339,10 +340,7 @@ class TestMottonenStatePreparation:
         res = qml.QNode(circuit, dev, diff_method=None)(state)
         ref = qml.QNode(circuit, dq, diff_method=None)(state)
 
-        dtol = 1e-1 if device_name == "lightning.tensor" else 1e-6
-
-        assert np.allclose(res, ref, atol=dtol, rtol=dtol)
-
+        assert np.allclose(res, ref)
 
 class TestArbitraryStatePreparation:
     """Test the ArbitraryStatePreparation algorithm."""
@@ -361,9 +359,7 @@ class TestArbitraryStatePreparation:
         res = qml.QNode(circuit, dev, diff_method=None)(weights)
         ref = qml.QNode(circuit, dq, diff_method=None)(weights)
 
-        dtol = 1e-2 if device_name == "lightning.tensor" else 1e-6
-
-        assert np.allclose(res, ref, atol=dtol, rtol=dtol)
+        assert np.allclose(res, ref)
 
 
 class TestCosineWindow:
@@ -722,7 +718,9 @@ class TestQuantumPhaseEstimation:
 class TestQFT:
     """Test the QFT algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
+    @pytest.mark.parametrize(
+        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 14)
+    )
     def test_qft(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
@@ -781,7 +779,9 @@ class TestAQFT:
 class TestQSVT:
     """Test the QSVT algorithm."""
 
-    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
+    @pytest.mark.parametrize(
+        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
+    )
     def test_qsvt(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")

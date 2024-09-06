@@ -17,14 +17,7 @@ Class implementation for tensornet manipulation.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import (
-        TensorNetC64,
-        TensorNetC128,
-        add_mpo_to_cache_c64,
-        add_mpo_to_cache_c128,
-        is_decomposed_c64,
-        is_decomposed_c128,
-    )
+    from pennylane_lightning.lightning_tensor_ops import TensorNetC64, TensorNetC128
 except ImportError:
     pass
 
@@ -378,7 +371,6 @@ class LightningTensorNet:
                 name = operation.name
                 invert_param = False
             method = getattr(tensornet, name, None)
-
             wires = list(operation.wires)
 
             if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:

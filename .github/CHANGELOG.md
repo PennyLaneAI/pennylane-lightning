@@ -2,6 +2,12 @@
 
 ### New features since last release
 
+* Add Matrix Product Operator support to `lightning.tensor`.
+  [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
+
+* Add shot measurement support to `lightning.tensor`.
+  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
+
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
   [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
 
@@ -36,9 +42,6 @@ Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
 # Release 0.38.0
 
 ### New features since last release
-
-* Add shot measurement support to `lightning.tensor`.
-  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
 
 * Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
   [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)

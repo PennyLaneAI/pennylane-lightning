@@ -48,9 +48,6 @@ namespace Pennylane::LightningTensor::TNCuda {
 using TensorNetBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
 
-template <class PrecisionT>
-using np_arr_c_t = py::array_t<std::complex<PrecisionT>,
-                               py::array::c_style | py::array::forcecast>;
 /**
  * @brief Register controlled matrix kernel.
  */
