@@ -58,9 +58,7 @@ def test_device_name_and_init(num_wires, dtype):
             TypeError,
             match=f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(bad_kokkos_args)}.",
         ):
-            assert LightningStateVector(
-                num_wires, dtype=dtype, kokkos_args=bad_kokkos_args
-            )
+            assert LightningStateVector(num_wires, dtype=dtype, kokkos_args=bad_kokkos_args)
 
         set_kokkos_args = InitializationSettings().set_num_threads(2)
         state_vector_3 = LightningStateVector(num_wires, dtype=dtype, kokkos_args=set_kokkos_args)

@@ -168,7 +168,8 @@ class TestVJP:
 
         dy = 1.0
         statevector = lightning_sv(num_wires=3)
-        res, jac = self.process_and_execute(statevector, qs, dy, execute_and_derivatives=execute_and_derivatives
+        res, jac = self.process_and_execute(
+            statevector, qs, dy, execute_and_derivatives=execute_and_derivatives
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
