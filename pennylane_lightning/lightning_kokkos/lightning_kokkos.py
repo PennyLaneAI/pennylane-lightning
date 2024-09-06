@@ -23,6 +23,7 @@ from typing import Optional
 
 import numpy as np
 import pennylane as qml
+from pennylane import DeviceError
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
@@ -305,12 +306,15 @@ class LightningKokkos(LightningBase):
                 "To manually compile from source, follow the instructions at "
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
+        
+        if batch_obs:
+            raise DeviceError("Lightning Kokkos does not support batch observables option. 'batch_obs' should be False")
 
         super().__init__(
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
-            batch_obs=False,
+            batch_obs=batch_obs,
         )
 
         # Set the attributes to call the Lightning classes

@@ -293,7 +293,7 @@ class LightningBase(Device):
         circuits: QuantumTape_or_Batch,
         cotangents: Tuple[Number],
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
+    ) -> Tuple:
         r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
         adjoint differentiation method to compute the VJP.
         Args:
