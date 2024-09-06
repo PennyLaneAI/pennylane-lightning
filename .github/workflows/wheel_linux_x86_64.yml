@@ -29,9 +29,10 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    if: |
-      github.event_name != 'pull_request' ||
-      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
+    # FIXME: temporary to check the wheels name!
+    # if: |
+    #   github.event_name != 'pull_request' ||
+    #   (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
