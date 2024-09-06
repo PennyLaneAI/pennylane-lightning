@@ -30,6 +30,7 @@
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "MPOTNCuda.hpp"
+#include "MPOTNCudaOpt.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
 #include "TensornetBase.hpp"
@@ -76,6 +77,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     std::vector<std::shared_ptr<MPOTNCuda<Precision>>> mpos_;
     std::vector<std::size_t> mpo_ids_;
+
+    std::vector<std::shared_ptr<MPOTNCudaOpt<Precision>>> mpos_opt_;
 
   public:
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
@@ -241,6 +244,44 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * a set of tensors. A MPO object will be created and applied to the quantum
      * state.
      *
+     * @param opsName The name of the gate.
+     * @param param The parameters of the gate.
+     * @param wires_order The wire indices of the gate acts on.
+     * @param maxMPOBondDim The maximum bond dimension of the MPO.
+     * @param matrix_data The matrix representation of the gate.
+     */
+    void applyMPOOperation(const std::string &opsName,
+                           const std::vector<Precision> &param,
+                           const std::vector<std::size_t> &wires,
+                           const std::vector<std::size_t> &wires_order,
+                           const std::size_t maxMPOBondDim,
+                           const std::vector<ComplexT> &matrix_data = {}) {
+        // Create a MPO object based on the host data from the user
+        mpos_opt_.emplace_back(std::make_shared<MPOTNCudaOpt<Precision>>(
+            opsName, param, wires, wires_order, maxMPOBondDim, matrix_data,
+            BaseType::getNumQubits(), BaseType::getTNCudaHandle(),
+            BaseType::getCudaDataType()));
+
+        // Apply the MPO operator to the quantum state
+        int64_t operatorId;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetNetworkOperator_t */
+            mpos_opt_.back()->getMPOOperator(),
+            /* const int32_t immutable */ 1,
+            /* const int32_t adjoint */ 0,
+            /* const int32_t unitary */ 1,
+            /* int64_t * operatorId*/ &operatorId));
+
+        mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
+    }
+
+    /**
+     * @brief Apply a 2+-wire gate to the MPS state. The gate is represented by
+     * a set of tensors. A MPO object will be created and applied to the quantum
+     * state.
+     *
      * @param tensors The tensor representation of each site of gate.
      * @param wires The wire indices of the gate acts on.
      */
@@ -317,7 +358,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         // MPO configurations
         cutensornetStateMPOApplication_t mpo_attribute =
-            CUTENSORNET_STATE_MPO_APPLICATION_EXACT;
+            (cutoff == 0) ? CUTENSORNET_STATE_MPO_APPLICATION_EXACT
+                          : CUTENSORNET_STATE_MPO_APPLICATION_INEXACT;
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),

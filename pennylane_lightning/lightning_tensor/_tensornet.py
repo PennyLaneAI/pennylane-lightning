@@ -271,7 +271,7 @@ class LightningTensorNet:
 
         self._tensornet.setBasisState(state)
 
-    def _apply_MPO(self, gate_matrix, wires):
+    def _apply_MPO(self, operation, gate_matrix, wires):
         """Apply a matrix product operator to the quantum state.
 
         Args:
@@ -292,38 +292,79 @@ class LightningTensorNet:
 
         matrix = gate_matrix.astype(self._c_dtype)
 
-        tensor_shape = [2] * len(wires) * 2
-
-        # Convert the gate matrix to the correct shape and complex dtype
-        gate_tensor = matrix.reshape(tensor_shape)
-
-        # Create the correct order of indices for the gate tensor to be decomposed
-        indices_order = []
-        for i in range(len(wires)):
-            indices_order.extend([original_axes[i] + len(wires), original_axes[i]])
-
-        # Transpose the gate data to the correct order for the tensor network contraction
-        gate_tensor = np.transpose(gate_tensor, axes=indices_order)
-
         max_mpo_bond_dim = 2 ** len(wires)  # Full decomposition
 
-        MPOs = dense_to_mpo(gate_tensor, len(wires), max_mpo_bond_dim)
+        # check if matrix is already decomposed
+        is_decomposed = is_decomposed_c64 if self._c_dtype == np.complex64 else is_decomposed_c128
 
-        mpos = []
-        for i in range(len(MPOs)):
-            if i == 0:
-                # [bond, bra, ket] -> [ket, bond, bra]
-                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
-            elif i == len(MPOs) - 1:
-                # [bra, ket, bond] -> [ket, bra, bond]
-                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
-            else:
-                # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
-                # To match the order of cutensornet backend
-                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
+        if is_decomposed(
+            operation.name, operation.parameters, original_axes, max_mpo_bond_dim, matrix
+        ):
+            # TODO: C++ API to be updated to accept MPOs key information
+            # self._tensornet.applyMPOOperator(operation.name, operation.parameters, original_axes, max_mpo_bond_dim, matrix)
+            self._tensornet.applyMPOOperation(
+                operation.name,
+                operation.parameters,
+                sorted_wires,
+                original_axes,
+                max_mpo_bond_dim,
+                matrix,
+            )
+        else:
+            tensor_shape = [2] * len(wires) * 2
 
-        # Append the MPOs to the tensor network
-        self._tensornet.applyMPOOperator(mpos, sorted_wires, max_mpo_bond_dim)
+            # Convert the gate matrix to the correct shape and complex dtype
+            gate_tensor = matrix.reshape(tensor_shape)
+
+            # Create the correct order of indices for the gate tensor to be decomposed
+            indices_order = []
+            for i in range(len(wires)):
+                indices_order.extend([original_axes[i] + len(wires), original_axes[i]])
+
+            # Transpose the gate data to the correct order for the tensor network contraction
+            gate_tensor = np.transpose(gate_tensor, axes=indices_order)
+
+            MPOs = dense_to_mpo(gate_tensor, len(wires), max_mpo_bond_dim)
+
+            mpos = []
+            for i in range(len(MPOs)):
+                if i == 0:
+                    # [bond, bra, ket] -> [ket, bond, bra]
+                    mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
+                elif i == len(MPOs) - 1:
+                    # [bra, ket, bond] -> [ket, bra, bond]
+                    mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
+                else:
+                    # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
+                    # To match the order of cutensornet backend
+                    mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
+
+            # Add the MPO to the cache
+            add_mpo = (
+                add_mpo_to_cache_c64 if self._c_dtype == np.complex64 else add_mpo_to_cache_c128
+            )
+            add_mpo(
+                operation.name,
+                operation.parameters,
+                sorted_wires,
+                original_axes,
+                max_mpo_bond_dim,
+                mpos,
+                matrix,
+            )
+
+            # Append the MPOs to the tensor network
+            # TODO: C++ API to be updated to accept MPOs key information
+            # self._tensornet.applyMPOOperator(operation.name, operation.parameters, original_axes, max_mpo_bond_dim, matrix)
+            # self._tensornet.applyMPOOperator(mpos, sorted_wires, max_mpo_bond_dim)
+            self._tensornet.applyMPOOperation(
+                operation.name,
+                operation.parameters,
+                sorted_wires,
+                original_axes,
+                max_mpo_bond_dim,
+                matrix,
+            )
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor. Note that `cutensornet` only supports controlled gates with a single wire target.
@@ -413,7 +454,7 @@ class LightningTensorNet:
                         f"Operation matrix of {operation.name} must be of shape (2**len(wires), 2**len(wires))."
                     )
 
-                self._apply_MPO(gate_ops_matrix, wires)
+                self._apply_MPO(operation, gate_ops_matrix, wires)
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""

@@ -172,6 +172,25 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Apply MPO to the state.")
         .def(
+            "applyMPOOperation",
+            [](TensorNet &tensor_network, const std::string &opsName,
+               const std::vector<PrecisionT> &param,
+               const std::vector<std::size_t> &wires,
+               const std::vector<std::size_t> &wires_order,
+               const std::size_t maxMPOBondDim, const np_arr_c &matrix_data) {
+                using ComplexT = typename TensorNet::ComplexT;
+                std::vector<ComplexT> conv_mat;
+                py::buffer_info numpyArrayInfo = matrix_data.request();
+                auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+
+                conv_mat =
+                    std::vector<ComplexT>{m_ptr, m_ptr + numpyArrayInfo.size};
+                tensor_network.applyMPOOperation(opsName, param, wires,
+                                                 wires_order, maxMPOBondDim,
+                                                 conv_mat);
+            },
+            "Append MPO to the graph.")
+        .def(
             "appendMPSFinalState",
             [](TensorNet &tensor_network, double cutoff,
                std::string cutoff_mode) {
@@ -235,7 +254,7 @@ void add_mpo_to_cache(const std::string &opsName,
                       const std::vector<PrecisionT> &param,
                       const std::vector<std::size_t> &wire_order,
                       const std::size_t maxMPOBondDim,
-                      const std::vector<std::size_t> &extents,
+                      const std::vector<std::vector<std::size_t>> &extents,
                       const std::vector<np_arr_c_t<PrecisionT>> &mpo_tensors,
                       const np_arr_c_t<PrecisionT> &matrix_data = {}) {
     using ComplexT = std::complex<PrecisionT>;
@@ -246,6 +265,16 @@ void add_mpo_to_cache(const std::string &opsName,
         conv_tensors.push_back(
             std::vector<ComplexT>{m_ptr, m_ptr + tensor.size()});
     }
+
+    std::vector<ComplexT> conv_mat;
+    if (matrix_data.size()) {
+        py::buffer_info numpyArrayInfo = matrix_data.request();
+        auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+        conv_mat = std::vector<ComplexT>{m_ptr, m_ptr + matrix_data.size()};
+    }
+    TNCudaMPOCache<PrecisionT>::getInstance().add_MPO(
+        opsName, param, wire_order, maxMPOBondDim, extents, conv_tensors,
+        conv_mat);
 }
 
 template <class PrecisionT> void registerMPOCacheOperation(py::module_ &m) {
@@ -253,6 +282,9 @@ template <class PrecisionT> void registerMPOCacheOperation(py::module_ &m) {
     std::string is_decomposed_name = "is_decomposed" + std::to_string(bitsize);
     std::string add_mpo_to_cache_name =
         "add_mpo_to_cache" + std::to_string(bitsize);
+    std::string doc0 =
+        "Check if a gate is decomposed." + std::to_string(bitsize);
+    std::string doc1 = "Add MPO to cache." + std::to_string(bitsize);
     m.def(
         is_decomposed_name.c_str(),
         [](const std::string &opsName, const std::vector<PrecisionT> &param,
@@ -262,20 +294,20 @@ template <class PrecisionT> void registerMPOCacheOperation(py::module_ &m) {
             return is_decomposed<PrecisionT>(opsName, param, wire_order,
                                              maxMPOBondDim, matrix_data);
         },
-        "Check if a gate is decomposed.");
+        doc0.c_str());
     m.def(
         add_mpo_to_cache_name.c_str(),
         [](const std::string &opsName, const std::vector<PrecisionT> &param,
            const std::vector<std::size_t> &wire_order,
            const std::size_t maxMPOBondDim,
-           const std::vector<std::size_t> &extents,
+           const std::vector<std::vector<std::size_t>> &extents,
            const std::vector<np_arr_c_t<PrecisionT>> &mpo_tensors,
            const np_arr_c_t<PrecisionT> &matrix_data = {}) {
             add_mpo_to_cache<PrecisionT>(opsName, param, wire_order,
                                          maxMPOBondDim, extents, mpo_tensors,
                                          matrix_data);
         },
-        "Add MPO to cache.");
+        doc1.c_str());
 }
 
 /**

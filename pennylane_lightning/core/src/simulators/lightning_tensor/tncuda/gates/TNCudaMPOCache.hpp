@@ -93,11 +93,21 @@ template <class PrecisionT> class TNCudaMPOCache {
 
     // Add MPO tensor to the cache. This function is called by the python layer
     // to add the MPO tensor to the cache.
+    /**
+     * @brief Add MPO tensor to the cache.
+     *
+     * @param opsName Name of the gate operation.
+     * @param param Parameters of the gate operation.
+     * @param wire_order Wire order of the gate operation.
+     * @param maxMPOBondDim Maximum bond dimension of the MPO tensor.
+     * @param mpo_data MPO tensor data.
+     * @param matrix_data Matrix data of the gate operation.
+     */
     void add_MPO(const std::string &opsName,
                  const std::vector<PrecisionT> &param,
                  const std::vector<std::size_t> &wire_order,
                  const std::size_t maxMPOBondDim,
-                 const std::vector<std::size_t> &extents,
+                 const std::vector<std::vector<std::size_t>> &extents,
                  const std::vector<std::vector<ComplexT>> &mpo_data,
                  const std::vector<ComplexT> &matrix_data = {}) {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -109,12 +119,12 @@ template <class PrecisionT> class TNCudaMPOCache {
         // Allocate memory on device and copy host data to device
         std::vector<std::shared_ptr<TensorCuda<PrecisionT>>> mpo_tensors;
         for (std::size_t i = 0; i < mpo_data.size(); ++i) {
-            const std::size_t tensor_rank = extents.size();
+            const std::size_t tensor_rank = extents[i].size();
             std::vector<std::size_t> modes(tensor_rank);
             std::iota(modes.begin(), modes.end(), 0);
 
             auto tensor = std::make_shared<TensorCuda<PrecisionT>>(
-                tensor_rank, modes, extents, device_tag_, true);
+                tensor_rank, modes, extents[i], device_tag_, true);
             tensor->getDataBuffer().CopyHostDataToGpu(mpo_data[i].data(),
                                                       mpo_data[i].size());
             mpo_tensors.emplace_back(tensor);
@@ -127,20 +137,19 @@ template <class PrecisionT> class TNCudaMPOCache {
 
     auto get_MPO_device_Ptr(const std::string &opsName,
                             const std::vector<PrecisionT> &param,
-                            std::vector<std::size_t> &wire_order,
+                            const std::vector<std::size_t> &wire_order,
                             const std::size_t maxMPOBondDim,
-                            const std::vector<ComplexT> &matrix_data = {}) const
-        -> std::vector<const void *> {
+                            const std::vector<ComplexT> &matrix_data = {})
+        -> std::vector<void *> {
         std::size_t hash_val =
             matrix_data.empty() ? 0 : MatrixHasher()(matrix_data);
         const mpo_info mpo_key = std::make_tuple(opsName, param, wire_order,
                                                  maxMPOBondDim, hash_val);
-        if (mpo_cache_.find(mpo_key) == mpo_cache_.end()) {
-            throw std::runtime_error(
-                "MPO tensor not found in cache. Please ensure "
-                "that the MPO tensor is added to the cache.");
-        }
-        std::vector<const void *> mpo_data_ptr;
+
+        PL_ABORT_IF(mpo_cache_.find(mpo_key) == mpo_cache_.end(),
+                    "MPO not found in cache.");
+
+        std::vector<void *> mpo_data_ptr;
         for (const auto &tensor : mpo_cache_.at(mpo_key)) {
             mpo_data_ptr.emplace_back(tensor->getDataBuffer().getData());
         }
@@ -148,8 +157,7 @@ template <class PrecisionT> class TNCudaMPOCache {
     }
 
     auto get_Identity_MPO_device_Ptr(const std::size_t bondDimL,
-                                     const std::size_t bondDimR) -> const
-        void * {
+                                     const std::size_t bondDimR) -> void * {
         const identity_mpo_info identity_key =
             std::make_tuple("Identity", bondDimL, bondDimR);
         if (identity_mpo_cache_.find(identity_key) ==
@@ -208,7 +216,7 @@ template <class PrecisionT> class TNCudaMPOCache {
     }
 
   private:
-    const DevTag<int> device_tag_;
+    const DevTag<int> device_tag_{0, 0};
     static std::mutex mutex_;
 
     // Follow the boost::hash_combine pattern(as shown
