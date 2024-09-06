@@ -94,14 +94,14 @@ class LightningBase(Device):
     def simulate(
         self,
         circuit: QuantumScript,
-        state,  # Lightning[Device]StateVector
+        state,  # Lightning [Device] StateVector
         postselect_mode: str = None,
     ) -> Result:
         """Simulate a single quantum script.
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning[Device]StateVector): handle to Lightning state vector
+            state (Lightning [Device] StateVector): handle to Lightning state vector
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
                 keep the same number of shots. Default is ``None``.
@@ -115,7 +115,7 @@ class LightningBase(Device):
     def jacobian(
         self,
         circuit: QuantumTape,
-        state,  # Lightning[Device]StateVector
+        state,  # Lightning [Device] StateVector
         batch_obs: bool = False,
         wire_map: dict = None,
     ):
@@ -123,7 +123,7 @@ class LightningBase(Device):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning[Device]StateVector): handle to the Lightning state vector
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -142,7 +142,7 @@ class LightningBase(Device):
     def simulate_and_jacobian(
         self,
         circuit: QuantumTape,
-        state,  # Lightning[Device]StateVector
+        state,  # Lightning [Device] StateVector
         batch_obs: bool = False,
         wire_map: dict = None,
     ) -> Tuple:
@@ -150,7 +150,7 @@ class LightningBase(Device):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning[Device]StateVector): handle to the Lightning state vector
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -170,7 +170,7 @@ class LightningBase(Device):
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
-        state,  # Lightning[Device]StateVector
+        state,  # Lightning [Device] StateVector
         batch_obs: bool = False,
         wire_map: dict = None,
     ):
@@ -181,7 +181,7 @@ class LightningBase(Device):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning[Device]StateVector): handle to the Lightning state vector
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the VJP.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -212,7 +212,7 @@ class LightningBase(Device):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning[Device]StateVector): handle to the Lightning state vector
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian.
             wire_map (Optional[dict]): a map from wire labels to simulation indices

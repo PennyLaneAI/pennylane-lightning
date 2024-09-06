@@ -28,7 +28,6 @@ except ImportError:
 
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint

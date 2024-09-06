@@ -210,7 +210,7 @@ class LightningBaseStateVector(ABC):
                 keep the same number of shots. Default is ``None``.
 
         Returns:
-            Lightning[Device]StateVector: Lightning final state class.
+            Lightning [Device] StateVector: Lightning final state class.
 
         """
         self.apply_operations(
