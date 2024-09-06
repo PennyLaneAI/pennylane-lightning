@@ -50,8 +50,9 @@ class TestJacobian:
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(wires, statevector, tape, execute_and_derivatives=False):
+    def process_and_execute(statevector, tape, execute_and_derivatives=False):
 
+        wires = statevector.num_wires
         device = LightningDevice(wires)
         if execute_and_derivatives:
             results, jac = device.simulate_and_jacobian(tape, statevector)
@@ -88,7 +89,7 @@ class TestJacobian:
         )
 
         statevector = lightning_sv(num_wires=3)
-        res, jac = self.process_and_execute(3, statevector, qs, execute_and_derivatives)
+        res, jac = self.process_and_execute(statevector, qs, execute_and_derivatives)
 
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(
@@ -127,9 +128,10 @@ class TestVJP:
         return transf_fn(results), jac
 
     @staticmethod
-    def process_and_execute(wires, statevector, tape, dy, execute_and_derivatives=False):
+    def process_and_execute(statevector, tape, dy, execute_and_derivatives=False):
         dy = [dy]
 
+        wires = statevector.num_wires
         device = LightningDevice(wires)
         if execute_and_derivatives:
             results, jac = device.simulate_and_vjp(tape, dy, statevector)
@@ -166,8 +168,7 @@ class TestVJP:
 
         dy = 1.0
         statevector = lightning_sv(num_wires=3)
-        res, jac = self.process_and_execute(
-            3, statevector, qs, dy, execute_and_derivatives=execute_and_derivatives
+        res, jac = self.process_and_execute(statevector, qs, dy, execute_and_derivatives=execute_and_derivatives
         )
         if isinstance(obs, qml.Hamiltonian):
             qs = QuantumScript(

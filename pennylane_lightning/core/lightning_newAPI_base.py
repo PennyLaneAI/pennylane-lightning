@@ -87,7 +87,7 @@ class LightningBase(Device):
     dtype = c_dtype
 
     @abstractmethod
-    def _set_Lightning_classes(self):
+    def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
 
     @abstractmethod
