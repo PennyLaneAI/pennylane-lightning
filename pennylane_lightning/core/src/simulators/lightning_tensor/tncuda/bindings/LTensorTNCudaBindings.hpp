@@ -105,59 +105,6 @@ void registerControlledGate(PyClass &pyclass) {
 }
 
 /**
- * @brief Register controlled matrix kernel.
- */
-template <class TensorNet>
-void applyControlledMatrix(
-    TensorNet &tensor_network,
-    const py::array_t<std::complex<typename TensorNet::PrecisionT>,
-                      py::array::c_style | py::array::forcecast> &matrix,
-    const std::vector<std::size_t> &controlled_wires,
-    const std::vector<bool> &controlled_values,
-    const std::vector<std::size_t> &target_wires, bool inverse = false) {
-    using ComplexT = typename TensorNet::ComplexT;
-    const auto m_buffer = matrix.request();
-    std::vector<ComplexT> conv_matrix;
-    if (m_buffer.size) {
-        const auto m_ptr = static_cast<const ComplexT *>(m_buffer.ptr);
-        conv_matrix = std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
-    }
-
-    tensor_network.applyControlledOperation(
-        "applexControlledMatrix", controlled_wires, controlled_values,
-        target_wires, inverse, {}, conv_matrix);
-}
-
-template <class TensorNet, class PyClass>
-void registerControlledGate(PyClass &pyclass) {
-    using PrecisionT = typename TensorNet::PrecisionT; // TensorNet's precision
-    using ParamT = PrecisionT; // Parameter's data precision
-
-    using Pennylane::Gates::ControlledGateOperation;
-    using Pennylane::Util::for_each_enum;
-    namespace Constant = Pennylane::Gates::Constant;
-
-    for_each_enum<ControlledGateOperation>(
-        [&pyclass](ControlledGateOperation gate_op) {
-            using Pennylane::Util::lookup;
-            const auto gate_name =
-                std::string(lookup(Constant::controlled_gate_names, gate_op));
-            const std::string doc = "Apply the " + gate_name + " gate.";
-            auto func = [gate_name = gate_name](
-                            TensorNet &tensor_network,
-                            const std::vector<std::size_t> &controlled_wires,
-                            const std::vector<bool> &controlled_values,
-                            const std::vector<std::size_t> &target_wires,
-                            bool inverse, const std::vector<ParamT> &params) {
-                tensor_network.applyControlledOperation(
-                    gate_name, controlled_wires, controlled_values,
-                    target_wires, inverse, params);
-            };
-            pyclass.def(gate_name.c_str(), func, doc.c_str());
-        });
-}
-
-/**
  * @brief Get a gate kernel map for a tensor network.
  */
 template <class TensorNet, class PyClass>
