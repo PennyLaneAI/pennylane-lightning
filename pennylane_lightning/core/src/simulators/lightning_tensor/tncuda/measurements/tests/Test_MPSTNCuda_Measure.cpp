@@ -26,6 +26,7 @@
 #include "MPSTNCuda.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
+#include "TestHelpers.hpp"
 #include "cuda_helpers.hpp"
 
 /// @cond DEV
@@ -33,6 +34,7 @@ namespace {
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 using namespace Pennylane::LightningTensor::TNCuda;
+using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
@@ -96,14 +98,6 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
 TEMPLATE_TEST_CASE("Samples", "[Measures]", float, double) {
     using TensorNetT = MPSTNCuda<TestType>;
 
-    constexpr uint32_t twos[] = {
-        1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
-        1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
-        1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
-        1U << 18U, 1U << 19U, 1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U,
-        1U << 24U, 1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
-        1U << 30U, 1U << 31U};
-
     SECTION("Looping over different wire configurations:") {
         // Probabilities calculated with Pennylane default.qubit:
         std::vector<TestType> expected_probabilities = {
@@ -126,23 +120,10 @@ TEMPLATE_TEST_CASE("Samples", "[Measures]", float, double) {
 
         auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
 
-        std::size_t N = std::pow(2, num_qubits);
         std::size_t num_samples = 100000;
         const std::vector<std::size_t> wires = {0, 1, 2};
         auto samples = measure.generate_samples(wires, num_samples);
-
-        std::vector<std::size_t> counts(N, 0);
-        std::vector<std::size_t> samples_decimal(num_samples, 0);
-
-        // convert samples to decimal and then bin them in counts
-        for (std::size_t i = 0; i < num_samples; i++) {
-            for (std::size_t j = 0; j < num_qubits; j++) {
-                if (samples[i * num_qubits + j] != 0) {
-                    samples_decimal[i] += twos[(num_qubits - 1 - j)];
-                }
-            }
-            counts[samples_decimal[i]] += 1;
-        }
+        auto counts = samples_to_decimal(samples, num_qubits, num_samples);
 
         // compute estimated probabilities from histogram
         std::vector<TestType> probabilities(counts.size());
