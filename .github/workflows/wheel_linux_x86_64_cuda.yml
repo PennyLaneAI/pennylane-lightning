@@ -1,7 +1,7 @@
 name: Wheel::Linux::x86_64::CUDA
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.9, 3.10, 3.11, 3.12.
+#                   Python versions: 3.10, 3.11, 3.12.
 # **Why we have it**: To build wheels for pennylane-lightning-gpu installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 on:
@@ -52,7 +52,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
-    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{"cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     container:
       image: ${{ matrix.container_img }}
@@ -68,10 +68,10 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.9 -m pip install cibuildwheel~=2.16.0 toml
+        run: python3.10 -m pip install cibuildwheel~=2.16.0 toml
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -106,12 +106,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.9 -m cibuildwheel --output-dir wheelhouse
+        run: python3.10 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.9 -m pip install twine
-          python3.9 -m twine check ./wheelhouse/*.whl
+          python3.10 -m pip install twine
+          python3.10 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
