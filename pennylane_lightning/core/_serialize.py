@@ -54,7 +54,7 @@ class QuantumScriptSerializer:
     device_name: device shortname.
     use_csingle (bool): whether to use np.complex64 instead of np.complex128
     use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
-    split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
+    split_obs (Union[bool, int], optional): If splitting the observables in a list. Defaults to False.
 
     """
 
@@ -214,16 +214,39 @@ class QuantumScriptSerializer:
         obs = observable.obs if isinstance(observable, Tensor) else observable.operands
         return self.tensor_obs([self._ob(o, wires_map) for o in obs])
 
+    def _chunk_ham_terms(self, coeffs, ops, split_num: int = 1) -> List:
+        "Create split_num sub-Hamiltonians from a single high term-count Hamiltonian"
+        num_terms = len(coeffs)
+        iperm = np.argsort(np.array([len(op.get_wires()) for op in ops]))
+        coeffs = [coeffs[i] for i in iperm]
+        ops = [ops[i] for i in iperm]
+        c_coeffs = [
+            tuple(coeffs[slice(i, num_terms, split_num)]) for i in range(min(num_terms, split_num))
+        ]
+        c_ops = [
+            tuple(ops[slice(i, num_terms, split_num)]) for i in range(min(num_terms, split_num))
+        ]
+        return c_coeffs, c_ops
+
     def _hamiltonian(self, observable, wires_map: dict = None):
         coeffs, ops = observable.terms()
         coeffs = np.array(unwrap(coeffs)).astype(self.rtype)
+        if self.split_obs:
+            ops_l = []
+            for t in ops:
+                term_cpp = self._ob(t, wires_map)
+                if isinstance(term_cpp, Sequence):
+                    ops_l.extend(term_cpp)
+                else:
+                    ops_l.append(term_cpp)
+            c, o = self._chunk_ham_terms(coeffs, ops_l, self.split_obs)
+            hams = [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
+            return hams
+
         terms = [self._ob(t, wires_map) for t in ops]
         # TODO: This is in case `_hamiltonian` is called recursively which would cause a list
         # to be passed where `_ob` expects an observable.
         terms = [t[0] if isinstance(t, Sequence) and len(t) == 1 else t for t in terms]
-
-        if self.split_obs:
-            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
 
         return self.hamiltonian_obs(coeffs, terms)
 
@@ -282,11 +305,14 @@ class QuantumScriptSerializer:
         terms = [self._pauli_word(pw, wires_map) for pw in pwords]
         coeffs = np.array(coeffs).astype(self.rtype)
 
+        if self.split_obs:
+            c, o = self._chunk_ham_terms(coeffs, terms, self.split_obs)
+            psentences = [self.hamiltonian_obs(c_coeffs, c_obs) for (c_coeffs, c_obs) in zip(c, o)]
+            return psentences
+
         if len(terms) == 1 and coeffs[0] == 1.0:
             return terms[0]
 
-        if self.split_obs:
-            return [self.hamiltonian_obs([c], [t]) for (c, t) in zip(coeffs, terms)]
         return self.hamiltonian_obs(coeffs, terms)
 
     # pylint: disable=protected-access, too-many-return-statements
@@ -326,17 +352,17 @@ class QuantumScriptSerializer:
         """
 
         serialized_obs = []
-        offset_indices = [0]
+        obs_indices = []
 
-        for observable in tape.observables:
+        for i, observable in enumerate(tape.observables):
             ser_ob = self._ob(observable, wires_map)
             if isinstance(ser_ob, list):
                 serialized_obs.extend(ser_ob)
-                offset_indices.append(offset_indices[-1] + len(ser_ob))
+                obs_indices.extend([i] * len(ser_ob))
             else:
                 serialized_obs.append(ser_ob)
-                offset_indices.append(offset_indices[-1] + 1)
-        return serialized_obs, offset_indices
+                obs_indices.append(i)
+        return serialized_obs, obs_indices
 
     def serialize_ops(self, tape: QuantumTape, wires_map: dict = None) -> Tuple[
         List[List[str]],

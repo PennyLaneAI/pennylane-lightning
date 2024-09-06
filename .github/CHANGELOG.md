@@ -2,6 +2,44 @@
 
 ### New features since last release
 
+* Add shot measurement support to `lightning.tensor`.
+  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
+
+* Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
+  [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
+
+* Lightning-Kokkos migrated to the new device API.
+  [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
+
+### Breaking changes
+
+### Improvements
+
+* Update GitHub actions in response to a high-severity vulnerability.
+  [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
+
+* Optimize gate cache recording for `lightning.tensor` C++ layer.
+  [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
+
+* Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
+  [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
+
+---
+
+# Release 0.38.0
+
+### New features since last release
+
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
@@ -30,9 +68,6 @@ Amintor Dusko, Luis Alfredo Nuñez Meneses, Shuli Shu
 # Release 0.38.0
 
 ### New features since last release
-
-* Add shot measurement support to `lightning.tensor`.
-  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
 
 * Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
   [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
