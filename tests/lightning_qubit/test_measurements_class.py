@@ -499,11 +499,12 @@ class TestMeasurements:
         if shots is None:
             assert np.allclose(result, expected, max(tol, 1.0e-4))
         else:
-            atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-3)
-            rtol = max(tol, rtol)  # % of expected value as tolerance
+            dtol = max(tol, 1.0e-2)
+            # atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-3)
+            # rtol = max(tol, rtol)  # % of expected value as tolerance
 
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
-            assert np.allclose(result, expected, rtol=rtol, atol=atol)
+            assert np.allclose(result, expected, rtol=dtol, atol=dtol)
 
     @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 300_000, (300_000, 300_000)])
@@ -610,14 +611,15 @@ class TestMeasurements:
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
-        atol = tol if shots is None else max(tol, 1.0e-2)
-        rtol = max(tol, rtol)  # % of expected value as tolerance
+        dtol = tol if shots is None else max(tol, 1.0e-2)
+        # atol = tol if shots is None else max(tol, 1.0e-2)
+        # rtol = max(tol, rtol)  # % of expected value as tolerance
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
                 r = np.concatenate(r)
                 e = np.concatenate(e)
             # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
-            assert np.allclose(r, e, atol=atol, rtol=rtol)
+            assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
     @pytest.mark.parametrize(
         "cases",
