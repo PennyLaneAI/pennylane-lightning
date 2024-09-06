@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
+  [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
+
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
