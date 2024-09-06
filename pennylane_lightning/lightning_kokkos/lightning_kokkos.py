@@ -306,9 +306,11 @@ class LightningKokkos(LightningBase):
                 "To manually compile from source, follow the instructions at "
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
-        
+
         if batch_obs:
-            raise DeviceError("Lightning Kokkos does not support batch observables option. 'batch_obs' should be False")
+            raise DeviceError(
+                "Lightning Kokkos does not support batch observables option. 'batch_obs' should be False"
+            )
 
         super().__init__(
             wires=wires,
