@@ -288,6 +288,7 @@ class AdjointJacobian final
             H_lambda.emplace_back(lambda.getNumQubits(), dt_local, true,
                                   cusvhandle, cublascaller, cusparsehandle);
         }
+
         BaseType::applyObservables(H_lambda, lambda, obs);
 
         StateVectorT mu(lambda.getNumQubits(), dt_local, true, cusvhandle,

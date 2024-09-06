@@ -16,8 +16,8 @@ r"""
 This module contains the base class for all PennyLane Lightning simulator devices,
 and interfaces with C++ for improved performance.
 """
-from itertools import islice, product
-from typing import List
+from itertools import product
+from typing import List, Union
 
 import numpy as np
 import pennylane as qml
@@ -29,12 +29,6 @@ from pennylane.wires import Wires
 
 from ._serialize import QuantumScriptSerializer
 from ._version import __version__
-
-
-def _chunk_iterable(iteration, num_chunks):
-    "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
-    iteration = iter(iteration)
-    return iter(lambda: tuple(islice(iteration, num_chunks)), ())
 
 
 class LightningBase(QubitDevice):
@@ -55,7 +49,7 @@ class LightningBase(QubitDevice):
             OpenMP.
     """
 
-    pennylane_requires = ">=0.36"
+    pennylane_requires = ">=0.37"
     version = __version__
     author = "Xanadu Inc."
     short_name = "lightning.base"
@@ -262,11 +256,16 @@ class LightningBase(QubitDevice):
 
     # pylint: disable=too-many-function-args, assignment-from-no-return, too-many-arguments
     def _process_jacobian_tape(
-        self, tape, starting_state, use_device_state, use_mpi: bool = False, split_obs: bool = False
+        self,
+        tape,
+        starting_state,
+        use_device_state,
+        use_mpi: bool = False,
+        split_obs: Union[bool, int] = False,
     ):
         state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
 
-        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
+        obs_serialized, obs_indices = QuantumScriptSerializer(
             self.short_name, self.use_csingle, use_mpi, split_obs
         ).serialize_observables(tape, self.wire_map)
 
@@ -309,7 +308,7 @@ class LightningBase(QubitDevice):
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
-            "obs_idx_offsets": obs_idx_offsets,
+            "obs_indices": obs_indices,
         }
 
     @staticmethod

@@ -85,19 +85,15 @@ jobs:
           python -m pip install twine
           python -m twine check dist/*.whl
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: |
           matrix.pl_backend == 'lightning_qubit' &&
           (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist/*.whl
-
-      - uses: actions/upload-artifact@v3
-        if: ${{ matrix.pl_backend != 'lightning_qubit' && (github.event_name == 'release' || github.ref == 'refs/heads/master') }}
-        with:
-          name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
-          path: dist/*.tar.gz
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
     needs: build-pure-python-wheel
@@ -107,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release' }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
@@ -120,9 +116,3 @@ jobs:
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
-
-      - uses: actions/download-artifact@v3
-        if: ${{ matrix.pl_backend != 'lightning_qubit' && github.event_name == 'release' }}
-        with:
-          name: pure-source-dist-${{ matrix.pl_backend }}.tar.gz
-          path: dist

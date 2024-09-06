@@ -127,6 +127,15 @@ LightningException = None
 
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos import LightningKokkos as LightningDevice
+    from pennylane_lightning.lightning_kokkos._adjoint_jacobian import (
+        LightningKokkosAdjointJacobian as LightningAdjointJacobian,
+    )
+    from pennylane_lightning.lightning_kokkos._measurements import (
+        LightningKokkosMeasurements as LightningMeasurements,
+    )
+    from pennylane_lightning.lightning_kokkos._state_vector import (
+        LightningKokkosStateVector as LightningStateVector,
+    )
 
     if hasattr(pennylane_lightning, "lightning_kokkos_ops"):
         import pennylane_lightning.lightning_kokkos_ops as lightning_ops
@@ -134,17 +143,28 @@ if device_name == "lightning.kokkos":
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
 
+    LightningAdjointJacobian = None
+    LightningMeasurements = None
+    LightningStateVector = None
+
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops
         from pennylane_lightning.lightning_gpu_ops import LightningException
 elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
 
+    LightningAdjointJacobian = None
+    LightningMeasurements = None
+    LightningStateVector = None
+
     if hasattr(pennylane_lightning, "lightning_tensor_ops"):
         import pennylane_lightning.lightning_tensor_ops as lightning_ops
         from pennylane_lightning.lightning_tensor_ops import LightningException
 else:
     from pennylane_lightning.lightning_qubit import LightningQubit as LightningDevice
+    from pennylane_lightning.lightning_qubit._adjoint_jacobian import LightningAdjointJacobian
+    from pennylane_lightning.lightning_qubit._measurements import LightningMeasurements
+    from pennylane_lightning.lightning_qubit._state_vector import LightningStateVector
 
     if hasattr(pennylane_lightning, "lightning_qubit_ops"):
         import pennylane_lightning.lightning_qubit_ops as lightning_ops
@@ -161,6 +181,18 @@ def qubit_device(request):
         return qml.device(device_name, wires=wires, shots=shots, c_dtype=request.param)
 
     return _device
+
+
+# General LightningStateVector fixture, for any number of wires.
+@pytest.fixture(
+    scope="function",
+    params=[np.complex64, np.complex128],
+)
+def lightning_sv(request):
+    def _statevector(num_wires):
+        return LightningStateVector(num_wires=num_wires, dtype=request.param)
+
+    return _statevector
 
 
 #######################################################################

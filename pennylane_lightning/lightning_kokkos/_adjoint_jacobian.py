@@ -14,6 +14,17 @@
 r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
+
+try:
+    from pennylane_lightning.lightning_kokkos_ops.algorithms import (
+        AdjointJacobianC64,
+        AdjointJacobianC128,
+        create_ops_listC64,
+        create_ops_listC128,
+    )
+except ImportError:
+    pass
+
 from os import getenv
 from typing import List
 
@@ -23,36 +34,25 @@ from pennylane import BasisState, QuantumFunctionError, StatePrep
 from pennylane.measurements import Expectation, MeasurementProcess, State
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
-from scipy.sparse import csr_matrix
-
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
-try:
-    from pennylane_lightning.lightning_qubit_ops.algorithms import (
-        AdjointJacobianC64,
-        AdjointJacobianC128,
-        create_ops_listC64,
-        create_ops_listC128,
-    )
-except ImportError:
-    pass
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
-from ._state_vector import LightningStateVector
+from ._state_vector import LightningKokkosStateVector
 
 
-class LightningAdjointJacobian:
+class LightningKokkosAdjointJacobian:
     """Check and execute the adjoint Jacobian differentiation method.
 
     Args:
-        qubit_state(LightningStateVector): State Vector to calculate the adjoint Jacobian with.
+        qubit_state(LightningKokkosStateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(self, qubit_state: LightningStateVector, batch_obs: bool = False) -> None:
-        self._qubit_state = qubit_state
-        self._state = qubit_state.state_vector
-        self._dtype = qubit_state.dtype
+    def __init__(self, kokkos_state: LightningKokkosStateVector, batch_obs: bool = False) -> None:
+        self._qubit_state = kokkos_state
+        self._state = kokkos_state.state_vector
+        self._dtype = kokkos_state.dtype
         self._jacobian_lightning = (
             AdjointJacobianC64() if self._dtype == np.complex64 else AdjointJacobianC128()
         )
@@ -63,12 +63,12 @@ class LightningAdjointJacobian:
 
     @property
     def qubit_state(self):
-        """Returns a handle to the LightningStateVector class."""
+        """Returns a handle to the LightningKokkosStateVector object."""
         return self._qubit_state
 
     @property
     def state(self):
-        """Returns a handle to the Lightning internal data class."""
+        """Returns a handle to the Lightning internal data object."""
         return self._state
 
     @property
@@ -112,7 +112,7 @@ class LightningAdjointJacobian:
         """
         use_csingle = self._dtype == np.complex64
 
-        obs_serialized, obs_indices = QuantumScriptSerializer(
+        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)
 
@@ -155,7 +155,7 @@ class LightningAdjointJacobian:
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
-            "obs_indices": obs_indices,
+            "obs_idx_offsets": obs_idx_offsets,
         }
 
     @staticmethod
@@ -175,21 +175,8 @@ class LightningAdjointJacobian:
         # must be 2-dimensional
         return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
 
-    def calculate_jacobian(self, tape: QuantumTape):
-        """Computes the Jacobian with the adjoint method.
-
-        .. code-block:: python
-
-            statevector = LightningStateVector(num_wires=num_wires)
-            statevector = statevector.get_final_state(tape)
-            jacobian = LightningAdjointJacobian(statevector).calculate_jacobian(tape)
-
-        Args:
-            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
-
-        Returns:
-            The Jacobian of a tape.
-        """
+    def _handle_raises(self, tape: QuantumTape, is_jacobian: bool, grad_vec=None):
+        """Handle the raises related with the tape for computing the Jacobian with the adjoint method or the vector-Jacobian products."""
 
         if tape.shots:
             raise QuantumFunctionError(
@@ -200,13 +187,25 @@ class LightningAdjointJacobian:
 
         tape_return_type = self._get_return_type(tape.measurements)
 
-        if not tape_return_type:  # the tape does not have measurements
-            return np.array([], dtype=self._dtype)
+        if is_jacobian:
+            if not tape_return_type:
+                # the tape does not have measurements
+                return True
 
-        if tape_return_type is State:
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support measurement StateMP."
-            )
+            if tape_return_type is State:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation method does not support measurement StateMP."
+                )
+
+        if not is_jacobian:
+            if qml.math.allclose(grad_vec, 0.0) or not tape_return_type:
+                # the tape does not have measurements or the gradient is 0.0
+                return True
+
+            if tape_return_type is State:
+                raise QuantumFunctionError(
+                    "Adjoint differentiation does not support State measurements."
+                )
 
         if any(m.return_type is not Expectation for m in tape.measurements):
             raise QuantumFunctionError(
@@ -214,21 +213,35 @@ class LightningAdjointJacobian:
                 "mixed with other return types"
             )
 
-        split_obs = (
-            len(tape.measurements) > 1
-        )  # lightning already parallelizes applying a single Hamiltonian
-        if split_obs:
-            # split linear combinations into num_threads
-            # this isn't the best load-balance in general, but well-rounded enough
-            split_obs = getenv("OMP_NUM_THREADS", None) if self._batch_obs else False
-            split_obs = int(split_obs) if split_obs else False
-        processed_data = self._process_jacobian_tape(tape, split_obs=split_obs)
+        return False
+
+    def calculate_jacobian(self, tape: QuantumTape):
+        """Computes the Jacobian with the adjoint method.
+
+        .. code-block:: python
+
+            statevector = LightningKokkosStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            jacobian = LightningKokkosAdjointJacobian(statevector).calculate_jacobian(tape)
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+
+        Returns:
+            The Jacobian of a tape.
+        """
+
+        empty_array = self._handle_raises(tape, is_jacobian=True)
+
+        if empty_array:
+            return np.array([], dtype=self._dtype)
+
+        processed_data = self._process_jacobian_tape(tape)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self._dtype)
 
         trainable_params = processed_data["tp_shift"]
-
         jac = self._jacobian_lightning(
             processed_data["state_vector"],
             processed_data["obs_serialized"],
@@ -236,17 +249,10 @@ class LightningAdjointJacobian:
             trainable_params,
         )
         jac = np.array(jac)
-        has_shape0 = bool(len(jac))
-
-        num_obs = len(np.unique(processed_data["obs_indices"]))
-        rows = processed_data["obs_indices"]
-        cols = np.arange(len(rows), dtype=int)
-        data = np.ones(len(rows))
-        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
-        jac = red_mat @ jac.reshape((len(rows), -1))
-        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
+        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
+
         return self._adjoint_jacobian_processing(jac_r)
 
     # pylint: disable=inconsistent-return-statements
@@ -255,9 +261,9 @@ class LightningAdjointJacobian:
 
         .. code-block:: python
 
-            statevector = LightningStateVector(num_wires=num_wires)
+            statevector = LightningKokkosStateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            vjp = LightningAdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
+            vjp = LightningKokkosAdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
 
         computes :math:`\\pmb{w} = (w_1,\\cdots,w_m)` where
 
@@ -269,41 +275,23 @@ class LightningAdjointJacobian:
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
-            grad_vec (tensor_like): Gradient-output vector, also called dy or cotangent. Must have shape matching the output
+            grad_vec (tensor_like): Gradient-output vector, also called `dy` or cotangent. Must have shape matching the output
                 shape of the corresponding tape, i.e. number of measurements if the return type is expectation.
 
         Returns:
             The vector-Jacobian products of a tape.
         """
-        if tape.shots:
-            raise QuantumFunctionError(
-                "Requested adjoint differentiation to be computed with finite shots. "
-                "The derivative is always exact when using the adjoint differentiation "
-                "method."
-            )
 
-        measurements = tape.measurements
-        tape_return_type = self._get_return_type(measurements)
+        empty_array = self._handle_raises(tape, is_jacobian=False, grad_vec=grad_vec)
 
-        if qml.math.allclose(grad_vec, 0) or tape_return_type is None:
+        if empty_array:
             return qml.math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
-
-        if tape_return_type is State:
-            raise QuantumFunctionError(
-                "Adjoint differentiation does not support State measurements."
-            )
-
-        if any(m.return_type is not Expectation for m in tape.measurements):
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support expectation return type "
-                "mixed with other return types"
-            )
 
         # Proceed, because tape_return_type is Expectation.
         if qml.math.ndim(grad_vec) == 0:
             grad_vec = (grad_vec,)
 
-        if len(grad_vec) != len(measurements):
+        if len(grad_vec) != len(tape.measurements):
             raise ValueError(
                 "Number of observables in the tape must be the same as the "
                 "length of grad_vec in the vjp method"
@@ -315,7 +303,7 @@ class LightningAdjointJacobian:
                 "tape is returning an expectation value"
             )
 
-        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in measurements]))
+        ham = qml.simplify(qml.dot(grad_vec, [m.obs for m in tape.measurements]))
 
         num_params = len(tape.trainable_params)
 

@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state-vector manipulation.
+Class implementation for lightning_kokkos state-vector manipulation.
 """
 
 try:
-    from pennylane_lightning.lightning_qubit_ops import (
+    from pennylane_lightning.lightning_kokkos_ops import (
+        InitializationSettings,
         StateVectorC64,
         StateVectorC128,
         allocate_aligned_array,
+        print_configuration,
     )
 except ImportError:
     pass
@@ -33,11 +35,14 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-from ._measurements import LightningMeasurements
+# pylint: disable=import-error, no-name-in-module, ungrouped-imports
+from pennylane_lightning.core._serialize import global_phase_diagonal
+
+from ._measurements import LightningKokkosMeasurements
 
 
-class LightningStateVector:
-    """Lightning state-vector class.
+class LightningKokkosStateVector:  # pylint: disable=too-few-public-methods
+    """Lightning Kokkos state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
 
@@ -45,22 +50,47 @@ class LightningStateVector:
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        device_name(string): state vector device name. Options: ["lightning.qubit"]
+        device_name(string): state vector device name. Options: ["lightning.kokkos"]
+        kokkos_args(InitializationSettings): binding for Kokkos::InitializationSettings
+            (threading parameters).
+        sync(bool): immediately sync with host-sv after applying operations
+
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.qubit"):
+    def __init__(
+        self,
+        num_wires,
+        dtype=np.complex128,
+        device_name="lightning.kokkos",
+        kokkos_args=None,
+        sync=True,
+    ):  # pylint: disable=too-many-arguments
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
 
-        if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
+        self._kokkos_config = {}
+        self._sync = sync
+
+        if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
 
-        if device_name != "lightning.qubit":
+        if device_name != "lightning.kokkos":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         self._device_name = device_name
-        self._qubit_state = self._state_dtype()(self._num_wires)
+
+        if kokkos_args is None:
+            self._kokkos_state = self._state_dtype()(self.num_wires)
+        elif isinstance(kokkos_args, InitializationSettings):
+            self._kokkos_state = self._state_dtype()(self.num_wires, kokkos_args)
+        else:
+            raise TypeError(
+                f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(kokkos_args)}."
+            )
+
+        if not self._kokkos_config:
+            self._kokkos_config = self._kokkos_configuration()
 
     @property
     def dtype(self):
@@ -85,22 +115,73 @@ class LightningStateVector:
     @property
     def state_vector(self):
         """Returns a handle to the state vector."""
-        return self._qubit_state
+        return self._kokkos_state
 
     @property
     def state(self):
-        """Copy the state vector data to a numpy array.
+        """Copy the state vector data from the device to the host.
+
+        A state vector Numpy array is explicitly allocated on the host to store and return
+        the data.
 
         **Example**
 
-        >>> dev = qml.device('lightning.qubit', wires=1)
+        >>> dev = qml.device('lightning.kokkos', wires=1)
         >>> dev.apply([qml.PauliX(wires=[0])])
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
-        self._qubit_state.getState(state)
+        self.sync_d2h(state)
         return state
+
+    def sync_h2d(self, state_vector):
+        """Copy the state vector data on host provided by the user to the state
+        vector on the device
+
+        Args:
+            state_vector(array[complex]): the state vector array on host.
+
+
+        **Example**
+
+        >>> dev = qml.device('lightning.kokkos', wires=3)
+        >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
+        >>> obs1 = qml.Identity(1)
+        >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
+        >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j, 0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64)
+        >>> dev.sync_h2d(state_vector)
+        >>> res = dev.expval(H)
+        >>> print(res)
+        1.0
+        """
+        self._kokkos_state.HostToDevice(state_vector.ravel(order="C"))
+
+    def sync_d2h(self, state_vector):
+        """Copy the state vector data on device to a state vector on the host provided
+        by the user
+
+        Args:
+            state_vector(array[complex]): the state vector array on device
+
+
+        **Example**
+
+        >>> dev = qml.device('lightning.kokkos', wires=1)
+        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
+        >>> dev.sync_d2h(state_vector)
+        >>> print(state_vector)
+        [0.+0.j 1.+0.j]
+        """
+        self._kokkos_state.DeviceToHost(state_vector.ravel(order="C"))
+
+    def _kokkos_configuration(self):
+        """Get the default configuration of the kokkos device.
+
+        Returns: The `lightning.kokkos` device configuration
+        """
+        return print_configuration()
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -112,7 +193,7 @@ class LightningStateVector:
     def reset_state(self):
         """Reset the device's state"""
         # init the state vector to |00..0>
-        self._qubit_state.resetStateVector()
+        self._kokkos_state.resetStateVector()
 
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
@@ -122,19 +203,19 @@ class LightningStateVector:
             device_wires (Wires): wires that get initialized in the state
         """
 
-        if isinstance(state, self._qubit_state.__class__):
+        if isinstance(state, self._kokkos_state.__class__):
             state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
-            state.getState(state_data)
+            state.DeviceToHost(state_data)
             state = state_data
 
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
             output_shape = (2,) * self._num_wires
             state = np.reshape(state, output_shape).ravel(order="C")
-            self._qubit_state.UpdateData(state)
+            self.sync_h2d(np.reshape(state, output_shape))
             return
 
-        self._qubit_state.setStateVector(state, list(device_wires))
+        self._kokkos_state.setStateVector(state, list(device_wires))  # this operation on device
 
     def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
@@ -153,7 +234,8 @@ class LightningStateVector:
         if len(state) != len(wires):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
-        self._qubit_state.setBasisState(list(state), list(wires))
+        # Return a computational basis state over all wires.
+        self._kokkos_state.setBasisState(list(state), list(wires))
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
@@ -166,24 +248,15 @@ class LightningStateVector:
         """
         state = self.state_vector
 
-        basename = operation.base.name
-        method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
-        target_wires = list(operation.target_wires)
-        if method is not None:  # apply n-controlled specialized gate
-            inv = False
-            param = operation.parameters
-            method(control_wires, control_values, target_wires, inv, param)
-        else:  # apply gate as an n-controlled matrix
-            method = getattr(state, "applyControlledMatrix")
-            method(
-                qml.matrix(operation.base),
-                control_wires,
-                control_values,
-                target_wires,
-                False,
-            )
+        name = operation.name
+        # Apply GlobalPhase
+        inv = False
+        param = operation.parameters[0]
+        wires = self.wires.indices(operation.wires)
+        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
+        state.apply(name, wires, inv, [[param]], matrix)
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -202,11 +275,11 @@ class LightningStateVector:
         """
         wires = self.wires.indices(operation.wires)
         wire = list(wires)[0]
+        circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
         if postselect_mode == "fill-shots" and operation.postselect is not None:
             sample = operation.postselect
         else:
-            circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
-            sample = LightningMeasurements(self).measure_final_state(circuit)
+            sample = LightningKokkosMeasurements(self).measure_final_state(circuit)
             sample = np.squeeze(sample)
         mid_measurements[operation] = sample
         getattr(self.state_vector, "collapse")(wire, bool(sample))
@@ -215,7 +288,7 @@ class LightningStateVector:
 
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
-    ):  # pylint: disable=protected-access
+    ):
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -251,16 +324,14 @@ class LightningStateVector:
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
-            elif isinstance(operation, qml.PauliRot):
-                method = getattr(state, "applyPauliRot")
-                paulis = operation._hyperparameters["pauli_word"]
-                wires = [i for i, w in zip(wires, paulis) if w != "I"]
-                word = "".join(p for p in paulis if p != "I")
-                method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
+            elif isinstance(operation, qml.ops.Controlled) and isinstance(
+                operation.base, qml.GlobalPhase
+            ):  # apply n-controlled gate
+
+                # Kokkos do not support the controlled gates except for GlobalPhase
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
@@ -284,6 +355,7 @@ class LightningStateVector:
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
+
         self._apply_lightning(
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
         )

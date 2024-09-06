@@ -189,9 +189,10 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
     void applyInPlace(StateVectorT &sv) const override {
         StateVectorT buffer{sv.getNumQubits()};
         buffer.initZeros();
+        StateVectorT tmp{sv};
         for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
              term_idx++) {
-            StateVectorT tmp{sv};
+            tmp.updateData(sv.getView());
             this->obs_[term_idx]->applyInPlace(tmp);
             LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
                 ComplexT{this->coeffs_[term_idx], 0.0}, tmp.getView(),
