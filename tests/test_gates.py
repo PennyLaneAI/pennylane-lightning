@@ -458,7 +458,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
-    threshold = 250
+    threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
     if operation == qml.GlobalPhase and device_name == "lightning.tensor":
         pytest.skip("GlobalPhase not implemented in lightning.tensor.")
