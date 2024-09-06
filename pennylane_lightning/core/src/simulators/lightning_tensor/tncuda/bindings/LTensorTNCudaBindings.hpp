@@ -29,7 +29,6 @@
 #include "DevicePool.hpp"
 #include "Error.hpp"
 #include "MPSTNCuda.hpp"
-#include "TNCudaMPOCache.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
@@ -39,7 +38,6 @@ namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
 using namespace Pennylane::LightningGPU::Util;
-using namespace Pennylane::LightningTensor::TNCuda::MPO;
 using Pennylane::LightningTensor::TNCuda::MPSTNCuda;
 } // namespace
 /// @endcond
@@ -170,26 +168,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 tensor_network.applyMPOOperation(conv_tensors, wires,
                                                  MPOBondDims);
             },
-            "Apply MPO to the state.")
-        .def(
-            "applyMPOOperation",
-            [](TensorNet &tensor_network, const std::string &opsName,
-               const std::vector<PrecisionT> &param,
-               const std::vector<std::size_t> &wires,
-               const std::vector<std::size_t> &wires_order,
-               const std::size_t maxMPOBondDim, const np_arr_c &matrix_data) {
-                using ComplexT = typename TensorNet::ComplexT;
-                std::vector<ComplexT> conv_mat;
-                py::buffer_info numpyArrayInfo = matrix_data.request();
-                auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-
-                conv_mat =
-                    std::vector<ComplexT>{m_ptr, m_ptr + numpyArrayInfo.size};
-                tensor_network.applyMPOOperation(opsName, param, wires,
-                                                 wires_order, maxMPOBondDim,
-                                                 conv_mat);
-            },
-            "Append MPO to the graph.")
+            "Apply MPO to the tensor network graph.")
         .def(
             "appendMPSFinalState",
             [](TensorNet &tensor_network, double cutoff,
@@ -210,107 +189,6 @@ auto getBackendInfo() -> py::dict {
 }
 
 /**
- * @brief Check if a gate is stored in the MPO cache.
- *
- * @param opsName Name of the gate.
- * @param param Parameters of the gate.
- * @param wire_order Wire order of the gate.
- * @param maxMPOBondDim Maximum bond dimension of the MPO.
- * @param matrix_data Matrix data of the gate.
- *
- * @return True if the gate is decomposed.
- */
-template <class PrecisionT>
-auto is_decomposed(const std::string &opsName,
-                   const std::vector<PrecisionT> &param,
-                   const std::vector<std::size_t> &wire_order,
-                   const std::size_t maxMPOBondDim,
-                   const np_arr_c_t<PrecisionT> &matrix_data = {}) -> bool {
-    using ComplexT = std::complex<PrecisionT>;
-    std::vector<ComplexT> matrix_data_conv;
-    if (matrix_data.size()) {
-        py::buffer_info numpyArrayInfo = matrix_data.request();
-        auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-        matrix_data_conv =
-            std::vector<ComplexT>{m_ptr, m_ptr + matrix_data.size()};
-    }
-    return TNCudaMPOCache<PrecisionT>::getInstance().is_gate_decomposed(
-        opsName, param, wire_order, maxMPOBondDim, matrix_data_conv);
-}
-
-/**
- * @brief Register MPO cache.
- *
- * @param opsName Name of the gate.
- * @param param Parameters of the gate.
- * @param wire_order Wire order of the gate.
- * @param maxMPOBondDim Maximum bond dimension of the MPO.
- * @param extents Extents of the MPO tensors.
- * @param mpo_tensors MPO tensors.
- * @param matrix_data Matrix data of the gate.
- */
-template <class PrecisionT>
-void add_mpo_to_cache(const std::string &opsName,
-                      const std::vector<PrecisionT> &param,
-                      const std::vector<std::size_t> &wire_order,
-                      const std::size_t maxMPOBondDim,
-                      const std::vector<std::vector<std::size_t>> &extents,
-                      const std::vector<np_arr_c_t<PrecisionT>> &mpo_tensors,
-                      const np_arr_c_t<PrecisionT> &matrix_data = {}) {
-    using ComplexT = std::complex<PrecisionT>;
-    std::vector<std::vector<ComplexT>> conv_tensors;
-    for (const auto &tensor : mpo_tensors) {
-        py::buffer_info numpyArrayInfo = tensor.request();
-        auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-        conv_tensors.push_back(
-            std::vector<ComplexT>{m_ptr, m_ptr + tensor.size()});
-    }
-
-    std::vector<ComplexT> conv_mat;
-    if (matrix_data.size()) {
-        py::buffer_info numpyArrayInfo = matrix_data.request();
-        auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-        conv_mat = std::vector<ComplexT>{m_ptr, m_ptr + matrix_data.size()};
-    }
-    TNCudaMPOCache<PrecisionT>::getInstance().add_MPO(
-        opsName, param, wire_order, maxMPOBondDim, extents, conv_tensors,
-        conv_mat);
-}
-
-template <class PrecisionT> void registerMPOCacheOperation(py::module_ &m) {
-    std::size_t bitsize = sizeof(std::complex<PrecisionT>) * 8;
-    std::string is_decomposed_name = "is_decomposed" + std::to_string(bitsize);
-    std::string add_mpo_to_cache_name =
-        "add_mpo_to_cache" + std::to_string(bitsize);
-    std::string doc0 =
-        "Check if a gate is decomposed." + std::to_string(bitsize);
-    std::string doc1 = "Add MPO to cache." + std::to_string(bitsize);
-    m.def(
-        is_decomposed_name.c_str(),
-        [](const std::string &opsName, const std::vector<PrecisionT> &param,
-           const std::vector<std::size_t> &wire_order,
-           const std::size_t maxMPOBondDim,
-           const np_arr_c_t<PrecisionT> &matrix_data = {}) {
-            return is_decomposed<PrecisionT>(opsName, param, wire_order,
-                                             maxMPOBondDim, matrix_data);
-        },
-        doc0.c_str());
-    m.def(
-        add_mpo_to_cache_name.c_str(),
-        [](const std::string &opsName, const std::vector<PrecisionT> &param,
-           const std::vector<std::size_t> &wire_order,
-           const std::size_t maxMPOBondDim,
-           const std::vector<std::vector<std::size_t>> &extents,
-           const std::vector<np_arr_c_t<PrecisionT>> &mpo_tensors,
-           const np_arr_c_t<PrecisionT> &matrix_data = {}) {
-            add_mpo_to_cache<PrecisionT>(opsName, param, wire_order,
-                                         maxMPOBondDim, extents, mpo_tensors,
-                                         matrix_data);
-        },
-        doc1.c_str());
-}
-
-/**
  * @brief Register bindings for backend-specific info.
  *
  * @param m Pybind11 module.
@@ -318,9 +196,6 @@ template <class PrecisionT> void registerMPOCacheOperation(py::module_ &m) {
 void registerBackendSpecificInfo(py::module_ &m) {
     m.def("backend_info", &getBackendInfo, "Backend-specific information.");
     registerCudaUtils(m);
-
-    registerMPOCacheOperation<float>(m);
-    registerMPOCacheOperation<double>(m);
 }
 
 } // namespace Pennylane::LightningTensor::TNCuda
