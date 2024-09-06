@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
+  [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
@@ -26,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
 
 ---
 
