@@ -315,11 +315,11 @@ class LightningKokkos(LightningBase):
             wires=wires,
             c_dtype=c_dtype,
             shots=shots,
-            batch_obs=batch_obs,
+            batch_obs=False,
         )
 
         # Set the attributes to call the Lightning classes
-        self._set_Lightning_classes()
+        self._set_lightning_classes()
 
         # Kokkos specific options
         self._kokkos_args = kokkos_args
