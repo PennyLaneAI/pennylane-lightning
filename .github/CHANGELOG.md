@@ -40,35 +40,6 @@ Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
 
 ### New features since last release
 
-* Lightning-Kokkos migrated to the new device API.
-  [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
-
-### Breaking changes
-
-### Improvements
-
-* Update GitHub actions in response to a high-severity vulnerability.
-  [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
-
-* Optimize gate cache recording for `lightning.tensor` C++ layer.
-  [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
-
-### Documentation
-
-### Bug fixes
-
-### Contributors
-
-This release contains contributions from (in alphabetical order):
-
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Shuli Shu
-
----
-
-# Release 0.38.0
-
-### New features since last release
-
 * Add `qml.StatePrep()` and `qml.QubitStateVector()` support to `lightning.tensor`.
   [(#849)](https://github.com/PennyLaneAI/pennylane-lightning/pull/849)
 
