@@ -409,7 +409,7 @@ class TestMeasurements:
         return m.measure_final_state(tape)
 
     @flaky(max_runs=15)
-    @pytest.mark.parametrize("shots", [None, 200_000, [190_000, 190_000]])
+    @pytest.mark.parametrize("shots", [None, 500_000, [500_000, 500_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -453,9 +453,9 @@ class TestMeasurements:
         if shots != None and measurement is qml.expval:
             # Increase the number of shots
             if isinstance(shots, int):
-                shots *= 10
+                shots = 1_000_000
             else:
-                shots = [i * 10 for i in shots]
+                shots = [1_000_000, 1_000_000]
 
             # Extra tolerance
             rtol = 5.0e-2  # 5% of expected value as tolerance
@@ -506,7 +506,7 @@ class TestMeasurements:
             assert np.allclose(result, expected, rtol=rtol, atol=atol)
 
     @flaky(max_runs=10)
-    @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
+    @pytest.mark.parametrize("shots", [None, 300_000, (300_000, 300_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -561,9 +561,9 @@ class TestMeasurements:
         if shots != None and measurement is qml.expval:
             # Increase the number of shots
             if isinstance(shots, int):
-                shots *= 10
+                shots = 1_000_000
             else:
-                shots = [i * 10 for i in shots]
+                shots = [1_000_000, 1_000_000]
 
             # Extra tolerance
             rtol = 5.0e-2  # 5% of expected value as tolerance
