@@ -126,7 +126,7 @@ jobs:
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.cibw_build }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp39-*":"py39","cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}.zip
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
@@ -147,7 +147,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.cibw_build }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
+          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp39-*":"py39","cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}.zip
           path: dist
 
       - name: Upload wheels to PyPI
