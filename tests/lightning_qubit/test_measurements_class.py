@@ -408,7 +408,7 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
-    @flaky(max_runs=15)
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 500_000, [500_000, 500_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -505,7 +505,7 @@ class TestMeasurements:
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=rtol, atol=atol)
 
-    @flaky(max_runs=10)
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 300_000, (300_000, 300_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
