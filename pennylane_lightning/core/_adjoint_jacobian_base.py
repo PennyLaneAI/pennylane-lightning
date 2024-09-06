@@ -97,7 +97,6 @@ class LightningBaseAdjointJacobian(ABC):
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
-            use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
             split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
 
         Returns:
