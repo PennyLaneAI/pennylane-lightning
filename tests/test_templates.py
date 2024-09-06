@@ -342,6 +342,7 @@ class TestMottonenStatePreparation:
 
         assert np.allclose(res, ref)
 
+
 class TestArbitraryStatePreparation:
     """Test the ArbitraryStatePreparation algorithm."""
 

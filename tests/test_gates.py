@@ -150,7 +150,7 @@ def test_gate_unitary_correct(op, op_name):
         unitary[:, i] = out
 
     unitary_expected = qml.matrix(op[0](*op1, **op2)) @ qml.matrix(op[0](*op[1], **op[2]))
-    assert np.allclose(unitary, unitary_expected, atol=1e-1)
+    assert np.allclose(unitary, unitary_expected)
 
 
 @pytest.mark.parametrize("op_name", ld.operations)
