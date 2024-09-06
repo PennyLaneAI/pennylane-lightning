@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* Migrate wheels artifacts to v4.
+  [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
+
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
