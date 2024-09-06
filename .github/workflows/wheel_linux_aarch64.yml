@@ -183,17 +183,18 @@ jobs:
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master'
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.cibw_build }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
 
   upload-pypi:
-    needs: linux-wheels-aarch64
+    needs: [set_wheel_build_matrix, linux-wheels-aarch64]
     strategy:
       matrix:
         arch: [aarch64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'release' ||
@@ -202,7 +203,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.cibw_build }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to PyPI

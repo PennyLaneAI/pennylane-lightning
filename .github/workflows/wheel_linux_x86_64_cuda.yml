@@ -126,18 +126,19 @@ jobs:
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.cibw_build }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
 
   upload-pypi:
-    needs: linux-wheels-x86-64
+    needs: [set_wheel_build_matrix, linux-wheels-x86-64]
     strategy:
       matrix:
         arch: [x86_64]
         pl_backend: ["lightning_gpu"]
         cuda_version: ["12"]
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'release' ||
@@ -146,7 +147,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
+          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.cibw_build }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
           path: dist
 
       - name: Upload wheels to PyPI
