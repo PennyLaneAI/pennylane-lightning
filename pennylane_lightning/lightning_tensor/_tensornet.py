@@ -222,6 +222,36 @@ class LightningTensorNet:
 
         self._tensornet.setBasisState(state)
 
+    def _apply_lightning_controlled(self, operation):
+        """Apply an arbitrary controlled operation to the state tensor. Note that `cutensornet` only supports controlled gates with a single wire target.
+
+        Args:
+            operation (~pennylane.operation.Operation): controlled operation to apply
+
+        Returns:
+            None
+        """
+        tensornet = self._tensornet
+
+        basename = operation.base.name
+        method = getattr(tensornet, f"{basename}", None)
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        target_wires = list(operation.target_wires)
+        if method is not None:  # apply n-controlled specialized gate
+            inv = False
+            param = operation.parameters
+            method(control_wires, control_values, target_wires, inv, param)
+        else:  # apply gate as an n-controlled matrix
+            method = getattr(tensornet, "applyControlledMatrix")
+            method(
+                qml.matrix(operation.base),
+                control_wires,
+                control_values,
+                target_wires,
+                False,
+            )
+
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
 
@@ -247,7 +277,9 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if method is not None:  # apply specialized gate
+            if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
+                self._apply_lightning_controlled(operation)
+            elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
             else:  # apply gate as a matrix
