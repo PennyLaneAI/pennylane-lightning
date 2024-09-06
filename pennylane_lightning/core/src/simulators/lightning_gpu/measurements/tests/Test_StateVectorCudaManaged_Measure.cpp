@@ -149,7 +149,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
             Measurer.expval(operations_list, wires_list, coeffs.data());
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
         PrecisionT expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
+        for (std::size_t i = 0; i < coeffs.size(); i++) {
             expected_values += exp_values_ref[i] * (coeffs[i].real());
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));
@@ -159,7 +159,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
             Measurer.expval(operations_list, wires_list, coeffs.data());
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
         expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
+        for (std::size_t i = 0; i < coeffs.size(); i++) {
             expected_values += exp_values_ref[i] * (coeffs[i].real());
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));
@@ -169,7 +169,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
             Measurer.expval(operations_list, wires_list, coeffs.data());
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
+        for (std::size_t i = 0; i < coeffs.size(); i++) {
             expected_values += exp_values_ref[i] * (coeffs[i].real());
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));

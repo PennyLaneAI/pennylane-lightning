@@ -58,7 +58,7 @@ constexpr auto findGateOpForGenerator() -> GateOperation {
     return GateOperation{};
 }
 
-template <size_t gntr_idx> constexpr auto generatorGatePairsIter() {
+template <std::size_t gntr_idx> constexpr auto generatorGatePairsIter() {
     if constexpr (gntr_idx < Constant::generator_names.size()) {
         constexpr auto gntr_op =
             std::get<0>(Constant::generator_names[gntr_idx]);
@@ -105,8 +105,8 @@ void testGeneratorEqualsGateDerivativeForKernel(
 
     DYNAMIC_SECTION("Test generator of " << gate_name << " for kernel "
                                          << kernel_name) {
-        for (size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
-             num_qubits++) {
+        for (std::size_t num_qubits = min_num_qubits;
+             num_qubits < max_num_qubits; num_qubits++) {
             const auto wires = createWires(gate_op, num_qubits);
             const auto ini_st =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -131,7 +131,7 @@ void testGeneratorEqualsGateDerivativeForKernel(
             dispatcher.applyOperation(kernel, diff_st_2.data(), num_qubits,
                                       gate_op, wires, inverse, {-eps});
 
-            std::vector<ComplexT> gate_der_st(size_t{1U} << num_qubits);
+            std::vector<ComplexT> gate_der_st(std::size_t{1U} << num_qubits);
 
             std::transform(diff_st_1.cbegin(), diff_st_1.cend(),
                            diff_st_2.cbegin(), gate_der_st.begin(),
@@ -184,7 +184,8 @@ constexpr auto findGateOpForControlledGenerator() -> ControlledGateOperation {
     return ControlledGateOperation{};
 }
 
-template <size_t gntr_idx> constexpr auto controlledGeneratorGatePairsIter() {
+template <std::size_t gntr_idx>
+constexpr auto controlledGeneratorGatePairsIter() {
     if constexpr (gntr_idx < Constant::controlled_generator_names.size()) {
         constexpr auto gntr_op =
             std::get<0>(Constant::controlled_generator_names[gntr_idx]);
@@ -233,8 +234,8 @@ void testControlledGeneratorEqualsGateDerivativeForKernel(
 
     DYNAMIC_SECTION("Test controlled generator of "
                     << gate_name << " for kernel " << kernel_name) {
-        for (size_t num_qubits = min_num_qubits; num_qubits < max_num_qubits;
-             num_qubits++) {
+        for (std::size_t num_qubits = min_num_qubits;
+             num_qubits < max_num_qubits; num_qubits++) {
             const auto wires = createWires(gate_op, num_qubits);
             const std::vector<std::size_t> controls = {num_qubits - 1};
             const std::vector<bool> values = {true};
@@ -265,7 +266,7 @@ void testControlledGeneratorEqualsGateDerivativeForKernel(
                                            gate_op, controls, values, wires,
                                            inverse, {-eps});
 
-            std::vector<ComplexT> gate_der_st(size_t{1U} << num_qubits);
+            std::vector<ComplexT> gate_der_st(std::size_t{1U} << num_qubits);
 
             std::transform(diff_st_1.cbegin(), diff_st_1.cend(),
                            diff_st_2.cbegin(), gate_der_st.begin(),

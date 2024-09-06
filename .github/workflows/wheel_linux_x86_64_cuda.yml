@@ -6,6 +6,12 @@ name: Wheel::Linux::x86_64::CUDA
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
   push:
     branches:
       - master
@@ -32,7 +38,9 @@ jobs:
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
 
+
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
@@ -116,7 +124,7 @@ jobs:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         # if: |
         #   github.event_name == 'release' ||
         #   github.event_name == 'workflow_dispatch' ||
@@ -125,6 +133,8 @@ jobs:
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
           path: ./wheelhouse/*.whl
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
     needs: linux-wheels-x86-64
@@ -139,7 +149,7 @@ jobs:
       github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
           path: dist

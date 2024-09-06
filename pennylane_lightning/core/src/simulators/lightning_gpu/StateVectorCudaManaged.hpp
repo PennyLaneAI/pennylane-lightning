@@ -107,7 +107,7 @@ class StateVectorCudaManaged
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Undefined;
 
     StateVectorCudaManaged() = delete;
-    StateVectorCudaManaged(size_t num_qubits)
+    StateVectorCudaManaged(std::size_t num_qubits)
         : StateVectorCudaBase<Precision, StateVectorCudaManaged<Precision>>(
               num_qubits),
           handle_(make_shared_cusv_handle()),
@@ -223,7 +223,7 @@ class StateVectorCudaManaged
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param param Complex phase generator.
      */
-    template <size_t thread_per_block = 256>
+    template <std::size_t thread_per_block = 256>
     void globalPhaseStateVector(const bool adjoint, const Precision param) {
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
         std::complex<Precision> phase =
@@ -238,7 +238,7 @@ class StateVectorCudaManaged
      *
      * @param phase Controlled complex phase vector.
      */
-    template <size_t thread_per_block = 256>
+    template <std::size_t thread_per_block = 256>
     void cGlobalPhaseStateVector(const bool adjoint,
                                  const std::vector<CFP_t> &phase,
                                  const bool async = false) {

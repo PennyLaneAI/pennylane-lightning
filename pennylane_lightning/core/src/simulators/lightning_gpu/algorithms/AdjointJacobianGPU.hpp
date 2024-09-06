@@ -82,7 +82,7 @@ class AdjointJacobian final
                    DataBuffer<CFP_t, int> &device_buffer_jac_single_param,
                    std::vector<CFP_t> &host_buffer_jac_single_param) {
         host_buffer_jac_single_param.clear();
-        for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+        for (std::size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
             const StateVectorT &sv1 = sv1s[obs_idx];
             PL_ABORT_IF_NOT(sv1.getDataBuffer().getDevTag().getDeviceID() ==
                                 sv2.getDataBuffer().getDevTag().getDeviceID(),
@@ -98,7 +98,7 @@ class AdjointJacobian final
         device_buffer_jac_single_param.CopyGpuDataToHost(
             host_buffer_jac_single_param.data(),
             host_buffer_jac_single_param.size(), false);
-        for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+        for (std::size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
             std::size_t idx = param_index + obs_idx * tp_size;
             jac[idx] =
                 -2 * scaling_coeff * host_buffer_jac_single_param[obs_idx].y;
@@ -284,10 +284,11 @@ class AdjointJacobian final
 
         // Create observable-applied state-vectors
         std::vector<StateVectorT> H_lambda;
-        for (size_t n = 0; n < num_observables; n++) {
+        for (std::size_t n = 0; n < num_observables; n++) {
             H_lambda.emplace_back(lambda.getNumQubits(), dt_local, true,
                                   cusvhandle, cublascaller, cusparsehandle);
         }
+
         BaseType::applyObservables(H_lambda, lambda, obs);
 
         StateVectorT mu(lambda.getNumQubits(), dt_local, true, cusvhandle,

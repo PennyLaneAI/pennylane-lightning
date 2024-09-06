@@ -11,6 +11,12 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lgpu_python.yml'
@@ -38,6 +44,7 @@ concurrency:
 
 jobs:
   builddeps:
+    if: github.event.pull_request.draft == false
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -228,11 +235,13 @@ jobs:
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: ubuntu-codecov-results-python-${{ matrix.pl_backend }}
           path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-python:
     needs: [pythontestswithLGPU]
@@ -243,9 +252,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          pattern: ubuntu-codecov-*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
