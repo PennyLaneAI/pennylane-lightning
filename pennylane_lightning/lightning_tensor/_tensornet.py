@@ -431,6 +431,7 @@ class LightningTensorNet:
         """
         self.apply_operations(circuit.operations)
         self.appendMPSFinalState()
+        return self
 
     def appendMPSFinalState(self):
         """

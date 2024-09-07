@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Matrix Product Operator support to `lightning.tensor`.
+* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`.
   [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
 * Add shot measurement support to `lightning.tensor`.

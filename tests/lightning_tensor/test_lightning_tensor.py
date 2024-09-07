@@ -46,6 +46,8 @@ def test_device_available_as_plugin():
     """Test that the device can be instantiated using ``qml.device``."""
     dev = qml.device("lightning.tensor", wires=2)
     assert isinstance(dev, LightningTensor)
+    assert dev.backend == "cutensornet"
+    assert dev.method in ["mps"]
 
 
 @pytest.mark.parametrize("backend", ["fake_backend"])
@@ -53,6 +55,12 @@ def test_invalid_backend(backend):
     """Test an invalid backend."""
     with pytest.raises(ValueError, match=f"Unsupported backend: {backend}"):
         LightningTensor(wires=1, backend=backend)
+
+
+def test_invalid_arg():
+    """Test that an error is raised if an invalid argument is provided."""
+    with pytest.raises(TypeError):
+        LightningTensor(wires=2, kwargs="invalid_arg")
 
 
 @pytest.mark.parametrize("method", ["fake_method"])

@@ -14,10 +14,16 @@
 """
 Unit tests for measurements class.
 """
+from typing import Sequence
+
 import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device
+from flaky import flaky
+from pennylane.devices import DefaultQubit
+from pennylane.measurements import VarianceMP
+from scipy.sparse import csr_matrix, random_array
 
 if device_name != "lightning.tensor":
     pytest.skip(
@@ -40,7 +46,11 @@ PHI = np.linspace(0.32, 1, 3)
 )
 def lightning_tn(request):
     """Fixture for creating a LightningTensorNet object."""
-    return LightningTensorNet(num_wires=5, max_bond_dim=128, c_dtype=request.param)
+
+    def _lightning_tn(n_wires):
+        return LightningTensorNet(num_wires=n_wires, max_bond_dim=128, c_dtype=request.param)
+
+    return _lightning_tn
 
 
 class TestMeasurementFunction:
@@ -48,7 +58,7 @@ class TestMeasurementFunction:
 
     def test_initialization(self, lightning_tn):
         """Tests for the initialization of the LightningTensorMeasurements class."""
-        tensornetwork = lightning_tn
+        tensornetwork = lightning_tn(2)
         m = LightningTensorMeasurements(tensornetwork)
 
         assert m.dtype == tensornetwork.dtype
@@ -56,7 +66,7 @@ class TestMeasurementFunction:
     def test_not_implemented_state_measurements(self, lightning_tn):
         """Test than a NotImplementedError is raised if the measurement is not a state measurement."""
 
-        tensornetwork = lightning_tn
+        tensornetwork = lightning_tn(2)
         m = LightningTensorMeasurements(tensornetwork)
 
         mp = qml.counts(wires=(0, 1))

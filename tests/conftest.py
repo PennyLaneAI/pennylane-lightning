@@ -152,10 +152,14 @@ elif device_name == "lightning.gpu":
         from pennylane_lightning.lightning_gpu_ops import LightningException
 elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
+    from pennylane_lightning.lightning_tensor._measurements import (
+        LightningTensorMeasurements as LightningMeasurements,
+    )
+    from pennylane_lightning.lightning_tensor._tensornet import (
+        LightningTensorNet as LightningStateVector,
+    )
 
     LightningAdjointJacobian = None
-    LightningMeasurements = None
-    LightningStateVector = None
 
     if hasattr(pennylane_lightning, "lightning_tensor_ops"):
         import pennylane_lightning.lightning_tensor_ops as lightning_ops
@@ -190,6 +194,8 @@ def qubit_device(request):
 )
 def lightning_sv(request):
     def _statevector(num_wires):
+        if device_name == "lightning.tensor":
+            return LightningStateVector(num_wires=num_wires, c_dtype=request.param)
         return LightningStateVector(num_wires=num_wires, dtype=request.param)
 
     return _statevector

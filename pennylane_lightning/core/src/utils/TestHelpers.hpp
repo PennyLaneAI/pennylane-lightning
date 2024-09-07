@@ -598,6 +598,35 @@ auto randomUnitary(RandomEngine &re, std::size_t num_qubits)
     return res;
 }
 
+inline auto samples_to_decimal(const std::vector<std::size_t> &samples,
+                               const std::size_t num_qubits,
+                               const std::size_t num_samples)
+    -> std::vector<std::size_t> {
+    constexpr uint32_t twos[] = {
+        1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
+        1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
+        1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
+        1U << 18U, 1U << 19U, 1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U,
+        1U << 24U, 1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
+        1U << 30U, 1U << 31U};
+
+    std::size_t N = std::pow(2, num_qubits);
+    std::vector<std::size_t> counts(N, 0);
+    std::vector<std::size_t> samples_decimal(num_samples, 0);
+
+    // convert samples to decimal and then bin them in counts
+    for (std::size_t i = 0; i < num_samples; i++) {
+        for (std::size_t j = 0; j < num_qubits; j++) {
+            if (samples[i * num_qubits + j] != 0) {
+                samples_decimal[i] += twos[(num_qubits - 1 - j)];
+            }
+        }
+        counts[samples_decimal[i]] += 1;
+    }
+
+    return counts;
+}
+
 #define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match)                   \
     REQUIRE_THROWS_AS(expr, type);                                             \
     REQUIRE_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));

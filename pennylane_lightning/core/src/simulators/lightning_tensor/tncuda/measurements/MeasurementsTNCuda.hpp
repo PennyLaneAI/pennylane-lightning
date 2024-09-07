@@ -179,12 +179,12 @@ template <class TensorNetT> class MeasurementsTNCuda {
      * number between 0 and num_samples-1.
      */
     auto generate_samples(const std::vector<std::size_t> &wires,
-                          const size_t num_samples,
+                          const std::size_t num_samples,
                           const int32_t numHyperSamples = 1)
         -> std::vector<std::size_t> {
         std::vector<int64_t> samples(num_samples * wires.size());
 
-        std::vector<int32_t> modesToSample =
+        const std::vector<int32_t> modesToSample =
             cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                 wires, tensor_network_.getNumQubits());
 
@@ -230,8 +230,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
                     "Insufficient workspace size on Device.\n");
 
         const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
-        DataBuffer<size_t, int> d_scratch(d_scratch_length,
-                                          tensor_network_.getDevTag(), true);
+        DataBuffer<std::size_t, int> d_scratch(
+            d_scratch_length, tensor_network_.getDevTag(), true);
 
         setWorkSpaceMemory(tensor_network_.getTNCudaHandle(), workDesc,
                            reinterpret_cast<void *>(d_scratch.getData()),
@@ -249,8 +249,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
             cutensornetDestroyWorkspaceDescriptor(workDesc));
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroySampler(sampler));
 
-        std::vector<std::size_t> samples_size_t(num_samples *
-                                                tensor_network_.getNumQubits());
+        std::vector<std::size_t> samples_size_t(samples.size());
 
         std::transform(samples.begin(), samples.end(), samples_size_t.begin(),
                        [&](int64_t x) { return static_cast<std::size_t>(x); });

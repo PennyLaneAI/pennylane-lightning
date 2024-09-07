@@ -177,9 +177,13 @@ class LightningTensorMeasurements:
         """
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
+                if isinstance(measurementprocess.obs, qml.Identity):
+                    return self.state_diagonalizing_gates
                 return self.expval
 
             if isinstance(measurementprocess, VarianceMP):
+                if isinstance(measurementprocess.obs, qml.Identity):
+                    return self.state_diagonalizing_gates
                 return self.var
 
             if isinstance(measurementprocess, ProbabilityMP):
@@ -270,8 +274,6 @@ class LightningTensorMeasurements:
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
                 )
-            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
-                all_res.extend(self._measure_hamiltonian_with_samples(group, shots))
             elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
                 all_res.extend(self._measure_sum_with_samples(group, shots))
             else:
@@ -340,14 +342,9 @@ class LightningTensorMeasurements:
 
             return tuple(processed)
 
-        try:
-            samples = self._measurement_lightning.generate_samples(
-                list(wires), shots.total_shots
-            ).astype(int, copy=False)
-        except ValueError as e:
-            if str(e) != "probabilities contain NaN":
-                raise e
-            samples = qml.math.full((shots.total_shots, len(wires)), 0)
+        samples = self._measurement_lightning.generate_samples(
+            list(wires), shots.total_shots
+        ).astype(int, copy=False)
 
         self._apply_diagonalizing_gates(mps, adjoint=True)
 
@@ -361,26 +358,6 @@ class LightningTensorMeasurements:
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
-
-    def _measure_hamiltonian_with_samples(
-        self,
-        mp: List[SampleMeasurement],
-        shots: Shots,
-    ):
-        # the list contains only one element based on how we group measurements
-        mp = mp[0]
-
-        # if the measurement process involves a Hamiltonian, measure each
-        # of the terms separately and sum
-        def _sum_for_single_shot(s):
-            results = self.measure_with_samples(
-                [ExpectationMP(t) for t in mp.obs.terms()[1]],
-                s,
-            )
-            return sum(c * res for c, res in zip(mp.obs.terms()[0], results))
-
-        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
-        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]
 
     def _measure_sum_with_samples(
         self,
