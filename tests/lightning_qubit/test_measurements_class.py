@@ -845,9 +845,11 @@ class TestControlledOps:
                         qml.ctrl(
                             operation(*tuple([0.1234] * operation.num_params), target_wires),
                             control_wires,
-                            control_values=[
-                                control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                            ] if device_name != "lightning.tensor" else [control_value for _ in control_wires],
+                            control_values=(
+                                [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                                if device_name != "lightning.tensor"
+                                else [control_value for _ in control_wires]
+                            ),
                         ),
                     ]
 
@@ -944,7 +946,6 @@ class TestControlledOps:
         )
         expected = self.calculate_reference(tape_cnot)
 
-        
         if device_name == "lightning.tensor":
             assert np.allclose(result, expected, 1e-4)
         else:
