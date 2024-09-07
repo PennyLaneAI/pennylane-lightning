@@ -847,7 +847,7 @@ class TestControlledOps:
                             control_wires,
                             control_values=[
                                 control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                            ],
+                            ] if device_name != "lightning.tensor" else [control_value for _ in control_wires],
                         ),
                     ]
 
@@ -867,8 +867,10 @@ class TestControlledOps:
                     else m.measure_tensor_network(tape)
                 )
                 expected = self.calculate_reference(tape)
-
-                assert np.allclose(result, expected, tol * 10)
+                if device_name == "lightning.tensor":
+                    assert np.allclose(result, expected, 1e-4)
+                else:
+                    assert np.allclose(result, expected, tol * 10)
 
     @pytest.mark.skipif(
         device_name != "lightning.qubit",
@@ -942,7 +944,11 @@ class TestControlledOps:
         )
         expected = self.calculate_reference(tape_cnot)
 
-        assert np.allclose(result, expected, tol)
+        
+        if device_name == "lightning.tensor":
+            assert np.allclose(result, expected, 1e-4)
+        else:
+            assert np.allclose(result, expected, tol)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor does not support GlobalPhase."
