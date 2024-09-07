@@ -147,12 +147,6 @@ def stopping_condition(op: Operator) -> bool:
     return op.has_matrix and len(op.wires) <= 2 and op.name in _operations
 
 
-def stopping_condition_shots(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by ``lightning.tensor``
-    with finite shots."""
-    return stopping_condition(op) or isinstance(op, qml.ops.op_math.Conditional)
-
-
 def simulate(circuit: QuantumScript, tensornet: LightningTensorNet) -> Result:
     """Simulate a single quantum script.
 
@@ -201,8 +195,7 @@ class LightningTensor(Device):
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
-        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Defaults to ``None`` if not specified. Setting
+        shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
         method (str): Supported method. Currently, only ``mps`` is supported.
@@ -394,7 +387,7 @@ class LightningTensor(Device):
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
-            stopping_condition_shots=stopping_condition_shots,
+            stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
         )

@@ -177,9 +177,13 @@ class LightningTensorMeasurements:
         """
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
+                if isinstance(measurementprocess.obs, qml.Identity):
+                    return self.state_diagonalizing_gates
                 return self.expval
 
             if isinstance(measurementprocess, VarianceMP):
+                if isinstance(measurementprocess.obs, qml.Identity):
+                    return self.state_diagonalizing_gates
                 return self.var
 
             if isinstance(measurementprocess, ProbabilityMP):
