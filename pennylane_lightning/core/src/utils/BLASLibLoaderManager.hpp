@@ -29,7 +29,7 @@
 
 #include <iostream>
 
-#if not defined(__APPLE__) && not defined(_ENABLE_PYTHON)
+#if not defined(__APPLE__) && defined(_ENABLE_PYTHON)
 #include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #endif
@@ -71,10 +71,6 @@ namespace Pennylane::Util {
  * locations if no path is provided. The default locations are:
  * - The path provided by the SCIPY_LIBS_PATH macro.
  * - The path provided by the get_scipylibs_path() function.
- * - The path provided by the scipy.libs package.
- * - The path provided by the scipy.libs package in the site-packages directory.
- * - The path provided by the scipy.libs package in the site-packages directory
- * of the current Python environment.
  *
  * The class will search for the libraries in the following order:
  * - stdc
@@ -90,53 +86,15 @@ class BLASLibLoaderManager {
     static inline std::array<std::string, 5> priority_lib{
         "stdc", "gcc.", "quadmath", "gfortran", "openblas"};
     bool scipy_prefix_ = false;
-    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
-    std::shared_ptr<SharedLibLoader> blasLib;
+    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs_;
+    std::shared_ptr<SharedLibLoader> blasLib_;
 #ifdef __APPLE__
-    const std::string scipy_lib_path_macos_str =
+    const std::string scipy_lib_path_macos_str_ =
         "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
         "Frameworks/vecLib.framework/libLAPACK.dylib";
-#elif defined(_ENABLE_PYTHON)
-    std::string get_scipylibs_path_() {
-        // Exclusively for python calls
-        // LCOV_EXCL_START
-        std::string currentPathStr(getPath());
-        std::string site_packages_str("site-packages/");
-        std::string scipyPathStr;
-
-        std::size_t str_pos = currentPathStr.find(site_packages_str);
-        if (str_pos != std::string::npos) {
-            scipyPathStr =
-                currentPathStr.substr(0, str_pos + site_packages_str.size());
-            scipyPathStr += "scipy.libs";
-        }
-
-        if (std::filesystem::exists(scipyPathStr)) {
-            try {
-                // convert the relative path to absolute path
-                scipyPathStr =
-                    std::filesystem::canonical(scipyPathStr).string();
-            } catch (const std::exception &err) {
-                std::cerr << "Canonical path for scipy.libs"
-                          << " threw exception:\n"
-                          << err.what() << '\n';
-            }
-        } else {
-            try {
-                scipyPathStr = currentPathStr + "/../../scipy.libs/";
-                // convert the relative path to absolute path
-                scipyPathStr =
-                    std::filesystem::canonical(scipyPathStr).string();
-            } catch (const std::exception &err) {
-                std::cerr << "Canonical path for scipy.libs"
-                          << " threw exception:\n"
-                          << err.what() << '\n';
-            }
-        }
-        return scipyPathStr;
-        // LCOV_EXCL_STOP
-    }
-#elif not defined(_ENABLE_PYTHON)
+#elif defined(_SCIPY_LIBS_PATH)
+    const std::string scipy_lib_path_str_ = _SCIPY_LIBS_PATH;
+#else
     std::string get_scipylibs_path_worker_() {
         pybind11::object scipy_module =
             pybind11::module::import("scipy").attr("__file__");
@@ -145,6 +103,9 @@ class BLASLibLoaderManager {
         std::string scipy_lib_path =
             scipy_path.substr(0, scipy_path.find("scipy")) + "scipy.libs";
 
+        PL_ABORT_IF(!std::filesystem::exists(scipy_lib_path),
+                    "scipy.libs package not found.");
+
         return scipy_lib_path;
     }
 
@@ -152,16 +113,13 @@ class BLASLibLoaderManager {
      * @brief Get the path to the scipy.libs package.
      *
      * This function will return the path to the scipy.libs package. It will
-     * first try to get the path from the current Python environment. If the
-     * Python environment is not initialized, it will initialize it and get the
-     * path.
+     * first try to get the path from the current Python environment. This
+     * method only works for Python layer calls, which means a Python
+     * interpreter is running.
      *
      * @return std::string The path to the scipy.libs package.
      */
-    std::string get_scipylibs_path_() {
-        pybind11::scoped_interpreter scope_guard{};
-        return get_scipylibs_path_worker_();
-    }
+    std::string get_scipylibs_path_() { return get_scipylibs_path_worker_(); }
 #endif
     /**
      * @brief BLASLibLoaderManager.
@@ -191,7 +149,7 @@ class BLASLibLoaderManager {
 
         for (const auto &lib : availableLibs) {
             auto libPath = scipyLibsPath / lib.c_str();
-            blasLibs.emplace_back(
+            blasLibs_.emplace_back(
                 std::make_shared<SharedLibLoader>(libPath.string()));
         }
 
@@ -201,7 +159,7 @@ class BLASLibLoaderManager {
                                                 std::string::npos;
                                      }) != availableLibs.end();
 
-        blasLib = blasLibs.back();
+        blasLib_ = blasLibs_.back();
     }
     /**
      * @brief BLASLibLoaderManager.
@@ -215,15 +173,17 @@ class BLASLibLoaderManager {
         [[maybe_unused]] const std::string &blaslib_path_str) {
 #if defined(__APPLE__)
         // On macOS, use the default BLAS library path.
-        blasLib = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str);
+        blasLib_ = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str_);
+#elif defined(_SCIPY_LIBS_PATH)
+        init_helper_(scipy_lib_path_str_);
 #else
         // Given that the BLAS library path is provided by the Python layer, use
         // the provided path.
         std::filesystem::path blaslib_path(blaslib_path_str);
         std::string scipyPathStr;
-        if(std::filesystem::exists(blaslib_path)){
+        if (std::filesystem::exists(blaslib_path)) {
             scipyPathStr = blaslib_path_str;
-        }else{
+        } else {
             scipyPathStr = get_scipylibs_path_();
         }
         init_helper_(scipyPathStr);
@@ -251,7 +211,7 @@ class BLASLibLoaderManager {
      *
      * @return SharedLibLoader* The BLAS library.
      */
-    auto getBLASLib() -> SharedLibLoader * { return blasLib.get(); }
+    auto getBLASLib() -> SharedLibLoader * { return blasLib_.get(); }
 
     /**
      * @brief Get the BLAS libraries.

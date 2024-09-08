@@ -45,7 +45,7 @@ option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
-option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(ENABLE_PYTHON "Enable compilation of the Python module" OFF)
 
 # OpenMP
 find_package(OpenMP)
@@ -88,6 +88,13 @@ include(FetchContent)
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
     add_compile_definitions(_ENABLE_PYTHON=1)
+endif()
+
+if(SCIPY_LIBS_PATH AND NOT ENABLE_PYTHON)
+    add_compile_definitions(_SCIPY_LIBS_PATH="${SCIPY_LIBS_PATH}")
+    message(STATUS "SCIPY_LIBS_PATH: ${SCIPY_LIBS_PATH}")
+elseif(ENABLE_PYTHON AND SCIPY_LIBS_PATH)
+    message(FATAL_ERROR "SCIPY_LIBS_PATH is only supported when ENABLE_PYTHON is OFF.")
 endif()
 
 FetchContent_Declare(pybind11
