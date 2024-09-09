@@ -123,7 +123,7 @@ jobs:
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: python -m pip install cibuildwheel~=2.16.0 toml
+        run: python -m pip install cibuildwheel~=2.16.0 tomlkit
 
       - uses: docker/setup-qemu-action@v3
         name: Set up QEMU
