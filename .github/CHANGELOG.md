@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
+  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
+
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
