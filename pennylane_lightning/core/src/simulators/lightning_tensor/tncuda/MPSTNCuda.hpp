@@ -237,12 +237,16 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     };
 
     /**
-     * @brief Apply a 2+-wire gate to the MPS state. The gate is represented by
-     * a set of tensors. A MPO object will be created and applied to the quantum
-     * state.
+     * @briefCreates an MPO object with the gate's MPO decomposition data
+     * provided by the user and applies the MPO data to the compute graph.
      *
-     * @param tensors The tensor representation of each site of gate.
-     * @param wires The wire indices of the gate acts on.
+     * This API only works for the MPS backend.
+     *
+     * @param tensors The MPO representation of a gate. Each element in the
+     * outer vector represents a MPO tensor site.
+     * @param wires The wire indices of the gate acts on. The size of this
+     * vector should match the size of the `tensors` vector.
+     * @param maxMPOBondDim The maximum bond dimension of the MPO operator.
      */
     void applyMPOOperation(const std::vector<std::vector<ComplexT>> &tensors,
                            const std::vector<std::size_t> &wires,
@@ -257,7 +261,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             BaseType::getTNCudaHandle(), BaseType::getCudaDataType(),
             BaseType::getDevTag()));
 
-        // Apply the MPO operator to the quantum state
+        // Append the MPO operator to the compute graph
         int64_t operatorId;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
@@ -316,6 +320,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* std::size_t */ sizeof(cutoff)));
 
         // MPO configurations
+        // Note that CUTENSORNET_STATE_MPO_APPLICATION_INEXACT is applied if the
+        // `cutoff` value is not set to 0 for the MPO application
         cutensornetStateMPOApplication_t mpo_attribute =
             (cutoff == 0) ? CUTENSORNET_STATE_MPO_APPLICATION_EXACT
                           : CUTENSORNET_STATE_MPO_APPLICATION_INEXACT;

@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include "MPOTNCuda.hpp"
-#include "MPSTNCuda.hpp"
 
 using namespace Pennylane::LightningTensor::TNCuda;
 

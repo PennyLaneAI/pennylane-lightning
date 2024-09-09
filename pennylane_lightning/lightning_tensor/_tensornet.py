@@ -273,7 +273,7 @@ class LightningTensorNet:
         Returns:
             None
         """
-        # TODO: check if the gate_matrix has been already decomposed before
+        # TODO: Next step optimization: check if the gate_matrix has been already decomposed before
         # This requires a check API in the C++ layer
         sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
