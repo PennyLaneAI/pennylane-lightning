@@ -16,27 +16,9 @@
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, LightningDevice, LightningStateVector, device_name  # tested device
+from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig
 from pennylane.tape import QuantumScript
-
-if device_name == "lightning.qubit":
-    from pennylane_lightning.lightning_qubit.lightning_qubit import (
-        jacobian,
-        simulate,
-        simulate_and_jacobian,
-        simulate_and_vjp,
-        vjp,
-    )
-
-if device_name == "lightning.kokkos":
-    from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
-        jacobian,
-        simulate,
-        simulate_and_jacobian,
-        simulate_and_vjp,
-        vjp,
-    )
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -70,11 +52,13 @@ class TestJacobian:
     @staticmethod
     def process_and_execute(statevector, tape, execute_and_derivatives=False):
 
+        wires = statevector.num_wires
+        device = LightningDevice(wires)
         if execute_and_derivatives:
-            results, jac = simulate_and_jacobian(tape, statevector)
+            results, jac = device.simulate_and_jacobian(tape, statevector)
         else:
-            results = simulate(tape, statevector)
-            jac = jacobian(tape, statevector)
+            results = device.simulate(tape, statevector)
+            jac = device.jacobian(tape, statevector)
         return results, jac
 
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
@@ -147,11 +131,13 @@ class TestVJP:
     def process_and_execute(statevector, tape, dy, execute_and_derivatives=False):
         dy = [dy]
 
+        wires = statevector.num_wires
+        device = LightningDevice(wires)
         if execute_and_derivatives:
-            results, jac = simulate_and_vjp(tape, dy, statevector)
+            results, jac = device.simulate_and_vjp(tape, dy, statevector)
         else:
-            results = simulate(tape, statevector)
-            jac = vjp(tape, dy, statevector)
+            results = device.simulate(tape, statevector)
+            jac = device.vjp(tape, dy, statevector)
         return results, jac
 
     @pytest.mark.usefixtures("use_legacy_and_new_opmath")
