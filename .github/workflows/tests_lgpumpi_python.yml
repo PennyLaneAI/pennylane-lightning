@@ -182,7 +182,7 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          pattern: ubuntu-codecov*
+          pattern: ubuntu-codecov-*
           merge-multiple: true
 
       - name: Upload to Codecov
