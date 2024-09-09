@@ -109,12 +109,14 @@ _operations = frozenset(
         "SingleExcitation",
         "SingleExcitationPlus",
         "SingleExcitationMinus",
+        "DoubleExcitation",
         "DoubleExcitationPlus",
         "DoubleExcitationMinus",
         "OrbitalRotation",
         "QFT",
         "ECR",
         "BlockEncode",
+        "C(BlockEncode)",
     }
 )
 
