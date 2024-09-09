@@ -69,7 +69,7 @@ jobs:
         id: setup_python
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
@@ -189,7 +189,7 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          pattern: ubuntu-codecov*
+          pattern: ubuntu-codecov-*
           merge-multiple: true
 
       - name: Upload to Codecov

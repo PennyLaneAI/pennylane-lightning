@@ -5,12 +5,24 @@
 * Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
   [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
 
+* Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
+  [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
+
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
 ### Breaking changes
 
+* Remove support for Python 3.9.
+  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+
 ### Improvements
+
+* Migrate wheels artifacts to v4.
+  [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
+
+* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
+  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
 
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
@@ -21,6 +33,9 @@
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
+* Unify Lightning Kokkos device and Lightning Qubit device under a Lightning Base device
+  [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
+  
 ### Documentation
 
 ### Bug fixes
@@ -29,7 +44,11 @@
 
 This release contains contributions from (in alphabetical order):
 
+<<<<<<< HEAD
 Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
+=======
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+>>>>>>> 7943928e8abb7af1bdeaa3fe97b57d9487c0ef20
 
 ---
 
