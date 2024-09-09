@@ -93,9 +93,7 @@ class CMakeBuild(build_ext):
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
         configure_args += (
-            [f"-DPYTHON_EXECUTABLE={sys.executable}"]
-            if platform.system() == "Linux"
-            else [f"-DPython_EXECUTABLE={sys.executable}"]
+            [f"-DPYTHON_EXECUTABLE={sys.executable}", "-DPYBIND11_FINDPYTHON=ON"]
         )
 
         if platform.system() == "Windows":

@@ -67,7 +67,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install ninja cmake~=3.24.3 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }}
+            python -m pip install ninja cmake~=3.27.0 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }}
             dnf clean all -y
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
