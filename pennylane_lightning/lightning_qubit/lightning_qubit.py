@@ -19,6 +19,7 @@ from dataclasses import replace
 from functools import reduce
 from pathlib import Path
 from typing import Optional, Sequence
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
@@ -56,6 +57,7 @@ try:
 
     LQ_CPP_BINARY_AVAILABLE = True
 except ImportError as ex:
+    warn(str(ex), UserWarning)
     LQ_CPP_BINARY_AVAILABLE = False
 
 # The set of supported operations.
@@ -342,7 +344,6 @@ class LightningQubit(LightningBase):
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
-                f"Encountered import error: {ex}"
                 "Pre-compiled binaries for lightning.qubit are not available. "
                 "To manually compile from source, follow the instructions at "
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
