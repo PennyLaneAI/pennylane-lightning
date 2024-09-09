@@ -624,7 +624,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
                                           {{0}, {1}, {2}},
                                           {false, false, false});
 
-            mps_state.applyOperation("CNOT", {0, 1}, inverse, {0.3});
+            mps_state.applyOperation("CNOT", {0, 1}, inverse);
 
             mps_state_mpo.applyMPOOperation(mpo_cnot, {0, 1}, max_mpo_bond);
 
@@ -648,7 +648,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
                                           {{0}, {1}, {2}},
                                           {false, false, false});
 
-            mps_state.applyOperation("CNOT", {0, 2}, inverse, {0.3});
+            mps_state.applyOperation("CNOT", {0, 2}, inverse);
 
             mps_state_mpo.applyMPOOperation(mpo_cnot, {0, 2}, max_mpo_bond);
 
