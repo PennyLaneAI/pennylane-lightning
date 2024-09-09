@@ -29,6 +29,9 @@ if device_name == "lightning.kokkos":
         from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
     except ImportError:
         pass
+    
+if device_name == "lightning.gpu":
+    from pennylane_lightning.lightning_gpu._mpi_handler import LightningGPU_MPIHandler
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
@@ -39,8 +42,8 @@ if not LightningDevice._new_API:
         allow_module_level=True,
     )
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
+# if device_name == "lightning.gpu":
+#     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -99,10 +102,16 @@ def test_apply_state_vector_with_lightning_handle(tol):
     state_vector_1 = LightningStateVector(2)
     state_vector_1.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
 
-    state_vector_2 = LightningStateVector(2)
-    state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
+    if device_name == 'lightning.gpu':
+        with pytest.raises(qml.DeviceError, match="LightningGPU does not support allocate external state_vector."):
+            state_vector_2 = LightningStateVector(2)
+            state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
 
-    assert np.allclose(state_vector_1.state, state_vector_2.state, atol=tol, rtol=0)
+    else:
+        state_vector_2 = LightningStateVector(2)
+        state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
+
+        assert np.allclose(state_vector_1.state, state_vector_2.state, atol=tol, rtol=0)
 
 
 @pytest.mark.parametrize(

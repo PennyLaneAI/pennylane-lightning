@@ -43,12 +43,23 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
+from pennylane import QuantumFunctionError, DeviceError
 
-
+from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningGPUMeasurements
+from ._mpi_handler import LightningGPU_MPIHandler
 
+gate_cache_needs_hash = (
+    qml.BlockEncode,
+    qml.ControlledQubitUnitary,
+    qml.DiagonalQubitUnitary,
+    qml.MultiControlledX,
+    qml.OrbitalRotation,
+    qml.PSWAP,
+    qml.QubitUnitary,
+)
 
 class LightningGPUStateVector(LightningBaseStateVector):
     """Lightning GPU state-vector class.
@@ -73,18 +84,19 @@ class LightningGPUStateVector(LightningBaseStateVector):
         super().__init__(num_wires, dtype)
 
         self._device_name = device_name
+        
+        if mpi_handler is None:
+            mpi_handler = LightningGPU_MPIHandler(False, 0, None, num_wires, dtype)
 
-        self._num_global_wires = self._mpi_handler.num_global_wires
-        self._num_local_wires = self._mpi_handler.num_local_wires
+        self._num_global_wires = mpi_handler.num_global_wires
+        self._num_local_wires = mpi_handler.num_local_wires
 
-        self._dtype = dtype
         self._mpi_handler = mpi_handler
         self._sync = sync
 
-        self._wires = Wires(range(num_wires))
-        
+        # Initialize the state vector
         if self._mpi_handler.use_mpi:
-            self._lgpu_state = self._state_dtype()(
+            self._qubit_state = self._state_dtype()(
                 self._mpi_handler.mpi_manager,
                 self._mpi_handler.devtag,
                 self._mpi_handler.mpi_buf_size,
@@ -93,32 +105,42 @@ class LightningGPUStateVector(LightningBaseStateVector):
             )
 
         if not self._mpi_handler.use_mpi:
-            self._lgpu_state = self._state_dtype()(self.num_wires)
+            self._qubit_state = self._state_dtype()(self.num_wires)
             
-    @property
-    def dtype(self):
-        """Returns the state vector data type."""
-        return self._dtype
+        self._create_basis_state(0)
 
-    @property
-    def device_name(self):
-        """Returns the state vector device name."""
-        return self._device_name
+    def _state_dtype(self):
+        """Binding to Lightning Managed state vector C++ class.
 
-    @property
-    def wires(self):
-        """All wires that can be addressed on this device"""
-        return self._wires
+        Returns: the state vector class
+        """
+        if self._mpi_handler.use_mpi:
+            return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
+        else:
+            return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-    @property
-    def num_wires(self):
-        """Number of wires addressed on this device"""
-        return self._num_wires
-    
-    @property
-    def state_vector(self):
-        """Returns a handle to the state vector."""
-        return self._lgpu_state
+    def reset_state(self):
+        """Reset the device's state"""
+        # init the state vector to |00..0>
+        self._qubit_state.resetGPU(False)  # Sync reset
+
+    def syncD2H(self, state_vector, use_async=False):
+        """Copy the state vector data on device to a state vector on the host provided by the user
+        Args:
+            state_vector(array[complex]): the state vector array on host
+            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
+            Note: This function only supports synchronized memory copy.
+
+        **Example**
+        >>> dev = qml.device('lightning.gpu', wires=1)
+        >>> dev.apply([qml.PauliX(wires=[0])])
+        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
+        >>> dev.syncD2H(state_vector)
+        >>> print(state_vector)
+        [0.+0.j 1.+0.j]
+        """
+        self._qubit_state.DeviceToHost(state_vector.ravel(order="C"), use_async)
+            
 
     @property
     def state(self):
@@ -137,39 +159,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self.syncD2H(state)
         return state
 
-    def _state_dtype(self):
-        """Binding to Lightning Managed state vector C++ class.
-
-        Returns: the state vector class
-        """
-        if self._mpi_handler.use_mpi:
-            return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
-        else:
-            return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
-
-    def reset_state(self):
-        """Reset the device's state"""
-        # init the state vector to |00..0>
-        self._gpu_state.resetGPU(False)  # Sync reset
-
-        self._lgpu_state.resetStateVector()
-
-    def syncD2H(self, state_vector, use_async=False):
-        """Copy the state vector data on device to a state vector on the host provided by the user
-        Args:
-            state_vector(array[complex]): the state vector array on host
-            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
-            Note: This function only supports synchronized memory copy.
-
-        **Example**
-        >>> dev = qml.device('lightning.gpu', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
-        >>> dev.syncD2H(state_vector)
-        >>> print(state_vector)
-        [0.+0.j 1.+0.j]
-        """
-        self._lgpu_state.DeviceToHost(state_vector.ravel(order="C"), use_async)
 
     def syncH2D(self, state_vector, use_async=False):
         """Copy the state vector data on host provided by the user to the state vector on the device
@@ -190,7 +179,28 @@ class LightningGPUStateVector(LightningBaseStateVector):
         >>> print(res)
         1.0
         """
-        self._lgpu_state.HostToDevice(state_vector.ravel(order="C"), use_async)
+        self._qubit_state.HostToDevice(state_vector.ravel(order="C"), use_async)
+    
+    @staticmethod
+    def _asarray(arr, dtype=None):
+        arr = np.asarray(arr)  # arr is not copied
+
+        if arr.dtype.kind not in ["f", "c"]:
+            return arr
+
+        if not dtype:
+            dtype = arr.dtype
+
+        return arr
+
+    def _create_basis_state(self, index, use_async=False):
+        """Return a computational basis state over all wires.
+        Args:
+            index (int): integer representing the computational basis state.
+            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
+            Note: This function only supports synchronized memory copy.
+        """
+        self._qubit_state.setBasisState(index, use_async)
 
     def _apply_state_vector(self, state, device_wires, use_async=False):
         """Initialize the state vector on GPU with a specified state on host.
@@ -202,16 +212,21 @@ class LightningGPUStateVector(LightningBaseStateVector):
         use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
         """
-        # translate to wire labels used by device
-        # device_wires = self.map_wires(device_wires)
+        
+        if isinstance(state, self._qubit_state.__class__):
+            raise DeviceError("LightningGPU does not support allocate external state_vector.")
+            
+            state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
+            state.getState(state_data)
+            state = state_data
 
-        # state = self._asarray(state, dtype=self.C_DTYPE)  # this operation on host
+        state = self._asarray(state, dtype=self.dtype)  # this operation on host
         output_shape = [2] * self._num_local_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
             if self.num_wires == self._num_local_wires:
-                self.syncH2D(self._reshape(state, output_shape))
+                self.syncH2D(np.reshape(state, output_shape))
                 return
             local_state = np.zeros(1 << self._num_local_wires, dtype=self.C_DTYPE)
             self._mpi_handler.mpi_manager.Scatter(state, local_state, 0)
@@ -231,7 +246,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
 
         # set the state vector on GPU with the unravelled_indices and their corresponding values
-        self._lgpu_state.setStateVector(
+        self._qubit_state.setStateVector(
             ravelled_indices, state, use_async
         )  # this operation on device
 
@@ -243,24 +258,60 @@ class LightningGPUStateVector(LightningBaseStateVector):
             wires (Wires): wires that the provided computational state should be initialized on
         Note: This function does not support broadcasted inputs yet.
         """
-        # # translate to wire labels used by device
-        # device_wires = self.map_wires(wires)
+        # translate to wire labels used by device
+        device_wires = wires
 
-        # length of basis state parameter
         if not set(state.tolist()).issubset({0, 1}):
             raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
 
         if len(state) != len(wires):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
-        self._lgpu_state.setStateVector(list(state), list(wires))
-        # # get computational basis state number
-        # basis_states = 2 ** (self.num_wires - 1 - np.array(list(wires)))
-        # basis_states = qml.math.convert_like(basis_states, state)
-        # num = int(qml.math.dot(state, basis_states))
+        # get computational basis state number
+        basis_states = 1 << (self.num_wires - 1 - np.array(device_wires))
+        basis_states = qml.math.convert_like(basis_states, state)
+        num = int(qml.math.dot(state, basis_states))
 
-        # self._create_basis_state(num)
+        self._create_basis_state(num)
 
+    def _apply_lightning_controlled(self, operation):
+        """Apply an arbitrary controlled operation to the state tensor.
+
+        Args:
+            operation (~pennylane.operation.Operation): controlled operation to apply
+
+        Returns:
+            None
+        """
+        state = self.state_vector
+
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        name = operation.name
+        # Apply GlobalPhase
+        inv = False
+        param = operation.parameters[0]
+        wires = self.wires.indices(operation.wires)
+        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
+        state.apply(name, wires, inv, [[param]], matrix)
+        
+    def _apply_lightning_midmeasure(
+        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
+    ):
+        """Execute a MidMeasureMP operation and return the sample in mid_measurements.
+
+        Args:
+            operation (~pennylane.operation.Operation): mid-circuit measurement
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots.
+
+        Returns:
+            None
+        """
+        raise DeviceError("LightningGPU does not support Mid Circuit Measure.")
+    
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
@@ -302,14 +353,26 @@ class LightningGPUStateVector(LightningBaseStateVector):
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
+            elif isinstance(operation, qml.ops.Controlled) and isinstance(
+                operation.base, qml.GlobalPhase
+            ):  # apply n-controlled gate
+                # LGPU do not support the controlled gates except for GlobalPhase
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
-                # Inverse can be set to False since qml.matrix(operation) is already in
-                # inverted form
-                method = getattr(state, "applyMatrix")
                 try:
-                    method(qml.matrix(operation), wires, False)
+                    mat = qml.matrix(operation)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
-                    method(operation.matrix, wires, False)
+                    mat = operation.matrix
+                r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
+                param = [[r_dtype(operation.hash)]] if isinstance(operation, gate_cache_needs_hash) else []
+                if len(mat) == 0:
+                    raise ValueError("Unsupported operation")
+                self._qubit_state.apply(
+                    name,
+                    wires,
+                    False,
+                    param,
+                    mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
+                )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
+

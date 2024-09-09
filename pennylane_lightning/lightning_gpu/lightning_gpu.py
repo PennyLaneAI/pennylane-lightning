@@ -19,9 +19,8 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 
 from ctypes.util import find_library
 from importlib import util as imp_util
-from numbers import Number
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Callable, Union
 
 import numpy as np
 import pennylane as qml
@@ -43,7 +42,6 @@ from ._measurements import LightningGPUMeasurements
 from ._state_vector import LightningGPUStateVector
 
 try:
-
     from pennylane_lightning.lightning_gpu_ops import (
         DevPool,
         backend_info,
@@ -58,7 +56,8 @@ try:
         from pennylane_lightning.lightning_gpu_ops import (
             DevTag,
             MPIManager,
-        )            
+        )
+        from ._mpi_handler import LightningGPU_MPIHandler            
         MPI_SUPPORT = True
     except ImportError:
         MPI_SUPPORT = False
@@ -150,122 +149,6 @@ _observables = frozenset(
     }
 )
 
-gate_cache_needs_hash = (
-    qml.BlockEncode,
-    qml.ControlledQubitUnitary,
-    qml.DiagonalQubitUnitary,
-    qml.MultiControlledX,
-    qml.OrbitalRotation,
-    qml.PSWAP,
-    qml.QubitUnitary,
-)
-
-# MPI options
-class LightningGPU_MPIHandler():
-    """MPI handler for PennyLane Lightning GPU device  
-    
-    MPI handler to use a GPU-backed Lightning device using NVIDIA cuQuantum SDK with parallel capabilities.
-    
-    Use the MPI library is necessary to initialize different variables and methods to handle the data across  nodes and perform checks for memory allocation on each device. 
-    
-    Args:
-        mpi (bool): declare if the device will use the MPI support.
-        mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-        dev_pool (Callable): Method to handle the GPU devices available.
-        num_wires (int): the number of wires to initialize the device wit.h 
-        c_dtype (np.complex64, np.complex128): Datatypes for statevector representation
-        
-    """
-
-    def __init__(self, 
-                 mpi: bool, 
-                 mpi_buf_size: int, 
-                 dev_pool: Callable, 
-                 num_wires: int, 
-                 c_dtype: Union[np.complex64, np.complex128]) -> None:
-        
-        self.use_mpi = mpi
-        self.mpi_but_size = mpi_buf_size
-        self._dp = dev_pool
-        
-        if self.use_mpi: 
-            
-            if not MPI_SUPPORT:
-                raise ImportError("MPI related APIs are not found.")
-
-            if mpi_buf_size < 0:
-                raise TypeError(f"Unsupported mpi_buf_size value: {mpi_buf_size}, should be >= 0")
-
-            if (mpi_buf_size > 0 
-                and (mpi_buf_size & (mpi_buf_size - 1))):
-
-                raise ValueError(f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2.")
-            
-            # After check if all MPI parameter are ok
-            self.mpi_manager, self.devtag = self._mpi_init_helper(num_wires)
-
-            # set the number of global and local wires
-            commSize = self._mpi_manager.getSize()
-            self.num_global_wires = commSize.bit_length() - 1
-            self.num_local_wires = num_wires - self._num_global_wires
-            
-            # Memory size in bytes
-            sv_memsize = np.dtype(c_dtype).itemsize * (1 << self.num_local_wires)
-            if self._mebibytesToBytes(mpi_buf_size) > sv_memsize:
-                raise ValueError("The MPI buffer size is larger than the local state vector size.")
-
-        if not self.use_mpi: 
-            self.num_local_wires = num_wires
-
-    def _mebibytesToBytes(mebibytes):
-        return mebibytes * 1024 * 1024
-    
-    def _mpi_init_helper(self, num_wires):
-        """Set up MPI checks and initializations."""
-        
-        # initialize MPIManager and config check in the MPIManager ctor
-        mpi_manager = MPIManager()
-        
-        # check if number of GPUs per node is larger than number of processes per node
-        numDevices = self._dp.getTotalDevices()
-        numProcsNode = mpi_manager.getSizeNode()
-        
-        if numDevices < numProcsNode:
-            raise ValueError(
-                "Number of devices should be larger than or equal to the number of processes on each node."
-            )
-        
-        # check if the process number is larger than number of statevector elements
-        if mpi_manager.getSize() > (1 << (num_wires - 1)):
-            raise ValueError(
-                "Number of processes should be smaller than the number of statevector elements."
-            )
-        
-        # set GPU device
-        rank = self._mpi_manager.getRank()
-        deviceid = rank % numProcsNode
-        self._dp.setDeviceID(deviceid)
-        devtag = DevTag(deviceid)
-        
-        return (mpi_manager, devtag)
-
-
-def check_gpu_resources() -> None:
-    """ Check the available resources of each Nvidia GPU """
-    if (find_library("custatevec") is None 
-        and not imp_util.find_spec("cuquantum")):
-        
-        raise ImportError(
-            "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
-        )
-        
-    if not DevPool.getTotalDevices():
-        raise ValueError("No supported CUDA-capable device found")
-
-    if not is_gpu_supported():
-        raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
-    
-
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     # To avoid building matrices beyond the given thresholds.
@@ -318,6 +201,21 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
 
     name = "adjoint + lightning.gpu"
     return 0
+
+def check_gpu_resources() -> None:
+    """ Check the available resources of each Nvidia GPU """
+    if (find_library("custatevec") is None 
+        and not imp_util.find_spec("cuquantum")):
+        
+        raise ImportError(
+            "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
+        )
+        
+    if not DevPool.getTotalDevices():
+        raise ValueError("No supported CUDA-capable device found")
+
+    if not is_gpu_supported():
+        raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
 
 @simulator_tracking
@@ -392,26 +290,20 @@ class LightningGPU(LightningBase):
         )
 
         # Set the attributes to call the LightningGPU classes
+        self._set_Lightning_classes()
 
         # GPU specific options
+        self._dp = DevPool()
+        self._sync = sync
 
         # Creating the state vector
         
-        self._dp = DevPool()
-        self._c_dtype = c_dtype
-        self._batch_obs = batch_obs
-        self._sync = sync
-        
-        if isinstance(wires, int):
-            self._wire_map = None  # should just use wires as is
-        else:
-            self._wire_map = {w: i for i, w in enumerate(self.wires)}
-
         self._mpi_handler = LightningGPU_MPIHandler(mpi, mpi_buf_size, self._dp, self.num_wires, c_dtype)
         
         self._num_local_wires = self._mpi_handler.num_local_wires
 
-        self._statevector = LightningGPUStateVector(self.num_wires, dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync)
+        print("FSDX")
+        self._statevector = self.LightningStateVector(self.num_wires, dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync)
 
 
     @property
@@ -421,7 +313,7 @@ class LightningGPU(LightningBase):
 
     def _set_Lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
-        return 0
+        self.LightningStateVector = LightningGPUStateVector
 
     def _setup_execution_config(self, config):
         """
