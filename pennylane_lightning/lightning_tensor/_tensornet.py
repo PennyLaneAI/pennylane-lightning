@@ -285,7 +285,7 @@ class LightningTensorNet:
 
         matrix = gate_matrix.astype(self._c_dtype)
 
-        max_mpo_bond_dim = 2 ** len(wires)  # Full decomposition
+        max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
 
         tensor_shape = [2] * len(wires) * 2
 

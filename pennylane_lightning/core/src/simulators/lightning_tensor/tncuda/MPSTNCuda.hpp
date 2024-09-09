@@ -321,7 +321,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         // MPO configurations
         // Note that CUTENSORNET_STATE_MPO_APPLICATION_INEXACT is applied if the
-        // `cutoff` value is not set to 0 for the MPO application
+        // `cutoff` value is not set to 0 for the MPO application.
         cutensornetStateMPOApplication_t mpo_attribute =
             (cutoff == 0) ? CUTENSORNET_STATE_MPO_APPLICATION_EXACT
                           : CUTENSORNET_STATE_MPO_APPLICATION_INEXACT;

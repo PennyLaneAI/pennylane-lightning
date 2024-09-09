@@ -64,14 +64,13 @@ namespace Pennylane::LightningTensor::TNCuda {
  the life time of the tensor network it's applied to. Note that the gate tensor
  should be permuted to ascending order and decomposed into MPO sites before
  passing to this class.
+
  * @tparam PrecisionT Floating point type.
  */
 template <class PrecisionT> class MPOTNCuda {
   private:
     using ComplexT = std::complex<PrecisionT>;
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
-
-    // std::vector<std::size_t> wires_; // pennylane  wires convention
 
     cutensornetNetworkOperator_t MPOOperator_;
     cuDoubleComplex coeff_ =
@@ -110,7 +109,7 @@ template <class PrecisionT> class MPOTNCuda {
      *
      * @return std::vector<void *>
      */
-    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<void *> {
+    [[nodiscard]] auto getTensorsDataPtr_() -> std::vector<void *> {
         std::vector<void *> tensorsDataPtr(numMPOSites_);
         for (std::size_t i = 0; i < numMPOSites_; i++) {
             tensorsDataPtr[i] = reinterpret_cast<void *>(
@@ -253,7 +252,7 @@ template <class PrecisionT> class MPOTNCuda {
             getModeExtentsPtr_().data(),
             /* const int64_t *tensorModeStrides[] */ nullptr,
             /* const void * */
-            const_cast<const void **>(getTensorsDataPtr().data()),
+            const_cast<const void **>(getTensorsDataPtr_().data()),
             /* cutensornetBoundaryCondition_t */ boundaryCondition_,
             /* int64_t * */ &componentIdx_));
     }
