@@ -78,12 +78,6 @@ class TestComparison:
     ):
         """Test a single-qubit circuit"""
 
-        if (
-            lightning_dev_version == lightning_backend_batch_obs_dev
-            and device_name == "lightning.kokkos"
-        ):
-            pytest.skip(reason="Lightning Kokkos does not support batch_obs")
-
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -123,12 +117,6 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a two-qubit circuit"""
-
-        if (
-            lightning_dev_version == lightning_backend_batch_obs_dev
-            and device_name == "lightning.kokkos"
-        ):
-            pytest.skip(reason="Lightning Kokkos does not support batch_obs")
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
@@ -178,12 +166,6 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a three-qubit circuit"""
-
-        if (
-            lightning_dev_version == lightning_backend_batch_obs_dev
-            and device_name == "lightning.kokkos"
-        ):
-            pytest.skip(reason="Lightning Kokkos does not support batch_obs")
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
@@ -241,12 +223,6 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a four-qubit circuit"""
-
-        if (
-            lightning_dev_version == lightning_backend_batch_obs_dev
-            and device_name == "lightning.kokkos"
-        ):
-            pytest.skip(reason="Lightning Kokkos does not support batch_obs")
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
@@ -308,11 +284,6 @@ class TestComparison:
         self, monkeypatch, stateprep, wires, lightning_dev_version, num_threads
     ):
         """Test an n-qubit circuit"""
-        if (
-            lightning_dev_version == lightning_backend_batch_obs_dev
-            and device_name == "lightning.kokkos"
-        ):
-            pytest.skip(reason="Lightning Kokkos does not support batch_obs")
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
