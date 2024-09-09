@@ -44,11 +44,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-<<<<<<< HEAD
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
-=======
 Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
->>>>>>> 7943928e8abb7af1bdeaa3fe97b57d9487c0ef20
 
 ---
 
