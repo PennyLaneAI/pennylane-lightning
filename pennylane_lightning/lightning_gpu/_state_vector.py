@@ -342,6 +342,11 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 invert_param = False
             method = getattr(state, name, None)
             wires = list(operation.wires)
+            
+            # print("statevector: _apply_lightning:  state:",state.__dir__)
+            # print("statevector: _apply_lightning:    ops:",operation)
+            # print("statevector: _apply_lightning:   name:",name)
+            # print("statevector: _apply_lightning: method:",method)
 
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
@@ -364,10 +369,17 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     mat = operation.matrix
+                    
+                
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
                 param = [[r_dtype(operation.hash)]] if isinstance(operation, gate_cache_needs_hash) else []
+                # param = []
                 if len(mat) == 0:
                     raise ValueError("Unsupported operation")
+
+                # print("statevector: _apply_lightning: method:",method)
+                # print("statevector: _apply_lightning: mat:", mat)
+
                 self._qubit_state.apply(
                     name,
                     wires,
@@ -375,4 +387,29 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     param,
                     mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                 )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
+                
+                # ----------------------------------------------------------
+                # method = getattr(state, "applyMatrix")
+                # # print("statevector: _apply_lightning: method:",method)
+                # # print("statevector: _apply_lightning: matrix:",qml.matrix(operation))
+                # # print("statevector: _apply_lightning: matrix:",operation.matrix)
+                
+                # try:
+                #     mat = qml.matrix(operation)
+                # except AttributeError:  # pragma: no cover
+                #     # To support older versions of PL
+                #     mat = operation.matrix
+
+                # # mat = mat.ravel(order='C')
+                # # mat = mat.conjugate().transpose()
+                
+                # print("statevector: _apply_lightning: mat:", mat)
+                # method(mat.ravel(order="C"), wires, False)
+                
+                # # try:
+                # #     method(mat, wires, False)
+                # # except AttributeError:  # pragma: no cover
+                # #     # To support older versions of PL
+                # #     method(mat, wires, False)
+
 

@@ -192,8 +192,14 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             else:
                 name = operation.name
                 invert_param = False
+
             method = getattr(state, name, None)
             wires = list(operation.wires)
+
+            print("statevector: _apply_lightning:  state:",state.__dir__)
+            print("statevector: _apply_lightning:    ops:",operation)
+            print("statevector: _apply_lightning:   name:",name)
+            print("statevector: _apply_lightning: method:",method)
 
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
@@ -219,8 +225,14 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 # Inverse can be set to False since qml.matrix(operation) is already in
                 # inverted form
                 method = getattr(state, "applyMatrix")
-                try:
-                    method(qml.matrix(operation), wires, False)
-                except AttributeError:  # pragma: no cover
-                    # To support older versions of PL
-                    method(operation.matrix, wires, False)
+                print("statevector: _apply_lightning: method:",method)
+                print("statevector: _apply_lightning: matrix:",qml.matrix(operation))
+                # print("statevector: _apply_lightning: matrix:",operation.matrix)
+                
+                method(qml.matrix(operation), wires, False)
+                
+                # try:
+                #     method(qml.matrix(operation), wires, False)
+                # except AttributeError:  # pragma: no cover
+                #     # To support older versions of PL
+                #     method(operation.matrix, wires, False)
