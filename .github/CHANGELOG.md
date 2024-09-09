@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Update Pybind11 2o 2.13.5.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
+
 * Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
   [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
 
