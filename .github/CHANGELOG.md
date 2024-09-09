@@ -16,6 +16,9 @@
 
 ### Breaking changes
 
+* Remove support for Python 3.9.
+  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+
 ### Improvements
 
 * Update GitHub actions in response to a high-severity vulnerability.
@@ -35,7 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
