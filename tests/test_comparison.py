@@ -117,6 +117,7 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a two-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -165,6 +166,7 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a three-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -221,6 +223,7 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a four-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -281,6 +284,7 @@ class TestComparison:
         self, monkeypatch, stateprep, wires, lightning_dev_version, num_threads
     ):
         """Test an n-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
