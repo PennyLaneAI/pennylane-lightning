@@ -23,7 +23,6 @@ from typing import Optional
 
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
