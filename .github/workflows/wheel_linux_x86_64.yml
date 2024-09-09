@@ -141,7 +141,7 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.10 -m pip install cibuildwheel~=2.16.0 toml
+        run: python3.10 -m pip install cibuildwheel~=2.16.0 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
@@ -203,17 +203,18 @@ jobs:
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
           retention-days: 1
           include-hidden-files: true
 
   upload-pypi:
-    needs: linux-wheels-x86-64
+    needs: [set_wheel_build_matrix, linux-wheels-x86-64]
     strategy:
       matrix:
         arch: [x86_64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'release' ||
@@ -222,7 +223,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to PyPI

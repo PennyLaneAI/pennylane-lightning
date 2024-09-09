@@ -15,6 +15,12 @@
 
 ### Improvements
 
+* Migrate wheels artifacts to v4.
+  [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
+
+* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
+  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
+
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
@@ -24,6 +30,9 @@
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
+* Unify Lightning Kokkos device and Lightning Qubit device under a Lightning Base device
+  [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
+  
 ### Documentation
 
 ### Bug fixes
@@ -32,7 +41,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
