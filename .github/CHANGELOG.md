@@ -27,6 +27,9 @@
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
+* Unify Lightning Kokkos device and Lightning Qubit device under a Lightning Base device
+  [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
+  
 ### Documentation
 
 ### Bug fixes
