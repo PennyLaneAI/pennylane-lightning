@@ -15,6 +15,9 @@
 
 ### Improvements
 
+* Migrate wheels artifacts to v4.
+  [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
+
 * Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
   [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
 
@@ -41,7 +44,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
