@@ -41,7 +41,7 @@ jobs:
         id: pyver
         run: |
           echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
-            --min-version=3.9 \
+            --min-version=3.10 \
             --max-version=3.12 --range)" >> $GITHUB_OUTPUT
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
