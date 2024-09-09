@@ -1,7 +1,7 @@
 name: Wheel::Linux::ARM::CUDA
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture ARM 64 and store it as artifacts.
-#                   Python versions: 3.9, 3.10, 3.11, 3.12.
+#                   Python versions: 3.10, 3.11, 3.12.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -41,7 +41,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
     timeout-minutes: 45
-    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12" }')[matrix.cibw_build] }})
+    name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ matrix.os }}
 
     steps:

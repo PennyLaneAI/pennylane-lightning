@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+* Remove support for Python 3.9.
+  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+
 ### Improvements
 
 * Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
@@ -32,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Shuli Shu
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 
