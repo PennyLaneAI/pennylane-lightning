@@ -96,10 +96,6 @@ class TestExpval:
         ) / np.sqrt(2)
         assert np.allclose(res, expected, tol)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.Projector()",
-    )
     def test_projector_expectation(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
