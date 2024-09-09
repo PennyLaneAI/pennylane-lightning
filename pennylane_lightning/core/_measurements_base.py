@@ -1,4 +1,4 @@
-# Copyright 2024 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,24 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for tensornet measurements.
+Class implementation for state vector measurements.
 """
 
-# pylint: disable=import-error, no-name-in-module, ungrouped-imports
-try:
-    from pennylane_lightning.lightning_tensor_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
-    pass
-
-from functools import reduce
-from typing import Callable, List, Union
+from abc import ABC, abstractmethod
+from typing import Any, Callable, List, Union
 
 import numpy as np
 import pennylane as qml
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,
-    CountsMP,
     ExpectationMP,
     MeasurementProcess,
     ProbabilityMP,
@@ -47,34 +40,41 @@ from pennylane.wires import Wires
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
-class LightningTensorMeasurements:
-    """Lightning Tensor Measurements class
+class LightningBaseMeasurements(ABC):
+    """Lightning [Device] Measurements class
 
-    Measures the tensor network provided by the LightningTensorNet class.
+    A class that serves as a base class for Lightning state-vector simulators.
+    Measures the state provided by the Lightning [Device] StateVector class.
 
     Args:
-        tensor_network(LightningTensorNet): Lightning tensornet class containing the tensor network to be measured.
+        qubit_state(Lightning [Device] StateVector): Lightning state-vector class containing the state vector to be measured.
     """
 
     def __init__(
         self,
-        tensor_network,
+        qubit_state: Any,
     ) -> None:
-        self._tensornet = tensor_network
-        self._dtype = tensor_network.dtype
-        self._measurement_lightning = self._measurement_dtype()(tensor_network.tensornet)
+        self._qubit_state = qubit_state
+
+        # Dummy for the C++ bindings
+        self._measurement_lightning = None
+
+    @property
+    def qubit_state(self):
+        """Returns a handle to the Lightning [Device] StateVector object."""
+        return self._qubit_state
 
     @property
     def dtype(self):
         """Returns the simulation data type."""
-        return self._dtype
+        return self._qubit_state.dtype
 
+    @abstractmethod
     def _measurement_dtype(self):
-        """Binding to Lightning Measurements C++ class.
+        """Binding to Lightning [Device] Measurements C++ class.
 
         Returns: the Measurements class
         """
-        return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
@@ -87,13 +87,11 @@ class LightningTensorMeasurements:
             TensorLike: the result of the measurement
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
-        self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
-        state_array = self._tensornet.state
-        wires = Wires(range(self._tensornet.num_wires))
+        self._qubit_state.apply_operations(diagonalizing_gates)
+        state_array = self._qubit_state.state
+        wires = Wires(range(self._qubit_state.num_wires))
         result = measurementprocess.process_state(state_array, wires)
-        self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
-        self._tensornet.appendMPSFinalState()
+        self._qubit_state.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
         return result
 
     # pylint: disable=protected-access
@@ -101,22 +99,36 @@ class LightningTensorMeasurements:
         """Expectation value of the supplied observable contained in the MeasurementProcess.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to apply to the tensor network
+            measurementprocess (StateMeasurement): measurement to apply to the state
 
         Returns:
             Expectation value of the observable
         """
+
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError("Sparse Hamiltonians are not supported.")
+            # ensuring CSR sparse representation.
+            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+                wire_order=list(range(self._qubit_state.num_wires))
+            ).tocsr(copy=False)
+            return self._measurement_lightning.expval(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
+            )
 
-        if isinstance(measurementprocess.obs, qml.Hermitian):
-            if len(measurementprocess.obs.wires) > 1:
-                raise ValueError("The number of Hermitian observables target wires should be 1.")
+        if (
+            isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
+            or (measurementprocess.obs.arithmetic_depth > 0)
+            or isinstance(measurementprocess.obs.name, List)
+        ):
+            ob_serialized = QuantumScriptSerializer(
+                self._qubit_state.device_name, self.dtype == np.complex64
+            )._ob(measurementprocess.obs)
+            return self._measurement_lightning.expval(ob_serialized)
 
-        ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
-        )._ob(measurementprocess.obs)
-        return self._measurement_lightning.expval(ob_serialized)
+        return self._measurement_lightning.expval(
+            measurementprocess.obs.name, measurementprocess.obs.wires
+        )
 
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
@@ -129,20 +141,16 @@ class LightningTensorMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         if diagonalizing_gates:
-            self._tensornet.apply_operations(diagonalizing_gates)
-            self._tensornet.appendMPSFinalState()
+            self._qubit_state.apply_operations(diagonalizing_gates)
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         if diagonalizing_gates:
-            self._tensornet.apply_operations(
+            self._qubit_state.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
-            self._tensornet.appendMPSFinalState()
         return results
 
     def var(self, measurementprocess: MeasurementProcess):
-        """Variance of the supplied observable contained in the MeasurementProcess. Note that the variance is
-        calculated as <obs**2> - <obs>**2. The current implementation only supports single-wire observables.
-        Observables with more than 1 wire, projector and sparse-hamiltonian are not supported.
+        """Variance of the supplied observable contained in the MeasurementProcess.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state
@@ -150,19 +158,31 @@ class LightningTensorMeasurements:
         Returns:
             Variance of the observable
         """
+
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError(
-                "The var measurement does not support sparse Hamiltonian observables."
+            # ensuring CSR sparse representation.
+            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+                wire_order=list(range(self._qubit_state.num_wires))
+            ).tocsr(copy=False)
+            return self._measurement_lightning.var(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
             )
 
-        if isinstance(measurementprocess.obs, qml.Hermitian):
-            if len(measurementprocess.obs.wires) > 1:
-                raise ValueError("The number of Hermitian observables target wires should be 1.")
+        if (
+            isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
+            or (measurementprocess.obs.arithmetic_depth > 0)
+            or isinstance(measurementprocess.obs.name, List)
+        ):
+            ob_serialized = QuantumScriptSerializer(
+                self._qubit_state.device_name, self.dtype == np.complex64
+            )._ob(measurementprocess.obs)
+            return self._measurement_lightning.var(ob_serialized)
 
-        ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
-        )._ob(measurementprocess.obs)
-        return self._measurement_lightning.var(ob_serialized)
+        return self._measurement_lightning.var(
+            measurementprocess.obs.name, measurementprocess.obs.wires
+        )
 
     def get_measurement_function(
         self, measurementprocess: MeasurementProcess
@@ -170,79 +190,81 @@ class LightningTensorMeasurements:
         """Get the appropriate method for performing a measurement.
 
         Args:
-            measurementprocess (MeasurementProcess): measurement process to apply to the graph
+            measurementprocess (MeasurementProcess): measurement process to apply to the state
 
         Returns:
             Callable: function that returns the measurement result
         """
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
-                if isinstance(measurementprocess.obs, qml.Identity):
+                if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
                     return self.state_diagonalizing_gates
                 return self.expval
-
-            if isinstance(measurementprocess, VarianceMP):
-                if isinstance(measurementprocess.obs, qml.Identity):
-                    return self.state_diagonalizing_gates
-                return self.var
 
             if isinstance(measurementprocess, ProbabilityMP):
                 return self.probs
 
+            if isinstance(measurementprocess, VarianceMP):
+                if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
+                    return self.state_diagonalizing_gates
+                return self.var
             if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates
 
-        raise NotImplementedError("Unsupported measurement type.")
+        raise NotImplementedError
 
     def measurement(self, measurementprocess: MeasurementProcess) -> TensorLike:
-        """Apply a measurement process to a tensor network.
+        """Apply a measurement process to a state.
 
         Args:
-            measurementprocess (MeasurementProcess): measurement process to apply to the graph
+            measurementprocess (MeasurementProcess): measurement process to apply to the state
 
         Returns:
             TensorLike: the result of the measurement
         """
         return self.get_measurement_function(measurementprocess)(measurementprocess)
 
-    def measure_tensor_network(self, circuit: QuantumScript) -> Result:
+    def measure_final_state(self, circuit: QuantumScript, mid_measurements=None) -> Result:
         """
-        Perform the measurements required by the circuit on the provided tensor network.
+        Perform the measurements required by the circuit on the provided state.
 
-        This is an internal function that will be called by the successor to ``lightning.tensor``.
+        This is an internal function that will be called by the successor to ``lightning.[device]``.
 
         Args:
             circuit (QuantumScript): The single circuit to simulate
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
 
         Returns:
             Tuple[TensorLike]: The measurement results
         """
 
-        if circuit.shots:
-            # finite-shot case
-            results = self.measure_with_samples(
-                circuit.measurements,
-                shots=circuit.shots,
-            )
-
+        if not circuit.shots:
+            # analytic case
             if len(circuit.measurements) == 1:
-                if circuit.shots.has_partitioned_shots:
-                    return tuple(res[0] for res in results)
+                return self.measurement(circuit.measurements[0])
 
-                return results[0]
+            return tuple(self.measurement(mp) for mp in circuit.measurements)
 
-            return results
-        # analytic case
+        # finite-shot case
+        results = self.measure_with_samples(
+            circuit.measurements,
+            shots=circuit.shots,
+            mid_measurements=mid_measurements,
+        )
+
         if len(circuit.measurements) == 1:
-            return self.measurement(circuit.measurements[0])
+            if circuit.shots.has_partitioned_shots:
+                return tuple(res[0] for res in results)
 
-        return tuple(self.measurement(mp) for mp in circuit.measurements)
+            return results[0]
 
-    # pylint:disable = too-many-arguments
+        return results
+
     def measure_with_samples(
         self,
         measurements: List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]],
         shots: Shots,
+        mid_measurements: dict = None,
     ) -> List[TensorLike]:
         """
         Returns the samples of the measurement process performed on the given state.
@@ -253,11 +275,13 @@ class LightningTensorMeasurements:
             measurements (List[Union[SampleMeasurement, ClassicalShadowMP, ShadowExpvalMP]]):
                 The sample measurements to perform
             shots (Shots): The number of samples to take
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
 
         Returns:
             List[TensorLike[Any]]: Sample measurement results
         """
-        mps = measurements
+        # last N measurements are sampling MCMs in ``dynamic_one_shot`` execution mode
+        mps = measurements[0 : -len(mid_measurements)] if mid_measurements else measurements
         groups, indices = _group_measurements(mps)
 
         all_res = []
@@ -274,7 +298,9 @@ class LightningTensorMeasurements:
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
                 )
-            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
+            if isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Hamiltonian):
+                all_res.extend(self._measure_hamiltonian_with_samples(group, shots))
+            elif isinstance(group[0], ExpectationMP) and isinstance(group[0].obs, Sum):
                 all_res.extend(self._measure_sum_with_samples(group, shots))
             else:
                 all_res.extend(self._measure_with_samples_diagonalizing_gates(group, shots))
@@ -286,6 +312,10 @@ class LightningTensorMeasurements:
         sorted_res = tuple(
             res for _, res in sorted(list(enumerate(all_res)), key=lambda r: flat_indices[r[0]])
         )
+
+        # append MCM samples
+        if mid_measurements:
+            sorted_res += tuple(mid_measurements.values())
 
         # put the shot vector axis before the measurement axis
         if shots.has_partitioned_shots:
@@ -306,9 +336,9 @@ class LightningTensorMeasurements:
                 qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)
             ]
 
-        self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
+        self._qubit_state.apply_operations(diagonalizing_gates)
 
+    @abstractmethod
     def _measure_with_samples_diagonalizing_gates(
         self,
         mps: List[SampleMeasurement],
@@ -326,38 +356,26 @@ class LightningTensorMeasurements:
         Returns:
             TensorLike[Any]: Sample measurement results
         """
-        # apply diagonalizing gates
-        self._apply_diagonalizing_gates(mps)
 
-        wires = reduce(sum, (mp.wires for mp in mps))
+    def _measure_hamiltonian_with_samples(
+        self,
+        mp: List[SampleMeasurement],
+        shots: Shots,
+    ):
+        # the list contains only one element based on how we group measurements
+        mp = mp[0]
 
-        def _process_single_shot(samples):
-            processed = []
-            for mp in mps:
-                res = mp.process_samples(samples, wires)
-                if not isinstance(mp, CountsMP):
-                    res = qml.math.squeeze(res)
+        # if the measurement process involves a Hamiltonian, measure each
+        # of the terms separately and sum
+        def _sum_for_single_shot(s):
+            results = self.measure_with_samples(
+                [ExpectationMP(t) for t in mp.obs.terms()[1]],
+                s,
+            )
+            return sum(c * res for c, res in zip(mp.obs.terms()[0], results))
 
-                processed.append(res)
-
-            return tuple(processed)
-
-        samples = self._measurement_lightning.generate_samples(
-            list(wires), shots.total_shots
-        ).astype(int, copy=False)
-
-        self._apply_diagonalizing_gates(mps, adjoint=True)
-
-        # if there is a shot vector, use the shots.bins generator to
-        # split samples w.r.t. the shots
-        processed_samples = []
-        for lower, upper in shots.bins():
-            result = _process_single_shot(samples[..., lower:upper, :])
-            processed_samples.append(result)
-
-        return (
-            tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
-        )
+        unsqueezed_results = tuple(_sum_for_single_shot(type(shots)(s)) for s in shots)
+        return [unsqueezed_results] if shots.has_partitioned_shots else [unsqueezed_results[0]]
 
     def _measure_sum_with_samples(
         self,
