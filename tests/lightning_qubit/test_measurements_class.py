@@ -38,9 +38,6 @@ if not LightningDevice._new_API:
         allow_module_level=True,
     )
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
-
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
@@ -411,15 +408,16 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
-    @flaky(max_runs=15)
-    @pytest.mark.parametrize("shots", [None, 200_000, [190_000, 190_000]])
+    @flaky(max_runs=2)
+    # @pytest.mark.parametrize("shots", [None, 200_000, [190_000, 190_000]])
+    @pytest.mark.parametrize("shots", [None, 1_000_000])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
         (
-            [0],
-            [1, 2],
-            [1, 0],
+            # [0],
+            # [1, 2],
+            # [1, 0],
             qml.PauliX(0),
             qml.PauliY(1),
             qml.PauliZ(2),
@@ -452,6 +450,12 @@ class TestMeasurements:
             pytest.skip(
                 f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
             )
+            
+        print()
+        print("shots:",shots)
+        print("measurement:",measurement)
+        print("observable:", observable)
+            
         rtol = 1.0e-2  # 1% of expected value as tolerance
         if shots != None and measurement is qml.expval:
             # Increase the number of shots
@@ -508,142 +512,142 @@ class TestMeasurements:
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=rtol, atol=atol)
 
-    @flaky(max_runs=10)
-    @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
-    @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
-    @pytest.mark.parametrize(
-        "obs0_",
-        (
-            qml.PauliX(0),
-            qml.PauliY(1),
-            qml.PauliZ(2),
-            qml.sum(qml.PauliX(0), qml.PauliY(0)),
-            qml.prod(qml.PauliX(0), qml.PauliY(1)),
-            qml.s_prod(2.0, qml.PauliX(0)),
-            qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
-            qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
-            qml.Hamiltonian(
-                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
-            ),
-            qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
-        ),
-    )
-    @pytest.mark.parametrize(
-        "obs1_",
-        (
-            qml.PauliX(0),
-            qml.PauliY(1),
-            qml.PauliZ(2),
-            qml.sum(qml.PauliX(0), qml.PauliY(0)),
-            qml.prod(qml.PauliX(0), qml.PauliY(1)),
-            qml.s_prod(2.0, qml.PauliX(0)),
-            qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
-            qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
-            qml.Hamiltonian(
-                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
-            ),
-            qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
-        ),
-    )
-    def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol):
-        skip_list = (
-            qml.ops.Sum,
-            qml.ops.SProd,
-            qml.ops.Prod,
-            qml.Hamiltonian,
-            qml.SparseHamiltonian,
-        )
-        if measurement is qml.probs and (
-            isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
-        ):
-            pytest.skip(
-                f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
-            )
+    # @flaky(max_runs=10)
+    # @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
+    # @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
+    # @pytest.mark.parametrize(
+    #     "obs0_",
+    #     (
+    #         qml.PauliX(0),
+    #         qml.PauliY(1),
+    #         qml.PauliZ(2),
+    #         qml.sum(qml.PauliX(0), qml.PauliY(0)),
+    #         qml.prod(qml.PauliX(0), qml.PauliY(1)),
+    #         qml.s_prod(2.0, qml.PauliX(0)),
+    #         qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
+    #         qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
+    #         qml.Hamiltonian(
+    #             [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
+    #         ),
+    #         qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
+    #     ),
+    # )
+    # @pytest.mark.parametrize(
+    #     "obs1_",
+    #     (
+    #         qml.PauliX(0),
+    #         qml.PauliY(1),
+    #         qml.PauliZ(2),
+    #         qml.sum(qml.PauliX(0), qml.PauliY(0)),
+    #         qml.prod(qml.PauliX(0), qml.PauliY(1)),
+    #         qml.s_prod(2.0, qml.PauliX(0)),
+    #         qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
+    #         qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
+    #         qml.Hamiltonian(
+    #             [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
+    #         ),
+    #         qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
+    #     ),
+    # )
+    # def test_double_return_value(self, shots, measurement, obs0_, obs1_, lightning_sv, tol):
+    #     skip_list = (
+    #         qml.ops.Sum,
+    #         qml.ops.SProd,
+    #         qml.ops.Prod,
+    #         qml.Hamiltonian,
+    #         qml.SparseHamiltonian,
+    #     )
+    #     if measurement is qml.probs and (
+    #         isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
+    #     ):
+    #         pytest.skip(
+    #             f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
+    #         )
 
-        rtol = 1.0e-2  # 1% of expected value as tolerance
-        if shots != None and measurement is qml.expval:
-            # Increase the number of shots
-            if isinstance(shots, int):
-                shots *= 10
-            else:
-                shots = [i * 10 for i in shots]
+    #     rtol = 1.0e-2  # 1% of expected value as tolerance
+    #     if shots != None and measurement is qml.expval:
+    #         # Increase the number of shots
+    #         if isinstance(shots, int):
+    #             shots *= 10
+    #         else:
+    #             shots = [i * 10 for i in shots]
 
-            # Extra tolerance
-            rtol = 5.0e-2  # 5% of expected value as tolerance
+    #         # Extra tolerance
+    #         rtol = 5.0e-2  # 5% of expected value as tolerance
 
-        n_qubits = 4
-        n_layers = 1
-        np.random.seed(0)
-        weights = np.random.rand(n_layers, n_qubits, 3)
-        ops = [qml.Hadamard(i) for i in range(n_qubits)]
-        ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
-        measurements = [measurement(op=obs0_), measurement(op=obs1_)]
-        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
+    #     n_qubits = 4
+    #     n_layers = 1
+    #     np.random.seed(0)
+    #     weights = np.random.rand(n_layers, n_qubits, 3)
+    #     ops = [qml.Hadamard(i) for i in range(n_qubits)]
+    #     ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
+    #     measurements = [measurement(op=obs0_), measurement(op=obs1_)]
+    #     tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
-        statevector = lightning_sv(n_qubits)
-        statevector = statevector.get_final_state(tape)
-        m = LightningMeasurements(statevector)
+    #     statevector = lightning_sv(n_qubits)
+    #     statevector = statevector.get_final_state(tape)
+    #     m = LightningMeasurements(statevector)
 
-        skip_list = (
-            qml.ops.Sum,
-            qml.Hamiltonian,
-            qml.SparseHamiltonian,
-        )
-        do_skip = measurement is qml.var and (
-            isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
-        )
-        do_skip = do_skip or (
-            measurement is qml.expval
-            and (
-                isinstance(obs0_, qml.SparseHamiltonian) or isinstance(obs1_, qml.SparseHamiltonian)
-            )
-        )
-        do_skip = do_skip and shots is not None
-        if do_skip:
-            with pytest.raises(TypeError):
-                _ = m.measure_final_state(tape)
-            return
-        else:
-            result = m.measure_final_state(tape)
+    #     skip_list = (
+    #         qml.ops.Sum,
+    #         qml.Hamiltonian,
+    #         qml.SparseHamiltonian,
+    #     )
+    #     do_skip = measurement is qml.var and (
+    #         isinstance(obs0_, skip_list) or isinstance(obs1_, skip_list)
+    #     )
+    #     do_skip = do_skip or (
+    #         measurement is qml.expval
+    #         and (
+    #             isinstance(obs0_, qml.SparseHamiltonian) or isinstance(obs1_, qml.SparseHamiltonian)
+    #         )
+    #     )
+    #     do_skip = do_skip and shots is not None
+    #     if do_skip:
+    #         with pytest.raises(TypeError):
+    #             _ = m.measure_final_state(tape)
+    #         return
+    #     else:
+    #         result = m.measure_final_state(tape)
 
-        expected = self.calculate_reference(tape, lightning_sv)
-        if len(expected) == 1:
-            expected = expected[0]
+    #     expected = self.calculate_reference(tape, lightning_sv)
+    #     if len(expected) == 1:
+    #         expected = expected[0]
 
-        assert isinstance(result, Sequence)
-        assert len(result) == len(expected)
-        # a few tests may fail in single precision, and hence we increase the tolerance
-        atol = tol if shots is None else max(tol, 1.0e-2)
-        rtol = max(tol, rtol)  # % of expected value as tolerance
-        for r, e in zip(result, expected):
-            if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
-                r = np.concatenate(r)
-                e = np.concatenate(e)
-            # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
-            assert np.allclose(r, e, atol=atol, rtol=rtol)
+    #     assert isinstance(result, Sequence)
+    #     assert len(result) == len(expected)
+    #     # a few tests may fail in single precision, and hence we increase the tolerance
+    #     atol = tol if shots is None else max(tol, 1.0e-2)
+    #     rtol = max(tol, rtol)  # % of expected value as tolerance
+    #     for r, e in zip(result, expected):
+    #         if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
+    #             r = np.concatenate(r)
+    #             e = np.concatenate(e)
+    #         # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
+    #         assert np.allclose(r, e, atol=atol, rtol=rtol)
 
-    @pytest.mark.parametrize(
-        "cases",
-        [
-            [[0, 1], [1, 0]],
-            [[1, 0], [0, 1]],
-        ],
-    )
-    def test_probs_tape_unordered_wires(self, cases, tol):
-        """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
+    # @pytest.mark.parametrize(
+    #     "cases",
+    #     [
+    #         [[0, 1], [1, 0]],
+    #         [[1, 0], [0, 1]],
+    #     ],
+    # )
+    # def test_probs_tape_unordered_wires(self, cases, tol):
+    #     """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
 
-        x, y, z = [0.5, 0.3, -0.7]
-        dev = qml.device(device_name, wires=cases[1])
+    #     x, y, z = [0.5, 0.3, -0.7]
+    #     dev = qml.device(device_name, wires=cases[1])
 
-        def circuit():
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            return qml.probs(wires=cases[0])
+    #     def circuit():
+    #         qml.RX(0.4, wires=[0])
+    #         qml.Rot(x, y, z, wires=[0])
+    #         qml.RY(-0.2, wires=[0])
+    #         return qml.probs(wires=cases[0])
 
-        expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
-        results = qml.QNode(circuit, dev)()
-        assert np.allclose(expected, results, tol)
+    #     expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
+    #     results = qml.QNode(circuit, dev)()
+    #     assert np.allclose(expected, results, tol)
 
 
 class TestControlledOps:

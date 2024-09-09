@@ -145,9 +145,11 @@ elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu._state_vector import (
         LightningGPUStateVector as LightningStateVector,
     )
+    from pennylane_lightning.lightning_gpu._measurements import (
+        LightningGPUMeasurements as LightningMeasurements,
+    )
 
     LightningAdjointJacobian = None
-    LightningMeasurements = None
 
     if hasattr(pennylane_lightning, "lightning_gpu_ops"):
         import pennylane_lightning.lightning_gpu_ops as lightning_ops

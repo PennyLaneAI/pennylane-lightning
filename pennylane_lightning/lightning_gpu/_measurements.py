@@ -83,7 +83,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         # apply diagonalizing gates
         self._apply_diagonalizing_gates(mps)
 
-        # Specific for Kokkos:
+        # Specific for LGPU:
         total_indices = self._qubit_state.num_wires
         wires = qml.wires.Wires(range(total_indices))
 
