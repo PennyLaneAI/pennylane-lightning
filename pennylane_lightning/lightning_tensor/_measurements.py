@@ -359,7 +359,6 @@ class LightningTensorMeasurements:
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
 
-
     def _measure_sum_with_samples(
         self,
         mp: List[SampleMeasurement],
