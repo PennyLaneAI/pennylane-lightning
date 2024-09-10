@@ -47,7 +47,7 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_gpu"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
@@ -83,22 +83,21 @@ jobs:
 
           CIBW_SKIP: "*-musllinux*"
 
-          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="LIGHTNING_RELEASE_TAG=master"
-
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install ninja cmake~=3.27.0 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} scipy
+            python -m pip install ninja cmake~=3.27.0 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
             dnf clean all -y
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
             yum-config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo -y
-            dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git openssh wget
+            dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
             PATH=/opt/rh/gcc-toolset-12/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
             LD_LIBRARY_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64:/opt/rh/gcc-toolset-12/root/usr/lib:/opt/rh/gcc-toolset-12/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-12/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
-            PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH
+            PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH \
+            CMAKE_ARGS="-DENABLE_LAPACK=OFF"
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 
@@ -136,7 +135,7 @@ jobs:
     strategy:
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_gpu"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest

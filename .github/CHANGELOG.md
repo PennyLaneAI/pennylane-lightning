@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
+  [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+
 * Add `Projector` observable support via diagonalization to Lightning-GPU.
   [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
 
