@@ -10,6 +10,9 @@
 
 ### Breaking changes
 
+* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
+
 * Remove support for Python 3.9.
   [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 

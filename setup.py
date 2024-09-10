@@ -93,8 +93,11 @@ class CMakeBuild(build_ext):
             "-DENABLE_WARNINGS=OFF",  # Ignore warnings
         ]
         configure_args += (
-            [f"-DPYTHON_EXECUTABLE={sys.executable}", "-DPYBIND11_FINDPYTHON=ON"]
+            [f"-DPYTHON_EXECUTABLE={sys.executable}"]
+            if platform.system() != "Darwin"
+            else [f"-DPython_EXECUTABLE={sys.executable}"]
         )
+        configure_args += ["-DPYBIND11_FINDPYTHON=ON"]
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
