@@ -30,6 +30,9 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
+# pylint: disable=ungrouped-imports
+from pennylane_lightning.core._serialize import global_phase_diagonal
+
 
 def svd_split(M, bond_dim):
     """SVD split a matrix into a matrix product state via numpy linalg. Note that this function is to be moved to the C++ layer."""
@@ -334,7 +337,7 @@ class LightningTensorNet:
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        if method is not None:  # apply n-controlled specialized gate
+        if method is not None and basename != "GlobalPhase":  # apply n-controlled specialized gate
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
@@ -373,8 +376,23 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
-                self._apply_lightning_controlled(operation)
+            if isinstance(operation, qml.ops.Controlled):
+                if len(list(operation.target_wires)) == 1:  # use cutensornet's default support
+                    self._apply_lightning_controlled(operation)
+                elif isinstance(operation.base, qml.GlobalPhase):
+                    control_wires = list(operation.control_wires)
+                    control_values = operation.control_values
+                    name = operation.name
+                    # Apply GlobalPhase
+                    param = operation.parameters[0]
+                    wires = self.wires.indices(operation.wires)
+                    matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
+                    gate_ops_matrix = matrix * np.eye(2 ** len(self.wires))
+                    self._apply_MPO(gate_ops_matrix, wires)
+                else:
+                    raise NotImplementedError(
+                        "cutensornet only supports controlled gates with a single wire target."
+                    )
             elif isinstance(operation, qml.GlobalPhase):
                 matrix = np.eye(2) * operation.matrix().flatten()[0]
                 method = getattr(tensornet, "applyMatrix")

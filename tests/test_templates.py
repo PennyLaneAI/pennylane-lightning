@@ -32,8 +32,6 @@ class TestGrover:
 
     @pytest.mark.parametrize("n_qubits", range(4, 8))
     def test_grover(self, n_qubits):
-        if device_name == "lightning.tensor" and n_qubits >= 6:
-            pytest.skip("Calculation is too slow for lightning.tensor")
         np.random.seed(42)
         omega = np.random.rand(n_qubits) > 0.5
         dev = qml.device(device_name, wires=n_qubits)
