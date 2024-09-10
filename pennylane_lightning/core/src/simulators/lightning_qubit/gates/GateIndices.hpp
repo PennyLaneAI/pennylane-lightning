@@ -66,7 +66,7 @@ auto generateBitPatterns(const std::vector<std::size_t> &qubitIndices,
  * @param controlled_values Control values (false or true).
  */
 void controlBitPatterns(std::vector<std::size_t> &indices,
-                        const std::size_t num_qubits,
+                        std::size_t num_qubits,
                         const std::vector<std::size_t> &controlled_wires,
                         const std::vector<bool> &controlled_values);
 /**
