@@ -21,6 +21,7 @@ from dataclasses import replace
 from functools import reduce
 from pathlib import Path
 from typing import Optional
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
@@ -57,7 +58,8 @@ try:
     from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
 
     LK_CPP_BINARY_AVAILABLE = True
-except ImportError:
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     LK_CPP_BINARY_AVAILABLE = False
     backend_info = None
 

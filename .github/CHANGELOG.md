@@ -16,6 +16,9 @@
 
 ### Breaking changes
 
+* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
+
 * Remove PowerPC wheel build recipe for Lightning-Qubit.
   [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
 
@@ -23,6 +26,9 @@
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* Update Pybind11 to 2.13.5.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
 
 * Migrate wheels artifacts to v4.
   [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
