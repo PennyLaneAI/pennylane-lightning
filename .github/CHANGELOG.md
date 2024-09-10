@@ -14,10 +14,10 @@
 ### Breaking changes
 
 * Remove PowerPC wheel build recipe for Lightning-Qubit.
-  [#902](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
+  [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
 
 * Remove support for Python 3.9.
-  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+  [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
 
