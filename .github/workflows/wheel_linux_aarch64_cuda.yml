@@ -20,10 +20,10 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    if: |
-      github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-      github.event_name == 'workflow_dispatch'
+    # if: |
+    #   github.event_name != 'pull_request' ||
+    #   contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+    #   github.event_name == 'workflow_dispatch'
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
@@ -101,10 +101,10 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v4
-        if: |
-          github.event_name == 'release' ||
-          github.event_name == 'workflow_dispatch' ||
-          github.ref == 'refs/heads/master'
+        # if: |
+        #   github.event_name == 'release' ||
+        #   github.event_name == 'workflow_dispatch' ||
+        #   github.ref == 'refs/heads/master'
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}.zip
           path: ./wheelhouse/*.whl
@@ -120,9 +120,9 @@ jobs:
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'release' ||
-      github.ref == 'refs/heads/master'
+    # if: |
+    #   github.event_name == 'release' ||
+    #   github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/download-artifact@v4
@@ -130,9 +130,7 @@ jobs:
           name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}.zip
           path: dist
 
-      - name: Upload wheels to PyPI
+      - name: Upload wheels to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_LGPU_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
