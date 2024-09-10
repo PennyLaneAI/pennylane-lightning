@@ -5,6 +5,9 @@
 * Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
   [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
 
+* Add `Projector` observable support via diagonalization to Lightning-GPU.
+  [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
+
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
   [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
 
