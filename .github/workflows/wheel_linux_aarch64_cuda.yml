@@ -20,25 +20,15 @@ concurrency:
 
 jobs:
   set_wheel_build_matrix:
-    # FIXME: uncomment this after testing all wheels:
-    # if: |
-    #   github.event_name != 'pull_request' ||
-    #   contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-    #   github.event_name == 'workflow_dispatch'
-    # name: "Set wheel build matrix"
-    # uses: ./.github/workflows/set_wheel_build_matrix.yml
-    # with:
-    #   event_name: ${{ github.event_name }}
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v4
-      - name: Python version
-        id: pyver
-        run: |
-          echo "python_version=$(python3 scripts/gen_pyver_matrix.py \
-            --min-version=3.10 \
-            --max-version=3.12 --range)" >> $GITHUB_OUTPUT
+    if: |
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
+      github.event_name == 'workflow_dispatch'
+    name: "Set wheel build matrix"
+    uses: ./.github/workflows/set_wheel_build_matrix.yml
+    with:
+      event_name: ${{ github.event_name }}
+
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}
 
@@ -114,11 +104,10 @@ jobs:
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
       - uses: actions/upload-artifact@v4
-        # FIXME: uncomment this before merge
-        # if: |
-        #   github.event_name == 'release' ||
-        #   github.event_name == 'workflow_dispatch' ||
-        #   github.ref == 'refs/heads/master'
+        if: |
+          github.event_name == 'release' ||
+          github.event_name == 'workflow_dispatch' ||
+          github.ref == 'refs/heads/master'
         with:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}.zip
           path: ./wheelhouse/*.whl
