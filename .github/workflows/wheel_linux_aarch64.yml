@@ -146,7 +146,8 @@ jobs:
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
             python -m pip install ninja cmake~=3.24.0
 
-          CIBW_ENVIRONMENT: CMAKE_ARGS="-DENABLE_LAPACK=OFF"
+          CIBW_ENVIRONMENT: |
+            CMAKE_ARGS="-DENABLE_LAPACK=OFF -DCMAKE_BUILD_TYPE=Release"
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 

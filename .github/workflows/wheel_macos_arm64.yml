@@ -99,7 +99,7 @@ jobs:
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools scipy
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF"
+            CMAKE_ARGS="-DCMAKE_CXX_COMPILER_TARGET=arm64-apple-macos11 -DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=ARM64 -DENABLE_OPENMP=OFF -DCMAKE_BUILD_TYPE=Release"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt

@@ -137,7 +137,7 @@ jobs:
             python -m pip install pybind11 cmake~=3.24.0 build
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DENABLE_LAPACK=OFF"
+            CMAKE_ARGS="-DENABLE_LAPACK=OFF -DCMAKE_BUILD_TYPE=Release"
 
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
 

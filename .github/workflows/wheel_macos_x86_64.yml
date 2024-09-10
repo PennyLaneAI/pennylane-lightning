@@ -148,6 +148,9 @@ jobs:
           CIBW_BEFORE_BUILD: |
             python -m pip install pybind11 ninja cmake~=3.24.0 setuptools scipy
 
+          CIBW_ENVIRONMENT: |
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+
           PL_BACKEND: ${{ matrix.pl_backend }}
 
           CIBW_BEFORE_TEST: |
