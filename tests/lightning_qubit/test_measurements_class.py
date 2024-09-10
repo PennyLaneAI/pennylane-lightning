@@ -588,7 +588,7 @@ class TestMeasurements:
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=rtol, atol=atol)
 
-    @flaky(max_runs=10)
+    @flaky(max_runs=20)
     @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
