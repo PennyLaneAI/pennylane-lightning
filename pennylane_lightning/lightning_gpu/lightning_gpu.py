@@ -188,6 +188,7 @@ allowed_observables = {
     "LinearCombination",
     "Hermitian",
     "Identity",
+    "Projector",
     "Sum",
     "Prod",
     "SProd",
@@ -805,6 +806,15 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         Returns:
             Expectation value of the observable
         """
+        if isinstance(observable, qml.Projector):
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if self.shots is None and diagonalizing_gates:
+                self.apply(diagonalizing_gates)
+            results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
+            if self.shots is None and diagonalizing_gates:
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
+            return results
+
         if self.shots is not None:
             # estimate the expectation value
             samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
@@ -888,6 +898,15 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         Returns:
             Variance of the observable
         """
+        if isinstance(observable, qml.Projector):
+            diagonalizing_gates = observable.diagonalizing_gates()
+            if self.shots is None and diagonalizing_gates:
+                self.apply(diagonalizing_gates)
+            results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
+            if self.shots is None and diagonalizing_gates:
+                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
+            return results
+
         if self.shots is not None:
             # estimate the var
             # Lightning doesn't support sampling yet
