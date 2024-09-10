@@ -19,6 +19,7 @@ libs = [
     "libcublas.so.11",
     "libcublas.so.12",
     "libcusolver.so.11",
+    "libcusolver.so.12",
     "libcusparse.so",
     "libcusparse.so.11",
     "libcusparse.so.12",
