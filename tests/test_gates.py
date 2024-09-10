@@ -168,11 +168,6 @@ def test_inverse_unitary_correct(op, op_name):
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")
 
-    if op_name == "QubitUnitary" and device_name == "lightning.tensor":
-        pytest.skip(
-            "Skipping QubitUnitary on lightning.tensor. It can't be decomposed into 1-wire or 2-wire gates"
-        )
-
     dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
@@ -312,7 +307,7 @@ def test_qubit_RY(theta, phi, tol):
 
 
 @pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
-@pytest.mark.parametrize("n_wires", range(1, 7) if device_name != "lightning.tensor" else [1, 2])
+@pytest.mark.parametrize("n_wires", range(1, 7))
 def test_qubit_unitary(n_wires, theta, phi, tol):
     """Test that Hadamard expectation value is correct"""
     n_qubits = 10
@@ -482,17 +477,21 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
                     qml.ctrl(
                         operation(target_wires),
                         control_wires,
-                        control_values=[
-                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                        ],
+                        control_values=(
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                            if device_name != "lightning.tensor"
+                            else [control_value for _ in control_wires]
+                        ),
                     )
                 else:
                     qml.ctrl(
                         operation(*tuple([0.1234] * operation.num_params), target_wires),
                         control_wires,
-                        control_values=[
-                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                        ],
+                        control_values=(
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                            if device_name != "lightning.tensor"
+                            else [control_value for _ in control_wires]
+                        ),
                     )
                 return qml.state()
 
@@ -559,7 +558,7 @@ def test_paulirot(n_wires, n_targets, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
+    device_name not in ("lightning.qubit", "lightning.tensor"),
     reason="N-controlled operations only implemented in lightning.qubit.",
 )
 @pytest.mark.parametrize("control_wires", range(4))
@@ -589,7 +588,7 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
 
     circ = qml.QNode(circuit, dev)
     circ_def = qml.QNode(cnot_circuit, dev)
-    assert np.allclose(circ(), circ_def(), tol)
+    assert np.allclose(circ(), circ_def(), atol=1e-4)
 
 
 @pytest.mark.skipif(

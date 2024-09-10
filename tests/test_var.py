@@ -50,7 +50,6 @@ class TestVar:
 
         assert np.allclose(var, expected, tol)
 
-
     def test_projector_var(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2

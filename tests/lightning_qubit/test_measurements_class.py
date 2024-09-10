@@ -952,7 +952,8 @@ class TestControlledOps:
             assert np.allclose(result, expected, tol)
 
     @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support GlobalPhase."
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support controlled GlobalPhase.",
     )
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
