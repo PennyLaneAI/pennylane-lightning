@@ -174,9 +174,9 @@ template <class TensorNetT> class MeasurementsTNCuda {
      * and is default as 1.
      *
      * @return std::vector<std::size_t> A 1-d array storing the samples.
-     * Each sample has a length equal to the number of qubits. Each sample can
-     * be accessed using the stride sample_id*num_qubits, where sample_id is a
-     * number between 0 and num_samples-1.
+     * Each sample has a length equal to the number of wires. Each sample can
+     * be accessed using the stride `sample_id * num_wires`, where `sample_id`
+     * is a number between `0` and `num_samples - 1`.
      */
     auto generate_samples(const std::vector<std::size_t> &wires,
                           const std::size_t num_samples,
@@ -230,8 +230,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
                     "Insufficient workspace size on Device.\n");
 
         const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
-        DataBuffer<std::size_t, int> d_scratch(
-            d_scratch_length, tensor_network_.getDevTag(), true);
+        DataBuffer<std::size_t> d_scratch(d_scratch_length,
+                                          tensor_network_.getDevTag(), true);
 
         setWorkSpaceMemory(tensor_network_.getTNCudaHandle(), workDesc,
                            reinterpret_cast<void *>(d_scratch.getData()),
@@ -252,7 +252,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         std::vector<std::size_t> samples_size_t(samples.size());
 
         std::transform(samples.begin(), samples.end(), samples_size_t.begin(),
-                       [&](int64_t x) { return static_cast<std::size_t>(x); });
+                       [](int64_t x) { return static_cast<std::size_t>(x); });
         return samples_size_t;
     }
 
