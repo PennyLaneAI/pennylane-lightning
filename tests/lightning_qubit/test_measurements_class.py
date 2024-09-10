@@ -803,16 +803,6 @@ class TestControlledOps:
         num_wires = max(operation.num_wires, 1)
         np.random.seed(0)
 
-        if num_wires > 1 and device_name == "lightning.tensor":
-            pytest.skip(
-                "Multi target wires control operations are not supported in lightning.tensor."
-            )
-
-        if (
-            operation == qml.GlobalPhase or operation == qml.MultiRZ
-        ) and device_name == "lightning.tensor":
-            pytest.skip("GlobalPhase and MultiRZ are not supported in lightning.tensor.")
-
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
             n_perms = len(wire_lists) * n_wires
@@ -951,15 +941,11 @@ class TestControlledOps:
         else:
             assert np.allclose(result, expected, tol)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support controlled GlobalPhase.",
-    )
     @pytest.mark.parametrize("control_value", [False, True])
     @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
     def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv):
         """Test that multi-controlled gates are correctly applied to a state"""
-        threshold = 250
+        threshold = 250 if device_name != "lightning.tensor" else 5
         operation = qml.GlobalPhase
         num_wires = max(operation.num_wires, 1)
         for n_wires in range(num_wires + 1, num_wires + 4):
@@ -979,20 +965,32 @@ class TestControlledOps:
                         qml.ctrl(
                             operation(0.1234, target_wires),
                             control_wires,
-                            control_values=[
-                                control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                            ],
+                            control_values=(
+                                [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                                if device_name != "lightning.tensor"
+                                else [control_value for _ in control_wires]
+                            ),
                         ),
                     ],
                     [qml.state()],
                 )
                 statevector = lightning_sv(n_qubits)
-                statevector = statevector.get_final_state(tape)
+                statevector = (
+                    statevector.get_final_state(tape)
+                    if device_name != "lightning.tensor"
+                    else statevector.set_tensor_network(tape)
+                )
                 m = LightningMeasurements(statevector)
-                result = m.measure_final_state(tape)
+                result = (
+                    m.measure_final_state(tape)
+                    if device_name != "lightning.tensor"
+                    else m.measure_tensor_network(tape)
+                )
                 expected = self.calculate_reference(tape)
-
-                assert np.allclose(result, expected, tol)
+                if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
+                    assert np.allclose(result, expected, 1e-4)
+                else:
+                    assert np.allclose(result, expected, tol)
 
 
 @pytest.mark.parametrize("phi", PHI)

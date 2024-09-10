@@ -155,6 +155,8 @@ class LightningTensorNet:
         if num_wires < 2:
             raise ValueError("Number of wires must be greater than 1.")
 
+        self._wires = Wires(range(num_wires))
+
         self._device_name = device_name
         self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
 
@@ -167,6 +169,11 @@ class LightningTensorNet:
     def device_name(self):
         """Returns the tensor network device name."""
         return self._device_name
+
+    @property
+    def wires(self):
+        """All wires that can be addressed on this device"""
+        return self._wires
 
     @property
     def num_wires(self):
@@ -337,7 +344,10 @@ class LightningTensorNet:
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        if method is not None and basename != "GlobalPhase":  # apply n-controlled specialized gate
+        if method is not None and basename not in (
+            "GlobalPhase",
+            "MultiRZ",
+        ):  # apply n-controlled specialized gate
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
@@ -379,27 +389,34 @@ class LightningTensorNet:
             if isinstance(operation, qml.ops.Controlled):
                 if len(list(operation.target_wires)) == 1:  # use cutensornet's default support
                     self._apply_lightning_controlled(operation)
-                elif isinstance(operation.base, qml.GlobalPhase):
+                else:
                     control_wires = list(operation.control_wires)
                     control_values = operation.control_values
                     name = operation.name
                     # Apply GlobalPhase
-                    param = operation.parameters[0]
                     wires = self.wires.indices(operation.wires)
-                    matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
-                    gate_ops_matrix = matrix * np.eye(2 ** len(self.wires))
+                    if isinstance(operation.base, qml.GlobalPhase):
+                        param = operation.parameters[0]
+                        matrix = global_phase_diagonal(
+                            param, self.wires, control_wires, control_values
+                        )
+                        gate_ops_matrix = np.diag(matrix)
+                    else:
+                        try:
+                            gate_ops_matrix = qml.matrix(operation)
+                        except AttributeError:
+                            gate_ops_matrix = operation.matrix()
                     self._apply_MPO(gate_ops_matrix, wires)
-                else:
-                    raise NotImplementedError(
-                        "cutensornet only supports controlled gates with a single wire target."
-                    )
             elif isinstance(operation, qml.GlobalPhase):
                 matrix = np.eye(2) * operation.matrix().flatten()[0]
                 method = getattr(tensornet, "applyMatrix")
                 method(
                     matrix, [0], False
                 )  # GlobalPhase is always applied to the first wire in the tensor network
-            elif len(wires) <= 2:
+            elif isinstance(operation, qml.MultiRZ) and len(wires) == 1:
+                method = getattr(tensornet, "RZ")
+                method(wires, invert_param, operation.parameters)
+            elif len(wires) <= 2 and not isinstance(operation, qml.MultiRZ):
                 if method is not None:
                     param = operation.parameters
                     method(wires, invert_param, param)
