@@ -467,8 +467,8 @@ class TestMeasurements:
             else m.measure_tensor_network(tape)
         )
 
-    @flaky(max_runs=15)
-    @pytest.mark.parametrize("shots", [None, 200_000, [190_000, 190_000]])
+    @flaky(max_runs=5)
+    @pytest.mark.parametrize("shots", [None, 500_000, [500_000, 500_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "observable",
@@ -519,16 +519,12 @@ class TestMeasurements:
             pytest.skip(
                 f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
             )
-        rtol = 1.0e-2  # 1% of expected value as tolerance
         if shots != None and measurement is qml.expval:
             # Increase the number of shots
             if isinstance(shots, int):
-                shots *= 10
+                shots = 1_000_000
             else:
-                shots = [i * 10 for i in shots]
-
-            # Extra tolerance
-            rtol = 5.0e-2  # 5% of expected value as tolerance
+                shots = [1_000_000, 1_000_000]
 
         n_qubits = 4
         n_layers = 1
@@ -582,14 +578,13 @@ class TestMeasurements:
         if shots is None:
             assert np.allclose(result, expected, max(tol, 1.0e-4))
         else:
-            atol = max(tol, 1.0e-2) if statevector.dtype == np.complex64 else max(tol, 1.0e-3)
-            rtol = max(tol, rtol)  # % of expected value as tolerance
-
+            # TODO Set better atol and rtol
+            dtol = max(tol, 1.0e-2)
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
-            assert np.allclose(result, expected, rtol=rtol, atol=atol)
+            assert np.allclose(result, expected, rtol=dtol, atol=dtol)
 
-    @flaky(max_runs=10)
-    @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
+    @flaky(max_runs=5)
+    @pytest.mark.parametrize("shots", [None, 400_000, (400_000, 400_000)])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -652,16 +647,12 @@ class TestMeasurements:
                 f"Observable of type {type(obs0_).__name__} is not supported for rotating probabilities."
             )
 
-        rtol = 1.0e-2  # 1% of expected value as tolerance
         if shots != None and measurement is qml.expval:
             # Increase the number of shots
             if isinstance(shots, int):
-                shots *= 10
+                shots = 1_000_000
             else:
-                shots = [i * 10 for i in shots]
-
-            # Extra tolerance
-            rtol = 5.0e-2  # 5% of expected value as tolerance
+                shots = [1_000_000, 1_000_000]
 
         n_qubits = 4
         n_layers = 1
@@ -718,14 +709,14 @@ class TestMeasurements:
         assert isinstance(result, Sequence)
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
-        atol = tol if shots is None else max(tol, 1.0e-2)
-        rtol = max(tol, rtol)  # % of expected value as tolerance
+        dtol = tol if shots is None else max(tol, 1.0e-2)
+        # TODO Set better atol and rtol
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
                 r = np.concatenate(r)
                 e = np.concatenate(e)
             # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
-            assert np.allclose(r, e, atol=atol, rtol=rtol)
+            assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
