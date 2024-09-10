@@ -48,6 +48,9 @@
 * Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
   [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
   
+* LightningKokkos gains native support for the `PauliRot` gate.
+  [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
+
 ### Documentation
 
 ### Bug fixes
