@@ -86,14 +86,6 @@ def ops_not_supported_in_ltensor(ops):
         return False
 
 
-# circuit not supported in lightning.tensor
-def is_circuit_supported_in_ltensor(num_qubits):
-    if device_name == "lightning.tensor":
-        if num_qubits < 2:
-            return False
-    return True
-
-
 def controlled_gate_not_supported_in_ltensor(ops):
     if device_name == "lightning.tensor":
         if ops.num_wires > 1:
@@ -772,9 +764,7 @@ class TestControlledOps:
 
         if ops_not_supported_in_ltensor(operation):
             pytest.skip("Controlled operation not supported in lightning.tensor.")
-        if controlled_gate_not_supported_in_ltensor(
-            operation
-        ): 
+        if controlled_gate_not_supported_in_ltensor(operation):
             pytest.skip("Controlled operation not supported in lightning.tensor.")
 
         for n_wires in range(num_wires + 1, num_wires + 4):
