@@ -8,6 +8,12 @@
 * Add shot measurement support to `lightning.tensor`.
   [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
 
+* Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
+  [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+
+* Add `Projector` observable support via diagonalization to Lightning-GPU.
+  [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
+
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
   [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
 
@@ -16,8 +22,11 @@
 
 ### Breaking changes
 
+* Remove PowerPC wheel build recipe for Lightning-Qubit.
+  [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
+
 * Remove support for Python 3.9.
-  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+  [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
 
@@ -36,7 +45,7 @@
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
-* Unify Lightning Kokkos device and Lightning Qubit device under a Lightning Base device
+* Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
   [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
   
 ### Documentation

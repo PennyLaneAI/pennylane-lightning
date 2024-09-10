@@ -342,9 +342,14 @@ class LightningTensorMeasurements:
 
             return tuple(processed)
 
-        samples = self._measurement_lightning.generate_samples(
-            list(wires), shots.total_shots
-        ).astype(int, copy=False)
+        try:
+            samples = self._measurement_lightning.generate_samples(
+                list(wires), shots.total_shots
+            ).astype(int, copy=False)
+        except ValueError as e:
+            if str(e) != "probabilities contain NaN":
+                raise e
+            samples = qml.math.full((shots.total_shots, len(wires)), 0)
 
         self._apply_diagonalizing_gates(mps, adjoint=True)
 
