@@ -13,8 +13,11 @@
 
 ### Breaking changes
 
+* Remove PowerPC wheel build recipe for Lightning-Qubit.
+  [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
+
 * Remove support for Python 3.9.
-  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+  [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
 
@@ -33,7 +36,7 @@
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
-* Unify Lightning Kokkos device and Lightning Qubit device under a Lightning Base device
+* Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
   [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
   
 ### Documentation
