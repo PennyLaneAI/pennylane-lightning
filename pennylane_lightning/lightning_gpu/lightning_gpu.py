@@ -74,7 +74,8 @@ try:
         )
 
         MPI_SUPPORT = True
-    except ImportError:
+    except ImportError as ex:
+        warn(str(ex), UserWarning)
         MPI_SUPPORT = False
 
     if find_library("custatevec") is None and not imp_util.find_spec(
@@ -90,8 +91,8 @@ try:
         raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LGPU_CPP_BINARY_AVAILABLE = True
-except (ImportError, ValueError) as e:
-    warn(str(e), UserWarning)
+except (ImportError, ValueError) as ex:
+    warn(str(ex), UserWarning)
     backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
 
