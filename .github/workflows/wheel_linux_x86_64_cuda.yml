@@ -1,11 +1,17 @@
 name: Wheel::Linux::x86_64::CUDA
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.9, 3.10, 3.11, 3.12.
+#                   Python versions: 3.10, 3.11, 3.12.
 # **Why we have it**: To build wheels for pennylane-lightning-gpu installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
   push:
     branches:
       - master
@@ -20,15 +26,15 @@ concurrency:
 jobs:
   set_wheel_build_matrix:
     if: |
-      github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-      github.event_name == 'workflow_dispatch'
+        github.event_name != 'pull_request' ||
+        (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
 
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
@@ -41,12 +47,12 @@ jobs:
       fail-fast: false
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_gpu"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
-    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} CUDA ${{ matrix.cuda_version }} (Python ${{ fromJson('{"cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     container:
       image: ${{ matrix.container_img }}
@@ -62,10 +68,10 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.9 -m pip install cibuildwheel~=2.16.0 toml
+        run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -77,22 +83,21 @@ jobs:
 
           CIBW_SKIP: "*-musllinux*"
 
-          CIBW_CONFIG_SETTINGS: --global-option=build_ext --global-option=--define="LIGHTNING_RELEASE_TAG=master"
-
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install ninja cmake~=3.24.3 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} scipy
+            python -m pip install ninja cmake~=3.27.0 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
             dnf clean all -y
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
             yum-config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64/cuda-rhel8.repo -y
-            dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git openssh wget
+            dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
             PATH=/opt/rh/gcc-toolset-12/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
             LD_LIBRARY_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64:/opt/rh/gcc-toolset-12/root/usr/lib:/opt/rh/gcc-toolset-12/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-12/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
-            PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH
+            PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH \
+            CMAKE_ARGS="-DENABLE_LAPACK=OFF"
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 
@@ -100,12 +105,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.9 -m cibuildwheel --output-dir wheelhouse
+        run: python3.10 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.9 -m pip install twine
-          python3.9 -m twine check ./wheelhouse/*.whl
+          python3.10 -m pip install twine
+          python3.10 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
@@ -113,32 +118,35 @@ jobs:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}.zip
           path: ./wheelhouse/*.whl
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
-    needs: linux-wheels-x86-64
+    needs: [set_wheel_build_matrix, linux-wheels-x86-64]
     strategy:
       matrix:
         arch: [x86_64]
-        pl_backend: ["lightning_gpu"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}
+          name:  ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}-cu${{ matrix.cuda_version }}.zip
           path: dist
 
       - name: Upload wheels to PyPI

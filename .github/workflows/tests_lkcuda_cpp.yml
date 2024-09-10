@@ -11,6 +11,12 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
     paths:
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
@@ -34,6 +40,7 @@ concurrency:
 
 jobs:
   builddeps:
+    if: github.event.pull_request.draft == false
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -85,18 +92,16 @@ jobs:
         env:
           CMAKE_PREFIX_PATH: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
         run: |
-          set -x
           sudo apt-get update && sudo apt-get -y -q install gfortran-$GCC_VERSION
           cd kokkos_${{ matrix.exec_model }}/example/build_cmake_installed
           which -a gfortran || which -a gfortran-$GCC_VERSION
           cmake -B build -DCMAKE_Fortran_COMPILER=gfortran-$GCC_VERSION
           cmake --build build
           cmake --build build --target test
-          set +x
 
       - name: Cache installation directories
         id: kokkos-cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
@@ -132,7 +137,7 @@ jobs:
 
       - name: Restoring cached dependencies
         id: kokkos-cache
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
@@ -152,7 +157,7 @@ jobs:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       # Since the self-hosted runner can be re-used. It is best to set up all package
       # installations in a virtual environment that gets cleaned at the end of each workflow run
@@ -205,16 +210,20 @@ jobs:
           mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
           path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-cpp
           path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true

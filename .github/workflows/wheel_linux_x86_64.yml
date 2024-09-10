@@ -1,7 +1,7 @@
 name: Wheel::Linux::x86_64
 
 # **What it does**: Builds python wheels for Linux (ubuntu-latest) architecture x86_64 and store it as artifacts.
-#                   Python versions: 3.9, 3.10, 3.11, 3.12.
+#                   Python versions: 3.10, 3.11, 3.12.
 # **Why we have it**: To build wheels for pennylane-lightning installation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -10,6 +10,12 @@ env:
 
 on:
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+      - labeled
   push:
     branches:
       - master
@@ -25,14 +31,14 @@ jobs:
   set_wheel_build_matrix:
     if: |
       github.event_name != 'pull_request' ||
-      contains(github.event.pull_request.labels.*.name, 'ci:build_wheels') ||
-      github.event_name == 'workflow_dispatch'
+      (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:build_wheels'))
     name: "Set wheel build matrix"
     uses: ./.github/workflows/set_wheel_build_matrix.yml
     with:
       event_name: ${{ github.event_name }}
 
   determine_runner:
+    if: github.event.pull_request.draft == false
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
@@ -106,7 +112,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
-    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp39-*":"3.9","cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
+    name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     container:
       image: ${{ matrix.container_img }}
@@ -135,10 +141,10 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.9 -m pip install cibuildwheel~=2.16.0 toml
+        run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.9 scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
 
       - name: Build wheels
         env:
@@ -153,7 +159,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
-            python -m pip install ninja cmake~=3.24.0 scipy
+            python -m pip install ninja cmake~=3.27.0 scipy
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y
@@ -177,12 +183,12 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python3.9 -m cibuildwheel --output-dir wheelhouse
+        run: python3.10 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-          python3.9 -m pip install twine
-          python3.9 -m twine check ./wheelhouse/*.whl
+          python3.10 -m pip install twine
+          python3.10 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
@@ -190,31 +196,34 @@ jobs:
           text: ${{ github.event.pull_request.head.ref }}
           regex: '.*[0-9]+.[0-9]+.[0-9]+[-_]?rc[0-9]+'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: |
           github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master' ||
           steps.rc_build.outputs.match != ''
         with:
-          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: ./wheelhouse/*.whl
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
-    needs: linux-wheels-x86-64
+    needs: [set_wheel_build_matrix, linux-wheels-x86-64]
     strategy:
       matrix:
         arch: [x86_64]
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
+        cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: Linux-wheels-${{ matrix.pl_backend }}-${{ matrix.arch }}.zip
+          name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
       - name: Upload wheels to PyPI

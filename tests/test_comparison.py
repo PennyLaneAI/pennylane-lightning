@@ -65,7 +65,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not support 1 wire tensor network",
+        reason="lightning.tensor device does not support one-qubit circuits",
     )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
@@ -104,7 +104,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not support direct access to the state",
+        reason="lightning.tensor device does not support direct access to the state",
     )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
@@ -117,6 +117,7 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a two-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -152,7 +153,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not support the direct access to state",
+        reason="lightning.tensor device does not support the direct access to state",
     )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
@@ -165,6 +166,7 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a three-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -208,7 +210,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not support the direct access to state",
+        reason="lightning.tensor device does not support the direct access to state",
     )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
@@ -221,6 +223,7 @@ class TestComparison:
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a four-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -269,7 +272,7 @@ class TestComparison:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device dose not support initialization with a state vector",
+        reason="lightning.tensor device does not support does not support the direct access to state",
     )
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
@@ -281,6 +284,7 @@ class TestComparison:
         self, monkeypatch, stateprep, wires, lightning_dev_version, num_threads
     ):
         """Test an n-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)

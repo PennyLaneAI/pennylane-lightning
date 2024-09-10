@@ -62,10 +62,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
-    MPSStatus MPSFinalized_ = MPSStatus::MPSFinalizedNotSet;
 
     const std::size_t maxBondDim_;
-
+    const std::vector<std::size_t> bondDims_;
     const std::vector<std::vector<std::size_t>> sitesModes_;
     const std::vector<std::vector<std::size_t>> sitesExtents_;
     const std::vector<std::vector<int64_t>> sitesExtents_int64_;
@@ -87,9 +86,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
-          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
+        reset();
+        appendInitialMPSState_();
     }
 
     // TODO: Add method to the constructor to allow users to select methods at
@@ -97,9 +99,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
-          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
+        reset();
+        appendInitialMPSState_();
     }
 
     ~MPSTNCuda() = default;
@@ -164,6 +169,31 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
+     * @brief Update the ith MPS site data.
+     *
+     * @param site_idx Index of the MPS site.
+     * @param host_data Pointer to the data on host.
+     * @param host_data_size Length of the data.
+     */
+    void updateMPSSiteData(const std::size_t site_idx,
+                           const ComplexT *host_data,
+                           std::size_t host_data_size) {
+        PL_ABORT_IF_NOT(
+            site_idx < BaseType::getNumQubits(),
+            "The site index should be less than the number of qubits.");
+
+        const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
+        PL_ABORT_IF_NOT(
+            host_data_size == tensors_[idx].getDataBuffer().getLength(),
+            "The length of the host data should match its copy on the device.");
+
+        tensors_[idx].getDataBuffer().zeroInit();
+
+        tensors_[idx].getDataBuffer().CopyHostDataToGpu(host_data,
+                                                        host_data_size);
+    }
+
+    /**
      * @brief Update quantum state with a basis state.
      * NOTE: This API assumes the bond vector is a standard basis vector
      * ([1,0,0,......]) and current implementation only works for qubit systems.
@@ -193,17 +223,12 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             if (i == 0) {
                 target = basisState[idx];
             } else {
-                target = basisState[idx] == 0 ? 0 : maxBondDim_;
+                target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
             }
 
             PL_CUDA_IS_SUCCESS(
                 cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
-        }
-
-        if (MPSInitialized_ == MPSStatus::MPSInitNotSet) {
-            MPSInitialized_ = MPSStatus::MPSInitSet;
-            updateQuantumStateMPS_();
         }
     };
 
@@ -215,21 +240,18 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      */
     void append_mps_final_state(double cutoff = 0,
                                 std::string cutoff_mode = "abs") {
-        if (MPSFinalized_ == MPSStatus::MPSFinalizedNotSet) {
-            MPSFinalized_ = MPSStatus::MPSFinalizedSet;
-            PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
-                /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-                /* cutensornetState_t */ BaseType::getQuantumState(),
-                /* cutensornetBoundaryCondition_t */
-                CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-                /* const int64_t *const extentsOut[] */
-                getSitesExtentsPtr().data(),
-                /*strides=*/nullptr));
-        }
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateFinalizeMPS(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetBoundaryCondition_t */
+            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+            /* const int64_t *const extentsOut[] */
+            getSitesExtentsPtr().data(),
+            /*strides=*/nullptr));
 
         // Optional: SVD
         cutensornetTensorSVDAlgo_t algo =
-            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default
+            CUTENSORNET_TENSOR_SVD_ALGO_GESVDJ; // default option
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateConfigure(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
@@ -237,7 +259,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* cutensornetStateAttributes_t */
             CUTENSORNET_STATE_CONFIG_MPS_SVD_ALGO,
             /* const void * */ &algo,
-            /* size_t */ sizeof(algo)));
+            /* std::size_t */ sizeof(algo)));
 
         PL_ABORT_IF_NOT(cutoff_mode == "rel" || cutoff_mode == "abs",
                         "cutoff_mode should either 'rel' or 'abs'.");
@@ -252,11 +274,26 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* cutensornetState_t */ BaseType::getQuantumState(),
             /* cutensornetStateAttributes_t */ svd_cutoff_mode,
             /* const void * */ &cutoff,
-            /* size_t */ sizeof(cutoff)));
+            /* std::size_t */ sizeof(cutoff)));
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
             reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
+
+        // TODO: This is a dummy tensor update to allow multiple calls to the
+        // `append_mps_final_state` method as well as appending additional
+        // operations to the graph. This is a temporary solution and this line
+        // can be removed in the future when the `cutensornet` backend allows
+        // multiple calls to the `cutensornetStateFinalizeMPS` method. For more
+        // details, please see the `cutensornet` high-level API workflow logic
+        // [here]
+        // (https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/functions.html#high-level-tensor-network-api).
+        // In order to proceed with the following gate operations or
+        // measurements after calling the `cutensornetStateCompute()` API, we
+        // have to call the `cutensornetStateUpdateTensor()` API, which is
+        // wrapped inside the `dummy_tensor_update()` method.
+        //
+        BaseType::dummy_tensor_update();
     }
 
     /**
@@ -276,7 +313,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
                     "State tensor size exceeds the available GPU memory!");
-        this->get_state_tensor(res);
+        BaseType::get_state_tensor(res);
     }
 
     /**
@@ -296,6 +333,27 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
   private:
+    /**
+     * @brief Return bondDims to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::size_t>
+     */
+    std::vector<std::size_t> setBondDims_() {
+        std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1,
+                                               maxBondDim_);
+
+        const std::size_t ubDim = log2(maxBondDim_);
+        for (std::size_t i = 0; i < localBondDims.size(); i++) {
+            const std::size_t bondDim =
+                std::min(i + 1, BaseType::getNumQubits() - i - 1);
+
+            if (bondDim <= ubDim) {
+                localBondDims[i] = std::size_t{1} << bondDim;
+            }
+        }
+        return localBondDims;
+    }
+
     /**
      * @brief Return siteModes to the member initializer
      * NOTE: This method only works for the open boundary condition
@@ -337,15 +395,16 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             if (i == 0) {
                 // Leftmost site (state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {BaseType::getQubitDims()[i], maxBondDim_});
+                    {BaseType::getQubitDims()[i], bondDims_[i]});
             } else if (i == BaseType::getNumQubits() - 1) {
                 // Rightmost site (shared mode, state mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {maxBondDim_, BaseType::getQubitDims()[i]});
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i]});
             } else {
                 // Interior sites (state mode, state mode, shared mode)
                 localSiteExtents = std::vector<std::size_t>(
-                    {maxBondDim_, BaseType::getQubitDims()[i], maxBondDim_});
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i],
+                     bondDims_[i]});
             }
             localSitesExtents.push_back(std::move(localSiteExtents));
         }
@@ -383,11 +442,11 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
-     * @brief Update quantumState (cutensornetState_t) with data provided by a
-     * user
+     * @brief Append initial MPS sites to the compute graph with data provided
+     * by a user
      *
      */
-    void updateQuantumStateMPS_() {
+    void appendInitialMPSState_() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),

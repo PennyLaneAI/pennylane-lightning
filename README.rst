@@ -39,7 +39,7 @@ The Lightning plugin ecosystem provides fast state-vector simulators written in 
 
 `PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
-PennyLane supports Python 3.9 and above.
+PennyLane supports Python 3.10 and above.
 
 Features
 ********
@@ -58,11 +58,11 @@ The following table summarizes the supported platforms and the primary installat
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 |           | L-Qubit | L-GPU  | L-GPU (MPI) | L-Kokkos (OMP) | L-Kokkos (CUDA) | L-Kokkos (HIP) |    L-Tensor    |
 +===========+=========+========+=============+================+=================+================+================+
-| Linux x86 | pip     | pip    | source      | pip            | source          | source         |     source     |
+| Linux x86 | pip     | pip    | source      | pip            | source          | source         |     pip        |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-| Linux ARM | pip     | source |             | pip            | source          | source         |                |
+| Linux ARM | pip     | pip    |             | pip            | source          | source         |     pip        |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
-| Linux PPC | pip     | source |             | pip            | source          | source         |                |
+| Linux PPC | pip     | source |             | source         | source          | source         |                |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+
 | MacOS x86 | pip     |        |             | pip            |                 |                |                |
 +-----------+---------+--------+-------------+----------------+-----------------+----------------+----------------+

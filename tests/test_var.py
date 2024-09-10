@@ -42,31 +42,22 @@ class TestVar:
             qml.RX(phi, wires=[0]),
             qml.RY(theta, wires=[0]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            var = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=[*obs.diagonalizing_gates()],
-            )
-            var = dev.var(obs)
+
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        var = dev.execute(tape)
+
         expected = 0.25 * (3 - np.cos(2 * theta) - 2 * np.cos(theta) ** 2 * np.cos(2 * phi))
 
         assert np.allclose(var, expected, tol)
 
-    pytest.mark.skipif(
+    @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor doesn't support projector."
     )
-
     def test_projector_var(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
-
-        if "Projector" not in dev.observables:
-            pytest.skip("Device does not support the Projector observable.")
 
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
@@ -99,15 +90,8 @@ class TestTensorVar:
             qml.CNOT(wires=[0, 1]),
             qml.CNOT(wires=[1, 2]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=obs.diagonalizing_gates(),
-            )
-            res = dev.var(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        res = dev.execute(tape)
 
         expected = (
             8 * np.sin(theta) ** 2 * np.cos(2 * varphi) * np.sin(phi) ** 2
@@ -131,15 +115,8 @@ class TestTensorVar:
             qml.CNOT(wires=[0, 1]),
             qml.CNOT(wires=[1, 2]),
         ]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.apply(
-                ops,
-                rotations=obs.diagonalizing_gates(),
-            )
-            res = dev.var(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        res = dev.execute(tape)
 
         expected = (
             3

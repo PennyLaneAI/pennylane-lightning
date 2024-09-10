@@ -27,7 +27,7 @@ struct MockSingleQubitGateWithoutParam {
     using Precision = PrecisionT;
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static std::tuple<std::string, std::size_t, bool>
     applyInternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
                   bool inverse) {
@@ -53,7 +53,7 @@ struct MockSingleQubitGateWithParam {
     using Precision = PrecisionT;
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire, class ParamT>
+    template <std::size_t rev_wire, class ParamT>
     static std::tuple<std::string, std::size_t, bool>
     applyInternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
                   bool inverse, ParamT angle) {
@@ -86,7 +86,7 @@ struct MockSingleQubitGateSomethingWrong {
     using Precision = PrecisionT;
     constexpr static std::size_t packed_size_ = packed_size;
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static std::tuple<std::string, std::size_t, bool>
     applyInternal(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
                   bool inverse) {

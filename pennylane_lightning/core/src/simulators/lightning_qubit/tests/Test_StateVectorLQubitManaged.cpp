@@ -48,7 +48,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::StateVectorLQubitManaged",
     using PrecisionT = TestType;
     std::mt19937_64 re{1337};
 
-    SECTION("StateVectorLQubitManaged<TestType> {size_t}") {
+    SECTION("StateVectorLQubitManaged<TestType> {std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorLQubitManaged<TestType>,
                                         std::size_t>);
         const std::size_t num_qubits = 4;
@@ -58,7 +58,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::StateVectorLQubitManaged",
         REQUIRE(sv.getLength() == 16);
         REQUIRE(sv.getDataVector().size() == 16);
     }
-    SECTION("StateVectorLQubitManaged<TestType> {size_t}") {
+    SECTION("StateVectorLQubitManaged<TestType> {std::size_t}") {
         using TestVectorT = TestVector<std::complex<PrecisionT>>;
         REQUIRE(std::is_constructible_v<StateVectorLQubitManaged<TestType>,
                                         TestVectorT>);
@@ -123,7 +123,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::setBasisState",
         TestVectorT init_state =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
-        TestVectorT expected_state(size_t{1U} << num_qubits, 0.0,
+        TestVectorT expected_state(std::size_t{1U} << num_qubits, 0.0,
                                    getBestAllocator<ComplexT>());
         std::size_t index = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
         expected_state[index] = {1.0, 0.0};
@@ -149,7 +149,8 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
 
         auto expected_state = init_state;
 
-        for (size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1); i++) {
+        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
+             i++) {
             std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
         }
 

@@ -72,7 +72,7 @@ auto createRandomOps(RandomEngine &re, std::size_t length, std::size_t wires)
     std::uniform_real_distribution<PrecisionT> param_dist(0.0, 2 * M_PI);
     std::uniform_int_distribution<int> inverse_dist(0, 1);
 
-    for (size_t i = 0; i < length; i++) {
+    for (std::size_t i = 0; i < length; i++) {
         const auto gate_op = gates_to_use[gate_dist(re)];
         const auto gate_name = lookup(Constant::gate_names, gate_op);
         ops_names.emplace_back(gate_name);
@@ -146,7 +146,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             JacobianData<StateVectorT> jd{1,  4,        ini_st.data(),
                                           {}, ops_data, {0}};
 
-            for (size_t i = 0; i < 4; i++) {
+            for (std::size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), ComplexT{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexT> vjp(1);
@@ -165,7 +165,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
             JacobianData<StateVectorT> jd{1,  4,        final_st.data(),
                                           {}, ops_data, {0}};
 
-            for (size_t i = 0; i < 4; i++) {
+            for (std::size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), ComplexT{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexT> vjp(1);
@@ -212,7 +212,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
 
             auto dy = std::vector<ComplexT>(4);
 
-            for (size_t i = 0; i < 4; i++) {
+            for (std::size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), ComplexT{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexT> vjp(2);
@@ -234,7 +234,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
 
             auto dy = std::vector<ComplexT>(4);
 
-            for (size_t i = 0; i < 4; i++) {
+            for (std::size_t i = 0; i < 4; i++) {
                 std::fill(dy.begin(), dy.end(), ComplexT{0.0, 0.0});
                 dy[i] = {1.0, 0.0};
                 std::vector<ComplexT> vjp(2);
@@ -362,7 +362,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVector VJP", "[Algorithms]",
 
         StateVectorT sv(ini_st.data(), ini_st.size());
 
-        for (size_t op_idx = 0; op_idx < ops_data.getOpsName().size();
+        for (std::size_t op_idx = 0; op_idx < ops_data.getOpsName().size();
              op_idx++) {
             sv.applyOperation(ops_data.getOpsName()[op_idx],
                               ops_data.getOpsWires()[op_idx], false,

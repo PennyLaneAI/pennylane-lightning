@@ -147,7 +147,7 @@ class MeasurementsMPI final
 
         // create new MPI communicator groups
         std::size_t subCommGroupId = 0;
-        for (size_t i = 0; i < wires_global.size(); i++) {
+        for (std::size_t i = 0; i < wires_global.size(); i++) {
             std::size_t mask =
                 1 << (wires_global[i] - this->_statevector.getNumLocalQubits());
             std::size_t bitValue = mpi_manager_.getRank() & mask;
@@ -205,7 +205,7 @@ class MeasurementsMPI final
      */
     auto probs() -> std::vector<PrecisionT> {
         std::vector<std::size_t> wires;
-        for (size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
+        for (std::size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
             wires.push_back(i);
         }
         return this->probs(wires);
@@ -233,7 +233,7 @@ class MeasurementsMPI final
      *
      * @return Floating point std::vector with probabilities.
      */
-    std::vector<PrecisionT> probs(size_t num_shots) {
+    std::vector<PrecisionT> probs(std::size_t num_shots) {
         return BaseType::probs(num_shots);
     }
 
@@ -262,7 +262,7 @@ class MeasurementsMPI final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         double epsilon = 1e-15;
         std::size_t nSubSvs = 1UL << (this->_statevector.getNumGlobalQubits());
         std::vector<double> rand_nums(num_samples);
@@ -274,7 +274,7 @@ class MeasurementsMPI final
 
         std::vector<int> bitOrdering(bitStringLen);
 
-        for (size_t i = 0; i < bitOrdering.size(); i++) {
+        for (std::size_t i = 0; i < bitOrdering.size(); i++) {
             bitOrdering[i] = i;
         }
 
@@ -282,7 +282,7 @@ class MeasurementsMPI final
         std::vector<custatevecIndex_t> globalBitStrings(num_samples);
 
         if (mpi_manager_.getRank() == 0) {
-            for (size_t n = 0; n < num_samples; n++) {
+            for (std::size_t n = 0; n < num_samples; n++) {
                 rand_nums[n] = (n + 1.0) / (num_samples + 2.0);
             }
         }
@@ -393,8 +393,8 @@ class MeasurementsMPI final
         mpi_manager_.Allreduce<custatevecIndex_t>(localBitStrings,
                                                   globalBitStrings, "sum");
 
-        for (size_t i = 0; i < num_samples; i++) {
-            for (size_t j = 0; j < bitStringLen; j++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
+            for (std::size_t j = 0; j < bitStringLen; j++) {
                 samples[i * bitStringLen + (bitStringLen - 1 - j)] =
                     (globalBitStrings[i] >> j) & 1U;
             }
@@ -424,7 +424,7 @@ class MeasurementsMPI final
         if (mpi_manager_.getRank() == 0) {
             PL_ABORT_IF_NOT(
                 static_cast<std::size_t>(csrOffsets_size - 1) ==
-                    (size_t{1} << this->_statevector.getTotalNumQubits()),
+                    (std::size_t{1} << this->_statevector.getTotalNumQubits()),
                 "Incorrect size of CSR Offsets.");
             PL_ABORT_IF_NOT(numNNZ > 0, "Empty CSR matrix.");
         }
@@ -499,7 +499,7 @@ class MeasurementsMPI final
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
@@ -703,7 +703,7 @@ class MeasurementsMPI final
 
         std::vector<PrecisionT> var_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             var_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -734,7 +734,7 @@ class MeasurementsMPI final
         if (mpi_manager_.getRank() == 0) {
             PL_ABORT_IF_NOT(
                 static_cast<std::size_t>(csrOffsets_size - 1) ==
-                    (size_t{1} << this->_statevector.getTotalNumQubits()),
+                    (std::size_t{1} << this->_statevector.getTotalNumQubits()),
                 "Incorrect size of CSR Offsets.");
             PL_ABORT_IF_NOT(numNNZ > 0, "Empty CSR matrix.");
         }

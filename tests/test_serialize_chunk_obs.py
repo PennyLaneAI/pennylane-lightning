@@ -14,13 +14,11 @@
 """
 Unit tests for the serialization helper functions.
 """
-import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
 
-import pennylane_lightning
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 if not ld._CPP_BINARY_AVAILABLE:
@@ -33,8 +31,8 @@ class TestSerializeObs:
     wires_dict = {i: i for i in range(10)}
 
     @pytest.mark.parametrize("use_csingle", [True, False])
-    @pytest.mark.parametrize("obs_chunk", list(range(1, 5)))
-    def test_chunk_obs(self, use_csingle, obs_chunk):
+    @pytest.mark.parametrize("obs_chunk, expected", [(1, 5), (2, 6), (3, 7), (7, 7)])
+    def test_chunk_obs(self, use_csingle, obs_chunk, expected):
         """Test chunking of observable array"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(
@@ -46,9 +44,8 @@ class TestSerializeObs:
             qml.expval(qml.PauliY(wires=1))
             qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
             qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=0) @ qml.Identity(1))
-        s, offsets = QuantumScriptSerializer(
-            device_name, use_csingle, split_obs=True
+        s, obs_idx = QuantumScriptSerializer(
+            device_name, use_csingle, split_obs=obs_chunk
         ).serialize_observables(tape, self.wires_dict)
-        obtained_chunks = pennylane_lightning.core.lightning_base._chunk_iterable(s, obs_chunk)
-        assert len(list(obtained_chunks)) == int(np.ceil(len(s) / obs_chunk))
-        assert [0, 3, 4, 5, 6, 7] == offsets
+        assert expected == len(s)
+        assert [0] * (expected - 4) + [1, 2, 3, 4] == obs_idx

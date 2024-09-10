@@ -20,7 +20,7 @@ auto getIndicesAfterExclusion(const std::vector<std::size_t> &indicesToExclude,
                               std::size_t num_qubits)
     -> std::vector<std::size_t> {
     std::set<std::size_t> indices;
-    for (size_t i = 0; i < num_qubits; i++) {
+    for (std::size_t i = 0; i < num_qubits; i++) {
         indices.emplace(i);
     }
     for (const std::size_t &excludedIndex : indicesToExclude) {
@@ -41,7 +41,7 @@ auto generateBitPatterns(const std::vector<std::size_t> &qubitIndices,
         const std::size_t value =
             Pennylane::Util::maxDecimalForQubit(*index_it, num_qubits);
         const std::size_t currentSize = indices.size();
-        for (size_t j = 0; j < currentSize; j++) {
+        for (std::size_t j = 0; j < currentSize; j++) {
             indices.emplace_back(indices[j] + value);
         }
     }
