@@ -141,7 +141,7 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.10 -m pip install cibuildwheel~=2.16.0 tomlkit
+        run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
@@ -159,7 +159,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/dnf.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/dnf.conf
-            python -m pip install ninja cmake~=3.24.0 scipy
+            python -m pip install ninja cmake~=3.27.0 scipy
             dnf clean all -y
             dnf install gcc-toolset-13 -y
             source /opt/rh/gcc-toolset-13/enable -y

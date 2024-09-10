@@ -125,7 +125,7 @@ jobs:
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: python -m pip install cibuildwheel~=2.16.0 tomlkit
+        run: python -m pip install cibuildwheel~=2.20.0 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
@@ -144,7 +144,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            python -m pip install ninja cmake~=3.24.0
+            python -m pip install ninja cmake~=3.27.0
 
           CIBW_ENVIRONMENT: CMAKE_ARGS="-DENABLE_LAPACK=OFF"
 

@@ -68,7 +68,7 @@ jobs:
           dnf update -y && dnf install -y podman
 
       - name: Install dependencies
-        run: python3.10 -m pip install cibuildwheel~=2.16.0 tomlkit
+        run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
@@ -85,7 +85,7 @@ jobs:
 
           # Python build settings
           CIBW_BEFORE_BUILD: |
-            python -m pip install ninja cmake~=3.24.3 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
+            python -m pip install ninja cmake~=3.27.0 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
             dnf clean all -y
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
