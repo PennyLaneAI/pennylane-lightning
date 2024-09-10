@@ -25,7 +25,7 @@ from typing import List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import CountsMP, SampleMeasurement, Shots
+from pennylane.measurements import CountsMP, SampleMeasurement, Shots, MeasurementProcess
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
@@ -93,6 +93,9 @@ class LightningKokkosMeasurements(
 
             return tuple(processed)
 
+        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: wires:",len(wires))
+        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: shot:",shots.total_shots)
+
         try:
             samples = self._measurement_lightning.generate_samples(
                 len(wires), shots.total_shots
@@ -102,16 +105,66 @@ class LightningKokkosMeasurements(
             if str(e) != "probabilities contain NaN":
                 raise e
             samples = qml.math.full((shots.total_shots, len(wires)), 0)
-
+            
         self._apply_diagonalizing_gates(mps, adjoint=True)
+        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: sample:")
+        unique, counts_uniq = np.unique(samples,axis=0, return_inverse=False, return_counts=True)
+        for val, c in zip(unique, counts_uniq):
+            print(val, c)
+        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: sample:",samples.shape)
+        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: sample:",samples.sum())
 
         # if there is a shot vector, use the shots.bins generator to
         # split samples w.r.t. the shots
         processed_samples = []
+        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: shots.bins:", list(shots.bins()))
         for lower, upper in shots.bins():
-            result = _process_single_shot(samples[..., lower:upper, :])
-            processed_samples.append(result)
+            # result = _process_single_shot(samples[..., lower:upper, :])
+            tmp_sample = samples[..., lower:upper, :]
+            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: tmp_sample:")
+            unique, counts_uniq = np.unique(tmp_sample,axis=0, return_inverse=False, return_counts=True)
+            for val, c in zip(unique, counts_uniq):
+                print(val, c)
 
+            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: tmp_sample", tmp_sample.shape)
+            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: tmp_sample", tmp_sample.sum())
+            result = _process_single_shot(tmp_sample)
+
+            processed_samples.append(result)
+            
+            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: result:", result)
+
+        print("I reach this place FDX")
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
+
+    def probs(self, measurementprocess: MeasurementProcess):
+        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Probabilities of the supplied observable or wires
+        """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        # print('*'*100)
+        # print("probs: diagonalizing_gates:", diagonalizing_gates)
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(diagonalizing_gates)
+        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        
+        # print("probs: result:",results)
+        # print('*'*100)
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(
+                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            )
+        
+        # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
+        if len(results) > 0:
+            num_local_wires = len(results).bit_length() - 1 if len(results) > 0 else 0
+            return results.reshape([2] * num_local_wires).transpose().reshape(-1)
+
+        return results
