@@ -29,9 +29,6 @@ jobs:
     with:
       event_name: ${{ github.event_name }}
 
-    outputs:
-      python_version: ${{ steps.pyver.outputs.python_version }}
-
   linux-wheels-aarch64:
     needs: [set_wheel_build_matrix]
     strategy:
