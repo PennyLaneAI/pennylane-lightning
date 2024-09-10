@@ -410,10 +410,8 @@ class TestMeasurements:
         return m.measure_final_state(tape)
 
     @flaky(max_runs=1)
-    # @pytest.mark.parametrize("shots", [None, 200_000, [190_000, 190_000]])
-    @pytest.mark.parametrize("shots", [None, 1_000_000])
+    @pytest.mark.parametrize("shots", [None, 600_000, [790_000, 790_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
-    # @pytest.mark.parametrize("measurement", [qml.probs])
     @pytest.mark.parametrize(
         "observable",
         (
@@ -519,8 +517,8 @@ class TestMeasurements:
             assert np.allclose(result, expected, rtol=rtol, atol=atol)
 
     @flaky(max_runs=1)
-    # @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
-    @pytest.mark.parametrize("shots", [None, 100_000])
+    @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
+    # @pytest.mark.parametrize("shots", [None, 100_000])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",
@@ -633,28 +631,32 @@ class TestMeasurements:
             # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
             assert np.allclose(r, e, atol=atol, rtol=rtol)
 
-    # @pytest.mark.parametrize(
-    #     "cases",
-    #     [
-    #         [[0, 1], [1, 0]],
-    #         [[1, 0], [0, 1]],
-    #     ],
-    # )
-    # def test_probs_tape_unordered_wires(self, cases, tol):
-    #     """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
+    @pytest.mark.skipif(
+        device_name == "lightning.gpu",
+        reason="lightning.gpu does not support out of order prob.",
+    )
+    @pytest.mark.parametrize(
+        "cases",
+        [
+            [[0, 1], [1, 0]],
+            [[1, 0], [0, 1]],
+        ],
+    )
+    def test_probs_tape_unordered_wires(self, cases, tol):
+        """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
 
-    #     x, y, z = [0.5, 0.3, -0.7]
-    #     dev = qml.device(device_name, wires=cases[1])
+        x, y, z = [0.5, 0.3, -0.7]
+        dev = qml.device(device_name, wires=cases[1])
 
-    #     def circuit():
-    #         qml.RX(0.4, wires=[0])
-    #         qml.Rot(x, y, z, wires=[0])
-    #         qml.RY(-0.2, wires=[0])
-    #         return qml.probs(wires=cases[0])
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            return qml.probs(wires=cases[0])
 
-    #     expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
-    #     results = qml.QNode(circuit, dev)()
-    #     assert np.allclose(expected, results, tol)
+        expected = qml.QNode(circuit, qml.device("default.qubit", wires=cases[1]))()
+        results = qml.QNode(circuit, dev)()
+        assert np.allclose(expected, results, tol)
 
 
 class TestControlledOps:

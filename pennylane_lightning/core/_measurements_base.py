@@ -130,6 +130,7 @@ class LightningBaseMeasurements(ABC):
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
+    @abstractmethod
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
@@ -139,35 +140,27 @@ class LightningBaseMeasurements(ABC):
         Returns:
             Probabilities of the supplied observable or wires
         """
-        diagonalizing_gates = measurementprocess.diagonalizing_gates()
-        # print('*'*100)
-        # print("probs: diagonalizing_gates:", diagonalizing_gates)
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(diagonalizing_gates)
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        # diagonalizing_gates = measurementprocess.diagonalizing_gates()
+        # # print('*'*100)
+        # # print("probs: diagonalizing_gates:", diagonalizing_gates)
+        # if diagonalizing_gates:
+        #     self._qubit_state.apply_operations(diagonalizing_gates)
+        # results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         
-        # print("probs: result:",results)
-        # print('*'*100)
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(
-                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-            )
-            
-        if len(results) > 0:
-            num_local_wires = len(results).bit_length() - 1 if len(results) > 0 else 0
-            return results.reshape([2] * num_local_wires).transpose().reshape(-1)
+        # # print("probs: result:",results)
+        # # print('*'*100)
+        # if diagonalizing_gates:
+        #     self._qubit_state.apply_operations(
+        #         [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+        #     )
+        
+        # # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
+        # if len(results) > 0:
+        #     num_local_wires = len(results).bit_length() - 1 if len(results) > 0 else 0
+        #     return results.reshape([2] * num_local_wires).transpose().reshape(-1)
 
-        return results
+        # return results
     
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(wires)
-        # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
-        local_prob = self.measurements.probs(observable_wires)
-        if len(local_prob) > 0:
-            num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
-            return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
-        return local_prob
-
 
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess.
