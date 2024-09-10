@@ -422,8 +422,8 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="N-controlled operations only implemented in lightning.qubit.",
+    device_name not in ("lightning.qubit", "lightning.tensor"),
+    reason="N-controlled operations only implemented in lightning.qubit and lightning.tensor.",
 )
 @pytest.mark.parametrize(
     "operation",
@@ -460,8 +460,13 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
-    threshold = 250
+    threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
+    if operation == qml.GlobalPhase and device_name == "lightning.tensor":
+        pytest.skip("GlobalPhase not implemented in lightning.tensor.")
+    if num_wires != 1 and device_name == "lightning.tensor":
+        pytest.skip("Multi-target wire controlled gates not implemented in lightning.tensor.")
+
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires

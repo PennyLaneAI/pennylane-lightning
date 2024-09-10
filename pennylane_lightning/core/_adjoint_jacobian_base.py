@@ -35,7 +35,7 @@ class LightningBaseAdjointJacobian(ABC):
     Check and execute the adjoint Jacobian differentiation method.
 
     Args:
-        qubit_state(Lightning[Device]StateVector): State Vector to calculate the adjoint Jacobian with.
+        qubit_state(Lightning [Device] StateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
@@ -49,7 +49,7 @@ class LightningBaseAdjointJacobian(ABC):
 
     @property
     def qubit_state(self):
-        """Returns a handle to the Lightning[Device]StateVector object."""
+        """Returns a handle to the Lightning [Device] StateVector object."""
         return self._qubit_state
 
     @property
@@ -89,15 +89,12 @@ class LightningBaseAdjointJacobian(ABC):
 
         return Expectation
 
-    def _process_jacobian_tape(
-        self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False
-    ):
+    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
-            use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
             split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
 
         Returns:
@@ -105,6 +102,7 @@ class LightningBaseAdjointJacobian(ABC):
         """
         use_csingle = self._qubit_state.dtype == np.complex64
 
+        use_mpi = False
         obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)
@@ -214,9 +212,9 @@ class LightningBaseAdjointJacobian(ABC):
 
         .. code-block:: python
 
-            statevector = Lightning[Device]StateVector(num_wires=num_wires)
+            statevector = Lightning [Device] StateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            jacobian = Lightning[Device]AdjointJacobian(statevector).calculate_jacobian(tape)
+            jacobian =  Lightning [Device] AdjointJacobian(statevector).calculate_jacobian(tape)
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
@@ -231,9 +229,9 @@ class LightningBaseAdjointJacobian(ABC):
 
         .. code-block:: python
 
-            statevector = Lightning[Device]StateVector(num_wires=num_wires)
+            statevector = Lightning [Device] StateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            vjp = Lightning[Device]AdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
+            vjp =  Lightning [Device] AdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
 
         computes :math:`\\pmb{w} = (w_1,\\cdots,w_m)` where
 

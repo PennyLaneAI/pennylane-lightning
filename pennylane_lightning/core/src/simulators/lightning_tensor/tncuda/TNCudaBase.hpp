@@ -73,6 +73,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
     std::set<int64_t> gate_ids_;
 
+    std::vector<std::size_t> identiy_gate_ids_;
+
   public:
     TNCudaBase() = delete;
 
@@ -245,6 +247,87 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Append a single controlled gate tensor to the compute graph.
+     *
+     * NOTE: This function does not update the quantum state but only appends
+     * gate tensor operator to the graph. The controlled gate should be
+     * immutable as v24.08.
+     *
+     * @param baseOpName Base gate's name.
+     * @param controlled_wires Controlled wires for the gate.
+     * @param controlled_values Controlled values for the gate.
+     * @param targetWires Target wires for the gate.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional gate matrix for custom gates.
+     */
+    void
+    applyControlledOperation(const std::string &baseOpName,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &targetWires,
+                             bool adjoint = false,
+                             const std::vector<PrecisionT> &params = {0.0},
+                             const std::vector<ComplexT> &gate_matrix = {}) {
+        // TODO: Need to revisit this line of code once `cutensornet` supports
+        // multi-target wire controlled gates
+        PL_ABORT_IF_NOT(targetWires.size() == 1,
+                        "Unsupported controlled gate: cutensornet only "
+                        "supports 1-wire target controlled gates");
+
+        auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
+
+        int64_t dummy_id = gate_ids_.empty() ? 1 : *gate_ids_.rbegin() + 1;
+
+        if (gate_matrix.empty()) {
+            gate_cache_->add_gate(dummy_id, baseOpName, par, adjoint);
+        } else {
+            auto gate_key = std::make_pair(baseOpName, par);
+            std::vector<CFP_t> matrix_cu =
+                cuUtil::complexToCu<ComplexT>(gate_matrix);
+            gate_cache_->add_gate(dummy_id, gate_key, matrix_cu, adjoint);
+        }
+
+        int64_t id;
+
+        std::vector<int32_t> controlledModes =
+            cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                controlled_wires, BaseType::getNumQubits());
+
+        std::vector<int64_t> controlled_values_int64(controlled_values.size());
+        std::transform(controlled_values.begin(), controlled_values.end(),
+                       controlled_values_int64.begin(),
+                       [](bool val) { return static_cast<int64_t>(val); });
+
+        std::vector<int32_t> targetModes =
+            cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                targetWires, BaseType::getNumQubits());
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyControlledTensorOperator(
+            /* const cutensornetHandle_t */ getTNCudaHandle(),
+            /* cutensornetState_t */ getQuantumState(),
+            /* int32_t numControlModes */ controlled_wires.size(),
+            /* const int32_t * stateControlModes */ controlledModes.data(),
+            /* const int64_t *stateControlValues*/
+            controlled_values_int64.data(),
+            /* int32_t numTargetModes */ targetWires.size(),
+            /* const int32_t * stateTargetModes */ targetModes.data(),
+            /* void * */
+            static_cast<void *>(gate_cache_->get_gate_device_ptr(dummy_id)),
+            /* const int64_t *tensorModeStrides */ nullptr,
+            /* const int32_t immutable */ 1,
+            /* const int32_t adjoint */ 0,
+            /* const int32_t unitary */ 1,
+            /* int64_t tensorId* */ &id));
+
+        if (dummy_id != id) {
+            gate_cache_->update_key(dummy_id, id);
+        }
+
+        gate_ids_.insert(id);
+    }
+
+    /**
      * @brief Append a single gate tensor to the compute graph.
      * NOTE: This function does not update the quantum state but only appends
      * gate tensor operator to the graph.
@@ -285,8 +368,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
                 wires, BaseType::getNumQubits());
 
-        // TODO: Need changes to support to the controlled gate tensor API once
-        // the API is finalized in cutensornet lib.
         //  Note `adjoint` in the cutensornet context indicates whether or not
         //  all tensor elements of the tensor operator will be complex
         //  conjugated. `adjoint` in the following API is not equivalent to
@@ -306,6 +387,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         if (dummy_id != id) {
             gate_cache_->update_key(dummy_id, id);
+        }
+
+        // one time initialization of the identity gate id
+        if (identiy_gate_ids_.empty() && opName == "Identity") {
+            identiy_gate_ids_.push_back(static_cast<std::size_t>(id));
         }
 
         gate_ids_.insert(id);
@@ -489,18 +575,18 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * gate cache is empty or update the existing gate operator by itself.
      */
     void dummy_tensor_update() {
-        if (gate_cache_->is_empty()) {
+        if (identiy_gate_ids_.empty()) {
             applyOperation("Identity", {0}, false);
         }
-
-        const std::size_t id = gate_cache_->get_cache_head_idx();
 
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetState_t */ getQuantumState(),
-            /* int64_t tensorId*/ static_cast<int64_t>(id),
+            /* int64_t tensorId*/
+            static_cast<int64_t>(identiy_gate_ids_.front()),
             /* void* */
-            static_cast<void *>(gate_cache_->get_gate_device_ptr(id)),
+            static_cast<void *>(
+                gate_cache_->get_gate_device_ptr(identiy_gate_ids_.front())),
             /* int32_t unitary*/ 1));
     }
 
