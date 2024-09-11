@@ -127,8 +127,8 @@ class TestMeasurementFunction:
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
 
-    @pytest.mark.parametrize("n_qubits", range(4, 12, 4))
-    @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 12, 4)))
+    @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
+    @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
     def test_probs_many_wires(self, n_qubits, n_targets, tol):
         """Test probs measuring many wires of a random quantum state."""
         if n_targets >= n_qubits:
