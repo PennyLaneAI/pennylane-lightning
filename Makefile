@@ -63,10 +63,14 @@ clean:
 	rm -rf pennylane_lightning/*_ops*
 	rm -rf *.egg-info
 
-.PHONY: python
+.PHONY: python python-skip-compile
 python:
 	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
 	pip install -e . --config-settings editable_mode=compat -vv
+
+python-skip-compile:
+	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
+	SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
 .PHONY: wheel
 wheel:

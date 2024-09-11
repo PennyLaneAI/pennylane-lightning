@@ -3,32 +3,17 @@ version: 2
 sphinx:
   configuration: doc/conf.py
 
-python:
-  install:
-    - requirements: ci_build_requirements.txt
-    - requirements: doc/requirements.txt
-    - requirements: requirements-dev.txt
-    - method: pip
-      path: .
-
 build:
   os: ubuntu-22.04
   tools:
     python: "3.10"
   apt_packages:
-    - cmake
-    - build-essential
-    - libopenblas-base
-    - libopenblas-dev
     - graphviz
-    - wget
   jobs:
-    pre_install:
-      - wget https://developer.download.nvidia.com/compute/cuda/12.3.2/local_installers/cuda_12.3.2_545.23.08_linux.run
-      - sh cuda_12.3.2_545.23.08_linux.run --silent --toolkit --toolkitpath=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3 || cat /tmp/cuda-installer.log
-      - echo "setuptools~=66.0" >> ci_build_requirements.txt
     post_install:
-      - rm -rf ./build && export PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/bin${PATH:+:${PATH}} && export LD_LIBRARY_PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} && PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py && CMAKE_ARGS="-DPL_DISABLE_CUDA_SAFETY=1" python -m build
-      - rm -rf ./build && PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py && python -m build
-      - rm -rf ./build && export PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/bin${PATH:+:${PATH}} && export LD_LIBRARY_PATH=${READTHEDOCS_VIRTUALENV_PATH}/cuda-12.3/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}} && PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py && CMAKE_ARGS="-DPL_DISABLE_CUDA_SAFETY=1" python -m build
+      - python -m pip install --exists-action=w --no-cache-dir -r doc/requirements.txt
+      - PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
+      - rm -rf ./build && PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
+      - rm -rf ./build && PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
+      - rm -rf ./build && PL_BACKEND="lightning_tensor" python scripts/configure_pyproject_toml.py && SKIP_COMPILATION=True python -m build
       - python -m pip install ./dist/*.whl
