@@ -1,3 +1,5 @@
+tomlkit
+build
 breathe
 docutils==0.16
 exhale>=0.3.3
