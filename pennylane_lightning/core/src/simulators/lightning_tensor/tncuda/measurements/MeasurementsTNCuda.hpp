@@ -139,8 +139,10 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
         } else {
             PL_ABORT_IF(projected_modes.size() > 64,
-                        "Number of projected modes is greater than 64.");
-            const std::size_t projected_modes_size = std::size_t(1)
+                        "Number of projected modes is greater than 64 and the "
+                        "value of projected_modes_size will exceed "
+                        "std::numeric_limits<size_t>::max()");
+            const std::size_t projected_modes_size = std::size_t(1U)
                                                      << projected_modes.size();
 
             DataBuffer<PrecisionT, int> tmp_probs(
@@ -148,7 +150,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
 
             for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
                 for (std::size_t j = 0; j < projected_modes.size(); j++) {
-                    projectedModeValues[j] = (idx >> j) & 1;
+                    projectedModeValues[j] = (idx >> j) & 1U;
                 }
 
                 tensor_network_.get_state_tensor(
