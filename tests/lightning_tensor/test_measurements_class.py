@@ -140,11 +140,12 @@ class TestMeasurementFunction:
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
 
-        def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            return qml.probs(wires=range(0, n_targets))
+        ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
 
-        res = qml.QNode(circuit, dev)()
-        ref = qml.QNode(circuit, dq)()
+        mp = qml.probs(wires=range(n_targets))
+
+        tape = qml.tape.QuantumScript(ops, [mp])
+        res = dev.execute(tape)
+        ref = dq.execute(tape)
 
         assert np.allclose(res, ref, atol=tol, rtol=0)

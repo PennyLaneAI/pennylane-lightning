@@ -138,8 +138,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
                           tensor_network_.getDevTag().getStreamID());
 
         } else {
-            PL_ABORT_IF(projected_modes.size() > 63,
-                        "Number of projected modes is greater than 63.");
+            PL_ABORT_IF(projected_modes.size() > 64,
+                        "Number of projected modes is greater than 64.");
             const std::size_t projected_modes_size = std::size_t(1)
                                                      << projected_modes.size();
 
