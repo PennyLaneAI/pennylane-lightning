@@ -192,7 +192,8 @@ template <class TensorNetT> class MeasurementsTNCuda {
             std::vector<ComplexT> h_state_vector(length);
             d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
 
-            PrecisionT sum = std::accumulate(h_res.begin(), h_res.end(), 0.0);
+            PrecisionT sum =
+                std::accumulate(h_res.begin(), h_res.end(), PrecisionT{0.0});
 
             PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
             for (std::size_t i = 0; i < length; i++) {
