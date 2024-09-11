@@ -93,6 +93,18 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
         auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
         REQUIRE_THROWS_AS(measure.probs({2, 1}), LightningException);
     }
+
+    SECTION("Test excessive projected wires failure") {
+        // Defining the State Vector that will be measured.
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        std::size_t num_qubits = 100;
+        std::size_t maxBondDim = bondDim;
+
+        TensorNetT mps_state{num_qubits, maxBondDim};
+
+        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
+        REQUIRE_THROWS_AS(measure.probs({0, 1, 2, 3}), LightningException);
+    }
 }
 
 TEMPLATE_TEST_CASE("Samples", "[Measures]", float, double) {
