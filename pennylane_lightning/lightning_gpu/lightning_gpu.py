@@ -27,8 +27,8 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.operation import Operator
 from pennylane.measurements import MidMeasureMP
+from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
@@ -308,10 +308,7 @@ class LightningGPU(LightningBase):
         )
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), 
-            dtype=c_dtype, 
-            mpi_handler=self._mpi_handler, 
-            sync=self._sync
+            num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
         )
 
     @property
@@ -430,4 +427,3 @@ class LightningGPU(LightningBase):
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return LightningGPUMeasurements(final_state).measure_final_state(circuit)
-
