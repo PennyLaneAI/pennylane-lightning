@@ -15,6 +15,7 @@
 Class implementation for lightning_gpu state-vector manipulation.
 """
 from warnings import warn
+
 try:
     from pennylane_lightning.lightning_gpu_ops import StateVectorC64, StateVectorC128
 
