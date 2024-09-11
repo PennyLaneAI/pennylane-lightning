@@ -2,6 +2,12 @@
 
 ### New features since last release
 
+* Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
+  [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+
+* Add `Projector` observable support via diagonalization to Lightning-GPU.
+  [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
+
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
   [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
 
@@ -10,10 +16,25 @@
 
 ### Breaking changes
 
+* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
+
+* Remove PowerPC wheel build recipe for Lightning-Qubit.
+  [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
+
 * Remove support for Python 3.9.
-  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+  [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* Update Pybind11 to 2.13.5.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
+
+* Migrate wheels artifacts to v4.
+  [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
+
+* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
+  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
 
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
@@ -24,9 +45,12 @@
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
-* Unify Lightning Kokkos device and Lightning Qubit device under a Lightning Base device
+* Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
   [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
   
+* LightningKokkos gains native support for the `PauliRot` gate.
+  [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
+
 ### Documentation
 
 ### Bug fixes
@@ -35,7 +59,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 

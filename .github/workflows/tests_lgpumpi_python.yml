@@ -19,7 +19,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-      - labeled
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lgpumpi_python.yml'
@@ -183,7 +182,7 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          pattern: ubuntu-codecov*
+          pattern: ubuntu-codecov-*
           merge-multiple: true
 
       - name: Upload to Codecov

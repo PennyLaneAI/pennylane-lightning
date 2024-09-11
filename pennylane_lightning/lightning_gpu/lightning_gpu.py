@@ -59,10 +59,13 @@ try:
         from ._mpi_handler import LightningGPU_MPIHandler
 
         MPI_SUPPORT = True
-    except ImportError:
+    except ImportError as ex:
+        warn(str(ex), UserWarning)
         MPI_SUPPORT = False
 
-except (ImportError, ValueError) as e:
+    LGPU_CPP_BINARY_AVAILABLE = True
+except (ImportError, ValueError) as ex:
+    warn(str(ex), UserWarning)
     backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
 
