@@ -330,6 +330,7 @@ class LightningTensorNet:
         # Append the MPOs to the tensor network
         self._tensornet.applyMPOOperator(mpos, sorted_wires, max_mpo_bond_dim)
 
+    # pylint: disable=too-many-branches
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor. Note that `cutensornet` only supports controlled gates with a single wire target.
 
@@ -355,6 +356,7 @@ class LightningTensorNet:
             method = getattr(tensornet, "applyControlledMatrix")
             method(qml.matrix(operation.base), control_wires, control_values, target_wires, False)
 
+    # pylint: disable=too-many-statements
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
 
