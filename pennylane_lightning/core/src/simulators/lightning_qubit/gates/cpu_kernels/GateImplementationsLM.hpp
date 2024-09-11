@@ -237,6 +237,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledMatrixOperation::NCMultiQubitOp,
     };
 
+    static std::size_t parity_2_offset(const std::vector<std::size_t> &parity,
+                                       const std::size_t k) {
+        std::size_t offset{0U};
+        for (std::size_t i = 0; i < parity.size(); i++) {
+            offset |= ((k << i) & parity[i]);
+        }
+        return offset;
+    }
+
     /* Matrix gates */
 
     /**
@@ -411,10 +420,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                   controlled_values);
         PL_LOOP_PARALLEL(1)
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            std::size_t offset{0U};
-            for (std::size_t i = 0; i < parity.size(); i++) {
-                offset |= ((k << i) & parity[i]);
-            }
+            const std::size_t offset = parity_2_offset(parity, k);
             core_function(arr, indices, offset);
         }
     }
@@ -588,10 +594,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::size_t i1 = indices[1];
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t offset{0U};
-                for (std::size_t i = 0; i < parity.size(); i++) {
-                    offset |= ((k << i) & parity[i]);
-                }
+                const std::size_t offset = parity_2_offset(parity, k);
                 core_function(arr, i0 + offset, i1 + offset);
             }
         } else {
@@ -1218,10 +1221,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::size_t i11 = indices[0B11];
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t offset{0U};
-                for (std::size_t i = 0; i < parity.size(); i++) {
-                    offset |= ((k << i) & parity[i]);
-                }
+                const std::size_t offset = parity_2_offset(parity, k);
                 core_function(arr, i00 + offset, i01 + offset, i10 + offset,
                               i11 + offset);
             }
@@ -1653,14 +1653,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             const std::size_t i1100 = indices[0B1100];
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-                std::size_t offset{0U};
-                for (std::size_t i = 0; i < parity.size(); i++) {
-                    offset |= ((k << i) & parity[i]);
-                }
+                const std::size_t offset = parity_2_offset(parity, k);
                 core_function(arr, i0011 + offset, i1100 + offset, indices,
                               offset);
             }
         } else {
+            constexpr std::size_t offset{0U};
             constexpr std::size_t one{1U};
             const std::array<std::size_t, 4> rev_wires{
                 num_qubits - wires[3] - 1, num_qubits - wires[2] - 1,
@@ -1669,7 +1667,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 one << rev_wires[0], one << rev_wires[1], one << rev_wires[2],
                 one << rev_wires[3]};
             const auto parity = Pennylane::Util::revWireParity(rev_wires);
-            const std::size_t offset{0U};
             const std::vector<std::size_t> indices{};
             PL_LOOP_PARALLEL(1)
             for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
@@ -1970,10 +1967,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t i1 = indices[(mask << one) | one];
         PL_LOOP_PARALLEL(1)
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            std::size_t offset{0U};
-            for (std::size_t i = 0; i < parity.size(); i++) {
-                offset |= ((k << i) & parity[i]);
-            }
+            const std::size_t offset = parity_2_offset(parity, k);
             for (std::size_t i = 0; i < indices.size(); i++) {
                 if ((i >> one) == mask) {
                     continue;
@@ -2196,10 +2190,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         PL_LOOP_PARALLEL(1)
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
-            std::size_t offset{0U};
-            for (std::size_t i = 0; i < parity.size(); i++) {
-                offset |= ((k << i) & parity[i]);
-            }
+            const std::size_t offset = parity_2_offset(parity, k);
             for (std::size_t i = 0; i < indices.size(); i++) {
                 if ((i >> two) == mask) {
                     continue;
@@ -2480,11 +2471,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         PL_LOOP_PARALLEL(1)
         for (std::size_t k = 0; k < exp2(num_qubits - nw_tot); k++) {
+            const std::size_t offset = parity_2_offset(parity, k);
             if constexpr (compute_indices) {
-                std::size_t offset{0U};
-                for (std::size_t i = 0; i < parity.size(); i++) {
-                    offset |= ((k << i) & parity[i]);
-                }
                 for (std::size_t i = 0; i < indices.size(); i++) {
                     if ((i >> 4U) == mask) {
                         continue;
@@ -2494,10 +2482,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 core_function(arr, i0011 + offset, i1100 + offset, indices,
                               offset);
             } else {
-                std::size_t offset{0U};
-                for (std::size_t i = 0; i < parity.size(); i++) {
-                    offset |= ((k << i) & parity[i]);
-                }
                 core_function(arr, i0011 + offset, i1100 + offset, indices,
                               offset);
             }
