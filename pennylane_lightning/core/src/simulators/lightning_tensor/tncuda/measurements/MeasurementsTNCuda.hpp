@@ -173,6 +173,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
         // LCOV_EXCL_START
         if (wires.size() > 10) {
             PrecisionT sum;
+
             asum_CUDA_device<PrecisionT>(
                 d_output_probs.getData(), length,
                 tensor_network_.getDevTag().getDeviceID(),
@@ -186,20 +187,25 @@ template <class TensorNetT> class MeasurementsTNCuda {
                                 tensor_network_.getDevTag().getStreamID());
 
             d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
-
         } else {
             // LCOV_EXCL_STOP
-            std::vector<ComplexT> h_state_vector(length);
+            // This branch dispatches the calculation to the CPU for a small
+            // number of wires. The CPU calculation is faster than the GPU
+            // calculation for a small number of wires due to the overhead of
+            // the GPU kernel launch.
             d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
 
+            // TODO: OMP support
             PrecisionT sum =
                 std::accumulate(h_res.begin(), h_res.end(), PrecisionT{0.0});
 
             PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
+            // TODO: OMP support
             for (std::size_t i = 0; i < length; i++) {
                 h_res[i] /= sum;
             }
         }
+
         return h_res;
     }
 
