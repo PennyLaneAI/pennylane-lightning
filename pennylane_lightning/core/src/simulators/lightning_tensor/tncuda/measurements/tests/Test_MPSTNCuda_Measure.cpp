@@ -128,14 +128,13 @@ TEMPLATE_TEST_CASE("Samples", "[Measures]", float, double) {
         // compute estimated probabilities from histogram
         std::vector<TestType> probabilities(counts.size());
         for (std::size_t i = 0; i < counts.size(); i++) {
-            probabilities[i] =
-                counts[i] / std::static_cast<TestType>(num_samples);
+            probabilities[i] = counts[i] / static_cast<TestType>(num_samples);
         }
 
         // compare estimated probabilities to real probabilities
         SECTION("No wires provided:") {
             REQUIRE_THAT(probabilities,
-                         Catch::Approx(expected_probabilities).margin(.1));
+                         Catch::Approx(expected_probabilities).margin(.05));
         }
     }
 }

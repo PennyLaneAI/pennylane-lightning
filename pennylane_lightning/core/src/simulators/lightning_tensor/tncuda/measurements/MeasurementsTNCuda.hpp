@@ -107,24 +107,72 @@ template <class TensorNetT> class MeasurementsTNCuda {
         DataBuffer<CFP_t, int> d_output_tensor(
             length, tensor_network_.getDevTag(), true);
 
+        DataBuffer<PrecisionT, int> d_output_probs(
+            length, tensor_network_.getDevTag(), true);
+
         d_output_tensor.zeroInit();
+        d_output_probs.zeroInit();
 
-        tensor_network_.get_state_tensor(d_output_tensor.getData(),
-                                         d_output_tensor.getLength(), wires,
-                                         numHyperSamples);
+        auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+            wires, tensor_network_.getNumQubits());
 
-        // `10` here means `1024` elements to be calculated
-        // LCOV_EXCL_START
-        if (wires.size() > 10) {
-            DataBuffer<PrecisionT, int> d_output_probs(
-                length, tensor_network_.getDevTag(), true);
+        std::vector<int32_t> projected_modes{};
 
+        for (int32_t idx = 0;
+             idx < static_cast<int32_t>(tensor_network_.getNumQubits());
+             idx++) {
+            auto it = std::find(stateModes.begin(), stateModes.end(), idx);
+            if (it == stateModes.end()) {
+                projected_modes.emplace_back(idx);
+            }
+        }
+
+        std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
+
+        if (projected_modes.size() == 0) {
+            tensor_network_.get_state_tensor(d_output_tensor.getData(),
+                                             d_output_tensor.getLength(), {},
+                                             {}, numHyperSamples);
             getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
                           length, static_cast<int>(thread_per_block),
                           tensor_network_.getDevTag().getStreamID());
 
-            PrecisionT sum;
+        } else {
+            PL_ABORT_IF(projected_modes.size() > 63,
+                        "Number of projected modes is greater than 63.");
+            const std::size_t projected_modes_size = std::size_t(1)
+                                                     << projected_modes.size();
 
+            DataBuffer<PrecisionT, int> tmp_probs(
+                length, tensor_network_.getDevTag(), true);
+
+            for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
+                for (std::size_t j = 0; j < projected_modes.size(); j++) {
+                    projectedModeValues[j] = (idx >> j) & 1;
+                }
+
+                tensor_network_.get_state_tensor(
+                    d_output_tensor.getData(), length, projected_modes,
+                    projectedModeValues, numHyperSamples);
+
+                getProbs_CUDA(d_output_tensor.getData(), tmp_probs.getData(),
+                              length, static_cast<int>(thread_per_block),
+                              tensor_network_.getDevTag().getStreamID());
+
+                // Copy the data to the output tensor
+                scaleAndAdd_CUDA(PrecisionT{1.0}, tmp_probs.getData(),
+                                 d_output_probs.getData(),
+                                 tmp_probs.getLength(),
+                                 tensor_network_.getDevTag().getDeviceID(),
+                                 tensor_network_.getDevTag().getStreamID(),
+                                 tensor_network_.getCublasCaller());
+            }
+        }
+
+        // `10` here means `1024` elements to be calculated
+        // LCOV_EXCL_START
+        if (wires.size() > 10) {
+            PrecisionT sum;
             asum_CUDA_device<PrecisionT>(
                 d_output_probs.getData(), length,
                 tensor_network_.getDevTag().getDeviceID(),
@@ -138,30 +186,19 @@ template <class TensorNetT> class MeasurementsTNCuda {
                                 tensor_network_.getDevTag().getStreamID());
 
             d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
+
         } else {
             // LCOV_EXCL_STOP
-            // This branch dispatches the calculation to the CPU for a small
-            // number of wires. The CPU calculation is faster than the GPU
-            // calculation for a small number of wires due to the overhead of
-            // the GPU kernel launch.
             std::vector<ComplexT> h_state_vector(length);
-            d_output_tensor.CopyGpuDataToHost(h_state_vector.data(),
-                                              h_state_vector.size());
-            // TODO: OMP support
-            for (std::size_t i = 0; i < length; i++) {
-                h_res[i] = std::norm(h_state_vector[i]);
-            }
+            d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
 
-            // TODO: OMP support
             PrecisionT sum = std::accumulate(h_res.begin(), h_res.end(), 0.0);
 
             PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
-            // TODO: OMP support
             for (std::size_t i = 0; i < length; i++) {
                 h_res[i] /= sum;
             }
         }
-
         return h_res;
     }
 
