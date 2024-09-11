@@ -310,7 +310,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Returns:
             None
         """
-        raise DeviceError("LightningGPU does not support Mid Circuit Measure.")
+        raise DeviceError("LightningGPU does not support Mid-circuit measurements.")
     
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
