@@ -173,7 +173,6 @@ template <class TensorNetT> class MeasurementsTNCuda {
         // LCOV_EXCL_START
         if (wires.size() > 10) {
             PrecisionT sum;
-
             asum_CUDA_device<PrecisionT>(
                 d_output_probs.getData(), length,
                 tensor_network_.getDevTag().getDeviceID(),
