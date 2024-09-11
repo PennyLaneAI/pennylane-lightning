@@ -171,10 +171,12 @@ class TestDisplacementSqueezingEmbedding:
 class TestIQPEmbedding:
     """Test the IQPEmbedding algorithm."""
 
-    @pytest.mark.parametrize(
-        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
-    )
+    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_iqpembedding(self, n_qubits):
+        if device_name == "lightning.tensor" and n_qubits > 14:
+            pytest.xfail(
+                "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
+            )
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -193,10 +195,12 @@ class TestIQPEmbedding:
 class TestQAOAEmbedding:
     """Test the QAOAEmbedding algorithm."""
 
-    @pytest.mark.parametrize(
-        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
-    )
+    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qaoaembedding(self, n_qubits):
+        if device_name == "lightning.tensor" and n_qubits > 14:
+            pytest.xfail(
+                "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
+            )
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -255,10 +259,12 @@ class TestRandomLayers:
 class TestStronglyEntanglingLayers:
     """Test the StronglyEntanglingLayers algorithm."""
 
-    @pytest.mark.parametrize(
-        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
-    )
+    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_stronglyentanglinglayers(self, n_qubits):
+        if device_name == "lightning.tensor" and n_qubits > 14:
+            pytest.xfail(
+                "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
+            )
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -278,10 +284,12 @@ class TestStronglyEntanglingLayers:
 class TestSimplifiedTwoDesign:
     """Test the SimplifiedTwoDesign algorithm."""
 
-    @pytest.mark.parametrize(
-        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
-    )
+    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_simplifiedtwodesign(self, n_qubits):
+        if device_name == "lightning.tensor" and n_qubits > 14:
+            pytest.xfail(
+                "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
+            )
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -717,10 +725,12 @@ class TestQuantumPhaseEstimation:
 class TestQFT:
     """Test the QFT algorithm."""
 
-    @pytest.mark.parametrize(
-        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 14)
-    )
+    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qft(self, n_qubits):
+        if device_name == "lightning.tensor" and n_qubits > 14:
+            pytest.xfail(
+                "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
+            )
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -778,10 +788,12 @@ class TestAQFT:
 class TestQSVT:
     """Test the QSVT algorithm."""
 
-    @pytest.mark.parametrize(
-        "n_qubits", range(2, 20, 2) if device_name != "lightning.tensor" else range(2, 16)
-    )
+    @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qsvt(self, n_qubits):
+        if device_name == "lightning.tensor" and n_qubits > 14:
+            pytest.xfail(
+                "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
+            )
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
         A = np.array([[0.1]])
