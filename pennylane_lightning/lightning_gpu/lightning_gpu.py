@@ -21,6 +21,7 @@ from ctypes.util import find_library
 from importlib import util as imp_util
 from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
