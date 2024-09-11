@@ -49,6 +49,7 @@ def svd_split(M, bond_dim):
 
 
 def split(M, max_mpo_bond_dim):
+    """SVD split a matrix into a matrix product operator via numpy linalg. Note that this function is to be moved to the C++ layer."""
     U, S, Vd = np.linalg.svd(M, full_matrices=False)
     bonds = len(S)
     Vd = (
@@ -65,6 +66,7 @@ def split(M, max_mpo_bond_dim):
 
 
 def dense_to_mpo(psi, n_wires, max_mpo_bond_dim):
+    """Convert a dense gate matrix to a matrix product operator."""
     Ms = [[] for _ in range(n_wires)]
 
     psi = np.reshape(psi, (4, -1))
@@ -344,22 +346,14 @@ class LightningTensorNet:
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        if method is not None and basename not in (
-            "GlobalPhase",
-            "MultiRZ",
-        ):  # apply n-controlled specialized gate
+
+        if method is not None and basename not in ("GlobalPhase", "MultiRZ"):
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(tensornet, "applyControlledMatrix")
-            method(
-                qml.matrix(operation.base),
-                control_wires,
-                control_values,
-                target_wires,
-                False,
-            )
+            method(qml.matrix(operation.base), control_wires, control_values, target_wires, False)
 
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
