@@ -658,6 +658,8 @@ class TestMeasurements:
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
         dtol = tol if shots is None else max(tol, 1.0e-2)
+        if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
+            dtol = max(dtol, 1.0e-4)
         # TODO Set better atol and rtol
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
