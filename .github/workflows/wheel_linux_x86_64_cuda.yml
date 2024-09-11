@@ -138,6 +138,8 @@ jobs:
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     # if: |
     #   github.event_name == 'release' ||
     #   github.ref == 'refs/heads/master'
