@@ -19,7 +19,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-      - labeled
     paths:
       - .github/workflows/tests_lgpumpi_cpp.yml
       - pennylane_lightning/core/src/**

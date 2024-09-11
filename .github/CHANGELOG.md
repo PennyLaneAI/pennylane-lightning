@@ -27,6 +27,9 @@
 
 ### Improvements
 
+* Skip the compilation of Lightning simulators and development requirements to boost the build of public docs up to 5x.
+  [(#904)](https://github.com/PennyLaneAI/pennylane-lightning/pull/904)
+
 * Update Pybind11 to 2.13.5.
   [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
 
@@ -48,6 +51,9 @@
 * Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
   [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
   
+* LightningKokkos gains native support for the `PauliRot` gate.
+  [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
+
 ### Documentation
 
 ### Bug fixes
