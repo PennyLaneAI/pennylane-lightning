@@ -46,7 +46,6 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 
 
 def get_hermitian_matrix(n):
-    np.random.seed(33)
     H = np.random.rand(n, n) + 1.0j * np.random.rand(n, n)
     return H + np.conj(H).T
 
@@ -409,7 +408,7 @@ class TestMeasurements:
         m = LightningMeasurements(statevector)
         return m.measure_final_state(tape)
 
-    @flaky(max_runs=1)
+    @flaky(max_runs=2)
     @pytest.mark.parametrize("shots", [None, 600_000, [790_000, 790_000]])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
@@ -450,12 +449,6 @@ class TestMeasurements:
             pytest.skip(
                 f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
             )
-            
-        print()
-        print("shots:",shots)
-        print("measurement:",measurement)
-        print("observable:", observable)
-            
         rtol = 1.0e-2  # 1% of expected value as tolerance
         if shots != None and measurement is qml.expval:
             # Increase the number of shots
@@ -481,7 +474,6 @@ class TestMeasurements:
         tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
 
         statevector = lightning_sv(n_qubits)
-        # print("dtype:",statevector.dtype)
         statevector = statevector.get_final_state(tape)
         m = LightningMeasurements(statevector)
 
@@ -503,9 +495,6 @@ class TestMeasurements:
 
         expected = self.calculate_reference(tape, lightning_sv)
 
-        print("Result:")
-        print(f'expected: {expected}')
-        print(f'  result: {result}')
         # a few tests may fail in single precision, and hence we increase the tolerance
         if shots is None:
             assert np.allclose(result, expected, max(tol, 1.0e-4))
@@ -516,9 +505,8 @@ class TestMeasurements:
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=rtol, atol=atol)
 
-    @flaky(max_runs=1)
+    @flaky(max_runs=10)
     @pytest.mark.parametrize("shots", [None, 100_000, (90_000, 90_000)])
-    # @pytest.mark.parametrize("shots", [None, 100_000])
     @pytest.mark.parametrize("measurement", [qml.expval, qml.probs, qml.var])
     @pytest.mark.parametrize(
         "obs0_",

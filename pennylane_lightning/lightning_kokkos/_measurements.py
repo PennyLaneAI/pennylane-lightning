@@ -93,9 +93,6 @@ class LightningKokkosMeasurements(
 
             return tuple(processed)
 
-        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: wires:",len(wires))
-        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: shot:",shots.total_shots)
-
         try:
             samples = self._measurement_lightning.generate_samples(
                 len(wires), shots.total_shots
@@ -105,36 +102,16 @@ class LightningKokkosMeasurements(
             if str(e) != "probabilities contain NaN":
                 raise e
             samples = qml.math.full((shots.total_shots, len(wires)), 0)
-            
+
         self._apply_diagonalizing_gates(mps, adjoint=True)
-        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: sample:")
-        unique, counts_uniq = np.unique(samples,axis=0, return_inverse=False, return_counts=True)
-        for val, c in zip(unique, counts_uniq):
-            print(val, c)
-        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: sample:",samples.shape)
-        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: sample:",samples.sum())
 
         # if there is a shot vector, use the shots.bins generator to
         # split samples w.r.t. the shots
         processed_samples = []
-        print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: shots.bins:", list(shots.bins()))
         for lower, upper in shots.bins():
-            # result = _process_single_shot(samples[..., lower:upper, :])
-            tmp_sample = samples[..., lower:upper, :]
-            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: tmp_sample:")
-            unique, counts_uniq = np.unique(tmp_sample,axis=0, return_inverse=False, return_counts=True)
-            for val, c in zip(unique, counts_uniq):
-                print(val, c)
-
-            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: tmp_sample", tmp_sample.shape)
-            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: tmp_sample", tmp_sample.sum())
-            result = _process_single_shot(tmp_sample)
-
+            result = _process_single_shot(samples[..., lower:upper, :])
             processed_samples.append(result)
-            
-            print("Kokkos: Measurements: _measure_with_samples_diagonalizing_gates: result:", result)
 
-        print("I reach this place FDX")
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )

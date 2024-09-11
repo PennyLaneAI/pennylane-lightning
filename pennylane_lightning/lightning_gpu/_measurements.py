@@ -134,6 +134,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
+
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         
         if diagonalizing_gates:

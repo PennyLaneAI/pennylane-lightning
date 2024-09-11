@@ -1,4 +1,19 @@
+# Copyright 2022-2023 Xanadu Quantum Technologies Inc.
 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""
+This module contains the :class:`~.LightningGPU_MPIHandler` class, a MPI handler to use LightningGPU device with multi-GPU on multi-node system.
+"""
 
 try:
     # pylint: disable=no-name-in-module
@@ -20,7 +35,7 @@ class LightningGPU_MPIHandler():
     
     MPI handler to use a GPU-backed Lightning device using NVIDIA cuQuantum SDK with parallel capabilities.
     
-    Use the MPI library is necessary to initialize different variables and methods to handle the data across  nodes and perform checks for memory allocation on each device. 
+    Use the MPI library is necessary to initialize different variables and methods to handle the data across nodes and perform checks for memory allocation on each device. 
     
     Args:
         mpi (bool): declare if the device will use the MPI support.
@@ -52,7 +67,6 @@ class LightningGPU_MPIHandler():
 
             if (mpi_buf_size > 0 
                 and (mpi_buf_size & (mpi_buf_size - 1))):
-
                 raise ValueError(f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2.")
             
             # After check if all MPI parameter are ok

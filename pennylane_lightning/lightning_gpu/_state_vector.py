@@ -43,12 +43,11 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
-from pennylane import QuantumFunctionError, DeviceError
+from pennylane import DeviceError
 
 from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
-from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import LightningGPU_MPIHandler
 
 gate_cache_needs_hash = (
@@ -73,13 +72,13 @@ class LightningGPUStateVector(LightningBaseStateVector):
         device_name(string): state vector device name. Options: ["lightning.gpu"]
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.gpu", 
+    def __init__(self, 
+                 num_wires, 
+                 dtype=np.complex128, 
+                 device_name="lightning.gpu", 
                  mpi_handler = None, 
                  sync=True,
                  ):
-
-        if device_name != "lightning.gpu":
-            raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         super().__init__(num_wires, dtype)
 
@@ -216,9 +215,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
         if isinstance(state, self._qubit_state.__class__):
             raise DeviceError("LightningGPU does not support allocate external state_vector.")
             
-            state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
-            state.getState(state_data)
-            state = state_data
+            # TODO
+            # state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
+            # state.getState(state_data)
+            # state = state_data
 
         state = self._asarray(state, dtype=self.dtype)  # this operation on host
         output_shape = [2] * self._num_local_wires
@@ -343,11 +343,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
             method = getattr(state, name, None)
             wires = list(operation.wires)
             
-            # print("statevector: _apply_lightning:  state:",state.__dir__)
-            # print("statevector: _apply_lightning:    ops:",operation)
-            # print("statevector: _apply_lightning:   name:",name)
-            # print("statevector: _apply_lightning: method:",method)
-
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
                     self._apply_lightning([operation.base])
@@ -373,12 +368,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
                 param = [[r_dtype(operation.hash)]] if isinstance(operation, gate_cache_needs_hash) else []
-                # param = []
                 if len(mat) == 0:
                     raise ValueError("Unsupported operation")
-
-                # print("statevector: _apply_lightning: method:",method)
-                # print("statevector: _apply_lightning: mat:", mat)
 
                 self._qubit_state.apply(
                     name,
@@ -388,28 +379,3 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                 )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
                 
-                # ----------------------------------------------------------
-                # method = getattr(state, "applyMatrix")
-                # # print("statevector: _apply_lightning: method:",method)
-                # # print("statevector: _apply_lightning: matrix:",qml.matrix(operation))
-                # # print("statevector: _apply_lightning: matrix:",operation.matrix)
-                
-                # try:
-                #     mat = qml.matrix(operation)
-                # except AttributeError:  # pragma: no cover
-                #     # To support older versions of PL
-                #     mat = operation.matrix
-
-                # # mat = mat.ravel(order='C')
-                # # mat = mat.conjugate().transpose()
-                
-                # print("statevector: _apply_lightning: mat:", mat)
-                # method(mat.ravel(order="C"), wires, False)
-                
-                # # try:
-                # #     method(mat, wires, False)
-                # # except AttributeError:  # pragma: no cover
-                # #     # To support older versions of PL
-                # #     method(mat, wires, False)
-
-

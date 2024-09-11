@@ -20,7 +20,7 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 from ctypes.util import find_library
 from importlib import util as imp_util
 from pathlib import Path
-from typing import Optional, Tuple, Callable, Union
+from typing import Optional, Tuple Callable, Union
 
 import numpy as np
 import pennylane as qml
@@ -291,7 +291,7 @@ class LightningGPU(LightningBase):
         )
 
         # Set the attributes to call the LightningGPU classes
-        self._set_Lightning_classes()
+        self._set_lightning_classes()
 
         # GPU specific options
         self._dp = DevPool()
@@ -303,7 +303,6 @@ class LightningGPU(LightningBase):
         
         self._num_local_wires = self._mpi_handler.num_local_wires
 
-        print("FSDX")
         self._statevector = self.LightningStateVector(self.num_wires, dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync)
 
 
@@ -312,9 +311,10 @@ class LightningGPU(LightningBase):
         """The name of the device."""
         return "lightning.gpu"
 
-    def _set_Lightning_classes(self):
+    def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         self.LightningStateVector = LightningGPUStateVector
+        self.LightningMeasurements = LightningGPUMeasurements
 
     def _setup_execution_config(self, config):
         """

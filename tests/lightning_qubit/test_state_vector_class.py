@@ -42,8 +42,6 @@ if not LightningDevice._new_API:
         allow_module_level=True,
     )
 
-# if device_name == "lightning.gpu":
-#     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
