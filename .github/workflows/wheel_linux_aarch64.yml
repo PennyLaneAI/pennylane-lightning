@@ -147,7 +147,7 @@ jobs:
             python -m pip install ninja cmake~=3.27.0
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DENABLE_LAPACK=OFF -DCMAKE_BUILD_TYPE=Release"
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 

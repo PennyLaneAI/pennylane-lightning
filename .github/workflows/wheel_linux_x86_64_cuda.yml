@@ -97,7 +97,7 @@ jobs:
             PATH=/opt/rh/gcc-toolset-12/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
             LD_LIBRARY_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64:/opt/rh/gcc-toolset-12/root/usr/lib:/opt/rh/gcc-toolset-12/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-12/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
             PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH \
-            CMAKE_ARGS="-DENABLE_LAPACK=OFF"
+            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 
