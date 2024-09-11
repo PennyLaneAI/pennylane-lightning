@@ -48,6 +48,9 @@
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
+* Optimize and simplify controlled kernels in Lightning-Qubit.
+  [(#882)](https://github.com/PennyLaneAI/pennylane-lightning/pull/882)
+
 * Optimize gate cache recording for `lightning.tensor` C++ layer.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
 
