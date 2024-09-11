@@ -28,6 +28,7 @@ import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.operation import Operator
+from pennylane.measurements import MidMeasureMP
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
@@ -303,11 +304,14 @@ class LightningGPU(LightningBase):
 
         # Creating the state vector
         self._mpi_handler = LightningGPU_MPIHandler(
-            mpi, mpi_buf_size, self._dp, self.num_wires, c_dtype
+            mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype
         )
 
         self._statevector = self.LightningStateVector(
-            self.num_wires, dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
+            num_wires=len(self.wires), 
+            dtype=c_dtype, 
+            mpi_handler=self._mpi_handler, 
+            sync=self._sync
         )
 
     @property
@@ -402,4 +406,28 @@ class LightningGPU(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        return 0
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            results = []
+            aux_circ = qml.tape.QuantumScript(
+                circuit.operations,
+                circuit.measurements,
+                shots=[1],
+                trainable_params=circuit.trainable_params,
+            )
+            for _ in range(circuit.shots.total_shots):
+                state.reset_state()
+                mid_measurements = {}
+                final_state = state.get_final_state(
+                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+                )
+                results.append(
+                    LightningGPUMeasurements(final_state).measure_final_state(
+                        aux_circ, mid_measurements=mid_measurements
+                    )
+                )
+            return tuple(results)
+
+        state.reset_state()
+        final_state = state.get_final_state(circuit)
+        return LightningGPUMeasurements(final_state).measure_final_state(circuit)
+
