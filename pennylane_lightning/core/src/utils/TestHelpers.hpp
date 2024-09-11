@@ -618,7 +618,7 @@ inline auto samples_to_decimal(const std::vector<std::size_t> &samples,
     for (std::size_t i = 0; i < num_samples; i++) {
         for (std::size_t j = 0; j < num_qubits; j++) {
             if (samples[i * num_qubits + j] != 0) {
-                samples_decimal[i] += twos[(num_qubits - 1 - j)];
+                samples_decimal[i] += twos[num_qubits - 1 - j];
             }
         }
         counts[samples_decimal[i]] += 1;
