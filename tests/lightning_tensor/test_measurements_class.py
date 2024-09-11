@@ -126,3 +126,26 @@ class TestMeasurementFunction:
 
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
+
+    @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
+    @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
+    def test_probs_many_wires(self, n_qubits, n_targets, tol):
+        """Test probs measuring many wires of a random quantum state."""
+        if n_targets >= n_qubits:
+            pytest.skip("Number of targets cannot exceed the number of wires.")
+
+        dev = qml.device(device_name, wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.linalg.norm(init_state)
+
+        ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
+
+        mp = qml.probs(wires=range(n_targets))
+
+        tape = qml.tape.QuantumScript(ops, [mp])
+        res = dev.execute(tape)
+        ref = dq.execute(tape)
+
+        assert np.allclose(res, ref, atol=tol, rtol=0)

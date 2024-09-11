@@ -406,69 +406,36 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      */
     void get_state_tensor(ComplexT *host_data,
                           const int32_t numHyperSamples = 1) {
-        std::vector<std::size_t> wires(BaseType::getNumQubits());
-        std::iota(wires.begin(), wires.end(), 0);
+        std::vector<int32_t> projected_modes{};
+        std::vector<int64_t> projected_mode_values{};
 
-        const std::size_t length = std::size_t{1} << wires.size();
+        const std::size_t length = std::size_t{1} << BaseType::getNumQubits();
 
         DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
 
-        get_state_tensor(d_output_tensor.getData(), d_output_tensor.getLength(),
-                         wires, numHyperSamples);
+        get_accessor_(d_output_tensor.getData(), length, projected_modes,
+                      projected_mode_values, numHyperSamples);
 
         d_output_tensor.CopyGpuDataToHost(host_data, length);
     }
 
     /**
-     * @brief Get a slice of the full state tensor
+     * @brief Get a slice of the full state tensor.
      *
      * @param tensor_data Pointer to the device memory for state tensor data.
      * @param tensor_data_size Size of the state tensor data.
-     * @param wires Wires to get the state tensor for.
+     * @param projected_modes Projected modes to get the state tensor for.
+     * @param projected_mode_values Values of the projected modes.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is set to 1 by default.
      */
     void get_state_tensor(CFP_t *tensor_data,
                           const std::size_t tensor_data_size,
-                          const std::vector<std::size_t> &wires,
+                          const std::vector<int32_t> &projected_modes,
+                          const std::vector<int64_t> &projected_mode_values,
                           const int32_t numHyperSamples = 1) const {
-        auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
-            wires, BaseType::getNumQubits());
-
-        std::vector<int32_t> projected_modes{};
-
-        for (int32_t idx = 0;
-             idx < static_cast<int32_t>(BaseType::getNumQubits()); idx++) {
-            auto it = std::find(stateModes.begin(), stateModes.end(), idx);
-            if (it == stateModes.end()) {
-                projected_modes.emplace_back(idx);
-            }
-        }
-
-        std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
-
-        if (projected_modes.empty()) {
-            get_accessor_(tensor_data, tensor_data_size, projected_modes,
-                          projectedModeValues, numHyperSamples);
-        } else {
-            DataBuffer<CFP_t, int> tmp(tensor_data_size, getDevTag(), true);
-
-            const std::size_t projected_modes_size = std::size_t(1)
-                                                     << projected_modes.size();
-            for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
-                for (std::size_t j = 0; j < projected_modes.size(); j++) {
-                    projectedModeValues[j] = (idx >> j) & 1;
-                }
-
-                get_accessor_(tmp.getData(), tensor_data_size, projected_modes,
-                              projectedModeValues, numHyperSamples);
-                // Copy the data to the output tensor
-                scaleAndAddC_CUDA(std::complex<PrecisionT>{1.0, 0.0},
-                                  tmp.getData(), tensor_data, tmp.getLength(),
-                                  getDevTag().getDeviceID(),
-                                  getDevTag().getStreamID(), getCublasCaller());
-            }
-        }
+        get_accessor_(tensor_data, tensor_data_size, projected_modes,
+                      projected_mode_values, numHyperSamples);
     }
 
   private:
@@ -478,13 +445,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @param tensor_data Pointer to the device memory for state tensor data.
      * @param tensor_data_size Size of the tensor data.
      * @param projected_modes Projected modes to get the state tensor for.
-     * @param projectedModeValues Values of the projected modes.
+     * @param projected_mode_values Values of the projected modes.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is set to 1 by default.
      */
     void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
                        const std::vector<int32_t> &projected_modes,
-                       const std::vector<int64_t> &projectedModeValues,
+                       const std::vector<int64_t> &projected_mode_values,
                        const int32_t numHyperSamples = 1) const {
         cutensornetStateAccessor_t accessor;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateAccessor(
@@ -543,7 +510,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* const cutensornetHandle_t */ getTNCudaHandle(),
             /* cutensornetStateAccessor_t */ accessor,
             /* const int64_t * projectedModeValues */
-            projectedModeValues.data(),
+            projected_mode_values.data(),
             /* cutensornetWorkspaceDescriptor_t */ workDesc,
             /* void *amplitudesTensor*/
             static_cast<void *>(tensor_data),
