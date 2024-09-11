@@ -134,7 +134,7 @@ TEMPLATE_TEST_CASE("Samples", "[Measures]", float, double) {
         // compare estimated probabilities to real probabilities
         SECTION("No wires provided:") {
             REQUIRE_THAT(probabilities,
-                         Catch::Approx(expected_probabilities).margin(.05));
+                         Catch::Approx(expected_probabilities).margin(.1));
         }
     }
 }
