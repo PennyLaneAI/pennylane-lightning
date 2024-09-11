@@ -750,11 +750,12 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
         .def("generate_samples", [](MeasurementsT &M,
                                     const std::vector<std::size_t> &wires,
                                     const std::size_t num_shots) {
+            constexpr auto sz = sizeof(std::size_t);
             const std::size_t num_wires = wires.size();
-            auto &&result = M.generate_samples(wires, num_shots);
             const std::size_t ndim = 2;
             const std::vector<std::size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(std::size_t);
+            auto &&result = M.generate_samples(wires, num_shots);
+
             const std::vector<std::size_t> strides{sz * num_wires, sz};
             // return 2-D NumPy array
             return py::array(py::buffer_info(

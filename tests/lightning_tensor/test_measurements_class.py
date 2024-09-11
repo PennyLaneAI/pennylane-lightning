@@ -72,3 +72,57 @@ class TestMeasurementFunction:
         mp = qml.counts(wires=(0, 1))
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
+
+    def test_not_supported_sparseH_shot_measurements(self):
+        """Test than a TypeError is raised if the measurement is not supported."""
+
+        tensornetwork = LightningTensorNet(num_wires=3, max_bond_dim=128)
+
+        m = LightningTensorMeasurements(tensornetwork)
+
+        ops = [qml.PauliX(0), qml.PauliZ(1)]
+
+        obs = qml.SparseHamiltonian(
+            qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(wire_order=[0, 1, 2]),
+            wires=[0, 1, 2],
+        )
+
+        for mp in [qml.var(obs), qml.expval(obs)]:
+            tape = qml.tape.QuantumScript(ops, [mp], shots=100)
+
+            with pytest.raises(TypeError):
+                m.measure_tensor_network(tape)
+
+    def test_not_supported_ham_sum_shot_measurements(self):
+        """Test than a TypeError is raised if the measurement is not supported."""
+
+        tensornetwork = LightningTensorNet(num_wires=3, max_bond_dim=128)
+
+        m = LightningTensorMeasurements(tensornetwork)
+
+        ops = [qml.PauliX(0), qml.PauliZ(1)]
+
+        obs_ham = qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)])
+
+        obs_sum = qml.sum(qml.PauliX(0), qml.PauliX(1))
+
+        for mp in [qml.var(obs_ham), qml.var(obs_sum)]:
+            tape = qml.tape.QuantumScript(ops, [mp], shots=100)
+
+            with pytest.raises(TypeError):
+                m.measure_tensor_network(tape)
+
+    def test_not_supported_shadowmp_shot_measurements(self):
+        """Test than a TypeError is raised if the measurement is not supported."""
+
+        tensornetwork = LightningTensorNet(num_wires=3, max_bond_dim=128)
+
+        m = LightningTensorMeasurements(tensornetwork)
+
+        ops = [qml.PauliX(0), qml.PauliZ(1)]
+
+        for mp in [qml.classical_shadow(wires=[0, 1]), qml.shadow_expval(qml.PauliX(0))]:
+            tape = qml.tape.QuantumScript(ops, [mp], shots=100)
+
+            with pytest.raises(TypeError):
+                m.measure_tensor_network(tape)
