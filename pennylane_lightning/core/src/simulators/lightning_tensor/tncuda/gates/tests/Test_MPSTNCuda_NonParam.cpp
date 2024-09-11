@@ -658,4 +658,3 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
             CHECK(res == Pennylane::Util::approx(ref));
         }
     }
-}
