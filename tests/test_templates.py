@@ -26,11 +26,13 @@ from pennylane import numpy as np
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 def lightning_tensor_check(n_qubits):
     if device_name == "lightning.tensor" and n_qubits > 14:
         pytest.xfail(
             "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
         )
+
 
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
