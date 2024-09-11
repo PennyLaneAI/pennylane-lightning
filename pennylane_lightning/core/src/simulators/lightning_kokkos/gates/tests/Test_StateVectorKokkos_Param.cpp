@@ -579,6 +579,22 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
                 }
             }
         }
+        SECTION("PauliRotXX 0,1") {
+            for (std::size_t index = 0; index < angles.size(); index++) {
+                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+                kokkos_sv.applyPauliRot({0, 1}, adjoint, {angles[index]}, "XX");
+                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
+                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK((real(result_sv[j])) ==
+                          Approx(real(expected_results[index][j])));
+                    CHECK((imag(result_sv[j])) ==
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
+                }
+            }
+        }
         SECTION("IsingXX 0,2") {
             for (std::size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
@@ -645,6 +661,22 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
                 }
             }
         }
+        SECTION("PauliRotYY 0,1") {
+            for (std::size_t index = 0; index < angles.size(); index++) {
+                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+                kokkos_sv.applyPauliRot({0, 1}, adjoint, {angles[index]}, "YY");
+                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
+                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK((real(result_sv[j])) ==
+                          Approx(real(expected_results[index][j])));
+                    CHECK((imag(result_sv[j])) ==
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
+                }
+            }
+        }
         SECTION("IsingYY 0,2") {
             for (std::size_t index = 0; index < angles.size(); index++) {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
@@ -688,6 +720,22 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
                 kokkos_sv.applyOperation("IsingZZ", {0, 1}, adjoint,
                                          {angles[index]});
+                std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
+                kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK((real(result_sv[j])) ==
+                          Approx(real(expected_results[index][j])));
+                    CHECK((imag(result_sv[j])) ==
+                          Approx(((adjoint) ? -1.0 : 1.0) *
+                                 imag(expected_results[index][j])));
+                }
+            }
+        }
+        SECTION("PauliRotZZ 0,1") {
+            for (std::size_t index = 0; index < angles.size(); index++) {
+                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+                kokkos_sv.applyPauliRot({0, 1}, adjoint, {angles[index]}, "ZZ");
                 std::vector<ComplexT> result_sv(kokkos_sv.getLength(), {0, 0});
                 kokkos_sv.DeviceToHost(result_sv.data(), kokkos_sv.getLength());
 

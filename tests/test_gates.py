@@ -522,8 +522,8 @@ def test_controlled_qubit_unitary_from_op(tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="PauliRot operations only implemented in lightning.qubit.",
+    device_name not in ("lightning.qubit", "lightning.kokkos"),
+    reason="PauliRot operations only implemented in lightning.qubit and lightning.kokkos.",
 )
 @pytest.mark.parametrize("n_wires", [1, 2, 3, 4, 5, 10, 15])
 @pytest.mark.parametrize("n_targets", [1, 2, 3, 4, 5, 10, 15])
@@ -539,8 +539,12 @@ def test_paulirot(n_wires, n_targets, tol):
     init_state /= np.linalg.norm(init_state)
     theta = 0.3
 
-    for _ in range(10):
-        word = "".join(pws[w] for w in np.random.randint(0, 3, n_targets))
+    for i in range(10):
+        word = (
+            "Z" * n_targets
+            if i == 0
+            else "".join(pws[w] for w in np.random.randint(0, 3, n_targets))
+        )
         wires = np.random.permutation(n_wires)[0:n_targets]
         stateprep = qml.StatePrep(init_state, wires=range(n_wires))
         op = qml.PauliRot(theta, word, wires=wires)

@@ -18,8 +18,10 @@ interfaces with C++ for fast linear algebra calculations.
 import os
 import sys
 from dataclasses import replace
+from functools import reduce
 from pathlib import Path
 from typing import Optional
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
@@ -56,7 +58,8 @@ try:
     from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
 
     LK_CPP_BINARY_AVAILABLE = True
-except ImportError:
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     LK_CPP_BINARY_AVAILABLE = False
     backend_info = None
 
@@ -154,7 +157,10 @@ def stopping_condition(op: Operator) -> bool:
         return len(op.wires) < 10
     if isinstance(op, qml.GroverOperator):
         return len(op.wires) < 13
-
+    if isinstance(op, qml.PauliRot):
+        word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
+        # decomposes to IsingXX, etc. for n <= 2
+        return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
     return op.name in _operations
 
 
@@ -210,7 +216,7 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    return adjoint_ops(op)
+    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:

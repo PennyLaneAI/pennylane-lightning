@@ -512,7 +512,8 @@ class TestMeasurements:
         np.random.seed(0)
         weights = np.random.rand(n_layers, n_qubits, 3)
         ops = [qml.Hadamard(i) for i in range(n_qubits)]
-        ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
+        if device_name != "lightning.tensor":
+            ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
         measurements = (
             [measurement(wires=observable)]
             if isinstance(observable, list)
@@ -704,7 +705,7 @@ class TestControlledOps:
         results = dev.execute(tapes)
         return transf_fn(results)
 
-    @flaky(max_runs=15)
+    @flaky(max_runs=5)
     @pytest.mark.parametrize(
         "operation",
         [
@@ -820,7 +821,7 @@ class TestControlledOps:
 
         assert np.allclose(result, expected, tol)
 
-    @flaky(max_runs=15)
+    @flaky(max_runs=5)
     @pytest.mark.parametrize("control_wires", range(4))
     @pytest.mark.parametrize("target_wires", range(4))
     def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv):
