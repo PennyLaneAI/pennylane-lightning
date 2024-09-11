@@ -1,7 +1,7 @@
 name: Wheel::Any::None
 
 # **What it does**: Builds a pure python wheel for Linux (ubuntu-latest) and store it as an artifact.
-#                   Python version: 3.9.
+#                   Python version: 3.10.
 # **Why we have it**: To test the wheel build in the python layer, with no compilation.
 # **Who does it impact**: Wheels to be uploaded to PyPI.
 
@@ -43,7 +43,7 @@ jobs:
       matrix:
         pl_backend: ["lightning_gpu", "lightning_kokkos", "lightning_qubit"]
     timeout-minutes: 30
-    name: Linux - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.9)
+    name: Linux - Pure Python wheels - ${{ matrix.pl_backend }} (Python 3.10)
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
 
     steps:
@@ -55,7 +55,7 @@ jobs:
       - uses: actions/setup-python@v5
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Upgrade pip
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
@@ -85,13 +85,15 @@ jobs:
           python -m pip install twine
           python -m twine check dist/*.whl
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: |
           matrix.pl_backend == 'lightning_qubit' &&
           (github.event_name == 'release' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/master')
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip
           path: dist/*.whl
+          retention-days: 1
+          include-hidden-files: true
 
   upload-pypi:
     needs: build-pure-python-wheel
@@ -101,7 +103,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         if: ${{ matrix.pl_backend == 'lightning_qubit' && github.event_name == 'release' }}
         with:
           name: pure-python-wheels-${{ matrix.pl_backend }}.zip

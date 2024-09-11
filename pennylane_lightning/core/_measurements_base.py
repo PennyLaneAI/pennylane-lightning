@@ -44,10 +44,10 @@ class LightningBaseMeasurements(ABC):
     """Lightning [Device] Measurements class
 
     A class that serves as a base class for Lightning state-vector simulators.
-    Measures the state provided by the Lightning[Device]StateVector class.
+    Measures the state provided by the Lightning [Device] StateVector class.
 
     Args:
-        qubit_state(Lightning[Device]StateVector): Lightning state-vector class containing the state vector to be measured.
+        qubit_state(Lightning [Device] StateVector): Lightning state-vector class containing the state vector to be measured.
     """
 
     def __init__(
@@ -61,7 +61,7 @@ class LightningBaseMeasurements(ABC):
 
     @property
     def qubit_state(self):
-        """Returns a handle to the Lightning[Device]StateVector object."""
+        """Returns a handle to the Lightning [Device] StateVector object."""
         return self._qubit_state
 
     @property

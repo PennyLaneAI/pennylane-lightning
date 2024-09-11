@@ -53,7 +53,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
 def test_device_name_and_init(num_wires, dtype):
     """Test the class initialization and returned properties."""
-    state_vector = LightningStateVector(num_wires, dtype=dtype, device_name=device_name)
+    state_vector = LightningStateVector(num_wires, dtype=dtype)
     assert state_vector.dtype == dtype
     assert state_vector.device_name == device_name
     assert state_vector.wires == Wires(range(num_wires))
@@ -64,22 +64,12 @@ def test_device_name_and_init(num_wires, dtype):
             TypeError,
             match=f"Argument kokkos_args must be of type {type(InitializationSettings())} but it is of {type(bad_kokkos_args)}.",
         ):
-            assert LightningStateVector(
-                num_wires, dtype=dtype, device_name=device_name, kokkos_args=bad_kokkos_args
-            )
+            assert LightningStateVector(num_wires, dtype=dtype, kokkos_args=bad_kokkos_args)
 
         set_kokkos_args = InitializationSettings().set_num_threads(2)
-        state_vector_3 = LightningStateVector(
-            num_wires, dtype=dtype, device_name=device_name, kokkos_args=set_kokkos_args
-        )
+        state_vector_3 = LightningStateVector(num_wires, dtype=dtype, kokkos_args=set_kokkos_args)
 
         assert type(state_vector) == type(state_vector_3)
-
-
-def test_wrong_device_name():
-    """Test an invalid device name"""
-    with pytest.raises(qml.DeviceError, match="The device name"):
-        LightningStateVector(3, device_name="thunder.qubit")
 
 
 @pytest.mark.parametrize("dtype", [np.double])

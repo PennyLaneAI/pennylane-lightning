@@ -60,11 +60,6 @@ except ImportError:
     LK_CPP_BINARY_AVAILABLE = False
     backend_info = None
 
-# Result_or_ResultBatch = Union[Result, ResultBatch]
-# QuantumTapeBatch = Sequence[QuantumTape]
-# QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
-# PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
-
 # The set of supported operations.
 _operations = frozenset(
     {
@@ -319,7 +314,7 @@ class LightningKokkos(LightningBase):
         )
 
         # Set the attributes to call the Lightning classes
-        self._set_Lightning_classes()
+        self._set_lightning_classes()
 
         # Kokkos specific options
         self._kokkos_args = kokkos_args
@@ -338,7 +333,7 @@ class LightningKokkos(LightningBase):
         """The name of the device."""
         return "lightning.kokkos"
 
-    def _set_Lightning_classes(self):
+    def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         self.LightningStateVector = LightningKokkosStateVector
         self.LightningMeasurements = LightningKokkosMeasurements

@@ -16,7 +16,6 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from abc import ABC, abstractmethod
-from os import getenv
 from typing import Any, Callable, List
 
 import numpy as np
@@ -27,7 +26,6 @@ from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
-from pennylane_lightning.core.lightning_base import _chunk_iterable
 
 
 class LightningBaseAdjointJacobian(ABC):
@@ -37,7 +35,7 @@ class LightningBaseAdjointJacobian(ABC):
     Check and execute the adjoint Jacobian differentiation method.
 
     Args:
-        qubit_state(Lightning[Device]StateVector): State Vector to calculate the adjoint Jacobian with.
+        qubit_state(Lightning [Device] StateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
@@ -51,7 +49,7 @@ class LightningBaseAdjointJacobian(ABC):
 
     @property
     def qubit_state(self):
-        """Returns a handle to the Lightning[Device]StateVector object."""
+        """Returns a handle to the Lightning [Device] StateVector object."""
         return self._qubit_state
 
     @property
@@ -91,15 +89,12 @@ class LightningBaseAdjointJacobian(ABC):
 
         return Expectation
 
-    def _process_jacobian_tape(
-        self, tape: QuantumTape, use_mpi: bool = False, split_obs: bool = False
-    ):
+    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
-            use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
             split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
 
         Returns:
@@ -107,7 +102,8 @@ class LightningBaseAdjointJacobian(ABC):
         """
         use_csingle = self._qubit_state.dtype == np.complex64
 
-        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
+        use_mpi = False
+        obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)
 
@@ -150,7 +146,7 @@ class LightningBaseAdjointJacobian(ABC):
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
-            "obs_idx_offsets": obs_idx_offsets,
+            "obs_indices": obs_indices,
         }
 
     @staticmethod
@@ -210,14 +206,15 @@ class LightningBaseAdjointJacobian(ABC):
 
         return False
 
+    @abstractmethod
     def calculate_jacobian(self, tape: QuantumTape):
         """Computes the Jacobian with the adjoint method.
 
         .. code-block:: python
 
-            statevector = Lightning[Device]StateVector(num_wires=num_wires)
+            statevector = Lightning [Device] StateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            jacobian = Lightning[Device]AdjointJacobian(statevector).calculate_jacobian(tape)
+            jacobian =  Lightning [Device] AdjointJacobian(statevector).calculate_jacobian(tape)
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
@@ -226,57 +223,15 @@ class LightningBaseAdjointJacobian(ABC):
             The Jacobian of a tape.
         """
 
-        empty_array = self._handle_raises(tape, is_jacobian=True)
-
-        if empty_array:
-            return np.array([], dtype=self._qubit_state.dtype)
-
-        processed_data = self._process_jacobian_tape(tape)
-
-        if not processed_data:  # training_params is empty
-            return np.array([], dtype=self._qubit_state.dtype)
-
-        trainable_params = processed_data["tp_shift"]
-
-        # If requested batching over observables, chunk into OMP_NUM_THREADS sized chunks.
-        # This will allow use of Lightning with adjoint for large-qubit numbers AND large
-        # numbers of observables, enabling choice between compute time and memory use.
-        requested_threads = int(getenv("OMP_NUM_THREADS", "1"))
-
-        if self._batch_obs and requested_threads > 1:
-            obs_partitions = _chunk_iterable(processed_data["obs_serialized"], requested_threads)
-            jac = []
-            for obs_chunk in obs_partitions:
-                jac_local = self._jacobian_lightning(
-                    processed_data["state_vector"],
-                    obs_chunk,
-                    processed_data["ops_serialized"],
-                    trainable_params,
-                )
-                jac.extend(jac_local)
-        else:
-            jac = self._jacobian_lightning(
-                processed_data["state_vector"],
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
-        jac = np.array(jac)
-        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
-        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-        jac_r[:, processed_data["record_tp_rows"]] = jac
-
-        return self._adjoint_jacobian_processing(jac_r)
-
     # pylint: disable=inconsistent-return-statements
     def calculate_vjp(self, tape: QuantumTape, grad_vec):
         """Compute the vector-Jacobian products of a tape.
 
         .. code-block:: python
 
-            statevector = Lightning[Device]StateVector(num_wires=num_wires)
+            statevector = Lightning [Device] StateVector(num_wires=num_wires)
             statevector = statevector.get_final_state(tape)
-            vjp = Lightning[Device]AdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
+            vjp =  Lightning [Device] AdjointJacobian(statevector).calculate_vjp(tape, grad_vec)
 
         computes :math:`\\pmb{w} = (w_1,\\cdots,w_m)` where
 

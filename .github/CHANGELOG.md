@@ -2,16 +2,31 @@
 
 ### New features since last release
 
+* Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
+  [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
+
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
 ### Breaking changes
 
+* Remove support for Python 3.9.
+  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+
 ### Improvements
+
+* Update GitHub actions in response to a high-severity vulnerability.
+  [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
 * Optimize gate cache recording for `lightning.tensor` C++ layer.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
 
+* Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
+  [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
+
+* Unify Lightning Kokkos device and Lightning Qubit device under a Lightning Base device
+  [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
+  
 ### Documentation
 
 ### Bug fixes
@@ -20,7 +35,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses, Shuli Shu
+Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ---
 

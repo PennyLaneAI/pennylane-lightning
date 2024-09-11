@@ -26,7 +26,6 @@ except ImportError:
 
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
@@ -51,13 +50,11 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         device_name(string): state vector device name. Options: ["lightning.qubit"]
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.qubit"):
-        if device_name != "lightning.qubit":
-            raise DeviceError(f'The device name "{device_name}" is not a valid option.')
+    def __init__(self, num_wires, dtype=np.complex128):
 
         super().__init__(num_wires, dtype)
 
-        self._device_name = device_name
+        self._device_name = "lightning.qubit"
 
         # Initialize the state vector
         self._qubit_state = self._state_dtype()(self._num_wires)
@@ -166,7 +163,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
-    ):
+    ):  # pylint: disable=protected-access
         """Apply a list of operations to the state tensor.
 
         Args:
