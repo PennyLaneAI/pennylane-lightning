@@ -65,14 +65,17 @@ void controlBitPatterns(std::vector<std::size_t> &indices,
     if (controlled_wires.empty()) {
         return;
     }
+    std::vector<std::size_t> controlled_values_i(controlled_values.size());
+    std::transform(controlled_values.begin(), controlled_values.end(),
+                   controlled_values_i.begin(),
+                   [](const bool v) { return static_cast<std::size_t>(v); });
     std::for_each(
         indices.begin(), indices.end(),
-        [num_qubits, &controlled_wires, &controlled_values](std::size_t &i) {
+        [num_qubits, &controlled_wires, &controlled_values_i](std::size_t &i) {
             for (std::size_t k = 0; k < controlled_wires.size(); k++) {
                 const std::size_t rev_wire =
                     (num_qubits - 1) - controlled_wires[k];
-                const auto value =
-                    static_cast<std::size_t>(controlled_values[k]);
+                const std::size_t value = controlled_values_i[k];
                 i = (i & ~(one << rev_wire)) | (value << rev_wire);
             }
         });
