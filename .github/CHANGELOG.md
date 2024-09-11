@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add shot measurement support to `lightning.tensor`.
+  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
+
 * Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
   [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
 
@@ -26,6 +29,9 @@
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* Skip the compilation of Lightning simulators and development requirements to boost the build of public docs up to 5x.
+  [(#904)](https://github.com/PennyLaneAI/pennylane-lightning/pull/904)
 
 * Update Pybind11 to 2.13.5.
   [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)

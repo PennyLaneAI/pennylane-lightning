@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(lightning_gpu_utils_tests)
+project(cuda_utils_tests)
 
 # Default build type for test code is Debug
 if(NOT CMAKE_BUILD_TYPE)

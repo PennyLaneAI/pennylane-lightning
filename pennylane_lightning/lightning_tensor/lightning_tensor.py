@@ -198,6 +198,9 @@ class LightningTensor(Device):
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
+        shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
+            to ``None`` results in computing statistics like expectation values and
+            variances analytically.
         method (str): Supported method. Currently, only ``mps`` is supported.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
@@ -253,6 +256,7 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
+        shots=None,
         method: str = "mps",
         c_dtype=np.complex128,
         **kwargs,
@@ -269,7 +273,7 @@ class LightningTensor(Device):
         if wires is None:
             raise ValueError("The number of wires must be specified.")
 
-        super().__init__(wires=wires, shots=None)
+        super().__init__(wires=wires, shots=shots)
 
         if isinstance(wires, int):
             self._wire_map = None  # should just use wires as is
@@ -372,7 +376,6 @@ class LightningTensor(Device):
 
         This device currently:
 
-        * Does not support finite shots.
         * Does not support derivatives.
         * Does not support vector-Jacobian products.
         """
@@ -387,6 +390,7 @@ class LightningTensor(Device):
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
         )
