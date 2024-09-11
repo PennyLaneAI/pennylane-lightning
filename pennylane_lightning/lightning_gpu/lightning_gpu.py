@@ -318,7 +318,6 @@ class LightningGPU(LightningBase):
         self.LightningStateVector = LightningGPUStateVector
         self.LightningMeasurements = LightningGPUMeasurements
         self.LightningAdjointJacobian = LightningGPUAdjointJacobian
-        
 
     def _setup_execution_config(self, config):
         """

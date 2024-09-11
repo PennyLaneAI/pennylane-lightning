@@ -145,7 +145,6 @@ elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu._adjoint_jacobian import (
         LightningGPUAdjointJacobian as LightningAdjointJacobian,
     )
-
     from pennylane_lightning.lightning_gpu._measurements import (
         LightningGPUMeasurements as LightningMeasurements,
     )
