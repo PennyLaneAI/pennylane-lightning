@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_gpu state-vector manipulation.
 """
+from warnings import warn
 try:
     from pennylane_lightning.lightning_gpu_ops import StateVectorC64, StateVectorC128
 
@@ -22,11 +23,13 @@ try:
         from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128
 
         MPI_SUPPORT = True
-    except ImportError:
+    except ImportError as ex:
+        warn(str(ex), UserWarning)
+
         MPI_SUPPORT = False
 
-except ImportError:
-    pass
+except ImportError as ex:
+    warn(str(ex), UserWarning)
 
 from itertools import product
 

@@ -15,6 +15,7 @@
 Class implementation for state vector measurements.
 """
 
+from warnings import warn
 try:
     from pennylane_lightning.lightning_gpu_ops import MeasurementsC64, MeasurementsC128
 
@@ -22,10 +23,14 @@ try:
         from pennylane_lightning.lightning_gpu_ops import MeasurementsMPIC64, MeasurementsMPIC128
 
         MPI_SUPPORT = True
-    except ImportError:
+    except ImportError as ex:
+        warn(str(ex), UserWarning)
+
         MPI_SUPPORT = False
 
-except ImportError:
+except ImportError as ex:
+    warn(str(ex), UserWarning)
+
     pass
 
 from typing import List
@@ -57,7 +62,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
 
     def _measurement_dtype(self):
-        """Binding to Lightning Kokkos Measurements C++ class.
+        """Binding to Lightning GPU Measurements C++ class.
 
         Returns: the Measurements class
         """
