@@ -22,6 +22,7 @@ from importlib import util as imp_util
 from numbers import Number
 from pathlib import Path
 from typing import Optional, Tuple
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
