@@ -16,7 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-      - labeled
     paths:
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'

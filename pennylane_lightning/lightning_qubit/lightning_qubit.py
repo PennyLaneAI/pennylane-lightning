@@ -19,6 +19,7 @@ from dataclasses import replace
 from functools import reduce
 from pathlib import Path
 from typing import Optional, Sequence
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
@@ -55,7 +56,8 @@ try:
     from pennylane_lightning.lightning_qubit_ops import backend_info
 
     LQ_CPP_BINARY_AVAILABLE = True
-except ImportError:
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     LQ_CPP_BINARY_AVAILABLE = False
 
 # The set of supported operations.

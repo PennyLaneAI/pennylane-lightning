@@ -18,6 +18,7 @@ It is a device to perform tensor network simulations of quantum circuits using `
 from dataclasses import replace
 from numbers import Number
 from typing import Callable, Optional, Sequence, Tuple, Union
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
@@ -49,7 +50,9 @@ try:
         raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LT_CPP_BINARY_AVAILABLE = True
-except ImportError:
+
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     LT_CPP_BINARY_AVAILABLE = False
 
 Result_or_ResultBatch = Union[Result, ResultBatch]

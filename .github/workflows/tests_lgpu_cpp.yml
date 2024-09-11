@@ -16,7 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-      - labeled
     paths:
       - .github/workflows/tests_lgpu_cpp.yml
       - pennylane_lightning/core/src/**
@@ -187,7 +186,7 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          pattern: ubuntu-codecov*
+          pattern: ubuntu-codecov-*
           merge-multiple: true
 
       - name: Upload to Codecov

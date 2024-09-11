@@ -52,18 +52,14 @@ class TestVar:
 
         assert np.allclose(var, expected, tol)
 
-    pytest.mark.skipif(
+    @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor doesn't support projector."
     )
-
     def test_projector_var(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qubit_device(wires=n_qubits)
-
-        if "Projector" not in dev.observables:
-            pytest.skip("Device does not support the Projector observable.")
 
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
