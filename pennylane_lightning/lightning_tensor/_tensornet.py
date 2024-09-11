@@ -413,9 +413,6 @@ class LightningTensorNet:
                 method(
                     matrix, [0], False
                 )  # GlobalPhase is always applied to the first wire in the tensor network
-            elif isinstance(operation, qml.MultiRZ) and len(wires) == 1:
-                method = getattr(tensornet, "RZ")
-                method(wires, invert_param, operation.parameters)
             elif len(wires) <= 2 and not isinstance(operation, qml.MultiRZ):
                 if method is not None:
                     param = operation.parameters
