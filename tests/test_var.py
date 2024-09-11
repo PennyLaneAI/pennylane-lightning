@@ -50,6 +50,7 @@ class TestVar:
 
         assert np.allclose(var, expected, tol)
 
+    @pytest.mark.skipif(device_name == "lightning.tensor", reason="Not supported on lightning.tensor")
     def test_projector_var(self, theta, phi, qubit_device, tol):
         """Test that Projector variance value is correct"""
         n_qubits = 2
