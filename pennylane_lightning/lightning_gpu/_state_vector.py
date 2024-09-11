@@ -15,22 +15,16 @@
 Class implementation for lightning_gpu state-vector manipulation.
 """
 try:
-    from pennylane_lightning.lightning_gpu_ops import (
-        StateVectorC64,
-        StateVectorC128,
-    )
-    
-    try: # Try to import the MPI modules
+    from pennylane_lightning.lightning_gpu_ops import StateVectorC64, StateVectorC128
+
+    try:  # Try to import the MPI modules
         # pylint: disable=no-name-in-module
-        from pennylane_lightning.lightning_gpu_ops import (
-            StateVectorMPIC64,
-            StateVectorMPIC128,
-        )
+        from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128
 
         MPI_SUPPORT = True
     except ImportError:
         MPI_SUPPORT = False
-        
+
 except ImportError:
     pass
 
@@ -39,11 +33,10 @@ from itertools import product
 import numpy as np
 import pennylane as qml
 from pennylane import DeviceError
-from pennylane.ops.op_math import Adjoint
-from pennylane.wires import Wires
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
-from pennylane import DeviceError
+from pennylane.ops.op_math import Adjoint
+from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
@@ -60,6 +53,7 @@ gate_cache_needs_hash = (
     qml.QubitUnitary,
 )
 
+
 class LightningGPUStateVector(LightningBaseStateVector):
     """Lightning GPU state-vector class.
 
@@ -72,18 +66,19 @@ class LightningGPUStateVector(LightningBaseStateVector):
         device_name(string): state vector device name. Options: ["lightning.gpu"]
     """
 
-    def __init__(self, 
-                 num_wires, 
-                 dtype=np.complex128, 
-                 device_name="lightning.gpu", 
-                 mpi_handler = None, 
-                 sync=True,
-                 ):
+    def __init__(
+        self,
+        num_wires,
+        dtype=np.complex128,
+        device_name="lightning.gpu",
+        mpi_handler=None,
+        sync=True,
+    ):
 
         super().__init__(num_wires, dtype)
 
         self._device_name = device_name
-        
+
         if mpi_handler is None:
             mpi_handler = LightningGPU_MPIHandler(False, 0, None, num_wires, dtype)
 
@@ -105,7 +100,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         if not self._mpi_handler.use_mpi:
             self._qubit_state = self._state_dtype()(self.num_wires)
-            
+
         self._create_basis_state(0)
 
     def _state_dtype(self):
@@ -139,7 +134,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         [0.+0.j 1.+0.j]
         """
         self._qubit_state.DeviceToHost(state_vector.ravel(order="C"), use_async)
-            
 
     @property
     def state(self):
@@ -157,7 +151,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         state = np.zeros(1 << self._num_local_wires, dtype=self.dtype)
         self.syncD2H(state)
         return state
-
 
     def syncH2D(self, state_vector, use_async=False):
         """Copy the state vector data on host provided by the user to the state vector on the device
@@ -179,7 +172,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         1.0
         """
         self._qubit_state.HostToDevice(state_vector.ravel(order="C"), use_async)
-    
+
     @staticmethod
     def _asarray(arr, dtype=None):
         arr = np.asarray(arr)  # arr is not copied
@@ -211,10 +204,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
         use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
         """
-        
+
         if isinstance(state, self._qubit_state.__class__):
             raise DeviceError("LightningGPU does not support allocate external state_vector.")
-            
+
             # TODO
             # state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
             # state.getState(state_data)
@@ -294,7 +287,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         wires = self.wires.indices(operation.wires)
         matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
         state.apply(name, wires, inv, [[param]], matrix)
-        
+
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
     ):
@@ -311,7 +304,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             None
         """
         raise DeviceError("LightningGPU does not support Mid-circuit measurements.")
-    
+
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
@@ -342,7 +335,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 invert_param = False
             method = getattr(state, name, None)
             wires = list(operation.wires)
-            
+
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
                     self._apply_lightning([operation.base])
@@ -364,10 +357,13 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     mat = operation.matrix
-                    
-                
+
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
-                param = [[r_dtype(operation.hash)]] if isinstance(operation, gate_cache_needs_hash) else []
+                param = (
+                    [[r_dtype(operation.hash)]]
+                    if isinstance(operation, gate_cache_needs_hash)
+                    else []
+                )
                 if len(mat) == 0:
                     raise ValueError("Unsupported operation")
 
@@ -378,4 +374,3 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     param,
                     mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                 )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
-                

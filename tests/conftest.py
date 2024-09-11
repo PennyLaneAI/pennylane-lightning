@@ -142,11 +142,11 @@ if device_name == "lightning.kokkos":
         from pennylane_lightning.lightning_kokkos_ops import LightningException
 elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
-    from pennylane_lightning.lightning_gpu._state_vector import (
-        LightningGPUStateVector as LightningStateVector,
-    )
     from pennylane_lightning.lightning_gpu._measurements import (
         LightningGPUMeasurements as LightningMeasurements,
+    )
+    from pennylane_lightning.lightning_gpu._state_vector import (
+        LightningGPUStateVector as LightningStateVector,
     )
 
     LightningAdjointJacobian = None

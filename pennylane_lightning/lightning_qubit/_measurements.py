@@ -26,7 +26,7 @@ from typing import List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import CountsMP, SampleMeasurement, Shots, MeasurementProcess
+from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
@@ -157,10 +157,10 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
             self._qubit_state.apply_operations(diagonalizing_gates)
 
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
-        
+
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
-        
+
         return results

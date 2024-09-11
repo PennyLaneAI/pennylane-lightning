@@ -20,7 +20,7 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 from ctypes.util import find_library
 from importlib import util as imp_util
 from pathlib import Path
-from typing import Optional, Tuple Callable, Union
+from typing import Callable, Optional, Tuple, Union
 
 import numpy as np
 import pennylane as qml
@@ -37,9 +37,9 @@ from pennylane_lightning.core.lightning_newAPI_base import (
     Result_or_ResultBatch,
 )
 
-from ._mpi_handler import LightningGPU_MPIHandler
 from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
+from ._mpi_handler import LightningGPU_MPIHandler
 from ._state_vector import LightningGPUStateVector
 
 try:
@@ -54,11 +54,10 @@ try:
 
     try:
         # pylint: disable=no-name-in-module
-        from pennylane_lightning.lightning_gpu_ops import (
-            DevTag,
-            MPIManager,
-        )
-        from ._mpi_handler import LightningGPU_MPIHandler            
+        from pennylane_lightning.lightning_gpu_ops import DevTag, MPIManager
+
+        from ._mpi_handler import LightningGPU_MPIHandler
+
         MPI_SUPPORT = True
     except ImportError:
         MPI_SUPPORT = False
@@ -150,6 +149,7 @@ _observables = frozenset(
     }
 )
 
+
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     # To avoid building matrices beyond the given thresholds.
@@ -203,15 +203,15 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     name = "adjoint + lightning.gpu"
     return 0
 
+
 def check_gpu_resources() -> None:
-    """ Check the available resources of each Nvidia GPU """
-    if (find_library("custatevec") is None 
-        and not imp_util.find_spec("cuquantum")):
-        
+    """Check the available resources of each Nvidia GPU"""
+    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
+
         raise ImportError(
             "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
         )
-        
+
     if not DevPool.getTotalDevices():
         raise ValueError("No supported CUDA-capable device found")
 
@@ -280,7 +280,7 @@ class LightningGPU(LightningBase):
                 "To manually compile from source, follow the instructions at "
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
-            
+
         check_gpu_resources()
 
         super().__init__(
@@ -298,13 +298,16 @@ class LightningGPU(LightningBase):
         self._sync = sync
 
         # Creating the state vector
-        
-        self._mpi_handler = LightningGPU_MPIHandler(mpi, mpi_buf_size, self._dp, self.num_wires, c_dtype)
-        
+
+        self._mpi_handler = LightningGPU_MPIHandler(
+            mpi, mpi_buf_size, self._dp, self.num_wires, c_dtype
+        )
+
         self._num_local_wires = self._mpi_handler.num_local_wires
 
-        self._statevector = self.LightningStateVector(self.num_wires, dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync)
-
+        self._statevector = self.LightningStateVector(
+            self.num_wires, dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
+        )
 
     @property
     def name(self):

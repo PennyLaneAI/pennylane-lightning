@@ -25,7 +25,7 @@ from typing import List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import CountsMP, SampleMeasurement, Shots, MeasurementProcess
+from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
@@ -131,14 +131,14 @@ class LightningKokkosMeasurements(
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
-        
+
         # print("probs: result:",results)
         # print('*'*100)
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
-        
+
         # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
         if len(results) > 0:
             num_local_wires = len(results).bit_length() - 1 if len(results) > 0 else 0

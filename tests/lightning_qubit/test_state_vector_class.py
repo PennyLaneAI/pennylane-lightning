@@ -29,7 +29,7 @@ if device_name == "lightning.kokkos":
         from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
     except ImportError:
         pass
-    
+
 if device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu._mpi_handler import LightningGPU_MPIHandler
 
@@ -90,8 +90,10 @@ def test_apply_state_vector_with_lightning_handle(tol):
     state_vector_1 = LightningStateVector(2)
     state_vector_1.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
 
-    if device_name == 'lightning.gpu':
-        with pytest.raises(qml.DeviceError, match="LightningGPU does not support allocate external state_vector."):
+    if device_name == "lightning.gpu":
+        with pytest.raises(
+            qml.DeviceError, match="LightningGPU does not support allocate external state_vector."
+        ):
             state_vector_2 = LightningStateVector(2)
             state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
 
