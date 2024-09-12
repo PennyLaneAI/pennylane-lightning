@@ -190,7 +190,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         return arr
 
     def _create_basis_state(self, index, use_async=False):
-        """Return a computational basis state over all wires.
+        """Creates a computational basis state consisting of 0s and 1s, over all wires on device.
         Args:
             index (int): integer representing the computational basis state.
             use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
@@ -255,9 +255,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
             wires (Wires): wires that the provided computational state should be initialized on
         Note: This function does not support broadcasted inputs yet.
         """
-        # translate to wire labels used by device
-        device_wires = wires
-
         if not set(state.tolist()).issubset({0, 1}):
             raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
 
@@ -265,7 +262,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # get computational basis state number
-        basis_states = 1 << (self.num_wires - 1 - np.array(device_wires))
+        basis_states = 1 << (self.num_wires - 1 - np.array(wires))
         basis_states = qml.math.convert_like(basis_states, state)
         num = int(qml.math.dot(state, basis_states))
 
