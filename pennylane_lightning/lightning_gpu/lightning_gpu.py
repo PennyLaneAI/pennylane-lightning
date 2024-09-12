@@ -18,9 +18,9 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 
 from ctypes.util import find_library
-from importlib import util as imp_util
 from dataclasses import replace
 from functools import reduce
+from importlib import util as imp_util
 from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
 from warnings import warn
@@ -443,7 +443,6 @@ class LightningGPU(LightningBase):
         if exec_config.gradient_method == "adjoint":
             _add_adjoint_transforms(program)
         return program, exec_config
-
 
     def execute(
         self,

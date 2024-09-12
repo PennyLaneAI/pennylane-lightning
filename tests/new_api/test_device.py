@@ -466,10 +466,11 @@ class TestExecution:
 
         if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
-        
-        if isinstance(mp.obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
-            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
 
+        if isinstance(mp.obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+            pytest.skip(
+                reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128"
+            )
 
         qs = QuantumScript(
             [
@@ -679,8 +680,10 @@ class TestDerivatives:
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
         if isinstance(obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
-            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
-            
+            pytest.skip(
+                reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128"
+            )
+
         if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             obs = qml.operation.convert_to_legacy_H(obs)
 
@@ -738,7 +741,9 @@ class TestDerivatives:
     ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
         if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
-            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
+            pytest.skip(
+                reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128"
+            )
 
         if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             obs1 = qml.operation.convert_to_legacy_H(obs1)
@@ -1110,7 +1115,9 @@ class TestVJP:
     ):
         """Test that the VJP is correct when a tape has multiple expectation values"""
         if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
-            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
+            pytest.skip(
+                reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128"
+            )
 
         if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             obs1 = qml.operation.convert_to_legacy_H(obs1)
