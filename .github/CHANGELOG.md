@@ -7,6 +7,7 @@
 
 * Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
   [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+  [(#905)](https://github.com/PennyLaneAI/pennylane-lightning/pull/905)
 
 * Add `Projector` observable support via diagonalization to Lightning-GPU.
   [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
@@ -45,6 +46,9 @@
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
+* Optimize and simplify controlled kernels in Lightning-Qubit.
+  [(#882)](https://github.com/PennyLaneAI/pennylane-lightning/pull/882)
+
 * Optimize gate cache recording for `lightning.tensor` C++ layer.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
 
@@ -63,6 +67,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Bug fix for analytic `probs` in the `lightning.tensor` C++ layer.
+  [(#906)](https://github.com/PennyLaneAI/pennylane-lightning/pull/906)
 
 ### Contributors
 
