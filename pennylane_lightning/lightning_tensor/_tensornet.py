@@ -34,84 +34,44 @@ from pennylane.wires import Wires
 from pennylane_lightning.core._serialize import global_phase_diagonal
 
 
-def svd_split(M, bond_dim):
-    """SVD split a matrix into a matrix product state via numpy linalg. Note that this function is to be moved to the C++ layer."""
-    U, S, Vd = np.linalg.svd(M, full_matrices=False)
+def svd_split(Mat, site_shape, max_bond_dim):
+    """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
+    U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
     U = U @ np.diag(S)  # Append singular values to U
     bonds = len(S)
-    Vd = Vd.reshape(bonds, 2, -1)
-    U = U.reshape((-1, 2, bonds))
+
+    Vd = Vd.reshape(tuple([bonds] + site_shape + [-1]))
+    U = U.reshape(tuple([-1] + site_shape + [bonds]))
 
     # keep only chi bonds
-    chi = np.min([bonds, bond_dim])
-    U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
+    chi = np.min([bonds, max_bond_dim])
+    U, Vd = U[..., :chi], Vd[:chi]
     return U, Vd
 
 
-def split(M, max_mpo_bond_dim):
-    """SVD split a matrix into a matrix product operator via numpy linalg. Note that this function is to be moved to the C++ layer."""
-    U, S, Vd = np.linalg.svd(M, full_matrices=False)
-    bonds = len(S)
-    Vd = (
-        np.diag(S) @ Vd
-    )  # Append singular values to Vd to ensure the decomposed data is aligned with the Quimb package
-    Vd = Vd.reshape(bonds, 2, 2, -1)
-    U = U.reshape((-1, 2, 2, bonds))
-
-    # keep only chi bonds
-    chi = np.min([bonds, max_mpo_bond_dim])
-    U, Vd = U[:, :, :, :chi], Vd[:chi]
-
-    return U, Vd
-
-
-def dense_to_mpo(psi, n_wires, max_mpo_bond_dim):
-    """Convert a dense gate matrix to a matrix product operator."""
+def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
     Ms = [[] for _ in range(n_wires)]
+    site_len = np.prod(site_shape)
+    psi = np.reshape(psi, (site_len, -1))
 
-    psi = np.reshape(psi, (4, -1))
-    U, Vd = split(psi, max_mpo_bond_dim)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
-
-    Ms[0] = U  # Indices order: ket, bra, bond
-    bondL = Vd.shape[0]
-    psi = Vd
-
-    for i in range(1, n_wires - 1):
-        psi = np.reshape(psi, (4 * bondL, -1))  # reshape psi[4 * bondL, (2x2x2...)]
-        U, Vd = split(psi, max_mpo_bond_dim)  # psi[4, (2x2x..)] = U[4, mu] S[mu] Vd[mu, (2x2x2x..)]
-        Ms[i] = U  # Indices order: bond, ket, bra, bond
-
-        psi = Vd
-        bondL = Vd.shape[0]
-
-    Ms[n_wires - 1] = Vd  # Indices order: bond, ket, bra
-
-    Ms[0] = Ms[0].reshape(2, 2, -1)
-    Ms[n_wires - 1] = Ms[n_wires - 1].reshape(-1, 2, 2)
-
-    return Ms
-
-
-def dense_to_mps(psi, n_wires, bond_dim):
-    """Convert a dense state vector to a matrix product state."""
-    Ms = [[] for _ in range(n_wires)]
-
-    psi = np.reshape(psi, (2, -1))  # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
-    U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
+    U, Vd = svd_split(psi, site_shape, max_bond_dim)
 
     Ms[0] = U
     bondL = Vd.shape[0]
     psi = Vd
 
     for i in range(1, n_wires - 1):
-        psi = np.reshape(psi, (2 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
-        U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
+        psi = np.reshape(psi, (site_len * bondL, -1))
+        U, Vd = svd_split(psi, site_shape, max_bond_dim)
         Ms[i] = U
 
         psi = Vd
         bondL = Vd.shape[0]
 
     Ms[n_wires - 1] = Vd
+
+    Ms[0] = Ms[0].reshape(tuple(site_shape + [-1]))
+    Ms[-1] = Ms[-1].reshape(tuple([-1] + site_shape))
 
     return Ms
 
@@ -249,8 +209,8 @@ class LightningTensorNet:
         """
 
         state = self._preprocess_state_vector(state, device_wires)
-
-        M = dense_to_mps(state, self._num_wires, self._max_bond_dim)
+        mps_site_shape = [2]
+        M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
 
         self._tensornet.updateMPSSitesData(M)
 
@@ -312,7 +272,8 @@ class LightningTensorNet:
         # Transpose the gate data to the correct order for the tensor network contraction
         gate_tensor = np.transpose(gate_tensor, axes=indices_order)
 
-        MPOs = dense_to_mpo(gate_tensor, len(wires), max_mpo_bond_dim)
+        mpo_site_shape = [2] * 2
+        MPOs = decompose_dense(gate_tensor, len(wires), mpo_site_shape, max_mpo_bond_dim)
 
         mpos = []
         for i in range(len(MPOs)):
