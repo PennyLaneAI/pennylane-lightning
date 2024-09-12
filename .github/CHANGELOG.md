@@ -10,6 +10,7 @@
 
 * Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
   [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+  [(#905)](https://github.com/PennyLaneAI/pennylane-lightning/pull/905)
 
 * Add `Projector` observable support via diagonalization to Lightning-GPU.
   [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
@@ -36,14 +37,14 @@
 * Skip the compilation of Lightning simulators and development requirements to boost the build of public docs up to 5x.
   [(#904)](https://github.com/PennyLaneAI/pennylane-lightning/pull/904)
 
+* Build Lightning wheels in `Release` mode.
+  [(#903)](https://github.com/PennyLaneAI/pennylane-lightning/pull/903)
+
 * Update Pybind11 to 2.13.5.
   [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
 
 * Migrate wheels artifacts to v4.
   [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
-
-* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
-  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
 
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
@@ -54,12 +55,15 @@
 * Optimize gate cache recording for `lightning.tensor` C++ layer.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
 
+* Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
+  [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
+
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
-* Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
-  [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
-  
+* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
+  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
+
 * LightningKokkos gains native support for the `PauliRot` gate.
   [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
 
