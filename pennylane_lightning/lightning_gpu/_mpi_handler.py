@@ -40,7 +40,7 @@ class LightningGPU_MPIHandler:
         mpi (bool): declare if the device will use the MPI support.
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
         dev_pool (Callable): Method to handle the GPU devices available.
-        num_wires (int): the number of wires to initialize the device wit.h
+        num_wires (int): the number of wires to initialize the device with.
         c_dtype (np.complex64, np.complex128): Datatypes for statevector representation
     """
 
@@ -70,7 +70,7 @@ class LightningGPU_MPIHandler:
                     f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2."
                 )
 
-            # After check if all MPI parameter are ok
+            # After check if all MPI parameters are ok
             self.mpi_manager, self.devtag = self._mpi_init_helper(num_wires)
 
             # set the number of global and local wires

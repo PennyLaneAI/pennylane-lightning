@@ -123,9 +123,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._qubit_state.resetGPU(False)  # Sync reset
 
     def syncD2H(self, state_vector, use_async=False):
-        """Copy the state vector data on device to a state vector on the host provided by the user
+        """Copy the state vector data on device to a state vector on the host provided by the user.
         Args:
-            state_vector(array[complex]): the state vector array on host
+            state_vector(array[complex]): the state vector array on host.
             use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
             Note: This function only supports synchronized memory copy.
 
