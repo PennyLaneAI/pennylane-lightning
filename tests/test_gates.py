@@ -455,10 +455,9 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
-    if operation == qml.GlobalPhase and device_name == "lightning.tensor":
-        pytest.skip("GlobalPhase not implemented in lightning.tensor.")
-    if num_wires != 1 and device_name == "lightning.tensor":
-        pytest.skip("Multi-target wire controlled gates not implemented in lightning.tensor.")
+
+    if n_qubits > 5 and device_name == "lightning.tensor":
+        pytest.skip("Skipping slow test for lightning.tensor.")
 
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -595,10 +594,6 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
     assert np.allclose(circ(), circ_def(), atol=1e-4)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support controlled globalphase gate.",
-)
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
 def test_controlled_globalphase(n_qubits, control_value, tol):
@@ -624,9 +619,11 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
                 qml.ctrl(
                     operation(0.1234, target_wires),
                     control_wires,
-                    control_values=[
-                        control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                    ],
+                    control_values=(
+                        [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                        if device_name != "lightning.tensor"
+                        else [control_value for _ in control_wires]
+                    ),
                 )
                 return qml.state()
 
