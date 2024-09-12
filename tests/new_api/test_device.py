@@ -44,11 +44,27 @@ if device_name == "lightning.qubit":
         validate_observables,
     )
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
-
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
+        _add_adjoint_transforms,
+        _adjoint_ops,
+        _supports_adjoint,
+        accepted_observables,
+        adjoint_measurements,
+        adjoint_observables,
+        decompose,
+        mid_circuit_measurements,
+        no_sampling,
+        stopping_condition,
+        stopping_condition_shots,
+        validate_adjoint_trainable_params,
+        validate_device_wires,
+        validate_measurements,
+        validate_observables,
+    )
+
+if device_name == "lightning.gpu":
+    from pennylane_lightning.lightning_gpu.lightning_gpu import (
         _add_adjoint_transforms,
         _adjoint_ops,
         _supports_adjoint,
@@ -450,6 +466,10 @@ class TestExecution:
 
         if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
+        
+        if isinstance(mp.obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
+
 
         qs = QuantumScript(
             [
@@ -644,6 +664,12 @@ class TestDerivatives:
             qml.Z(1) + qml.X(1),
             qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]),
             qml.Hermitian(qml.Hadamard.compute_matrix(), 0),
+            qml.SparseHamiltonian(
+                qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
+                    wire_order=[0, 1, 2]
+                ),
+                wires=[0, 1, 2],
+            ),
             qml.Projector([1], 1),
         ],
     )
@@ -652,6 +678,9 @@ class TestDerivatives:
         self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
+        if isinstance(obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
+            
         if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             obs = qml.operation.convert_to_legacy_H(obs)
 
@@ -708,6 +737,9 @@ class TestDerivatives:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
+        if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
+
         if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             obs1 = qml.operation.convert_to_legacy_H(obs1)
         if isinstance(obs2, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
@@ -1077,6 +1109,9 @@ class TestVJP:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the VJP is correct when a tape has multiple expectation values"""
+        if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+            pytest.skip(reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible in np.complex128")
+
         if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
             obs1 = qml.operation.convert_to_legacy_H(obs1)
         if isinstance(obs2, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():

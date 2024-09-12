@@ -85,9 +85,7 @@ except (ImportError, ValueError) as ex:
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
         "QubitStateVector",
-        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -160,6 +158,7 @@ _observables = frozenset(
         "LinearCombination",
         "Hermitian",
         "Identity",
+        "Projector",
         "Sum",
         "Prod",
         "SProd",
