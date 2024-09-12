@@ -42,7 +42,6 @@ class LightningGPU_MPIHandler:
         dev_pool (Callable): Method to handle the GPU devices available.
         num_wires (int): the number of wires to initialize the device wit.h
         c_dtype (np.complex64, np.complex128): Datatypes for statevector representation
-
     """
 
     def __init__(
