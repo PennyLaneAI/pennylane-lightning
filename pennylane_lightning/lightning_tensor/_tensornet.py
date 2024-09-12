@@ -386,13 +386,12 @@ class LightningTensorNet:
                 if len(list(operation.target_wires)) == 1:  # use cutensornet's default support
                     self._apply_lightning_controlled(operation)
                 else:
-                    control_wires = list(operation.control_wires)
-                    control_values = operation.control_values
-                    name = operation.name
-                    # Apply GlobalPhase
                     wires = self.wires.indices(operation.wires)
                     if isinstance(operation.base, qml.GlobalPhase):
                         param = operation.parameters[0]
+                        control_wires = list(operation.control_wires)
+                        control_values = operation.control_values
+                        wires = self.wires
                         matrix = global_phase_diagonal(
                             param, self.wires, control_wires, control_values
                         )
@@ -426,12 +425,6 @@ class LightningTensorNet:
                     gate_ops_matrix = qml.matrix(operation)
                 except AttributeError:
                     gate_ops_matrix = operation.matrix()
-
-                if gate_ops_matrix.shape != (2 ** len(wires), 2 ** len(wires)):
-                    # TODO: get the full matrix reprensentation of the gate, epscially for the controlled gates and others
-                    raise ValueError(
-                        f"Operation matrix of {operation.name} must be of shape (2**len(wires), 2**len(wires))."
-                    )
 
                 self._apply_MPO(gate_ops_matrix, wires)
 
