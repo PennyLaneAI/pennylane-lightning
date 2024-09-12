@@ -405,7 +405,7 @@ class LightningGPU(LightningBase):
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
-            
+
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return LightningGPUMeasurements(final_state).measure_final_state(circuit)
