@@ -50,13 +50,14 @@ def svd_split(Mat, site_shape, max_bond_dim):
 
 
 def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
+    """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
     Ms = [[] for _ in range(n_wires)]
     site_len = np.prod(site_shape)
     psi = np.reshape(psi, (site_len, -1))
 
     U, Vd = svd_split(psi, site_shape, max_bond_dim)
 
-    Ms[0] = U
+    Ms[0] = U.reshape(tuple(site_shape + [-1]))
     bondL = Vd.shape[0]
     psi = Vd
 
@@ -68,10 +69,7 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
         psi = Vd
         bondL = Vd.shape[0]
 
-    Ms[n_wires - 1] = Vd
-
-    Ms[0] = Ms[0].reshape(tuple(site_shape + [-1]))
-    Ms[-1] = Ms[-1].reshape(tuple([-1] + site_shape))
+    Ms[-1] = Vd.reshape(tuple([-1] + site_shape))
 
     return Ms
 
