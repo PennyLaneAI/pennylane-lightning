@@ -177,8 +177,9 @@ template <class PrecisionT> class MPOTNCuda {
                 const std::size_t numISites = wires[i + 1] - wires[i] - 1;
                 if (numISites > 0) {
                     std::vector<std::size_t> ISites(numISites, BondDims[i]);
-                    bondDims_.insert(bondDims_.begin() + i + 1, ISites.begin(),
-                                     ISites.end());
+                    std::size_t offset = wires[i] - wires[0];
+                    bondDims_.insert(bondDims_.begin() + offset + 1,
+                                     ISites.begin(), ISites.end());
                 }
             }
         }
