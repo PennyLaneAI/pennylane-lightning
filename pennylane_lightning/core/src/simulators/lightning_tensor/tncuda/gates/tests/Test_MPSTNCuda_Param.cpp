@@ -1135,27 +1135,13 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::SingleExcitation", "[MPSTNCuda_Param]",
         CHECK(res == Pennylane::Util::approx(ref));
     }
 
-    SECTION("Target at non-adjacent wire indices") {
+    SECTION("Fail at non-local target wire") {
         std::size_t num_qubits = 3;
-
-        MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
 
         MPSTNCuda<TestType> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
-        mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                  {{0}, {1}, {2}}, {false, false, false});
-
-        mps_state_mpo.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
-
-        mps_state.applyOperation("SingleExcitation", {0, 2}, false, {0.3});
-
-        mps_state_mpo.applyMPOOperation(mpo_single_excitation, {0, 2},
-                                        max_mpo_bond);
-
-        auto ref = mps_state.getDataVector();
-        auto res = mps_state_mpo.getDataVector();
-
-        CHECK(res == Pennylane::Util::approx(ref));
+        REQUIRE_THROWS_AS(mps_state_mpo.applyMPOOperation(mpo_single_excitation,
+                                                          {0, 2}, max_mpo_bond),
+                          LightningException);
     }
 }
