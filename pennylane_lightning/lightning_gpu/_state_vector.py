@@ -122,7 +122,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
     def reset_state(self):
         """Reset the device's state"""
         # init the state vector to |00..0>
-        self._qubit_state.resetGPU(False)  # Sync reset
+        self._qubit_state.resetStateVector(False)  # Sync reset
 
     def syncD2H(self, state_vector, use_async=False):
         """Copy the state vector data on device to a state vector on the host provided by the user.
@@ -215,6 +215,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
             raise DeviceError("LightningGPU does not support allocate external state_vector.")
 
             # TODO
+            # Create an implementation in the C++ backend and binding to be able 
+            # to allocate memory for a new statevector and copy the data 
+            # from an external state vector.
             # state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
             # state.getState(state_data)
             # state = state_data

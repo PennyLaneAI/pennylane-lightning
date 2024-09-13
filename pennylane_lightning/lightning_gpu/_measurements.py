@@ -34,7 +34,7 @@ except ImportError as ex:
 
     pass
 
-from typing import List
+from typing import Any, List
 
 import numpy as np
 import pennylane as qml
@@ -126,31 +126,20 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
-
-    def probs(self, measurementprocess: MeasurementProcess):
-        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
-
-        Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
-
-        Returns:
-            Probabilities of the supplied observable or wires
+        
+    def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
+        """Convert the data structure from the C++ backend to a common structure through lightning devices.
+        
+        Args: 
+            probs_result (Any): Result provided by C++ backend.
+            
+        Returns: 
+            np.ndarray with probabilities of the supplied observable or wires.
         """
-        diagonalizing_gates = measurementprocess.diagonalizing_gates()
-
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(diagonalizing_gates)
-
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
-
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(
-                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-            )
 
         # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
-        if len(results) > 0:
-            num_local_wires = len(results).bit_length() - 1 if len(results) > 0 else 0
-            return results.reshape([2] * num_local_wires).transpose().reshape(-1)
+        if len(probs_results) > 0:
+            num_local_wires = len(probs_results).bit_length() - 1 if len(probs_results) > 0 else 0
+            return probs_results.reshape([2] * num_local_wires).transpose().reshape(-1)
 
-        return results
+        return probs_results

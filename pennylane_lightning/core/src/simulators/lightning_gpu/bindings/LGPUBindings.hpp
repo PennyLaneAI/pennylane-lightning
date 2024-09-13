@@ -152,7 +152,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
              "Get the GPU index for the statevector data.")
         .def("numQubits", &StateVectorT::getNumQubits)
         .def("dataLength", &StateVectorT::getLength)
-        .def("resetGPU", &StateVectorT::initSV)
+        .def("resetStateVector", &StateVectorT::initSV)
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
