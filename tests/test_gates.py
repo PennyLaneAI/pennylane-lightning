@@ -456,9 +456,6 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
 
-    if n_qubits > 5 and device_name == "lightning.tensor":
-        pytest.skip("Skipping slow test for lightning.tensor.")
-
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires
