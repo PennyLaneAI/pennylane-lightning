@@ -610,7 +610,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
         mpo_cnot[1][10] = {1.0, 0.0};
         mpo_cnot[1][13] = {-1.0, 0.0};
 
-        SECTION("Target at adjacent wire indices") {
+        SECTION("Target at wire indices") {
             std::size_t num_qubits = 3;
 
             MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
@@ -632,16 +632,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
             auto res = mps_state_mpo.getDataVector();
 
             CHECK(res == Pennylane::Util::approx(ref));
-        }
-
-        SECTION("Fails at non-local target wire") {
-            std::size_t num_qubits = 3;
-
-            MPSTNCuda<TestType> mps_state_mpo{num_qubits, maxExtent, dev_tag};
-
-            REQUIRE_THROWS_AS(
-                mps_state_mpo.applyMPOOperation(mpo_cnot, {0, 2}, max_mpo_bond),
-                LightningException);
         }
     }
 }

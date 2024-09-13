@@ -1111,7 +1111,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::SingleExcitation", "[MPSTNCuda_Param]",
     mpo_single_excitation[1][12] = {-0.707106781, 0.0};
     mpo_single_excitation[1][15] = {-0.707106781, 0.0};
 
-    SECTION("Target at adjacent wire indices") {
+    SECTION("Target at wire indices") {
         std::size_t num_qubits = 3;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
@@ -1133,15 +1133,5 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::SingleExcitation", "[MPSTNCuda_Param]",
         auto res = mps_state_mpo.getDataVector();
 
         CHECK(res == Pennylane::Util::approx(ref));
-    }
-
-    SECTION("Fail at non-local target wire") {
-        std::size_t num_qubits = 3;
-
-        MPSTNCuda<TestType> mps_state_mpo{num_qubits, maxExtent, dev_tag};
-
-        REQUIRE_THROWS_AS(mps_state_mpo.applyMPOOperation(mpo_single_excitation,
-                                                          {0, 2}, max_mpo_bond),
-                          LightningException);
     }
 }
