@@ -33,6 +33,9 @@ from pennylane.wires import Wires
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._serialize import global_phase_diagonal
 
+def is_sorted(arr):
+    """Check if an array is sorted."""
+    return all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1))
 
 def svd_split(Mat, site_shape, max_bond_dim):
     """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
@@ -73,6 +76,86 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
 
     return Ms
 
+def gate_matrix_permutation(gate_ops_matrix, wires, c_dtype):
+    # Permute the gate matrix to match the wire order in the tensor network
+    sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
+
+    sorted_wires = []
+    original_axes = []
+    for index, wire in sorted_indexed_wires:
+        sorted_wires.append(wire)
+        original_axes.append(index)
+
+    tensor_shape = [2] * len(wires) * 2
+
+    matrix = gate_ops_matrix.astype(c_dtype)
+
+    # Convert the gate matrix to the correct shape and complex dtype
+    gate_tensor = matrix.reshape(tensor_shape)
+
+    # Create the correct order of indices for the gate tensor to be decomposed
+    indices_order = []
+    for i in range(len(wires)):
+        indices_order.extend([original_axes[i] + len(wires), original_axes[i]])
+
+    # Permutation of the gate tensor
+    gate_tensor = np.transpose(gate_tensor, axes=indices_order)
+
+    mpo_site_shape = [2] * 2
+    max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
+    MPOs = decompose_dense(gate_tensor, len(wires), mpo_site_shape, max_mpo_bond_dim)
+
+    mpos = []
+    for i in range(len(MPOs)):
+        if i == 0:
+            # [bond, bra, ket] -> [ket, bond, bra]
+            mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
+        elif i == len(MPOs) - 1:
+            # [bra, ket, bond] -> [ket, bra, bond]
+            mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
+        else:
+            # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
+            # To match the order of cutensornet backend
+            mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
+    
+    return mpos, sorted_wires
+
+
+def create_swap_queue(wires):
+    swap_wire_pairs = []
+    wires_size = len(wires)
+    if (wires[-1] - wires[0]) == wires_size - 1:
+        target_wires = wires
+        return target_wires, swap_wire_pairs
+    else:
+        fixed_pos = wires_size // 2
+        fixed_gate_wire_id = wires[fixed_pos]
+        op_wires_queue = []
+        target_wires = [fixed_gate_wire_id]
+
+        left_pos = fixed_pos - 1
+        right_pos = fixed_pos + 1
+
+        while left_pos >= 0 or right_pos < wires_size:
+            if left_pos >= 0:
+                wire_pair_queue = []
+                print()
+                for i in range(wires[left_pos], wires[fixed_pos]-(fixed_pos - left_pos)):
+                    wire_pair_queue.append([i, i+1])
+                if wire_pair_queue:
+                    op_wires_queue.append(wire_pair_queue) 
+                target_wires = [target_wires[0] - 1] + target_wires
+                left_pos -= 1
+
+            if right_pos < wires_size:
+                wire_pair_queue = []
+                for i in range(wires[right_pos], wires[fixed_pos]+ right_pos - fixed_pos, -1):
+                    wire_pair_queue.append([i, i-1])
+                if wire_pair_queue:
+                    op_wires_queue.append(wire_pair_queue)
+                target_wires +=  [target_wires[-1] + 1]
+                right_pos += 1
+    return target_wires, op_wires_queue
 
 # pylint: disable=too-many-instance-attributes
 class LightningTensorNet:
@@ -233,7 +316,7 @@ class LightningTensorNet:
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         self._tensornet.setBasisState(state)
-
+    
     def _apply_MPO(self, gate_matrix, wires):
         """Apply a matrix product operator to the quantum state.
 
@@ -243,51 +326,25 @@ class LightningTensorNet:
         Returns:
             None
         """
-        # TODO: Next step optimization: check if the gate_matrix has been already decomposed before
-        # This requires a check API in the C++ layer
-        sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
+        # Get sorted wires and MPO site tensor
+        mpos, sorted_wires = gate_matrix_permutation(gate_matrix, wires, self._c_dtype)
 
-        sorted_wires = []
-        original_axes = []
-        for index, wire in sorted_indexed_wires:
-            sorted_wires.append(wire)
-            original_axes.append(index)
+        # Check if SWAP operation should be applied
+        local_target_wires, swap_pair_queue = create_swap_queue(sorted_wires)
 
-        matrix = gate_matrix.astype(self._c_dtype)
+        for swap_wire_pairs in swap_pair_queue:
+            for swap_wires in swap_wire_pairs:
+                swap_op = getattr(self._tensornet, "SWAP", None)
+                swap_op(swap_wires, False, [])
 
         max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
 
-        tensor_shape = [2] * len(wires) * 2
+        self._tensornet.applyMPOOperator(mpos, local_target_wires, max_mpo_bond_dim)
 
-        # Convert the gate matrix to the correct shape and complex dtype
-        gate_tensor = matrix.reshape(tensor_shape)
-
-        # Create the correct order of indices for the gate tensor to be decomposed
-        indices_order = []
-        for i in range(len(wires)):
-            indices_order.extend([original_axes[i] + len(wires), original_axes[i]])
-
-        # Transpose the gate data to the correct order for the tensor network contraction
-        gate_tensor = np.transpose(gate_tensor, axes=indices_order)
-
-        mpo_site_shape = [2] * 2
-        MPOs = decompose_dense(gate_tensor, len(wires), mpo_site_shape, max_mpo_bond_dim)
-
-        mpos = []
-        for i in range(len(MPOs)):
-            if i == 0:
-                # [bond, bra, ket] -> [ket, bond, bra]
-                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
-            elif i == len(MPOs) - 1:
-                # [bra, ket, bond] -> [ket, bra, bond]
-                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
-            else:
-                # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
-                # To match the order of cutensornet backend
-                mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
-
-        # Append the MPOs to the tensor network
-        self._tensornet.applyMPOOperator(mpos, sorted_wires, max_mpo_bond_dim)
+        for swap_wire_pairs in swap_pair_queue[::-1]:
+            for swap_wires in swap_wire_pairs[::-1]:
+                swap_op = getattr(self._tensornet, "SWAP", None)
+                swap_op(swap_wires, False, [])
 
     # pylint: disable=too-many-branches
     def _apply_lightning_controlled(self, operation):
@@ -341,26 +398,8 @@ class LightningTensorNet:
             method = getattr(tensornet, name, None)
             wires = list(operation.wires)
 
-            if isinstance(operation, qml.ops.Controlled):
-                if len(list(operation.target_wires)) == 1:  # use cutensornet's default support
-                    self._apply_lightning_controlled(operation)
-                else:
-                    wires = self.wires.indices(operation.wires)
-                    if isinstance(operation.base, qml.GlobalPhase):
-                        param = operation.parameters[0]
-                        control_wires = list(operation.control_wires)
-                        control_values = operation.control_values
-                        wires = self.wires
-                        matrix = global_phase_diagonal(
-                            param, self.wires, control_wires, control_values
-                        )
-                        gate_ops_matrix = np.diag(matrix)
-                    else:
-                        try:
-                            gate_ops_matrix = qml.matrix(operation)
-                        except AttributeError:
-                            gate_ops_matrix = operation.matrix()
-                    self._apply_MPO(gate_ops_matrix, wires)
+            if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
+                self._apply_lightning_controlled(operation)
             elif isinstance(operation, qml.GlobalPhase):
                 matrix = np.eye(2) * operation.matrix().flatten()[0]
                 method = getattr(tensornet, "applyMatrix")
