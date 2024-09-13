@@ -151,7 +151,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Create Basis State on GPU.")
         .def(
-            "applyMPOOperator",
+            "applyMPOOperation",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
                std::vector<std::size_t> &wires, const std::size_t MPOBondDims) {
                 using ComplexT = typename TensorNet::ComplexT;

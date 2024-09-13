@@ -37,7 +37,6 @@ TEST_CASE("swap_op_wires_queue", "[TNCuda_utils]") {
         REQUIRE(is_wires_local(wires) == false);
     }
 
-    /*
     SECTION("swap_op_wires_queue: local") {
         std::vector<std::size_t> wires = {0, 1, 2, 3};
         auto [target_wires, swap_wires_queue] =
@@ -46,52 +45,39 @@ TEST_CASE("swap_op_wires_queue", "[TNCuda_utils]") {
         REQUIRE(swap_wires_queue.empty() == true);
     }
 
-    SECTION("swap_op_wires_queue: local[0,1,2,3]") {
-        std::vector<std::size_t> wires = {0, 1, 2, 3};
-        auto [target_wires, swap_wires_queue] =
-            create_swap_wire_pair_queue(wires);
-        REQUIRE(wires == target_wires);
-        REQUIRE(swap_wires_queue.empty() == true);
-    }
-    */
-
-    SECTION("swap_op_wires_queue: non-local[0,1,n_wires-1]") {
+    SECTION("swap_op_wires_queue: non-local [0,1,n_wires-1]") {
         std::vector<std::size_t> wires = {0, 1, 4};
-
-        std::vector<std::size_t> local_wires;
 
         std::vector<std::size_t> target_wires_ref = {0, 1, 2};
         std::vector<std::vector<std::size_t>> swap_wires_queue_ref = {{4, 3},
                                                                       {3, 2}};
-        auto swap_wires_queue = create_swap_wire_pair_queue(wires, local_wires);
+        auto [local_wires, swap_wires_queue] =
+            create_swap_wire_pair_queue(wires);
         REQUIRE(local_wires == target_wires_ref);
         REQUIRE(swap_wires_queue.size() == 1);
         REQUIRE(swap_wires_queue[0] == swap_wires_queue_ref);
     }
 
-    SECTION("swap_op_wires_queue: non-local[0,n_wires-2,n_wires-1] with local "
-            "wires") {
+    SECTION("swap_op_wires_queue: non-local [0,n_wires-2,n_wires-1]") {
         std::vector<std::size_t> wires = {0, 3, 4};
-        std::vector<std::size_t> local_wires;
 
         std::vector<std::size_t> target_wires_ref = {2, 3, 4};
         std::vector<std::vector<std::size_t>> swap_wires_queue_ref = {{0, 1},
                                                                       {1, 2}};
-        auto swap_wires_queue = create_swap_wire_pair_queue(wires, local_wires);
+        auto [local_wires, swap_wires_queue] =
+            create_swap_wire_pair_queue(wires);
         REQUIRE(local_wires == target_wires_ref);
         REQUIRE(swap_wires_queue.size() == 1);
         REQUIRE(swap_wires_queue[0] == swap_wires_queue_ref);
     }
 
-    SECTION("swap_op_wires_queue: non-local[0,n_wires/2,n_wires-1] with local "
-            "wires") {
+    SECTION("swap_op_wires_queue: non-local [0,n_wires/2,n_wires-1]") {
         std::vector<std::size_t> wires = {0, 2, 4};
-        std::vector<std::size_t> local_wires;
-
         std::vector<std::size_t> target_wires_ref = {1, 2, 3};
         std::vector<std::vector<std::size_t>> swap_wires_queue_ref0 = {{0, 1}};
         std::vector<std::vector<std::size_t>> swap_wires_queue_ref1 = {{4, 3}};
-        auto swap_wires_queue = create_swap_wire_pair_queue(wires, local_wires);
+        auto [local_wires, swap_wires_queue] =
+            create_swap_wire_pair_queue(wires);
         REQUIRE(local_wires == target_wires_ref);
         REQUIRE(swap_wires_queue.size() == 2);
         REQUIRE(swap_wires_queue[0] == swap_wires_queue_ref0);

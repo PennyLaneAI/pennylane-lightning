@@ -237,8 +237,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     };
 
     /**
-     * @briefCreates an MPO object with the gate's MPO decomposition data
-     * provided by the user and applies the MPO data to the compute graph.
+     * @brief Apply an MPO operator with the gate's MPO decomposition data
+     * provided by the user to the compute graph.
      *
      * This API only works for the MPS backend.
      *
@@ -246,18 +246,29 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      * outer vector represents a MPO tensor site.
      * @param wires The wire indices of the gate acts on. The size of this
      * vector should match the size of the `tensors` vector.
-     * @param maxMPOBondDim The maximum bond dimension of the MPO operator.
+     * @param max_mpo_bond_dim The maximum bond dimension of the MPO operator.
      */
     void applyMPOOperation(const std::vector<std::vector<ComplexT>> &tensors,
                            const std::vector<std::size_t> &wires,
-                           const std::size_t maxMPOBondDim) {
+                           const std::size_t max_mpo_bond_dim) {
         PL_ABORT_IF_NOT(
             tensors.size() == wires.size(),
             "The number of tensors should be equal to the number of "
             "wires.");
+
+        auto [local_wires, swap_wires_queue] =
+            create_swap_wire_pair_queue(wires);
+
+        if (swap_wires_queue.size() > 0) {
+            for (const auto &swap_wires : swap_wires_queue) {
+                for (const auto &wire_pair : swap_wires) {
+                    BaseType::applyOperation("SWAP", wire_pair, false);
+                }
+            }
+        }
         // Create a MPO object based on the host data from the user
         mpos_.emplace_back(std::make_shared<MPOTNCuda<Precision>>(
-            tensors, wires, maxMPOBondDim, BaseType::getNumQubits(),
+            tensors, local_wires, max_mpo_bond_dim, BaseType::getNumQubits(),
             BaseType::getTNCudaHandle(), BaseType::getCudaDataType(),
             BaseType::getDevTag()));
 
@@ -273,6 +284,16 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             /* int64_t * operatorId*/ &operatorId));
 
         mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
+
+        if (swap_wires_queue.size() > 0) {
+            for (std::size_t i = swap_wires_queue.size(); i > 0; i--) {
+                for (std::size_t j = swap_wires_queue[i - 1].size(); j > 0;
+                     j--) {
+                    BaseType::applyOperation(
+                        "SWAP", swap_wires_queue[i - 1][j - 1], false);
+                }
+            }
+        }
     }
 
     /**

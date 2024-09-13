@@ -119,44 +119,6 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
     return mpos, sorted_wires
 
 
-def create_swap_queue(wires):
-    """Create a swap ops queue non-local target wires gates applied to the MPS tensor network."""
-    swap_wire_pairs = []
-    wires_size = len(wires)
-    if (wires[-1] - wires[0]) == wires_size - 1:
-        target_wires = wires
-        return target_wires, swap_wire_pairs
-    else:
-        fixed_pos = wires_size // 2
-        fixed_gate_wire_id = wires[fixed_pos]
-        op_wires_queue = []
-        target_wires = [fixed_gate_wire_id]
-
-        left_pos = fixed_pos - 1
-        right_pos = fixed_pos + 1
-
-        while left_pos >= 0 or right_pos < wires_size:
-            if left_pos >= 0:
-                wire_pair_queue = []
-                print()
-                for i in range(wires[left_pos], wires[fixed_pos] - (fixed_pos - left_pos)):
-                    wire_pair_queue.append([i, i + 1])
-                if wire_pair_queue:
-                    op_wires_queue.append(wire_pair_queue)
-                target_wires = [target_wires[0] - 1] + target_wires
-                left_pos -= 1
-
-            if right_pos < wires_size:
-                wire_pair_queue = []
-                for i in range(wires[right_pos], wires[fixed_pos] + right_pos - fixed_pos, -1):
-                    wire_pair_queue.append([i, i - 1])
-                if wire_pair_queue:
-                    op_wires_queue.append(wire_pair_queue)
-                target_wires += [target_wires[-1] + 1]
-                right_pos += 1
-    return target_wires, op_wires_queue
-
-
 # pylint: disable=too-many-instance-attributes
 class LightningTensorNet:
     """Lightning tensornet class.
@@ -329,25 +291,9 @@ class LightningTensorNet:
         # Get sorted wires and MPO site tensor
         mpos, sorted_wires = gate_matrix_decompose(gate_matrix, wires, self._c_dtype)
 
-        # Check if SWAP operation should be applied
-        local_target_wires, swap_pair_queue = create_swap_queue(sorted_wires)
-
-        # TODO: This following part can be moved to the C++ layer in 2024 Q4
-        # Apply SWAP operation to ensure the target wires are local
-        for swap_wire_pairs in swap_pair_queue:
-            for swap_wires in swap_wire_pairs:
-                swap_op = getattr(self._tensornet, "SWAP", None)
-                swap_op(swap_wires, False, [])
-
         max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
 
-        self._tensornet.applyMPOOperator(mpos, local_target_wires, max_mpo_bond_dim)
-
-        # Apply SWAP operation to restore the original wire order
-        for swap_wire_pairs in swap_pair_queue[::-1]:
-            for swap_wires in swap_wire_pairs[::-1]:
-                swap_op = getattr(self._tensornet, "SWAP", None)
-                swap_op(swap_wires, False, [])
+        self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
 
     # pylint: disable=too-many-branches
     def _apply_lightning_controlled(self, operation):

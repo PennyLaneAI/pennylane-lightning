@@ -126,19 +126,18 @@ inline bool is_wires_local(const std::vector<std::size_t> &wires) {
  *
  * @return A tuple containing the local target wires and the swap wire queue.
  */
-inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires,
-                                        std::vector<std::size_t> &local_wires)
-    -> std::vector<std::vector<std::vector<std::size_t>>> {
+inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires)
+    -> std::tuple<std::vector<std::size_t>,
+                  std::vector<std::vector<std::vector<std::size_t>>>> {
     PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
                     "The wires should be in descending order.");
 
     std::vector<std::vector<std::vector<std::size_t>>> swap_wires_queue;
+    std::vector<std::size_t> local_wires;
 
     if (is_wires_local(wires)) {
         local_wires = wires;
     } else {
-        local_wires.clear();
-
         const std::size_t num_wires = wires.size();
 
         const std::size_t fix_wire_pos = num_wires / std::size_t{2U};
@@ -153,12 +152,12 @@ inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires,
                right_wire_pos < static_cast<int32_t>(num_wires)) {
             std::vector<std::vector<std::size_t>> local_swap_wires_queue;
             if (left_wire_pos >= 0) {
-                std::size_t a = wires[left_wire_pos];
-                std::size_t b =
+                const std::size_t begin = wires[left_wire_pos];
+                const std::size_t end =
                     wires[fix_wire_pos] - (fix_wire_pos - left_wire_pos);
 
-                if (a < b) {
-                    for (std::size_t i = a; i < b; i++) {
+                if (begin < end) {
+                    for (std::size_t i = begin; i < end; i++) {
                         local_swap_wires_queue.emplace_back(
                             std::vector<std::size_t>{i, i + 1});
                     }
@@ -174,10 +173,11 @@ inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires,
 
             if (right_wire_pos < static_cast<int32_t>(num_wires)) {
                 std::vector<std::vector<std::size_t>> local_swap_wires_queue;
-                auto a = wires[right_wire_pos];
-                auto b = wires[fix_wire_pos] + (right_wire_pos - fix_wire_pos);
-                if (a > b) {
-                    for (std::size_t i = a; i > b; i--) {
+                const std::size_t begin = wires[right_wire_pos];
+                const std::size_t end =
+                    wires[fix_wire_pos] + (right_wire_pos - fix_wire_pos);
+                if (begin > end) {
+                    for (std::size_t i = begin; i > end; i--) {
                         local_swap_wires_queue.emplace_back(
                             std::vector<std::size_t>{i, i - 1});
                     }
@@ -191,7 +191,7 @@ inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires,
             }
         }
     }
-    return swap_wires_queue;
+    return {local_wires, swap_wires_queue};
 }
 
 } // namespace Pennylane::LightningTensor::TNCuda::Util
