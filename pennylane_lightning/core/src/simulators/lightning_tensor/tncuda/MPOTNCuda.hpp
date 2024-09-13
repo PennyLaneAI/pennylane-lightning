@@ -183,10 +183,7 @@ template <class PrecisionT> class MPOTNCuda {
             tensors_.emplace_back(std::make_shared<TensorCuda<PrecisionT>>(
                 localModesExtents.size(), localModesExtents, localModesExtents,
                 dev_tag));
-            tensors_[i]->getDataBuffer().zeroInit();
-        }
 
-        for (std::size_t i = 0; i < numMPOSites_; i++) {
             auto tensor_cu = cuUtil::complexToCu<ComplexT>(tensors[i]);
             tensors_[i]->getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
                                                            tensor_cu.size());

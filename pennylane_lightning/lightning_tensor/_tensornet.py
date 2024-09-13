@@ -30,9 +30,6 @@ from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
-# pylint: disable=ungrouped-imports
-from pennylane_lightning.core._serialize import global_phase_diagonal
-
 
 def svd_split(Mat, site_shape, max_bond_dim):
     """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
@@ -352,10 +349,9 @@ class LightningTensorNet:
             elif isinstance(operation, qml.GlobalPhase):
                 matrix = np.eye(2) * operation.matrix().flatten()[0]
                 method = getattr(tensornet, "applyMatrix")
-                method(
-                    matrix, [0], False
-                )  # GlobalPhase is always applied to the first wire in the tensor network
-            elif len(wires) <= 2 and not isinstance(operation, qml.MultiRZ):
+                # GlobalPhase is always applied to the first wire in the tensor network
+                method(matrix, [0], False)
+            elif len(wires) <= 2:
                 if method is not None:
                     param = operation.parameters
                     method(wires, invert_param, param)
