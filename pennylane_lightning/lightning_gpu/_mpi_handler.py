@@ -84,10 +84,10 @@ class LightningGPU_MPIHandler:
             self.num_local_wires = num_wires
             self.num_global_wires = num_wires
 
-    def _mebibytesToBytes(self,mebibytes):
+    def _mebibytesToBytes(self, mebibytes):
         return mebibytes * 1024 * 1024
-    
-    def _check_memory_size(self,c_dtype, mpi_buf_size):
+
+    def _check_memory_size(self, c_dtype, mpi_buf_size):
         # Memory size in bytes
         sv_memsize = np.dtype(c_dtype).itemsize * (1 << self.num_local_wires)
         if self._mebibytesToBytes(mpi_buf_size) > sv_memsize:
