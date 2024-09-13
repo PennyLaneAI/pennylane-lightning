@@ -33,9 +33,6 @@ from pennylane.wires import Wires
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._serialize import global_phase_diagonal
 
-def is_sorted(arr):
-    """Check if an array is sorted."""
-    return all(arr[i] <= arr[i + 1] for i in range(len(arr) - 1))
 
 def svd_split(Mat, site_shape, max_bond_dim):
     """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
@@ -76,8 +73,9 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
 
     return Ms
 
-def gate_matrix_permutation(gate_ops_matrix, wires, c_dtype):
-    # Permute the gate matrix to match the wire order in the tensor network
+
+def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
+    """Permute and decompose a gate matrix into MPO sites."""
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
     sorted_wires = []
@@ -117,11 +115,12 @@ def gate_matrix_permutation(gate_ops_matrix, wires, c_dtype):
             # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
             # To match the order of cutensornet backend
             mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
-    
+
     return mpos, sorted_wires
 
 
 def create_swap_queue(wires):
+    """Create a swap ops queue non-local target wires gates applied to the MPS tensor network."""
     swap_wire_pairs = []
     wires_size = len(wires)
     if (wires[-1] - wires[0]) == wires_size - 1:
@@ -140,22 +139,23 @@ def create_swap_queue(wires):
             if left_pos >= 0:
                 wire_pair_queue = []
                 print()
-                for i in range(wires[left_pos], wires[fixed_pos]-(fixed_pos - left_pos)):
-                    wire_pair_queue.append([i, i+1])
+                for i in range(wires[left_pos], wires[fixed_pos] - (fixed_pos - left_pos)):
+                    wire_pair_queue.append([i, i + 1])
                 if wire_pair_queue:
-                    op_wires_queue.append(wire_pair_queue) 
+                    op_wires_queue.append(wire_pair_queue)
                 target_wires = [target_wires[0] - 1] + target_wires
                 left_pos -= 1
 
             if right_pos < wires_size:
                 wire_pair_queue = []
-                for i in range(wires[right_pos], wires[fixed_pos]+ right_pos - fixed_pos, -1):
-                    wire_pair_queue.append([i, i-1])
+                for i in range(wires[right_pos], wires[fixed_pos] + right_pos - fixed_pos, -1):
+                    wire_pair_queue.append([i, i - 1])
                 if wire_pair_queue:
                     op_wires_queue.append(wire_pair_queue)
-                target_wires +=  [target_wires[-1] + 1]
+                target_wires += [target_wires[-1] + 1]
                 right_pos += 1
     return target_wires, op_wires_queue
+
 
 # pylint: disable=too-many-instance-attributes
 class LightningTensorNet:
@@ -316,7 +316,7 @@ class LightningTensorNet:
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         self._tensornet.setBasisState(state)
-    
+
     def _apply_MPO(self, gate_matrix, wires):
         """Apply a matrix product operator to the quantum state.
 
@@ -327,11 +327,13 @@ class LightningTensorNet:
             None
         """
         # Get sorted wires and MPO site tensor
-        mpos, sorted_wires = gate_matrix_permutation(gate_matrix, wires, self._c_dtype)
+        mpos, sorted_wires = gate_matrix_decompose(gate_matrix, wires, self._c_dtype)
 
         # Check if SWAP operation should be applied
         local_target_wires, swap_pair_queue = create_swap_queue(sorted_wires)
 
+        # TODO: This following part can be moved to the C++ layer in 2024 Q4
+        # Apply SWAP operation to ensure the target wires are local
         for swap_wire_pairs in swap_pair_queue:
             for swap_wires in swap_wire_pairs:
                 swap_op = getattr(self._tensornet, "SWAP", None)
@@ -341,6 +343,7 @@ class LightningTensorNet:
 
         self._tensornet.applyMPOOperator(mpos, local_target_wires, max_mpo_bond_dim)
 
+        # Apply SWAP operation to restore the original wire order
         for swap_wire_pairs in swap_pair_queue[::-1]:
             for swap_wires in swap_wire_pairs[::-1]:
                 swap_op = getattr(self._tensornet, "SWAP", None)
