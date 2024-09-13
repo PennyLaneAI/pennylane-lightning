@@ -175,16 +175,18 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qml.GroverOperator):
         return len(op.wires) < 13
     if isinstance(op, qml.PauliRot):
-        word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
-        # decomposes to IsingXX, etc. for n <= 2
-        return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
+        return False
+
     return op.name in _operations
 
 
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``
     with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    if isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional)):
+        # LightningGPU does not support Mid-circuit measurements.
+        return False
+    return stopping_condition(op)
 
 
 def accepted_observables(obs: Operator) -> bool:
