@@ -127,9 +127,8 @@ template <class PrecisionT> class MPOTNCuda {
         PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
                         "Only sorted target wires is accepeted.");
 
-        PL_ABORT_IF_NOT(
-            wires.size() == wires.back() - wires.front() + 1,
-            "Only support local target wires.");
+        PL_ABORT_IF_NOT(wires.size() == wires.back() - wires.front() + 1,
+                        "Only support local target wires.");
 
         // Create an empty MPO tensor network operator. Note that the state
         // extents are aligned with the quantum state.
