@@ -68,6 +68,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): state vector device name. Options: ["lightning.gpu"]
+        mpi_handler(LightningGPU_MPIHandler): MPI handler for PennyLane Lightning GPU device. Provides functionality to run on multiple devices. 
+        sync (bool): immediately sync with host-sv after applying operation.
     """
 
     def __init__(
@@ -93,7 +95,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._sync = sync
 
         # Initialize the state vector
-        if self._mpi_handler.use_mpi:
+        if self._mpi_handler.use_mpi: # using MPI
             self._qubit_state = self._state_dtype()(
                 self._mpi_handler.mpi_manager,
                 self._mpi_handler.devtag,
@@ -101,8 +103,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 self._mpi_handler.num_global_wires,
                 self._mpi_handler.num_local_wires,
             )
-
-        if not self._mpi_handler.use_mpi:
+        else: # without MPI
             self._qubit_state = self._state_dtype()(self.num_wires)
 
         self._create_basis_state(0)
@@ -227,8 +228,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 return
             local_state = np.zeros(1 << self._num_local_wires, dtype=self.C_DTYPE)
             self._mpi_handler.mpi_manager.Scatter(state, local_state, 0)
-            # Initialize the entire device state with the input state
-            # self.syncH2D(self._reshape(local_state, output_shape))
             self.syncH2D(np.reshape(local_state, output_shape))
             return
 
@@ -337,14 +336,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
-            if isinstance(operation, Conditional):
-                if operation.meas_val.concretize(mid_measurements):
-                    self._apply_lightning([operation.base])
-            elif isinstance(operation, MidMeasureMP):
-                self._apply_lightning_midmeasure(
-                    operation, mid_measurements, postselect_mode=postselect_mode
-                )
-            elif method is not None:  # apply specialized gate
+            if method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif isinstance(operation, qml.ops.Controlled) and isinstance(
