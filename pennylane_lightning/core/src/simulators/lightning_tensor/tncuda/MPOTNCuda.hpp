@@ -173,7 +173,10 @@ template <class PrecisionT> class MPOTNCuda {
             } else if (i == numMPOSites_ - 1) {
                 localModesExtents = {bondDims_[i - 1], 2, 2};
             } else {
+                // This branch is tested in the python layer
+                // LCOV_EXCL_START
                 localModesExtents = {bondDims_[i - 1], 2, bondDims_[i], 2};
+                // LCOV_EXCL_STOP
             }
 
             modesExtents_int64_.emplace_back(
