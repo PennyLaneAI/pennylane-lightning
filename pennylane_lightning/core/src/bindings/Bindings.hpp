@@ -328,12 +328,15 @@ void registerBackendAgnosticObservables(py::module_ &m) {
     using ObservableT = ObservableTNCuda<LightningBackendT>;
     using NamedObsT = NamedObsTNCuda<LightningBackendT>;
     using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
+    using PauliWordT = PauliWord<LightningBackendT>;
     using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
     using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
 #else
     using ObservableT = Observable<LightningBackendT>;
     using NamedObsT = NamedObs<LightningBackendT>;
     using HermitianObsT = HermitianObs<LightningBackendT>;
+    using PauliWordT = PauliWord<LightningBackendT>;
+    using PauliSentenceT = PauliSentence<LightningBackendT>;
     using TensorProdObsT = TensorProdObs<LightningBackendT>;
     using HamiltonianT = Hamiltonian<LightningBackendT>;
 #endif
@@ -385,6 +388,53 @@ void registerBackendAgnosticObservables(py::module_ &m) {
                     return false;
                 }
                 auto other_cast = other.cast<HermitianObsT>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    class_name = "PauliWordC" + bitsize;
+    py::class_<PauliWordT, std::shared_ptr<PauliWordT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init(
+            [](const std::string &word, const std::vector<std::size_t> wires) {
+                return PauliWordT(word, wires);
+            }))
+        .def("__repr__", &PauliWordT::getObsName)
+        .def("get_wires", &PauliWordT::getWires, "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const PauliWordT &self, py::handle other) -> bool {
+                if (!py::isinstance<PauliWordT>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<PauliWordT>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    class_name = "PauliSentenceC" + bitsize;
+    using ObsPtr = std::shared_ptr<ObservableT>;
+    py::class_<PauliSentenceT, std::shared_ptr<PauliSentenceT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init(
+            [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
+                auto buffer = coeffs.request();
+                const auto ptr = static_cast<const ParamT *>(buffer.ptr);
+                return PauliSentenceT{std::vector(ptr, ptr + buffer.size), obs};
+            }))
+        .def("__repr__", &PauliSentenceT::getObsName)
+        .def("get_wires", &PauliSentenceT::getWires, "Get wires of observables")
+        .def("get_ops", &PauliSentenceT::getObs,
+             "Get operations contained by PauliSentence")
+        .def("get_coeffs", &PauliSentenceT::getCoeffs,
+             "Get PauliSentence coefficients")
+        .def(
+            "__eq__",
+            [](const PauliSentenceT &self, py::handle other) -> bool {
+                if (!py::isinstance<PauliSentenceT>(other)) {
+                    return false;
+                }
+                auto other_cast = other.cast<PauliSentenceT>();
                 return self == other_cast;
             },
             "Compare two observables");

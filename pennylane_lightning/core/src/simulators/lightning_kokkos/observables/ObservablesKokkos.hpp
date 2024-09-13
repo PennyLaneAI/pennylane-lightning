@@ -95,6 +95,92 @@ class HermitianObs final : public HermitianObsBase<StateVectorT> {
 };
 
 /**
+ * @brief Final class for PauliWord observables
+ *
+ * @tparam StateVectorT State vector class.
+ */
+template <class StateVectorT>
+class PauliWord final : public PauliWordBase<StateVectorT> {
+  private:
+    using BaseType = PauliWordBase<StateVectorT>;
+
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    /**
+     * @brief Create an PauliWord observable
+     *
+     * @param matrix Matrix in row major format.
+     * @param wires Wires the observable applies to.
+     */
+    PauliWord(const std::string &word, const std::vector<std::size_t> wires)
+        : BaseType{word, wires} {}
+};
+
+/**
+ * @brief Final class for a general PauliSentence representation as a sum of
+ * observables.
+ *
+ * @tparam StateVectorT State vector class.
+ */
+template <class StateVectorT>
+class PauliSentence final : public PauliSentenceBase<StateVectorT> {
+  private:
+    using BaseType = PauliSentenceBase<StateVectorT>;
+
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    /**
+     * @brief Create a PauliSentence from coefficients and observables
+     *
+     * @param coeffs Arguments to construct coefficients
+     * @param obs Arguments to construct observables
+     */
+    template <typename T1, typename T2>
+    explicit PauliSentence(T1 &&coeffs, T2 &&obs) : BaseType{coeffs, obs} {}
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param coeffs Arguments to construct coefficients
+     * @param obs Arguments to construct observables
+     */
+    static auto
+    create(std::initializer_list<PrecisionT> coeffs,
+           std::initializer_list<std::shared_ptr<Observable<StateVectorT>>> obs)
+        -> std::shared_ptr<PauliSentence<StateVectorT>> {
+        return std::shared_ptr<PauliSentence<StateVectorT>>(
+            new PauliSentence<StateVectorT>{std::move(coeffs), std::move(obs)});
+    }
+
+    /**
+     * @brief Updates the statevector sv:->sv'.
+     * @param sv The statevector to update
+     */
+    void applyInPlace(StateVectorT &sv) const override {
+        StateVectorT buffer{sv.getNumQubits()};
+        buffer.initZeros();
+        StateVectorT tmp{sv};
+        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
+             term_idx++) {
+            tmp.updateData(sv.getView());
+            this->obs_[term_idx]->applyInPlace(tmp);
+            LightningKokkos::Util::axpy_Kokkos<PrecisionT>(
+                ComplexT{this->coeffs_[term_idx], 0.0}, tmp.getView(),
+                buffer.getView(), tmp.getLength());
+        }
+        sv.updateData(buffer);
+    }
+};
+
+/**
  * @brief Final class for TensorProdObs observables
  *
  * @tparam StateVectorT State vector class.

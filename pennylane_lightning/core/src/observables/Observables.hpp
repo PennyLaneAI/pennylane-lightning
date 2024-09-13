@@ -312,6 +312,205 @@ class HermitianObsBase : public Observable<StateVectorT> {
 };
 
 /**
+ * @brief Base class for a Pauli word observable.
+ *
+ * @tparam StateVectorT State vector class.
+ */
+template <class StateVectorT>
+class PauliWordBase : public Observable<StateVectorT> {
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+
+  protected:
+    std::string word_;
+    std::vector<std::size_t> wires_;
+
+  private:
+    [[nodiscard]] auto isEqual(const Observable<StateVectorT> &other) const
+        -> bool override {
+        const auto &other_cast =
+            static_cast<const PauliWordBase<StateVectorT> &>(other);
+        if (wires_.size() != other_cast.wires_.size()) {
+            return false;
+        }
+        if (!std::equal(wires_.begin(), wires_.end(),
+                        other_cast.wires_.begin())) {
+            return false;
+        }
+        if (word_.size() != other_cast.word_.size()) {
+            return false;
+        }
+        if (!std::equal(word_.begin(), word_.end(), other_cast.word_.begin())) {
+            return false;
+        }
+        return true;
+    }
+
+  public:
+    /**
+     * @brief Create a tensor product of observables
+     *
+     * @param arg Arguments perfect forwarded to vector of observables.
+     */
+    explicit PauliWordBase(const std::string &word,
+                           const std::vector<std::size_t> wires)
+        : wires_{std::move(wires)}, word_{std::move(word)} {
+        PL_ASSERT(word_.size() == wires_.size());
+    }
+
+    /**
+     * @brief Get the wires for each observable operation.
+     *
+     * @return const std::vector<std::vector<std::size_t>>&
+     */
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
+        return wires_;
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        using Util::operator<<;
+        std::ostringstream obs_stream;
+        obs_stream << "PauliWord(" << word_ << ")";
+        return obs_stream.str();
+    }
+
+    void applyInPlace(StateVectorT &sv) const override {
+        sv.applyPauliRot(wires_, false, {-M_PI}, word_);
+    }
+
+    void applyInPlaceShots(StateVectorT &sv,
+                           std::vector<std::vector<PrecisionT>> &eigenValues,
+                           std::vector<std::size_t> &ob_wires) const override {
+        PL_ABORT(
+            "PauliWord observables with shot measurement are not supported;");
+    }
+};
+
+/**
+ * @brief Base class for a general PauliSentence representation as a sum of
+ * Pauli words.
+ *
+ * @tparam StateVectorT State vector class.
+ */
+template <class StateVectorT>
+class PauliSentenceBase : public Observable<StateVectorT> {
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+
+  protected:
+    std::vector<PrecisionT> coeffs_;
+    std::vector<std::shared_ptr<Observable<StateVectorT>>> obs_;
+
+  private:
+    [[nodiscard]] bool
+    isEqual(const Observable<StateVectorT> &other) const override {
+        const auto &other_cast =
+            static_cast<const PauliSentenceBase<StateVectorT> &>(other);
+
+        if (coeffs_ != other_cast.coeffs_) {
+            return false;
+        }
+
+        for (std::size_t i = 0; i < obs_.size(); i++) {
+            if (*obs_[i] != *other_cast.obs_[i]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+  public:
+    /**
+     * @brief Create a PauliSentence from coefficients and observables
+     *
+     * @param coeffs Arguments to construct coefficients
+     * @param obs Arguments to construct observables
+     */
+    template <typename T1, typename T2>
+    PauliSentenceBase(T1 &&coeffs, T2 &&obs)
+        : coeffs_{std::forward<T1>(coeffs)}, obs_{std::forward<T2>(obs)} {
+        PL_ASSERT(coeffs_.size() == obs_.size());
+    }
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param coeffs Arguments to construct coefficients
+     * @param obs Arguments to construct observables
+     * @return std::shared_ptr<PauliSentenceBase<StateVectorT>>
+     */
+    static auto
+    create(std::initializer_list<PrecisionT> coeffs,
+           std::initializer_list<std::shared_ptr<Observable<StateVectorT>>> obs)
+        -> std::shared_ptr<PauliSentenceBase<StateVectorT>> {
+        return std::shared_ptr<PauliSentenceBase<StateVectorT>>(
+            new PauliSentenceBase<StateVectorT>{std::move(coeffs),
+                                                std::move(obs)});
+    }
+
+    void applyInPlace([[maybe_unused]] StateVectorT &sv) const override {
+        PL_ABORT(
+            "For PauliSentence Observables, the applyInPlace method must be "
+            "defined at the backend level.");
+    }
+
+    void applyInPlaceShots(
+        [[maybe_unused]] StateVectorT &sv,
+        [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
+        [[maybe_unused]] std::vector<std::size_t> &ob_wires) const override {
+        PL_ABORT("PauliSentence observables as a term of an observable do not "
+                 "support shot measurement.");
+    }
+
+    [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
+        std::unordered_set<std::size_t> wires;
+
+        for (const auto &ob : obs_) {
+            const auto ob_wires = ob->getWires();
+            wires.insert(ob_wires.begin(), ob_wires.end());
+        }
+        auto all_wires = std::vector<std::size_t>(wires.begin(), wires.end());
+        std::sort(all_wires.begin(), all_wires.end());
+        return all_wires;
+    }
+
+    [[nodiscard]] auto getObsName() const -> std::string override {
+        using Util::operator<<;
+        std::ostringstream ss;
+        ss << "PauliSentence: { 'coeffs' : " << coeffs_
+           << ", 'observables' : [";
+        const auto term_size = coeffs_.size();
+        for (std::size_t t = 0; t < term_size; t++) {
+            ss << obs_[t]->getObsName();
+            if (t != term_size - 1) {
+                ss << ", ";
+            }
+        }
+        ss << "]}";
+        return ss.str();
+    }
+
+    /**
+     * @brief Get the observable.
+     */
+    [[nodiscard]] auto getObs() const
+        -> std::vector<std::shared_ptr<Observable<StateVectorT>>> override {
+        return obs_;
+    };
+
+    /**
+     * @brief Get the coefficients of the observable.
+     */
+    [[nodiscard]] auto getCoeffs() const -> std::vector<PrecisionT> override {
+        return coeffs_;
+    };
+};
+
+/**
  * @brief Base class for a tensor product of observables.
  *
  * @tparam StateVectorT State vector class.
