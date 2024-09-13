@@ -120,7 +120,7 @@ class LightningKokkosMeasurements(
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
+            measurementprocess (StateMeasurement): measurement to apply to the state.
 
         Returns:
             Probabilities of the supplied observable or wires

@@ -41,7 +41,7 @@ class LightningGPU_MPIHandler:
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
         dev_pool (Callable): Method to handle the GPU devices available.
         num_wires (int): the number of wires to initialize the device with.
-        c_dtype (np.complex64, np.complex128): Datatypes for statevector representation
+        c_dtype (np.complex64, np.complex128): Datatypes for statevector representation.
     """
 
     def __init__(
