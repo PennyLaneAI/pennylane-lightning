@@ -104,4 +104,94 @@ inline void setWorkSpaceMemory(const cutensornetHandle_t &tncuda_handle,
         /* int64_t */ static_cast<int64_t>(worksize)));
 }
 
+/**
+ * @brief Check if the wires are local.
+ *
+ * @param wires The wires to check.
+ */
+inline bool is_wires_local(const std::vector<std::size_t> &wires) {
+    const std::size_t num_wires = wires.size();
+    for (std::size_t i = 0; i < num_wires - 1; ++i) {
+        if (wires[i + 1] - wires[i] != 1) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/**
+ * @brief Create a queue of swap operations to be performed on the MPS.
+ *
+ * @param wires The target wires.
+ *
+ * @return A tuple containing the local target wires and the swap wire queue.
+ */
+inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires,
+                                        std::vector<std::size_t> &local_wires)
+    -> std::vector<std::vector<std::vector<std::size_t>>> {
+    PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
+                    "The wires should be in descending order.");
+
+    std::vector<std::vector<std::vector<std::size_t>>> swap_wires_queue;
+
+    if (is_wires_local(wires)) {
+        local_wires = wires;
+    } else {
+        local_wires.clear();
+
+        const std::size_t num_wires = wires.size();
+
+        const std::size_t fix_wire_pos = num_wires / std::size_t{2U};
+        const std::size_t fixed_gate_wire_idx = wires[fix_wire_pos];
+
+        local_wires.push_back(fixed_gate_wire_idx);
+
+        int32_t left_wire_pos = fix_wire_pos - 1;
+        int32_t right_wire_pos = fix_wire_pos + 1;
+
+        while (left_wire_pos >= 0 ||
+               right_wire_pos < static_cast<int32_t>(num_wires)) {
+            std::vector<std::vector<std::size_t>> local_swap_wires_queue;
+            if (left_wire_pos >= 0) {
+                std::size_t a = wires[left_wire_pos];
+                std::size_t b =
+                    wires[fix_wire_pos] - (fix_wire_pos - left_wire_pos);
+
+                if (a < b) {
+                    for (std::size_t i = a; i < b; i++) {
+                        local_swap_wires_queue.emplace_back(
+                            std::vector<std::size_t>{i, i + 1});
+                    }
+                    swap_wires_queue.emplace_back(local_swap_wires_queue);
+                }
+
+                std::size_t left_most_wire = local_wires[0] - 1;
+
+                local_wires.insert(local_wires.begin(), left_most_wire);
+
+                left_wire_pos--;
+            }
+
+            if (right_wire_pos < static_cast<int32_t>(num_wires)) {
+                std::vector<std::vector<std::size_t>> local_swap_wires_queue;
+                auto a = wires[right_wire_pos];
+                auto b = wires[fix_wire_pos] + (right_wire_pos - fix_wire_pos);
+                if (a > b) {
+                    for (std::size_t i = a; i > b; i--) {
+                        local_swap_wires_queue.emplace_back(
+                            std::vector<std::size_t>{i, i - 1});
+                    }
+                    swap_wires_queue.emplace_back(local_swap_wires_queue);
+                }
+
+                std::size_t right_most_wire = local_wires.back() + 1;
+                local_wires.push_back(right_most_wire);
+
+                right_wire_pos++;
+            }
+        }
+    }
+    return swap_wires_queue;
+}
+
 } // namespace Pennylane::LightningTensor::TNCuda::Util
