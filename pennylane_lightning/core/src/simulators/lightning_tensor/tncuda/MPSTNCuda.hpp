@@ -255,10 +255,13 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             tensors.size() == wires.size(),
             "The number of tensors should be equal to the number of "
             "wires.");
-
-        auto [local_wires, swap_wires_queue] =
+        // Create a queue of wire pairs to apply SWAP gates and MPO local target
+        // wires
+        const auto [local_wires, swap_wires_queue] =
             create_swap_wire_pair_queue(wires);
 
+        // Apply SWAP gates to ensure the following MPO operator targeting at
+        // local wires
         if (swap_wires_queue.size() > 0) {
             for (const auto &swap_wires : swap_wires_queue) {
                 for (const auto &wire_pair : swap_wires) {
@@ -273,6 +276,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             BaseType::getDevTag()));
 
         // Append the MPO operator to the compute graph
+        // Note MPO operator only works for local target wires as of v24.08
         int64_t operatorId;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
@@ -285,12 +289,13 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
 
+        // Apply SWAP gates to restore the original wire order
         if (swap_wires_queue.size() > 0) {
-            for (std::size_t i = swap_wires_queue.size(); i > 0; i--) {
-                for (std::size_t j = swap_wires_queue[i - 1].size(); j > 0;
-                     j--) {
-                    BaseType::applyOperation(
-                        "SWAP", swap_wires_queue[i - 1][j - 1], false);
+            for (auto site = swap_wires_queue.rbegin();
+                 site != swap_wires_queue.rend(); site++) {
+                for (auto wire_pair = site->rbegin(); wire_pair != site->rend();
+                     wire_pair++) {
+                    BaseType::applyOperation("SWAP", *wire_pair, false);
                 }
             }
         }
