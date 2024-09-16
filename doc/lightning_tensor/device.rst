@@ -20,11 +20,16 @@ The ``lightning.tensor`` device dispatches all operations to be performed on a C
 and greater.
 
 .. note:: 
-    Given the inherent parallelism of GPUs, simulations with intensive parallel computation, such as those with larger maximum
+    Some tips on the usage of the ``lightning.tensor`` device:
+    - ``lightning.tensor`` performs better for the maximum bond dimension MPS calculation. Given the inherent parallelism of GPUs, simulations with intensive parallel computation, such as those with larger maximum
     bond dimensions, stand to gain the most from the computational power offered by GPU and those simulations can benifit from the 
     ``lightning.tensor`` device.  It's worth noting that if the bond dimension used in the simulation is small, the ``lightning.tensor`` 
     device with ``MPS`` running a GPU may perform slower compared to a ``default.tensor`` device with ``MPS`` running on a CPU. For more details
     on how bond dimension affects the simulation performance, please refer to the ``Approximate Tensor Network Methods`` section in the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`__.
+    - The ``lightning.tensor`` device is optimized for large-scale quantum simulations. For small-scale quantum simulations, the overhead of transferring data between the CPU and GPU may outweigh the benefits of GPU acceleration.
+    - For the ``lightning.tensor`` device, it is recommended to use shot-based ``probs()`` measurements. The analytical calculation of ``prob()`` can lead to excessive memory usage or become impractical due to high computational costs for large-scale quantum simulations.
+    - Similarly, shot-based ``var()`` measurements are recommended for the ``lightning.tensor`` device. The analytical calculation of ``var()`` may also result in excessive memory usage or be impractical due to prohibitive computational costs for large-scale quantum simulations.
+    - It is advisable to disable new_opmath for the ``lightning.tensor`` device, as it only supports 1-wire Hermitian observables.
 
 Users also have the flexibility to customize these parameters according to their specific needs with:
 
@@ -58,7 +63,7 @@ Check out the :doc:`/lightning_tensor/installation` guide for more information.
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The "lightning.tensor" supports 1- and 2-wire gate operations and all other operations that can be decomposed to that by PennyLane.
+The "lightning.tensor" supports all gate operations supported by PennyLane.
 
 **Supported operations:**
 
@@ -70,6 +75,7 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     :nosignatures:
 
     ~pennylane.BasisState
+    ~pennylane.BlockEncode
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
@@ -82,7 +88,10 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     ~pennylane.CZ
     ~pennylane.DiagonalQubitUnitary
     ~pennylane.DoubleExcitation
+    ~pennylane.DoubleExcitationMinus
+    ~pennylane.DoubleExcitationPlus
     ~pennylane.ECR
+    ~pennylane.GlobalPhase
     ~pennylane.Hadamard
     ~pennylane.Identity
     ~pennylane.IsingXX
@@ -98,6 +107,7 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     ~pennylane.PSWAP
     ~pennylane.QFT
     ~pennylane.QubitCarry
+    ~pennylane.QubitStateVector
     ~pennylane.QubitSum
     ~pennylane.QubitUnitary
     ~pennylane.Rot
@@ -108,6 +118,7 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     ~pennylane.SingleExcitation
     ~pennylane.SingleExcitationMinus
     ~pennylane.SingleExcitationPlus
+    ~pennylane.StatePrep
     ~pennylane.SISWAP
     ~pennylane.SQISW
     ~pennylane.SWAP
@@ -119,30 +130,10 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
 
     </div>
 
-**Unsupported operations:**
-
-.. raw:: html
-
-    <div class="summary-table">
-
-.. autosummary::
-    :nosignatures:
-
-    ~pennylane.StatePrep
-    ~pennylane.QubitStateVector
-    ~pennylane.DoubleExcitationMinus
-    ~pennylane.DoubleExcitationPlus
-    ~pennylane.GlobalPhase
-    ~pennylane.BlockEncode
-
-
-.. raw:: html
-
-    </div>
 
 **Supported observables:**
 
-The ``lightning.tensor`` supports all observables supported by the Lightning state-vector simulators, besides ``qml.SparseHamiltonian``, ``qml.Projector`` and limited support to ``qml.Hamiltonian``, ``qml.Prod``.
+The ``lightning.tensor`` supports all observables supported by the Lightning state-vector simulators, besides ``qml.SparseHamiltonian``, ``qml.Projector`` and limited support to ``qml.Hamiltonian``, ``qml.Prod`` since ``lightning.tensor`` only supports 1-wire Hermitian observables.
 
 Users can not create a ``Hamiltonian`` or ``Prod`` observable from ``Hamiltonian`` observables.
 
