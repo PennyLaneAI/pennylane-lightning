@@ -35,7 +35,7 @@ Lightning Plugins
 
 .. header-start-inclusion-marker-do-not-remove
 
-The Lightning plugin ecosystem provides fast state-vector simulators written in C++.
+The Lightning plugin ecosystem provides fast state-vector and tensor network simulators written in C++.
 
 `PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
