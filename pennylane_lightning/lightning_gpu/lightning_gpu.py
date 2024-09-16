@@ -55,7 +55,7 @@ try:
     LGPU_CPP_BINARY_AVAILABLE = True
 
     try:
-        from ._mpi_handler import LightningGPU_MPIHandler
+        from ._mpi_handler import MPIHandler
 
         MPI_SUPPORT = True
     except ImportError as ex:
