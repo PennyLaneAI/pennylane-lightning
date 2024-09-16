@@ -97,7 +97,7 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
     indices_order = []
     for i in range(len(wires)):
         indices_order.extend([original_axes[i], original_axes[i] + len(wires)])
-    # Reverse the indices order to match the requirement of cutensornet backend
+    # Reverse the indices order to match the target wire order of cutensornet backend
     indices_order.reverse()
 
     # Permutation of the gate tensor
