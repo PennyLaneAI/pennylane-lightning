@@ -33,6 +33,7 @@ from pennylane.wires import Wires
 
 def svd_split(Mat, site_shape, max_bond_dim):
     """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
+    # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
     U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
     U = U @ np.diag(S)  # Append singular values to U
     bonds = len(S)
@@ -50,17 +51,21 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
     """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
     Ms = [[] for _ in range(n_wires)]
     site_len = np.prod(site_shape)
-    psi = np.reshape(psi, (site_len, -1))
+    psi = np.reshape(psi, (site_len, -1))  # split psi [2, 2, 2, 2...] to psi [site_len, -1]
 
-    U, Vd = svd_split(psi, site_shape, max_bond_dim)
+    U, Vd = svd_split(
+        psi, site_shape, max_bond_dim
+    )  # psi [site_len, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
 
     Ms[0] = U.reshape(tuple(site_shape + [-1]))
     bondL = Vd.shape[0]
     psi = Vd
 
     for i in range(1, n_wires - 1):
-        psi = np.reshape(psi, (site_len * bondL, -1))
-        U, Vd = svd_split(psi, site_shape, max_bond_dim)
+        psi = np.reshape(psi, (site_len * bondL, -1))  # reshape psi[site_len*bondL, -1]
+        U, Vd = svd_split(
+            psi, site_shape, max_bond_dim
+        )  # psi [site_len*bondL, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
         Ms[i] = U
 
         psi = Vd
@@ -97,20 +102,22 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
     gate_tensor = np.transpose(gate_tensor, axes=indices_order)
 
     mpo_site_shape = [2] * 2
+    # TODO: Discuss if public interface for max_mpo_bond_dim argument
     max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
+    # The indices order of MPOs: 1. left-most site: [bra, ket, bondR]; 2. right-most sites: [bondL, bra, ket]; 3. sites in-between: [bondL, bra, ket, bondR].
     MPOs = decompose_dense(gate_tensor, len(wires), mpo_site_shape, max_mpo_bond_dim)
 
+    # Convert the MPOs to the correct order for the cutensornet backend
     mpos = []
     for i in range(len(MPOs)):
         if i == 0:
-            # [bond, bra, ket] -> [ket, bond, bra] in the Fortran order to match the order of cutensornet backend
+            # [bond, bra, ket](0, 1, 2) -> [bra, bond, ket](1, 0, 2) -> Fortran order or reverse indices(2, 0, 1) to match the order requirement of cutensornet backend.
             mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
         elif i == len(MPOs) - 1:
-            # [bra, ket, bond] -> [ket, bra, bond] in Fortran order to match the order of cutensornet backend
+            # [bra, ket, bond](0, 1, 2) -> [bond, bra, ket](2, 0, 1) -> Fortran order or reverse indices(1, 0, 2) to match the order requirement of cutensornet backend.
             mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
         else:
-            # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
-            # To match the order of cutensornet backend in Frotran order to match the order of cutensornet backend
+            # [bondL, bra, ket, bondR](0, 1, 2, 3) -> [bondL, bra, bondR, ket]->(0, 1, 3, 2) -> [bondR, bra, bondL, ket](3, 1, 0, 2) -> Fortran order or reverse indices(2, 0, 1, 3) to match the requirement of cutensornet backend.
             mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
 
     return mpos, sorted_wires

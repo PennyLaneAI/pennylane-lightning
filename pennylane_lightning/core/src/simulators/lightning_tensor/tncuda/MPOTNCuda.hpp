@@ -48,9 +48,9 @@ namespace Pennylane::LightningTensor::TNCuda {
    |              |              |
    0              1              1
 
- 2. The extents of the left side bound MPO tensor are [2, bondR, 2].
-   The extents of the right side bound MPO tensor are [bondL, 2, 2].
-   The extents of the middle MPO tensors are [bondL, 2, bondR, 2].
+ 2. The extents of the MPO tensors are [bondL, 2, bondR, 2]. The bondL of the
+ left side bound MPO tensor is 1 and the bondR of the right side bound MPO
+ tensor is 1.
 
  Note that the gate tensor should be permuted to ascending order and decomposed
  into MPO sites before passing to this class. Preprocess and postprocess with
