@@ -303,9 +303,7 @@ class LightningGPU(LightningBase):
         self._sync = sync
 
         # Creating the state vector
-        self._mpi_handler = LightningGPU_MPIHandler(
-            mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype
-        )
+        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype)
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync

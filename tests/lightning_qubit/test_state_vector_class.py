@@ -31,7 +31,7 @@ if device_name == "lightning.kokkos":
         pass
 
 if device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu._mpi_handler import LightningGPU_MPIHandler
+    from pennylane_lightning.lightning_gpu._mpi_handler import MPIHandler
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)

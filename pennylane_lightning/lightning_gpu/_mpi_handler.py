@@ -16,6 +16,7 @@ This module contains the :class:`~.LightningGPU_MPIHandler` class, a MPI handler
 """
 
 from warnings import warn
+
 try:
     # pylint: disable=no-name-in-module
     from pennylane_lightning.lightning_gpu_ops import DevTag, MPIManager

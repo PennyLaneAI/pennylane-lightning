@@ -45,7 +45,7 @@ from pennylane.wires import Wires
 from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
-from ._mpi_handler import LightningGPU_MPIHandler
+from ._mpi_handler import MPIHandler
 
 gate_cache_needs_hash = (
     qml.BlockEncode,
@@ -68,7 +68,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): state vector device name. Options: ["lightning.gpu"]
-        mpi_handler(LightningGPU_MPIHandler): MPI handler for PennyLane Lightning GPU device.
+        mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
             Provides functionality to run on multiple devices.
         sync (bool): immediately sync with host-sv after applying operation.
     """
@@ -87,7 +87,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._device_name = device_name
 
         if mpi_handler is None:
-            mpi_handler = LightningGPU_MPIHandler(False, 0, None, num_wires, dtype)
+            mpi_handler = MPIHandler(False, 0, None, num_wires, dtype)
 
         self._num_global_wires = mpi_handler.num_global_wires
         self._num_local_wires = mpi_handler.num_local_wires
