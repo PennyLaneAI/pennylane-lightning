@@ -138,7 +138,7 @@ class LightningBaseMeasurements(ABC):
             np.ndarray with probabilities of the supplied observable or wires.
         """
         return probs_results
-    
+
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
