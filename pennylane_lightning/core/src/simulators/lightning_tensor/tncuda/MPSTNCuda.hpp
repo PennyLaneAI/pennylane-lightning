@@ -270,7 +270,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                 }
             }
         }
-        
+
         // Create a MPO object based on the host data from the user
         mpos_.emplace_back(std::make_shared<MPOTNCuda<Precision>>(
             tensors, local_wires, max_mpo_bond_dim, BaseType::getNumQubits(),
