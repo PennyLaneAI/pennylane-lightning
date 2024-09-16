@@ -66,6 +66,9 @@
 
 ### Documentation
 
+*  Update ``lightning.tensor`` documentation on all the new features.
+  [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
+
 ### Bug fixes
 
 * Bug fix for analytic `probs` in the `lightning.tensor` C++ layer.
