@@ -19,17 +19,12 @@ The default setup for the MPS tensor network approximation is:
 The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0 (Volta)
 and greater.
 
-.. note:: 
-    Some tips on the usage of the ``lightning.tensor`` device:
-    * ``lightning.tensor`` performs better for the maximum bond dimension MPS calculation. Given the inherent parallelism of GPUs, simulations with intensive parallel computation, such as those with larger maximum
-    bond dimensions, stand to gain the most from the computational power offered by GPU and those simulations can benifit from the 
-    ``lightning.tensor`` device.  It's worth noting that if the bond dimension used in the simulation is small, the ``lightning.tensor`` 
-    device with ``MPS`` running a GPU may perform slower compared to a ``default.tensor`` device with ``MPS`` running on a CPU. For more details
-    on how bond dimension affects the simulation performance, please refer to the ``Approximate Tensor Network Methods`` section in the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`__.
-    * The ``lightning.tensor`` device is optimized for large-scale quantum simulations. For small-scale quantum simulations, the overhead of transferring data between the CPU and GPU may outweigh the benefits of GPU acceleration.
-    * For the ``lightning.tensor`` device, it is recommended to use shot-based ``probs()`` measurements. The analytical calculation of ``prob()`` can lead to excessive memory usage or become impractical due to high computational costs for large-scale quantum simulations.
-    * Similarly, shot-based ``var()`` measurements are recommended for the ``lightning.tensor`` device. The analytical calculation of ``var()`` may also result in excessive memory usage or be impractical due to prohibitive computational costs for large-scale quantum simulations.
-    * It is advisable to disable new_opmath for the ``lightning.tensor`` device, as it only supports 1-wire Hermitian observables.
+Some tips on the usage of the ``lightning.tensor`` device:
+    - ``lightning.tensor`` performs better for the maximum bond dimension MPS calculation. Given the inherent parallelism of GPUs, simulations with intensive parallel computation, such as those with larger maximum bond dimensions, stand to gain the most from the computational power offered by GPU and those simulations can benifit from the ``lightning.tensor`` device.  It's worth noting that if the bond dimension used in the simulation is small, the ``lightning.tensor`` device with ``MPS`` running a GPU may perform slower compared to a ``default.tensor`` device with ``MPS`` running on a CPU. For more details on how bond dimension affects the simulation performance, please refer to the ``Approximate Tensor Network Methods`` section in the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`__.
+    - The ``lightning.tensor`` device is optimized for large-scale quantum simulations. For small-scale quantum simulations, the overhead of transferring data between the CPU and GPU may outweigh the benefits of GPU acceleration.
+    - For the ``lightning.tensor`` device, it is recommended to use shot-based ``probs()`` measurements. The analytical calculation of ``prob()`` can lead to excessive memory usage or become impractical due to high computational costs for large-scale quantum simulations.
+    - Similarly, shot-based ``var()`` measurements are recommended for the ``lightning.tensor`` device. The analytical calculation of ``var()`` may also result in excessive memory usage or be impractical due to prohibitive computational costs for large-scale quantum simulations.
+    - It is advisable to disable ``new_opmath`` for the ``lightning.tensor`` device, as it only supports 1-wire Hermitian observables.
 
 Users also have the flexibility to customize these parameters according to their specific needs with:
 
