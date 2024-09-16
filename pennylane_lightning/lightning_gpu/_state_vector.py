@@ -82,7 +82,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         sync=True,
     ):
 
-        super().__init__(num_wires, dtype)
+        super().__init__(num_wires, dtype, sync=sync)
 
         self._device_name = device_name
 
@@ -107,7 +107,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
         else:  # without MPI
             self._qubit_state = self._state_dtype()(self.num_wires)
 
-        self._create_basis_state(0)
+        use_async = False
+        self._qubit_state.setBasisStateZero(use_async)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -119,10 +120,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         else:
             return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-    def reset_state(self):
-        """Reset the device's state"""
-        # init the state vector to |00..0>
-        self._qubit_state.resetStateVector(False)  # Sync reset
 
     def syncD2H(self, state_vector, use_async=False):
         """Copy the state vector data on device to a state vector on the host provided by the user.
@@ -249,27 +246,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._qubit_state.setStateVector(
             ravelled_indices, state, use_async
         )  # this operation on device
-
-    def _apply_basis_state(self, state, wires):
-        """Initialize the state vector in a specified computational basis state on GPU directly.
-            Args:
-            state (array[int]): computational basis state (on host) of shape ``(wires,)``
-                consisting of 0s and 1s.
-            wires (Wires): wires that the provided computational state should be initialized on
-        Note: This function does not support broadcasted inputs yet.
-        """
-        if not set(state.tolist()).issubset({0, 1}):
-            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
-
-        if len(state) != len(wires):
-            raise ValueError("BasisState parameter and wires must be of equal length.")
-
-        # get computational basis state number
-        basis_states = 1 << (self.num_wires - 1 - np.array(wires))
-        basis_states = qml.math.convert_like(basis_states, state)
-        num = int(qml.math.dot(state, basis_states))
-
-        self._create_basis_state(num)
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
