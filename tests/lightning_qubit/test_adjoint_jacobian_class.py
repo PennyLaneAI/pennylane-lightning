@@ -508,7 +508,7 @@ class TestVectorJacobianProduct:
                 statevector.reset_state(True)
             else:
                 statevector.reset_state()
-            
+
             vjp = self.calculate_vjp(statevector, tape, dy)
 
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
