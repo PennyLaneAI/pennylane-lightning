@@ -72,7 +72,7 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
 
 
 def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
-    """Permute and decompose a gate matrix into MPO sites."""
+    """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention."""
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
     sorted_wires = []
@@ -103,14 +103,14 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
     mpos = []
     for i in range(len(MPOs)):
         if i == 0:
-            # [bond, bra, ket] -> [ket, bond, bra]
+            # [bond, bra, ket] -> [ket, bond, bra] in the Fortran order to match the order of cutensornet backend
             mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
         elif i == len(MPOs) - 1:
-            # [bra, ket, bond] -> [ket, bra, bond]
+            # [bra, ket, bond] -> [ket, bra, bond] in Fortran order to match the order of cutensornet backend
             mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
         else:
             # sites between MSB and LSB [bondL, bra, ket, bondR] -> [ket, bondL, bra, bondR]
-            # To match the order of cutensornet backend
+            # To match the order of cutensornet backend in Frotran order to match the order of cutensornet backend
             mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
 
     return mpos, sorted_wires
