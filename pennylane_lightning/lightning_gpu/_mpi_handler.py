@@ -15,12 +15,14 @@
 This module contains the :class:`~.LightningGPU_MPIHandler` class, a MPI handler to use LightningGPU device with multi-GPU on multi-node system.
 """
 
+from warnings import warn
 try:
     # pylint: disable=no-name-in-module
     from pennylane_lightning.lightning_gpu_ops import DevTag, MPIManager
 
     MPI_SUPPORT = True
-except ImportError:
+except ImportError as ex:
+    print(str(ex), UserWarning)
     MPI_SUPPORT = False
 
 from typing import Callable, Union
@@ -29,7 +31,7 @@ import numpy as np
 
 
 # MPI options
-class LightningGPU_MPIHandler:
+class MPIHandler:
     """MPI handler for PennyLane Lightning GPU device.
 
     MPI handler to use a GPU-backed Lightning device using NVIDIA cuQuantum SDK with parallel capabilities.

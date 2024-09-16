@@ -128,6 +128,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             Note: This function only supports synchronized memory copy.
 
         **Example**
+
         >>> dev = qml.device('lightning.gpu', wires=1)
         >>> dev.apply([qml.PauliX(wires=[0])])
         >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
@@ -162,6 +163,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             Note: This function only supports synchronized memory copy.
 
         **Example**
+
         >>> dev = qml.device('lightning.gpu', wires=3)
         >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
         >>> obs1 = qml.Identity(1)
@@ -287,7 +289,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
-        """Apply a list of operations to the state tensor.
+        """Apply a list of operations to the state vector.
 
         Args:
             operations (list[~pennylane.operation.Operation]): operations to apply

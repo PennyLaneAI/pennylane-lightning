@@ -109,9 +109,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
                 len(wires), shots.total_shots
             ).astype(int, copy=False)
 
-        except ValueError as e:
-            if str(e) != "probabilities contain NaN":
-                raise e
+        except ValueError as ex:
+            if str(ex) != "probabilities contain NaN":
+                raise ex
             samples = qml.math.full((shots.total_shots, len(wires)), 0)
 
         self._apply_diagonalizing_gates(mps, adjoint=True)

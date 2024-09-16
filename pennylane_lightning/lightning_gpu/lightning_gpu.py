@@ -41,7 +41,7 @@ from pennylane_lightning.core.lightning_newAPI_base import (
 
 from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
-from ._mpi_handler import LightningGPU_MPIHandler
+from ._mpi_handler import MPIHandler
 from ._state_vector import LightningGPUStateVector
 
 try:
