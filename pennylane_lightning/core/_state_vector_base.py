@@ -96,10 +96,13 @@ class LightningBaseStateVector(ABC):
         Returns: the state vector class
         """
 
-    def reset_state(self):
+    def reset_state(self, sync=None):
         """Reset the device's state"""
         # init the state vector to |00..0>
-        self._qubit_state.resetStateVector()
+        if sync == None:
+            self._qubit_state.resetStateVector()
+        else:
+            self._qubit_state.resetStateVector(sync)
 
     @abstractmethod
     def _apply_state_vector(self, state, device_wires: Wires):
