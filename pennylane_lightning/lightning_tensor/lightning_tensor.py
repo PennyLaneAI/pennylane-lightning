@@ -137,6 +137,8 @@ _operations = frozenset(
         "DoubleExcitation",
         "DoubleExcitationPlus",
         "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
         "OrbitalRotation",
         "QFT",
         "ECR",

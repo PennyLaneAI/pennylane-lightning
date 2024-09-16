@@ -173,11 +173,6 @@ class LightningTensorNet:
         return self._device_name
 
     @property
-    def wires(self):
-        """All wires that can be addressed on this device"""
-        return self._wires
-
-    @property
     def num_wires(self):
         """Number of wires addressed on this device"""
         return self._num_wires

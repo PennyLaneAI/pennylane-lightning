@@ -255,6 +255,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             tensors.size() == wires.size(),
             "The number of tensors should be equal to the number of "
             "wires.");
+
         // Create a queue of wire pairs to apply SWAP gates and MPO local target
         // wires
         const auto [local_wires, swap_wires_queue] =
@@ -269,6 +270,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
                 }
             }
         }
+        
         // Create a MPO object based on the host data from the user
         mpos_.emplace_back(std::make_shared<MPOTNCuda<Precision>>(
             tensors, local_wires, max_mpo_bond_dim, BaseType::getNumQubits(),
