@@ -96,7 +96,9 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
     # Create the correct order of indices for the gate tensor to be decomposed
     indices_order = []
     for i in range(len(wires)):
-        indices_order.extend([original_axes[i] + len(wires), original_axes[i]])
+        indices_order.extend([original_axes[i], original_axes[i] + len(wires)])
+    # Reverse the indices order to match the requirement of cutensornet backend
+    indices_order.reverse()
 
     # Permutation of the gate tensor
     gate_tensor = np.transpose(gate_tensor, axes=indices_order)
@@ -104,21 +106,21 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
     mpo_site_shape = [2] * 2
     # TODO: Discuss if public interface for max_mpo_bond_dim argument
     max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
-    # The indices order of MPOs: 1. left-most site: [bra, ket, bondR]; 2. right-most sites: [bondL, bra, ket]; 3. sites in-between: [bondL, bra, ket, bondR].
+    # The indices order of MPOs: 1. left-most site: [ket, bra, bondR]; 2. right-most sites: [bondL, ket, bra]; 3. sites in-between: [bondL, ket, bra, bondR].
     MPOs = decompose_dense(gate_tensor, len(wires), mpo_site_shape, max_mpo_bond_dim)
 
     # Convert the MPOs to the correct order for the cutensornet backend
     mpos = []
     for i in range(len(MPOs)):
         if i == 0:
-            # [bond, bra, ket](0, 1, 2) -> [bra, bond, ket](1, 0, 2) -> Fortran order or reverse indices(2, 0, 1) to match the order requirement of cutensornet backend.
-            mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1)))
+            # [ket, bra, bond](0, 1, 2) -> [ket, bond, bra](0, 2, 1) -> Fortran order or reverse indices(1, 2, 0) to match the order requirement of cutensornet backend.
+            mpos.append(np.transpose(MPOs[i], axes=(1, 2, 0)))
         elif i == len(MPOs) - 1:
-            # [bra, ket, bond](0, 1, 2) -> [bond, bra, ket](2, 0, 1) -> Fortran order or reverse indices(1, 0, 2) to match the order requirement of cutensornet backend.
-            mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(1, 0, 2)))
+            # [bond, ket, bra](0, 1, 2) -> Fortran order or reverse indices(2, 1, 0) to match the order requirement of cutensornet backend.
+            mpos.append(np.transpose(MPOs[i], axes=(2, 1, 0)))
         else:
-            # [bondL, bra, ket, bondR](0, 1, 2, 3) -> [bondL, bra, bondR, ket]->(0, 1, 3, 2) -> [bondR, bra, bondL, ket](3, 1, 0, 2) -> Fortran order or reverse indices(2, 0, 1, 3) to match the requirement of cutensornet backend.
-            mpos.append(np.transpose(MPOs[len(MPOs) - 1 - i], axes=(2, 0, 1, 3)))
+            # [bondL, ket, bra, bondR](0, 1, 2, 3) -> [bondL, ket, bondR, bra](0, 1, 3, 2) -> Fortran order or reverse indices(2, 3, 1, 0) to match the requirement of cutensornet backend.
+            mpos.append(np.transpose(MPOs[i], axes=(2, 3, 1, 0)))
 
     return mpos, sorted_wires
 
