@@ -189,7 +189,7 @@ class StateVectorCudaManaged
      *
      * @param state Binary number representing the index
      * @param wires Wires.
-     * @param 
+     * @param
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
@@ -217,7 +217,6 @@ class StateVectorCudaManaged
         setBasisState_CUDA(BaseType::getData(), value_cu, index, use_async,
                            stream_id);
     }
-
 
     /**
      * @brief Set values for a batch of elements of the state-vector. This

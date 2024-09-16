@@ -155,7 +155,7 @@ def test_reset_state(tol, operation, par):
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations([operation(np.array(par), Wires(range(wires)))])
 
-    if device_name == 'lightning.gpu':
+    if device_name == "lightning.gpu":
         state_vector.reset_state(sync=False)
     else:
         state_vector.reset_state()

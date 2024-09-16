@@ -155,7 +155,7 @@ class LightningBaseMeasurements(ABC):
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
 
-        return self._probs_retval_conversion(results) 
+        return self._probs_retval_conversion(results)
 
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess.

@@ -16,7 +16,7 @@ Class implementation for state-vector manipulation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Union, Optional
+from typing import Optional, Union
 
 import numpy as np
 from pennylane import BasisState, StatePrep
@@ -38,7 +38,9 @@ class LightningBaseStateVector(ABC):
         sync Optional(bool): immediately sync with host-sv after applying operation.
     """
 
-    def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64], sync: Optional[bool] = None):
+    def __init__(
+        self, num_wires: int, dtype: Union[np.complex128, np.complex64], sync: Optional[bool] = None
+    ):
 
         if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -98,7 +100,7 @@ class LightningBaseStateVector(ABC):
         Returns: the state vector class
         """
 
-    def reset_state(self, sync:Optional[bool] =None):
+    def reset_state(self, sync: Optional[bool] = None):
         """Reset the device's state"""
         # init the state vector to |00..0>
         if sync == None:
@@ -115,7 +117,7 @@ class LightningBaseStateVector(ABC):
             device_wires (Wires): wires that get initialized in the state
         """
 
-    def _apply_basis_state(self, state, wires, use_async:Optional[bool] = None):
+    def _apply_basis_state(self, state, wires, use_async: Optional[bool] = None):
         """Initialize the state vector in a specified computational basis state.
 
         Args:
@@ -138,7 +140,6 @@ class LightningBaseStateVector(ABC):
             self._qubit_state.setBasisState(list(state), list(wires))
         else:
             self._qubit_state.setBasisState(list(state), list(wires), use_async)
-            
 
     @abstractmethod
     def _apply_lightning_controlled(self, operation):
@@ -195,7 +196,9 @@ class LightningBaseStateVector(ABC):
                 self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(operations[0].parameters[0], operations[0].wires, self._sync)
+                self._apply_basis_state(
+                    operations[0].parameters[0], operations[0].wires, self._sync
+                )
                 operations = operations[1:]
         self._apply_lightning(
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode

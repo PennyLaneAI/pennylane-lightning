@@ -120,7 +120,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         else:
             return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-
     def syncD2H(self, state_vector, use_async=False):
         """Copy the state vector data on device to a state vector on the host provided by the user.
         Args:
@@ -212,8 +211,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
             raise DeviceError("LightningGPU does not support allocate external state_vector.")
 
             # TODO
-            # Create an implementation in the C++ backend and binding to be able 
-            # to allocate memory for a new statevector and copy the data 
+            # Create an implementation in the C++ backend and binding to be able
+            # to allocate memory for a new statevector and copy the data
             # from an external state vector.
             # state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
             # state.getState(state_data)

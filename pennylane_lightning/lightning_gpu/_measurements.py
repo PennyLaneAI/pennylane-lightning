@@ -126,14 +126,14 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
-        
+
     def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
         """Convert the data structure from the C++ backend to a common structure through lightning devices.
-        
-        Args: 
+
+        Args:
             probs_result (Any): Result provided by C++ backend.
-            
-        Returns: 
+
+        Returns:
             np.ndarray with probabilities of the supplied observable or wires.
         """
 
