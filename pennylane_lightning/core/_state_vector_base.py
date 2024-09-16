@@ -48,7 +48,7 @@ class LightningBaseStateVector(ABC):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
-        self._sync = sync
+        self._base_sync = sync
 
         # Dummy for the device name
         self._device_name = None
@@ -136,6 +136,7 @@ class LightningBaseStateVector(ABC):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # Return a computational basis state over all wires.
+        print("FSX:",use_async)
         if use_async == None:
             self._qubit_state.setBasisState(list(state), list(wires))
         else:
@@ -197,7 +198,7 @@ class LightningBaseStateVector(ABC):
                 operations = operations[1:]
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(
-                    operations[0].parameters[0], operations[0].wires, self._sync
+                    operations[0].parameters[0], operations[0].wires, self._base_sync
                 )
                 operations = operations[1:]
         self._apply_lightning(

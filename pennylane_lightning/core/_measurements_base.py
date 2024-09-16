@@ -130,7 +130,6 @@ class LightningBaseMeasurements(ABC):
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
-    @abstractmethod
     def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
         """Convert the data structure from the C++ backend to a common structure through lightning devices.
         Args:
@@ -138,7 +137,8 @@ class LightningBaseMeasurements(ABC):
         Returns:
             np.ndarray with probabilities of the supplied observable or wires.
         """
-        return probs_results;
+        return probs_results
+    
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
