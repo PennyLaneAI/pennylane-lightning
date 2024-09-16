@@ -185,6 +185,40 @@ class StateVectorCudaManaged
     }
 
     /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     * @param
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires,
+                       const bool use_async) {
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
+        const auto num_qubits = BaseType::getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        const auto n_wires = wires.size();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+
+        BaseType::getDataBuffer().zeroInit();
+        const std::complex<PrecisionT> value(1, 0);
+        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+        setBasisState_CUDA(BaseType::getData(), value_cu, index, use_async,
+                           stream_id);
+    }
+
+    /**
      * @brief Set values for a batch of elements of the state-vector. This
      * method is implemented by the customized CUDA kernel defined in the
      * DataBuffer class.

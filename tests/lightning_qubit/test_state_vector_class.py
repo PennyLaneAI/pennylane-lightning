@@ -31,7 +31,7 @@ if device_name == "lightning.kokkos":
         pass
 
 if device_name == "lightning.gpu":
-    from pennylane_lightning.lightning_gpu._mpi_handler import LightningGPU_MPIHandler
+    from pennylane_lightning.lightning_gpu._mpi_handler import MPIHandler
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
@@ -155,7 +155,10 @@ def test_reset_state(tol, operation, par):
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations([operation(np.array(par), Wires(range(wires)))])
 
-    state_vector.reset_state()
+    if device_name == "lightning.gpu":
+        state_vector.reset_state(sync=False)
+    else:
+        state_vector.reset_state()
 
     expected_output = np.array([1, 0, 0, 0], dtype=state_vector.dtype)
     assert np.allclose(state_vector.state, expected_output, atol=tol, rtol=0)

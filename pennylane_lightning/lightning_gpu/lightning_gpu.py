@@ -41,7 +41,7 @@ from pennylane_lightning.core.lightning_newAPI_base import (
 
 from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
-from ._mpi_handler import LightningGPU_MPIHandler
+from ._mpi_handler import MPIHandler
 from ._state_vector import LightningGPUStateVector
 
 try:
@@ -211,7 +211,7 @@ def check_gpu_resources() -> None:
     if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
 
         raise ImportError(
-            "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
+            "cuStateVec libraries not found. Please pip install the appropriate cuStateVec library in a virtual environment."
         )
 
     if not DevPool.getTotalDevices():
@@ -244,7 +244,7 @@ class LightningGPU(LightningBase):
             is built with MPI. Default is False.
         mpi (bool): declare if the device will use the MPI support.
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-        sync (bool): immediately sync with host-sv after applying operation
+        sync (bool): immediately sync with host-sv after applying operation.
     """
 
     # General device options
@@ -300,9 +300,7 @@ class LightningGPU(LightningBase):
         self._sync = sync
 
         # Creating the state vector
-        self._mpi_handler = LightningGPU_MPIHandler(
-            mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype
-        )
+        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype)
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
@@ -404,6 +402,6 @@ class LightningGPU(LightningBase):
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
 
-        state.reset_state()
+        state.reset_state(sync=False)
         final_state = state.get_final_state(circuit)
         return LightningGPUMeasurements(final_state).measure_final_state(circuit)

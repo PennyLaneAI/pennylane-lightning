@@ -15,12 +15,15 @@
 This module contains the :class:`~.LightningGPU_MPIHandler` class, a MPI handler to use LightningGPU device with multi-GPU on multi-node system.
 """
 
+from warnings import warn
+
 try:
     # pylint: disable=no-name-in-module
     from pennylane_lightning.lightning_gpu_ops import DevTag, MPIManager
 
     MPI_SUPPORT = True
-except ImportError:
+except ImportError as ex:
+    print(str(ex), UserWarning)
     MPI_SUPPORT = False
 
 from typing import Callable, Union
@@ -29,8 +32,8 @@ import numpy as np
 
 
 # MPI options
-class LightningGPU_MPIHandler:
-    """MPI handler for PennyLane Lightning GPU device
+class MPIHandler:
+    """MPI handler for PennyLane Lightning GPU device.
 
     MPI handler to use a GPU-backed Lightning device using NVIDIA cuQuantum SDK with parallel capabilities.
 
@@ -41,7 +44,7 @@ class LightningGPU_MPIHandler:
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
         dev_pool (Callable): Method to handle the GPU devices available.
         num_wires (int): the number of wires to initialize the device with.
-        c_dtype (np.complex64, np.complex128): Datatypes for statevector representation
+        c_dtype (np.complex64, np.complex128): Datatypes for statevector representation.
     """
 
     def __init__(
@@ -76,19 +79,22 @@ class LightningGPU_MPIHandler:
             # set the number of global and local wires
             commSize = self._mpi_manager.getSize()
             self.num_global_wires = commSize.bit_length() - 1
-            self.num_local_wires = num_wires - self._num_global_wires
+            self.num_local_wires = num_wires - self.num_global_wires
 
-            # Memory size in bytes
-            sv_memsize = np.dtype(c_dtype).itemsize * (1 << self.num_local_wires)
-            if self._mebibytesToBytes(mpi_buf_size) > sv_memsize:
-                raise ValueError("The MPI buffer size is larger than the local state vector size.")
+            self._check_memory_size(c_dtype, mpi_buf_size)
 
         if not self.use_mpi:
             self.num_local_wires = num_wires
             self.num_global_wires = num_wires
 
-    def _mebibytesToBytes(mebibytes):
+    def _mebibytesToBytes(self, mebibytes):
         return mebibytes * 1024 * 1024
+
+    def _check_memory_size(self, c_dtype, mpi_buf_size):
+        # Memory size in bytes
+        sv_memsize = np.dtype(c_dtype).itemsize * (1 << self.num_local_wires)
+        if self._mebibytesToBytes(mpi_buf_size) > sv_memsize:
+            raise ValueError("The MPI buffer size is larger than the local state vector size.")
 
     def _mpi_init_helper(self, num_wires):
         """Set up MPI checks and initializations."""
@@ -112,7 +118,7 @@ class LightningGPU_MPIHandler:
             )
 
         # set GPU device
-        rank = self._mpi_manager.getRank()
+        rank = mpi_manager.getRank()
         deviceid = rank % numProcsNode
         self._dp.setDeviceID(deviceid)
         devtag = DevTag(deviceid)

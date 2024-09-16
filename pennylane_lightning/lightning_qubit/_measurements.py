@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 from functools import reduce
-from typing import List
+from typing import Any, List
 
 import numpy as np
 import pennylane as qml
@@ -142,25 +142,13 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
 
-    def probs(self, measurementprocess: MeasurementProcess):
-        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
+    def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
+        """Convert the data structure from the C++ backend to a common structure through lightning devices.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
+            probs_result (Any): Result provided by C++ backend.
 
         Returns:
-            Probabilities of the supplied observable or wires
+            np.ndarray with probabilities of the supplied observable or wires.
         """
-        diagonalizing_gates = measurementprocess.diagonalizing_gates()
-
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(diagonalizing_gates)
-
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
-
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(
-                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-            )
-
-        return results
+        return probs_results
