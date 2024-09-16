@@ -19,15 +19,15 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 
 from ctypes.util import find_library
 from importlib import util as imp_util
-from numbers import Number
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Callable, Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.measurements import MidMeasureMP
 from pennylane.operation import Operator
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
@@ -41,40 +41,35 @@ from pennylane_lightning.core.lightning_newAPI_base import (
 
 from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
+from ._mpi_handler import MPIHandler
 from ._state_vector import LightningGPUStateVector
 
 try:
+    from pennylane_lightning.lightning_gpu_ops import (
+        DevPool,
+        backend_info,
+        get_gpu_arch,
+        is_gpu_supported,
+    )
 
-    from pennylane_lightning.lightning_gpu_ops import backend_info
+    LGPU_CPP_BINARY_AVAILABLE = True
 
     try:
         # pylint: disable=no-name-in-module
-        from pennylane_lightning.lightning_gpu_ops import MPIManager
+        from pennylane_lightning.lightning_gpu_ops import DevTag, MPIManager
+
+        from ._mpi_handler import LightningGPU_MPIHandler
 
         MPI_SUPPORT = True
     except ImportError as ex:
         warn(str(ex), UserWarning)
         MPI_SUPPORT = False
 
-    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
-        raise ImportError(
-            "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
-        )
-    # if not DevPool.getTotalDevices():  # pragma: no cover
-    #     raise ValueError("No supported CUDA-capable device found")
-
-    # if not is_gpu_supported():  # pragma: no cover
-    #     raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
-
     LGPU_CPP_BINARY_AVAILABLE = True
 except (ImportError, ValueError) as ex:
     warn(str(ex), UserWarning)
     backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
-
-
-def _mebibytesToBytes(mebibytes):
-    return mebibytes * 1024 * 1024
 
 
 _operations = frozenset(
@@ -159,16 +154,6 @@ _observables = frozenset(
     }
 )
 
-gate_cache_needs_hash = (
-    qml.BlockEncode,
-    qml.ControlledQubitUnitary,
-    qml.DiagonalQubitUnitary,
-    qml.MultiControlledX,
-    qml.OrbitalRotation,
-    qml.PSWAP,
-    qml.QubitUnitary,
-)
-
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
@@ -224,6 +209,21 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     return 0
 
 
+def check_gpu_resources() -> None:
+    """Check the available resources of each Nvidia GPU"""
+    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
+
+        raise ImportError(
+            "cuStateVec libraries not found. Please pip install the appropriate cuStateVec library in a virtual environment."
+        )
+
+    if not DevPool.getTotalDevices():
+        raise ValueError("No supported CUDA-capable device found")
+
+    if not is_gpu_supported():
+        raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
+
+
 @simulator_tracking
 @single_tape_support
 class LightningGPU(LightningBase):
@@ -245,6 +245,9 @@ class LightningGPU(LightningBase):
         batch_obs (bool): Determine whether we process observables in parallel when
             computing the jacobian. This value is only relevant when the lightning.gpu
             is built with MPI. Default is False.
+        mpi (bool): declare if the device will use the MPI support.
+        mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
+        sync (bool): immediately sync with host-sv after applying operation.
     """
 
     # General device options
@@ -271,7 +274,10 @@ class LightningGPU(LightningBase):
         c_dtype=np.complex128,
         shots=None,
         batch_obs=False,
-        # GPU arguments
+        # GPU and MPI arguments
+        mpi: bool = False,
+        mpi_buf_size: int = 0,
+        sync: bool = False,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -279,6 +285,8 @@ class LightningGPU(LightningBase):
                 "To manually compile from source, follow the instructions at "
                 "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
+
+        check_gpu_resources()
 
         super().__init__(
             wires=wires,
@@ -288,19 +296,28 @@ class LightningGPU(LightningBase):
         )
 
         # Set the attributes to call the LightningGPU classes
+        self._set_lightning_classes()
 
         # GPU specific options
+        self._dp = DevPool()
+        self._sync = sync
 
         # Creating the state vector
+        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype)
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
+        )
 
     @property
     def name(self):
         """The name of the device."""
         return "lightning.gpu"
 
-    def _set_Lightning_classes(self):
+    def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
-        return 0
+        self.LightningStateVector = LightningGPUStateVector
+        self.LightningMeasurements = LightningGPUMeasurements
 
     def _setup_execution_config(self, config):
         """
@@ -384,4 +401,9 @@ class LightningGPU(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        return 0
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
+
+        state.reset_state(sync=False)
+        final_state = state.get_final_state(circuit)
+        return LightningGPUMeasurements(final_state).measure_final_state(circuit)

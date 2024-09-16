@@ -22,11 +22,11 @@ except ImportError:
     pass
 
 from functools import reduce
-from typing import List
+from typing import Any, List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import CountsMP, SampleMeasurement, Shots
+from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements

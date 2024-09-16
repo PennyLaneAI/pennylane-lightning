@@ -38,9 +38,6 @@ if not LightningDevice._new_API:
         allow_module_level=True,
     )
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
-
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
@@ -613,6 +610,10 @@ class TestMeasurements:
             # allclose -> absolute(r - e) <= (atol + rtol * absolute(e))
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.gpu",
+        reason="lightning.gpu does not support out of order prob.",
+    )
     @pytest.mark.parametrize(
         "cases",
         [

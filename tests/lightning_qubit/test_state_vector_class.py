@@ -30,6 +30,9 @@ if device_name == "lightning.kokkos":
     except ImportError:
         pass
 
+if device_name == "lightning.gpu":
+    from pennylane_lightning.lightning_gpu._mpi_handler import MPIHandler
+
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
@@ -39,8 +42,6 @@ if not LightningDevice._new_API:
         allow_module_level=True,
     )
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -89,10 +90,18 @@ def test_apply_state_vector_with_lightning_handle(tol):
     state_vector_1 = LightningStateVector(2)
     state_vector_1.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
 
-    state_vector_2 = LightningStateVector(2)
-    state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
+    if device_name == "lightning.gpu":
+        with pytest.raises(
+            qml.DeviceError, match="LightningGPU does not support allocate external state_vector."
+        ):
+            state_vector_2 = LightningStateVector(2)
+            state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
 
-    assert np.allclose(state_vector_1.state, state_vector_2.state, atol=tol, rtol=0)
+    else:
+        state_vector_2 = LightningStateVector(2)
+        state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
+
+        assert np.allclose(state_vector_1.state, state_vector_2.state, atol=tol, rtol=0)
 
 
 @pytest.mark.parametrize(
@@ -146,7 +155,10 @@ def test_reset_state(tol, operation, par):
     state_vector = LightningStateVector(wires)
     state_vector.apply_operations([operation(np.array(par), Wires(range(wires)))])
 
-    state_vector.reset_state()
+    if device_name == "lightning.gpu":
+        state_vector.reset_state(sync=False)
+    else:
+        state_vector.reset_state()
 
     expected_output = np.array([1, 0, 0, 0], dtype=state_vector.dtype)
     assert np.allclose(state_vector.state, expected_output, atol=tol, rtol=0)

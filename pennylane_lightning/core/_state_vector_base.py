@@ -16,7 +16,7 @@ Class implementation for state-vector manipulation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from pennylane import BasisState, StatePrep
@@ -35,9 +35,12 @@ class LightningBaseStateVector(ABC):
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
+        sync Optional(bool): immediately sync with host-sv after applying operation.
     """
 
-    def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64]):
+    def __init__(
+        self, num_wires: int, dtype: Union[np.complex128, np.complex64], sync: Optional[bool] = None
+    ):
 
         if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
@@ -45,6 +48,7 @@ class LightningBaseStateVector(ABC):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
+        self._base_sync = sync
 
         # Dummy for the device name
         self._device_name = None
@@ -96,13 +100,16 @@ class LightningBaseStateVector(ABC):
         Returns: the state vector class
         """
 
-    def reset_state(self):
+    def reset_state(self, sync: Optional[bool] = None):
         """Reset the device's state"""
         # init the state vector to |00..0>
-        self._qubit_state.resetStateVector()
+        if sync == None:
+            self._qubit_state.resetStateVector()
+        else:
+            self._qubit_state.resetStateVector(sync)
 
     @abstractmethod
-    def _apply_state_vector(self, state, device_wires: Wires):
+    def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
         """Initialize the internal state vector in a specified state.
         Args:
             state (array[complex]): normalized input state of length ``2**len(wires)``
@@ -110,7 +117,7 @@ class LightningBaseStateVector(ABC):
             device_wires (Wires): wires that get initialized in the state
         """
 
-    def _apply_basis_state(self, state, wires):
+    def _apply_basis_state(self, state, wires, use_async: Optional[bool] = None):
         """Initialize the state vector in a specified computational basis state.
 
         Args:
@@ -118,6 +125,7 @@ class LightningBaseStateVector(ABC):
                 consisting of 0s and 1s.
             wires (Wires): wires that the provided computational state should be
                 initialized on
+            use_async(Optional[bool]): immediately sync with host-sv after applying operation.
 
         Note: This function does not support broadcasted inputs yet.
         """
@@ -128,7 +136,11 @@ class LightningBaseStateVector(ABC):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # Return a computational basis state over all wires.
-        self._qubit_state.setBasisState(list(state), list(wires))
+        print("FSX:", use_async)
+        if use_async == None:
+            self._qubit_state.setBasisState(list(state), list(wires))
+        else:
+            self._qubit_state.setBasisState(list(state), list(wires), use_async)
 
     @abstractmethod
     def _apply_lightning_controlled(self, operation):
@@ -185,7 +197,9 @@ class LightningBaseStateVector(ABC):
                 self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
+                self._apply_basis_state(
+                    operations[0].parameters[0], operations[0].wires, self._base_sync
+                )
                 operations = operations[1:]
         self._apply_lightning(
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
