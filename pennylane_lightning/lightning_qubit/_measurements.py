@@ -141,14 +141,3 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
-
-    def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
-        """Convert the data structure from the C++ backend to a common structure through lightning devices.
-
-        Args:
-            probs_result (Any): Result provided by C++ backend.
-
-        Returns:
-            np.ndarray with probabilities of the supplied observable or wires.
-        """
-        return probs_results

@@ -185,11 +185,12 @@ class StateVectorCudaManaged
     }
 
     /**
-     * @brief Prepares a single computational basis state.
+     * @brief Prepare a single computational basis state.
      *
      * @param state Binary number representing the index
      * @param wires Wires.
-     * @param
+     * @param use_async(Optional[bool]): immediately sync with host-sv after applying operation.
+ 
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
