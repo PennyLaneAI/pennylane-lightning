@@ -48,6 +48,7 @@ T                      = { properties = [ "invertible", "controllable", "differe
 # strategy in PennyLane.
 MultiControlledX       = {}
 QFT                    = {}
+CosineWindow           = {}
 
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
