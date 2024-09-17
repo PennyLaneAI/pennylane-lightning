@@ -38,9 +38,9 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @brief Class representing an Matrix Product Operator (MPO) object for the MPS
  backend.
  * Any gate tensor can be represented as an MPO tensor network in the context of
- MPS. The gate tensor must be decomposed with respect to its target wires. Note that
- the only local target wires are supported. The non-adjacent target wires must be swapped
- to local before contructing the MPO tensor network.
+ MPS. The gate tensor must be decomposed with respect to its target wires. Note
+ that the only local target wires are supported. The non-adjacent target wires
+ must be swapped to local before contructing the MPO tensor network.
  * The MPO tensors' modes order in an open boundary condition are:
    2              3              2
    |              |              |
