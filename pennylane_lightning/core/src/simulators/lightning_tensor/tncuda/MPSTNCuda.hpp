@@ -264,11 +264,14 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         // Apply SWAP gates to ensure the following MPO operator targeting at
         // local wires
         if (swap_wires_queue.size() > 0) {
-            for (const auto &swap_wires : swap_wires_queue) {
-                for (const auto &wire_pair : swap_wires) {
-                    BaseType::applyOperation("SWAP", wire_pair, false);
-                }
-            }
+            for_each(swap_wires_queue.begin(), swap_wires_queue.end(),
+                     [this](const auto &swap_wires) {
+                         for_each(swap_wires.begin(), swap_wires.end(),
+                                  [this](const auto &wire_pair) {
+                                      BaseType::applyOperation(
+                                          "SWAP", wire_pair, false);
+                                  });
+                     });
         }
 
         // Create a MPO object based on the host data from the user
@@ -293,13 +296,14 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         // Apply SWAP gates to restore the original wire order
         if (swap_wires_queue.size() > 0) {
-            for (auto site = swap_wires_queue.rbegin();
-                 site != swap_wires_queue.rend(); site++) {
-                for (auto wire_pair = site->rbegin(); wire_pair != site->rend();
-                     wire_pair++) {
-                    BaseType::applyOperation("SWAP", *wire_pair, false);
-                }
-            }
+            for_each(swap_wires_queue.rbegin(), swap_wires_queue.rend(),
+                     [this](const auto &swap_wires) {
+                         for_each(swap_wires.rbegin(), swap_wires.rend(),
+                                  [this](const auto &wire_pair) {
+                                      BaseType::applyOperation(
+                                          "SWAP", wire_pair, false);
+                                  });
+                     });
         }
     }
 
