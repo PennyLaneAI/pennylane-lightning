@@ -136,7 +136,6 @@ class LightningBaseStateVector(ABC):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # Return a computational basis state over all wires.
-        print("FSX:", use_async)
         if use_async == None:
             self._qubit_state.setBasisState(list(state), list(wires))
         else:
