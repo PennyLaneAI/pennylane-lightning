@@ -1378,7 +1378,7 @@ def test_adjoint_SparseHamiltonian(returns):
 def test_qubit_unitary(dev, n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = len(dev.wires)
-    dev_def = qml.device("default.qubit.legacy", wires=n_wires)
+    dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
     c_dtype = np.complex64 if dev.R_DTYPE == np.float32 else np.complex128
 
@@ -1396,7 +1396,7 @@ def test_qubit_unitary(dev, n_targets):
 
     init_state = np.array(init_state, requires_grad=False, dtype=c_dtype)
     U = np.array(U, requires_grad=False, dtype=c_dtype)
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     def circuit(x):
         qml.StatePrep(init_state, wires=range(n_wires))
@@ -1444,7 +1444,7 @@ def test_diff_qubit_unitary(dev, n_targets):
 
     init_state = np.array(init_state, requires_grad=False, dtype=c_dtype)
     U = np.array(U, requires_grad=False, dtype=c_dtype)
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     def circuit(x, u_mat):
         qml.StatePrep(init_state, wires=range(n_wires))
