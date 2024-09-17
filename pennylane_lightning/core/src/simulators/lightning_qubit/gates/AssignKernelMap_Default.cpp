@@ -150,6 +150,9 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::MultiRZ, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GateOperation::PCPhase, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
     instance.assignKernelForOp(GateOperation::GlobalPhase, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
@@ -305,6 +308,9 @@ void assignKernelsForControlledGateOp_Default() {
                                all_qubit_numbers, KernelType::LM);
     /* Multi-qubit gates */
     instance.assignKernelForOp(ControlledGateOperation::MultiRZ, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::PCPhase, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::GlobalPhase,

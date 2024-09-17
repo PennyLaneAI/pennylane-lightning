@@ -31,18 +31,12 @@ namespace Pennylane::LightningQubit::Gates::AVXCommon {
 template <class PrecisionT, std::size_t packed_size> struct AVXConcept;
 
 #ifdef PL_USE_AVX2
-template <> struct AVXConcept<float, 8> {
-    using Type = AVX2Concept<float>;
-};
-template <> struct AVXConcept<double, 4> {
-    using Type = AVX2Concept<double>;
-};
+template <> struct AVXConcept<float, 8> { using Type = AVX2Concept<float>; };
+template <> struct AVXConcept<double, 4> { using Type = AVX2Concept<double>; };
 #endif
 
 #ifdef PL_USE_AVX512F
-template <> struct AVXConcept<float, 16> {
-    using Type = AVX512Concept<float>;
-};
+template <> struct AVXConcept<float, 16> { using Type = AVX512Concept<float>; };
 template <> struct AVXConcept<double, 8> {
     using Type = AVX512Concept<double>;
 };

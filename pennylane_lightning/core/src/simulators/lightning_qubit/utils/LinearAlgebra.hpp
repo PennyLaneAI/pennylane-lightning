@@ -93,7 +93,8 @@ omp_innerProd(const std::complex<T> *v1, const std::complex<T> *v2,
     }
 
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
-    shared(v1, v2, data_size) reduction(sm : result)
+    shared(v1, v2, data_size) reduction(sm                                     \
+                                        : result)
 #endif
     for (std::size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMult(*(v1 + i), *(v2 + i)));
@@ -167,7 +168,8 @@ omp_innerProdC(const std::complex<T> *v1, const std::complex<T> *v2,
 
 #if defined(_OPENMP)
 #pragma omp parallel for num_threads(nthreads) default(none)                   \
-    shared(v1, v2, data_size) reduction(sm : result)
+    shared(v1, v2, data_size) reduction(sm                                     \
+                                        : result)
 #endif
     for (std::size_t i = 0; i < data_size; i++) {
         result = ConstSum(result, ConstMultConj(*(v1 + i), *(v2 + i)));

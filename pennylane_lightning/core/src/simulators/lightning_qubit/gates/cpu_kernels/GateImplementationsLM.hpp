@@ -153,6 +153,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::DoubleExcitationMinus,
         GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ,
+        GateOperation::PCPhase,
         GateOperation::GlobalPhase,
     };
 
@@ -180,6 +181,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::DoubleExcitationMinus,
         ControlledGateOperation::DoubleExcitationPlus,
         ControlledGateOperation::MultiRZ,
+        ControlledGateOperation::PCPhase,
         ControlledGateOperation::GlobalPhase,
     };
 
@@ -1869,6 +1871,64 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
     }
+
+    template <class PrecisionT, class ParamT>
+    static void applyPCPhase(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle), -std::sin(angle)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle), std::sin(angle)};
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+
+        std::size_t wires_parity{0U};
+        for (std::size_t wire : wires) {
+            wires_parity |=
+                (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
+        }
+
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t k = 0; k < exp2(num_qubits); k++) {
+            arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyNCPCPhase(std::complex<PrecisionT> *arr,
+                               std::size_t num_qubits,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               bool inverse, ParamT angle) {
+        const std::complex<PrecisionT> first =
+            std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        const std::complex<PrecisionT> second =
+            std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+        const std::array<std::complex<PrecisionT>, 2> shifts = {
+            (inverse) ? std::conj(first) : first,
+            (inverse) ? std::conj(second) : second};
+        std::size_t wires_parity = 0U;
+        for (std::size_t wire : wires) {
+            wires_parity |=
+                (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
+        }
+        auto core_function = [wires_parity,
+                              &shifts](std::complex<PrecisionT> *arr,
+                                       const std::vector<std::size_t> &indices,
+                                       const std::size_t offset) {
+            for (auto k : indices) {
+                arr[(k + offset)] *=
+                    shifts[std::popcount((k + offset) & wires_parity) % 2];
+            }
+        };
+        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
+                 core_function);
+    }
+
     template <class PrecisionT, class ParamT>
     static void
     applyGlobalPhase(std::complex<PrecisionT> *arr, std::size_t num_qubits,

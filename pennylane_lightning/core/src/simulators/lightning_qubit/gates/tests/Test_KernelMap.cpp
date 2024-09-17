@@ -117,7 +117,8 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
             [&gate_map](Pennylane::Gates::GateOperation gate_op) {
                 INFO(lookup(Pennylane::Gates::Constant::gate_names, gate_op));
                 if (gate_op == Pennylane::Gates::GateOperation::GlobalPhase ||
-                    gate_op == Pennylane::Gates::GateOperation::MultiRZ) {
+                    gate_op == Pennylane::Gates::GateOperation::MultiRZ ||
+                    gate_op == Pennylane::Gates::GateOperation::PCPhase) {
                     REQUIRE(gate_map[gate_op] ==
                             Pennylane::Gates::KernelType::LM);
                 } else if (lookup(Pennylane::Gates::Constant::gate_wires,
@@ -194,7 +195,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp parallel default(none)                                             \
     shared(instance, records, rd, num_qubits, threadings, memory_models)       \
-    firstprivate(num_iter)
+        firstprivate(num_iter)
 #endif
     {
         std::mt19937 re;
