@@ -216,6 +216,34 @@ inline auto scaleAndAddC_CUDA(const CFP_t a, const T *v1, T *v2,
 }
 
 /**
+ * @brief cuBLAS backed GPU SAXPY/DAXPY.
+ *
+ * @tparam T Float data-type. Accepts float and double
+ * @param a scaling factor
+ * @param v1 Device data pointer 1 (data to be modified)
+ * @param v2 Device data pointer 2 (the result data)
+ * @param data_size Length of device data.
+ * @param dev_id the device on which the function should be executed.
+ * @param stream_id the CUDA stream on which the operation should be executed.
+ * @param cublas the CublasCaller object that manages the cuBLAS handle.
+ */
+
+template <class T = double, class DevTypeID = int>
+inline auto scaleAndAdd_CUDA(const T a, const T *v1, T *v2, const int data_size,
+                             DevTypeID dev_id, cudaStream_t stream_id,
+                             const CublasCaller &cublas) {
+    if constexpr (std::is_same_v<T, float>) {
+        const float alpha = a;
+        cublas.call(cublasSaxpy, dev_id, stream_id, data_size, &alpha, v1, 1,
+                    v2, 1);
+    } else if constexpr (std::is_same_v<T, double>) {
+        const double alpha = a;
+        cublas.call(cublasDaxpy, dev_id, stream_id, data_size, &alpha, v1, 1,
+                    v2, 1);
+    }
+}
+
+/**
  * @brief cuBLAS backed GPU data scaling.
  *
  * @tparam CFP_t Complex data-type. Accepts std::complex<float> and
