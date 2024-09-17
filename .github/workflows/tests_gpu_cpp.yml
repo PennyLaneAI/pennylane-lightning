@@ -1,4 +1,4 @@
-name: Testing::x86_64::LGPU::C++
+name: Testing::x86_64::GPU::C++
 on:
   workflow_call:
     inputs:
@@ -122,7 +122,7 @@ jobs:
           python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} scipy
 
       - name: Install required lightning_tensor only packages
-        if: ${{ matrix.pl_backend }} == 'lightning_tensor'
+        if: ${{ matrix.pl_backend == 'lightning_tensor' }}
         run: |
           python -m pip install cutensornet-cu${{ matrix.cuda_version }}
 
