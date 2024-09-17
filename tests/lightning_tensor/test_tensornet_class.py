@@ -101,7 +101,7 @@ def test_gate_matrix_decompose():
     gate = scipy.linalg.expm(1j * hermitian)
     original_gate = gate.copy()  # for later to double check
 
-    max_mpo_bond_dim = 2**len(wires)
+    max_mpo_bond_dim = 2 ** len(wires)
 
     mpos, sorted_wired = gate_matrix_decompose(gate, wires, max_mpo_bond_dim, np.complex128)
 

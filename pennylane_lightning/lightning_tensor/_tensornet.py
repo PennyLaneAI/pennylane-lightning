@@ -80,11 +80,7 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
     """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention."""
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
-    sorted_wires = []
-    original_axes = []
-    for index, wire in sorted_indexed_wires:
-        sorted_wires.append(wire)
-        original_axes.append(index)
+    original_axes, sorted_wires = zip(*sorted_indexed_wires)
 
     tensor_shape = [2] * len(wires) * 2
 
