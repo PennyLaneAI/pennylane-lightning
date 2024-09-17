@@ -21,7 +21,7 @@ try:
 except ImportError:
     pass
 
-from typing import List
+from typing import Any, List
 
 import numpy as np
 import pennylane as qml
@@ -115,26 +115,3 @@ class LightningKokkosMeasurements(
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
-
-    def probs(self, measurementprocess: MeasurementProcess):
-        """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
-
-        Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
-
-        Returns:
-            Probabilities of the supplied observable or wires
-        """
-        diagonalizing_gates = measurementprocess.diagonalizing_gates()
-
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(diagonalizing_gates)
-
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
-
-        if diagonalizing_gates:
-            self._qubit_state.apply_operations(
-                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
-            )
-
-        return results

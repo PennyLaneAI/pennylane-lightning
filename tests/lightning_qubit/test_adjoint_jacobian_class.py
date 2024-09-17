@@ -420,7 +420,10 @@ class TestVectorJacobianProduct:
         statevector = lightning_sv(num_wires=2)
         result_vjp = self.calculate_vjp(statevector, tape1, dy)
 
-        statevector.reset_state()
+        if device_name == "lightning.gpu":
+            statevector.reset_state(True)
+        else:
+            statevector.reset_state()
 
         result_jac = self.calculate_jacobian(statevector, tape2)
 
@@ -480,7 +483,11 @@ class TestVectorJacobianProduct:
                 qml.expval(qml.Hermitian(obs, wires=(0,)))
             tape.trainable_params = {0}
 
-            statevector.reset_state()
+            if device_name == "lightning.gpu":
+                statevector.reset_state(True)
+            else:
+                statevector.reset_state()
+
             vjp = self.calculate_vjp(statevector, tape, dy)
 
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
@@ -497,7 +504,11 @@ class TestVectorJacobianProduct:
                 qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
             tape.trainable_params = {0}
 
-            statevector.reset_state()
+            if device_name == "lightning.gpu":
+                statevector.reset_state(True)
+            else:
+                statevector.reset_state()
+
             vjp = self.calculate_vjp(statevector, tape, dy)
 
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)

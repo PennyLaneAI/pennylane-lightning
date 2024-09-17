@@ -82,13 +82,21 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                     static_cast<std::size_t>(arr.size()));
         }))
         .def(
-            "setBasisState",
-            [](StateVectorT &sv, const std::size_t index,
-               const bool use_async) {
+            "setBasisStateZero",
+            [](StateVectorT &sv, const bool use_async) {
                 const std::complex<PrecisionT> value(1, 0);
-                sv.setBasisState(value, index, use_async);
+                std::size_t zero{0U};
+                sv.setBasisState(value, zero, use_async);
             },
-            "Create Basis State on GPU.")
+            "Create Basis State to zero on GPU.")
+        .def(
+            "setBasisState",
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires, const bool use_async) {
+                sv.setBasisState(state, wires, use_async);
+            },
+            "Set the state vector to a basis state on GPU.")
+
         .def(
             "setStateVector",
             [](StateVectorT &sv, const np_arr_sparse_ind &indices,
@@ -152,7 +160,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
              "Get the GPU index for the statevector data.")
         .def("numQubits", &StateVectorT::getNumQubits)
         .def("dataLength", &StateVectorT::getLength)
-        .def("resetGPU", &StateVectorT::initSV)
+        .def("resetStateVector", &StateVectorT::initSV)
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,

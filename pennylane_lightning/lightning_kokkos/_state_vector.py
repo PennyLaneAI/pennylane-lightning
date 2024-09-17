@@ -62,7 +62,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         num_wires,
         dtype=np.complex128,
         kokkos_args=None,
-        sync=True,
     ):  # pylint: disable=too-many-arguments
 
         super().__init__(num_wires, dtype)
@@ -70,7 +69,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self._device_name = "lightning.kokkos"
 
         self._kokkos_config = {}
-        self._sync = sync
 
         # Initialize the state vector
         if kokkos_args is None:

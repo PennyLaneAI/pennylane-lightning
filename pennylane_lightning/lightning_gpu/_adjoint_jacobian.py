@@ -38,8 +38,9 @@ try:
         warn(str(ex), UserWarning)
         MPI_SUPPORT = False
 
-except (ImportError, ValueError) as ex:
+except ImportError as ex:
     warn(str(ex), UserWarning)
+    pass
 
 import numpy as np
 from pennylane.tape import QuantumTape

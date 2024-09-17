@@ -130,16 +130,37 @@ class LightningBaseMeasurements(ABC):
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
-    @abstractmethod
+    def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
+        """Convert the data structure from the C++ backend to a common structure through lightning devices.
+        Args:
+            probs_result (Any): Result provided by C++ backend.
+        Returns:
+            np.ndarray with probabilities of the supplied observable or wires.
+        """
+        return probs_results
+
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
+            measurementprocess (StateMeasurement): measurement to apply to the state.
 
         Returns:
-            Probabilities of the supplied observable or wires
+            Probabilities of the supplied observable or wires.
         """
+        diagonalizing_gates = measurementprocess.diagonalizing_gates()
+
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(diagonalizing_gates)
+
+        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+
+        if diagonalizing_gates:
+            self._qubit_state.apply_operations(
+                [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
+            )
+
+        return self._probs_retval_conversion(results)
 
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess.
