@@ -209,6 +209,10 @@ template <class PrecisionT> class MPOTNCuda {
         return MPOOperator_;
     }
 
+    auto getBondDims() const -> const std::vector<std::size_t> & {
+        return bondDims_;
+    }
+
     ~MPOTNCuda() {
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyNetworkOperator(MPOOperator_));
