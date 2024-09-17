@@ -73,6 +73,16 @@ jobs:
       - gpu
 
     steps:
+      - name: Validate GPU version and installed compiler
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/${{ matrix.cuda_version }}
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
