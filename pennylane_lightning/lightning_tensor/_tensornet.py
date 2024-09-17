@@ -76,7 +76,7 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
     return Ms
 
 
-def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
+def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
     """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention."""
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
@@ -104,8 +104,7 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
     gate_tensor = np.transpose(gate_tensor, axes=indices_order)
 
     mpo_site_shape = [2] * 2
-    # TODO: Discuss if public interface for max_mpo_bond_dim argument
-    max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
+
     # The indices order of MPOs: 1. left-most site: [ket, bra, bondR]; 2. right-most sites: [bondL, ket, bra]; 3. sites in-between: [bondL, ket, bra, bondR].
     MPOs = decompose_dense(gate_tensor, len(wires), mpo_site_shape, max_mpo_bond_dim)
 
@@ -289,10 +288,13 @@ class LightningTensorNet:
         Returns:
             None
         """
-        # Get sorted wires and MPO site tensor
-        mpos, sorted_wires = gate_matrix_decompose(gate_matrix, wires, self._c_dtype)
-
+        # TODO: Discuss if public interface for max_mpo_bond_dim argument
         max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
+
+        # Get sorted wires and MPO site tensor
+        mpos, sorted_wires = gate_matrix_decompose(
+            gate_matrix, wires, max_mpo_bond_dim, self._c_dtype
+        )
 
         self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
 
