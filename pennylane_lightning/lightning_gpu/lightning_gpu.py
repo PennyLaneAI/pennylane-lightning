@@ -55,10 +55,7 @@ try:
     LGPU_CPP_BINARY_AVAILABLE = True
 
     try:
-        # pylint: disable=no-name-in-module
-        from pennylane_lightning.lightning_gpu_ops import DevTag, MPIManager
-
-        from ._mpi_handler import LightningGPU_MPIHandler
+        from ._mpi_handler import MPIHandler
 
         MPI_SUPPORT = True
     except ImportError as ex:
@@ -318,6 +315,7 @@ class LightningGPU(LightningBase):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
         self.LightningStateVector = LightningGPUStateVector
         self.LightningMeasurements = LightningGPUMeasurements
+        self.LightningAdjointJacobian = LightningGPUAdjointJacobian
 
     def _setup_execution_config(self, config):
         """

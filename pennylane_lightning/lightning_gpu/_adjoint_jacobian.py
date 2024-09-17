@@ -15,9 +15,37 @@ r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
 
-import numpy as np
-import pennylane as qml
+from warnings import warn
 
+try:
+    from pennylane_lightning.lightning_gpu_ops.algorithms import (
+        AdjointJacobianC64,
+        AdjointJacobianC128,
+        create_ops_listC64,
+        create_ops_listC128,
+    )
+
+    try:
+        from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
+            AdjointJacobianMPIC64,
+            AdjointJacobianMPIC128,
+            create_ops_listMPIC64,
+            create_ops_listMPIC128,
+        )
+
+        MPI_SUPPORT = True
+    except ImportError as ex:
+        warn(str(ex), UserWarning)
+        MPI_SUPPORT = False
+
+except ImportError as ex:
+    warn(str(ex), UserWarning)
+    pass
+
+import numpy as np
+from pennylane.tape import QuantumTape
+
+# pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
 
 from ._state_vector import LightningGPUStateVector
@@ -31,5 +59,62 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(self, lgpu_state: LightningGPUStateVector, batch_obs: bool = False) -> None:
-        super().__init__(lgpu_state, batch_obs)
+    # pylint: disable=too-few-public-methods
+
+    def __init__(self, qubit_state: LightningGPUStateVector, batch_obs: bool = False) -> None:
+        super().__init__(qubit_state, batch_obs)
+        # Initialize the C++ binds
+        self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
+
+    def _adjoint_jacobian_dtype(self):
+        """Binding to Lightning GPU Adjoint Jacobian C++ class.
+
+        Returns: the AdjointJacobian class
+        """
+        jacobian_lightning = (
+            AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
+        )
+        create_ops_list_lightning = (
+            create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
+        )
+        return jacobian_lightning, create_ops_list_lightning
+
+    def calculate_jacobian(self, tape: QuantumTape):
+        """Computes the Jacobian with the adjoint method.
+
+        .. code-block:: python
+
+            statevector = LightningGPUStateVector(num_wires=num_wires)
+            statevector = statevector.get_final_state(tape)
+            jacobian = LightningGPUAdjointJacobian(statevector).calculate_jacobian(tape)
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+
+        Returns:
+            The Jacobian of a tape.
+        """
+
+        empty_array = self._handle_raises(tape, is_jacobian=True)
+
+        if empty_array:
+            return np.array([], dtype=self.dtype)
+
+        processed_data = self._process_jacobian_tape(tape)
+
+        if not processed_data:  # training_params is empty
+            return np.array([], dtype=self.dtype)
+
+        trainable_params = processed_data["tp_shift"]
+        jac = self._jacobian_lightning(
+            processed_data["state_vector"],
+            processed_data["obs_serialized"],
+            processed_data["ops_serialized"],
+            trainable_params,
+        )
+        jac = np.array(jac)
+        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
+        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
+        jac_r[:, processed_data["record_tp_rows"]] = jac
+
+        return self._adjoint_jacobian_processing(jac_r)

@@ -302,7 +302,6 @@ class LightningKokkos(LightningBase):
         shots=None,
         batch_obs=False,
         # Kokkos arguments
-        sync=True,
         kokkos_args=None,
     ):
         if not self._CPP_BINARY_AVAILABLE:
@@ -324,11 +323,10 @@ class LightningKokkos(LightningBase):
 
         # Kokkos specific options
         self._kokkos_args = kokkos_args
-        self._sync = sync
 
         # Creating the state vector
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args, sync=sync
+            num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args
         )
 
         if not LightningKokkos.kokkos_config:
