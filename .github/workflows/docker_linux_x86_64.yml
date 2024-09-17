@@ -47,7 +47,7 @@ jobs:
     timeout-minutes: 180
     name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}::${{ inputs.lightning-version }}
     runs-on:
-      group: 'Lightning Additional Runners'
+      group: 'PL Additional Runners'
     steps:
 
       - name: Checkout
