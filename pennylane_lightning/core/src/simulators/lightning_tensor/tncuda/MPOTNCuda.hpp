@@ -38,24 +38,24 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @brief Class representing an Matrix Product Operator (MPO) object for the MPS
  backend.
  * Any gate tensor can be represented as an MPO tensor network in the context of
- MPS. The gate tensor must be decomposed with respect to its target wires. If
- the target wires are not adjacent, identity tensors are inserted between the
- MPO tensors.
- 1. The MPO tensors' modes order in an open boundary condition are:
+ MPS. The gate tensor must be decomposed with respect to its target wires. Note that
+ the only local target wires are supported. The non-adjacent target wires must be swapped
+ to local before contructing the MPO tensor network.
+ * The MPO tensors' modes order in an open boundary condition are:
    2              3              2
    |              |              |
    X--1--....--0--X--2--....--0--X
    |              |              |
    0              1              1
 
- 2. The extents of the MPO tensors are [bondL, 2, bondR, 2]. The bondL of the
+ * The extents of the MPO tensors are [bondL, 2, bondR, 2]. The bondL of the
  left side bound MPO tensor is 1 and the bondR of the right side bound MPO
  tensor is 1.
 
- Note that the gate tensor should be permuted to ascending order and decomposed
- into MPO sites before passing to this class. Preprocess and postprocess with
- SWAP operations are required to ensure MPOs target at adjacent wires and the
- target wires are correct.
+ * Note that the gate tensor should be permuted to ascending order and
+ decomposed into MPO sites before passing to this class. Preprocess and
+ postprocess with SWAP operations are required to ensure MPOs target at adjacent
+ wires and the target wires are correct.
 
  * @tparam PrecisionT Floating point type.
  */
@@ -74,7 +74,6 @@ template <class PrecisionT> class MPOTNCuda {
     std::vector<std::size_t> bondDims_;
 
     std::size_t numMPOSites_;
-    std::vector<std::size_t> modes_;
     std::vector<int32_t> MPO_modes_int32_;
 
     std::vector<std::vector<int64_t>> modesExtents_int64_;
@@ -89,9 +88,10 @@ template <class PrecisionT> class MPOTNCuda {
      * required by cutensornet backend.
      */
     [[nodiscard]] auto getModeExtentsPtr_() -> std::vector<int64_t const *> {
-        std::vector<int64_t const *> modeExtentsPtr_int64(numMPOSites_);
-        for (std::size_t i = 0; i < numMPOSites_; i++) {
-            modeExtentsPtr_int64[i] = modesExtents_int64_[i].data();
+        std::vector<int64_t const *> modeExtentsPtr_int64;
+        for (auto it = modesExtents_int64_.cbegin();
+             it != modesExtents_int64_.cend(); it++) {
+            modeExtentsPtr_int64.emplace_back(it->data());
         }
         return modeExtentsPtr_int64;
     }
@@ -102,10 +102,10 @@ template <class PrecisionT> class MPOTNCuda {
      * @return std::vector<void *>
      */
     [[nodiscard]] auto getTensorsDataPtr_() -> std::vector<void *> {
-        std::vector<void *> tensorsDataPtr(numMPOSites_);
-        for (std::size_t i = 0; i < numMPOSites_; i++) {
-            tensorsDataPtr[i] = reinterpret_cast<void *>(
-                tensors_[i]->getDataBuffer().getData());
+        std::vector<void *> tensorsDataPtr;
+        for (auto &tensor : tensors_) {
+            tensorsDataPtr.emplace_back(
+                reinterpret_cast<void *>(tensor->getDataBuffer().getData()));
         }
         return tensorsDataPtr;
     }
@@ -148,23 +148,23 @@ template <class PrecisionT> class MPOTNCuda {
                   wires.front());
 
         std::transform(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
-                       MPO_modes_int32_.begin(), [numQubits](std::size_t mode) {
+                       MPO_modes_int32_.begin(),
+                       [&numQubits](const std::size_t mode) {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
 
         // Ensure the modes are in ascending order
         std::reverse(MPO_modes_int32_.begin(), MPO_modes_int32_.end());
 
-        std::vector<std::size_t> BondDims(wires.size() - 1, maxBondDim);
-        for (std::size_t i = 0; i < BondDims.size(); i++) {
-            std::size_t bondDim = std::min(i + 1, BondDims.size() - i) *
+        for (std::size_t i = 0; i < numMPOSites_ - 1; i++) {
+            std::size_t bondDim = std::min(i + 1, numMPOSites_ - i - 1) *
                                   2; // 1+1 (1 for bra and 1 for ket)
             if (bondDim <= log2(maxBondDim)) {
-                BondDims[i] = std::size_t{1} << bondDim;
+                bondDims_.emplace_back(std::size_t{1} << bondDim);
+            } else {
+                bondDims_.emplace_back(maxBondDim);
             }
         }
-
-        bondDims_ = BondDims;
 
         for (std::size_t i = 0; i < numMPOSites_; i++) {
             std::vector<std::size_t> localModesExtents;
@@ -173,10 +173,7 @@ template <class PrecisionT> class MPOTNCuda {
             } else if (i == numMPOSites_ - 1) {
                 localModesExtents = {bondDims_[i - 1], 2, 2};
             } else {
-                // This branch is tested in the python layer
-                // LCOV_EXCL_START
                 localModesExtents = {bondDims_[i - 1], 2, bondDims_[i], 2};
-                // LCOV_EXCL_STOP
             }
 
             modesExtents_int64_.emplace_back(

@@ -592,7 +592,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
     {
         using cp_t = std::complex<TestType>;
         std::size_t maxExtent = 2;
-        std::size_t max_mpo_bond = 4;
+        std::size_t max_mpo_bond = 16;
         DevTag<int> dev_tag{0, 0};
 
         std::vector<std::vector<cp_t>> mpo_cnot(
@@ -609,6 +609,38 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
         mpo_cnot[1][7] = {-1.0, 0.0};
         mpo_cnot[1][10] = {1.0, 0.0};
         mpo_cnot[1][13] = {-1.0, 0.0};
+
+        std::vector<std::vector<cp_t>> mpo_cswap;
+        mpo_cswap.emplace_back(std::vector<cp_t>(16, {0.0, 0.0}));
+        mpo_cswap.emplace_back(std::vector<cp_t>(64, {0.0, 0.0}));
+        mpo_cswap.emplace_back(std::vector<cp_t>(16, {0.0, 0.0}));
+
+        mpo_cswap[0][0] = {-1.5811388300841898, 0.0};
+        mpo_cswap[0][2] = {0.7071067811865475, 0.0};
+        mpo_cswap[0][5] = {-1.0, 0.0};
+        mpo_cswap[0][9] = mpo_cswap[0][0];
+        mpo_cswap[0][11] = -mpo_cswap[0][2];
+        mpo_cswap[0][14] = {1.0, 0.0};
+
+        mpo_cswap[1][0] = {-0.413452607315265, 0.0};
+        mpo_cswap[1][1] = {0.6979762349196628, 0.0};
+        mpo_cswap[1][7] = {0.9870874576374964, 0.0};
+        mpo_cswap[1][8] = {0.5736348503222318, 0.0};
+        mpo_cswap[1][9] = {0.11326595025589799, 0.0};
+        mpo_cswap[1][15] = {0.16018224300696726, 0.0};
+        mpo_cswap[1][34] = -mpo_cswap[1][7];
+        mpo_cswap[1][36] = mpo_cswap[1][0];
+        mpo_cswap[1][37] = -mpo_cswap[1][1];
+        mpo_cswap[1][42] = -mpo_cswap[1][15];
+        mpo_cswap[1][44] = mpo_cswap[1][8];
+        mpo_cswap[1][45] = -mpo_cswap[1][9];
+
+        mpo_cswap[2][0] = mpo_cswap[1][15];
+        mpo_cswap[2][1] = -mpo_cswap[1][7];
+        mpo_cswap[2][7] = {1.0, 0.0};
+        mpo_cswap[2][10] = {-1.0, 0.0};
+        mpo_cswap[2][12] = -mpo_cswap[2][1];
+        mpo_cswap[2][13] = mpo_cswap[2][0];
 
         SECTION("Target at wire indices") {
             std::size_t num_qubits = 3;
@@ -654,6 +686,26 @@ TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::2+_wires", "[MPSTNCuda_NonParam]",
 
             auto ref = mps_state.getDataVector();
             auto res = mps_state_mpo.getDataVector();
+
+            CHECK(res == Pennylane::Util::approx(ref));
+        }
+
+        SECTION("Tests for 3-wire MPOs") {
+            std::size_t num_qubits = 3;
+
+            MPSTNCuda<TestType> mps_state_mpo{num_qubits, maxExtent, dev_tag};
+            MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+
+            mps_state_mpo.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                          {{0}, {1}, {2}},
+                                          {false, false, false});
+            mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+
+            mps_state_mpo.applyMPOOperation(mpo_cswap, {0, 1, 2}, max_mpo_bond);
+
+            auto res = mps_state_mpo.getDataVector();
+            auto ref = mps_state.getDataVector();
 
             CHECK(res == Pennylane::Util::approx(ref));
         }
