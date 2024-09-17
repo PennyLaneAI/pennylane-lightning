@@ -168,9 +168,8 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
-    # These thresholds are adapted from `lightning_base.py`
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
+    # TODOs: These thresholds are from ``lightning.qubit`` and should be adjuested based on the benchmarking tests for the MPS
+    #  simulator (against both max_mps_bond_dim and number of qubits).
     if isinstance(op, qml.QFT):
         return len(op.wires) < 10
     if isinstance(op, qml.GroverOperator):

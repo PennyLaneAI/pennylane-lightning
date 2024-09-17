@@ -111,16 +111,16 @@ def gate_matrix_decompose(gate_ops_matrix, wires, c_dtype):
 
     # Convert the MPOs to the correct order for the cutensornet backend
     mpos = []
-    for i in range(len(MPOs)):
-        if i == 0:
+    for index, MPO in enumerate(MPOs):
+        if index == 0:
             # [ket, bra, bond](0, 1, 2) -> [ket, bond, bra](0, 2, 1) -> Fortran order or reverse indices(1, 2, 0) to match the order requirement of cutensornet backend.
-            mpos.append(np.transpose(MPOs[i], axes=(1, 2, 0)))
-        elif i == len(MPOs) - 1:
+            mpos.append(np.transpose(MPO, axes=(1, 2, 0)))
+        elif index == len(MPOs) - 1:
             # [bond, ket, bra](0, 1, 2) -> Fortran order or reverse indices(2, 1, 0) to match the order requirement of cutensornet backend.
-            mpos.append(np.transpose(MPOs[i], axes=(2, 1, 0)))
+            mpos.append(np.transpose(MPO, axes=(2, 1, 0)))
         else:
             # [bondL, ket, bra, bondR](0, 1, 2, 3) -> [bondL, ket, bondR, bra](0, 1, 3, 2) -> Fortran order or reverse indices(2, 3, 1, 0) to match the requirement of cutensornet backend.
-            mpos.append(np.transpose(MPOs[i], axes=(2, 3, 1, 0)))
+            mpos.append(np.transpose(MPO, axes=(2, 3, 1, 0)))
 
     return mpos, sorted_wires
 
@@ -365,12 +365,14 @@ class LightningTensorNet:
                     method = getattr(tensornet, "applyMatrix")
                     try:
                         method(qml.matrix(operation), wires, False)
-                    except AttributeError:
+                    except AttributeError:  # pragma: no cover
+                        # To support older versions of PL
                         method(operation.matrix(), wires, False)
             else:
                 try:
                     gate_ops_matrix = qml.matrix(operation)
-                except AttributeError:
+                except AttributeError:  # pragma: no cover
+                    # To support older versions of PL
                     gate_ops_matrix = operation.matrix()
 
                 self._apply_MPO(gate_ops_matrix, wires)
