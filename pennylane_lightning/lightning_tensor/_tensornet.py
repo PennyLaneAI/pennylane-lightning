@@ -35,14 +35,14 @@ def svd_split(Mat, site_shape, max_bond_dim):
     """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
     # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
     U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
-    U = U @ np.diag(S)  # Append singular values to U
+    U = U * S  # Append singular values to U
     bonds = len(S)
 
-    Vd = Vd.reshape(tuple([bonds] + site_shape + [-1]))
-    U = U.reshape(tuple([-1] + site_shape + [bonds]))
+    Vd = Vd.reshape([bonds] + site_shape + [-1])
+    U = U.reshape([-1] + site_shape + [bonds])
 
     # keep only chi bonds
-    chi = np.min([bonds, max_bond_dim])
+    chi = min([bonds, max_bond_dim])
     U, Vd = U[..., :chi], Vd[:chi]
     return U, Vd
 
@@ -57,7 +57,7 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
         psi, site_shape, max_bond_dim
     )  # psi [site_len, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
 
-    Ms[0] = U.reshape(tuple(site_shape + [-1]))
+    Ms[0] = U.reshape(site_shape + [-1])
     bondL = Vd.shape[0]
     psi = Vd
 
@@ -71,7 +71,7 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
         psi = Vd
         bondL = Vd.shape[0]
 
-    Ms[-1] = Vd.reshape(tuple([-1] + site_shape))
+    Ms[-1] = Vd.reshape([-1] + site_shape)
 
     return Ms
 
