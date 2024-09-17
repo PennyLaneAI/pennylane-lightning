@@ -36,7 +36,7 @@ concurrency:
 
 jobs:
   builddeps:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner') }}
+    if: contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -132,7 +132,7 @@ jobs:
           python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} scipy
 
       - name: Install required lightning_tensor only packages
-        if: ${{ matrix.pl_backend == 'lightning_tensor' }}
+        if: matrix.pl_backend == 'lightning_tensor'
         run: |
           python -m pip install cutensornet-cu${{ matrix.cuda_version }}
 
