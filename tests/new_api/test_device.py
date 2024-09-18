@@ -43,8 +43,7 @@ if device_name == "lightning.qubit":
         validate_measurements,
         validate_observables,
     )
-
-if device_name == "lightning.kokkos":
+elif device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos.lightning_kokkos import (
         _add_adjoint_transforms,
         _adjoint_ops,
@@ -62,8 +61,7 @@ if device_name == "lightning.kokkos":
         validate_measurements,
         validate_observables,
     )
-
-if device_name == "lightning.gpu":
+elif device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu.lightning_gpu import (
         _add_adjoint_transforms,
         _adjoint_ops,
@@ -81,13 +79,13 @@ if device_name == "lightning.gpu":
         validate_measurements,
         validate_observables,
     )
-
-
-if device_name == "lightning.tensor":
+elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor.lightning_tensor import (
         accepted_observables,
         stopping_condition,
     )
+else:
+    raise TypeError(f"The device name: {device_name} is not a valid name")
 
 if not LightningDevice._new_API:
     pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
