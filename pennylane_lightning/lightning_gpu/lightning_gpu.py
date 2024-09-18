@@ -461,7 +461,7 @@ class LightningGPU(LightningBase):
         results = []
         for circuit in circuits:
             if self._wire_map is not None:
-                [circuit], _ = qml.map_wires(circuit, self._wire_map)
+                circuit, _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
                     circuit,
