@@ -18,6 +18,8 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 
 from ctypes.util import find_library
+from dataclasses import replace
+from functools import reduce
 from importlib import util as imp_util
 from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
@@ -26,10 +28,21 @@ from warnings import warn
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.devices.preprocess import (
+    decompose,
+    mid_circuit_measurements,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import Operator
-from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.ops import Prod, SProd, Sum
+from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
@@ -65,16 +78,14 @@ try:
     LGPU_CPP_BINARY_AVAILABLE = True
 except (ImportError, ValueError) as ex:
     warn(str(ex), UserWarning)
-    backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
+    backend_info = None
 
-
+# The set of supported operations.
 _operations = frozenset(
     {
         "Identity",
-        "BasisState",
         "QubitStateVector",
-        "StatePrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -133,7 +144,9 @@ _operations = frozenset(
         "C(BlockEncode)",
     }
 )
+# End the set of supported operations.
 
+# The set of supported observables.
 _observables = frozenset(
     {
         "PauliX",
@@ -145,6 +158,7 @@ _observables = frozenset(
         "LinearCombination",
         "Hermitian",
         "Identity",
+        "Projector",
         "Sum",
         "Prod",
         "SProd",
@@ -156,38 +170,72 @@ def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
     # To avoid building matrices beyond the given thresholds.
     # This should reduce runtime overheads for larger systems.
-    return 0
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+    if isinstance(op, qml.PauliRot):
+        return False
+
+    return op.name in _operations
 
 
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``
     with finite shots."""
-    return 0
+    if isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional)):
+        # LightningGPU does not support Mid-circuit measurements.
+        return False
+    return stopping_condition(op)
 
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
-    return 0
+    return obs.name in _observables
 
 
 def adjoint_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.gpu``
     when using the adjoint differentiation method."""
-    return 0
+    if isinstance(obs, qml.Projector):
+        return False
+
+    if isinstance(obs, Tensor):
+        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
+            return False
+        return True
+
+    if isinstance(obs, SProd):
+        return adjoint_observables(obs.base)
+
+    if isinstance(obs, (Sum, Prod)):
+        return all(adjoint_observables(o) for o in obs)
+
+    return obs.name in _observables
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
     """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
-    return 0
+    return isinstance(mp, qml.measurements.ExpectationMP)
 
 
 def _supports_adjoint(circuit):
-    return 0
+    if circuit is None:
+        return True
+
+    prog = TransformProgram()
+    _add_adjoint_transforms(prog)
+
+    try:
+        prog((circuit,))
+    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
+        return False
+    return True
 
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    return 0
+    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
@@ -203,9 +251,23 @@ def _add_adjoint_transforms(program: TransformProgram) -> None:
     """
 
     name = "adjoint + lightning.gpu"
-    return 0
+    program.add_transform(no_sampling, name=name)
+    program.add_transform(
+        decompose,
+        stopping_condition=_adjoint_ops,
+        stopping_condition_shots=stopping_condition_shots,
+        name=name,
+        skip_initial_state_prep=False,
+    )
+    program.add_transform(validate_observables, accepted_observables, name=name)
+    program.add_transform(
+        validate_measurements, analytic_measurements=adjoint_measurements, name=name
+    )
+    program.add_transform(qml.transforms.broadcast_expand)
+    program.add_transform(validate_adjoint_trainable_params)
 
 
+# LightningGPU specific methods
 def check_gpu_resources() -> None:
     """Check the available resources of each Nvidia GPU"""
     if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
@@ -321,7 +383,24 @@ class LightningGPU(LightningBase):
         """
         Update the execution config with choices for how the device should be used and the device options.
         """
-        return 0
+        updated_values = {}
+        if config.gradient_method == "best":
+            updated_values["gradient_method"] = "adjoint"
+        if config.use_device_gradient is None:
+            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+        if config.grad_on_execution is None:
+            updated_values["grad_on_execution"] = True
+
+        new_device_options = dict(config.device_options)
+        for option in self._device_options:
+            if option not in new_device_options:
+                new_device_options[option] = getattr(self, f"_{option}", None)
+
+        # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
+        mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0, "rng": None}
+        new_device_options.update(mcmc_default)
+
+        return replace(config, **updated_values, device_options=new_device_options)
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
@@ -342,7 +421,28 @@ class LightningGPU(LightningBase):
         * Currently does not intrinsically support parameter broadcasting
 
         """
-        return 0
+        exec_config = self._setup_execution_config(execution_config)
+        program = TransformProgram()
+
+        program.add_transform(validate_measurements, name=self.name)
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        program.add_transform(
+            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
+        )
+
+        program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
+            skip_initial_state_prep=True,
+            name=self.name,
+        )
+        program.add_transform(qml.transforms.broadcast_expand)
+
+        if exec_config.gradient_method == "adjoint":
+            _add_adjoint_transforms(program)
+        return program, exec_config
 
     def execute(
         self,
@@ -358,7 +458,19 @@ class LightningGPU(LightningBase):
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        return 0
+        results = []
+        for circuit in circuits:
+            if self._wire_map is not None:
+                circuit, _ = qml.map_wires(circuit, self._wire_map)
+            results.append(
+                self.simulate(
+                    circuit,
+                    self._statevector,
+                    postselect_mode=execution_config.mcm_config.postselect_mode,
+                )
+            )
+
+        return tuple(results)
 
     def supports_derivatives(
         self,
@@ -377,7 +489,11 @@ class LightningGPU(LightningBase):
             Bool: Whether or not a derivative can be calculated provided the given information
 
         """
-        return 0
+        if circuit is None or (execution_config is None and circuit is None):
+            return True
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
+        return _supports_adjoint(circuit=circuit)
 
     def simulate(
         self,
