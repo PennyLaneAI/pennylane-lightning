@@ -113,7 +113,7 @@ template <class PrecisionT> class MPOTNCuda {
   public:
     explicit MPOTNCuda(const std::vector<std::vector<ComplexT>> &tensors,
                        const std::vector<std::size_t> &wires,
-                       const std::size_t maxBondDim,
+                       const std::size_t maxMPOBondDim,
                        const std::size_t numQubits,
                        const cutensornetHandle_t &cutensornetHandle,
                        const cudaDataType_t &cudaDataType,
@@ -121,7 +121,7 @@ template <class PrecisionT> class MPOTNCuda {
         PL_ABORT_IF_NOT(tensors.size() == wires.size(),
                         "Number of tensors and wires must match.");
 
-        PL_ABORT_IF(maxBondDim < 2,
+        PL_ABORT_IF(maxMPOBondDim < 2,
                     "Max MPO bond dimension must be at least 2.");
 
         PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
@@ -157,24 +157,30 @@ template <class PrecisionT> class MPOTNCuda {
         std::reverse(MPO_modes_int32_.begin(), MPO_modes_int32_.end());
 
         for (std::size_t i = 0; i < numMPOSites_ - 1; i++) {
-            std::size_t bondDim = std::min(i + 1, numMPOSites_ - i - 1) *
-                                  2; // 1+1 (1 for bra and 1 for ket)
-            if (bondDim <= log2(maxBondDim)) {
-                bondDims_.emplace_back(std::size_t{1} << bondDim);
-            } else {
-                bondDims_.emplace_back(maxBondDim);
-            }
+            // Binary logarithm of the bond dimension required for the exact MPO
+            // decomposition
+            const std::size_t lg_bondDim_exact =
+                std::min(i + 1, numMPOSites_ - i - 1) *
+                2; // 1+1 (1 for bra and 1 for ket)
+
+            const std::size_t bondDim =
+                lg_bondDim_exact <= log2(maxMPOBondDim)
+                    ? (std::size_t{1} << lg_bondDim_exact)
+                    : maxMPOBondDim;
+
+            bondDims_.emplace_back(bondDim);
         }
 
         for (std::size_t i = 0; i < numMPOSites_; i++) {
-            std::vector<std::size_t> localModesExtents;
-            if (i == 0) {
-                localModesExtents = {2, bondDims_[i], 2};
-            } else if (i == numMPOSites_ - 1) {
-                localModesExtents = {bondDims_[i - 1], 2, 2};
-            } else {
-                localModesExtents = {bondDims_[i - 1], 2, bondDims_[i], 2};
-            }
+            const std::size_t bondDimR =
+                i < numMPOSites_ - 1 ? bondDims_[i] : 1;
+            const std::size_t bondDimL = i > 0 ? bondDims_[i - 1] : 1;
+
+            auto localModesExtents =
+                i == 0 ? std::vector<std::size_t>{2, bondDimR, 2}
+                : i == numMPOSites_ - 1
+                    ? std::vector<std::size_t>{bondDimL, 2, 2}
+                    : std::vector<std::size_t>{bondDimL, 2, bondDimR, 2};
 
             modesExtents_int64_.emplace_back(
                 Pennylane::Util::cast_vector<std::size_t, int64_t>(
