@@ -151,6 +151,22 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Create Basis State on GPU.")
         .def(
+            "applyMPOOperation",
+            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
+               std::vector<std::size_t> &wires, const std::size_t MPOBondDims) {
+                using ComplexT = typename TensorNet::ComplexT;
+                std::vector<std::vector<ComplexT>> conv_tensors;
+                for (const auto &tensor : tensors) {
+                    py::buffer_info numpyArrayInfo = tensor.request();
+                    auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+                    conv_tensors.push_back(
+                        std::vector<ComplexT>{m_ptr, m_ptr + tensor.size()});
+                }
+                tensor_network.applyMPOOperation(conv_tensors, wires,
+                                                 MPOBondDims);
+            },
+            "Apply MPO to the tensor network graph.")
+        .def(
             "appendMPSFinalState",
             [](TensorNet &tensor_network, double cutoff,
                std::string cutoff_mode) {

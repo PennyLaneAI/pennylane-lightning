@@ -1084,3 +1084,78 @@ TEMPLATE_TEST_CASE("MPSTNCuda::Param_Gates::2+_wires", "[MPSTNCuda_Param]",
         }
     }
 }
+
+TEMPLATE_TEST_CASE("MPSTNCuda::applyMPO::SingleExcitation", "[MPSTNCuda_Param]",
+                   float, double) {
+    using cp_t = std::complex<TestType>;
+    std::size_t maxExtent = 2;
+    std::size_t max_mpo_bond = 4;
+    DevTag<int> dev_tag{0, 0};
+
+    std::vector<std::vector<cp_t>> mpo_single_excitation(
+        2, std::vector<cp_t>(16, {0.0, 0.0}));
+
+    // in-order decomposition of the cnot operator
+    // data from scipy decompose in the lightning.tensor python layer
+    mpo_single_excitation[0][0] = {-1.40627352, 0.0};
+    mpo_single_excitation[0][3] = {-0.14943813, 0.0};
+    mpo_single_excitation[0][6] = {0.00794005, 0.0};
+    mpo_single_excitation[0][9] = {-1.40627352, 0.0};
+    mpo_single_excitation[0][12] = {-0.14943813, 0.0};
+    mpo_single_excitation[0][15] = {-0.00794005, 0.0};
+
+    mpo_single_excitation[1][0] = {-0.707106781, 0.0};
+    mpo_single_excitation[1][3] = {0.707106781, 0.0};
+    mpo_single_excitation[1][6] = {1.0, 0.0};
+    mpo_single_excitation[1][9] = {-1.0, 0.0};
+    mpo_single_excitation[1][12] = {-0.707106781, 0.0};
+    mpo_single_excitation[1][15] = {-0.707106781, 0.0};
+
+    SECTION("Target at wire indices") {
+        std::size_t num_qubits = 3;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+
+        MPSTNCuda<TestType> mps_state_mpo{num_qubits, maxExtent, dev_tag};
+
+        mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                  {{0}, {1}, {2}}, {false, false, false});
+
+        mps_state_mpo.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+
+        mps_state.applyOperation("SingleExcitation", {0, 1}, false, {0.3});
+
+        mps_state_mpo.applyMPOOperation(mpo_single_excitation, {0, 1},
+                                        max_mpo_bond);
+
+        auto ref = mps_state.getDataVector();
+        auto res = mps_state_mpo.getDataVector();
+
+        CHECK(res == Pennylane::Util::approx(ref));
+    }
+
+    SECTION("Target at non-adjacent wire indices") {
+        std::size_t num_qubits = 3;
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxExtent, dev_tag};
+
+        MPSTNCuda<TestType> mps_state_mpo{num_qubits, maxExtent, dev_tag};
+
+        mps_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                  {{0}, {1}, {2}}, {false, false, false});
+
+        mps_state_mpo.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
+                                      {{0}, {1}, {2}}, {false, false, false});
+
+        mps_state.applyOperation("SingleExcitation", {0, 2}, false, {0.3});
+
+        mps_state_mpo.applyMPOOperation(mpo_single_excitation, {0, 2},
+                                        max_mpo_bond);
+
+        auto ref = mps_state.getDataVector();
+        auto res = mps_state_mpo.getDataVector();
+
+        CHECK(res == Pennylane::Util::approx(ref));
+    }
+}

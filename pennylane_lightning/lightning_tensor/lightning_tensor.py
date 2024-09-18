@@ -73,12 +73,12 @@ _operations = frozenset(
         "BasisState",
         "QubitUnitary",
         "ControlledQubitUnitary",
-        "MultiControlledX",
         "DiagonalQubitUnitary",
         "PauliX",
         "PauliY",
         "PauliZ",
         "Hadamard",
+        "GlobalPhase",
         "S",
         "Adjoint(S)",
         "T",
@@ -99,6 +99,26 @@ _operations = frozenset(
         "CZ",
         "PhaseShift",
         "ControlledPhaseShift",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(Rot)",
+        "C(IsingXX)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(IsingXY)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationPlus)",
+        "C(SingleExcitationMinus)",
+        "C(DoubleExcitation)",
+        "C(DoubleExcitationMinus)",
+        "C(DoubleExcitationPlus)",
+        "C(GlobalPhase)",
+        "C(MultiRZ)",
         "RX",
         "RY",
         "RZ",
@@ -115,11 +135,15 @@ _operations = frozenset(
         "SingleExcitationPlus",
         "SingleExcitationMinus",
         "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "BlockEncode",
+        "C(BlockEncode)",
     }
 )
 
@@ -144,10 +168,17 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
-    # These thresholds are adapted from `lightning_base.py`
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
-    return op.has_matrix and len(op.wires) <= 2 and op.name in _operations
+    # TODOs: These thresholds are from ``lightning.qubit`` and should be adjuested based on the benchmarking tests for the MPS
+    #  simulator (against both max_mps_bond_dim and number of qubits).
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+
+    if isinstance(op, qml.ControlledQubitUnitary):
+        return True
+
+    return op.has_matrix and op.name in _operations
 
 
 def simulate(circuit: QuantumScript, tensornet: LightningTensorNet) -> Result:
