@@ -137,7 +137,7 @@ class LightningBaseStateVector(ABC):
 
         # Return a computational basis state over all wires.
         self._select_setBasisState(state, wires, use_async)
-        
+
     @abstractmethod
     def _select_setBasisState(state, wires, use_async):
         """Select the proper setBasisState from the C++ backend"""

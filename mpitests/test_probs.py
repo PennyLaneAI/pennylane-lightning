@@ -21,8 +21,8 @@ from conftest import device_name
 from mpi4py import MPI
 
 if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.",allow_module_level=True)
-    
+    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
+
 numQubits = 8
 
 

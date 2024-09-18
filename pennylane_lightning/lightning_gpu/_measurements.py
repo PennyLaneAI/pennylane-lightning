@@ -42,6 +42,7 @@ from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasureme
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
+
 from ._mpi_handler import MPIHandler
 
 
@@ -81,7 +82,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
             return MeasurementsMPIC128 if self.dtype == np.complex128 else MeasurementsMPIC64
         else:
             return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
-        
 
     def _measure_with_samples_diagonalizing_gates(
         self,

@@ -263,7 +263,8 @@ class StateVectorCudaMPI final
         std::size_t rankId = index >> BaseType::getNumQubits();
 
         constexpr std::size_t one{1U};
-        std::size_t local_index = rankId * (one << BaseType::getNumQubits()) ^ index;
+        std::size_t local_index =
+            rankId * (one << BaseType::getNumQubits()) ^ index;
         BaseType::getDataBuffer().zeroInit();
 
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
@@ -289,7 +290,7 @@ class StateVectorCudaMPI final
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
                        const bool use_async) {
-        // This is not functional yet. 
+        // This is not functional yet.
         PL_ABORT_IF_NOT(state.size() == wires.size(),
                         "state and wires must have equal dimensions.");
         const auto num_qubits = this->getNumQubits();
@@ -310,15 +311,16 @@ class StateVectorCudaMPI final
         std::size_t rankId = index >> BaseType::getNumQubits();
 
         constexpr std::size_t one{1U};
-        std::size_t local_index = rankId * (one >> BaseType::getNumQubits()) ^ index;
+        std::size_t local_index =
+            rankId * (one >> BaseType::getNumQubits()) ^ index;
         BaseType::getDataBuffer().zeroInit();
         const std::complex<PrecisionT> value(1, 0);
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
         auto stream_id = localStream_.get();
 
         if (mpi_manager_.getRank() == rankId) {
-            setBasisState_CUDA(BaseType::getData(), value_cu, local_index, use_async,
-            stream_id);
+            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
+                               use_async, stream_id);
         }
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();

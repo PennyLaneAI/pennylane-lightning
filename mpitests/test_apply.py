@@ -37,12 +37,12 @@ fixture_params = itertools.product(
 def create_random_init_state(numWires, C_DTYPE, seed_value=48):
     """Returns a random initial state of a certain type."""
     np.random.seed(seed_value)
-    
+
     if C_DTYPE == np.complex128:
         R_DTYPE = np.float64
     else:
         R_DTYPE = np.float32
-    
+
     num_elements = 1 << numWires
     init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
         num_elements
@@ -85,7 +85,6 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
     local_state_vector = mpi_qnode(*par)
 
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
-
 
 
 def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
@@ -386,9 +385,9 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
 
 @pytest.mark.skipif(
-        device_name == "lightning.gpu",
-        reason="LGPU new API in WIP.  Skipping.",
-    )
+    device_name == "lightning.gpu",
+    reason="LGPU new API in WIP.  Skipping.",
+)
 class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-function-docstring
     """Tests sparse hamiltonian expectation values."""
 
@@ -437,9 +436,9 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
 
 
 @pytest.mark.skipif(
-        device_name == "lightning.gpu",
-        reason="LGPU new API in WIP.  Skipping.",
-    )
+    device_name == "lightning.gpu",
+    reason="LGPU new API in WIP.  Skipping.",
+)
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
