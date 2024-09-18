@@ -25,10 +25,6 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support gates with more than 2 wires, preprocess is required for the following tests",
-)
 @pytest.mark.usefixtures("use_legacy_and_new_opmath")
 @pytest.mark.parametrize("diff_method", ("param_shift", "finite_diff"))
 class TestQChem:
@@ -36,6 +32,9 @@ class TestQChem:
 
     def test_VQE_gradients(self, diff_method, tol):
         """Test if the VQE procedure returns the expected gradients."""
+
+        if qml.operation.active_new_opmath() and device_name == "lightning.tensor":
+            pytest.skip("The new operation math is not yet fully supported for lightning.tensor")
 
         symbols = ["H", "H"]
 
