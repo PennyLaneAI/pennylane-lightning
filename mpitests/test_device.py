@@ -36,6 +36,8 @@ def test_create_device():
     else:
         dev = qml.device(device_name, mpi=True, wires=4)
 
+def test_create_device_without_MPI():
+    dev = qml.device(device_name, mpi=False, wires=4)
 
 def test_unsupported_mpi_buf_size():
     with pytest.raises(ValueError, match="Unsupported mpi_buf_size value"):

@@ -70,6 +70,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
             mpi_handler = MPIHandler(False, 0, None, lgpu_state.num_wires, lgpu_state.dtype)
 
         self._mpi_handler = mpi_handler
+        self._use_mpi = self._mpi_handler.use_mpi
 
         self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
 
