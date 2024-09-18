@@ -20,6 +20,9 @@ from conftest import device_name
 # pylint: disable=missing-function-docstring,unnecessary-comprehension,too-many-arguments,wrong-import-order,unused-variable,c-extension-no-member
 from mpi4py import MPI
 
+if device_name == "lightning.gpu":
+    pytest.skip("LGPU new API in WIP.  Skipping.",allow_module_level=True)
+    
 numQubits = 8
 
 

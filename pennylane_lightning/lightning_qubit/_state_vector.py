@@ -24,6 +24,8 @@ try:
 except ImportError:
     pass
 
+from typing import Optional
+
 import numpy as np
 import pennylane as qml
 from pennylane.measurements import MidMeasureMP
@@ -102,6 +104,10 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             return
 
         self._qubit_state.setStateVector(state, list(device_wires))
+
+    def _select_setBasisState(self, state, wires, use_async: Optional[bool] = None):
+        """Select the proper setBasisState from the C++ backend"""
+        self._qubit_state.setBasisState(list(state), list(wires))
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.

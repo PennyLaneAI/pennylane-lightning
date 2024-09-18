@@ -42,6 +42,7 @@ from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasureme
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
+from ._mpi_handler import MPIHandler
 
 
 class LightningGPUMeasurements(LightningBaseMeasurements):
@@ -51,14 +52,23 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
     Args:
         qubit_state(LightningGPUStateVector): Lightning state-vector class containing the state vector to be measured.
+        mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
+            Provides functionality to run on multiple devices.
+
     """
 
     def __init__(
         self,
         lgpu_state,
+        mpi_handler=None,
     ) -> TensorLike:
 
         super().__init__(lgpu_state)
+
+        if mpi_handler is None:
+            mpi_handler = MPIHandler(False, 0, None, lgpu_state.num_wires, lgpu_state.dtype)
+
+        self._mpi_handler = mpi_handler
 
         self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
 
@@ -67,7 +77,11 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
         Returns: the Measurements class
         """
-        return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+        if self._mpi_handler.use_mpi:
+            return MeasurementsMPIC128 if self.dtype == np.complex128 else MeasurementsMPIC64
+        else:
+            return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
+        
 
     def _measure_with_samples_diagonalizing_gates(
         self,

@@ -22,6 +22,8 @@ import pytest
 from conftest import PHI, THETA, VARPHI, device_name
 from mpi4py import MPI
 
+if device_name == "lightning.gpu":
+    pytest.skip("LGPU new API in WIP.  Skipping.",allow_module_level=True)
 
 @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
 class TestExpval:

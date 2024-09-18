@@ -262,11 +262,8 @@ class StateVectorCudaMPI final
                        const std::size_t index, const bool async = false) {
         std::size_t rankId = index >> BaseType::getNumQubits();
 
-        std::size_t local_index =
-            static_cast<std::size_t>(
-                rankId * std::pow(2.0, static_cast<long double>(
-                                           BaseType::getNumQubits()))) ^
-            index;
+        constexpr std::size_t one{1U};
+        std::size_t local_index = rankId * (one << BaseType::getNumQubits()) ^ index;
         BaseType::getDataBuffer().zeroInit();
 
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
@@ -280,6 +277,52 @@ class StateVectorCudaMPI final
         mpi_manager_.Barrier();
     }
 
+    /**
+     * @brief Prepare a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     * @param use_async(Optional[bool]): immediately sync with host-sv after
+     applying operation.
+
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires,
+                       const bool use_async) {
+        // This is not functional yet. 
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        // const auto n_wires = wires.size();
+        const auto n_wires = this->getTotalNumQubits();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+
+        std::size_t rankId = index >> BaseType::getNumQubits();
+
+        constexpr std::size_t one{1U};
+        std::size_t local_index = rankId * (one >> BaseType::getNumQubits()) ^ index;
+        BaseType::getDataBuffer().zeroInit();
+        const std::complex<PrecisionT> value(1, 0);
+        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+        auto stream_id = localStream_.get();
+
+        if (mpi_manager_.getRank() == rankId) {
+            setBasisState_CUDA(BaseType::getData(), value_cu, local_index, use_async,
+            stream_id);
+        }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
+    }
     /**
      * @brief Set values for a batch of elements of the state-vector. This
      * method is implemented by the customized CUDA kernel defined in the
