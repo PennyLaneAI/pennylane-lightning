@@ -25,7 +25,7 @@ Some tips on the usage of the ``lightning.tensor`` device:
     - The ``lightning.tensor`` device is recommended for large-scale quantum simulations. For small-scale simulations, the cost of SVD decomposition and MPS-MPO multiplication might outweigh than the benifits of MPS.
     - It is recommended to use shot-based ``probs()`` measurements for the ``lightning.tensor`` device when the number of target/projected wires is large. The analytical calculation of ``prob()`` target at ``30+`` wires can lead to excessive memory usage. The analytical calculation of ``prob()`` that targets at small number of subset wires but projects a larger number of wires could become impractical due to high computational costs for large-scale quantum simulations. If the number of projected wires is ``n``, ``2**n`` times of ``cutensornet`` API calls should be made to get the analytical ``probs()``, which could be prohibitive if ``n`` is large. 
     - The analytical calculation of ``var()`` measurements could be impractical for Hamiltonian observables with many terms. The computational cost of current ``var`` implementation scales with ``n**2``, where ``n`` is the number of terms in the Hamiltonian observable.
-    - It is advisable to disable ``new_opmath`` for the ``lightning.tensor`` device, as it only supports 1-wire Hermitian observables.
+    - It is advisable to disable ``new_opmath`` for the ``lightning.tensor`` device, as the device only supports 1-wire Hermitian observables.
 
 Users also have the flexibility to customize these parameters according to their specific needs with:
 
