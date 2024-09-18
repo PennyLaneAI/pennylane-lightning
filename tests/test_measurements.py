@@ -154,7 +154,7 @@ class TestProbs:
             _ = circuit()
 
     @pytest.mark.skipif(
-        device_name == "lightning.gpu" or device_name == "lightning.tensor",
+        device_name in ("lightning.gpu", "lightning.tensor"),
         reason="lightning.gpu/lightning.tensor does not support out of order prob.",
     )
     @pytest.mark.parametrize(

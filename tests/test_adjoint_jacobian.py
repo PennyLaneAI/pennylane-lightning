@@ -1547,7 +1547,7 @@ def test_qubit_unitary(n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
-    dev_def = qml.device("default.qubit.legacy", wires=n_wires)
+    dev_def = qml.device("default.qubit", wires=n_wires)
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
