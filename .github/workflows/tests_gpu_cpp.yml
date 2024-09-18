@@ -36,7 +36,7 @@ concurrency:
 
 jobs:
   builddeps:
-    if: contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')
+    if: ${{ github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner') }}
     runs-on:
       - self-hosted
       - ubuntu-22.04
