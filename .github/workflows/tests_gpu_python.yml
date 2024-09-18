@@ -202,6 +202,9 @@ jobs:
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+
+      - name: Move coverage file
+        run: |
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
