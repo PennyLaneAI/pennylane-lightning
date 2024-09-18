@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* Update the test suite to remove deprecated code.
+  [(#912)](https://github.com/PennyLaneAI/pennylane-lightning/pull/912)
+
 * Skip the compilation of Lightning simulators and development requirements to boost the build of public docs up to 5x.
   [(#904)](https://github.com/PennyLaneAI/pennylane-lightning/pull/904)
 
@@ -78,7 +81,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
