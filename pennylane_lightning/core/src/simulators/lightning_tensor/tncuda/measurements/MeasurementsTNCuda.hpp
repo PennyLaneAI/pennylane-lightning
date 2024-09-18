@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <complex>
 #include <cuComplex.h>
 #include <cutensornet.h>
@@ -106,22 +107,73 @@ template <class TensorNetT> class MeasurementsTNCuda {
         DataBuffer<CFP_t, int> d_output_tensor(
             length, tensor_network_.getDevTag(), true);
 
+        DataBuffer<PrecisionT, int> d_output_probs(
+            length, tensor_network_.getDevTag(), true);
+
         d_output_tensor.zeroInit();
+        d_output_probs.zeroInit();
 
-        tensor_network_.get_state_tensor(d_output_tensor.getData(),
-                                         d_output_tensor.getLength(), wires,
-                                         numHyperSamples);
+        auto stateModes = cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+            wires, tensor_network_.getNumQubits());
 
-        // `10` here means `1024` elements to be calculated
-        // LCOV_EXCL_START
-        if (wires.size() > 10) {
-            DataBuffer<PrecisionT, int> d_output_probs(
-                length, tensor_network_.getDevTag(), true);
+        std::vector<int32_t> projected_modes{};
 
+        for (int32_t idx = 0;
+             idx < static_cast<int32_t>(tensor_network_.getNumQubits());
+             idx++) {
+            auto it = std::find(stateModes.begin(), stateModes.end(), idx);
+            if (it == stateModes.end()) {
+                projected_modes.emplace_back(idx);
+            }
+        }
+
+        std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
+
+        if (projected_modes.size() == 0) {
+            tensor_network_.get_state_tensor(d_output_tensor.getData(),
+                                             d_output_tensor.getLength(), {},
+                                             {}, numHyperSamples);
             getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
                           length, static_cast<int>(thread_per_block),
                           tensor_network_.getDevTag().getStreamID());
 
+        } else {
+            PL_ABORT_IF(projected_modes.size() > 64,
+                        "Number of projected modes is greater than 64 and the "
+                        "value of projected_modes_size will exceed "
+                        "std::numeric_limits<size_t>::max()");
+            const std::size_t projected_modes_size = std::size_t(1U)
+                                                     << projected_modes.size();
+
+            DataBuffer<PrecisionT, int> tmp_probs(
+                length, tensor_network_.getDevTag(), true);
+
+            for (std::size_t idx = 0; idx < projected_modes_size; idx++) {
+                for (std::size_t j = 0; j < projected_modes.size(); j++) {
+                    projectedModeValues[j] = (idx >> j) & 1U;
+                }
+
+                tensor_network_.get_state_tensor(
+                    d_output_tensor.getData(), length, projected_modes,
+                    projectedModeValues, numHyperSamples);
+
+                getProbs_CUDA(d_output_tensor.getData(), tmp_probs.getData(),
+                              length, static_cast<int>(thread_per_block),
+                              tensor_network_.getDevTag().getStreamID());
+
+                // Copy the data to the output tensor
+                scaleAndAdd_CUDA(PrecisionT{1.0}, tmp_probs.getData(),
+                                 d_output_probs.getData(),
+                                 tmp_probs.getLength(),
+                                 tensor_network_.getDevTag().getDeviceID(),
+                                 tensor_network_.getDevTag().getStreamID(),
+                                 tensor_network_.getCublasCaller());
+            }
+        }
+
+        // `10` here means `1024` elements to be calculated
+        // LCOV_EXCL_START
+        if (wires.size() > 10) {
             PrecisionT sum;
 
             asum_CUDA_device<PrecisionT>(
@@ -143,16 +195,11 @@ template <class TensorNetT> class MeasurementsTNCuda {
             // number of wires. The CPU calculation is faster than the GPU
             // calculation for a small number of wires due to the overhead of
             // the GPU kernel launch.
-            std::vector<ComplexT> h_state_vector(length);
-            d_output_tensor.CopyGpuDataToHost(h_state_vector.data(),
-                                              h_state_vector.size());
-            // TODO: OMP support
-            for (std::size_t i = 0; i < length; i++) {
-                h_res[i] = std::norm(h_state_vector[i]);
-            }
+            d_output_probs.CopyGpuDataToHost(h_res.data(), h_res.size());
 
             // TODO: OMP support
-            PrecisionT sum = std::accumulate(h_res.begin(), h_res.end(), 0.0);
+            PrecisionT sum =
+                std::accumulate(h_res.begin(), h_res.end(), PrecisionT{0.0});
 
             PL_ABORT_IF(sum == 0.0, "Sum of probabilities is zero.");
             // TODO: OMP support
@@ -162,6 +209,97 @@ template <class TensorNetT> class MeasurementsTNCuda {
         }
 
         return h_res;
+    }
+
+    /**
+     * @brief Utility method for samples.
+     *
+     * @param wires Wires can be a subset or the full system.
+     * @param num_samples Number of samples
+     * @param numHyperSamples Number of hyper samples to use in the calculation
+     * and is default as 1.
+     *
+     * @return std::vector<std::size_t> A 1-d array storing the samples.
+     * Each sample has a length equal to the number of wires. Each sample can
+     * be accessed using the stride `sample_id * num_wires`, where `sample_id`
+     * is a number between `0` and `num_samples - 1`.
+     */
+    auto generate_samples(const std::vector<std::size_t> &wires,
+                          const std::size_t num_samples,
+                          const int32_t numHyperSamples = 1)
+        -> std::vector<std::size_t> {
+        std::vector<int64_t> samples(num_samples * wires.size());
+
+        const std::vector<int32_t> modesToSample =
+            cuUtil::NormalizeCastIndices<std::size_t, int32_t>(
+                wires, tensor_network_.getNumQubits());
+
+        cutensornetStateSampler_t sampler;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateSampler(
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* cutensornetState_t */ tensor_network_.getQuantumState(),
+            /* int32_t numModesToSample */ modesToSample.size(),
+            /* const int32_t *modesToSample */ modesToSample.data(),
+            /* cutensornetStateSampler_t * */ &sampler));
+
+        // Configure the quantum circuit sampler
+        const cutensornetSamplerAttributes_t samplerAttributes =
+            CUTENSORNET_SAMPLER_CONFIG_NUM_HYPER_SAMPLES;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetSamplerConfigure(
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* cutensornetStateSampler_t */ sampler,
+            /* cutensornetSamplerAttributes_t */ samplerAttributes,
+            /* const void *attributeValue */ &numHyperSamples,
+            /* size_t attributeSize */ sizeof(numHyperSamples)));
+
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* cutensornetWorkspaceDescriptor_t * */ &workDesc));
+
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        // Prepare the quantum circuit sampler for sampling
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetSamplerPrepare(
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* cutensornetStateSampler_t */ sampler,
+            /* size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* cudaStream_t unused as of v24.08 */ 0x0));
+
+        std::size_t worksize =
+            getWorkSpaceMemorySize(tensor_network_.getTNCudaHandle(), workDesc);
+
+        PL_ABORT_IF(worksize > scratchSize,
+                    "Insufficient workspace size on Device.\n");
+
+        const std::size_t d_scratch_length = worksize / sizeof(size_t) + 1;
+        DataBuffer<std::size_t> d_scratch(d_scratch_length,
+                                          tensor_network_.getDevTag(), true);
+
+        setWorkSpaceMemory(tensor_network_.getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetSamplerSample(
+            /* const cutensornetHandle_t */ tensor_network_.getTNCudaHandle(),
+            /* cutensornetStateSampler_t */ sampler,
+            /* int64_t numShots */ num_samples,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* int64_t * */ samples.data(),
+            /* cudaStream_t unused as of v24.08  */ 0x0));
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroySampler(sampler));
+
+        std::vector<std::size_t> samples_size_t(samples.size());
+
+        std::transform(samples.begin(), samples.end(), samples_size_t.begin(),
+                       [](int64_t x) { return static_cast<std::size_t>(x); });
+        return samples_size_t;
     }
 
     /**
