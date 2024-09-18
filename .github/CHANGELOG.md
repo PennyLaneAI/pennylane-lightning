@@ -66,7 +66,7 @@
 
 ### Documentation
 
-*  Update ``lightning.tensor`` documentation on all the new features.
+* Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
