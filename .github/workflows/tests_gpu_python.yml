@@ -185,14 +185,22 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
 
-      - name: Run GPU unit tests
+      - name: Run PennyLane unit tests
+        env:
+          OMP_NUM_THREADS: 1
+          OMP_PROC_BIND: false
+        if: matrix.pl_backend == 'lightning_gpu'
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Run PennyLane Lightning unit tests
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
