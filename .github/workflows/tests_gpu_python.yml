@@ -31,7 +31,7 @@ concurrency:
 
 jobs:
   builddeps:
-    if: github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')
+    if: github.event.pull_request.draft == false || contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -176,17 +176,16 @@ jobs:
         run: |
           rm -rf build
           PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || true
-          SKIP_COMPILATION=True python -m pip install . -vv
+          PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           rm -rf build
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          python -m pip install . -vv
+          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
       - name: Run PennyLane unit tests
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
-        if: matrix.pl_backend == 'lightning_gpu'
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
