@@ -82,14 +82,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                     static_cast<std::size_t>(arr.size()));
         }))
         .def(
-            "setBasisStateZero",
-            [](StateVectorT &sv, const bool use_async) {
-                const std::complex<PrecisionT> value(1, 0);
-                std::size_t zero{0U};
-                sv.setBasisState(value, zero, use_async);
-            },
-            "Create Basis State to zero on GPU.")
-        .def(
             "setBasisState",
             [](StateVectorT &sv, const std::vector<std::size_t> &state,
                const std::vector<std::size_t> &wires, const bool use_async) {

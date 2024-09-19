@@ -136,11 +136,10 @@ class LightningBaseStateVector(ABC):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # Return a computational basis state over all wires.
-        self._select_setBasisState(state, wires, use_async)
-
-    @abstractmethod
-    def _select_setBasisState(state, wires, use_async):
-        """Select the proper setBasisState from the C++ backend"""
+        if use_async == None:
+            self._qubit_state.setBasisState(list(state), list(wires))
+        else:
+            self._qubit_state.setBasisState(list(state), list(wires), use_async)
 
     @abstractmethod
     def _apply_lightning_controlled(self, operation):

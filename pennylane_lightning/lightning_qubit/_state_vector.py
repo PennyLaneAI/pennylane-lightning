@@ -105,10 +105,6 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
         self._qubit_state.setStateVector(state, list(device_wires))
 
-    def _select_setBasisState(self, state, wires, use_async: Optional[bool] = None):
-        """Select the proper setBasisState from the C++ backend"""
-        self._qubit_state.setBasisState(list(state), list(wires))
-
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
 

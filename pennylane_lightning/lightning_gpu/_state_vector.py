@@ -108,7 +108,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             self._qubit_state = self._state_dtype()(self.num_wires)
 
         use_async = False
-        self._qubit_state.setBasisStateZero(use_async)
+        self.reset_state(use_async)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -238,17 +238,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._qubit_state.setStateVector(
             ravelled_indices, state, use_async
         )  # this operation on device
-
-    def _select_setBasisState(self, state, wires, use_async):
-        """Select the proper setBasisState from the C++ backend"""
-        if self._mpi_handler.use_mpi:
-            basis_states = 2 ** (self.num_wires - 1 - np.array(list(wires)))
-            basis_states = math.convert_like(basis_states, state)
-            num = int(math.dot(state, basis_states))
-
-            self._qubit_state.setBasisStateIndex(num, use_async)
-        else:
-            self._qubit_state.setBasisState(list(state), list(wires), use_async)
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
