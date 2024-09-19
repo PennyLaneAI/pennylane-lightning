@@ -15,21 +15,14 @@ The default setup for the MPS tensor network approximation is:
     - ``max_bond_dim`` (maximum bond dimension) defaults to ``128`` .
     - ``cutoff`` (singular value truncation threshold) defaults to ``0`` .
     - ``cutoff_mode`` (singular value truncation mode) defaults to ``abs`` , considering the absolute values of the singular values; Alternatively, users can opt to set ``cutoff_mode`` to ``rel`` to consider the relative values of the singular values.
-Note that the ``cutensornet`` will automatically determin the reduced extent of the bond dimension based on the lowest among the multiple truncation cutoffs (``max_bond_dim``, ``cutoff-abs`` and ``cutoff-rel``). For more details on how the ``cutoff`` works, please check it out the `cuQuantum documentation <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/types.html#cutensornettensorsvdconfigattributes-t>`__. All swap and decomposition operations in MPS-MPO multiplication will follow the same constraints set by SVD configurations (``cutoff``) and target extents setups. For more details, please refer to the `cuQuantum documentation <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/types.html#cutensornetstatempoapplication-t>`__.
+Note that the ``cutensornet`` will automatically determine the reduced extent of the bond dimension based on the lowest among the multiple truncation cutoffs (``max_bond_dim``, ``cutoff-abs`` and ``cutoff-rel``). For more details on how the ``cutoff`` works, please check it out the `cuQuantum documentation <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/types.html#cutensornettensorsvdconfigattributes-t>`__.
 
 The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0 (Volta)
 and greater. This device supports both exact and finite shots measurements. Currently, the supported differentiation methods are parameter-shift and finite-diff. Note that the MPS backend of lightning.tensor supports multi-wire gates via Matrix Product Operators (MPO).
 
-Note that measurements of ``qml.probs()`` or ``qml.state()`` return dense vectors of dimension :math:`2^{n_\text{qubits}}`, so they should only be used for small systems. When using finite shots, ``qml.probs()`` can be used to get individual samples.
+Note that the ``lightning.tensor`` device is designed for expectation value calculations and large-scale quantum circuits. Measurements of ``qml.probs()`` or ``qml.state()`` return dense vectors of dimension :math:`2^{n_\text{qubits}}`, so they should only be used for small systems. When using finite shots, ``qml.probs()`` can be used to get individual samples.
 
-.. note:: ``qml.Hermitian`` is currently only supported for single wires. You can use ``qml.pauli_decompose`` on smaller matrices to obtain a compatible Pauli decomposition in the meantime.
-
-Some tips on the usage of the ``lightning.tensor`` device:
-    - ``lightning.tensor`` performs better for the larger bond dimensions in MPS calculations, see the ``Approximate Tensor Network Methods`` section in the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`__.
-    - The ``lightning.tensor`` device is recommended for large-scale quantum simulations. For small-scale simulations, the cost of SVD decomposition and MPS-MPO multiplication might outweigh than the benifits of MPS.
-    - It is recommended to use shot-based ``probs()`` measurements for the ``lightning.tensor`` device when the number of target/projected wires is large. The analytical calculation of ``prob()`` target at ``30+`` wires can lead to excessive memory usage. The analytical calculation of ``prob()`` that targets at small number of subset wires but projects a larger number of wires could become impractical due to high computational costs for large-scale quantum simulations. If the number of projected wires is ``n``, ``2**n`` times of ``cutensornet`` API calls should be made to get the analytical ``probs()``, which could be prohibitive if ``n`` is large. 
-    - The analytical calculation of ``var()`` measurements could be impractical for Hamiltonian observables with many terms. The computational cost of current ``var`` implementation scales with ``n**2``, where ``n`` is the number of terms in the Hamiltonian observable.
-    - It is advisable to disable ``new_opmath`` for the ``lightning.tensor`` device, as the device only supports 1-wire Hermitian observables.
+.. note:: ``qml.Hermitian`` is currently only supported for single wires. You can use ``qml.pauli_decompose`` on smaller matrices to obtain a compatible Pauli decomposition in the meantime. As a result, it is advisable to disable ``new_opmath`` for the ``lightning.tensor`` device. This limitation will be addressed once multi-wires Hermitian observables can be supported with ``cutensornet``.
 
 Users also have the flexibility to customize these parameters according to their specific needs with:
 
