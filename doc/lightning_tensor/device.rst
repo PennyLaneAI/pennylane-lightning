@@ -20,7 +20,7 @@ Note that the ``cutensornet`` will automatically determine the reduced extent of
 The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0 (Volta)
 and greater. This device supports both exact and finite shots measurements. Currently, the supported differentiation methods are parameter-shift and finite-diff. Note that the MPS backend of lightning.tensor supports multi-wire gates via Matrix Product Operators (MPO).
 
-Note that the ``lightning.tensor`` device is designed for expectation value calculations. Measurements of ``qml.probs()`` or ``qml.state()`` return dense vectors of dimension :math:`2^{n_\text{qubits}}`, so they should only be used for small systems. When using finite shots, ``qml.probs()`` can be used to get individual samples.
+The ``lightning.tensor`` device is designed for expectation value calculations. Measurements of ``qml.probs()`` or ``qml.state()`` return dense vectors of dimension :math:`2^{n_\text{qubits}}`, so they should only be used for small systems. When using finite shots, ``qml.probs()`` can be used to get individual samples.
 
 .. note:: ``qml.Hermitian`` is currently only supported for single wires. You can use ``qml.pauli_decompose`` on smaller matrices to obtain a compatible Pauli decomposition in the meantime. As a result, it is advisable to disable ``new_opmath`` for the ``lightning.tensor`` device to prevent the implicit conversion of Pauli words to multi-wire Hermitian observables. This limitation will be addressed once multi-wires Hermitian observables can be supported with ``cutensornet``.
 
