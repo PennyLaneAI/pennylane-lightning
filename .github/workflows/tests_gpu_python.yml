@@ -16,14 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths-ignore:
-      - .github/**
-      - '!.github/workflows/tests_gpu_python.yml'
-      - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
-      - pennylane_lightning/lightning_kokkos/**
-      - pennylane_lightning/lightning_qubit/**
   push:
     branches:
       - master
@@ -146,7 +138,12 @@ jobs:
       - name: Install required packages
         run: |
           python -m pip install -r requirements-dev.txt
-          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
+          python -m pip install cmake openfermionpyscf
+
+      - name: Install required lightning_gpu only packages
+        if: matrix.pl_backend == 'lightning_gpu'
+        run: |
+          python -m pip install custatevec-cu${{ matrix.cuda_version }}
 
       - name: Install required lightning_tensor only packages
         if: matrix.pl_backend == 'lightning_tensor'
