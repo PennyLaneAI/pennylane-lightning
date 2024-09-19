@@ -427,13 +427,13 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
             return qml.expval(H_sparse)
 
         gpu_qnode = qml.QNode(circuit, dev_gpu)
-        expected_output_cpu = gpu_qnode()
-        comm.Bcast(np.array(expected_output_cpu), root=0)
+        expected_output_gpu = gpu_qnode()
+        comm.Bcast(np.array(expected_output_gpu), root=0)
 
         mpi_qnode = qml.QNode(circuit, dev_mpi)
         expected_output_mpi = mpi_qnode()
 
-        assert np.allclose(expected_output_mpi, expected_output_cpu)
+        assert np.allclose(expected_output_mpi, expected_output_gpu)
 
 
 class TestExpval:
