@@ -39,8 +39,8 @@ namespace Pennylane::LightningTensor::TNCuda {
  backend.
  * Any gate tensor can be represented as an MPO tensor network in the context of
  MPS. The gate tensor must be decomposed with respect to its target wires. Note
- that the only local target wires are supported. The non-adjacent target wires
- must be swapped to local before contructing the MPO tensor network.
+ that connecting Identities MPO are inserted between two adjacent wires for
+ non-local wires gates.
  * The MPO tensors' modes order in an open boundary condition are:
    2              3              2
    |              |              |
@@ -127,9 +127,6 @@ template <class PrecisionT> class MPOTNCuda {
         PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
                         "Only sorted target wires is accepeted.");
 
-        PL_ABORT_IF_NOT(wires.size() == wires.back() - wires.front() + 1,
-                        "Only support local target wires.");
-
         // Create an empty MPO tensor network operator. Note that the state
         // extents are aligned with the quantum state.
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
@@ -140,7 +137,7 @@ template <class PrecisionT> class MPOTNCuda {
             /* cudaDataType_t */ cudaDataType,
             /* cutensornetNetworkOperator_t */ &MPOOperator_));
 
-        numMPOSites_ = wires.size();
+        numMPOSites_ = wires.back() - wires.front() + 1;
 
         MPO_modes_int32_.resize(numMPOSites_);
 
@@ -153,14 +150,11 @@ template <class PrecisionT> class MPOTNCuda {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
 
-        // Ensure the modes are in ascending order
-        std::reverse(MPO_modes_int32_.begin(), MPO_modes_int32_.end());
-
-        for (std::size_t i = 0; i < numMPOSites_ - 1; i++) {
+        for (std::size_t i = 0; i < wires.size() - 1; i++) {
             // Binary logarithm of the bond dimension required for the exact MPO
             // decomposition
             const std::size_t lg_bondDim_exact =
-                std::min(i + 1, numMPOSites_ - i - 1) *
+                std::min(i + 1, wires.size() - i - 1) *
                 2; // 1+1 (1 for bra and 1 for ket)
 
             const std::size_t bondDim =
@@ -170,6 +164,24 @@ template <class PrecisionT> class MPOTNCuda {
 
             bondDims_.emplace_back(bondDim);
         }
+
+        auto BondDims = bondDims_;
+        // Insert bond dimensions of Identity tensors
+        if (wires.size() != numMPOSites_) {
+            for (std::size_t i = 0; i < wires.size() - 1; i++) {
+                const std::size_t numISites = wires[i + 1] - wires[i] - 1;
+                if (numISites > 0) {
+                    std::vector<std::size_t> ISites(numISites, BondDims[i]);
+                    std::size_t offset = wires[i] - wires[0];
+                    bondDims_.insert(bondDims_.begin() + offset + 1,
+                                     ISites.begin(), ISites.end());
+                }
+            }
+        }
+
+        PL_ABORT_IF_NOT(bondDims_.size() == numMPOSites_ - 1,
+                        "Number of bond dimensions must match the number of "
+                        "MPO sites.");
 
         for (std::size_t i = 0; i < numMPOSites_; i++) {
             const std::size_t bondDimR =
@@ -189,10 +201,36 @@ template <class PrecisionT> class MPOTNCuda {
             tensors_.emplace_back(std::make_shared<TensorCuda<PrecisionT>>(
                 localModesExtents.size(), localModesExtents, localModesExtents,
                 dev_tag));
+        }
 
-            auto tensor_cu = cuUtil::complexToCu<ComplexT>(tensors[i]);
-            tensors_[i]->getDataBuffer().CopyHostDataToGpu(tensor_cu.data(),
-                                                           tensor_cu.size());
+        std::vector<std::size_t> mpo_site_tag(numMPOSites_, numMPOSites_);
+        for (std::size_t i = 0; i < wires.size(); i++) {
+            auto idx = wires[i] - wires[0];
+            mpo_site_tag[idx] = i;
+        }
+
+        // Update MPO tensors
+        for (std::size_t i = 0; i < numMPOSites_; i++) {
+            auto idx = mpo_site_tag[i];
+            if (idx < numMPOSites_) {
+                auto tensor_cu = cuUtil::complexToCu<ComplexT>(tensors[idx]);
+                tensors_[i]->getDataBuffer().CopyHostDataToGpu(
+                    tensor_cu.data(), tensor_cu.size());
+            } else {
+                // Initialize connecting Identity tensors
+                std::size_t length = tensors_[i]->getDataBuffer().getLength();
+
+                std::vector<CFP_t> identity_tensor_host(length,
+                                                        CFP_t{0.0, 0.0});
+                for (std::size_t idx = 0; idx < length;
+                     idx += 2 * bondDims_[i - 1] + 1) {
+                    identity_tensor_host[idx] =
+                        cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
+                }
+
+                tensors_[i]->getDataBuffer().CopyHostDataToGpu(
+                    identity_tensor_host.data(), identity_tensor_host.size());
+            }
         }
 
         // Append MPO tensor network operator components
