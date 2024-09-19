@@ -101,4 +101,16 @@ inline SharedCusvHandle make_shared_cusv_handle() {
     PL_CUSTATEVEC_IS_SUCCESS(custatevecCreate(&h));
     return {h, handleDeleter()};
 }
+
+/**
+ * @brief Compute the local index from a given index 
+ */
+inline std::size_t compute_local_index(const std::size_t index, const std::size_t num_qubits){
+
+    // TODO: bound check for the left shift operation here
+    constexpr std::size_t one{1U};
+    const std::size_t local_index = (index >> num_qubits) * (one << num_qubits) ^ index;
+    return local_index;
+}
+
 } // namespace Pennylane::LightningGPU::Util

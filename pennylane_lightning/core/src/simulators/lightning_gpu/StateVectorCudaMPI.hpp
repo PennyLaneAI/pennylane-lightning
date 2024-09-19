@@ -260,11 +260,12 @@ class StateVectorCudaMPI final
      */
     void setBasisState(const std::complex<Precision> &value,
                        const std::size_t index, const bool async = false) {
-        std::size_t rankId = index >> BaseType::getNumQubits();
 
-        constexpr std::size_t one{1U};
-        std::size_t local_index =
-            rankId * (one << BaseType::getNumQubits()) ^ index;
+        const std::size_t rankId = index >> this->getNumLocalQubits();
+
+        const std::size_t local_index = compute_local_index(index, this->getNumLocalQubits());
+
+
         BaseType::getDataBuffer().zeroInit();
 
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
@@ -283,9 +284,7 @@ class StateVectorCudaMPI final
      *
      * @param state Binary number representing the index
      * @param wires Wires.
-     * @param use_async(Optional[bool]): immediately sync with host-sv after
-     applying operation.
-
+     * @param use_async Use an asynchronous memory copy.
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
@@ -293,29 +292,25 @@ class StateVectorCudaMPI final
         // This is not functional yet.
         PL_ABORT_IF_NOT(state.size() == wires.size(),
                         "state and wires must have equal dimensions.");
-        const auto num_qubits = this->getNumQubits();
-        PL_ABORT_IF_NOT(
-            std::find_if(wires.begin(), wires.end(),
-                         [&num_qubits](const auto i) {
-                             return i >= num_qubits;
-                         }) == wires.end(),
-            "wires must take values lower than the number of qubits.");
-        // const auto n_wires = wires.size();
+
         const auto n_wires = this->getTotalNumQubits();
+
         std::size_t index{0U};
+        const std::size_t one{1U};
+
         for (std::size_t k = 0; k < n_wires; k++) {
-            const auto bit = static_cast<std::size_t>(state[k]);
-            index |= bit << (num_qubits - 1 - wires[k]);
+            const auto bit = state[k];
+            index |= bit << (n_wires - 1 - wires[k]);
         }
 
-        std::size_t rankId = index >> BaseType::getNumQubits();
+        const std::size_t rankId = index >> this->getNumLocalQubits();
+        const std::size_t local_index = compute_local_index(index, this->getNumLocalQubits());
 
-        constexpr std::size_t one{1U};
-        std::size_t local_index =
-            rankId * (one >> BaseType::getNumQubits()) ^ index;
-        BaseType::getDataBuffer().zeroInit();
         const std::complex<PrecisionT> value(1, 0);
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+
+        BaseType::getDataBuffer().zeroInit();
+
         auto stream_id = localStream_.get();
 
         if (mpi_manager_.getRank() == rankId) {
@@ -352,11 +347,7 @@ class StateVectorCudaMPI final
                 static_cast<std::size_t>(index) >> BaseType::getNumQubits();
 
             if (rankId == mpi_manager_.getRank()) {
-                int local_index =
-                    static_cast<std::size_t>(
-                        rankId * std::pow(2.0, static_cast<long double>(
-                                                   BaseType::getNumQubits()))) ^
-                    index;
+                int local_index = static_cast<int>(compute_local_index(static_cast<std::size_t>(index), this->getNumLocalQubits()));
                 indices_local.push_back(local_index);
                 values_local.push_back(values[i]);
             }

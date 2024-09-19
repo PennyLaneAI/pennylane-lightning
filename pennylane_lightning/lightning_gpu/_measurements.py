@@ -61,15 +61,12 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
     def __init__(
         self,
         lgpu_state,
-        mpi_handler=None,
+        use_mpi=False,
     ) -> TensorLike:
 
         super().__init__(lgpu_state)
 
-        if mpi_handler is None:
-            mpi_handler = MPIHandler(False, 0, None, lgpu_state.num_wires, lgpu_state.dtype)
-
-        self._mpi_handler = mpi_handler
+        self._use_mpi = use_mpi
 
         self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
 
@@ -78,7 +75,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
         Returns: the Measurements class
         """
-        if self._mpi_handler.use_mpi:
+        if self._use_mpi:
             return MeasurementsMPIC128 if self.dtype == np.complex128 else MeasurementsMPIC64
         else:
             return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
