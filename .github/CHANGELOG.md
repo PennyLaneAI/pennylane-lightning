@@ -34,7 +34,7 @@
 
 ### Improvements
 
-* Add label to `lightning.kokkos` GPU CIs.
+* Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
   [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
 
 * Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
