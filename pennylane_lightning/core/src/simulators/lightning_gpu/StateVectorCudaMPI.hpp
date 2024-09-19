@@ -263,8 +263,8 @@ class StateVectorCudaMPI final
 
         const std::size_t rankId = index >> this->getNumLocalQubits();
 
-        const std::size_t local_index = compute_local_index(index, this->getNumLocalQubits());
-
+        const std::size_t local_index =
+            compute_local_index(index, this->getNumLocalQubits());
 
         BaseType::getDataBuffer().zeroInit();
 
@@ -304,7 +304,8 @@ class StateVectorCudaMPI final
         }
 
         const std::size_t rankId = index >> this->getNumLocalQubits();
-        const std::size_t local_index = compute_local_index(index, this->getNumLocalQubits());
+        const std::size_t local_index =
+            compute_local_index(index, this->getNumLocalQubits());
 
         const std::complex<PrecisionT> value(1, 0);
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
@@ -347,7 +348,9 @@ class StateVectorCudaMPI final
                 static_cast<std::size_t>(index) >> BaseType::getNumQubits();
 
             if (rankId == mpi_manager_.getRank()) {
-                int local_index = static_cast<int>(compute_local_index(static_cast<std::size_t>(index), this->getNumLocalQubits()));
+                int local_index = static_cast<int>(
+                    compute_local_index(static_cast<std::size_t>(index),
+                                        this->getNumLocalQubits()));
                 indices_local.push_back(local_index);
                 values_local.push_back(values[i]);
             }
