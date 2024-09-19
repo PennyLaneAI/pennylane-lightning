@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users. 
+* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
   [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
 * Add shot measurement support to `lightning.tensor`.
@@ -33,6 +33,9 @@
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* Add label to `lightning.kokkos` GPU CIs.
+  [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
 
 * Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
   [(#911)](https://github.com/PennyLaneAI/pennylane-lightning/pull/911)
