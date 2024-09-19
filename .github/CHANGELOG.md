@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
+  [(#911)](https://github.com/PennyLaneAI/pennylane-lightning/pull/911)
+
 * Update the test suite to remove deprecated code.
   [(#912)](https://github.com/PennyLaneAI/pennylane-lightning/pull/912)
 

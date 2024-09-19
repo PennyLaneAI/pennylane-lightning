@@ -1,4 +1,4 @@
-name: Testing::x86_64::LGPU::C++
+name: Testing::x86_64::GPU::Python
 on:
   workflow_call:
     inputs:
@@ -16,12 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths:
-      - .github/workflows/tests_lgpu_cpp.yml
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
   push:
     branches:
       - master
@@ -30,16 +24,14 @@ env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
-  TF_VERSION: 2.10.0
-  TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_lgpu_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_gpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
   builddeps:
-    if: github.event.pull_request.draft == false
+    if: github.event.pull_request.draft == false || contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -61,16 +53,14 @@ jobs:
           nvcc --version
           nvidia-smi
 
-  cpptestswithLGPU:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+  pythontestswithGPU:
     needs: [builddeps]
     strategy:
       matrix:
-        pl_backend: ["lightning_gpu"]
-        enable_lapack: ["OFF"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
 
-    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }}, enable_lapack=${{ matrix.enable_lapack }})
+    name: Python Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
     runs-on:
       - ubuntu-22.04
       - self-hosted
@@ -87,10 +77,22 @@ jobs:
           nvcc --version
           nvidia-smi
 
-      - name: Checkout PennyLane-Lightning-GPU
+      - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
-          path: main
+          fetch-tags: true
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release' && matrix.pl_backend == 'lightning.qubit'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable' && matrix.pl_backend == 'lightning.qubit'
+        run: |
+          git fetch --tags --force
+          git checkout latest_release
 
       - uses: actions/setup-python@v5
         name: Install Python
@@ -100,7 +102,7 @@ jobs:
       - name: Setup Python virtual environment
         id: setup_venv
         env:
-          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}_${{ matrix.pl_backend }}
         run: |
           # Clear any pre-existing venvs
           rm -rf venv_*
@@ -113,12 +115,14 @@ jobs:
           echo ${{ env.VENV_NAME }}/bin >> $GITHUB_PATH
 
           # Adding venv name as an output for subsequent steps to reference if needed
+          source ${{ env.VENV_NAME }}/bin/activate
           echo "venv_name=${{ env.VENV_NAME }}" >> $GITHUB_OUTPUT
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
           # Adding venv site-packages to output for subsequent step to referecen if needed
           echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
+
 
       - name: Display Python-Path
         id: python_path
@@ -127,56 +131,90 @@ jobs:
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
 
-          pip_path=$(which pip)
+          pip_path=$(which python)
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
         run: |
-          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} scipy
-          sudo apt-get -y -q install liblapack-dev black
+          python -m pip install -r requirements-dev.txt
+          python -m pip install cmake openfermionpyscf
 
-      - name: Build and run unit tests
+      - name: Install required lightning_gpu only packages
+        if: matrix.pl_backend == 'lightning_gpu'
         run: |
-          cd main
-          cmake . -BBuild \
-            -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
-            -DBUILD_TESTS=ON \
-            -DENABLE_PYTHON=OFF \
-            -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
-            -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-            -DENABLE_COVERAGE=ON \
-            -G Ninja
-          cmake --build ./Build
-          cd ./Build
-          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}/report_$file.xml; done;
-          lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}.info
+          python -m pip install custatevec-cu${{ matrix.cuda_version }}
 
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
+      - name: Install required lightning_tensor only packages
+        if: matrix.pl_backend == 'lightning_tensor'
+        run: |
+          python -m pip install cutensornet-cu${{ matrix.cuda_version }}
+
+      - name: Checkout PennyLane for release build
+        if: inputs.pennylane-version == 'release'
+        uses: actions/checkout@v4
         with:
-          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
-          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
-          retention-days: 1
-          if-no-files-found: error
-          include-hidden-files: true
+          path: pennylane
+          repository: PennyLaneAI/pennylane
+
+      - name: Switch to release build of PennyLane
+        if: inputs.pennylane-version == 'release'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
+
+      - name: Install Stable PennyLane
+        if: inputs.pennylane-version == 'stable'
+        run: |
+          python -m pip uninstall -y pennylane && python -m pip install -U pennylane
+
+      - name: Build and install package
+        env:
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
+        run: |
+          rm -rf build
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
+
+          rm -rf build
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
+
+      - name: Run PennyLane unit tests
+        env:
+          OMP_NUM_THREADS: 1
+          OMP_PROC_BIND: false
+        if: matrix.pl_backend == 'lightning_gpu'
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Run PennyLane Lightning unit tests
+        env:
+          OMP_NUM_THREADS: 1
+          OMP_PROC_BIND: false
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+
+      - name: Move coverage file
+        run: |
+          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
-          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}.info
+          name: ubuntu-codecov-results-python-${{ matrix.pl_backend }}
+          path: coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
 
-  upload-to-codecov-linux-cpp:
-    needs: [cpptestswithLGPU]
+  upload-to-codecov-linux-python:
+    needs: [pythontestswithGPU]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
@@ -195,13 +233,3 @@ jobs:
           fail_ci_if_error: true
           verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
-
-      - name: Cleanup
-        if: always()
-        run: |
-          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
-          rm -rf *
-          rm -rf .git
-          rm -rf .gitignore
-          rm -rf .github
-          pip cache purge
