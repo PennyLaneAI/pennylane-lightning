@@ -186,6 +186,7 @@ jobs:
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
+        if: matrix.pl_backend == 'lightning_gpu'
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
