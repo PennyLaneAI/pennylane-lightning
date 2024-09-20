@@ -42,6 +42,7 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
     pass
 
+from typing import Optional
 import numpy as np
 from pennylane.tape import QuantumTape
 
@@ -61,8 +62,16 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, qubit_state: LightningGPUStateVector, batch_obs: bool = False) -> None:
+    def __init__(self, 
+                 qubit_state: LightningGPUStateVector, 
+                 batch_obs: bool = False,
+                use_mpi: Optional[bool] = False,
+                 ) -> None:
+        
         super().__init__(qubit_state, batch_obs)
+        
+        self._use_mpi = use_mpi
+        
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
@@ -71,14 +80,17 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
         Returns: the AdjointJacobian class
         """
-        jacobian_lightning = (
-            AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
-        )
-        create_ops_list_lightning = (
-            create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
-        )
-        return jacobian_lightning, create_ops_list_lightning
-
+        if self._use_mpi:
+            if self.dtype == np.complex64:
+                return AdjointJacobianMPIC64, create_ops_listMPIC64
+            else:
+                return AdjointJacobianMPIC128, create_ops_listMPIC128
+        else:
+            if self.dtype == np.complex64:
+                return AdjointJacobianC64, create_ops_listC64
+            else:
+                return AdjointJacobianC128, create_ops_listC128
+            
     def calculate_jacobian(self, tape: QuantumTape):
         """Computes the Jacobian with the adjoint method.
 
@@ -100,12 +112,22 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         if empty_array:
             return np.array([], dtype=self.dtype)
 
-        processed_data = self._process_jacobian_tape(tape)
+        if self._use_mpi:
+            split_obs = False  # with MPI batched means compute Jacobian one observables at a time, no point splitting linear combinations
+        else:
+            split_obs = self._dp.getTotalDevices() if self._batch_obs else False
+
+
+        processed_data = self._process_jacobian_tape(tape,split_obs,self._use_mpi)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self.dtype)
 
         trainable_params = processed_data["tp_shift"]
+        print(processed_data["state_vector"])
+        print(processed_data["obs_serialized"])
+        print(processed_data["ops_serialized"])
+        print(trainable_params)
         jac = self._jacobian_lightning(
             processed_data["state_vector"],
             processed_data["obs_serialized"],

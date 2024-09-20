@@ -16,7 +16,7 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Optional
 
 import numpy as np
 import pennylane as qml
@@ -89,7 +89,7 @@ class LightningBaseAdjointJacobian(ABC):
 
         return Expectation
 
-    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False):
+    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi: Optional[bool] = None):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
@@ -102,7 +102,7 @@ class LightningBaseAdjointJacobian(ABC):
         """
         use_csingle = self._qubit_state.dtype == np.complex64
 
-        use_mpi = False
+        use_mpi = False if use_mpi == None else use_mpi
         obs_serialized, obs_indices = QuantumScriptSerializer(
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_observables(tape)

@@ -42,7 +42,7 @@ from pennylane.devices.preprocess import (
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
 from pennylane.ops import Prod, SProd, Sum
-from pennylane.tape import QuantumScript
+from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
@@ -523,3 +523,57 @@ class LightningGPU(LightningBase):
         state.reset_state(sync=False)
         final_state = state.get_final_state(circuit)
         return LightningGPUMeasurements(final_state, self._mpi_handler.use_mpi, self._mpi_handler).measure_final_state(circuit)
+
+    def jacobian(
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ):
+        """Compute the Jacobian for a single quantum script.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. Default is False.
+            wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+        Returns:
+            TensorLike: The Jacobian of the quantum script
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        state.reset_state(self._sync)
+        final_state = state.get_final_state(circuit)
+        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs, use_mpi = self._mpi_handler.use_mpi).calculate_jacobian(
+            circuit
+        )
+
+    def simulate_and_jacobian(
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ) -> Tuple:
+        """Simulate a single quantum script and compute its Jacobian.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. Default is False.
+            wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        res = self.simulate(circuit, state)
+        jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs, use_mpi = self._mpi_handler.use_mpi).calculate_jacobian(circuit)
+        return res, jac
