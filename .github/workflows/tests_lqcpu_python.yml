@@ -70,7 +70,7 @@ jobs:
           fetch-tags: true
 
       - name: Patching tests following deprecation (remove after v0.39)
-        if: inputs.lightning-version == 'stable' && inputs.lightning-version != 'latest'
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version != 'latest'
         run: |
           cd tests
           grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
@@ -89,6 +89,13 @@ jobs:
           git checkout latest_release
           git log -1 --format='%H'
           git status
+
+      - name: Patching tests following deprecation (remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version != 'latest'
+        run: |
+          cd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          cd ..
 
       - name: Install dependencies
         run: |
