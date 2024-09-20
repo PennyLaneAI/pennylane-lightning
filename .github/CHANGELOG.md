@@ -34,9 +34,6 @@
 
 ### Improvements
 
-* Update plugin test matrix GPU workflow names.
-  [(#918)](https://github.com/PennyLaneAI/pennylane-lightning/pull/918)
-
 * Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
   [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
 
