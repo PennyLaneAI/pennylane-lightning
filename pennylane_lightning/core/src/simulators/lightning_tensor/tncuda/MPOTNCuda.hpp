@@ -149,6 +149,7 @@ template <class PrecisionT> class MPOTNCuda {
                        [&numQubits](const std::size_t mode) {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
+        std::reverse(MPO_modes_int32_.begin(), MPO_modes_int32_.end());
 
         for (std::size_t i = 0; i < wires.size() - 1; i++) {
             // Binary logarithm of the bond dimension required for the exact MPO
@@ -227,6 +228,9 @@ template <class PrecisionT> class MPOTNCuda {
                     identity_tensor_host[idx] =
                         cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
                 }
+
+                std::reverse(identity_tensor_host.begin(),
+                             identity_tensor_host.end());
 
                 tensors_[i]->getDataBuffer().CopyHostDataToGpu(
                     identity_tensor_host.data(), identity_tensor_host.size());
