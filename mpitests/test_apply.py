@@ -38,10 +38,7 @@ def create_random_init_state(numWires, C_DTYPE, seed_value=48):
     """Returns a random initial state of a certain type."""
     np.random.seed(seed_value)
 
-    if C_DTYPE == np.complex128:
-        R_DTYPE = np.float64
-    else:
-        R_DTYPE = np.float32
+    R_DTYPE = np.float64 if C_DTYPE == np.complex128 else np.float32
 
     num_elements = 1 << numWires
     init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
