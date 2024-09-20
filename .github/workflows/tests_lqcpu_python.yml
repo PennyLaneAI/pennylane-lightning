@@ -83,6 +83,13 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Patching tests following deprecation (remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.lightning-version != 'latest'
+        run: |
+          cd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          cd ..
+
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-base libopenblas-dev
