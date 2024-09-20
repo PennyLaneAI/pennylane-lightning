@@ -286,7 +286,7 @@ class QuantumScriptSerializer:
             return wires_map[wire] if wires_map else wire
 
         if len(observable) == 0:
-            return self.named_obs(PAULI_NAME_MAP["I"], [map_wire(0)])
+            return self.named_obs(PAULI_NAME_MAP["I"], [0])
 
         if len(observable) == 1:
             wire, pauli = list(observable.items())[0]
