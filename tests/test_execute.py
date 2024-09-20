@@ -68,8 +68,6 @@ class TestQChem:
 
             qml.expval(H)
 
-        # print(H)
-
         num_params = len(excitations)
         tape.trainable_params = np.linspace(1, num_params, num_params, dtype=int).tolist()
 
