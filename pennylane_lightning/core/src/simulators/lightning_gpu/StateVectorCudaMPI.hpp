@@ -296,8 +296,6 @@ class StateVectorCudaMPI final
         const auto n_wires = this->getTotalNumQubits();
 
         std::size_t index{0U};
-        const std::size_t one{1U};
-
         for (std::size_t k = 0; k < n_wires; k++) {
             const auto bit = state[k];
             index |= bit << (n_wires - 1 - wires[k]);

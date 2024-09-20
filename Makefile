@@ -98,7 +98,7 @@ coverage-cpp:
 	lcov --directory . -b ../pennylane_lightning/core/src/ --capture --output-file coverage.info; \
 	genhtml coverage.info --output-directory out
 
-.PHONY: test-python test-builtin test-suite test-cpp
+.PHONY: test-python test-builtin test-suite test-cpp test-cpp-mpi
 test-python: test-builtin test-suite
 
 test-builtin:
@@ -123,6 +123,27 @@ else
 	cmake --build ./BuildTests $(VERBOSE)
 	cmake --build ./BuildTests $(VERBOSE) --target test
 endif
+
+test-cpp-mpi:
+	rm -rf ./BuildTests
+	cmake -BBuildTests -G Ninja \
+		  -DCMAKE_BUILD_TYPE=Debug \
+		  -DBUILD_TESTS=ON \
+		  -DENABLE_WARNINGS=ON \
+		  -DENABLE_MPI=ON \
+		  -DPL_BACKEND=$(PL_BACKEND) \
+		  $(OPTIONS)
+ifdef target
+	cmake --build ./BuildTests $(VERBOSE) --target $(target)
+	mpi -np 2 ./BuildTests/$(target)
+else
+	cmake --build ./BuildTests $(VERBOSE)
+	for file in ./BuildTests/*_test_runner_mpi; do \
+		echo "Running $$file"; \
+		mpirun -np 2 $$file ; \
+	done
+endif
+
 
 .PHONY: format format-cpp format-python
 format: format-cpp format-python
