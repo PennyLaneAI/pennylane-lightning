@@ -83,6 +83,9 @@
 
 ### Bug fixes
 
+* Bug fix for `_pauli_word` of `QuantumScriptSerializer`. `_pauli_word` can process `PauliWord` object: `I`.
+  [(#919)](https://github.com/PennyLaneAI/pennylane-lightning/pull/919)
+
 * Bug fix for analytic `probs` in the `lightning.tensor` C++ layer.
   [(#906)](https://github.com/PennyLaneAI/pennylane-lightning/pull/906)
 
