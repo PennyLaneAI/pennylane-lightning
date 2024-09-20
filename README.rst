@@ -35,7 +35,7 @@ Lightning Plugins
 
 .. header-start-inclusion-marker-do-not-remove
 
-The Lightning plugin ecosystem provides fast state-vector simulators written in C++.
+The Lightning plugin ecosystem provides fast state-vector and tensor network simulators written in C++.
 
 `PennyLane <https://docs.pennylane.ai>`_ is a cross-platform Python library for quantum machine
 learning, automatic differentiation, and optimization of hybrid quantum-classical computations.
@@ -49,8 +49,7 @@ PennyLane-Lightning high performance simulators include the following backends:
 * ``lightning.qubit``: is a fast state-vector simulator written in C++.
 * ``lightning.gpu``: is a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on MPI.
 * ``lightning.kokkos``: is a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html>`_ programming models.
-* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). This device is designed to simulate large-scale quantum circuits using tensor networks. For small circuits, state-vector simulator plugins may be more suitable. The supported method is Matrix Product State (MPS). This device does not currently support finite shots. Currently, the supported measurement types are expectation values and the supported differentiation methods are ``parameter-shift`` and ``finite-diff``. Note that only 1,2-wire gates and gates that can be decomposed by PennyLane into 1,2-wire gates are supported.
-
+* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). The supported method is Matrix Product State (MPS).
 .. header-end-inclusion-marker-do-not-remove
 
 The following table summarizes the supported platforms and the primary installation mode:
