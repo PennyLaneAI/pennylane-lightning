@@ -33,9 +33,6 @@ class TestQChem:
     def test_VQE_gradients(self, diff_method, tol):
         """Test if the VQE procedure returns the expected gradients."""
 
-        if qml.operation.active_new_opmath() and device_name == "lightning.tensor":
-            pytest.skip("The new operation math is not yet fully supported for lightning.tensor")
-
         symbols = ["H", "H"]
 
         geometry = np.array(
@@ -70,6 +67,8 @@ class TestQChem:
                     qml.SingleExcitation(params[i], wires=excitation)
 
             qml.expval(H)
+
+        # print(H)
 
         num_params = len(excitations)
         tape.trainable_params = np.linspace(1, num_params, num_params, dtype=int).tolist()
