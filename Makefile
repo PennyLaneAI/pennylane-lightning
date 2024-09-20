@@ -35,9 +35,11 @@ help:
 	@echo "  test-cpp [verbose=1]     to run the C++ test suite (requires CMake)"
 	@echo "                           use with 'verbose=1' for building with verbose flag"
 	@echo "  test-cpp [target=?]      to run a specific C++ test target (requires CMake)."
+	@echo "  test-cpp-mpi [backend=?] to run the C++ test suite with MPI (requires CMake and MPI)"
+	@echo "                           Default: lightning_gpu"
 	@echo "  test-python [device=?]   to run the Python test suite"
 	@echo "                           Default: lightning.qubit"
-	@echo "  wheel [backend=?]        to configure and build Python wheels
+	@echo "  wheel [backend=?]        to configure and build Python wheels"
 	@echo "                           Default: lightning_qubit"
 	@echo "  coverage [device=?]      to generate a coverage report for python interface"
 	@echo "                           Default: lightning.qubit"
@@ -130,8 +132,8 @@ test-cpp-mpi:
 		  -DCMAKE_BUILD_TYPE=Debug \
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
+		  -DPL_BACKEND=lightning_gpu \
 		  -DENABLE_MPI=ON \
-		  -DPL_BACKEND=$(PL_BACKEND) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)

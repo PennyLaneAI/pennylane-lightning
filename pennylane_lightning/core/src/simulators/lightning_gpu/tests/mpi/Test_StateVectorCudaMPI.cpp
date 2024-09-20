@@ -59,17 +59,16 @@ TEMPLATE_TEST_CASE("cuStateVec_helper::compute_local_index",
     const std::size_t local_num_qubits = 4;
 
     SECTION("compute_local_index, index inside the current qubits set") {
-        const std::size_t index = 2; //0b00010
+        const std::size_t index = 2; // 0b00010
         std::size_t local_index = compute_local_index(index, local_num_qubits);
         REQUIRE(local_index == index);
     }
 
     SECTION("compute_local_index, index outside the current qubits set") {
-        const std::size_t index = 16; //0b10000
+        const std::size_t index = 16; // 0b10000
         std::size_t local_index = compute_local_index(index, local_num_qubits);
         REQUIRE(local_index == 0);
     }
-
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",

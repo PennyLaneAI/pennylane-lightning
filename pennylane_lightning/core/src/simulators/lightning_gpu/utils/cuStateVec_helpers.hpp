@@ -104,7 +104,7 @@ inline SharedCusvHandle make_shared_cusv_handle() {
 
 /**
  * @brief Compute the local index from a given index in multi-gpu workflow
- * 
+ *
  * @param index Global index of the target element.
  * @param num_qubits Number of wires within the local devices.
  */
