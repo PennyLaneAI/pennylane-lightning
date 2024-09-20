@@ -115,3 +115,17 @@ class LightningKokkosMeasurements(
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
+
+    def _sparse_hamiltonian_measurements(self, measurementprocess: MeasurementProcess):
+        """Compute the sparse hamiltonian measurement"""
+        # ensuring CSR sparse representation.
+        CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+            wire_order=list(range(self._qubit_state.num_wires))
+        ).tocsr(copy=False)
+        
+        return self._measurement_lightning.expval(
+            CSR_SparseHamiltonian.indptr,
+            CSR_SparseHamiltonian.indices,
+            CSR_SparseHamiltonian.data,
+        )
+

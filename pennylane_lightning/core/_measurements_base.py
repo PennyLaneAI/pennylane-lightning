@@ -95,6 +95,10 @@ class LightningBaseMeasurements(ABC):
         self._qubit_state.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
         return result
 
+    @abstractmethod
+    def _sparse_hamiltonian_measurements(self, measurementprocess: MeasurementProcess):
+        """Compute the sparse hamiltonian measurement"""
+
     # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
         """Expectation value of the supplied observable contained in the MeasurementProcess.
@@ -108,27 +112,28 @@ class LightningBaseMeasurements(ABC):
 
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
             # ensuring CSR sparse representation.
-            if self._use_mpi:
-                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
-                # host(cpu) memory requirements
-                obs = qml.Identity(0)
-                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
-                # CSR_SparseHamiltonian for rank == 0
-                if self._mpi_handler.mpi_manager.getRank() == 0:
-                    CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
-                        wire_order=list(range(self._qubit_state.num_wires))
-                    ).tocsr(copy=False)
+            # if self._use_mpi:
+            #     # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+            #     # host(cpu) memory requirements
+            #     obs = qml.Identity(0)
+            #     Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
+            #     H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
+            #     CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+            #     # CSR_SparseHamiltonian for rank == 0
+            #     if self._mpi_handler.mpi_manager.getRank() == 0:
+            #         CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+            #             wire_order=list(range(self._qubit_state.num_wires))
+            #         ).tocsr(copy=False)
 
-            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
-                wire_order=list(range(self._qubit_state.num_wires))
-            ).tocsr(copy=False)
-            return self._measurement_lightning.expval(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
-            )
+            # CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+            #     wire_order=list(range(self._qubit_state.num_wires))
+            # ).tocsr(copy=False)
+            # return self._measurement_lightning.expval(
+            #     CSR_SparseHamiltonian.indptr,
+            #     CSR_SparseHamiltonian.indices,
+            #     CSR_SparseHamiltonian.data,
+            # )
+            return self._sparse_hamiltonian_measurements(measurementprocess)
 
         if (
             isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))

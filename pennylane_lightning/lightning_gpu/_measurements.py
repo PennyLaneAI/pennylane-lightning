@@ -34,7 +34,7 @@ except ImportError as ex:
 
     pass
 
-from typing import Any, List
+from typing import Any, List, Optional
 
 import numpy as np
 import pennylane as qml
@@ -61,12 +61,16 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
     def __init__(
         self,
         lgpu_state,
-        use_mpi=False,
+        use_mpi: Optional[bool] = False,
+        mpi_handler: Optional[MPIHandler] = None
     ) -> TensorLike:
 
         super().__init__(lgpu_state)
 
         self._use_mpi = use_mpi
+        
+        if use_mpi:
+            self._mpi_handler = mpi_handler
 
         self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
 
@@ -136,6 +140,31 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
+        )
+
+    def _sparse_hamiltonian_measurements(self, measurementprocess: MeasurementProcess):
+        """Compute the sparse hamiltonian measurement"""
+        # ensuring CSR sparse representation.
+        if self._use_mpi:
+            # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+            # host(cpu) memory requirements
+            obs = qml.Identity(0)
+            Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
+            H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
+            CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+            # CSR_SparseHamiltonian for rank == 0
+            if self._mpi_handler.mpi_manager.getRank() == 0:
+                CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+                    wire_order=list(range(self._qubit_state.num_wires))
+                ).tocsr(copy=False)
+
+        CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+            wire_order=list(range(self._qubit_state.num_wires))
+        ).tocsr(copy=False)
+        return self._measurement_lightning.expval(
+            CSR_SparseHamiltonian.indptr,
+            CSR_SparseHamiltonian.indices,
+            CSR_SparseHamiltonian.data,
         )
 
     def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:

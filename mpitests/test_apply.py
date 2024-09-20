@@ -417,8 +417,6 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
         local_state_vector = np.zeros(1 << num_local_wires).astype(C_DTYPE)
         comm.Scatter(state_vector, local_state_vector, root=0)
 
-        dev_gpu = qml.device("lightning.gpu", wires=3, mpi=False, c_dtype=C_DTYPE)
-        dev_mpi = qml.device("lightning.gpu", wires=3, mpi=True, c_dtype=C_DTYPE)
         
         H_sparse = qml.SparseHamiltonian(Hmat, wires=range(3))
 
@@ -426,10 +424,12 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
             qml.StatePrep(state_vector, wires=range(3))
             return qml.expval(H_sparse)
 
+        dev_gpu = qml.device("lightning.gpu", wires=3, mpi=False, c_dtype=C_DTYPE)
         gpu_qnode = qml.QNode(circuit, dev_gpu)
         expected_output_gpu = gpu_qnode()
         comm.Bcast(np.array(expected_output_gpu), root=0)
 
+        dev_mpi = qml.device("lightning.gpu", wires=3, mpi=True, c_dtype=C_DTYPE)
         mpi_qnode = qml.QNode(circuit, dev_mpi)
         expected_output_mpi = mpi_qnode()
 
