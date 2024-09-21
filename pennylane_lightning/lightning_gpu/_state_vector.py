@@ -36,7 +36,7 @@ from itertools import product
 
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError
+from pennylane import DeviceError, math
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
@@ -108,7 +108,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             self._qubit_state = self._state_dtype()(self.num_wires)
 
         use_async = False
-        self._qubit_state.setBasisStateZero(use_async)
+        self.reset_state(use_async)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -189,15 +189,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         return arr
 
-    def _create_basis_state(self, index, use_async=False):
-        """Creates a computational basis state consisting of 0s and 1s, over all wires on device.
-        Args:
-            index (int): integer representing the computational basis state.
-            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
-            Note: This function only supports synchronized memory copy.
-        """
-        self._qubit_state.setBasisState(index, use_async)
-
     def _apply_state_vector(self, state, device_wires, use_async=False):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
@@ -228,7 +219,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             if self.num_wires == self._num_local_wires:
                 self.syncH2D(np.reshape(state, output_shape))
                 return
-            local_state = np.zeros(1 << self._num_local_wires, dtype=self.C_DTYPE)
+            local_state = np.zeros(1 << self._num_local_wires, dtype=self._dtype)
             self._mpi_handler.mpi_manager.Scatter(state, local_state, 0)
             self.syncH2D(np.reshape(local_state, output_shape))
             return

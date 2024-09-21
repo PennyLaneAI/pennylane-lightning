@@ -57,7 +57,7 @@ class MPIHandler:
     ) -> None:
 
         self.use_mpi = mpi
-        self.mpi_but_size = mpi_buf_size
+        self.mpi_buf_size = mpi_buf_size
         self._dp = dev_pool
 
         if self.use_mpi:
@@ -66,7 +66,7 @@ class MPIHandler:
                 raise ImportError("MPI related APIs are not found.")
 
             if mpi_buf_size < 0:
-                raise TypeError(f"Unsupported mpi_buf_size value: {mpi_buf_size}, should be >= 0")
+                raise ValueError(f"Unsupported mpi_buf_size value: {mpi_buf_size}, should be >= 0")
 
             if mpi_buf_size > 0 and (mpi_buf_size & (mpi_buf_size - 1)):
                 raise ValueError(
@@ -77,7 +77,7 @@ class MPIHandler:
             self.mpi_manager, self.devtag = self._mpi_init_helper(num_wires)
 
             # set the number of global and local wires
-            commSize = self._mpi_manager.getSize()
+            commSize = self.mpi_manager.getSize()
             self.num_global_wires = commSize.bit_length() - 1
             self.num_local_wires = num_wires - self.num_global_wires
 
@@ -94,7 +94,7 @@ class MPIHandler:
         # Memory size in bytes
         sv_memsize = np.dtype(c_dtype).itemsize * (1 << self.num_local_wires)
         if self._mebibytesToBytes(mpi_buf_size) > sv_memsize:
-            raise ValueError("The MPI buffer size is larger than the local state vector size.")
+            raise RuntimeError("The MPI buffer size is larger than the local state vector size.")
 
     def _mpi_init_helper(self, num_wires):
         """Set up MPI checks and initializations."""

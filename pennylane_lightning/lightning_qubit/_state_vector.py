@@ -24,6 +24,8 @@ try:
 except ImportError:
     pass
 
+from typing import Optional
+
 import numpy as np
 import pennylane as qml
 from pennylane.measurements import MidMeasureMP

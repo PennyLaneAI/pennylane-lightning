@@ -35,9 +35,11 @@ help:
 	@echo "  test-cpp [verbose=1]     to run the C++ test suite (requires CMake)"
 	@echo "                           use with 'verbose=1' for building with verbose flag"
 	@echo "  test-cpp [target=?]      to run a specific C++ test target (requires CMake)."
+	@echo "  test-cpp-mpi [backend=?] to run the C++ test suite with MPI (requires CMake and MPI)"
+	@echo "                           Default: lightning_gpu"
 	@echo "  test-python [device=?]   to run the Python test suite"
 	@echo "                           Default: lightning.qubit"
-	@echo "  wheel [backend=?]        to configure and build Python wheels
+	@echo "  wheel [backend=?]        to configure and build Python wheels"
 	@echo "                           Default: lightning_qubit"
 	@echo "  coverage [device=?]      to generate a coverage report for python interface"
 	@echo "                           Default: lightning.qubit"
@@ -98,7 +100,7 @@ coverage-cpp:
 	lcov --directory . -b ../pennylane_lightning/core/src/ --capture --output-file coverage.info; \
 	genhtml coverage.info --output-directory out
 
-.PHONY: test-python test-builtin test-suite test-cpp
+.PHONY: test-python test-builtin test-suite test-cpp test-cpp-mpi
 test-python: test-builtin test-suite
 
 test-builtin:
@@ -123,6 +125,27 @@ else
 	cmake --build ./BuildTests $(VERBOSE)
 	cmake --build ./BuildTests $(VERBOSE) --target test
 endif
+
+test-cpp-mpi:
+	rm -rf ./BuildTests
+	cmake -BBuildTests -G Ninja \
+		  -DCMAKE_BUILD_TYPE=Debug \
+		  -DBUILD_TESTS=ON \
+		  -DENABLE_WARNINGS=ON \
+		  -DPL_BACKEND=lightning_gpu \
+		  -DENABLE_MPI=ON \
+		  $(OPTIONS)
+ifdef target
+	cmake --build ./BuildTests $(VERBOSE) --target $(target)
+	mpi -np 2 ./BuildTests/$(target)
+else
+	cmake --build ./BuildTests $(VERBOSE)
+	for file in ./BuildTests/*_test_runner_mpi; do \
+		echo "Running $$file"; \
+		mpirun -np 2 $$file ; \
+	done
+endif
+
 
 .PHONY: format format-cpp format-python
 format: format-cpp format-python

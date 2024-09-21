@@ -461,7 +461,7 @@ class LightningGPU(LightningBase):
         results = []
         for circuit in circuits:
             if self._wire_map is not None:
-                circuit, _ = qml.map_wires(circuit, self._wire_map)
+                [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
                     circuit,
@@ -489,10 +489,12 @@ class LightningGPU(LightningBase):
             Bool: Whether or not a derivative can be calculated provided the given information
 
         """
-        if circuit is None or (execution_config is None and circuit is None):
+        if execution_config is None and circuit is None:
             return True
         if execution_config.gradient_method not in {"adjoint", "best"}:
             return False
+        if circuit is None:
+            return True
         return _supports_adjoint(circuit=circuit)
 
     def simulate(
@@ -520,4 +522,6 @@ class LightningGPU(LightningBase):
 
         state.reset_state(sync=False)
         final_state = state.get_final_state(circuit)
-        return LightningGPUMeasurements(final_state).measure_final_state(circuit)
+        return LightningGPUMeasurements(final_state, self._mpi_handler.use_mpi).measure_final_state(
+            circuit
+        )
