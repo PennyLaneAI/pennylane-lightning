@@ -196,7 +196,7 @@ jobs:
           git status
 
       - name: Patching tests following deprecation FIXME(remove after v0.39)
-        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'stable'
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
         run: |
           pushd tests
           grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
