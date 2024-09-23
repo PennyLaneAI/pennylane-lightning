@@ -200,7 +200,7 @@ jobs:
         run: |
           pushd tests
           grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
-          cd ..
+          popd
 
       - name: Run PennyLane-Lightning unit tests
         run: |
