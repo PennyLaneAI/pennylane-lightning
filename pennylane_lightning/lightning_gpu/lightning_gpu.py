@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
 from warnings import warn
 
+from numbers import Number
+
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
@@ -42,7 +44,7 @@ from pennylane.devices.preprocess import (
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
 from pennylane.ops import Prod, SProd, Sum
-from pennylane.tape import QuantumScript
+from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
@@ -522,6 +524,231 @@ class LightningGPU(LightningBase):
 
         state.reset_state(sync=False)
         final_state = state.get_final_state(circuit)
-        return LightningGPUMeasurements(final_state, self._mpi_handler.use_mpi).measure_final_state(
+        return LightningGPUMeasurements(final_state, self._mpi_handler.use_mpi,self._mpi_handler).measure_final_state(
             circuit
         )
+
+
+    def jacobian(
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ):
+        """Compute the Jacobian for a single quantum script.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. Default is False.
+            wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+        Returns:
+            TensorLike: The Jacobian of the quantum script
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        state.reset_state(self._sync)
+        final_state = state.get_final_state(circuit)
+        return self.LightningAdjointJacobian(final_state, batch_obs, self._mpi_handler.use_mpi,self._mpi_handler).calculate_jacobian(
+            circuit
+        )
+
+    def simulate_and_jacobian(
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ) -> Tuple:
+        """Simulate a single quantum script and compute its Jacobian.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. Default is False.
+            wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        res = self.simulate(circuit, state)
+        jac = self.LightningAdjointJacobian(state, batch_obs, self._mpi_handler.use_mpi,self._mpi_handler).calculate_jacobian(circuit)
+        return res, jac
+
+    def vjp(  # pylint: disable=too-many-arguments
+        self,
+        circuit: QuantumTape,
+        cotangents: Tuple[Number],
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ):
+        """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
+                have shape matching the output shape of the corresponding circuit. If
+                the circuit has a single output, ``cotangents`` may be a single number,
+                not an iterable of numbers.
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the VJP.
+            wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+        Returns:
+            TensorLike: The VJP of the quantum script
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        state.reset_state(self._sync)
+        final_state = state.get_final_state(circuit)
+        return self.LightningAdjointJacobian(final_state, batch_obs,self._mpi_handler.use_mpi,self._mpi_handler).calculate_vjp(
+            circuit, cotangents
+        )
+
+    def simulate_and_vjp(  # pylint: disable=too-many-arguments
+        self,
+        circuit: QuantumTape,
+        cotangents: Tuple[Number],
+        state,
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ) -> Tuple:
+        """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
+                have shape matching the output shape of the corresponding circuit. If
+                the circuit has a single output, ``cotangents`` may be a single number,
+                not an iterable of numbers.
+            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian.
+            wire_map (Optional[dict]): a map from wire labels to simulation indices
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation and the calculated VJP
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        res = self.simulate(circuit, state)
+        _vjp = self.LightningAdjointJacobian(state, batch_obs,self._mpi_handler.use_mpi,self._mpi_handler).calculate_vjp(
+            circuit, cotangents
+        )
+        return res, _vjp
+
+    def compute_derivatives(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ):
+        """Calculate the jacobian of either a single or a batch of circuits on the device.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+
+        Returns:
+            Tuple: The jacobian for each trainable parameter
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+
+        return tuple(
+            self.jacobian(circuit, self._statevector, batch_obs, wire_map=self._wire_map)
+            for circuit in circuits
+        )
+
+    def execute_and_compute_derivatives(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Tuple:
+        """Compute the results and jacobians of circuits at the same time.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+
+        Returns:
+            Tuple: A numeric result of the computation and the gradient.
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        results = tuple(
+            self.simulate_and_jacobian(
+                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
+            for c in circuits
+        )
+        return tuple(zip(*results))
+
+    def compute_vjp(
+        self,
+        circuits: QuantumTape_or_Batch,
+        cotangents: Tuple[Number],
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Tuple:
+        r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
+        adjoint differentiation method to compute the VJP.
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
+                corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
+                of numbers.
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+        Returns:
+            tensor-like: A numeric result of computing the vector jacobian product
+        **Definition of vjp:**
+        If we have a function with jacobian:
+        .. math::
+            \vec{y} = f(\vec{x}) \qquad J_{i,j} = \frac{\partial y_i}{\partial x_j}
+        The vector jacobian product is the inner product of the derivatives of the output ``y`` with the
+        Jacobian matrix. The derivatives of the output vector are sometimes called the **cotangents**.
+        .. math::
+            \text{d}x_i = \Sigma_{i} \text{d}y_i J_{i,j}
+        **Shape of cotangents:**
+        The value provided to ``cotangents`` should match the output of :meth:`~.execute`. For computing the full Jacobian,
+        the cotangents can be batched to vectorize the computation. In this case, the cotangents can have the following
+        shapes. ``batch_size`` below refers to the number of entries in the Jacobian:
+        * For a state measurement, the cotangents must have shape ``(batch_size, 2 ** n_wires)``
+        * For ``n`` expectation values, the cotangents must have shape ``(n, batch_size)``. If ``n = 1``,
+          then the shape must be ``(batch_size,)``.
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        return tuple(
+            self.vjp(circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            for circuit, cots in zip(circuits, cotangents)
+        )
+
+    def execute_and_compute_vjp(
+        self,
+        circuits: QuantumTape_or_Batch,
+        cotangents: Tuple[Number],
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Tuple:
+        """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits to be executed
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
+                corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
+                of numbers.
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+        Returns:
+            Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        results = tuple(
+            self.simulate_and_vjp(
+                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+            )
+            for circuit, cots in zip(circuits, cotangents)
+        )
+        return tuple(zip(*results))

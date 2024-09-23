@@ -56,6 +56,7 @@ class LightningBaseMeasurements(ABC):
     ) -> None:
         self._qubit_state = qubit_state
 
+        self._use_mpi = False
         # Dummy for the C++ bindings
         self._measurement_lightning = None
 
@@ -189,7 +190,7 @@ class LightningBaseMeasurements(ABC):
             or isinstance(measurementprocess.obs.name, List)
         ):
             ob_serialized = QuantumScriptSerializer(
-                self._qubit_state.device_name, self.dtype == np.complex64
+                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._ob(measurementprocess.obs)
             return self._measurement_lightning.var(ob_serialized)
 

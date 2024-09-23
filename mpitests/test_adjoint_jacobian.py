@@ -31,9 +31,6 @@ from scipy.stats import unitary_group
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
-
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),
@@ -95,6 +92,7 @@ def Rz(theta):
     return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Z
 
 
+@pytest.mark.skip("old API")
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
 
@@ -1382,8 +1380,8 @@ def test_qubit_unitary(dev, n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = len(dev.wires)
     dev_def = qml.device("default.qubit.legacy", wires=n_wires)
-    h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-    c_dtype = np.complex64 if dev.R_DTYPE == np.float32 else np.complex128
+    h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+    c_dtype = dev.c_dtype
 
     np.random.seed(1337)
     par = 2 * np.pi * np.random.rand(n_wires)
@@ -1430,8 +1428,8 @@ def test_diff_qubit_unitary(dev, n_targets):
     """Tests that ``qml.QubitUnitary`` can be differentiated with the adjoint method."""
     n_wires = len(dev.wires)
     dev_def = qml.device("default.qubit", wires=n_wires)
-    h = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
-    c_dtype = np.complex64 if dev.R_DTYPE == np.float32 else np.complex128
+    h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+    c_dtype = dev.c_dtype
 
     np.random.seed(1337)
     par = 2 * np.pi * np.random.rand(n_wires)

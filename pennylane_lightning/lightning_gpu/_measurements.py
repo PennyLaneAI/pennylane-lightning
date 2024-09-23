@@ -40,6 +40,9 @@ import numpy as np
 import pennylane as qml
 from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
+from pennylane.tape import QuantumScript
+
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 
@@ -62,11 +65,17 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         self,
         lgpu_state,
         use_mpi=False,
+        mpi_handler=None,
     ) -> TensorLike:
 
         super().__init__(lgpu_state)
 
         self._use_mpi = use_mpi
+
+        if use_mpi:
+            self._mpi_handler = mpi_handler
+            self._num_local_wires = mpi_handler.num_local_wires
+            
 
         self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
 
@@ -137,6 +146,81 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         return (
             tuple(zip(*processed_samples)) if shots.has_partitioned_shots else processed_samples[0]
         )
+
+    def expval(self, measurementprocess: MeasurementProcess):
+        """Expectation value of the supplied observable contained in the MeasurementProcess.
+
+        Args:
+            measurementprocess (StateMeasurement): measurement to apply to the state
+
+        Returns:
+            Expectation value of the observable
+        """
+
+        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
+            # ensuring CSR sparse representation.
+            # CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+            #     wire_order=list(range(self._qubit_state.num_wires))
+            # ).tocsr(copy=False)
+            # return self._measurement_lightning.expval(
+            #     CSR_SparseHamiltonian.indptr,
+            #     CSR_SparseHamiltonian.indices,
+            #     CSR_SparseHamiltonian.data,
+            # )
+            
+            if self._use_mpi:
+                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
+                # host(cpu) memory requirements
+                obs = qml.Identity(0)
+                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
+                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
+                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+                # CSR_SparseHamiltonian for rank == 0
+                if self._mpi_handler.mpi_manager.getRank() == 0:
+                    CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
+            else:
+                CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
+
+            return self._measurement_lightning.expval(
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
+            )
+
+        # use specialized functors to compute expval(Hermitian)
+        if isinstance(measurementprocess.obs, qml.Hermitian):
+            observable_wires = measurementprocess.obs.wires
+            if self._use_mpi and len(observable_wires) > self._num_local_wires:
+                raise RuntimeError(
+                    "MPI backend does not support Hermitian with number of target wires larger than local wire number."
+                )
+            matrix = measurementprocess.obs.matrix()
+            return self._measurement_lightning.expval(matrix, observable_wires)
+
+        # if (
+        #     isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
+        #     or (measurementprocess.obs.arithmetic_depth > 0)
+        #     or isinstance(measurementprocess.obs.name, List)
+        # ):
+        #     ob_serialized = QuantumScriptSerializer(
+        #         self._qubit_state.device_name, self.dtype == np.complex64
+        #     )._ob(measurementprocess.obs)
+        #     return self._measurement_lightning.expval(ob_serialized)
+
+        if (
+            isinstance(measurementprocess.obs, qml.ops.Hamiltonian)
+            or (measurementprocess.obs.arithmetic_depth > 0)
+            or isinstance(measurementprocess.obs.name, List)
+        ):
+            ob_serialized = QuantumScriptSerializer(
+                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
+            )._ob(measurementprocess.obs)
+            return self._measurement_lightning.expval(ob_serialized)
+
+        return self._measurement_lightning.expval(
+            measurementprocess.obs.name, measurementprocess.obs.wires
+        )
+
 
     def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
         """Convert the data structure from the C++ backend to a common structure through lightning devices.

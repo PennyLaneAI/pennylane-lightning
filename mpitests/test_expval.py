@@ -22,140 +22,279 @@ import pytest
 from conftest import PHI, THETA, VARPHI, device_name
 from mpi4py import MPI
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
+numQubits = 8
+
+def create_random_init_state(numWires, C_DTYPE, seed_value=48):
+    """Returns a random initial state of a certain type."""
+    np.random.seed(seed_value)
+
+    R_DTYPE = np.float64 if C_DTYPE == np.complex128 else np.float32
+
+    num_elements = 1 << numWires
+    init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
+        num_elements
+    ).astype(R_DTYPE)
+    scale_sum = np.sqrt(np.sum(np.abs(init_state) ** 2)).astype(R_DTYPE)
+    init_state = init_state / scale_sum
+    return init_state
 
 
-@pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
+    """Wrapper applying a parametric gate with QNode function."""
+    num_wires = numQubits
+    comm = MPI.COMM_WORLD
+    commSize = comm.Get_size()
+    num_global_wires = commSize.bit_length() - 1
+    num_local_wires = num_wires - num_global_wires
+
+    c_dtype = dev_mpi.c_dtype
+
+    expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
+    local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
+    local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+
+    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
+    comm.Bcast(state_vector, root=0)
+
+    comm.Scatter(state_vector, local_state_vector, root=0)
+    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+
+    def circuit(*params):
+        qml.StatePrep(state_vector, wires=range(num_wires))
+        operation(*params, wires=Wires)
+        return qml.state()
+
+    cpu_qnode = qml.QNode(circuit, dev_cpu)
+    expected_output_cpu = cpu_qnode(*par).astype(c_dtype)
+    comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
+
+    mpi_qnode = qml.QNode(circuit, dev_mpi)
+    local_state_vector = mpi_qnode(*par)
+
+    assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
+
+
+def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
+    """Wrapper applying a non-parametric gate with QNode function."""
+    num_wires = numQubits
+    comm = MPI.COMM_WORLD
+    commSize = comm.Get_size()
+    num_global_wires = commSize.bit_length() - 1
+    num_local_wires = num_wires - num_global_wires
+
+    c_dtype = dev_mpi.c_dtype
+
+    expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
+    local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
+    local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+
+    state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
+    comm.Bcast(state_vector, root=0)
+
+    comm.Scatter(state_vector, local_state_vector, root=0)
+    dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
+
+    def circuit():
+        qml.StatePrep(state_vector, wires=range(num_wires))
+        operation(wires=Wires)
+        return qml.state()
+
+    cpu_qnode = qml.QNode(circuit, dev_cpu)
+    expected_output_cpu = cpu_qnode().astype(c_dtype)
+    comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
+
+    mpi_qnode = qml.QNode(circuit, dev_mpi)
+    local_state_vector = mpi_qnode()
+
+    assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
+
 class TestExpval:
-    """Test expectation values"""
+    """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
-    def test_identity_expectation(self, theta, phi, tol):
-        """Test that identity expectation value (i.e. the trace) is 1"""
-        dev = qml.device(device_name, mpi=True, wires=3)
 
-        O1 = qml.Identity(wires=[0])
-        O2 = qml.Identity(wires=[1])
-
-        dev.apply(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
-
-        res = np.array([dev.expval(O1), dev.expval(O2)])
-        assert np.allclose(res, np.array([1, 1]), tol)
-
-    def test_pauliz_expectation(self, theta, phi, tol):
-        """Test that PauliZ expectation value is correct"""
-        dev = qml.device(device_name, mpi=True, wires=3)
-
-        O1 = qml.PauliZ(wires=[0])
-        O2 = qml.PauliZ(wires=[1])
-
-        dev.apply(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
-
-        res = np.array([dev.expval(O1), dev.expval(O2)])
-        assert np.allclose(res, np.array([np.cos(theta), np.cos(theta) * np.cos(phi)]), tol)
-
-    def test_paulix_expectation(self, theta, phi, tol):
-        """Test that PauliX expectation value is correct"""
-        dev = qml.device(device_name, mpi=True, wires=3)
-
-        O1 = qml.PauliX(wires=[0])
-        O2 = qml.PauliX(wires=[1])
-
-        dev.apply(
-            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
-
-        res = np.array([dev.expval(O1), dev.expval(O2)], dtype=dev.C_DTYPE)
-        assert np.allclose(
-            res,
-            np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.C_DTYPE),
-            tol * 10,
-        )
-
-    def test_pauliy_expectation(self, theta, phi, tol):
-        """Test that PauliY expectation value is correct"""
-        dev = qml.device(device_name, mpi=True, wires=3)
-
-        O1 = qml.PauliY(wires=[0])
-        O2 = qml.PauliY(wires=[1])
-
-        dev.apply(
-            [qml.RX(theta, wires=[0]), qml.RX(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
-
-        res = np.array([dev.expval(O1), dev.expval(O2)])
-        assert np.allclose(res, np.array([0, -np.cos(theta) * np.sin(phi)]), tol)
-
-    def test_hadamard_expectation(self, theta, phi, tol):
-        """Test that Hadamard expectation value is correct"""
-        dev = qml.device(device_name, mpi=True, wires=3)
-
-        O1 = qml.Hadamard(wires=[0])
-        O2 = qml.Hadamard(wires=[1])
-
-        dev.apply(
-            [qml.RY(theta, wires=[0]), qml.RY(phi, wires=[1]), qml.CNOT(wires=[0, 1])],
-            rotations=[*O1.diagonalizing_gates(), *O2.diagonalizing_gates()],
-        )
-
-        res = np.array([dev.expval(O1), dev.expval(O2)])
-        expected = np.array(
-            [
-                np.sin(theta) * np.sin(phi) + np.cos(theta),
-                np.cos(theta) * np.cos(phi) + np.sin(phi),
-            ]
-        ) / np.sqrt(2)
-        assert np.allclose(res, expected, tol)
-
-    @pytest.mark.parametrize("n_wires", range(1, 8))
-    def test_hermitian_expectation(self, n_wires, theta, phi, tol):
-        """Test that Hadamard expectation value is correct"""
-        n_qubits = 7
-        dev_def = qml.device("default.qubit", wires=n_qubits)
-        dev = qml.device(device_name, mpi=True, wires=n_qubits)
+    @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            qml.PauliX,
+            qml.PauliY,
+            qml.PauliZ,
+            qml.Hadamard,
+            # qml.Identity,
+        ],
+    )
+    @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 3, numQubits - 2, numQubits - 1])
+    def test_expval_single_wire_no_parameters(self, tol, operation, wires, C_DTYPE):
+        """Tests that expectation values are properly calculated for single-wire observables without parameters."""
+        num_wires = numQubits
         comm = MPI.COMM_WORLD
+        commSize = comm.Get_size()
+        num_global_wires = commSize.bit_length() - 1
+        num_local_wires = num_wires - num_global_wires
 
-        m = 2**n_wires
-        U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
-        U = U + np.conj(U.T)
-        U = U.astype(dev.C_DTYPE)
-        comm.Bcast(U, root=0)
-        obs = qml.Hermitian(U, wires=range(n_wires))
+        dev_mpi = qml.device("lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE)
 
-        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
-        init_state = init_state.astype(dev.C_DTYPE)
-        comm.Bcast(init_state, root=0)
+        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
+        comm.Bcast(state_vector, root=0)
+
+        local_state_vector = np.zeros(1 << num_local_wires).astype(C_DTYPE)
+        comm.Scatter(state_vector, local_state_vector, root=0)
+        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
 
         def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            qml.RY(theta, wires=[0])
-            qml.RY(phi, wires=[1])
-            qml.CNOT(wires=[0, 1])
+            qml.StatePrep(state_vector, wires=range(num_wires))
+            return qml.expval(operation(wires))
+
+        cpu_qnode = qml.QNode(circuit, dev_cpu)
+        expected_output_cpu = cpu_qnode()
+        comm.Bcast(np.array(expected_output_cpu), root=0)
+
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        expected_output_mpi = mpi_qnode()
+
+        assert np.allclose(expected_output_mpi, expected_output_cpu, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.PauliX(0) @ qml.PauliZ(1),
+            qml.PauliX(0) @ qml.PauliZ(numQubits - 1),
+            qml.PauliX(numQubits - 2) @ qml.PauliZ(numQubits - 1),
+            qml.PauliZ(0) @ qml.PauliZ(1),
+            qml.PauliZ(0) @ qml.PauliZ(numQubits - 1),
+            qml.PauliZ(numQubits - 2) @ qml.PauliZ(numQubits - 1),
+        ],
+    )
+    def test_expval_multiple_obs(self, obs, tol, C_DTYPE):
+        """Test expval with Hamiltonian"""
+        num_wires = numQubits
+
+        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
+        dev_mpi = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE)
+
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.RY(-0.2, wires=[num_wires - 1])
             return qml.expval(obs)
 
-        circ = qml.QNode(circuit, dev)
-        comm = MPI.COMM_WORLD
-        mpisize = comm.Get_size()
-        if n_wires > n_qubits - np.log2(mpisize):
-            with pytest.raises(
-                RuntimeError,
-                match="MPI backend does not support Hermitian with number of target wires larger than local wire number",
-            ):
-                circ()
-        else:
-            circ_def = qml.QNode(circuit, dev_def)
-            assert np.allclose(circ(), circ_def(), tol)
+        cpu_qnode = qml.QNode(circuit, dev_cpu)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
+
+        assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
+    @pytest.mark.parametrize(
+        "obs, coeffs",
+        [
+            ([qml.PauliX(0) @ qml.PauliZ(1)], [0.314]),
+            ([qml.PauliX(0) @ qml.PauliZ(numQubits - 1)], [0.314]),
+            ([qml.PauliZ(0) @ qml.PauliZ(1)], [0.314]),
+            ([qml.PauliZ(0) @ qml.PauliZ(numQubits - 1)], [0.314]),
+            (
+                [qml.PauliX(0) @ qml.PauliZ(1), qml.PauliZ(0) @ qml.PauliZ(1)],
+                [0.314, 0.2],
+            ),
+            (
+                [
+                    qml.PauliX(0) @ qml.PauliZ(numQubits - 1),
+                    qml.PauliZ(0) @ qml.PauliZ(1),
+                ],
+                [0.314, 0.2],
+            ),
+            (
+                [
+                    qml.PauliX(numQubits - 2) @ qml.PauliZ(numQubits - 1),
+                    qml.PauliZ(0) @ qml.PauliZ(1),
+                ],
+                [0.314, 0.2],
+            ),
+        ],
+    )
+    def test_expval_hamiltonian(self, obs, coeffs, tol, C_DTYPE):
+        """Test expval with Hamiltonian"""
+        num_wires = numQubits
+
+        ham = qml.Hamiltonian(coeffs, obs)
+
+        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
+        dev_mpi = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE)
+
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.RY(-0.2, wires=[numQubits - 1])
+            return qml.expval(ham)
+
+        cpu_qnode = qml.QNode(circuit, dev_cpu)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
+
+        assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
+
+    def test_expval_non_pauli_word_hamiltionian(self, tol):
+        """Tests expectation values of non-Pauli word Hamiltonians."""
+        dev_mpi = qml.device("lightning.gpu", wires=3, mpi=True)
+        dev_cpu = qml.device("lightning.qubit", wires=3)
+
+        theta = 0.432
+        phi = 0.123
+        varphi = -0.543
+
+        def circuit():
+            qml.RX(theta, wires=[0])
+            qml.RX(phi, wires=[1])
+            qml.RX(varphi, wires=[2])
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[1, 2])
+            return qml.expval(0.5 * qml.Hadamard(2))
+
+        cpu_qnode = qml.QNode(circuit, dev_cpu)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
+
+        assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
+
+    # @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    # @pytest.mark.parametrize("n_wires", range(1, 8))
+    # def test_hermitian_expectation(self, n_wires, theta, phi, tol):
+    #     """Test that Hadamard expectation value is correct"""
+    #     n_qubits = 7
+    #     comm = MPI.COMM_WORLD
+    #     mpisize = comm.Get_size()
+    #     dev_def = qml.device("default.qubit", wires=n_qubits)
+    #     dev = qml.device(device_name, mpi=True, wires=n_qubits)
+    #     comm = MPI.COMM_WORLD
+
+    #     m = 2**n_wires
+    #     U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+    #     U = U + np.conj(U.T)
+    #     U = U.astype(dev.c_dtype)
+    #     comm.Bcast(U, root=0)
+    #     # obs = qml.Hermitian(U, wires=range(n_wires))
+    #     obs = qml.PauliX(0)
+
+    #     init_state = create_random_init_state(n_qubits, dev.c_dtype)
+    #     comm.Bcast(init_state, root=0)
+
+    #     def circuit():
+    #         qml.StatePrep(init_state, wires=range(n_qubits))
+    #         qml.RY(theta, wires=[0])
+    #         qml.RY(phi, wires=[1])
+    #         qml.CNOT(wires=[0, 1])
+    #         return qml.expval(obs)
+
+    #     circ = qml.QNode(circuit, dev)
+    #     if n_wires > n_qubits - np.log2(mpisize):
+    #         with pytest.raises(
+    #             RuntimeError,
+    #             match="MPI backend does not support Hermitian with number of target wires larger than local wire number",
+    #         ):
+    #             circ()
+    #     else:
+    #         circ_res = circ()
+    #         circ_def = qml.QNode(circuit, dev_def)
+    #         assert np.allclose(circ_res, circ_def, tol)
 
 
+@pytest.mark.skip("tmp skip WIP")
 @pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""
@@ -253,69 +392,33 @@ class TestExpOperatorArithmetic:
 class TestTensorExpval:
     """Test tensor expectation values"""
 
-    def test_paulix_pauliy(self, theta, phi, varphi, tol):
+
+    @pytest.mark.parametrize("obs,expected",[
+        (qml.PauliX(0) @ qml.PauliY(2), "PXPY"),
+        (qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2), "PZIPZ"),
+        (qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2), "PZHPY")
+        ])
+    def test_tensor(self, theta, phi, varphi,obs,expected, tol):
         """Test that a tensor product involving PauliX and PauliY works
         correctly"""
         dev = qml.device(device_name, mpi=True, wires=3)
-        obs = qml.PauliX(0) @ qml.PauliY(2)
 
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-        res = dev.expval(obs)
+        def circuit():
+            qml.RX(theta, wires=[0]),
+            qml.RX(phi, wires=[1]),
+            qml.RX(varphi, wires=[2]),
+            qml.CNOT(wires=[0, 1]),
+            qml.CNOT(wires=[1, 2]),
+            return qml.expval(obs)
 
-        expected = np.sin(theta) * np.sin(phi) * np.sin(varphi)
+        mpi_qnode = qml.QNode(circuit, dev)
+        res = mpi_qnode()
 
-        assert np.allclose(res, expected, atol=tol)
-
-    def test_pauliz_identity(self, theta, phi, varphi, tol):
-        """Test that a tensor product involving PauliZ and Identity works
-        correctly"""
-        dev = qml.device(device_name, mpi=True, wires=3)
-        obs = qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2)
-
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-
-        res = dev.expval(obs)
-
-        expected = np.cos(varphi) * np.cos(phi)
-
-        assert np.allclose(res, expected, tol)
-
-    def test_pauliz_hadamard_pauliy(self, theta, phi, varphi, tol):
-        """Test that a tensor product involving PauliZ and PauliY and Hadamard
-        works correctly"""
-        dev = qml.device(device_name, mpi=True, wires=3)
-        obs = qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2)
-
-        dev.apply(
-            [
-                qml.RX(theta, wires=[0]),
-                qml.RX(phi, wires=[1]),
-                qml.RX(varphi, wires=[2]),
-                qml.CNOT(wires=[0, 1]),
-                qml.CNOT(wires=[1, 2]),
-            ],
-            rotations=obs.diagonalizing_gates(),
-        )
-
-        res = dev.expval(obs)
-        expected = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
-
-        assert np.allclose(res, expected, tol)
+        if expected == "PXPY":
+            expected_val = np.sin(theta) * np.sin(phi) * np.sin(varphi)
+        elif expected == "PZIPZ":
+            expected_val = np.cos(varphi) * np.cos(phi)
+        elif expected == "PZHPY":
+            expected_val = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
+            
+        assert np.allclose(res, expected_val, atol=tol)

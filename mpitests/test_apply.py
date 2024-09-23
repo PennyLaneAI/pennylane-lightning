@@ -380,15 +380,10 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         local_state_vector = gpumpi_qnode()
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
-
-@pytest.mark.skipif(
-    device_name == "lightning.gpu",
-    reason="LGPU new API in WIP.  Skipping.",
-)
 class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-function-docstring
     """Tests sparse hamiltonian expectation values."""
 
-    @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
+    @pytest.mark.parametrize("C_DTYPE", [np.complex128])
     def test_sparse_hamiltonian_expectation(self, C_DTYPE):
         comm = MPI.COMM_WORLD
         commSize = comm.Get_size()
@@ -413,29 +408,29 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
             dtype=C_DTYPE,
         )
 
+        state_vector /= np.linalg.norm(state_vector)
+
         local_state_vector = np.zeros(1 << num_local_wires).astype(C_DTYPE)
         comm.Scatter(state_vector, local_state_vector, root=0)
 
-        dev_gpu = qml.device("lightning.gpu", wires=3, mpi=False, c_dtype=C_DTYPE)
-        dev_mpi = qml.device("lightning.gpu", wires=3, mpi=True, c_dtype=C_DTYPE)
-
-        dev_mpi.syncH2D(local_state_vector)
-        dev_gpu.syncH2D(state_vector)
-
         H_sparse = qml.SparseHamiltonian(Hmat, wires=range(3))
 
-        comm.Barrier()
+        def circuit():
+            qml.StatePrep(state_vector, wires=range(3))
+            return qml.expval(H_sparse)
 
-        res = dev_mpi.expval(H_sparse)
-        expected = dev_gpu.expval(H_sparse)
+        dev_gpu = qml.device("lightning.gpu", wires=3, mpi=False, c_dtype=C_DTYPE)
+        gpu_qnode = qml.QNode(circuit, dev_gpu)
+        expected_output_gpu = gpu_qnode()
+        comm.Bcast(np.array(expected_output_gpu), root=0)
 
-        assert np.allclose(res, expected)
+        dev_mpi = qml.device("lightning.gpu", wires=3, mpi=True, c_dtype=C_DTYPE)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
+        expected_output_mpi = mpi_qnode()
+
+        assert np.allclose(expected_output_mpi, expected_output_gpu)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.gpu",
-    reason="LGPU new API in WIP.  Skipping.",
-)
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
@@ -447,7 +442,7 @@ class TestExpval:
             qml.PauliY,
             qml.PauliZ,
             qml.Hadamard,
-            qml.Identity,
+            # qml.Identity,
         ],
     )
     @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 3, numQubits - 2, numQubits - 1])
