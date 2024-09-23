@@ -195,7 +195,7 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - name: Patching tests following deprecation (remove after v0.39)
+      - name: Patching tests following deprecation (FIXME: remove after v0.39)
         if: inputs.lightning-version == 'stable' && inputs.pennylane-version != 'stable'
         run: |
           cd tests
