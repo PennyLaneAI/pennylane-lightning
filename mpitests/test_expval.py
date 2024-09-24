@@ -24,6 +24,7 @@ from mpi4py import MPI
 
 numQubits = 8
 
+
 def create_random_init_state(numWires, C_DTYPE, seed_value=48):
     """Returns a random initial state of a certain type."""
     np.random.seed(seed_value)
@@ -108,9 +109,9 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
 
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
+
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
-
 
     @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
     @pytest.mark.parametrize(
@@ -389,13 +390,15 @@ class TestExpOperatorArithmetic:
 class TestTensorExpval:
     """Test tensor expectation values"""
 
-
-    @pytest.mark.parametrize("obs,expected",[
-        (qml.PauliX(0) @ qml.PauliY(2), "PXPY"),
-        (qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2), "PZIPZ"),
-        (qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2), "PZHPY")
-        ])
-    def test_tensor(self, theta, phi, varphi,obs,expected, tol):
+    @pytest.mark.parametrize(
+        "obs,expected",
+        [
+            (qml.PauliX(0) @ qml.PauliY(2), "PXPY"),
+            (qml.PauliZ(0) @ qml.Identity(1) @ qml.PauliZ(2), "PZIPZ"),
+            (qml.PauliZ(0) @ qml.Hadamard(1) @ qml.PauliY(2), "PZHPY"),
+        ],
+    )
+    def test_tensor(self, theta, phi, varphi, obs, expected, tol):
         """Test that a tensor product involving PauliX and PauliY works
         correctly"""
         dev = qml.device(device_name, mpi=True, wires=3)
@@ -416,6 +419,8 @@ class TestTensorExpval:
         elif expected == "PZIPZ":
             expected_val = np.cos(varphi) * np.cos(phi)
         elif expected == "PZHPY":
-            expected_val = -(np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)) / np.sqrt(2)
-            
+            expected_val = -(
+                np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)
+            ) / np.sqrt(2)
+
         assert np.allclose(res, expected_val, atol=tol)

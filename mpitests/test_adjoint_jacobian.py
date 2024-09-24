@@ -26,12 +26,12 @@ from mpi4py import MPI
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qnode
+from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
+from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-from pennylane.tape import QuantumScript
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
-
 import pennylane_lightning
+
 if hasattr(pennylane_lightning, "lightning_gpu_ops"):
     import pennylane_lightning.lightning_gpu_ops as lightning_ops
     from pennylane_lightning.lightning_gpu_ops import LightningException
@@ -120,7 +120,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             jac = device.compute_derivatives(qscript, config)
         return transf_fn(results), jac
 
-
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_not_expval(self, dev, batch_obs):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -133,7 +132,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
             _ = dev.compute_derivatives(qs, config)
-            
+
         qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
 
         with pytest.raises(
@@ -143,14 +142,18 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             _ = dev.compute_derivatives(qs, config)
 
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_finite_shots_warns(self,dev, batch_obs):
+    def test_finite_shots_warns(self, dev, batch_obs):
         """Tests warning raised when finite shots specified"""
 
-        qs = QuantumScript([qml.RX(1.23, 0)], [qml.expval(qml.Z(0))], shots=10, trainable_params=[0])
+        qs = QuantumScript(
+            [qml.RX(1.23, 0)], [qml.expval(qml.Z(0))], shots=10, trainable_params=[0]
+        )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
-        with pytest.raises(qml.QuantumFunctionError, 
-                           match="Requested adjoint differentiation to be computed with finite shots."):
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="Requested adjoint differentiation to be computed with finite shots.",
+        ):
             _ = dev.compute_derivatives(qs, config)
 
     def test_empty_measurements(self, dev):
@@ -163,10 +166,10 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.RX(0.4, wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        qnode = QNode(circuit, dev, diff_method='adjoint')     
-        
+        qnode = QNode(circuit, dev, diff_method="adjoint")
+
         jac = qml.grad(qnode)()
-        
+
         assert len(jac) == 0
 
     @pytest.mark.parametrize("batch_obs", [True, False])
@@ -178,7 +181,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         qs = QuantumScript(
             [qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])],
             [qml.expval(qml.PauliZ(0))],
-            trainable_params=[0]
+            trainable_params=[0],
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
@@ -186,19 +189,19 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             LightningException,
             match="The operation is not supported using the adjoint differentiation method",
         ):
-            _ = dev.compute_derivatives(qs, config)        
+            _ = dev.compute_derivatives(qs, config)
 
     @pytest.mark.skip("WIP: Need a deep review if LGPU accept Projector")
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_proj_unsupported(self,batch_obs, dev):
+    def test_proj_unsupported(self, batch_obs, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
 
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
-        qs = QuantumScript(            
+        qs = QuantumScript(
             [qml.CRX(0.1, wires=[0, 1])],
             [qml.expval(qml.Projector([0, 1], wires=[0, 1]))],
-            trainable_params=[0]
+            trainable_params=[0],
         )
 
         with pytest.raises(
@@ -207,10 +210,10 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         ):
             _ = dev.compute_derivatives(qs, config)
 
-        qs = QuantumScript(            
+        qs = QuantumScript(
             [qml.CRX(0.1, wires=[0, 1])],
             [qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(0))],
-            trainable_params=[0]
+            trainable_params=[0],
         )
 
         with pytest.raises(
@@ -223,16 +226,16 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_pauli_rotation_gradient(self, stateprep, G, theta,batch_obs, dev):
+    def test_pauli_rotation_gradient(self, stateprep, G, theta, batch_obs, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
         random_state = np.array(
             [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
         )
 
         qs = QuantumScript(
-            [stateprep(random_state, 0), G(theta, 0)], 
+            [stateprep(random_state, 0), G(theta, 0)],
             [qml.expval(qml.PauliZ(0))],
-            trainable_params=[1]
+            trainable_params=[1],
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
@@ -248,7 +251,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_Rot_gradient(self, stateprep, theta,batch_obs, dev):
+    def test_Rot_gradient(self, stateprep, theta, batch_obs, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
@@ -256,10 +259,10 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         qs = QuantumScript(
             [
                 stateprep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0),
-                qml.Rot(*params, wires=[0])
+                qml.Rot(*params, wires=[0]),
             ],
             [qml.expval(qml.PauliZ(0))],
-            trainable_params = [1, 2, 3]
+            trainable_params=[1, 2, 3],
         )
 
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
@@ -267,7 +270,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         calculated_val = dev.compute_derivatives(qs, config)
 
         tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        
+
         # compare to finite differences
         tapes, fn = qml.gradients.param_shift(qs)
         numeric_val = fn(qml.execute(tapes, dev, None))
@@ -277,10 +280,8 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_ry_gradient(self, par, tol, batch_obs, dev):
         """Test that the gradient of the RY gate matches the exact analytic formula."""
-        qs = QuantumScript(        
-            [qml.RY(par, wires=[0])],
-            [qml.expval(qml.PauliX(0))],
-            trainable_params = [0]
+        qs = QuantumScript(
+            [qml.RY(par, wires=[0])], [qml.expval(qml.PauliX(0))], trainable_params=[0]
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
@@ -296,14 +297,9 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """Test that the gradient of the RX gate matches the known formula."""
         a = 0.7418
 
-        qs = QuantumScript(                
-            [qml.RX(a, wires=0)],
-            [qml.expval(qml.PauliZ(0))],
-            trainable_params = [0]
-        )
-        
-        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
+        qs = QuantumScript([qml.RX(a, wires=0)], [qml.expval(qml.PauliZ(0))], trainable_params=[0])
 
+        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         # circuit jacobians
         dev_jacobian = dev.compute_derivatives(qs, config)
@@ -311,33 +307,28 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
     @staticmethod
-    def process_and_execute_multiple_rx(dev,params,obs,batch_obs):
-        qs = QuantumScript(                        
-            [
-            qml.RX(params[0], wires=0),
-            qml.RX(params[1], wires=1),
-            qml.RX(params[2], wires=2)
-            ],
+    def process_and_execute_multiple_rx(dev, params, obs, batch_obs):
+        qs = QuantumScript(
+            [qml.RX(params[0], wires=0), qml.RX(params[1], wires=1), qml.RX(params[2], wires=2)],
             obs,
-            trainable_params = [0,1,2]
+            trainable_params=[0, 1, 2],
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         # circuit jacobians
         dev_jacobian = dev.compute_derivatives(qs, config)
-        
+
         return dev_jacobian
 
-        
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_multiple_rx_gradient_pauliz(self, tol, batch_obs, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        obs =    [qml.expval(qml.PauliZ(idx)) for idx in range(3)]
-        
+        obs = [qml.expval(qml.PauliZ(idx)) for idx in range(3)]
+
         # circuit jacobians
-        dev_jacobian = self.process_and_execute_multiple_rx(dev,params,obs,batch_obs)
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
         expected_jacobian = -np.diag(np.sin(params))
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
@@ -348,11 +339,11 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """
 
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
-        
+
         obs = [qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)]
 
         # circuit jacobians
-        dev_jacobian = self.process_and_execute_multiple_rx(dev,params,obs,batch_obs)
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
         expected_jacobian = -np.diag(np.sin(params))
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
@@ -364,14 +355,16 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        obs =    [qml.expval(
+        obs = [
+            qml.expval(
                 qml.Hermitian(
                     [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
                     wires=[0, 2],
                 )
-            )]
+            )
+        ]
 
-        dev_jacobian = self.process_and_execute_multiple_rx(dev,params,obs,batch_obs)
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
         expected_jacobian = np.array(
             [
                 -np.sin(params[0]) * np.cos(params[2]),
@@ -389,20 +382,24 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        obs= [qml.expval(qml.Hamiltonian(
-            [1.0, 0.3, 0.3, 0.4],
-            [
-                qml.PauliX(0) @ qml.PauliX(1),
-                qml.PauliZ(0),
-                qml.PauliZ(1),
-                qml.Hermitian(
-                    [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
-                    wires=[0, 2],
-                ),
-            ],
-        ))]
+        obs = [
+            qml.expval(
+                qml.Hamiltonian(
+                    [1.0, 0.3, 0.3, 0.4],
+                    [
+                        qml.PauliX(0) @ qml.PauliX(1),
+                        qml.PauliZ(0),
+                        qml.PauliZ(1),
+                        qml.Hermitian(
+                            [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
+                            wires=[0, 2],
+                        ),
+                    ],
+                )
+            )
+        ]
 
-        dev_jacobian = self.process_and_execute_multiple_rx(dev,params,obs,batch_obs)        
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
         expected_jacobian = (
             0.3 * np.array([-np.sin(params[0]), 0, 0])
             + 0.3 * np.array([0, -np.sin(params[1]), 0])
@@ -418,18 +415,21 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("obs", 
-                             [
-                                 [qml.expval(qml.PauliX(wires=0)),qml.expval(qml.PauliZ(wires=1))], 
-                                 [qml.expval(qml.PauliY(wires=0)),qml.expval(qml.PauliZ(wires=1))],
-                                 [qml.expval(
-                qml.Hermitian(
-                    [[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]],
-                    wires=[0, 1],
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            [qml.expval(qml.PauliX(wires=0)), qml.expval(qml.PauliZ(wires=1))],
+            [qml.expval(qml.PauliY(wires=0)), qml.expval(qml.PauliZ(wires=1))],
+            [
+                qml.expval(
+                    qml.Hermitian(
+                        [[0, 0, 1, 1], [0, 1, 2, 1], [1, 2, 1, 0], [1, 1, 0, 0]],
+                        wires=[0, 1],
+                    )
                 )
-            )]
-                             ]
-                             )
+            ],
+        ],
+    )
     @pytest.mark.parametrize(
         "op",
         [
@@ -447,22 +447,19 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
         # op.num_wires and op.num_params must be initialized a priori
-        qs = QuantumScript(                        
+        qs = QuantumScript(
             [
-
-            qml.Hadamard(wires=0),
-            qml.RX(0.543, wires=0),
-            qml.CNOT(wires=[0, 1]),
-
-            op,  # pylint: disable=pointless-statement,
-
-            qml.Rot(1.3, -2.3, 0.5, wires=[0]),
-            qml.RZ(-0.5, wires=0),
-            qml.adjoint(qml.RY(0.5, wires=1), lazy=False),
-            qml.CNOT(wires=[0, 1]),
+                qml.Hadamard(wires=0),
+                qml.RX(0.543, wires=0),
+                qml.CNOT(wires=[0, 1]),
+                op,  # pylint: disable=pointless-statement,
+                qml.Rot(1.3, -2.3, 0.5, wires=[0]),
+                qml.RZ(-0.5, wires=0),
+                qml.adjoint(qml.RY(0.5, wires=1), lazy=False),
+                qml.CNOT(wires=[0, 1]),
             ],
             obs,
-            trainable_params = list(range(1, 1 + op.num_params))
+            trainable_params=list(range(1, 1 + op.num_params)),
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
@@ -475,16 +472,21 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         grad_D = dev.compute_derivatives(qs, config)
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("obs",[
-        [qml.expval(qml.PauliZ(0))],
-        [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))],
-        [qml.expval(
-            qml.Hamiltonian(
-                [1.0, 0.3, 0.3],
-                [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)],
-            )
-        )]
-    ])
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            [qml.expval(qml.PauliZ(0))],
+            [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))],
+            [
+                qml.expval(
+                    qml.Hamiltonian(
+                        [1.0, 0.3, 0.3],
+                        [qml.PauliX(0) @ qml.PauliX(1), qml.PauliZ(0), qml.PauliZ(1)],
+                    )
+                )
+            ],
+        ],
+    )
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_gradient_gate_with_multiple_parameters(self, obs, batch_obs, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
@@ -497,7 +499,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
                 qml.RY(-0.2, wires=[0]),
             ],
             obs,
-            trainable_params = [1, 2, 3]
+            trainable_params=[1, 2, 3],
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
@@ -518,7 +520,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
 class TestAdjointJacobianQNode:
     """Test QNode integration with the adjoint_jacobian method"""
-
 
     def test_finite_shots_error(self):
         """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
@@ -562,7 +563,7 @@ class TestAdjointJacobianQNode:
 
         spy.assert_called()
 
-        h   = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
         tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
 
         qnode2 = QNode(circuit, dev, diff_method="finite-diff", h=h)
@@ -638,7 +639,7 @@ class TestAdjointJacobianQNode:
 
         spy_analytic = mocker.spy(dev, "LightningAdjointJacobian")
 
-        h   = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
         tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
 
         cost = QNode(circuit, dev, diff_method="finite-diff", h=h)

@@ -21,11 +21,10 @@ from ctypes.util import find_library
 from dataclasses import replace
 from functools import reduce
 from importlib import util as imp_util
+from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional, Tuple, Union
 from warnings import warn
-
-from numbers import Number
 
 import numpy as np
 import pennylane as qml
@@ -524,10 +523,9 @@ class LightningGPU(LightningBase):
 
         state.reset_state(sync=False)
         final_state = state.get_final_state(circuit)
-        return LightningGPUMeasurements(final_state, self._mpi_handler.use_mpi,self._mpi_handler).measure_final_state(
-            circuit
-        )
-
+        return LightningGPUMeasurements(
+            final_state, self._mpi_handler.use_mpi, self._mpi_handler
+        ).measure_final_state(circuit)
 
     def jacobian(
         self,
@@ -552,9 +550,9 @@ class LightningGPU(LightningBase):
             [circuit], _ = qml.map_wires(circuit, wire_map)
         state.reset_state(self._sync)
         final_state = state.get_final_state(circuit)
-        return self.LightningAdjointJacobian(final_state, batch_obs, self._mpi_handler.use_mpi,self._mpi_handler).calculate_jacobian(
-            circuit
-        )
+        return self.LightningAdjointJacobian(
+            final_state, batch_obs, self._mpi_handler.use_mpi, self._mpi_handler
+        ).calculate_jacobian(circuit)
 
     def simulate_and_jacobian(
         self,
@@ -580,7 +578,9 @@ class LightningGPU(LightningBase):
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
         res = self.simulate(circuit, state)
-        jac = self.LightningAdjointJacobian(state, batch_obs, self._mpi_handler.use_mpi,self._mpi_handler).calculate_jacobian(circuit)
+        jac = self.LightningAdjointJacobian(
+            state, batch_obs, self._mpi_handler.use_mpi, self._mpi_handler
+        ).calculate_jacobian(circuit)
         return res, jac
 
     def vjp(  # pylint: disable=too-many-arguments
@@ -610,9 +610,9 @@ class LightningGPU(LightningBase):
             [circuit], _ = qml.map_wires(circuit, wire_map)
         state.reset_state(self._sync)
         final_state = state.get_final_state(circuit)
-        return self.LightningAdjointJacobian(final_state, batch_obs,self._mpi_handler.use_mpi,self._mpi_handler).calculate_vjp(
-            circuit, cotangents
-        )
+        return self.LightningAdjointJacobian(
+            final_state, batch_obs, self._mpi_handler.use_mpi, self._mpi_handler
+        ).calculate_vjp(circuit, cotangents)
 
     def simulate_and_vjp(  # pylint: disable=too-many-arguments
         self,
@@ -641,8 +641,7 @@ class LightningGPU(LightningBase):
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
         res = self.simulate(circuit, state)
-        _vjp = self.LightningAdjointJacobian(state, batch_obs,self._mpi_handler.use_mpi,self._mpi_handler).calculate_vjp(
-            circuit, cotangents
-        )
+        _vjp = self.LightningAdjointJacobian(
+            state, batch_obs, self._mpi_handler.use_mpi, self._mpi_handler
+        ).calculate_vjp(circuit, cotangents)
         return res, _vjp
-

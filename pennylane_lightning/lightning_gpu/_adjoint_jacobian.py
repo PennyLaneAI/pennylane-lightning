@@ -18,11 +18,8 @@ Internal methods for adjoint Jacobian differentiation method.
 from warnings import warn
 
 try:
-    
-    from pennylane_lightning.lightning_gpu_ops import (
-        DevPool,
-    )
 
+    from pennylane_lightning.lightning_gpu_ops import DevPool
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
         AdjointJacobianC128,
@@ -48,18 +45,14 @@ except ImportError as ex:
     pass
 
 import numpy as np
+from pennylane import BasisState, QuantumFunctionError, StatePrep
+from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 from scipy.sparse import csr_matrix
 
-from pennylane import BasisState, QuantumFunctionError, StatePrep
-from pennylane.operation import Operation
-
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
-
-
-
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 from ._state_vector import LightningGPUStateVector
 
@@ -74,24 +67,23 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, 
-                 qubit_state: LightningGPUStateVector, 
-                 batch_obs: bool = False, 
-                 use_mpi: bool = False, 
-                 mpi_handler=None,
-                 ) -> None:
-        
+    def __init__(
+        self,
+        qubit_state: LightningGPUStateVector,
+        batch_obs: bool = False,
+        use_mpi: bool = False,
+        mpi_handler=None,
+    ) -> None:
+
         super().__init__(qubit_state, batch_obs)
-        
+
         self._dp = DevPool()
-        
-        
+
         self._use_mpi = use_mpi
 
         if use_mpi:
             self._mpi_handler = mpi_handler
 
-        
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
@@ -108,7 +100,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
                 create_ops_listMPIC64 if self.dtype == np.complex64 else create_ops_listMPIC128
             )
             return jacobian_lightning, create_ops_list_lightning
-        else: # without MPI
+        else:  # without MPI
             jacobian_lightning = (
                 AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
             )
@@ -117,7 +109,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             )
             return jacobian_lightning, create_ops_list_lightning
 
-    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi = False):
+    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi=False):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
@@ -175,8 +167,6 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             "all_params": all_params,
             "obs_indices": obs_indices,
         }
-
-
 
     def calculate_jacobian(self, tape: QuantumTape):
         """Computes the Jacobian with the adjoint method.

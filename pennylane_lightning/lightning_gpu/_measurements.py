@@ -39,12 +39,11 @@ from typing import Any, List
 import numpy as np
 import pennylane as qml
 from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
-from pennylane.typing import TensorLike
 from pennylane.tape import QuantumScript
-
-from pennylane_lightning.core._serialize import QuantumScriptSerializer
+from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 from ._mpi_handler import MPIHandler
 
@@ -75,7 +74,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         if use_mpi:
             self._mpi_handler = mpi_handler
             self._num_local_wires = mpi_handler.num_local_wires
-            
 
         self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
 
@@ -167,7 +165,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
             #     CSR_SparseHamiltonian.indices,
             #     CSR_SparseHamiltonian.data,
             # )
-            
+
             if self._use_mpi:
                 # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
@@ -220,7 +218,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         return self._measurement_lightning.expval(
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
-
 
     def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
         """Convert the data structure from the C++ backend to a common structure through lightning devices.

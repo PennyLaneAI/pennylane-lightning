@@ -27,6 +27,7 @@ from pennylane import qchem
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 class TestSparseExpval:
     """Tests for the expval function"""
 
