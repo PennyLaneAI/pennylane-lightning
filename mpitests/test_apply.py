@@ -430,7 +430,7 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
         expected_output_mpi = mpi_qnode()
 
         comm.Barrier()
-        
+
         assert np.allclose(expected_output_mpi, expected_output_gpu)
 
 
