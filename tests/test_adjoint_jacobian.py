@@ -1550,7 +1550,9 @@ def test_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
@@ -1592,7 +1594,9 @@ def test_diff_qubit_unitary(n_targets):
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 

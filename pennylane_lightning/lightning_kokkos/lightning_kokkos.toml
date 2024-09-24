@@ -58,7 +58,8 @@ ControlledQubitUnitary = {}
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]
 
-BlockEncode            = {}
+BlockEncode            = {properties = [ "controllable" ]}
+PCPhase                = {properties = [ "controllable" ]}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}

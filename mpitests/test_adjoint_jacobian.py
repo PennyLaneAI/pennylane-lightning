@@ -1384,7 +1384,9 @@ def test_qubit_unitary(dev, n_targets):
 
     np.random.seed(1337)
     par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
@@ -1432,7 +1434,9 @@ def test_diff_qubit_unitary(dev, n_targets):
 
     np.random.seed(1337)
     par = 2 * np.pi * np.random.rand(n_wires)
-    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
+    U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(
+        2**n_targets, 2**n_targets
+    )
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))

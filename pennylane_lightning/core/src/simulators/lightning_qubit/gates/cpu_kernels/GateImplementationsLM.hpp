@@ -1884,7 +1884,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-
         std::size_t wires_parity{0U};
         for (std::size_t wire : wires) {
             wires_parity |=
