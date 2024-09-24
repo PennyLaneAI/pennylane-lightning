@@ -61,7 +61,7 @@ class SharedLibLoader final {
     explicit SharedLibLoader(const std::string &filename) {
         const std::lock_guard<std::mutex> lock(mtx_);
         handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
-        // PL_ABORT_IF(!handle_, PL_DLERROR());
+        PL_ABORT_IF(!handle_, PL_DLERROR());
     }
 
     ~SharedLibLoader() noexcept {
