@@ -17,14 +17,25 @@
  * Dynamic shared library functions API wrapper.
  */
 #pragma once
+#include <mutex>
 #include <string>
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
+#define HANDLE_TYPE void *
 #define PL_DLOPEN(NAME, ARG) dlopen(NAME, ARG)
 #define PL_DLERROR() dlerror()
 #define PL_DLCLOSE(NAME) dlclose(NAME)
 #define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
+
+#else
+#define NOMINMAX
+#include <windows.h>
+#define HANDLE_TYPE HMODULE
+#define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
+#define PL_DLERROR() GetLastError()
+#define PL_DLCLOSE(NAME) FreeLibrary(NAME)
+#define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
 #endif
 
 #include "Error.hpp"
@@ -42,23 +53,26 @@ namespace Pennylane::Util {
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
-    void *handle_{nullptr};
+    HANDLE_TYPE handle_;
+    std::mutex mtx_;
 
   public:
     SharedLibLoader();
     explicit SharedLibLoader(const std::string &filename) {
+        const std::lock_guard<std::mutex> lock(mtx_);
         handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
         PL_ABORT_IF(!handle_, PL_DLERROR());
     }
 
-    ~SharedLibLoader() noexcept { PL_DLCLOSE(handle_); }
+    ~SharedLibLoader() noexcept {
+        const std::lock_guard<std::mutex> lock(mtx_);
+        PL_DLCLOSE(handle_);
+    }
 
-    void *getHandle() { return handle_; }
+    HANDLE_TYPE getHandle() { return handle_; }
 
-    void *getSymbol(const std::string &symbol) {
-        void *sym = PL_DLSYS(handle_, symbol.c_str());
-        PL_ABORT_IF(!sym, PL_DLERROR());
-        return sym;
+    template <typename FunPtr> FunPtr getSymbol(const std::string &symbol) {
+        return reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
     }
 };
 // NOLINTEND

@@ -99,6 +99,8 @@ class CMakeBuild(build_ext):
         )
         configure_args += ["-DPYBIND11_FINDPYTHON=ON"]
 
+        configure_args += [f"-Dpybind11_DIR={pybind11.get_cmake_dir()}"]
+
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
             #  (https://github.com/ninja-build/ninja/pull/2056)

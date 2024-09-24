@@ -7,9 +7,7 @@ set(LQUBIT_UTILS_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 
-if(ENABLE_LAPACK)
-    list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
-endif()
+list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
 
 set(CUDA_UTILS_ADDED FALSE CACHE BOOL "Add cuda_utils header files")
 
@@ -22,12 +20,18 @@ foreach(BACKEND ${PL_BACKEND})
     endif()
 endforeach()
 
-
 target_include_directories(lightning_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_utils INTERFACE lightning_compile_options
-                                                lightning_external_libs
-                                                )
+                                                lightning_external_libs)
 
+
+if(ENABLE_PYTHON)
+    add_compile_definitions(_ENABLE_PYTHON)
+elseif(NOT CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    target_link_libraries(lightning_utils INTERFACE pybind11::module
+                                                  pybind11::pybind11
+                                                  pybind11::embed)
+endif()
 
 set_property(TARGET lightning_utils PROPERTY POSITION_INDEPENDENT_CODE ON)
 

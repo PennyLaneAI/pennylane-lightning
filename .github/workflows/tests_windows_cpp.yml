@@ -124,7 +124,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja scipy
+          python -m pip install cmake build ninja scipy pybind11
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -202,7 +202,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja
+          python -m pip install cmake build ninja scipy
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4

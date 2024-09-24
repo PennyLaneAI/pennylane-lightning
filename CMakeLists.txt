@@ -45,9 +45,7 @@ option(ENABLE_CLANG_TIDY "Enable clang-tidy build checks" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
-option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-
-option(ENABLE_LAPACK "Enable compilation with scipy/LAPACK" OFF)
+option(ENABLE_PYTHON "Enable compilation of the Python module" OFF)
 
 # OpenMP
 find_package(OpenMP)
@@ -85,32 +83,8 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/process_options.cmake")
 
 set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
-# Add pybind11
+
 include(FetchContent)
-
-if(ENABLE_LAPACK)
-    find_package(Python COMPONENTS Interpreter Development)
-    set(SCIPYLIBS ${Python_SITELIB})
-
-    if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-        set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        if(EXISTS ${SCIPYLIBS}/scipy.libs)
-            set(SCIPYLIBS ${SCIPYLIBS}/scipy.libs)
-        else()
-            # Fallback to the lib path of Python for `conda` support
-            set(SCIPYLIBS ${SCIPYLIBS}/../..)
-        endif()
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    else()
-        message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-    endif()
-
-    add_compile_definitions(SCIPY_LIBS_PATH="${SCIPYLIBS}")
-
-    message(STATUS "Python scipy-lib path: ${SCIPYLIBS}")
-endif()
-
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
@@ -120,8 +94,20 @@ if(ENABLE_PYTHON)
     FetchContent_MakeAvailable(pybind11)
 endif()
 
-# Print Python site-packages directory for reference
-message("Python site-packages directory: ${Python_SITELIB}")
+if(SCIPY_LIBS_PATH AND NOT ENABLE_PYTHON)
+    add_compile_definitions(_SCIPY_LIBS_PATH="${SCIPY_LIBS_PATH}")
+    message(STATUS "SCIPY_LIBS_PATH: ${SCIPY_LIBS_PATH}")
+elseif(ENABLE_PYTHON AND SCIPY_LIBS_PATH)
+    message(FATAL_ERROR "SCIPY_LIBS_PATH is only supported when ENABLE_PYTHON is OFF.")
+endif()
+
+FetchContent_Declare(pybind11
+    GIT_REPOSITORY https://github.com/pybind/pybind11.git
+    GIT_TAG        v2.11.1
+)
+
+FetchContent_MakeAvailable(pybind11)
+
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 

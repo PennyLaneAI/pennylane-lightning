@@ -150,7 +150,8 @@ jobs:
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
 
-          PL_BACKEND: ${{ matrix.pl_backend }}
+          CIBW_ENVIRONMENT: |
+            PL_BACKEND="${{ matrix.pl_backend }}"
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
