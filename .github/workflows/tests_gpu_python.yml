@@ -1,4 +1,4 @@
-name: Testing::x86_64::LGPU::Python
+name: Testing::x86_64::GPU::Python
 on:
   workflow_call:
     inputs:
@@ -16,17 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-      - labeled
-    paths-ignore:
-      - .github/**
-      - '!.github/workflows/tests_lgpu_python.yml'
-      - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
-      - pennylane_lightning/core/src/simulators/lightning_tensor/**
-      - pennylane_lightning/lightning_kokkos/**
-      - pennylane_lightning/lightning_qubit/**
-      - pennylane_lightning/lightning_tensor/**
   push:
     branches:
       - master
@@ -35,16 +24,14 @@ env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
-  TF_VERSION: 2.10.0
-  TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_lgpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_gpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
   builddeps:
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -66,11 +53,11 @@ jobs:
           nvcc --version
           nvidia-smi
 
-  pythontestswithLGPU:
+  pythontestswithGPU:
     needs: [builddeps]
     strategy:
       matrix:
-        pl_backend: ["lightning_gpu"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
 
     name: Python Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
@@ -94,19 +81,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Switch to release build of Lightning
-        if: inputs.lightning-version == 'release'
+        if: inputs.lightning-version == 'release' && matrix.pl_backend == 'lightning.qubit'
         run: |
-          cd main
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
-        if: inputs.lightning-version == 'stable'
+        if: inputs.lightning-version == 'stable' && matrix.pl_backend == 'lightning.qubit'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
 
@@ -118,7 +102,7 @@ jobs:
       - name: Setup Python virtual environment
         id: setup_venv
         env:
-          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}_${{ matrix.pl_backend }}
         run: |
           # Clear any pre-existing venvs
           rm -rf venv_*
@@ -153,9 +137,18 @@ jobs:
 
       - name: Install required packages
         run: |
-          cd main
           python -m pip install -r requirements-dev.txt
-          python -m pip install cmake custatevec-cu${{ matrix.cuda_version }} openfermionpyscf
+          python -m pip install cmake openfermionpyscf
+
+      - name: Install required lightning_gpu only packages
+        if: matrix.pl_backend == 'lightning_gpu'
+        run: |
+          python -m pip install custatevec-cu${{ matrix.cuda_version }}
+
+      - name: Install required lightning_tensor only packages
+        if: matrix.pl_backend == 'lightning_tensor'
+        run: |
+          python -m pip install cutensornet-cu${{ matrix.cuda_version }}
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -175,76 +168,53 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
       - name: Build and install package
         env:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
-          cd main
           rm -rf build
           PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || true
           PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           rm -rf build
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
-          python -m pip install . -vv
+          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
-      - name: Run PennyLane-Lightning-GPU unit tests
-        if: ${{ matrix.pl_backend != 'all'}}
+      - name: Run PennyLane unit tests
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
+        if: matrix.pl_backend == 'lightning_gpu'
         run: |
-          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
-      - name: Install all backend devices
-        if: ${{ matrix.pl_backend == 'all' }}
-        env:
-          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
-        run: |
-          cd main
-          rm -rf build
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=lightning_qubit python -m pip install . -vv
-          rm -rf build
-
-          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
-          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
-
-      - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
-        if: ${{ matrix.pl_backend == 'all' }}
+      - name: Run PennyLane Lightning unit tests
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
         run: |
-          cd main/
-          PL_DEVICE=lightning.qubit python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
-          pl-device-test --device lightning.qubit --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.qubit --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          PL_DEVICE=lightning.gpu python -m pytest tests/ $COVERAGE_FLAGS
-          pl-device-test --device lightning.gpu --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device lightning.gpu --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+
+      - name: Move coverage file
+        run: |
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-python-${{ matrix.pl_backend }}
-          path: ./main/coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+          path: coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
 
   upload-to-codecov-linux-python:
-    needs: [pythontestswithLGPU]
+    needs: [pythontestswithGPU]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:

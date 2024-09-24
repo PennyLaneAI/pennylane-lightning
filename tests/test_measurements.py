@@ -151,7 +151,7 @@ class TestProbs:
             _ = circuit()
 
     @pytest.mark.skipif(
-        device_name == "lightning.gpu" or device_name == "lightning.tensor",
+        device_name in ("lightning.gpu", "lightning.tensor"),
         reason="lightning.gpu/lightning.tensor does not support out of order prob.",
     )
     @pytest.mark.parametrize(
@@ -625,10 +625,6 @@ class TestWiresInExpval:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.sample()",
-)
 class TestSample:
     """Tests that samples are properly calculated."""
 
@@ -744,10 +740,6 @@ class TestWiresInVar:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shots",
-)
 @flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [None, 10000, [10000, 11111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
@@ -768,9 +760,9 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
     n_qubits = 3
 
-    if (shots is None or device_name in ("lightning.gpu", "lightning.kokkos")) and (
-        mcmc or kernel_name != "Local"
-    ):
+    if (
+        shots is None or device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor")
+    ) and (mcmc or kernel_name != "Local"):
         pytest.skip(f"Device {device_name} does not have an mcmc option.")
 
     if measure_f in (qml.expval, qml.var) and isinstance(obs, Sequence):
@@ -779,7 +771,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     if measure_f in (qml.counts, qml.sample) and shots is None:
         pytest.skip("qml.counts, qml.sample do not work with shots = None.")
 
-    if device_name in ("lightning.gpu", "lightning.kokkos"):
+    if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
         dev = qml.device(device_name, wires=n_qubits, shots=shots)
     else:
         dev = qml.device(
@@ -807,7 +799,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
 # TODO: Add LT after extending the support for shots_vector
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support shot vectors.",
+    reason="lightning.tensor does not support single-wire devices.",
 )
 @pytest.mark.parametrize("shots", ((1, 10), (1, 10, 100), (1, 10, 10, 100, 100, 100)))
 def test_shots_bins(shots, qubit_device):

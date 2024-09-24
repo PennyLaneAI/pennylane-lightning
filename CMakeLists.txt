@@ -12,7 +12,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "Minimum OS X deployment versi
 set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 project(pennylane_lightning
-    DESCRIPTION "C++ suite of state-vector simulators bindings for PennyLane. "
+    DESCRIPTION "C++ suite of state-vector and tensor network simulators bindings for PennyLane. "
     LANGUAGES CXX
 )
 
@@ -87,7 +87,11 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 include(FetchContent)
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
-    add_compile_definitions(_ENABLE_PYTHON=1)
+    FetchContent_Declare(pybind11
+                        GIT_REPOSITORY https://github.com/pybind/pybind11.git
+                        GIT_TAG        v2.13.5
+    )
+    FetchContent_MakeAvailable(pybind11)
 endif()
 
 if(SCIPY_LIBS_PATH AND NOT ENABLE_PYTHON)

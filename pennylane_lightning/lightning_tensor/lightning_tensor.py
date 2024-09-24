@@ -18,6 +18,7 @@ It is a device to perform tensor network simulations of quantum circuits using `
 from dataclasses import replace
 from numbers import Number
 from typing import Callable, Optional, Sequence, Tuple, Union
+from warnings import warn
 
 import numpy as np
 import pennylane as qml
@@ -49,7 +50,9 @@ try:
         raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LT_CPP_BINARY_AVAILABLE = True
-except ImportError:
+
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     LT_CPP_BINARY_AVAILABLE = False
 
 Result_or_ResultBatch = Union[Result, ResultBatch]
@@ -70,12 +73,12 @@ _operations = frozenset(
         "BasisState",
         "QubitUnitary",
         "ControlledQubitUnitary",
-        "MultiControlledX",
         "DiagonalQubitUnitary",
         "PauliX",
         "PauliY",
         "PauliZ",
         "Hadamard",
+        "GlobalPhase",
         "S",
         "Adjoint(S)",
         "T",
@@ -96,6 +99,26 @@ _operations = frozenset(
         "CZ",
         "PhaseShift",
         "ControlledPhaseShift",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(Rot)",
+        "C(IsingXX)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(IsingXY)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationPlus)",
+        "C(SingleExcitationMinus)",
+        "C(DoubleExcitation)",
+        "C(DoubleExcitationMinus)",
+        "C(DoubleExcitationPlus)",
+        "C(GlobalPhase)",
+        "C(MultiRZ)",
         "RX",
         "RY",
         "RZ",
@@ -112,11 +135,15 @@ _operations = frozenset(
         "SingleExcitationPlus",
         "SingleExcitationMinus",
         "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
         "QFT",
         "ECR",
+        "BlockEncode",
+        "C(BlockEncode)",
     }
 )
 
@@ -141,10 +168,17 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
-    # These thresholds are adapted from `lightning_base.py`
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
-    return op.has_matrix and len(op.wires) <= 2 and op.name in _operations
+    # TODOs: These thresholds are from ``lightning.qubit`` and should be adjuested based on the benchmarking tests for the MPS
+    #  simulator (against both max_mps_bond_dim and number of qubits).
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+
+    if isinstance(op, qml.ControlledQubitUnitary):
+        return True
+
+    return op.has_matrix and op.name in _operations
 
 
 def simulate(circuit: QuantumScript, tensornet: LightningTensorNet) -> Result:
@@ -195,6 +229,9 @@ class LightningTensor(Device):
     Args:
         wires (int): The number of wires to initialize the device with.
             Defaults to ``None`` if not specified.
+        shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
+            to ``None`` results in computing statistics like expectation values and
+            variances analytically.
         method (str): Supported method. Currently, only ``mps`` is supported.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
@@ -250,6 +287,7 @@ class LightningTensor(Device):
         self,
         *,
         wires=None,
+        shots=None,
         method: str = "mps",
         c_dtype=np.complex128,
         **kwargs,
@@ -266,7 +304,7 @@ class LightningTensor(Device):
         if wires is None:
             raise ValueError("The number of wires must be specified.")
 
-        super().__init__(wires=wires, shots=None)
+        super().__init__(wires=wires, shots=shots)
 
         if isinstance(wires, int):
             self._wire_map = None  # should just use wires as is
@@ -369,7 +407,6 @@ class LightningTensor(Device):
 
         This device currently:
 
-        * Does not support finite shots.
         * Does not support derivatives.
         * Does not support vector-Jacobian products.
         """
@@ -384,6 +421,7 @@ class LightningTensor(Device):
         program.add_transform(
             decompose,
             stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition,
             skip_initial_state_prep=True,
             name=self.name,
         )

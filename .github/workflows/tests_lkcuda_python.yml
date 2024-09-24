@@ -16,7 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-      - labeled
     paths-ignore:
       - .github/**
       - '!.github/workflows/tests_lkcuda_python.yml'
@@ -44,7 +43,7 @@ concurrency:
 
 jobs:
   builddeps:
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
     runs-on:
       - self-hosted
       - ubuntu-22.04

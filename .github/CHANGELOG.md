@@ -2,6 +2,19 @@
 
 ### New features since last release
 
+* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
+  [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
+
+* Add shot measurement support to `lightning.tensor`.
+  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
+
+* Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
+  [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+  [(#905)](https://github.com/PennyLaneAI/pennylane-lightning/pull/905)
+
+* Add `Projector` observable support via diagonalization to Lightning-GPU.
+  [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
+
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
   [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
 
@@ -10,29 +23,77 @@
 
 ### Breaking changes
 
+* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
+
+* Remove PowerPC wheel build recipe for Lightning-Qubit.
+  [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
+
 * Remove support for Python 3.9.
-  [#891](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
+  [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
+  [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
+
+* Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
+  [(#911)](https://github.com/PennyLaneAI/pennylane-lightning/pull/911)
+
+* Update the test suite to remove deprecated code.
+  [(#912)](https://github.com/PennyLaneAI/pennylane-lightning/pull/912)
+
+* Skip the compilation of Lightning simulators and development requirements to boost the build of public docs up to 5x.
+  [(#904)](https://github.com/PennyLaneAI/pennylane-lightning/pull/904)
+
+* Build Lightning wheels in `Release` mode.
+  [(#903)](https://github.com/PennyLaneAI/pennylane-lightning/pull/903)
+
+* Update Pybind11 to 2.13.5.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
+
+* Migrate wheels artifacts to v4.
+  [(#893)](https://github.com/PennyLaneAI/pennylane-lightning/pull/893)
 
 * Update GitHub actions in response to a high-severity vulnerability.
   [(#887)](https://github.com/PennyLaneAI/pennylane-lightning/pull/887)
 
+* Optimize and simplify controlled kernels in Lightning-Qubit.
+  [(#882)](https://github.com/PennyLaneAI/pennylane-lightning/pull/882)
+
 * Optimize gate cache recording for `lightning.tensor` C++ layer.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
+
+* Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
+  [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
 
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
   [(#873)](https://github.com/PennyLaneAI/pennylane-lightning/pull/873/)
 
+* Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
+  [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
+
+* LightningKokkos gains native support for the `PauliRot` gate.
+  [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
+
 ### Documentation
 
+* Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
+  [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
+
 ### Bug fixes
+
+* Bug fix for `_pauli_word` of `QuantumScriptSerializer`. `_pauli_word` can process `PauliWord` object: `I`.
+  [(#919)](https://github.com/PennyLaneAI/pennylane-lightning/pull/919)
+
+* Bug fix for analytic `probs` in the `lightning.tensor` C++ layer.
+  [(#906)](https://github.com/PennyLaneAI/pennylane-lightning/pull/906)
 
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu
 
 ---
 
