@@ -48,6 +48,7 @@ fixture_params = itertools.product(
     [True, False],
 )
 
+
 @pytest.fixture(name="dev", params=fixture_params)
 def fixture_dev(request):
     """Returns a PennyLane device."""
@@ -58,6 +59,7 @@ def fixture_dev(request):
         c_dtype=request.param[0],
         batch_obs=request.param[1],
     )
+
 
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
@@ -219,28 +221,26 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("param", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
-    @pytest.mark.parametrize("rotation,obs,expected_func",
-                             [
-                                 (qml.RY, qml.PauliX, lambda x : np.cos(x)),
-                                 (qml.RX, qml.PauliZ, lambda x : -np.sin(x))
-                             ])
+    @pytest.mark.parametrize(
+        "rotation,obs,expected_func",
+        [(qml.RY, qml.PauliX, lambda x: np.cos(x)), (qml.RX, qml.PauliZ, lambda x: -np.sin(x))],
+    )
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_r_gradient(self, tol, param, rotation, obs, expected_func, batch_obs, dev):
         """Test for the gradient of the rotation gate matches the known formula."""
-        
+
         qs = QuantumScript(
             [rotation(param, wires=0)],
             [qml.expval(obs(0))],
             trainable_params=[0],
         )
-        
+
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         # circuit jacobians
         dev_jacobian = dev.compute_derivatives(qs, config)
         expected_jacobian = expected_func(param)
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
-        
 
     @staticmethod
     def process_and_execute_multiple_rx(dev, params, obs, batch_obs):
@@ -388,7 +388,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
                 qml.Hadamard(wires=0),
                 qml.RX(0.543, wires=0),
                 qml.CNOT(wires=[0, 1]),
-                op, 
+                op,
                 qml.Rot(1.3, -2.3, 0.5, wires=[0]),
                 qml.RZ(-0.5, wires=0),
                 qml.adjoint(qml.RY(0.5, wires=1), lazy=False),
@@ -461,6 +461,7 @@ I, X, Y, Z = (
     qml.PauliZ.compute_matrix(),
 )
 
+
 def Rx(theta):
     r"""One-qubit rotation about the x axis.
 
@@ -471,6 +472,7 @@ def Rx(theta):
     """
     return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * X
 
+
 def Ry(theta):
     r"""One-qubit rotation about the y axis.
 
@@ -480,6 +482,7 @@ def Ry(theta):
         array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_y \theta/2}`
     """
     return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Y
+
 
 def Rz(theta):
     r"""One-qubit rotation about the z axis.
