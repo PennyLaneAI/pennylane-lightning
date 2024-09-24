@@ -15,7 +15,6 @@ r"""
 This module contains the LightningQubit class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
-import os
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path

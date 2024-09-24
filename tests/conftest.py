@@ -161,10 +161,6 @@ elif device_name == "lightning.tensor":
 
     LightningAdjointJacobian = None
 
-    LightningAdjointJacobian = None
-    LightningMeasurements = None
-    LightningStateVector = None
-
     if hasattr(pennylane_lightning, "lightning_tensor_ops"):
         import pennylane_lightning.lightning_tensor_ops as lightning_ops
         from pennylane_lightning.lightning_tensor_ops import LightningException

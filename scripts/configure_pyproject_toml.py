@@ -94,10 +94,6 @@ if __name__ == "__main__":
         "setuptools>=42",
         "tomli",
     ]
-
-    if "ppc" not in platform.machine() and "powerpc" not in platform.machine():
-        requires.append("scipy")
-
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")
     if backend == "lightning_tensor":
