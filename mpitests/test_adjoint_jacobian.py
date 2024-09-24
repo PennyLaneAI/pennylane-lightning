@@ -39,12 +39,6 @@ if hasattr(pennylane_lightning, "lightning_gpu_ops"):
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-I, X, Y, Z = (
-    np.eye(2),
-    qml.PauliX.compute_matrix(),
-    qml.PauliY.compute_matrix(),
-    qml.PauliZ.compute_matrix(),
-)
 
 # Tuple passed to distributed device ctor
 # np.complex for data type and True or False
@@ -53,7 +47,6 @@ fixture_params = itertools.product(
     [np.complex64, np.complex128],
     [True, False],
 )
-
 
 @pytest.fixture(name="dev", params=fixture_params)
 def fixture_dev(request):
@@ -66,56 +59,8 @@ def fixture_dev(request):
         batch_obs=request.param[1],
     )
 
-
-def Rx(theta):
-    r"""One-qubit rotation about the x axis.
-
-    Args:
-        theta (float): rotation angle
-    Returns:
-        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_x \theta/2}`
-    """
-    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * X
-
-
-def Ry(theta):
-    r"""One-qubit rotation about the y axis.
-
-    Args:
-        theta (float): rotation angle
-    Returns:
-        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_y \theta/2}`
-    """
-    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Y
-
-
-def Rz(theta):
-    r"""One-qubit rotation about the z axis.
-
-    Args:
-        theta (float): rotation angle
-    Returns:
-        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_z \theta/2}`
-    """
-    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Z
-
-
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
-
-    @staticmethod
-    def process_and_execute(device, qscript, execute_and_derivatives=False, obs_batch=False):
-        program, config = device.preprocess(
-            ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": obs_batch})
-        )
-        qscript, transf_fn = program([qscript])
-
-        if execute_and_derivatives:
-            results, jac = device.execute_and_compute_derivatives(qscript, config)
-        else:
-            results = device.execute(qscript, config)
-            jac = device.compute_derivatives(qscript, config)
-        return transf_fn(results), jac
 
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_not_expval(self, dev, batch_obs):
@@ -273,35 +218,29 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("par", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
+    @pytest.mark.parametrize("param", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
+    @pytest.mark.parametrize("rotation,obs,expected_func",
+                             [
+                                 (qml.RY, qml.PauliX, lambda x : np.cos(x)),
+                                 (qml.RX, qml.PauliZ, lambda x : -np.sin(x))
+                             ])
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_ry_gradient(self, par, tol, batch_obs, dev):
-        """Test that the gradient of the RY gate matches the exact analytic formula."""
+    def test_r_gradient(self, tol, param, rotation, obs, expected_func, batch_obs, dev):
+        """Test for the gradient of the rotation gate matches the known formula."""
+        
         qs = QuantumScript(
-            [qml.RY(par, wires=[0])], [qml.expval(qml.PauliX(0))], trainable_params=[0]
+            [rotation(param, wires=0)],
+            [qml.expval(obs(0))],
+            trainable_params=[0],
         )
-        config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
-
-        # gradients
-        exact = np.cos(par)
-        grad_A = dev.compute_derivatives(qs, config)
-
-        # different methods must agree
-        assert np.allclose(grad_A, exact, atol=tol, rtol=0)
-
-    @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_rx_gradient(self, tol, batch_obs, dev):
-        """Test that the gradient of the RX gate matches the known formula."""
-        a = 0.7418
-
-        qs = QuantumScript([qml.RX(a, wires=0)], [qml.expval(qml.PauliZ(0))], trainable_params=[0])
-
+        
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
         # circuit jacobians
         dev_jacobian = dev.compute_derivatives(qs, config)
-        expected_jacobian = -np.sin(a)
+        expected_jacobian = expected_func(param)
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
+        
 
     @staticmethod
     def process_and_execute_multiple_rx(dev, params, obs, batch_obs):
@@ -449,7 +388,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
                 qml.Hadamard(wires=0),
                 qml.RX(0.543, wires=0),
                 qml.CNOT(wires=[0, 1]),
-                op,  # pylint: disable=pointless-statement,
+                op, 
                 qml.Rot(1.3, -2.3, 0.5, wires=[0]),
                 qml.RZ(-0.5, wires=0),
                 qml.adjoint(qml.RY(0.5, wires=1), lazy=False),
@@ -513,6 +452,44 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.count_nonzero(grad_D) == 3
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
+
+
+I, X, Y, Z = (
+    np.eye(2),
+    qml.PauliX.compute_matrix(),
+    qml.PauliY.compute_matrix(),
+    qml.PauliZ.compute_matrix(),
+)
+
+def Rx(theta):
+    r"""One-qubit rotation about the x axis.
+
+    Args:
+        theta (float): rotation angle
+    Returns:
+        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_x \theta/2}`
+    """
+    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * X
+
+def Ry(theta):
+    r"""One-qubit rotation about the y axis.
+
+    Args:
+        theta (float): rotation angle
+    Returns:
+        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_y \theta/2}`
+    """
+    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Y
+
+def Rz(theta):
+    r"""One-qubit rotation about the z axis.
+
+    Args:
+        theta (float): rotation angle
+    Returns:
+        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_z \theta/2}`
+    """
+    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Z
 
 
 class TestAdjointJacobianQNode:
