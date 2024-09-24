@@ -384,7 +384,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-function-docstring
     """Tests sparse hamiltonian expectation values."""
 
-    @pytest.mark.parametrize("C_DTYPE", [np.complex128])
+    @pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
     def test_sparse_hamiltonian_expectation(self, C_DTYPE):
         comm = MPI.COMM_WORLD
         commSize = comm.Get_size()
@@ -429,13 +429,11 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
         mpi_qnode = qml.QNode(circuit, dev_mpi)
         expected_output_mpi = mpi_qnode()
 
+        comm.Barrier()
+        
         assert np.allclose(expected_output_mpi, expected_output_gpu)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.gpu",
-    reason="LGPU new API in WIP.  Skipping.",
-)
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 

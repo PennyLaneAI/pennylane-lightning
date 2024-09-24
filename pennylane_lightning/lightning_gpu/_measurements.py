@@ -157,14 +157,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
             # ensuring CSR sparse representation.
-            # CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
-            #     wire_order=list(range(self._qubit_state.num_wires))
-            # ).tocsr(copy=False)
-            # return self._measurement_lightning.expval(
-            #     CSR_SparseHamiltonian.indptr,
-            #     CSR_SparseHamiltonian.indices,
-            #     CSR_SparseHamiltonian.data,
-            # )
 
             if self._use_mpi:
                 # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
@@ -194,16 +186,6 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
                 )
             matrix = measurementprocess.obs.matrix()
             return self._measurement_lightning.expval(matrix, observable_wires)
-
-        # if (
-        #     isinstance(measurementprocess.obs, (qml.ops.Hamiltonian, qml.Hermitian))
-        #     or (measurementprocess.obs.arithmetic_depth > 0)
-        #     or isinstance(measurementprocess.obs.name, List)
-        # ):
-        #     ob_serialized = QuantumScriptSerializer(
-        #         self._qubit_state.device_name, self.dtype == np.complex64
-        #     )._ob(measurementprocess.obs)
-        #     return self._measurement_lightning.expval(ob_serialized)
 
         if (
             isinstance(measurementprocess.obs, qml.ops.Hamiltonian)
