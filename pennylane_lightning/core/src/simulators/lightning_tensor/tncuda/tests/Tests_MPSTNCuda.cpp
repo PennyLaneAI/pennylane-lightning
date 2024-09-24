@@ -22,6 +22,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
+#include "MPOTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "cuda_helpers.hpp"
 
@@ -285,5 +286,41 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
             MPSTNCuda<TestType>(num_qubits, maxBondDim, dev_tag),
             Catch::Matchers::Contains(
                 "The number of qubits should be greater than 1."));
+    }
+}
+
+TEMPLATE_TEST_CASE("MPOTNCuda::getBondDims()", "[MPOTNCuda]", float, double) {
+    using cp_t = std::complex<TestType>;
+    SECTION("Check if bondDims is correctly set") {
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 128;
+        const DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
+        const std::vector<std::size_t> wires = {0, 1, 2};
+        const std::size_t maxMPOBondDim = 3;
+
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+
+        const auto tensors_const = tensors;
+
+        MPOTNCuda<TestType> mpo{tensors_const,
+                                wires,
+                                maxMPOBondDim,
+                                num_qubits,
+                                mps.getTNCudaHandle(),
+                                mps.getCudaDataType(),
+                                dev_tag};
+
+        auto bondDims = mpo.getBondDims();
+
+        std::vector<std::size_t> expected_bondDims = {maxMPOBondDim,
+                                                      maxMPOBondDim};
+
+        CHECK(bondDims == expected_bondDims);
     }
 }

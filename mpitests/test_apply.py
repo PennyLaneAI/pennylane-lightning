@@ -431,6 +431,10 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
         assert np.allclose(expected_output_mpi, expected_output_gpu)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.gpu",
+    reason="LGPU new API in WIP.  Skipping.",
+)
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 

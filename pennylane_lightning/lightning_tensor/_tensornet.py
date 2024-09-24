@@ -31,42 +31,93 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-def svd_split(M, bond_dim):
-    """SVD split a matrix into a matrix product state via numpy linalg. Note that this function is to be moved to the C++ layer."""
-    U, S, Vd = np.linalg.svd(M, full_matrices=False)
-    U = U @ np.diag(S)  # Append singular values to U
+def svd_split(Mat, site_shape, max_bond_dim):
+    """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
+    # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
+    U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
+    U = U * S  # Append singular values to U
     bonds = len(S)
-    Vd = Vd.reshape(bonds, 2, -1)
-    U = U.reshape((-1, 2, bonds))
+
+    Vd = Vd.reshape([bonds] + site_shape + [-1])
+    U = U.reshape([-1] + site_shape + [bonds])
 
     # keep only chi bonds
-    chi = np.min([bonds, bond_dim])
-    U, S, Vd = U[:, :, :chi], S[:chi], Vd[:chi]
+    chi = min([bonds, max_bond_dim])
+    U, Vd = U[..., :chi], Vd[:chi]
     return U, Vd
 
 
-def dense_to_mps(psi, n_wires, bond_dim):
-    """Convert a dense state vector to a matrix product state."""
+def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
+    """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
     Ms = [[] for _ in range(n_wires)]
+    site_len = np.prod(site_shape)
+    psi = np.reshape(psi, (site_len, -1))  # split psi [2, 2, 2, 2...] to psi [site_len, -1]
 
-    psi = np.reshape(psi, (2, -1))  # split psi[2, 2, 2, 2..] = psi[2, (2x2x2...)]
-    U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
+    U, Vd = svd_split(
+        psi, site_shape, max_bond_dim
+    )  # psi [site_len, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
 
-    Ms[0] = U
+    Ms[0] = U.reshape(site_shape + [-1])
     bondL = Vd.shape[0]
     psi = Vd
 
     for i in range(1, n_wires - 1):
-        psi = np.reshape(psi, (2 * bondL, -1))  # reshape psi[2 * bondL, (2x2x2...)]
-        U, Vd = svd_split(psi, bond_dim)  # psi[2, (2x2x..)] = U[2, mu] Vd[mu, (2x2x2x..)]
+        psi = np.reshape(psi, (site_len * bondL, -1))  # reshape psi[site_len*bondL, -1]
+        U, Vd = svd_split(
+            psi, site_shape, max_bond_dim
+        )  # psi [site_len*bondL, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
         Ms[i] = U
 
         psi = Vd
         bondL = Vd.shape[0]
 
-    Ms[n_wires - 1] = Vd
+    Ms[-1] = Vd.reshape([-1] + site_shape)
 
     return Ms
+
+
+def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
+    """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention."""
+    sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
+
+    original_axes, sorted_wires = zip(*sorted_indexed_wires)
+
+    tensor_shape = [2] * len(wires) * 2
+
+    matrix = gate_ops_matrix.astype(c_dtype)
+
+    # Convert the gate matrix to the correct shape and complex dtype
+    gate_tensor = matrix.reshape(tensor_shape)
+
+    # Create the correct order of indices for the gate tensor to be decomposed
+    indices_order = []
+    for i in range(len(wires)):
+        indices_order.extend([original_axes[i], original_axes[i] + len(wires)])
+    # Reverse the indices order to match the target wire order of cutensornet backend
+    indices_order.reverse()
+
+    # Permutation of the gate tensor
+    gate_tensor = np.transpose(gate_tensor, axes=indices_order)
+
+    mpo_site_shape = [2] * 2
+
+    # The indices order of MPOs: 1. left-most site: [ket, bra, bondR]; 2. right-most sites: [bondL, ket, bra]; 3. sites in-between: [bondL, ket, bra, bondR].
+    MPOs = decompose_dense(gate_tensor, len(wires), mpo_site_shape, max_mpo_bond_dim)
+
+    # Convert the MPOs to the correct order for the cutensornet backend
+    mpos = []
+    for index, MPO in enumerate(MPOs):
+        if index == 0:
+            # [ket, bra, bond](0, 1, 2) -> [ket, bond, bra](0, 2, 1) -> Fortran order or reverse indices(1, 2, 0) to match the order requirement of cutensornet backend.
+            mpos.append(np.transpose(MPO, axes=(1, 2, 0)))
+        elif index == len(MPOs) - 1:
+            # [bond, ket, bra](0, 1, 2) -> Fortran order or reverse indices(2, 1, 0) to match the order requirement of cutensornet backend.
+            mpos.append(np.transpose(MPO, axes=(2, 1, 0)))
+        else:
+            # [bondL, ket, bra, bondR](0, 1, 2, 3) -> [bondL, ket, bondR, bra](0, 1, 3, 2) -> Fortran order or reverse indices(2, 3, 1, 0) to match the requirement of cutensornet backend.
+            mpos.append(np.transpose(MPO, axes=(2, 3, 1, 0)))
+
+    return mpos, sorted_wires
 
 
 # pylint: disable=too-many-instance-attributes
@@ -109,6 +160,8 @@ class LightningTensorNet:
 
         if num_wires < 2:
             raise ValueError("Number of wires must be greater than 1.")
+
+        self._wires = Wires(range(num_wires))
 
         self._device_name = device_name
         self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
@@ -195,8 +248,8 @@ class LightningTensorNet:
         """
 
         state = self._preprocess_state_vector(state, device_wires)
-
-        M = dense_to_mps(state, self._num_wires, self._max_bond_dim)
+        mps_site_shape = [2]
+        M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
 
         self._tensornet.updateMPSSitesData(M)
 
@@ -222,6 +275,26 @@ class LightningTensorNet:
 
         self._tensornet.setBasisState(state)
 
+    def _apply_MPO(self, gate_matrix, wires):
+        """Apply a matrix product operator to the quantum state.
+
+        Args:
+            gate_matrix (array[complex/float]): matrix representation of the MPO
+            wires (Wires): wires that the MPO should be applied to
+        Returns:
+            None
+        """
+        # TODO: Discuss if public interface for max_mpo_bond_dim argument
+        max_mpo_bond_dim = 2 ** len(wires)  # Exact SVD decomposition for MPO
+
+        # Get sorted wires and MPO site tensor
+        mpos, sorted_wires = gate_matrix_decompose(
+            gate_matrix, wires, max_mpo_bond_dim, self._c_dtype
+        )
+
+        self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
+
+    # pylint: disable=too-many-branches
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor. Note that `cutensornet` only supports controlled gates with a single wire target.
 
@@ -238,20 +311,16 @@ class LightningTensorNet:
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        if method is not None:  # apply n-controlled specialized gate
+
+        if method is not None and basename not in ("GlobalPhase", "MultiRZ"):
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(tensornet, "applyControlledMatrix")
-            method(
-                qml.matrix(operation.base),
-                control_wires,
-                control_values,
-                target_wires,
-                False,
-            )
+            method(qml.matrix(operation.base), control_wires, control_values, target_wires, False)
 
+    # pylint: disable=too-many-statements
     def _apply_lightning(self, operations):
         """Apply a list of operations to the quantum state.
 
@@ -279,18 +348,32 @@ class LightningTensorNet:
 
             if isinstance(operation, qml.ops.Controlled) and len(list(operation.target_wires)) == 1:
                 self._apply_lightning_controlled(operation)
-            elif method is not None:  # apply specialized gate
-                param = operation.parameters
-                method(wires, invert_param, param)
-            else:  # apply gate as a matrix
-                # Inverse can be set to False since qml.matrix(operation) is already in
-                # inverted form
+            elif isinstance(operation, qml.GlobalPhase):
+                matrix = np.eye(2) * operation.matrix().flatten()[0]
                 method = getattr(tensornet, "applyMatrix")
+                # GlobalPhase is always applied to the first wire in the tensor network
+                method(matrix, [0], False)
+            elif len(wires) <= 2:
+                if method is not None:
+                    param = operation.parameters
+                    method(wires, invert_param, param)
+                else:
+                    # Inverse can be set to False since qml.matrix(operation) is already in
+                    # inverted form
+                    method = getattr(tensornet, "applyMatrix")
+                    try:
+                        method(qml.matrix(operation), wires, False)
+                    except AttributeError:  # pragma: no cover
+                        # To support older versions of PL
+                        method(operation.matrix(), wires, False)
+            else:
                 try:
-                    method(qml.matrix(operation), wires, False)
+                    gate_ops_matrix = qml.matrix(operation)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
-                    method(operation.matrix, wires, False)
+                    gate_ops_matrix = operation.matrix()
+
+                self._apply_MPO(gate_ops_matrix, wires)
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""

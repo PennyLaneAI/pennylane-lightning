@@ -30,12 +30,17 @@ if device_name == "lightning.gpu":
     pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
 
 
+def lightning_tensor_check(n_qubits):
+    if device_name == "lightning.tensor" and n_qubits > 14:
+        pytest.xfail(
+            "Inexact calculation for lightning.tensor with n_qubits > 14 since the default max mps bond dim is 2^7."
+        )
+
+
 class TestGrover:
     """Test Grover's algorithm (multi-controlled gates, decomposition, etc.)"""
 
-    @pytest.mark.parametrize(
-        "n_qubits", range(4, 8) if device_name != "lightning.tensor" else range(4, 6)
-    )
+    @pytest.mark.parametrize("n_qubits", range(4, 8))
     def test_grover(self, n_qubits):
         np.random.seed(42)
         omega = np.random.rand(n_qubits) > 0.5
@@ -67,10 +72,6 @@ class TestGrover:
         assert np.allclose(np.sum(prob), 1.0)
         assert prob[index] > 0.95
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not have full support of multi-controlled gates.",
-    )
     @pytest.mark.skipif(not LightningDevice._new_API, reason="New API required.")
     @pytest.mark.parametrize("wires", [5, 10, 13, 15])
     def test_preprocess_grover_operator_decomposition(self, wires):
@@ -180,11 +181,9 @@ class TestDisplacementSqueezingEmbedding:
 class TestIQPEmbedding:
     """Test the IQPEmbedding algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support MultiRZ"
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_iqpembedding(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -203,11 +202,9 @@ class TestIQPEmbedding:
 class TestQAOAEmbedding:
     """Test the QAOAEmbedding algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor does not support MultiRZ"
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qaoaembedding(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -248,6 +245,7 @@ class TestRandomLayers:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_randomlayers(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
 
@@ -268,6 +266,7 @@ class TestStronglyEntanglingLayers:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_stronglyentanglinglayers(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -289,6 +288,7 @@ class TestSimplifiedTwoDesign:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_simplifiedtwodesign(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -312,6 +312,7 @@ class TestBasicEntanglerLayers:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_basicentanglerlayers(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -330,10 +331,6 @@ class TestBasicEntanglerLayers:
 class TestMottonenStatePreparation:
     """Test the MottonenStatePreparation algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support GlobalPhase and 2+ wires gates.",
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_mottonenstatepreparation(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
@@ -355,10 +352,6 @@ class TestMottonenStatePreparation:
 class TestArbitraryStatePreparation:
     """Test the ArbitraryStatePreparation algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support MultiRZ.",
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_arbitrarystatepreparation(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
@@ -379,10 +372,6 @@ class TestArbitraryStatePreparation:
 class TestCosineWindow:
     """Test the CosineWindow algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support 2+ wires gates that can't be decomposed into 1,2 wires gates.",
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 6, 2))
     def test_cosinewindow(self, n_qubits):
         dev = qml.device(device_name, wires=n_qubits)
@@ -640,6 +629,7 @@ class TestApproxTimeEvolution:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_approxtimeevolution(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -662,6 +652,7 @@ class TestQDrift:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qdrift(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
 
@@ -684,6 +675,7 @@ class TestTrotterProduct:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_trotterproduct(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -706,6 +698,7 @@ class TestQuantumPhaseEstimation:
 
     @pytest.mark.parametrize("n_qubits", range(2, 12, 2))
     def test_quantumphaseestimation(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         phase = 5
         target_wires = [0]
         unitary = qml.RX(phase, wires=0).matrix()
@@ -738,6 +731,7 @@ class TestQFT:
 
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qft(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
 
@@ -795,12 +789,9 @@ class TestAQFT:
 class TestQSVT:
     """Test the QSVT algorithm."""
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support BlockEncode",
-    )
     @pytest.mark.parametrize("n_qubits", range(2, 20, 2))
     def test_qsvt(self, n_qubits):
+        lightning_tensor_check(n_qubits)
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit")
         A = np.array([[0.1]])

@@ -75,25 +75,6 @@ def obs_not_supported_in_ltensor(obs):
         return False
 
 
-# Ops not supported in lightning.tensor
-def ops_not_supported_in_ltensor(ops):
-    if device_name == "lightning.tensor":
-        unsupported_ops = [qml.MultiRZ, qml.GlobalPhase]
-        if any([ops == op for op in unsupported_ops]):
-            return True
-        return False
-    else:
-        return False
-
-
-def controlled_gate_not_supported_in_ltensor(ops):
-    if device_name == "lightning.tensor":
-        if ops.num_wires > 1:
-            return True
-    else:
-        return False
-
-
 def get_final_state(statevector, tape):
     if device_name == "lightning.tensor":
         return statevector.set_tensor_network(tape)
@@ -677,6 +658,8 @@ class TestMeasurements:
         assert len(result) == len(expected)
         # a few tests may fail in single precision, and hence we increase the tolerance
         dtol = tol if shots is None else max(tol, 1.0e-2)
+        if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
+            dtol = max(dtol, 1.0e-4)
         # TODO Set better atol and rtol
         for r, e in zip(result, expected):
             if isinstance(shots, tuple) and isinstance(r[0], np.ndarray):
@@ -766,11 +749,6 @@ class TestControlledOps:
         num_wires = max(operation.num_wires, 1)
         np.random.seed(0)
 
-        if ops_not_supported_in_ltensor(operation):
-            pytest.skip("Controlled operation not supported in lightning.tensor.")
-        if controlled_gate_not_supported_in_ltensor(operation):
-            pytest.skip("Controlled operation not supported in lightning.tensor.")
-
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
             n_perms = len(wire_lists) * n_wires
@@ -825,7 +803,7 @@ class TestControlledOps:
                     assert np.allclose(result, expected, tol * 10)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
+        device_name not in ("lightning.qubit", "lightning.tensor"),
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
@@ -890,10 +868,8 @@ class TestControlledOps:
     @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
     def test_controlled_globalphase(self, n_qubits, control_value, tol, lightning_sv):
         """Test that multi-controlled gates are correctly applied to a state"""
-        threshold = 250
+        threshold = 250 if device_name != "lightning.tensor" else 5
         operation = qml.GlobalPhase
-        if ops_not_supported_in_ltensor(operation):
-            pytest.skip("Operation not supported in lightning.tensor.")
         num_wires = max(operation.num_wires, 1)
         for n_wires in range(num_wires + 1, num_wires + 4):
             wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -912,9 +888,11 @@ class TestControlledOps:
                         qml.ctrl(
                             operation(0.1234, target_wires),
                             control_wires,
-                            control_values=[
-                                control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                            ],
+                            control_values=(
+                                [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                                if device_name != "lightning.tensor"
+                                else [control_value for _ in control_wires]
+                            ),
                         ),
                     ],
                     [qml.state()],
@@ -924,8 +902,10 @@ class TestControlledOps:
                 m = LightningMeasurements(statevector)
                 result = measure_final_state(m, tape)
                 expected = self.calculate_reference(tape)
-
-                assert np.allclose(result, expected, tol)
+                if device_name == "lightning.tensor" and statevector.dtype == np.complex64:
+                    assert np.allclose(result, expected, 1e-4)
+                else:
+                    assert np.allclose(result, expected, tol)
 
 
 @pytest.mark.parametrize("phi", PHI)

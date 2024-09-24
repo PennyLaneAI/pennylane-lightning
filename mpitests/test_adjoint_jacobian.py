@@ -39,6 +39,9 @@ if hasattr(pennylane_lightning, "lightning_gpu_ops"):
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+if device_name == "lightning.gpu":
+    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
+
 I, X, Y, Z = (
     np.eye(2),
     qml.PauliX.compute_matrix(),
@@ -1264,7 +1267,7 @@ def test_qubit_unitary(dev, n_targets):
 
     init_state = np.array(init_state, requires_grad=False, dtype=c_dtype)
     U = np.array(U, requires_grad=False, dtype=c_dtype)
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     def circuit(x):
         qml.StatePrep(init_state, wires=range(n_wires))
@@ -1312,7 +1315,7 @@ def test_diff_qubit_unitary(dev, n_targets):
 
     init_state = np.array(init_state, requires_grad=False, dtype=c_dtype)
     U = np.array(U, requires_grad=False, dtype=c_dtype)
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     def circuit(x, u_mat):
         qml.StatePrep(init_state, wires=range(n_wires))
