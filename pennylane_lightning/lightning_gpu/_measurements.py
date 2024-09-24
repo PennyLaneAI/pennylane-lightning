@@ -169,7 +169,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
                 if self._mpi_handler.mpi_manager.getRank() == 0:
                     CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
             else:
-                CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
+                CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+                    wire_order=list(range(self._qubit_state.num_wires))
+                ).tocsr(copy=False)
 
             return self._measurement_lightning.expval(
                 CSR_SparseHamiltonian.indptr,

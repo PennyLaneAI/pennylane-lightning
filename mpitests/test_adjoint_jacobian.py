@@ -1227,7 +1227,7 @@ def test_adjoint_SparseHamiltonian(returns):
 def test_qubit_unitary(dev, n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = len(dev.wires)
-    dev_def = qml.device("default.qubit.legacy", wires=n_wires)
+    dev_def = qml.device("default.qubit", wires=n_wires)
     h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
     c_dtype = dev.c_dtype
 
