@@ -251,46 +251,46 @@ class TestExpval:
 
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
-    # @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    # @pytest.mark.parametrize("n_wires", range(1, 8))
-    # def test_hermitian_expectation(self, n_wires, theta, phi, tol):
-    #     """Test that Hadamard expectation value is correct"""
-    #     n_qubits = 7
-    #     comm = MPI.COMM_WORLD
-    #     mpisize = comm.Get_size()
-    #     dev_def = qml.device("default.qubit", wires=n_qubits)
-    #     dev = qml.device(device_name, mpi=True, wires=n_qubits)
-    #     comm = MPI.COMM_WORLD
+    @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
+    @pytest.mark.parametrize("n_wires", range(1, 8))
+    def test_hermitian_expectation(self, n_wires, theta, phi, tol):
+        """Test that Hadamard expectation value is correct"""
+        n_qubits = 7
+        dev_def = qml.device("default.qubit", wires=n_qubits)
+        dev = qml.device(device_name, mpi=True, wires=n_qubits)
+        comm = MPI.COMM_WORLD
 
-    #     m = 2**n_wires
-    #     U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
-    #     U = U + np.conj(U.T)
-    #     U = U.astype(dev.c_dtype)
-    #     comm.Bcast(U, root=0)
-    #     # obs = qml.Hermitian(U, wires=range(n_wires))
-    #     obs = qml.PauliX(0)
+        m = 2**n_wires
+        U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
+        U = U + np.conj(U.T)
+        U = U.astype(dev.c_dtype)
+        comm.Bcast(U, root=0)
+        obs = qml.Hermitian(U, wires=range(n_wires))
 
-    #     init_state = create_random_init_state(n_qubits, dev.c_dtype)
-    #     comm.Bcast(init_state, root=0)
+        init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
+        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state = init_state.astype(dev.c_dtype)
+        comm.Bcast(init_state, root=0)
 
-    #     def circuit():
-    #         qml.StatePrep(init_state, wires=range(n_qubits))
-    #         qml.RY(theta, wires=[0])
-    #         qml.RY(phi, wires=[1])
-    #         qml.CNOT(wires=[0, 1])
-    #         return qml.expval(obs)
+        def circuit():
+            qml.StatePrep(init_state, wires=range(n_qubits))
+            qml.RY(theta, wires=[0])
+            qml.RY(phi, wires=[1])
+            qml.CNOT(wires=[0, 1])
+            return qml.expval(obs)
 
-    #     circ = qml.QNode(circuit, dev)
-    #     if n_wires > n_qubits - np.log2(mpisize):
-    #         with pytest.raises(
-    #             RuntimeError,
-    #             match="MPI backend does not support Hermitian with number of target wires larger than local wire number",
-    #         ):
-    #             circ()
-    #     else:
-    #         circ_res = circ()
-    #         circ_def = qml.QNode(circuit, dev_def)
-    #         assert np.allclose(circ_res, circ_def, tol)
+        circ = qml.QNode(circuit, dev)
+        comm = MPI.COMM_WORLD
+        mpisize = comm.Get_size()
+        if n_wires > n_qubits - np.log2(mpisize):
+            with pytest.raises(
+                RuntimeError,
+                match="MPI backend does not support Hermitian with number of target wires larger than local wire number",
+            ):
+                circ()
+        else:
+            circ_def = qml.QNode(circuit, dev_def)
+            assert np.allclose(circ(), circ_def(), tol)
 
 
 @pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
