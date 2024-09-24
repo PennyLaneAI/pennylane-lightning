@@ -49,6 +49,7 @@ except ImportError as ex:
 
 import numpy as np
 from pennylane.tape import QuantumTape
+from scipy.sparse import csr_matrix
 
 from pennylane import BasisState, QuantumFunctionError, StatePrep
 from pennylane.operation import Operation
@@ -209,15 +210,32 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             return np.array([], dtype=self.dtype)
 
         trainable_params = processed_data["tp_shift"]
-        jac = self._jacobian_lightning(
-            processed_data["state_vector"],
-            processed_data["obs_serialized"],
-            processed_data["ops_serialized"],
-            trainable_params,
-        )
+
+        if self._batch_obs:  # Batching of Measurements
+            jac = self._jacobian_lightning.batched(
+                processed_data["state_vector"],
+                processed_data["obs_serialized"],
+                processed_data["ops_serialized"],
+                trainable_params,
+            )
+        else:
+            jac = self._jacobian_lightning(
+                processed_data["state_vector"],
+                processed_data["obs_serialized"],
+                processed_data["ops_serialized"],
+                trainable_params,
+            )
+
         jac = np.array(jac)
-        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
+        has_shape0 = bool(len(jac))
+
+        num_obs = len(np.unique(processed_data["obs_indices"]))
+        rows = processed_data["obs_indices"]
+        cols = np.arange(len(rows), dtype=int)
+        data = np.ones(len(rows))
+        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
+        jac = red_mat @ jac.reshape((len(rows), -1))
+        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
-
         return self._adjoint_jacobian_processing(jac_r)

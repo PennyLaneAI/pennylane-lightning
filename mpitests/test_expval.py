@@ -34,8 +34,8 @@ def create_random_init_state(numWires, C_DTYPE, seed_value=48):
     init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
         num_elements
     ).astype(R_DTYPE)
-    scale_sum = np.sqrt(np.sum(np.abs(init_state) ** 2)).astype(R_DTYPE)
-    init_state = init_state / scale_sum
+
+    init_state = init_state / np.linalg.norm(init_state)
     return init_state
 
 
@@ -134,16 +134,14 @@ class TestExpval:
 
         dev_mpi = qml.device("lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE)
 
+        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
+
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
         comm.Bcast(state_vector, root=0)
 
-        local_state_vector = np.zeros(1 << num_local_wires).astype(C_DTYPE)
-        comm.Scatter(state_vector, local_state_vector, root=0)
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
-
         def circuit():
             qml.StatePrep(state_vector, wires=range(num_wires))
-            return qml.expval(operation(wires))
+            return qml.expval(operation(0))
 
         cpu_qnode = qml.QNode(circuit, dev_cpu)
         expected_output_cpu = cpu_qnode()
@@ -294,7 +292,6 @@ class TestExpval:
     #         assert np.allclose(circ_res, circ_def, tol)
 
 
-@pytest.mark.skip("tmp skip WIP")
 @pytest.mark.parametrize("diff_method", ("parameter-shift", "adjoint"))
 class TestExpOperatorArithmetic:
     """Test integration of lightning with SProd, Prod, and Sum."""
