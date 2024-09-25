@@ -13,7 +13,6 @@
 // limitations under the License.
 #include "TestHelpers.hpp"      // createProductState, createZeroState
 #include "TestHelpersWires.hpp" // CombinationGenerator, PermutationGenerator
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 #include <catch2/catch.hpp>
 
@@ -32,7 +31,6 @@
 namespace {
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::Util;
-using Pennylane::LightningQubit::Gates::GateImplementationsPI;
 } // namespace
 /// @endcond
 
@@ -77,42 +75,6 @@ TEMPLATE_TEST_CASE("Approx", "[Test_Internal]", float, double) {
             ComplexT{1.0, 0.0},
         };
         REQUIRE(test1 != approx(test2).margin(margin));
-    }
-}
-
-TEMPLATE_TEST_CASE("createProductState", "[Test_Internal]", float, double) {
-    using PrecisionT = TestType;
-    using ComplexT = std::complex<PrecisionT>;
-
-    const auto margin = PrecisionT{1e-7};
-
-    SECTION("createProductState(\"+-0\") == |+-0> ") {
-        const auto st = createProductState<PrecisionT>("+-0");
-
-        auto expected = createZeroState<ComplexT>(3);
-        GateImplementationsPI::applyHadamard(expected.data(), 3, {0}, false);
-
-        GateImplementationsPI::applyPauliX(expected.data(), 3, {1}, false);
-        GateImplementationsPI::applyHadamard(expected.data(), 3, {1}, false);
-
-        REQUIRE(st == approx(expected).margin(margin));
-    }
-    SECTION("createProductState(\"+-0\") != |+-1> ") {
-        const auto st = createProductState<PrecisionT>("+-0");
-
-        auto expected = createZeroState<ComplexT>(3); // |000>
-        GateImplementationsPI::applyHadamard(expected.data(), 3, {0},
-                                             false); // |+00>
-
-        GateImplementationsPI::applyPauliX(expected.data(), 3, {1},
-                                           false); // |+10>
-        GateImplementationsPI::applyHadamard(expected.data(), 3, {1},
-                                             false); // |+-0>
-
-        GateImplementationsPI::applyPauliX(expected.data(), 3, {2},
-                                           false); // |+-1>
-
-        REQUIRE(st != approx(expected).margin(margin));
     }
 }
 

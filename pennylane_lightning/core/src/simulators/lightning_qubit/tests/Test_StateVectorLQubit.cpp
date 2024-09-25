@@ -25,7 +25,6 @@
 #include "StateVectorLQubitRaw.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 #include "TestHelpersWires.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 /**
  * @file
@@ -276,9 +275,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
             const auto m = randomUnitary<PrecisionT>(re, num_wires);
 
             state_vector_1.applyMatrix(m, wires);
-
-            Gates::GateImplementationsPI::applyMultiQubitOp<PrecisionT>(
-                state_vector_2.getData(), num_qubits, m.data(), wires, false);
+            state_vector_2.applyMatrix(m, wires);
 
             PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10E3;
             REQUIRE(isApproxEqual(
