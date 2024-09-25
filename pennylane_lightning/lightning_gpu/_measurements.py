@@ -34,18 +34,15 @@ except ImportError as ex:
 
     pass
 
-from typing import Any, List
+from typing import Any, List, Callable
 
 import numpy as np
 import pennylane as qml
 from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
-from pennylane.tape import QuantumScript
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
-
-from ._mpi_handler import MPIHandler
 
 
 class LightningGPUMeasurements(LightningBaseMeasurements):
@@ -57,14 +54,14 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         qubit_state(LightningGPUStateVector): Lightning state-vector class containing the state vector to be measured.
         use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
         mpi_handler(MPIHandler, optional): MPI handler for PennyLane Lightning GPU device.
-            Provides functionality to run on multiple devices.
+            Provides functionality to distribute the state-vector to multiple devices.
     """
 
     def __init__(
         self,
-        lgpu_state,
-        use_mpi=False,
-        mpi_handler=None,
+        lgpu_state, # LightningGPUStateVector
+        use_mpi: bool = False,
+        mpi_handler: Callable = None, # MPIHandler
     ) -> TensorLike:
 
         super().__init__(lgpu_state)

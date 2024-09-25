@@ -45,7 +45,7 @@ except ImportError as ex:
     pass
 
 import numpy as np
-from pennylane import BasisState, QuantumFunctionError, StatePrep
+from pennylane import BasisState, StatePrep
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 from scipy.sparse import csr_matrix
@@ -62,10 +62,13 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
     Args:
         qubit_state(LightningGPUStateVector): State Vector to calculate the adjoint Jacobian with.
-        batch_obs(bool): If serialized tape is to be batched or not.
+        batch_obs(bool): If serialized tape is to be batched or not. For Lightning GPU, 
+            if `batch_obs=False` the computation requires more memory and is faster, 
+            while `batch_obs=True` allows a larger number of qubits simulation 
+            at the expense of high computational cost. Defaults to False
         use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
         mpi_handler(MPIHandler, optional): MPI handler for PennyLane Lightning GPU device.
-            Provides functionality to run on multiple devices.
+            Provides functionality to distribute the state-vector to multiple devices.
     """
 
     # pylint: disable=too-few-public-methods
@@ -75,7 +78,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         qubit_state: LightningGPUStateVector,
         batch_obs: bool = False,
         use_mpi: bool = False,
-        mpi_handler=None,
+        mpi_handler = None,
     ) -> None:
 
         super().__init__(qubit_state, batch_obs)
@@ -91,12 +94,11 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
 
         # Warning about performance with MPI and batch observation
-        if self._use_mpi and self._batch_obs:
+        if self._use_mpi and not self._batch_obs:
             warn(
-                "It is not possible to use LGPU with MPI and batch the observation. batch_obs will be deactivated",
+                "Using LightningGPU with `batch_obs=False` and `use_mpi=True` has the limitation of requiring more memory. If you want to allocate larger number of qubits use the option `batch_obs=True`",
                 RuntimeWarning,
             )
-            self._batch_obs = False
 
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning GPU Adjoint Jacobian C++ class.
@@ -120,7 +122,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             )
             return jacobian_lightning, create_ops_list_lightning
 
-    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi=False):
+    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi: bool = False):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
