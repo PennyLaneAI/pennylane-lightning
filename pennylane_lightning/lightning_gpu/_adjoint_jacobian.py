@@ -75,7 +75,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         qubit_state: LightningGPUStateVector,
         batch_obs: bool = False,
         use_mpi: bool = False,
-        mpi_handler = None,
+        mpi_handler=None,
     ) -> None:
 
         super().__init__(qubit_state, batch_obs)
@@ -89,10 +89,13 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
-        
-        # Warning about performance with MPI and batch observation 
+
+        # Warning about performance with MPI and batch observation
         if self._use_mpi and self._batch_obs:
-            warn("It is not possible to use LGPU with MPI and batch the observation. batch_obs will be deactivated",RuntimeWarning)
+            warn(
+                "It is not possible to use LGPU with MPI and batch the observation. batch_obs will be deactivated",
+                RuntimeWarning,
+            )
             self._batch_obs = False
 
     def _adjoint_jacobian_dtype(self):
@@ -117,7 +120,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             )
             return jacobian_lightning, create_ops_list_lightning
 
-    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi = False):
+    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi=False):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 

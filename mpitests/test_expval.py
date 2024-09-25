@@ -122,7 +122,12 @@ class TestExpval:
             qml.PauliY,
             qml.PauliZ,
             qml.Hadamard,
-            pytest.param(qml.Identity, marks=pytest.mark.xfail(reason="The Identity gate need a deep review for MPI support")),
+            pytest.param(
+                qml.Identity,
+                marks=pytest.mark.xfail(
+                    reason="The Identity gate need a deep review for MPI support"
+                ),
+            ),
         ],
     )
     @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 3, numQubits - 2, numQubits - 1])
@@ -134,7 +139,9 @@ class TestExpval:
         num_global_wires = commSize.bit_length() - 1
         num_local_wires = num_wires - num_global_wires
 
-        dev_mpi = qml.device("lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs)
+        dev_mpi = qml.device(
+            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+        )
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
 
@@ -170,7 +177,9 @@ class TestExpval:
         num_wires = numQubits
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
-        dev_mpi = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs)
+        dev_mpi = qml.device(
+            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+        )
 
         def circuit():
             qml.RX(0.4, wires=[0])
@@ -216,7 +225,9 @@ class TestExpval:
         ham = qml.Hamiltonian(coeffs, obs)
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
-        dev_mpi = qml.device("lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs)
+        dev_mpi = qml.device(
+            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+        )
 
         def circuit():
             qml.RX(0.4, wires=[0])
@@ -230,7 +241,9 @@ class TestExpval:
 
     def test_expval_non_pauli_word_hamiltionian(self, tol, C_DTYPE, batch_obs):
         """Tests expectation values of non-Pauli word Hamiltonians."""
-        dev_mpi = qml.device("lightning.gpu", wires=3, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs)
+        dev_mpi = qml.device(
+            "lightning.gpu", wires=3, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+        )
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
         theta = 0.432
@@ -256,7 +269,9 @@ class TestExpval:
         """Test that Hadamard expectation value is correct"""
         n_qubits = 7
         dev_def = qml.device("default.qubit", wires=n_qubits)
-        dev = qml.device(device_name, mpi=True, wires=n_qubits, c_dtype=C_DTYPE, batch_obs=batch_obs)
+        dev = qml.device(
+            device_name, mpi=True, wires=n_qubits, c_dtype=C_DTYPE, batch_obs=batch_obs
+        )
         comm = MPI.COMM_WORLD
 
         m = 2**n_wires

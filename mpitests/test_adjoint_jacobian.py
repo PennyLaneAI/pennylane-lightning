@@ -161,7 +161,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     @staticmethod
     def tol_for_allclose(c_dtype):
         return 1e-3 if c_dtype == np.complex64 else 1e-7
-    
+
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
@@ -509,11 +509,10 @@ class TestAdjointJacobianQNode:
                 return qml.expval(qml.PauliZ(0))
 
             qml.grad(circ)(0.1)
-    
+
     @staticmethod
     def tol_for_allclose(c_dtype):
         return 1e-3 if c_dtype == np.complex64 else 1e-7
-
 
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
@@ -540,7 +539,7 @@ class TestAdjointJacobianQNode:
         grad_A = grad_fn(*args)
 
         spy.assert_called()
-        
+
         h = self.tol_for_allclose(dev.c_dtype)
         tol = self.tol_for_allclose(dev.c_dtype)
 
