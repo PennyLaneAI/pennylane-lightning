@@ -40,7 +40,7 @@ This can be done by modifying two files:
 
     // file: gates/KernelType.hpp
     namespace Pennylane {
-    enum class KernelType { PI, LM, MyKernel /* This is added */, None };
+    enum class KernelType { LM, MyKernel /* This is added */, None };
 
     /* Rest of the file */
 
@@ -53,7 +53,6 @@ and
     // file: gates/AvailableKernels.hpp
     namespace Pennylane {
         using AvailableKernels = Util::TypeList<GateImplementationsLM,
-                                                GateImplementationsPI,
                                                 MyGateImplementation /* This is added*/,
                                                 void>;
     } // namespace Pennylane
@@ -111,7 +110,6 @@ To test your own kernel implementations, you can go to ``tests/TestKernels.hpp``
 .. code-block:: cpp
 
     using TestKernels = Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
-                                                  Pennylane::Gates::GateImplementationsPI,
                                                   MyGateImplementation /*This is added */, void>;
 
 It will automatically test your gate implementation.
