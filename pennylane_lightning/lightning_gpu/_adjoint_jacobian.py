@@ -96,7 +96,8 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         # Warning about performance with MPI and batch observation
         if self._use_mpi and not self._batch_obs:
             warn(
-                "Using LightningGPU with `batch_obs=False` and `use_mpi=True` has the limitation of requiring more memory. If you want to allocate larger number of qubits use the option `batch_obs=True`",
+                "Using LightningGPU with `batch_obs=False` and `use_mpi=True` has the limitation of requiring more memory. If you want to allocate larger number of qubits use the option `batch_obs=True`"
+                "For more information Check out the section `Parallel adjoint differentiation support` in our website https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/device.html for more details.",
                 RuntimeWarning,
             )
 
