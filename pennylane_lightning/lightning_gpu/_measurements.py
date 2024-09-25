@@ -55,9 +55,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
     Args:
         qubit_state(LightningGPUStateVector): Lightning state-vector class containing the state vector to be measured.
-        mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
+        use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
+        mpi_handler(MPIHandler, optional): MPI handler for PennyLane Lightning GPU device.
             Provides functionality to run on multiple devices.
-
     """
 
     def __init__(

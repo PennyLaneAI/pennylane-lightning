@@ -30,11 +30,7 @@ from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionCon
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-import pennylane_lightning
-
-if hasattr(pennylane_lightning, "lightning_gpu_ops"):
-    import pennylane_lightning.lightning_gpu_ops as lightning_ops
-    from pennylane_lightning.lightning_gpu_ops import LightningException
+from pennylane_lightning.lightning_gpu_ops import LightningException
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -103,9 +99,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     def test_empty_measurements(self, dev):
         """Tests if an empty array is returned when the measurements of the tape is empty."""
 
-        # with qml.tape.QuantumTape() as tape:
-        #     qml.RX(0.4, wires=[0])
-
         def circuit():
             qml.RX(0.4, wires=[0])
             return qml.expval(qml.PauliZ(0))
@@ -121,7 +114,6 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
         multi-parameter operations that are not qml.Rot"""
 
-        # with qml.tape.QuantumTape() as tape:
         qs = QuantumScript(
             [qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])],
             [qml.expval(qml.PauliZ(0))],
@@ -166,6 +158,10 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         ):
             _ = dev.compute_derivatives(qs, config)
 
+    @staticmethod
+    def tol_for_allclose(c_dtype):
+        return 1e-3 if c_dtype == np.complex64 else 1e-7
+    
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
@@ -185,7 +181,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
         calculated_val = dev.compute_derivatives(qs, config)
 
-        tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         # compare to finite differences
         tapes, fn = qml.gradients.param_shift(qs)
@@ -213,7 +209,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
         calculated_val = dev.compute_derivatives(qs, config)
 
-        tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         # compare to finite differences
         tapes, fn = qml.gradients.param_shift(qs)
@@ -399,7 +395,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
-        tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         tapes, fn = qml.gradients.param_shift(qs)
         grad_F = fn(qml.execute(tapes, dev, None))
@@ -439,7 +435,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
 
-        tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         # circuit jacobians
         grad_D = dev.compute_derivatives(qs, config)
@@ -513,6 +509,11 @@ class TestAdjointJacobianQNode:
                 return qml.expval(qml.PauliZ(0))
 
             qml.grad(circ)(0.1)
+    
+    @staticmethod
+    def tol_for_allclose(c_dtype):
+        return 1e-3 if c_dtype == np.complex64 else 1e-7
+
 
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
@@ -539,9 +540,9 @@ class TestAdjointJacobianQNode:
         grad_A = grad_fn(*args)
 
         spy.assert_called()
-
-        h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        
+        h = self.tol_for_allclose(dev.c_dtype)
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         qnode2 = QNode(circuit, dev, diff_method="finite-diff", h=h)
         grad_fn = qml.grad(qnode2)
@@ -616,8 +617,8 @@ class TestAdjointJacobianQNode:
 
         spy_analytic = mocker.spy(dev, "LightningAdjointJacobian")
 
-        h = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
-        tol = 1e-3 if dev.c_dtype == np.complex64 else 1e-7
+        h = self.tol_for_allclose(dev.c_dtype)
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         cost = QNode(circuit, dev, diff_method="finite-diff", h=h)
 
@@ -655,8 +656,8 @@ class TestAdjointJacobianQNode:
         params1 = tf.Variable(0.3, dtype=tf_r_dtype)
         params2 = tf.Variable(0.4, dtype=tf_r_dtype)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        h = self.tol_for_allclose(dev.c_dtype)
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         qnode1 = QNode(f, dev, interface="tf", diff_method="adjoint")
         qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", h=h)
@@ -688,7 +689,7 @@ class TestAdjointJacobianQNode:
         params1 = torch.tensor(0.3, requires_grad=True)
         params2 = torch.tensor(0.4, requires_grad=True)
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        h = self.tol_for_allclose(dev.c_dtype)
 
         qnode1 = QNode(f, dev, interface="torch", diff_method="adjoint")
         qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff", h=h)
@@ -710,7 +711,7 @@ class TestAdjointJacobianQNode:
         jax interface"""
 
         jax = pytest.importorskip("jax")
-        if dev.R_DTYPE == np.float64:
+        if dev.c_dtype == np.complex128:
             from jax import config  # pylint: disable=import-outside-toplevel
 
             config.update("jax_enable_x64", True)
@@ -721,11 +722,13 @@ class TestAdjointJacobianQNode:
             qml.RY(jax.numpy.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        params1 = jax.numpy.array(0.3, dev.R_DTYPE)
-        params2 = jax.numpy.array(0.4, dev.R_DTYPE)
+        R_DTYPE = np.float32 if dev.c_dtype == np.complex64 else np.float64
 
-        h = 2e-3 if dev.R_DTYPE == np.float32 else 1e-7
-        tol = 1e-3 if dev.R_DTYPE == np.float32 else 1e-7
+        params1 = jax.numpy.array(0.3, R_DTYPE)
+        params2 = jax.numpy.array(0.4, R_DTYPE)
+
+        h = self.tol_for_allclose(dev.c_dtype)
+        tol = self.tol_for_allclose(dev.c_dtype)
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
         qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff", h=h)

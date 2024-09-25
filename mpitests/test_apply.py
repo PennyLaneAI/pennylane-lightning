@@ -445,7 +445,7 @@ class TestExpval:
             qml.PauliY,
             qml.PauliZ,
             qml.Hadamard,
-            # qml.Identity,
+            pytest.param(qml.Identity, marks=pytest.mark.xfail(reason="The Identity gate need a deep review for MPI support")),
         ],
     )
     @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 3, numQubits - 2, numQubits - 1])

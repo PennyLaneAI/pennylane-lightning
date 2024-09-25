@@ -63,6 +63,9 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
     Args:
         qubit_state(LightningGPUStateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
+        use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
+        mpi_handler(MPIHandler, optional): MPI handler for PennyLane Lightning GPU device.
+            Provides functionality to run on multiple devices.
     """
 
     # pylint: disable=too-few-public-methods
@@ -86,6 +89,11 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
+        
+        # Warning about performance with MPI and batch observation 
+        if self._use_mpi and self._batch_obs:
+            warn("It is not possible to use LGPU with MPI and batch the observation. batch_obs will be deactivated",RuntimeWarning)
+            self._batch_obs = False
 
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning GPU Adjoint Jacobian C++ class.
@@ -109,13 +117,14 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             )
             return jacobian_lightning, create_ops_list_lightning
 
-    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi=False):
+    def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False, use_mpi = False):
         """Process a tape, serializing and building a dictionary proper for
         the adjoint Jacobian calculation in the C++ layer.
 
         Args:
             tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
             split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
+            use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
 
         Returns:
             dictionary: dictionary providing serialized data for Jacobian calculation.
