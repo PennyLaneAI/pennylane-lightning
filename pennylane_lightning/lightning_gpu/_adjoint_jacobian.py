@@ -72,7 +72,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         qubit_state: LightningGPUStateVector,
         batch_obs: bool = False,
         use_mpi: bool = False,
-        mpi_handler=None,
+        mpi_handler = None,
     ) -> None:
 
         super().__init__(qubit_state, batch_obs)
@@ -81,7 +81,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
         self._use_mpi = use_mpi
 
-        if use_mpi:
+        if self._use_mpi:
             self._mpi_handler = mpi_handler
 
         # Initialize the C++ binds
