@@ -15,17 +15,21 @@
 Class implementation for state vector measurements.
 """
 
-# pylint: disable=import-error, no-name-in-module, ungrouped-imports
+from __future__ import annotations
+
+from warnings import warn
+
 try:
     from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     pass
 
-from typing import Any, List
+from typing import List
 
 import numpy as np
 import pennylane as qml
-from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
+from pennylane.measurements import CountsMP, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
@@ -44,8 +48,8 @@ class LightningKokkosMeasurements(
 
     def __init__(
         self,
-        kokkos_state,
-    ) -> None:
+        kokkos_state: LightningKokkosStateVector,
+    ) -> TensorLike:
 
         super().__init__(kokkos_state)
 

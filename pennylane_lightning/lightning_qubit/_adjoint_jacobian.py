@@ -14,6 +14,9 @@
 r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
+from __future__ import annotations
+
+from warnings import warn
 
 try:
     from pennylane_lightning.lightning_qubit_ops.algorithms import (
@@ -22,7 +25,8 @@ try:
         create_ops_listC64,
         create_ops_listC128,
     )
-except ImportError:
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     pass
 
 from os import getenv
@@ -33,8 +37,6 @@ from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
-
-from ._state_vector import LightningStateVector
 
 
 class LightningAdjointJacobian(
@@ -48,6 +50,7 @@ class LightningAdjointJacobian(
     """
 
     def __init__(self, qubit_state: LightningStateVector, batch_obs: bool = False) -> None:
+
         super().__init__(qubit_state, batch_obs)
 
         # Initialize the C++ binds

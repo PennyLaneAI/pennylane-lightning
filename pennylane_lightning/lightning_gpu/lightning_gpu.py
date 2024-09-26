@@ -19,11 +19,10 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 
 from ctypes.util import find_library
 from dataclasses import replace
-from functools import reduce
 from importlib import util as imp_util
 from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -53,11 +52,6 @@ from pennylane_lightning.core.lightning_newAPI_base import (
     Result_or_ResultBatch,
 )
 
-from ._adjoint_jacobian import LightningGPUAdjointJacobian
-from ._measurements import LightningGPUMeasurements
-from ._mpi_handler import MPIHandler
-from ._state_vector import LightningGPUStateVector
-
 try:
     from pennylane_lightning.lightning_gpu_ops import (
         DevPool,
@@ -68,19 +62,15 @@ try:
 
     LGPU_CPP_BINARY_AVAILABLE = True
 
-    try:
-        from ._mpi_handler import MPIHandler
-
-        MPI_SUPPORT = True
-    except ImportError as ex:
-        warn(str(ex), UserWarning)
-        MPI_SUPPORT = False
-
-    LGPU_CPP_BINARY_AVAILABLE = True
 except (ImportError, ValueError) as ex:
     warn(str(ex), UserWarning)
     LGPU_CPP_BINARY_AVAILABLE = False
     backend_info = None
+
+from ._adjoint_jacobian import LightningGPUAdjointJacobian
+from ._measurements import LightningGPUMeasurements
+from ._mpi_handler import MPIHandler
+from ._state_vector import LightningGPUStateVector
 
 # The set of supported operations.
 _operations = frozenset(
@@ -329,11 +319,11 @@ class LightningGPU(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires,
+        wires: Union[int, List],
         *,
-        c_dtype=np.complex128,
-        shots=None,
-        batch_obs=False,
+        c_dtype: Union[np.complex128, np.complex64] = np.complex128,
+        shots: Union[int, List] = None,
+        batch_obs: bool = False,
         # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
@@ -363,7 +353,7 @@ class LightningGPU(LightningBase):
         self._sync = sync
 
         # Creating the state vector
-        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype)
+        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
@@ -523,14 +513,14 @@ class LightningGPU(LightningBase):
 
         state.reset_state(sync=False)
         final_state = state.get_final_state(circuit)
-        return LightningGPUMeasurements(
+        return self.LightningMeasurements(
             final_state, self._mpi_handler.use_mpi, self._mpi_handler
         ).measure_final_state(circuit)
 
     def jacobian(
         self,
         circuit: QuantumTape,
-        state,  # Lightning [Device] StateVector
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ):
@@ -538,7 +528,7 @@ class LightningGPU(LightningBase):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -557,7 +547,7 @@ class LightningGPU(LightningBase):
     def simulate_and_jacobian(
         self,
         circuit: QuantumTape,
-        state,  # Lightning [Device] StateVector
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ) -> Tuple:
@@ -565,7 +555,7 @@ class LightningGPU(LightningBase):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -587,7 +577,7 @@ class LightningGPU(LightningBase):
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
-        state,  # Lightning [Device] StateVector
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ):
@@ -598,7 +588,7 @@ class LightningGPU(LightningBase):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the VJP.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -618,7 +608,7 @@ class LightningGPU(LightningBase):
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
-        state,
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ) -> Tuple:
@@ -629,7 +619,7 @@ class LightningGPU(LightningBase):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian.
             wire_map (Optional[dict]): a map from wire labels to simulation indices

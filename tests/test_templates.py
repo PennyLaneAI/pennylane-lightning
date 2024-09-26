@@ -26,9 +26,6 @@ from pennylane import numpy as np
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
-
 
 def lightning_tensor_check(n_qubits):
     if device_name == "lightning.tensor" and n_qubits > 14:

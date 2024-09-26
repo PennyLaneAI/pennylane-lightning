@@ -15,18 +15,15 @@
 This module contains the :class:`~.LightningGPU_MPIHandler` class, a MPI handler to use LightningGPU device with multi-GPU on multi-node system.
 """
 
-from warnings import warn
-
 try:
     # pylint: disable=no-name-in-module
-    from pennylane_lightning.lightning_gpu_ops import DevTag, MPIManager
+    from pennylane_lightning.lightning_gpu_ops import DevPool, DevTag, MPIManager
 
     MPI_SUPPORT = True
-except ImportError as ex:
-    print(str(ex), UserWarning)
+except ImportError:
     MPI_SUPPORT = False
 
-from typing import Callable, Union
+from typing import Union
 
 import numpy as np
 
@@ -42,7 +39,6 @@ class MPIHandler:
     Args:
         mpi (bool): declare if the device will use the MPI support.
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-        dev_pool (Callable): Method to handle the GPU devices available.
         num_wires (int): the number of wires to initialize the device with.
         c_dtype (np.complex64, np.complex128): Datatypes for statevector representation.
     """
@@ -51,19 +47,23 @@ class MPIHandler:
         self,
         mpi: bool,
         mpi_buf_size: int,
-        dev_pool: Callable,
         num_wires: int,
         c_dtype: Union[np.complex64, np.complex128],
     ) -> None:
 
         self.use_mpi = mpi
         self.mpi_buf_size = mpi_buf_size
-        self._dp = dev_pool
+
+        self._dp = DevPool()
 
         if self.use_mpi:
 
             if not MPI_SUPPORT:
-                raise ImportError("MPI related APIs are not found.")
+                raise ImportError(
+                    "Pre-compiled binaries for lightning.gpu with MPI support are not available. "
+                    "To manually compile from source, follow the instructions at "
+                    "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
+                )
 
             if mpi_buf_size < 0:
                 raise ValueError(f"Unsupported mpi_buf_size value: {mpi_buf_size}, should be >= 0")

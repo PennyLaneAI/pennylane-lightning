@@ -15,6 +15,10 @@ r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
 
+from __future__ import annotations
+
+from warnings import warn
+
 try:
     from pennylane_lightning.lightning_kokkos_ops.algorithms import (
         AdjointJacobianC64,
@@ -22,7 +26,8 @@ try:
         create_ops_listC64,
         create_ops_listC128,
     )
-except ImportError:
+except ImportError as ex:
+    warn(str(ex), UserWarning)
     pass
 
 import numpy as np
@@ -30,8 +35,6 @@ from pennylane.tape import QuantumTape
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
-
-from ._state_vector import LightningKokkosStateVector
 
 
 class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):

@@ -26,9 +26,6 @@ from conftest import device_name
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == "lightning.gpu":
-    pytest.skip("LGPU new API in WIP.  Skipping.", allow_module_level=True)
-
 
 def test_create_device():
     dev = qml.device(device_name, wires=1)

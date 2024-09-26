@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_kokkos state-vector manipulation.
 """
+from warnings import warn
 
 try:
     from pennylane_lightning.lightning_kokkos_ops import (
@@ -23,10 +24,10 @@ try:
         allocate_aligned_array,
         print_configuration,
     )
-except ImportError:
-    pass
+except ImportError as ex:
+    warn(str(ex), UserWarning)
 
-from typing import Optional
+from typing import Union
 
 import numpy as np
 import pennylane as qml
@@ -61,10 +62,10 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
     def __init__(
         self,
-        num_wires,
-        dtype=np.complex128,
+        num_wires: int,
+        dtype: Union[np.complex128, np.complex64] = np.complex128,
         kokkos_args=None,
-    ):  # pylint: disable=too-many-arguments
+    ):
 
         super().__init__(num_wires, dtype)
 
