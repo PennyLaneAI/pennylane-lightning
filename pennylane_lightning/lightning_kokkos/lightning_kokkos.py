@@ -20,7 +20,7 @@ import sys
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np

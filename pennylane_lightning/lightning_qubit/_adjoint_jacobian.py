@@ -15,6 +15,7 @@ r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
 from __future__ import annotations
+
 from warnings import warn
 
 try:
@@ -48,11 +49,8 @@ class LightningAdjointJacobian(
         batch_obs(bool): If serialized tape is to be batched or not.
     """
 
-    def __init__(self, 
-                 qubit_state: LightningStateVector, 
-                 batch_obs: bool = False
-                 ) -> None:
-        
+    def __init__(self, qubit_state: LightningStateVector, batch_obs: bool = False) -> None:
+
         super().__init__(qubit_state, batch_obs)
 
         # Initialize the C++ binds

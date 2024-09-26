@@ -16,6 +16,7 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from __future__ import annotations
+
 from warnings import warn
 
 try:
@@ -46,10 +47,7 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, 
-                 qubit_state: LightningKokkosStateVector, 
-                 batch_obs: bool = False
-                 ) -> None:
+    def __init__(self, qubit_state: LightningKokkosStateVector, batch_obs: bool = False) -> None:
         super().__init__(qubit_state, batch_obs)
 
         # Initialize the C++ binds

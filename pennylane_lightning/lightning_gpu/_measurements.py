@@ -16,6 +16,7 @@ Class implementation for state vector measurements.
 """
 
 from __future__ import annotations
+
 from warnings import warn
 
 try:

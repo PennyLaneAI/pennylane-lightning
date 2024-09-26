@@ -60,7 +60,6 @@ from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
 
-
 # The set of supported operations.
 _operations = frozenset(
     {
@@ -335,7 +334,7 @@ class LightningQubit(LightningBase):
         wires: Union[int, List],
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
-        shots: Union[int, List] =None,
+        shots: Union[int, List] = None,
         batch_obs: bool = False,
         # Markov Chain Monte Carlo (MCMC) sampling method arguments
         seed: Union[str, int] = "global",

@@ -61,11 +61,11 @@ class LightningKokkosStateVector(LightningBaseStateVector):
     """
 
     def __init__(
-        self,        
+        self,
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
         kokkos_args=None,
-    ):  
+    ):
 
         super().__init__(num_wires, dtype)
 
