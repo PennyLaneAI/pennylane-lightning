@@ -43,7 +43,6 @@ try:
 
 except ImportError as ex:
     warn(str(ex), UserWarning)
-    pass
 
 
 import numpy as np
@@ -117,14 +116,15 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
                 create_ops_listMPIC64 if self.dtype == np.complex64 else create_ops_listMPIC128
             )
             return jacobian_lightning, create_ops_list_lightning
-        else:  # without MPI
-            jacobian_lightning = (
-                AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
-            )
-            create_ops_list_lightning = (
-                create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
-            )
-            return jacobian_lightning, create_ops_list_lightning
+        
+        # without MPI
+        jacobian_lightning = (
+            AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
+        )
+        create_ops_list_lightning = (
+            create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
+        )
+        return jacobian_lightning, create_ops_list_lightning
 
     def _process_jacobian_tape(
         self, tape: QuantumTape, split_obs: bool = False, use_mpi: bool = False

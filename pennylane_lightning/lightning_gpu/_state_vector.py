@@ -43,6 +43,7 @@ from pennylane.wires import Wires
 from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
+# pylint: disable=ungrouped-imports
 from ._mpi_handler import MPIHandler
 
 gate_cache_needs_hash = (
@@ -118,8 +119,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 warn(str(mpi_error), UserWarning)
 
             return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
-        else:
-            return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
+        
+        # without MPI
+        return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
     def syncD2H(self, state_vector, use_async=False):
         """Copy the state vector data on device to a state vector on the host provided by the user.

@@ -160,13 +160,14 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def tol_for_allclose(c_dtype):
+        """Compute the tolerance for allclose"""
         return 1e-3 if c_dtype == np.complex64 else 1e-7
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_pauli_rotation_gradient(self, stateprep, G, theta, batch_obs, dev):
+    def test_pauli_rotation_gradient(self, stateprep, G, theta, batch_obs, dev):# pylint: disable=too-many-arguments
         """Tests that the automatic gradients of Pauli rotations are correct."""
         random_state = np.array(
             [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
@@ -222,7 +223,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         [(qml.RY, qml.PauliX, lambda x: np.cos(x)), (qml.RX, qml.PauliZ, lambda x: -np.sin(x))],
     )
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_r_gradient(self, tol, param, rotation, obs, expected_func, batch_obs, dev):
+    def test_r_gradient(self, tol, param, rotation, obs, expected_func, batch_obs, dev): # pylint: disable=too-many-arguments
         """Test for the gradient of the rotation gate matches the known formula."""
 
         qs = QuantumScript(
@@ -240,6 +241,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def process_and_execute_multiple_rx(dev, params, obs, batch_obs):
+        """Compute the circuit with multiple RX gates"""
         qs = QuantumScript(
             [qml.RX(params[0], wires=0), qml.RX(params[1], wires=1), qml.RX(params[2], wires=2)],
             obs,

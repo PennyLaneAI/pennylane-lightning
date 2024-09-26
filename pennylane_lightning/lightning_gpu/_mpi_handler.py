@@ -29,7 +29,7 @@ import numpy as np
 
 
 # MPI options
-class MPIHandler:
+class MPIHandler: # pylint: disable=too-few-public-methods
     """MPI handler for PennyLane Lightning GPU device.
 
     MPI handler to use a GPU-backed Lightning device using NVIDIA cuQuantum SDK with parallel capabilities.

@@ -418,11 +418,11 @@ class TestTensorExpval:
         dev = qml.device(device_name, mpi=True, wires=3)
 
         def circuit():
-            qml.RX(theta, wires=[0]),
-            qml.RX(phi, wires=[1]),
-            qml.RX(varphi, wires=[2]),
-            qml.CNOT(wires=[0, 1]),
-            qml.CNOT(wires=[1, 2]),
+            qml.RX(theta, wires=[0])
+            qml.RX(phi, wires=[1])
+            qml.RX(varphi, wires=[2])
+            qml.CNOT(wires=[0, 1])
+            qml.CNOT(wires=[1, 2])
             return qml.expval(obs)
 
         mpi_qnode = qml.QNode(circuit, dev)

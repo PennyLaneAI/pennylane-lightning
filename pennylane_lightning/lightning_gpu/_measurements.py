@@ -32,20 +32,20 @@ try:
 
 except ImportError as ex:
     warn(str(ex), UserWarning)
-    pass
 
-from typing import Any, Callable, List
+from typing import Any, List
 
 import numpy as np
 import pennylane as qml
 from pennylane.measurements import CountsMP, MeasurementProcess, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
+# pylint: disable=ungrouped-imports
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
-class LightningGPUMeasurements(LightningBaseMeasurements):
+class LightningGPUMeasurements(LightningBaseMeasurements): # pylint: disable=too-few-public-methods
     """Lightning GPU Measurements class
 
     Measures the state provided by the LightningGPUStateVector class.
@@ -84,8 +84,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
                 warn(str(mpi_error), UserWarning)
 
             return MeasurementsMPIC128 if self.dtype == np.complex128 else MeasurementsMPIC64
-        else:
-            return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
+
+        # without MPI
+        return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64
 
     def _measure_with_samples_diagonalizing_gates(
         self,

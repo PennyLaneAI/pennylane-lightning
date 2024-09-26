@@ -260,7 +260,6 @@ class StateVectorCudaMPI final
      */
     void setBasisState(const std::complex<Precision> &value,
                        const std::size_t index, const bool async = false) {
-
         const std::size_t rankId = index >> this->getNumLocalQubits();
 
         const std::size_t local_index =

@@ -55,7 +55,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::Constructibility",
 
 TEMPLATE_TEST_CASE("cuStateVec_helper::compute_local_index",
                    "[Default Constructibility]", StateVectorCudaMPI<>) {
-
     const std::size_t local_num_qubits = 4;
 
     SECTION("compute_local_index, index inside the current qubits set") {

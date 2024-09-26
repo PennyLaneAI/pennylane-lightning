@@ -16,6 +16,7 @@ r"""
 This module contains the :class:`~.LightningGPU` class, a PennyLane simulator device that
 interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enabled calculations.
 """
+from __future__ import annotations
 
 from ctypes.util import find_library
 from dataclasses import replace
@@ -67,10 +68,10 @@ except (ImportError, ValueError) as ex:
     LGPU_CPP_BINARY_AVAILABLE = False
     backend_info = None
 
-from ._adjoint_jacobian import LightningGPUAdjointJacobian
-from ._measurements import LightningGPUMeasurements
+# from ._adjoint_jacobian import LightningGPUAdjointJacobian
+# from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import MPIHandler
-from ._state_vector import LightningGPUStateVector
+# from ._state_vector import LightningGPUStateVector
 
 # The set of supported operations.
 _operations = frozenset(
@@ -366,9 +367,9 @@ class LightningGPU(LightningBase):
 
     def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
-        self.LightningStateVector = LightningGPUStateVector
-        self.LightningMeasurements = LightningGPUMeasurements
-        self.LightningAdjointJacobian = LightningGPUAdjointJacobian
+        self.LightningStateVector = _state_vector.LightningGPUStateVector
+        self.LightningMeasurements = _measurements.LightningGPUMeasurements
+        self.LightningAdjointJacobian = _adjoint_jacobian.LightningGPUAdjointJacobian
 
     def _setup_execution_config(self, config):
         """
