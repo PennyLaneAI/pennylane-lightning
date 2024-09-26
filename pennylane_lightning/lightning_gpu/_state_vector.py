@@ -119,7 +119,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 warn(str(mpi_error), UserWarning)
 
             return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
-        
+
         # without MPI
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 

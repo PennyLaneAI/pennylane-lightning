@@ -45,7 +45,7 @@ from pennylane_lightning.core._measurements_base import LightningBaseMeasurement
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 
-class LightningGPUMeasurements(LightningBaseMeasurements): # pylint: disable=too-few-public-methods
+class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=too-few-public-methods
     """Lightning GPU Measurements class
 
     Measures the state provided by the LightningGPUStateVector class.

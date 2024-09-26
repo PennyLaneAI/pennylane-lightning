@@ -116,7 +116,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
                 create_ops_listMPIC64 if self.dtype == np.complex64 else create_ops_listMPIC128
             )
             return jacobian_lightning, create_ops_list_lightning
-        
+
         # without MPI
         jacobian_lightning = (
             AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
