@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users. 
+* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
   [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
 * Add shot measurement support to `lightning.tensor`.
@@ -33,6 +33,12 @@
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
+  [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
+
+* Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
+  [(#911)](https://github.com/PennyLaneAI/pennylane-lightning/pull/911)
 
 * Update the test suite to remove deprecated code.
   [(#912)](https://github.com/PennyLaneAI/pennylane-lightning/pull/912)
@@ -72,7 +78,13 @@
 
 ### Documentation
 
+* Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
+  [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
+
 ### Bug fixes
+
+* Bug fix for `_pauli_word` of `QuantumScriptSerializer`. `_pauli_word` can process `PauliWord` object: `I`.
+  [(#919)](https://github.com/PennyLaneAI/pennylane-lightning/pull/919)
 
 * Bug fix for analytic `probs` in the `lightning.tensor` C++ layer.
   [(#906)](https://github.com/PennyLaneAI/pennylane-lightning/pull/906)

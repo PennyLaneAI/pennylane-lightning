@@ -1,4 +1,4 @@
-name: Testing::x86_64::LGPU::C++
+name: Testing::x86_64::GPU::C++
 on:
   workflow_call:
     inputs:
@@ -16,12 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths:
-      - .github/workflows/tests_lgpu_cpp.yml
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
   push:
     branches:
       - master
@@ -30,16 +24,14 @@ env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 11
-  TF_VERSION: 2.10.0
-  TORCH_VERSION: 1.11.0+cpu
 
 concurrency:
-  group: tests_lgpu_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_gpu_cpp-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
   builddeps:
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -61,16 +53,15 @@ jobs:
           nvcc --version
           nvidia-smi
 
-  cpptestswithLGPU:
+  cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [builddeps]
     strategy:
       matrix:
-        pl_backend: ["lightning_gpu"]
-        enable_lapack: ["OFF"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
 
-    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }}, enable_lapack=${{ matrix.enable_lapack }})
+    name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
     runs-on:
       - ubuntu-22.04
       - self-hosted
@@ -87,20 +78,20 @@ jobs:
           nvcc --version
           nvidia-smi
 
-      - name: Checkout PennyLane-Lightning-GPU
+      - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
           path: main
 
       - uses: actions/setup-python@v5
-        name: Install Python
+        name: Setup Python
         with:
           python-version: '3.10'
 
       - name: Setup Python virtual environment
         id: setup_venv
         env:
-          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}_${{ matrix.pl_backend }}
         run: |
           # Clear any pre-existing venvs
           rm -rf venv_*
@@ -117,7 +108,7 @@ jobs:
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
-          # Adding venv site-packages to output for subsequent step to referecen if needed
+          # Adding venv site-packages to output for subsequent step to referece if needed
           echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
 
       - name: Display Python-Path
@@ -131,10 +122,19 @@ jobs:
           echo "PIP Path => $pip_path"
           echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
-      - name: Install required packages
+      - name: Install required basic packages
         run: |
-          python -m pip install ninja cmake custatevec-cu${{ matrix.cuda_version }} scipy
-          sudo apt-get -y -q install liblapack-dev black
+          python -m pip install ninja cmake scipy
+
+      - name: Install required lightning_gpu only packages
+        if: matrix.pl_backend == 'lightning_gpu'
+        run: |
+          python -m pip install custatevec-cu${{ matrix.cuda_version }}
+
+      - name: Install required lightning_tensor only packages
+        if: matrix.pl_backend == 'lightning_tensor'
+        run: |
+          python -m pip install cutensornet-cu${{ matrix.cuda_version }}
 
       - name: Build and run unit tests
         run: |
@@ -143,25 +143,24 @@ jobs:
             -DCUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")\
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
-            -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \
             -G Ninja
           cmake --build ./Build
           cd ./Build
-          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
-          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}/report_$file.xml; done;
+          mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
+          for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
           lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
           lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}.info
+          mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
-          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
+          name: ubuntu-tests-reports-${{ github.job }}_${{ matrix.pl_backend }}
+          path: ./main/Build/tests/results_${{ github.job }}_${{ matrix.pl_backend }}
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
@@ -169,14 +168,14 @@ jobs:
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}
-          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_lapack }}.info
+          name: ubuntu-codecov-results-cpp-${{ matrix.pl_backend }}
+          path: ./main/Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
 
   upload-to-codecov-linux-cpp:
-    needs: [cpptestswithLGPU]
+    needs: [cpptests]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:

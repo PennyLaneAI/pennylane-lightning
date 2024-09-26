@@ -12,7 +12,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "Minimum OS X deployment versi
 set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 project(pennylane_lightning
-    DESCRIPTION "C++ suite of state-vector simulators bindings for PennyLane. "
+    DESCRIPTION "C++ suite of state-vector and tensor network simulators bindings for PennyLane. "
     LANGUAGES CXX
 )
 
