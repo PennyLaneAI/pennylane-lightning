@@ -16,6 +16,7 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from __future__ import annotations
+
 from warnings import warn
 
 try:
@@ -108,7 +109,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         if self._use_mpi:
             if not MPI_SUPPORT:
                 warn(str(mpi_error), UserWarning)
-            
+
             jacobian_lightning = (
                 AdjointJacobianMPIC64() if self.dtype == np.complex64 else AdjointJacobianMPIC128()
             )

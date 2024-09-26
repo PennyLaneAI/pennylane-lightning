@@ -31,7 +31,7 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
 
 from itertools import product
-from typing import Union, Callable
+from typing import Callable, Union
 
 import numpy as np
 import pennylane as qml
@@ -115,7 +115,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         if self._mpi_handler.use_mpi:
             if not MPI_SUPPORT:
                 warn(str(mpi_error), UserWarning)
-                
+
             return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
         else:
             return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64

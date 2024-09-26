@@ -24,6 +24,7 @@ from pennylane import numpy as np
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
+
 @pytest.mark.usefixtures("use_legacy_and_new_opmath")
 @pytest.mark.parametrize("diff_method", ("param_shift", "finite_diff"))
 class TestQChem:

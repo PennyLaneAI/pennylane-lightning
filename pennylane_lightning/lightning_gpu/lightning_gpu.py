@@ -22,7 +22,7 @@ from dataclasses import replace
 from importlib import util as imp_util
 from numbers import Number
 from pathlib import Path
-from typing import Optional, Tuple, Union, List
+from typing import List, Optional, Tuple, Union
 from warnings import warn
 
 import numpy as np
@@ -54,11 +54,12 @@ from pennylane_lightning.core.lightning_newAPI_base import (
 
 try:
     from pennylane_lightning.lightning_gpu_ops import (
+        DevPool,
         backend_info,
         get_gpu_arch,
         is_gpu_supported,
-        DevPool,
     )
+
     LGPU_CPP_BINARY_AVAILABLE = True
 
 except (ImportError, ValueError) as ex:
@@ -70,7 +71,6 @@ from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import MPIHandler
 from ._state_vector import LightningGPUStateVector
-
 
 # The set of supported operations.
 _operations = frozenset(
