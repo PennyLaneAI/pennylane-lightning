@@ -20,25 +20,23 @@ try:
     from pennylane_lightning.lightning_gpu_ops import StateVectorC64, StateVectorC128
 
     try:  # Try to import the MPI modules
-        # pylint: disable=no-name-in-module
         from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128
 
         MPI_SUPPORT = True
     except ImportError as ex:
-        warn(str(ex), UserWarning)
-
+        mpi_error = ex
         MPI_SUPPORT = False
 
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
 from itertools import product
+from typing import Union, Callable
 
 import numpy as np
 import pennylane as qml
-from pennylane import DeviceError, math
+from pennylane import DeviceError
 from pennylane.measurements import MidMeasureMP
-from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
 
@@ -75,19 +73,18 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
     def __init__(
         self,
-        num_wires,
-        dtype=np.complex128,
-        device_name="lightning.gpu",
-        mpi_handler=None,
-        sync=True,
+        num_wires: int,
+        dtype: Union[np.complex128, np.complex64] = np.complex128,
+        mpi_handler: Callable = None,
+        sync: bool = True,
     ):
 
         super().__init__(num_wires, dtype, sync=sync)
 
-        self._device_name = device_name
+        self._device_name = "lightning.gpu"
 
         if mpi_handler is None:
-            mpi_handler = MPIHandler(False, 0, None, num_wires, dtype)
+            mpi_handler = MPIHandler(False, 0, num_wires, dtype)
 
         self._num_global_wires = mpi_handler.num_global_wires
         self._num_local_wires = mpi_handler.num_local_wires
@@ -116,6 +113,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Returns: the state vector class
         """
         if self._mpi_handler.use_mpi:
+            if not MPI_SUPPORT:
+                warn(str(mpi_error), UserWarning)
+                
             return StateVectorMPIC128 if self.dtype == np.complex128 else StateVectorMPIC64
         else:
             return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64

@@ -19,11 +19,10 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 
 from ctypes.util import find_library
 from dataclasses import replace
-from functools import reduce
 from importlib import util as imp_util
 from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional, Tuple, Union
+from typing import Optional, Tuple, Union, List
 from warnings import warn
 
 import numpy as np
@@ -53,34 +52,25 @@ from pennylane_lightning.core.lightning_newAPI_base import (
     Result_or_ResultBatch,
 )
 
+try:
+    from pennylane_lightning.lightning_gpu_ops import (
+        backend_info,
+        get_gpu_arch,
+        is_gpu_supported,
+        DevPool,
+    )
+    LGPU_CPP_BINARY_AVAILABLE = True
+
+except (ImportError, ValueError) as ex:
+    warn(str(ex), UserWarning)
+    LGPU_CPP_BINARY_AVAILABLE = False
+    backend_info = None
+
 from ._adjoint_jacobian import LightningGPUAdjointJacobian
 from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import MPIHandler
 from ._state_vector import LightningGPUStateVector
 
-try:
-    from pennylane_lightning.lightning_gpu_ops import (
-        DevPool,
-        backend_info,
-        get_gpu_arch,
-        is_gpu_supported,
-    )
-
-    LGPU_CPP_BINARY_AVAILABLE = True
-
-    try:
-        from ._mpi_handler import MPIHandler
-
-        MPI_SUPPORT = True
-    except ImportError as ex:
-        warn(str(ex), UserWarning)
-        MPI_SUPPORT = False
-
-    LGPU_CPP_BINARY_AVAILABLE = True
-except (ImportError, ValueError) as ex:
-    warn(str(ex), UserWarning)
-    LGPU_CPP_BINARY_AVAILABLE = False
-    backend_info = None
 
 # The set of supported operations.
 _operations = frozenset(
@@ -329,11 +319,11 @@ class LightningGPU(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires,
+        wires: Union[int, List],
         *,
-        c_dtype=np.complex128,
-        shots=None,
-        batch_obs=False,
+        c_dtype: Union[np.complex128, np.complex64] = np.complex128,
+        shots: Union[int, List] = None,
+        batch_obs: bool = False,
         # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
@@ -363,7 +353,7 @@ class LightningGPU(LightningBase):
         self._sync = sync
 
         # Creating the state vector
-        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, self._dp, len(self.wires), c_dtype)
+        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync

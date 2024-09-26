@@ -15,6 +15,7 @@
 Class implementation for state vector measurements.
 """
 
+from __future__ import annotations
 from warnings import warn
 
 try:
@@ -25,16 +26,14 @@ try:
 
         MPI_SUPPORT = True
     except ImportError as ex:
-        warn(str(ex), UserWarning)
-
+        mpi_error = ex
         MPI_SUPPORT = False
 
 except ImportError as ex:
     warn(str(ex), UserWarning)
-
     pass
 
-from typing import Any, Callable, List
+from typing import Any, List
 
 import numpy as np
 import pennylane as qml
@@ -59,9 +58,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
     def __init__(
         self,
-        lgpu_state,  # LightningGPUStateVector
+        lgpu_state: LightningGPUStateVector, # LightningGPUStateVector
         use_mpi: bool = False,
-        mpi_handler: Callable = None,  # MPIHandler
+        mpi_handler: MPIHandler = None, # MPIHandler
     ) -> TensorLike:
 
         super().__init__(lgpu_state)
@@ -80,6 +79,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
         Returns: the Measurements class
         """
         if self._use_mpi:
+            if not MPI_SUPPORT:
+                warn(str(mpi_error), UserWarning)
+
             return MeasurementsMPIC128 if self.dtype == np.complex128 else MeasurementsMPIC64
         else:
             return MeasurementsC128 if self.dtype == np.complex128 else MeasurementsC64

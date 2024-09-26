@@ -15,10 +15,10 @@ r"""
 Internal methods for adjoint Jacobian differentiation method.
 """
 
+from __future__ import annotations
 from warnings import warn
 
 try:
-
     from pennylane_lightning.lightning_gpu_ops import DevPool
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
@@ -37,12 +37,13 @@ try:
 
         MPI_SUPPORT = True
     except ImportError as ex:
-        warn(str(ex), UserWarning)
+        mpi_error = ex
         MPI_SUPPORT = False
 
 except ImportError as ex:
     warn(str(ex), UserWarning)
     pass
+
 
 import numpy as np
 from pennylane import BasisState, StatePrep
@@ -53,8 +54,6 @@ from scipy.sparse import csr_matrix
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
-
-from ._state_vector import LightningGPUStateVector
 
 
 class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
@@ -107,6 +106,9 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         Returns: the AdjointJacobian class
         """
         if self._use_mpi:
+            if not MPI_SUPPORT:
+                warn(str(mpi_error), UserWarning)
+            
             jacobian_lightning = (
                 AdjointJacobianMPIC64() if self.dtype == np.complex64 else AdjointJacobianMPIC128()
             )
