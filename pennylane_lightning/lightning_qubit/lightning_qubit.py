@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
-from typing import Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union
 from warnings import warn
 
 import numpy as np
