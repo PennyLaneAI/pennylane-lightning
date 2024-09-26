@@ -16,7 +16,6 @@ Class implementation for state vector measurements.
 """
 
 from __future__ import annotations
-
 from warnings import warn
 
 try:
@@ -59,9 +58,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
     def __init__(
         self,
-        lgpu_state,  # LightningGPUStateVector
+        lgpu_state: LightningGPUStateVector,
         use_mpi: bool = False,
-        mpi_handler: Callable = None,  # MPIHandler
+        mpi_handler: MPIHandler = None,
     ) -> TensorLike:
 
         super().__init__(lgpu_state)

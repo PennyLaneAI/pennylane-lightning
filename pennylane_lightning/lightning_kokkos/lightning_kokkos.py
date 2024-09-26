@@ -20,7 +20,7 @@ import sys
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union, List
 from warnings import warn
 
 import numpy as np
@@ -50,10 +50,6 @@ from pennylane_lightning.core.lightning_newAPI_base import (
     Result_or_ResultBatch,
 )
 
-from ._adjoint_jacobian import LightningKokkosAdjointJacobian
-from ._measurements import LightningKokkosMeasurements
-from ._state_vector import LightningKokkosStateVector
-
 try:
     from pennylane_lightning.lightning_kokkos_ops import backend_info, print_configuration
 
@@ -62,6 +58,10 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
     LK_CPP_BINARY_AVAILABLE = False
     backend_info = None
+
+from ._adjoint_jacobian import LightningKokkosAdjointJacobian
+from ._measurements import LightningKokkosMeasurements
+from ._state_vector import LightningKokkosStateVector
 
 # The set of supported operations.
 _operations = frozenset(
@@ -296,11 +296,11 @@ class LightningKokkos(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires,
+        wires: Union[int, List],
         *,
-        c_dtype=np.complex128,
-        shots=None,
-        batch_obs=False,
+        c_dtype: Union[np.complex128, np.complex64] = np.complex128,
+        shots: Union[int, List] = None,
+        batch_obs: bool = False,
         # Kokkos arguments
         kokkos_args=None,
     ):
@@ -497,7 +497,7 @@ class LightningKokkos(LightningBase):
                     aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                 )
                 results.append(
-                    LightningKokkosMeasurements(final_state).measure_final_state(
+                    self.LightningMeasurements(final_state).measure_final_state(
                         aux_circ, mid_measurements=mid_measurements
                     )
                 )
@@ -505,7 +505,7 @@ class LightningKokkos(LightningBase):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        return LightningKokkosMeasurements(final_state).measure_final_state(circuit)
+        return self.LightningMeasurements(final_state).measure_final_state(circuit)
 
     @staticmethod
     def get_c_interface():

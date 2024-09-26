@@ -75,7 +75,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self,
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
-        mpi_handler: Callable = None,
+        mpi_handler: MPIHandler = None,
         sync: bool = True,
     ):
 

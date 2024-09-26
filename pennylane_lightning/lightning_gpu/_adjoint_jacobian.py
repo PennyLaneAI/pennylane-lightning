@@ -16,7 +16,6 @@ Internal methods for adjoint Jacobian differentiation method.
 """
 
 from __future__ import annotations
-
 from warnings import warn
 
 try:
