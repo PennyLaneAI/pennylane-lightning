@@ -547,7 +547,7 @@ class LightningGPU(LightningBase):
     def simulate_and_jacobian(
         self,
         circuit: QuantumTape,
-        state: LightningGPUStateVector,  
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ) -> Tuple:
