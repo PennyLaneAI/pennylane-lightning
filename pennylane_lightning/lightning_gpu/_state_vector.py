@@ -69,7 +69,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         device_name(string): state vector device name. Options: ["lightning.gpu"]
         mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
-            Provides functionality to run on multiple devices.
+            Provides functionality to distribute the state-vector to multiple devices.
         sync (bool): immediately sync with host-sv after applying operation.
     """
 

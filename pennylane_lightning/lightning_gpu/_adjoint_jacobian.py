@@ -18,6 +18,8 @@ Internal methods for adjoint Jacobian differentiation method.
 from warnings import warn
 
 try:
+
+    from pennylane_lightning.lightning_gpu_ops import DevPool
     from pennylane_lightning.lightning_gpu_ops.algorithms import (
         AdjointJacobianC64,
         AdjointJacobianC128,
@@ -43,10 +45,14 @@ except ImportError as ex:
     pass
 
 import numpy as np
+from pennylane import BasisState, StatePrep
+from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
+from scipy.sparse import csr_matrix
 
 # pylint: disable=ungrouped-imports
 from pennylane_lightning.core._adjoint_jacobian_base import LightningBaseAdjointJacobian
+from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
 from ._state_vector import LightningGPUStateVector
 
@@ -56,28 +62,128 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
     Args:
         qubit_state(LightningGPUStateVector): State Vector to calculate the adjoint Jacobian with.
-        batch_obs(bool): If serialized tape is to be batched or not.
+        batch_obs(bool): If serialized tape is to be batched or not. For Lightning GPU,
+            if `batch_obs=False` the computation requires more memory and is faster,
+            while `batch_obs=True` allows a larger number of qubits simulation
+            at the expense of high computational cost. Defaults to False
+        use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
+        mpi_handler(MPIHandler, optional): MPI handler for PennyLane Lightning GPU device.
+            Provides functionality to distribute the state-vector to multiple devices.
     """
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, qubit_state: LightningGPUStateVector, batch_obs: bool = False) -> None:
+    def __init__(
+        self,
+        qubit_state: LightningGPUStateVector,
+        batch_obs: bool = False,
+        use_mpi: bool = False,
+        mpi_handler=None,
+    ) -> None:
+
         super().__init__(qubit_state, batch_obs)
+
+        self._dp = DevPool()
+
+        self._use_mpi = use_mpi
+
+        if self._use_mpi:
+            self._mpi_handler = mpi_handler
+
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()
+
+        # Warning about performance with MPI and batch observation
+        if self._use_mpi and not self._batch_obs:
+            warn(
+                "Using LightningGPU with `batch_obs=False` and `use_mpi=True` has the limitation of requiring more memory. If you want to allocate larger number of qubits use the option `batch_obs=True`"
+                "For more information Check out the section `Parallel adjoint differentiation support` in our website https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/device.html for more details.",
+                RuntimeWarning,
+            )
 
     def _adjoint_jacobian_dtype(self):
         """Binding to Lightning GPU Adjoint Jacobian C++ class.
 
         Returns: the AdjointJacobian class
         """
-        jacobian_lightning = (
-            AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
-        )
-        create_ops_list_lightning = (
-            create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
-        )
-        return jacobian_lightning, create_ops_list_lightning
+        if self._use_mpi:
+            jacobian_lightning = (
+                AdjointJacobianMPIC64() if self.dtype == np.complex64 else AdjointJacobianMPIC128()
+            )
+            create_ops_list_lightning = (
+                create_ops_listMPIC64 if self.dtype == np.complex64 else create_ops_listMPIC128
+            )
+            return jacobian_lightning, create_ops_list_lightning
+        else:  # without MPI
+            jacobian_lightning = (
+                AdjointJacobianC64() if self.dtype == np.complex64 else AdjointJacobianC128()
+            )
+            create_ops_list_lightning = (
+                create_ops_listC64 if self.dtype == np.complex64 else create_ops_listC128
+            )
+            return jacobian_lightning, create_ops_list_lightning
+
+    def _process_jacobian_tape(
+        self, tape: QuantumTape, split_obs: bool = False, use_mpi: bool = False
+    ):
+        """Process a tape, serializing and building a dictionary proper for
+        the adjoint Jacobian calculation in the C++ layer.
+
+        Args:
+            tape (QuantumTape): Operations and measurements that represent instructions for execution on Lightning.
+            split_obs (bool, optional): If splitting the observables in a list. Defaults to False.
+            use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
+
+        Returns:
+            dictionary: dictionary providing serialized data for Jacobian calculation.
+        """
+        use_csingle = self._qubit_state.dtype == np.complex64
+
+        obs_serialized, obs_indices = QuantumScriptSerializer(
+            self._qubit_state.device_name, use_csingle, use_mpi, split_obs
+        ).serialize_observables(tape)
+
+        ops_serialized, use_sp = QuantumScriptSerializer(
+            self._qubit_state.device_name, use_csingle, use_mpi, split_obs
+        ).serialize_ops(tape)
+
+        ops_serialized = self._create_ops_list_lightning(*ops_serialized)
+
+        # We need to filter out indices in trainable_params which do not
+        # correspond to operators.
+        trainable_params = sorted(tape.trainable_params)
+        if len(trainable_params) == 0:
+            return None
+
+        tp_shift = []
+        record_tp_rows = []
+        all_params = 0
+
+        for op_idx, trainable_param in enumerate(trainable_params):
+            # get op_idx-th operator among differentiable operators
+            operation, _, _ = tape.get_operation(op_idx)
+            if isinstance(operation, Operation) and not isinstance(
+                operation, (BasisState, StatePrep)
+            ):
+                # We now just ignore non-op or state preps
+                tp_shift.append(trainable_param)
+                record_tp_rows.append(all_params)
+            all_params += 1
+
+        if use_sp:
+            # When the first element of the tape is state preparation. Still, I am not sure
+            # whether there must be only one state preparation...
+            tp_shift = [i - 1 for i in tp_shift]
+
+        return {
+            "state_vector": self.state,
+            "obs_serialized": obs_serialized,
+            "ops_serialized": ops_serialized,
+            "tp_shift": tp_shift,
+            "record_tp_rows": record_tp_rows,
+            "all_params": all_params,
+            "obs_indices": obs_indices,
+        }
 
     def calculate_jacobian(self, tape: QuantumTape):
         """Computes the Jacobian with the adjoint method.
@@ -100,21 +206,43 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         if empty_array:
             return np.array([], dtype=self.dtype)
 
-        processed_data = self._process_jacobian_tape(tape)
+        if self._use_mpi:
+            split_obs = False  # with MPI batched means compute Jacobian one observables at a time, no point splitting linear combinations
+        else:
+            split_obs = self._dp.getTotalDevices() if self._batch_obs else False
+
+        processed_data = self._process_jacobian_tape(tape, split_obs, self._use_mpi)
 
         if not processed_data:  # training_params is empty
             return np.array([], dtype=self.dtype)
 
         trainable_params = processed_data["tp_shift"]
-        jac = self._jacobian_lightning(
-            processed_data["state_vector"],
-            processed_data["obs_serialized"],
-            processed_data["ops_serialized"],
-            trainable_params,
-        )
+
+        if self._batch_obs:  # Batching of Measurements
+            jac = self._jacobian_lightning.batched(
+                processed_data["state_vector"],
+                processed_data["obs_serialized"],
+                processed_data["ops_serialized"],
+                trainable_params,
+            )
+        else:
+            jac = self._jacobian_lightning(
+                processed_data["state_vector"],
+                processed_data["obs_serialized"],
+                processed_data["ops_serialized"],
+                trainable_params,
+            )
+
         jac = np.array(jac)
-        jac = jac.reshape(-1, len(trainable_params)) if len(jac) else jac
+        has_shape0 = bool(len(jac))
+
+        num_obs = len(np.unique(processed_data["obs_indices"]))
+        rows = processed_data["obs_indices"]
+        cols = np.arange(len(rows), dtype=int)
+        data = np.ones(len(rows))
+        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
+        jac = red_mat @ jac.reshape((len(rows), -1))
+        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
         jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
         jac_r[:, processed_data["record_tp_rows"]] = jac
-
         return self._adjoint_jacobian_processing(jac_r)
