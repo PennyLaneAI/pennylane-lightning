@@ -33,7 +33,7 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
     pass
 
-from typing import Any, List
+from typing import Any, Callable, List
 
 import numpy as np
 import pennylane as qml
@@ -58,9 +58,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):
 
     def __init__(
         self,
-        lgpu_state: LightningGPUStateVector, # LightningGPUStateVector
+        lgpu_state,  # LightningGPUStateVector
         use_mpi: bool = False,
-        mpi_handler: MPIHandler = None, # MPIHandler
+        mpi_handler: Callable = None,  # MPIHandler
     ) -> TensorLike:
 
         super().__init__(lgpu_state)
