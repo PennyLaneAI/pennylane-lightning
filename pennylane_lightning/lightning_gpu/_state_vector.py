@@ -83,6 +83,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         self._device_name = "lightning.gpu"
 
+        # Initialize GPU and MPI variables
         if mpi_handler is None:
             mpi_handler = MPIHandler(False, 0, num_wires, dtype)
 

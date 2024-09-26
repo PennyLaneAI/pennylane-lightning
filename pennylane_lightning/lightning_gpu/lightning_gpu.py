@@ -520,7 +520,7 @@ class LightningGPU(LightningBase):
     def jacobian(
         self,
         circuit: QuantumTape,
-        state,  # Lightning [Device] StateVector
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ):
@@ -528,7 +528,7 @@ class LightningGPU(LightningBase):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -547,7 +547,7 @@ class LightningGPU(LightningBase):
     def simulate_and_jacobian(
         self,
         circuit: QuantumTape,
-        state,  # Lightning [Device] StateVector
+        state: LightningGPUStateVector,  
         batch_obs: bool = False,
         wire_map: dict = None,
     ) -> Tuple:
@@ -555,7 +555,7 @@ class LightningGPU(LightningBase):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian. Default is False.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -577,7 +577,7 @@ class LightningGPU(LightningBase):
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
-        state,  # Lightning [Device] StateVector
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ):
@@ -588,7 +588,7 @@ class LightningGPU(LightningBase):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the VJP.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
@@ -608,7 +608,7 @@ class LightningGPU(LightningBase):
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
-        state,
+        state: LightningGPUStateVector,
         batch_obs: bool = False,
         wire_map: dict = None,
     ) -> Tuple:
@@ -619,7 +619,7 @@ class LightningGPU(LightningBase):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (LightningGPUStateVector): handle to the Lightning state vector
             batch_obs (bool): Determine whether we process observables in parallel when
                 computing the jacobian.
             wire_map (Optional[dict]): a map from wire labels to simulation indices
