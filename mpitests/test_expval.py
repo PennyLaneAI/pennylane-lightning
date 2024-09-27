@@ -130,10 +130,10 @@ class TestExpval:
             ),
         ],
     )
-    @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 3, numQubits - 2, numQubits - 1])
+    @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 2, numQubits - 1, numQubits])
     def test_expval_single_wire_no_parameters(self, tol, operation, wires, C_DTYPE, batch_obs):
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
-        num_wires = numQubits
+        num_wires = wires
         comm = MPI.COMM_WORLD
 
         dev_mpi = qml.device(

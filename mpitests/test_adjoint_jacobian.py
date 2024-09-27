@@ -26,7 +26,7 @@ from mpi4py import MPI
 from pennylane import QNode
 from pennylane import numpy as np
 from pennylane import qnode
-from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
+from pennylane.devices import ExecutionConfig
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
@@ -521,6 +521,7 @@ class TestAdjointJacobianQNode:
 
     @staticmethod
     def tol_for_allclose(c_dtype):
+        """Compute the tolerance for allclose"""
         return 1e-3 if c_dtype == np.complex64 else 1e-7
 
     def test_qnode(self, mocker, dev):
