@@ -436,6 +436,7 @@ class LightningGPU(LightningBase):
             _add_adjoint_transforms(program)
         return program, exec_config
 
+    # pylint: disable=unused-argument
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
