@@ -32,12 +32,11 @@ except ImportError as ex:
     warn(str(ex), UserWarning)
 
 from itertools import product
-from typing import Callable, Union
+from typing import Union
 
 import numpy as np
 import pennylane as qml
 from pennylane import DeviceError
-from pennylane.measurements import MidMeasureMP
 from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
 
@@ -264,26 +263,17 @@ class LightningGPUStateVector(LightningBaseStateVector):
         matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
         state.apply(name, wires, inv, [[param]], matrix)
 
-    def _apply_lightning_midmeasure(
-        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
-    ):
+    def _apply_lightning_midmeasure(self):
         """Execute a MidMeasureMP operation and return the sample in mid_measurements.
 
         Args:
-            operation (~pennylane.operation.Operation): mid-circuit measurement
-            mid_measurements (None, dict): Dictionary of mid-circuit measurements
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots.
 
         Returns:
             None
         """
         raise DeviceError("LightningGPU does not support Mid-circuit measurements.")
 
-    def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None
-    ):
+    def _apply_lightning(self, operations):
         """Apply a list of operations to the state vector.
 
         Args:

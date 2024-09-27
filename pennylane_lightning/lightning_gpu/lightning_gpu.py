@@ -439,7 +439,6 @@ class LightningGPU(LightningBase):
     def execute(
         self,
         circuits: QuantumTape_or_Batch,
-        execution_config: ExecutionConfig = DefaultExecutionConfig,
     ) -> Result_or_ResultBatch:
         """Execute a circuit or a batch of circuits and turn it into results.
 
@@ -458,7 +457,6 @@ class LightningGPU(LightningBase):
                 self.simulate(
                     circuit,
                     self._statevector,
-                    postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
             )
 
@@ -493,16 +491,12 @@ class LightningGPU(LightningBase):
         self,
         circuit: QuantumScript,
         state: LightningGPUStateVector,
-        postselect_mode: str = None,
     ) -> Result:
         """Simulate a single quantum script.
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
             state (LightningGPUStateVector): handle to Lightning state vector
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``None``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation
