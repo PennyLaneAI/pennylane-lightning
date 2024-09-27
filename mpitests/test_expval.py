@@ -31,7 +31,7 @@ def create_random_init_state(numWires, C_DTYPE, seed_value=48):
 
     R_DTYPE = np.float64 if C_DTYPE == np.complex128 else np.float32
 
-    num_elements = 1 << numWires
+    num_elements = 2**numWires
     init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
         num_elements
     ).astype(R_DTYPE)

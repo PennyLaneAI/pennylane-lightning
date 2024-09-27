@@ -137,7 +137,7 @@ test-cpp-mpi:
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
-	mpi -np 2 ./BuildTests/$(target)
+	mpirun -np 2 ./BuildTests/$(target)
 else
 	cmake --build ./BuildTests $(VERBOSE)
 	for file in ./BuildTests/*_test_runner_mpi; do \

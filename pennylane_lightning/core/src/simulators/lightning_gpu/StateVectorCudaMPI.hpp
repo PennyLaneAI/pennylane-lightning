@@ -288,7 +288,6 @@ class StateVectorCudaMPI final
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
                        const bool use_async) {
-        // This is not functional yet.
         PL_ABORT_IF_NOT(state.size() == wires.size(),
                         "state and wires must have equal dimensions.");
 
@@ -304,7 +303,7 @@ class StateVectorCudaMPI final
         const std::size_t local_index =
             compute_local_index(index, this->getNumLocalQubits());
 
-        const std::complex<PrecisionT> value(1, 0);
+        const std::complex<PrecisionT> value(1.0, 0.0);
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
 
         BaseType::getDataBuffer().zeroInit();

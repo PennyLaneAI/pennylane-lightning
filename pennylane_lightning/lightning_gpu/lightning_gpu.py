@@ -298,7 +298,7 @@ class LightningGPU(LightningBase):
             is built with MPI. Default is False.
         mpi (bool): declare if the device will use the MPI support.
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-        sync (bool): immediately sync with host-sv after applying operation.
+        sync (bool): is host-device data copy synchronized or not.
     """
 
     # General device options

@@ -107,6 +107,8 @@ inline SharedCusvHandle make_shared_cusv_handle() {
  *
  * @param index Global index of the target element.
  * @param num_qubits Number of wires within the local devices.
+ *
+ *  @return local_index Local index of the target element.
  */
 inline std::size_t compute_local_index(const std::size_t index,
                                        const std::size_t num_qubits) {

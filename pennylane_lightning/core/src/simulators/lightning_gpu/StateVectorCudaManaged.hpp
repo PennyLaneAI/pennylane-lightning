@@ -195,7 +195,7 @@ class StateVectorCudaManaged
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
-                       const bool use_async) {
+                       const bool use_async = false) {
         PL_ABORT_IF_NOT(state.size() == wires.size(),
                         "state and wires must have equal dimensions.");
         const auto num_qubits = BaseType::getNumQubits();
@@ -213,7 +213,7 @@ class StateVectorCudaManaged
         }
 
         BaseType::getDataBuffer().zeroInit();
-        const std::complex<PrecisionT> value(1, 0);
+        const std::complex<PrecisionT> value(1.0, 0.0);
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
         setBasisState_CUDA(BaseType::getData(), value_cu, index, use_async,

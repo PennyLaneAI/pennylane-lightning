@@ -69,7 +69,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         device_name(string): state vector device name. Options: ["lightning.gpu"]
         mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
             Provides functionality to distribute the state-vector to multiple devices.
-        sync (bool): immediately sync with host-sv after applying operation.
+        sync (bool): is host-device data copy synchronized or not.
     """
 
     def __init__(
