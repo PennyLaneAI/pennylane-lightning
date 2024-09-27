@@ -22,6 +22,7 @@ try:
     try:  # Try to import the MPI modules
         from pennylane_lightning.lightning_gpu_ops import StateVectorMPIC64, StateVectorMPIC128
 
+        mpi_error = None
         MPI_SUPPORT = True
     except ImportError as ex:
         mpi_error = ex
@@ -40,10 +41,10 @@ from pennylane.measurements import MidMeasureMP
 from pennylane.ops.op_math import Adjoint
 from pennylane.wires import Wires
 
+# pylint: disable=ungrouped-imports
 from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
-# pylint: disable=ungrouped-imports
 from ._mpi_handler import MPIHandler
 
 gate_cache_needs_hash = (

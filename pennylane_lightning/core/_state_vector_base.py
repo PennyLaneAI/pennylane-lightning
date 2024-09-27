@@ -103,7 +103,7 @@ class LightningBaseStateVector(ABC):
     def reset_state(self, sync: Optional[bool] = None):
         """Reset the device's state"""
         # init the state vector to |00..0>
-        if sync == None:
+        if sync is None:
             self._qubit_state.resetStateVector()
         else:
             self._qubit_state.resetStateVector(sync)
@@ -136,7 +136,7 @@ class LightningBaseStateVector(ABC):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # Return a computational basis state over all wires.
-        if use_async == None:
+        if use_async is None:
             self._qubit_state.setBasisState(list(state), list(wires))
         else:
             self._qubit_state.setBasisState(list(state), list(wires), use_async)

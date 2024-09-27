@@ -23,7 +23,6 @@ try:
     from pennylane_lightning.lightning_kokkos_ops import MeasurementsC64, MeasurementsC128
 except ImportError as ex:
     warn(str(ex), UserWarning)
-    pass
 
 from typing import List
 
@@ -32,6 +31,7 @@ import pennylane as qml
 from pennylane.measurements import CountsMP, SampleMeasurement, Shots
 from pennylane.typing import TensorLike
 
+# pylint: disable=ungrouped-imports
 from pennylane_lightning.core._measurements_base import LightningBaseMeasurements
 
 
@@ -48,7 +48,7 @@ class LightningKokkosMeasurements(
 
     def __init__(
         self,
-        kokkos_state: LightningKokkosStateVector,
+        kokkos_state: LightningKokkosStateVector,  # pylint: disable=undefined-variable
     ) -> TensorLike:
 
         super().__init__(kokkos_state)

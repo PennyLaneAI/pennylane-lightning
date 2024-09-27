@@ -36,6 +36,7 @@ try:
             create_ops_listMPIC128,
         )
 
+        mpi_error = None
         MPI_SUPPORT = True
     except ImportError as ex:
         mpi_error = ex
@@ -74,7 +75,7 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
 
     def __init__(
         self,
-        qubit_state: LightningGPUStateVector,
+        qubit_state: LightningGPUStateVector,  # pylint: disable=undefined-variable
         batch_obs: bool = False,
         use_mpi: bool = False,
         mpi_handler=None,

@@ -136,6 +136,7 @@ class LightningBase(Device):
             [circuit], _ = qml.map_wires(circuit, wire_map)
         state.reset_state(self._sync)
         final_state = state.get_final_state(circuit)
+        # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
             circuit
         )
@@ -164,6 +165,7 @@ class LightningBase(Device):
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
         res = self.simulate(circuit, state)
+        # pylint: disable=not-callable
         jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
         return res, jac
 
@@ -194,6 +196,7 @@ class LightningBase(Device):
             [circuit], _ = qml.map_wires(circuit, wire_map)
         state.reset_state(self._sync)
         final_state = state.get_final_state(circuit)
+        # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
             circuit, cotangents
         )
@@ -225,6 +228,7 @@ class LightningBase(Device):
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
         res = self.simulate(circuit, state)
+        # pylint: disable=not-callable
         _vjp = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(
             circuit, cotangents
         )

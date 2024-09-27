@@ -95,7 +95,6 @@ class LightningBaseMeasurements(ABC):
         self._qubit_state.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
         return result
 
-    # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
         """Expectation value of the supplied observable contained in the MeasurementProcess.
 
@@ -122,6 +121,7 @@ class LightningBaseMeasurements(ABC):
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
+            # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64
             )._ob(measurementprocess.obs)
@@ -189,6 +189,7 @@ class LightningBaseMeasurements(ABC):
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
+            # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._ob(measurementprocess.obs)

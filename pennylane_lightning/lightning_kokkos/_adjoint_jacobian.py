@@ -28,7 +28,6 @@ try:
     )
 except ImportError as ex:
     warn(str(ex), UserWarning)
-    pass
 
 import numpy as np
 from pennylane.tape import QuantumTape
@@ -47,7 +46,11 @@ class LightningKokkosAdjointJacobian(LightningBaseAdjointJacobian):
 
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, qubit_state: LightningKokkosStateVector, batch_obs: bool = False) -> None:
+    def __init__(
+        self,
+        qubit_state: LightningKokkosStateVector,  # pylint: disable=undefined-variable
+        batch_obs: bool = False,
+    ) -> None:
         super().__init__(qubit_state, batch_obs)
 
         # Initialize the C++ binds

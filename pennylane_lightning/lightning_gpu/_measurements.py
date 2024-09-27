@@ -25,6 +25,7 @@ try:
     try:
         from pennylane_lightning.lightning_gpu_ops import MeasurementsMPIC64, MeasurementsMPIC128
 
+        mpi_error = None
         MPI_SUPPORT = True
     except ImportError as ex:
         mpi_error = ex
@@ -59,9 +60,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
 
     def __init__(
         self,
-        lgpu_state: LightningGPUStateVector,
+        lgpu_state: LightningGPUStateVector,  # pylint: disable=undefined-variable
         use_mpi: bool = False,
-        mpi_handler: MPIHandler = None,
+        mpi_handler: MPIHandler = None,  # pylint: disable=undefined-variable
     ) -> TensorLike:
 
         super().__init__(lgpu_state)
@@ -195,6 +196,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
+            # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._ob(measurementprocess.obs)
