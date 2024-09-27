@@ -274,7 +274,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
         raise DeviceError("LightningGPU does not support Mid-circuit measurements.")
 
     # pylint: disable=unused-argument
-    def _apply_lightning(self, operations, mid_measurements: dict = None, postselect_mode: str = None): 
+    def _apply_lightning(
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None
+    ):
         """Apply a list of operations to the state vector.
 
         Args:
