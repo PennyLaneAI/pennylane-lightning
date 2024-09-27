@@ -27,8 +27,8 @@ try:
 
         mpi_error = None
         MPI_SUPPORT = True
-    except ImportError as ex:
-        mpi_error = ex
+    except ImportError as ex_mpi:
+        mpi_error = ex_mpi
         MPI_SUPPORT = False
 
 except ImportError as ex:

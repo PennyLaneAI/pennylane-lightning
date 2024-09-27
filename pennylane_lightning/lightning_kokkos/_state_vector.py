@@ -271,6 +271,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
+                # pylint: disable=protected-access
                 paulis = operation._hyperparameters[
                     "pauli_word"
                 ]  # pylint: disable=protected-access

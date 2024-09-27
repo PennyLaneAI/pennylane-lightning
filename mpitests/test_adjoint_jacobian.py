@@ -223,16 +223,8 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     @pytest.mark.parametrize(
         "rotation,obs,expected_func",
         [
-            (
-                qml.RY, 
-                qml.PauliX, 
-                lambda x: np.cos(x)
-            ), 
-            (
-                qml.RX, 
-                qml.PauliZ, 
-                lambda x: -np.sin(x)
-            ),
+            (qml.RY, qml.PauliX, lambda x: np.cos(x)),  # pylint: disable=unnecessary-lambda
+            (qml.RX, qml.PauliZ, lambda x: -np.sin(x)),  # pylint: disable=unnecessary-lambda
         ],
     )
     @pytest.mark.parametrize("batch_obs", [True, False])
