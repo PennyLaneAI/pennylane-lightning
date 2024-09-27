@@ -151,8 +151,6 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.kokkos``."""
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
     if isinstance(op, qml.PauliRot):
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
