@@ -103,9 +103,9 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.RX(0.4, wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        qnode = QNode(circuit, dev, diff_method="adjoint")
+        result = QNode(circuit, dev, diff_method="adjoint")
 
-        jac = qml.grad(qnode)()
+        jac = qml.grad(result)()
 
         assert len(jac) == 0
 
@@ -222,7 +222,18 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     @pytest.mark.parametrize("param", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     @pytest.mark.parametrize(
         "rotation,obs,expected_func",
-        [(qml.RY, qml.PauliX, lambda x: np.cos(x)), (qml.RX, qml.PauliZ, lambda x: -np.sin(x))],
+        [
+            (
+                qml.RY, 
+                qml.PauliX, 
+                lambda x: np.cos(x)
+            ), 
+            (
+                qml.RX, 
+                qml.PauliZ, 
+                lambda x: -np.sin(x)
+            ),
+        ],
     )
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_r_gradient(

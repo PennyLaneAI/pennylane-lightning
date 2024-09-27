@@ -135,9 +135,6 @@ class TestExpval:
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         num_wires = numQubits
         comm = MPI.COMM_WORLD
-        commSize = comm.Get_size()
-        num_global_wires = commSize.bit_length() - 1
-        num_local_wires = num_wires - num_global_wires
 
         dev_mpi = qml.device(
             "lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
@@ -436,5 +433,7 @@ class TestTensorExpval:
             expected_val = -(
                 np.cos(varphi) * np.sin(phi) + np.sin(varphi) * np.cos(theta)
             ) / np.sqrt(2)
+        else:
+            expected_val = 0
 
         assert np.allclose(res, expected_val, atol=tol)
