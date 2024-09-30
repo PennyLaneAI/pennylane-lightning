@@ -576,11 +576,11 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
+    std::vector<std::size_t> generate_samples(const std::size_t num_samples, std::mt19937 *catalyst_rng = nullptr) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
-        return generate_samples(wires, num_samples);
+        return generate_samples(wires, num_samples, catalyst_rng);
     }
 
     /**
