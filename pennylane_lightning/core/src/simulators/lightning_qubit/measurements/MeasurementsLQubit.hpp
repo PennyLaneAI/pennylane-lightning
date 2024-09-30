@@ -573,11 +573,13 @@ class Measurements final
      * Reference: https://en.wikipedia.org/wiki/Alias_method
      *
      * @param num_samples The number of samples to generate.
+     * @param catalyst_rng The seeded random number generator from catalyst.
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(const std::size_t num_samples,
-        const std::mt19937 *&catalyst_rng = nullptr) {
+    std::vector<std::size_t>
+    generate_samples(const std::size_t num_samples,
+                     const std::mt19937 *&catalyst_rng = nullptr) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
