@@ -76,10 +76,15 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
     /**
      * @brief Randomly set the seed of the internal random generator
+     * If catalyst already provides a random generator, use the provided one
      *
-     * @param seed Seed
+     * @param catalyst_rng Seed
      */
-    void setRandomSeed() {
+    void setRandomSeed(std::mt19937 *catalyst_rng = nullptr) {
+        if (catalyst_rng){
+            this->rng = *catalyst_rng;
+            return;
+        }
         std::random_device rd;
         setSeed(rd());
     }

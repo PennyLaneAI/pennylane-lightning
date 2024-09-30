@@ -588,15 +588,16 @@ class Measurements final
      *
      * @param wires Sample are generated for the specified wires.
      * @param num_samples The number of samples to generate.
+     * @param catalyst_rng The seeded random number generator from catalyst.
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
-                     const std::size_t num_samples) {
+                     const std::size_t num_samples, std::mt19937 *catalyst_rng) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        this->setRandomSeed();
+        this->setRandomSeed(catalyst_rng);
         DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -

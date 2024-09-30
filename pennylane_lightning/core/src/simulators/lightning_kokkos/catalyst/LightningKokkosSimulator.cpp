@@ -348,7 +348,7 @@ void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
         *(this->device_sv)};
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = m.generate_samples(shots, this->gen);
 
     RT_FAIL_IF(samples.size() != li_samples.size(),
                "Invalid size for the pre-allocated samples");
@@ -387,7 +387,7 @@ void LightningKokkosSimulator::PartialSample(
 
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = m.generate_samples(shots, this->gen);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
