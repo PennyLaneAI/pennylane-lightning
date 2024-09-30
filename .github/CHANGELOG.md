@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* Remove dynamic decomposition rules in Lightning.
+  [(#926)](https://github.com/PennyLaneAI/pennylane-lightning/pull/926)
+
 * Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
   [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
 
