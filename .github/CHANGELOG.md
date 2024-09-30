@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* Uniform Python format to adhere PennyLane style.
+  [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
+
 * Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
   [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
 
