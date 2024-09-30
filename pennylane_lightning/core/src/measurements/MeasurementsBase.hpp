@@ -76,18 +76,19 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 
     /**
      * @brief Randomly set the seed of the internal random generator
-     * If catalyst already provides a random generator, use the provided one
      *
-     * @param catalyst_rng Seed
      */
-    void setRandomSeed(const std::mt19937 *&catalyst_rng = nullptr) {
-        if (catalyst_rng != nullptr) {
-            rng = *catalyst_rng;
-            return;
-        }
+    void setRandomSeed() {
         std::random_device rd;
         setSeed(rd());
     }
+
+    /**
+     * @brief Set the internal random generator to an already existing instance
+     *
+     * @param catalyst_rng Seed
+     */
+    void setRNG(std::mt19937 rng) { this->rng = std::move(rng); }
 
     /**
      * @brief Calculate the expectation value for a general Observable.

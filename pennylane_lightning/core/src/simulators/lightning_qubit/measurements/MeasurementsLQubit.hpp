@@ -579,7 +579,7 @@ class Measurements final
      */
     std::vector<std::size_t>
     generate_samples(const std::size_t num_samples,
-                     const std::mt19937 *&catalyst_rng = nullptr) {
+                     const std::optional<std::mt19937> &catalyst_rng) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
@@ -598,10 +598,14 @@ class Measurements final
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
                      const std::size_t num_samples,
-                     const std::mt19937 *&catalyst_rng = nullptr) {
+                     const std::optional<std::mt19937> &catalyst_rng) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        this->setRandomSeed(catalyst_rng);
+        if (catalyst_rng.has_value()) {
+            this->setRNG(catalyst_rng);
+        } else {
+            this->setRandomSeed();
+        }
         DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -
