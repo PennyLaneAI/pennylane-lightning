@@ -80,8 +80,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param catalyst_rng Seed
      */
-    void setRandomSeed(std::mt19937 *catalyst_rng = nullptr) {
-        if (catalyst_rng){
+    void setRandomSeed(const std::mt19937 *&catalyst_rng = nullptr) {
+        if (catalyst_rng != nullptr){
             rng = *catalyst_rng;
             return;
         }

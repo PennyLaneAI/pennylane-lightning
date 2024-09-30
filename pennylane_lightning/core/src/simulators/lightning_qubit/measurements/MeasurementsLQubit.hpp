@@ -576,7 +576,8 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(const std::size_t num_samples, std::mt19937 *catalyst_rng = nullptr) {
+    std::vector<std::size_t> generate_samples(const std::size_t num_samples,
+        const std::mt19937 *&catalyst_rng = nullptr) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
@@ -594,7 +595,8 @@ class Measurements final
      */
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
-                     const std::size_t num_samples, std::mt19937 *catalyst_rng = nullptr) {
+                     const std::size_t num_samples,
+                     const std::mt19937 *&catalyst_rng = nullptr) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
         this->setRandomSeed(catalyst_rng);
