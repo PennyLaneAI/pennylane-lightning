@@ -594,7 +594,7 @@ class Measurements final
      */
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
-                     const std::size_t num_samples, std::mt19937 *catalyst_rng) {
+                     const std::size_t num_samples, std::mt19937 *catalyst_rng = nullptr) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
         this->setRandomSeed(catalyst_rng);
