@@ -51,6 +51,7 @@ from pennylane_lightning.core.lightning_newAPI_base import (
 from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
+from ._tree_simulate import tree_simulate
 
 try:
     from pennylane_lightning.lightning_qubit_ops import backend_info
@@ -143,6 +144,9 @@ _operations = frozenset(
         "ECR",
         "BlockEncode",
         "C(BlockEncode)",
+        "BitFlip",
+        "PhaseFlip",
+        "DepolarizingChannel",
     }
 )
 # End the set of supported operations.
@@ -542,6 +546,9 @@ class LightningQubit(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
+        if any(isinstance(op, qml.operation.Channel) for op in circuit.operations):
+            state.reset_state()
+            return tree_simulate(circuit, state)
         if mcmc is None:
             mcmc = {}
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):

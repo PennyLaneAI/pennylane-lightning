@@ -670,7 +670,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param wire Wire to collapse.
      * @param branch Branch 0 or 1.
      */
-    void collapse(const std::size_t wire, const bool branch) {
+    auto collapse(const std::size_t wire, const bool branch) -> PrecisionT {
         auto *arr = BaseType::getData();
         const std::size_t stride =
             pow(2, BaseType::getNumQubits() - (1 + wire));
@@ -691,13 +691,13 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             }
         }
 
-        normalize();
+        return normalize();
     }
 
     /**
      * @brief Normalize vector (to have norm 1).
      */
-    void normalize() {
+    auto normalize() -> PrecisionT {
         auto *arr = BaseType::getData();
         PrecisionT norm = std::sqrt(squaredNorm(arr, BaseType::getLength()));
 
@@ -708,6 +708,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         for (std::size_t k = 0; k < BaseType::getLength(); k++) {
             arr[k] *= inv_norm;
         }
+        return norm;
     }
 
     /**
