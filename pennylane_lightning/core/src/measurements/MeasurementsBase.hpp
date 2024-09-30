@@ -82,7 +82,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     void setRandomSeed(std::mt19937 *catalyst_rng = nullptr) {
         if (catalyst_rng){
-            this->rng = *catalyst_rng;
+            rng = *catalyst_rng;
             return;
         }
         std::random_device rd;
