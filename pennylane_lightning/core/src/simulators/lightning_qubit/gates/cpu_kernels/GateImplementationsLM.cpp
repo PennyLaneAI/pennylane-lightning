@@ -241,6 +241,12 @@ template void GateImplementationsLM::applyMultiRZ<float, float>(
 template void GateImplementationsLM::applyMultiRZ<double, double>(
     std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
     double);
+template void GateImplementationsLM::applyPCPhase<float, float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
+template void GateImplementationsLM::applyPCPhase<double, double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 template void GateImplementationsLM::applyGlobalPhase<float, float>(
     std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
     float);

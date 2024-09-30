@@ -60,6 +60,7 @@ MultiControlledX       = {}
 
 BlockEncode            = {properties = [ "controllable" ]}
 GlobalPhase            = {properties = [ "controllable" ]}
+PCPhase                = {properties = [ "controllable" ]}
 ControlledQubitUnitary = {}
 ECR                    = {}
 SX                     = {}

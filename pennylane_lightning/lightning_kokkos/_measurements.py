@@ -46,7 +46,6 @@ class LightningKokkosMeasurements(
         self,
         kokkos_state,
     ) -> None:
-
         super().__init__(kokkos_state)
 
         self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)

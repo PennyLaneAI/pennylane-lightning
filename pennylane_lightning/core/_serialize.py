@@ -367,7 +367,9 @@ class QuantumScriptSerializer:
                 obs_indices.append(i)
         return serialized_obs, obs_indices
 
-    def serialize_ops(self, tape: QuantumTape, wires_map: dict = None) -> Tuple[
+    def serialize_ops(
+        self, tape: QuantumTape, wires_map: dict = None
+    ) -> Tuple[
         List[List[str]],
         List[np.ndarray],
         List[List[int]],

@@ -53,6 +53,7 @@ QFT                    = {}
 [operators.gates.matrix]
 
 BlockEncode            = {properties = [ "controllable" ]}
+PCPhase                = {properties = [ "controllable" ]}
 DiagonalQubitUnitary   = {}
 ECR                    = {}
 ISWAP                  = {}

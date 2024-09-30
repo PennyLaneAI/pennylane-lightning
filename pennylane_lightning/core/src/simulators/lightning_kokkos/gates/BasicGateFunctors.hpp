@@ -1162,6 +1162,19 @@ void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
+void applyPCPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                  const std::size_t num_qubits,
+                  [[maybe_unused]] const std::vector<std::size_t> &wires,
+                  const bool inverse = false,
+                  const std::vector<PrecisionT> &params = {}) {
+    const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
+        Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        KOKKOS_LAMBDA(const std::size_t k) { arr_(k) *= phase; });
+}
+
+template <class ExecutionSpace, class PrecisionT>
 void applyNamedOperation(const GateOperation gateop,
                          Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                          const std::size_t num_qubits,
@@ -1276,6 +1289,9 @@ void applyNamedOperation(const GateOperation gateop,
     case GateOperation::GlobalPhase:
         applyGlobalPhase<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                          params);
+        return;
+    case GateOperation::PCPhase:
+        applyPCPhase<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
         return;
     case GateOperation::MultiRZ:
         applyMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
