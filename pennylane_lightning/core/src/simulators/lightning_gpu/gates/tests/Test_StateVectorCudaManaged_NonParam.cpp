@@ -1103,6 +1103,12 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
                                                indices.data(), false);
 
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+
+        sv.initSV();
+        std::copy(init_state.begin(), init_state.end(),
+                  values.begin()); // copy the data to values
+        sv.setStateVector(values, std::vector<std::size_t>{0, 1, 2});
+        CHECK(init_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
 // LCOV_EXCL_START

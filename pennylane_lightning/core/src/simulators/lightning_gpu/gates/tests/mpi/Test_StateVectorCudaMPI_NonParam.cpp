@@ -15,6 +15,7 @@
 #include <complex>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -173,6 +174,19 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
         mpi_manager.Barrier();
 
         CHECK(expected_local_state == Pennylane::Util::approx(local_state));
+
+        sv.initSV();
+        std::vector<std::complex<PrecisionT>> values(init_state.size());
+        std::copy(init_state.begin(), init_state.end(),
+                  values.begin()); // copy the data to values
+        std::vector<std::size_t> wires(num_qubits);
+        std::iota(wires.begin(), wires.end(), 0);
+        sv.setStateVector(values, wires);
+
+        auto expected_local_state_vector = mpi_manager.scatter<cp_t>(values, 0);
+
+        CHECK(expected_local_state_vector ==
+              Pennylane::Util::approx(sv.getDataVector()));
     }
 }
 
