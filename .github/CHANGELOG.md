@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
+  [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
+
 * Always decompose `qml.QFT` in Lightning.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
 
