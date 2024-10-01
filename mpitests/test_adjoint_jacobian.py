@@ -486,7 +486,6 @@ class TestAdjointJacobianQNode:
         """
         return math.cos(theta / 2) * self.I + 1j * math.sin(-theta / 2) * self.X
 
-
     def Ry(self, theta):
         r"""One-qubit rotation about the y axis.
 
@@ -497,7 +496,6 @@ class TestAdjointJacobianQNode:
         """
         return math.cos(theta / 2) * self.I + 1j * math.sin(-theta / 2) * self.Y
 
-
     def Rz(self, theta):
         r"""One-qubit rotation about the z axis.
 
@@ -507,7 +505,6 @@ class TestAdjointJacobianQNode:
             array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_z \theta/2}`
         """
         return math.cos(theta / 2) * self.I + 1j * math.sin(-theta / 2) * self.Z
-
 
     def test_finite_shots_error(self):
         """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
@@ -602,18 +599,34 @@ class TestAdjointJacobianQNode:
         # manual gradient
         grad_true0 = (
             expZ(
-                self.Rx(reused_p) @ self.Rz(other_p) @ self.Ry(reused_p + np.pi / 2) @ self.Rx(extra_param) @ zero_state
+                self.Rx(reused_p)
+                @ self.Rz(other_p)
+                @ self.Ry(reused_p + np.pi / 2)
+                @ self.Rx(extra_param)
+                @ zero_state
             )
             - expZ(
-                self.Rx(reused_p) @ self.Rz(other_p) @ self.Ry(reused_p - np.pi / 2) @ self.Rx(extra_param) @ zero_state
+                self.Rx(reused_p)
+                @ self.Rz(other_p)
+                @ self.Ry(reused_p - np.pi / 2)
+                @ self.Rx(extra_param)
+                @ zero_state
             )
         ) / 2
         grad_true1 = (
             expZ(
-                self.Rx(reused_p + np.pi / 2) @ self.Rz(other_p) @ self.Ry(reused_p) @ self.Rx(extra_param) @ zero_state
+                self.Rx(reused_p + np.pi / 2)
+                @ self.Rz(other_p)
+                @ self.Ry(reused_p)
+                @ self.Rx(extra_param)
+                @ zero_state
             )
             - expZ(
-                self.Rx(reused_p - np.pi / 2) @ self.Rz(other_p) @ self.Ry(reused_p) @ self.Rx(extra_param) @ zero_state
+                self.Rx(reused_p - np.pi / 2)
+                @ self.Rz(other_p)
+                @ self.Ry(reused_p)
+                @ self.Rx(extra_param)
+                @ zero_state
             )
         ) / 2
         expected = grad_true0 + grad_true1  # product rule
