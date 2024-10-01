@@ -90,7 +90,6 @@ def test_unsupported_measurement():
         ):
             func(*params)
     if device_name == "lightning.kokkos":
-
         with pytest.raises(
             qml.DeviceError,
             match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "

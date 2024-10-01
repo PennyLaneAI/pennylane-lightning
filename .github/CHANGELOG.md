@@ -34,6 +34,12 @@
 
 ### Improvements
 
+* Always decompose `qml.QFT` in Lightning.
+  [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
+
+* Uniform Python format to adhere PennyLane style.
+  [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
+
 * Remove dynamic decomposition rules in Lightning.
   [(#926)](https://github.com/PennyLaneAI/pennylane-lightning/pull/926)
 
