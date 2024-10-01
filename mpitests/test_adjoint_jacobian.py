@@ -57,7 +57,6 @@ def fixture_dev(request):
     )
 
 
-
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
 

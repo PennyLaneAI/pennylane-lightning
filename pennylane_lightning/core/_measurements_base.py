@@ -212,7 +212,7 @@ class LightningBaseMeasurements(ABC):
         """
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
-                if self._use_mpi:                    
+                if self._use_mpi:
                     if isinstance(measurementprocess.obs, (qml.Projector)):
                         return self.state_diagonalizing_gates
                 else:
@@ -224,7 +224,7 @@ class LightningBaseMeasurements(ABC):
                 return self.probs
 
             if isinstance(measurementprocess, VarianceMP):
-                if self._use_mpi:                    
+                if self._use_mpi:
                     if isinstance(measurementprocess.obs, (qml.Projector)):
                         return self.state_diagonalizing_gates
                 else:
