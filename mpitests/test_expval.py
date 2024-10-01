@@ -122,23 +122,16 @@ class TestExpval:
             qml.PauliY,
             qml.PauliZ,
             qml.Hadamard,
-            pytest.param(
-                qml.Identity,
-                marks=pytest.mark.xfail(
-                    reason="The Identity gate need a deep review for MPI support"
-                ),
-            ),
+            qml.Identity,
         ],
     )
-    @pytest.mark.parametrize("wires", [1, 2, numQubits - 2, numQubits - 1, numQubits])
+    @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 2, numQubits - 1])
     def test_expval_single_wire_no_parameters(self, tol, operation, wires, C_DTYPE, batch_obs):
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
-        num_wires = wires
+        num_wires = numQubits
         comm = MPI.COMM_WORLD
 
-        dev_mpi = qml.device(
-            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
-        )
+        dev_mpi = qml.device("lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE)
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
 
@@ -147,7 +140,7 @@ class TestExpval:
 
         def circuit():
             qml.StatePrep(state_vector, wires=range(num_wires))
-            return qml.expval(operation(0))
+            return qml.expval(operation(wires))
 
         cpu_qnode = qml.QNode(circuit, dev_cpu)
         expected_output_cpu = cpu_qnode()
@@ -261,10 +254,10 @@ class TestExpval:
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
-    @pytest.mark.parametrize("n_wires", range(1, 8))
+    @pytest.mark.parametrize("n_wires", range(1, numQubits))
     def test_hermitian_expectation(self, n_wires, theta, phi, tol, C_DTYPE, batch_obs):
         """Test that Hadamard expectation value is correct"""
-        n_qubits = 7
+        n_qubits = numQubits - 1
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qml.device(
             device_name, mpi=True, wires=n_qubits, c_dtype=C_DTYPE, batch_obs=batch_obs

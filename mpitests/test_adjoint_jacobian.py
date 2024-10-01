@@ -57,13 +57,6 @@ def fixture_dev(request):
     )
 
 
-# I, X, Y, Z = (
-#         np.eye(2),
-#         qml.PauliX.compute_matrix(),
-#         qml.PauliY.compute_matrix(),
-#         qml.PauliZ.compute_matrix(),
-#     )
-
 
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
