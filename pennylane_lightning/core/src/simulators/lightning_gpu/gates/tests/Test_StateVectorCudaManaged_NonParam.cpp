@@ -1107,7 +1107,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
         sv.initSV();
         std::copy(init_state.begin(), init_state.end(),
                   values.begin()); // copy the data to values
-        sv.setStateVector(values, std::vector<std::size_t>{0, 1, 2});
+        sv.setStateVector(values.data(), values.size(),
+                          std::vector<std::size_t>{0, 1, 2});
         CHECK(init_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
