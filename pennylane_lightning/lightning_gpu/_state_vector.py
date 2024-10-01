@@ -80,7 +80,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         sync: bool = True,
     ):
 
-        super().__init__(num_wires, dtype, sync=sync)
+        super().__init__(num_wires, dtype)
 
         self._device_name = "lightning.gpu"
 

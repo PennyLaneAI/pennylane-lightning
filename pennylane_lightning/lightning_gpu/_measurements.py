@@ -53,27 +53,22 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
 
     Args:
         qubit_state(LightningGPUStateVector): Lightning state-vector class containing the state vector to be measured.
-        use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
-        mpi_handler(MPIHandler, optional): MPI handler for PennyLane Lightning GPU device.
-            Provides functionality to distribute the state-vector to multiple devices.
     """
 
     def __init__(
         self,
-        lgpu_state: LightningGPUStateVector,  # pylint: disable=undefined-variable
-        use_mpi: bool = False,
-        mpi_handler: MPIHandler = None,  # pylint: disable=undefined-variable
+        qubit_state: LightningGPUStateVector,  # pylint: disable=undefined-variable
     ) -> TensorLike:
 
-        super().__init__(lgpu_state)
+        super().__init__(qubit_state)
 
-        self._use_mpi = use_mpi
+        self._use_mpi = qubit_state._mpi_handler.use_mpi
 
-        if use_mpi:
-            self._mpi_handler = mpi_handler
-            self._num_local_wires = mpi_handler.num_local_wires
+        if self._use_mpi:
+            self._mpi_handler = qubit_state._mpi_handler
+            self._num_local_wires = qubit_state._mpi_handler.num_local_wires
 
-        self._measurement_lightning = self._measurement_dtype()(lgpu_state.state_vector)
+        self._measurement_lightning = self._measurement_dtype()(qubit_state.state_vector)
 
     def _measurement_dtype(self):
         """Binding to Lightning GPU Measurements C++ class.

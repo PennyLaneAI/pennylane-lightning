@@ -39,7 +39,7 @@ class LightningBaseStateVector(ABC):
     """
 
     def __init__(
-        self, num_wires: int, dtype: Union[np.complex128, np.complex64], sync: Optional[bool] = None
+        self, num_wires: int, dtype: Union[np.complex128, np.complex64]
     ):
 
         if dtype not in [np.complex64, np.complex128]:
@@ -48,7 +48,6 @@ class LightningBaseStateVector(ABC):
         self._num_wires = num_wires
         self._wires = Wires(range(num_wires))
         self._dtype = dtype
-        self._base_sync = sync
 
         # Dummy for the device name
         self._device_name = None
@@ -103,10 +102,7 @@ class LightningBaseStateVector(ABC):
     def reset_state(self, sync: Optional[bool] = None):
         """Reset the device's state"""
         # init the state vector to |00..0>
-        if sync is None:
-            self._qubit_state.resetStateVector()
-        else:
-            self._qubit_state.resetStateVector(sync)
+        self._qubit_state.resetStateVector()
 
     @abstractmethod
     def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
@@ -117,7 +113,7 @@ class LightningBaseStateVector(ABC):
             device_wires (Wires): wires that get initialized in the state
         """
 
-    def _apply_basis_state(self, state, wires, use_async: Optional[bool] = None):
+    def _apply_basis_state(self, state, wires):
         """Initialize the state vector in a specified computational basis state.
 
         Args:
@@ -136,10 +132,7 @@ class LightningBaseStateVector(ABC):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         # Return a computational basis state over all wires.
-        if use_async is None:
-            self._qubit_state.setBasisState(list(state), list(wires))
-        else:
-            self._qubit_state.setBasisState(list(state), list(wires), use_async)
+        self._qubit_state.setBasisState(list(state), list(wires))
 
     @abstractmethod
     def _apply_lightning_controlled(self, operation):
@@ -196,9 +189,7 @@ class LightningBaseStateVector(ABC):
                 self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(
-                    operations[0].parameters[0], operations[0].wires, self._base_sync
-                )
+                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
         self._apply_lightning(
             operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode

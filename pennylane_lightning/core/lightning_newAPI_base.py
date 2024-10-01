@@ -92,6 +92,49 @@ class LightningBase(Device):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
 
     @abstractmethod
+    def _setup_execution_config(self, config):
+        """
+        Update the execution config with choices for how the device should be used and the device options.
+        """
+
+    @abstractmethod
+    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        """This function defines the device transform program to be applied and an updated device configuration.
+
+        Args:
+            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
+                parameters needed to fully describe the execution.
+
+        Returns:
+            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
+            with unset specifications filled in.
+
+        This device:
+
+        * Supports any qubit operations that provide a matrix
+        * Currently does not support finite shots
+        * Currently does not intrinsically support parameter broadcasting
+
+        """
+
+    @abstractmethod
+    def execute(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Result_or_ResultBatch:
+        """Execute a circuit or a batch of circuits and turn it into results.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            execution_config (ExecutionConfig): a datastructure with additional information required for execution
+
+        Returns:
+            TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
+        """
+
+    @abstractmethod
     def simulate(
         self,
         circuit: QuantumScript,
@@ -111,6 +154,25 @@ class LightningBase(Device):
             Tuple[TensorLike]: The results of the simulation
 
         Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+
+    @abstractmethod
+    def supports_derivatives(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
+    ) -> bool:
+        """Check whether or not derivatives are available for a given configuration and circuit.
+
+        ``LightningGPU`` supports adjoint differentiation with analytic results.
+
+        Args:
+            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
+            circuit (QuantumTape): An optional circuit to check derivatives support for.
+
+        Returns:
+            Bool: Whether or not a derivative can be calculated provided the given information
+
         """
 
     def jacobian(

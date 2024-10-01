@@ -66,9 +66,6 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
             if `batch_obs=False` the computation requires more memory and is faster,
             while `batch_obs=True` allows a larger number of qubits simulation
             at the expense of high computational cost. Defaults to False
-        use_mpi (bool, optional): If distributing computation with MPI. Defaults to False.
-        mpi_handler(MPIHandler, optional): MPI handler for PennyLane Lightning GPU device.
-            Provides functionality to distribute the state-vector to multiple devices.
     """
 
     # pylint: disable=too-few-public-methods
@@ -77,18 +74,16 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
         self,
         qubit_state: LightningGPUStateVector,  # pylint: disable=undefined-variable
         batch_obs: bool = False,
-        use_mpi: bool = False,
-        mpi_handler=None,
     ) -> None:
 
         super().__init__(qubit_state, batch_obs)
 
         self._dp = DevPool()
 
-        self._use_mpi = use_mpi
+        self._use_mpi = qubit_state._mpi_handler.use_mpi
 
         if self._use_mpi:
-            self._mpi_handler = mpi_handler
+            self._mpi_handler = qubit_state._mpi_handler
 
         # Initialize the C++ binds
         self._jacobian_lightning, self._create_ops_list_lightning = self._adjoint_jacobian_dtype()

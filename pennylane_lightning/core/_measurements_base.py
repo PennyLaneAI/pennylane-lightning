@@ -123,7 +123,7 @@ class LightningBaseMeasurements(ABC):
         ):
             # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
-                self._qubit_state.device_name, self.dtype == np.complex64
+                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._ob(measurementprocess.obs)
             return self._measurement_lightning.expval(ob_serialized)
 
