@@ -511,5 +511,5 @@ class LightningGPU(LightningBase):
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(
-            final_state#, self._mpi_handler.use_mpi, self._mpi_handler
+            final_state
         ).measure_final_state(circuit)
