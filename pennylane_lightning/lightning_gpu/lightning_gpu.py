@@ -172,7 +172,6 @@ allowed_operations = {
     "QubitCarry",
     "QubitSum",
     "OrbitalRotation",
-    "QFT",
     "ECR",
     "BlockEncode",
     "C(BlockEncode)",

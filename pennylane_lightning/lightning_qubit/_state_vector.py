@@ -51,7 +51,6 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
     """
 
     def __init__(self, num_wires, dtype=np.complex128):
-
         super().__init__(num_wires, dtype)
 
         self._device_name = "lightning.qubit"
