@@ -456,8 +456,7 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
             self.syncH2D(self._reshape(local_state, output_shape))
             return
 
-        # set the state vector on GPU with the unravelled_indices and their corresponding values
-        # this operation on device
+        # set the state vector on GPU with the input values and wires
         self._gpu_state.setStateVector(state, list(device_wires))
 
     def _apply_basis_state(self, state, wires):
