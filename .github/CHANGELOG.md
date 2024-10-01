@@ -21,6 +21,9 @@
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
+* Lightning-GPU migrated to the new device API.
+  [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
+
 ### Breaking changes
 
 * Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
