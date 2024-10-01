@@ -220,12 +220,13 @@ class StateVectorCudaManaged
     /**
      * @brief Set values for a batch of elements of the state-vector.
      *
-     * @param state State.
+     * @param state_ptr Pointer to the initial state data.
+     * @param num_states Length of the initial state data.
      * @param wires Wires.
      */
-    void setStateVector(const std::vector<ComplexT> &state,
+    void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
                         const std::vector<std::size_t> &wires) {
-        PL_ABORT_IF_NOT(state.size() == Pennylane::Util::exp2(wires.size()),
+        PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
         const auto num_qubits = BaseType::getNumQubits();
@@ -240,8 +241,6 @@ class StateVectorCudaManaged
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
-        const auto num_states = state.size();
-
         // Calculate the indices of the state-vector to be set.
         // TODO: Could move to GPU calculation if the state size is large.
         std::vector<index_type> indices(num_states);
@@ -254,7 +253,7 @@ class StateVectorCudaManaged
             }
             indices[i] = index;
         }
-        setStateVector<index_type>(num_states, state.data(), indices.data());
+        setStateVector<index_type>(num_states, state_ptr, indices.data());
     }
 
     /**

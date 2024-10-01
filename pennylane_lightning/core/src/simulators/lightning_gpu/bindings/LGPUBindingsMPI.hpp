@@ -113,15 +113,9 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             [](StateVectorT &sv, const np_arr_c &state,
                const std::vector<std::size_t> &wires) {
                 const auto state_buffer = state.request();
-                std::vector<std::complex<ParamT>> state_vec;
-                if (state_buffer.size) {
-                    const auto state_ptr =
-                        static_cast<const std::complex<ParamT> *>(
-                            state_buffer.ptr);
-                    state_vec = std::vector<std::complex<ParamT>>{
-                        state_ptr, state_ptr + state_buffer.size};
-                }
-                sv.setStateVector(state_vec, wires);
+                const auto state_ptr =
+                    static_cast<const std::complex<ParamT> *>(state_buffer.ptr);
+                sv.setStateVector(state_ptr, state_buffer.size, wires);
             },
             "Set State Vector on GPU with values for the state vector and "
             "wires on the host memory.")

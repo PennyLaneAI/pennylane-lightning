@@ -181,7 +181,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
                   values.begin()); // copy the data to values
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
-        sv.setStateVector(values, wires);
+        sv.setStateVector(values.data(), values.size(), wires);
 
         auto expected_local_state_vector = mpi_manager.scatter<cp_t>(values, 0);
 
