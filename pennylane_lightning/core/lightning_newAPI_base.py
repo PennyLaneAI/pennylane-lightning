@@ -68,7 +68,6 @@ class LightningBase(Device):
 
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
-        self._sync = None
 
         if isinstance(wires, int):
             self._wire_map = None  # should just use wires as is
@@ -196,7 +195,7 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
-        state.reset_state(self._sync)
+        state.reset_state()
         final_state = state.get_final_state(circuit)
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
@@ -256,7 +255,7 @@ class LightningBase(Device):
         """
         if wire_map is not None:
             [circuit], _ = qml.map_wires(circuit, wire_map)
-        state.reset_state(self._sync)
+        state.reset_state()
         final_state = state.get_final_state(circuit)
         # pylint: disable=not-callable
         return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
