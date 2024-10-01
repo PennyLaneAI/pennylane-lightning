@@ -31,8 +31,8 @@ try:
         mpi_error = ex_mpi
         MPI_SUPPORT = False
 
-except ImportError as ex:
-    warn(str(ex), UserWarning)
+except ImportError as error_import:
+    warn(str(error_import), UserWarning)
 
 from typing import Any, List
 
