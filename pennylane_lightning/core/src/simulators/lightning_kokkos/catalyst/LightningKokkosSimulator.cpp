@@ -349,6 +349,7 @@ std::vector<size_t> LightningKokkosSimulator::GenerateSamples(size_t shots) {
 
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
+    std::cout << "hi! " << ((this->gen) == nullptr) << std::endl;
     if (this->gen) {
         std::cout << "seeded kokkos sample: " << (*(this->gen))() << "\n";
         return m.generate_samples(shots, (*(this->gen))());
