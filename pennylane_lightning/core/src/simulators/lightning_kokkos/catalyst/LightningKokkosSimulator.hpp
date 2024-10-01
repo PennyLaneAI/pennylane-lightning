@@ -174,6 +174,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto CacheManagerInfo()
         -> std::tuple<std::size_t, std::size_t, std::size_t,
                       std::vector<std::string>, std::vector<ObsIdType>>;
+    auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 };
 
 } // namespace Catalyst::Runtime::Simulator

@@ -1255,7 +1255,7 @@ TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
 }
 
 template <typename TypeList>
-void testSamples(const std::optional<std::mt19937> &rng = std::nullopt) {
+void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -1286,8 +1286,8 @@ void testSamples(const std::optional<std::mt19937> &rng = std::nullopt) {
         std::size_t N = std::pow(2, num_qubits);
         std::size_t num_samples = 100000;
         auto &&samples =
-            rng.has_value()
-                ? Measurer.generate_samples(num_samples, rng.value())
+            seed.has_value()
+                ? Measurer.generate_samples(num_samples, seed.value())
                 : Measurer.generate_samples(num_samples);
 
         std::vector<std::size_t> counts(N, 0);
@@ -1314,7 +1314,7 @@ void testSamples(const std::optional<std::mt19937> &rng = std::nullopt) {
             REQUIRE_THAT(probabilities,
                          Catch::Approx(expected_probabilities).margin(.05));
         }
-        testSamples<typename TypeList::Next>(rng);
+        testSamples<typename TypeList::Next>(seed);
     }
 }
 
@@ -1326,8 +1326,7 @@ TEST_CASE("Samples", "[MeasurementsBase]") {
 
 TEST_CASE("Seeded samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
-        std::mt19937 rng(37);
-        testSamples<TestStateVectorBackends>(rng);
+        testSamples<TestStateVectorBackends>(37);
     }
 }
 

@@ -574,17 +574,17 @@ class Measurements final
      * Reference: https://en.wikipedia.org/wiki/Alias_method
      *
      * @param num_samples The number of samples to generate.
-     * @param catalyst_rng The seeded random number generator from catalyst.
+     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(
-        const std::size_t num_samples,
-        const std::optional<std::mt19937> &catalyst_rng = std::nullopt) {
+    std::vector<std::size_t>
+    generate_samples(const std::size_t num_samples,
+                     const std::optional<std::size_t> &seed = std::nullopt) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
-        return generate_samples(wires, num_samples, catalyst_rng);
+        return generate_samples(wires, num_samples, seed);
     }
 
     /**
@@ -592,17 +592,18 @@ class Measurements final
      *
      * @param wires Sample are generated for the specified wires.
      * @param num_samples The number of samples to generate.
-     * @param catalyst_rng The seeded random number generator from catalyst.
+     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(
-        const std::vector<std::size_t> &wires, const std::size_t num_samples,
-        const std::optional<std::mt19937> &catalyst_rng = std::nullopt) {
+    std::vector<std::size_t>
+    generate_samples(const std::vector<std::size_t> &wires,
+                     const std::size_t num_samples,
+                     const std::optional<std::size_t> &seed = std::nullopt) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        if (catalyst_rng.has_value()) {
-            this->setRNG(catalyst_rng.value());
+        if (seed.has_value()) {
+            this->setSeed(seed.value());
         } else {
             this->setRandomSeed();
         }
