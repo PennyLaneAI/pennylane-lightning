@@ -202,6 +202,7 @@ class LightningBaseMeasurements(ABC):
     def get_measurement_function(
         self, measurementprocess: MeasurementProcess
     ) -> Callable[[MeasurementProcess, TensorLike], TensorLike]:
+        # pylint: disable=too-many-return-statements
         """Get the appropriate method for performing a measurement.
 
         Args:
