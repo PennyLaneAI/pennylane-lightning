@@ -39,7 +39,6 @@ class LightningBaseStateVector(ABC):
     """
 
     def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64]):
-
         if dtype not in [np.complex64, np.complex128]:
             raise TypeError(f"Unsupported complex type: {dtype}")
 

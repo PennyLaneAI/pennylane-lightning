@@ -49,8 +49,7 @@ class LightningKokkosMeasurements(
     def __init__(
         self,
         kokkos_state: LightningKokkosStateVector,  # pylint: disable=undefined-variable
-    ) -> TensorLike:
-
+    ) -> None:
         super().__init__(kokkos_state)
 
         self._measurement_lightning = self._measurement_dtype()(kokkos_state.state_vector)

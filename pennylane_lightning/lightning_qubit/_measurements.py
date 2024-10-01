@@ -62,7 +62,6 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
         kernel_name: str = None,
         num_burnin: int = None,
     ) -> None:
-
         super().__init__(qubit_state)
 
         self._mcmc = mcmc

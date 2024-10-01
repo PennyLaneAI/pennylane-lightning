@@ -139,7 +139,6 @@ _operations = frozenset(
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
-        "QFT",
         "ECR",
         "BlockEncode",
         "C(BlockEncode)",
