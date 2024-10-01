@@ -86,7 +86,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     /**
      * @brief Set the internal random generator to an already existing instance
      *
-     * @param catalyst_rng Seed
+     * @param rng An already existing instance of a random number generator
      */
     void setRNG(std::mt19937 rng) { this->rng = std::move(rng); }
 

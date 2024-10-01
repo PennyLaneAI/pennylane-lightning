@@ -20,6 +20,8 @@ using Pennylane::Util::isApproxEqual;
 } // namespace
 /// @endcond
 #include <algorithm>
+#include <optional>
+#include <random>
 #include <string>
 
 #ifdef _ENABLE_PLQUBIT
@@ -1251,7 +1253,9 @@ TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
         testTensorProdObsVarShot<TestStateVectorBackends>();
     }
 }
-template <typename TypeList> void testSamples() {
+
+template <typename TypeList> void testSamples(
+    const std::optional<std::mt19937>& rng = std::nullopt) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -1281,7 +1285,8 @@ template <typename TypeList> void testSamples() {
         std::size_t num_qubits = 3;
         std::size_t N = std::pow(2, num_qubits);
         std::size_t num_samples = 100000;
-        auto &&samples = Measurer.generate_samples(num_samples);
+        auto &&samples = rng.has_value() ?
+            Measurer.generate_samples(num_samples, rng.value()) : Measurer.generate_samples(num_samples);
 
         std::vector<std::size_t> counts(N, 0);
         std::vector<std::size_t> samples_decimal(num_samples, 0);
@@ -1307,13 +1312,20 @@ template <typename TypeList> void testSamples() {
             REQUIRE_THAT(probabilities,
                          Catch::Approx(expected_probabilities).margin(.05));
         }
-        testSamples<typename TypeList::Next>();
+        testSamples<typename TypeList::Next>(rng);
     }
 }
 
 TEST_CASE("Samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testSamples<TestStateVectorBackends>();
+    }
+}
+
+TEST_CASE("Seeded samples", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        std::mt19937 rng(37.42);
+        testSamples<TestStateVectorBackends>(rng);
     }
 }
 
