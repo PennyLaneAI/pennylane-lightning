@@ -131,7 +131,9 @@ class TestExpval:
         num_wires = numQubits
         comm = MPI.COMM_WORLD
 
-        dev_mpi = qml.device("lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs)
+        dev_mpi = qml.device(
+            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+        )
 
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
 
