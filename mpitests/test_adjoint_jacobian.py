@@ -57,6 +57,14 @@ def fixture_dev(request):
     )
 
 
+# I, X, Y, Z = (
+#         np.eye(2),
+#         qml.PauliX.compute_matrix(),
+#         qml.PauliY.compute_matrix(),
+#         qml.PauliZ.compute_matrix(),
+#     )
+
+
 class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     """Tests for the adjoint_jacobian method"""
 
@@ -459,49 +467,47 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
 
-I, X, Y, Z = (
-    np.eye(2),
-    qml.PauliX.compute_matrix(),
-    qml.PauliY.compute_matrix(),
-    qml.PauliZ.compute_matrix(),
-)
-
-
-def Rx(theta):
-    r"""One-qubit rotation about the x axis.
-
-    Args:
-        theta (float): rotation angle
-    Returns:
-        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_x \theta/2}`
-    """
-    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * X
-
-
-def Ry(theta):
-    r"""One-qubit rotation about the y axis.
-
-    Args:
-        theta (float): rotation angle
-    Returns:
-        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_y \theta/2}`
-    """
-    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Y
-
-
-def Rz(theta):
-    r"""One-qubit rotation about the z axis.
-
-    Args:
-        theta (float): rotation angle
-    Returns:
-        array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_z \theta/2}`
-    """
-    return math.cos(theta / 2) * I + 1j * math.sin(-theta / 2) * Z
-
-
 class TestAdjointJacobianQNode:
     """Test QNode integration with the adjoint_jacobian method"""
+
+    # def analytic_rotation(self):
+    I = np.eye(2)
+    X = qml.PauliX.compute_matrix()
+    Y = qml.PauliY.compute_matrix()
+    Z = qml.PauliZ.compute_matrix()
+
+    def Rx(self, theta):
+        r"""One-qubit rotation about the x axis.
+
+        Args:
+            theta (float): rotation angle
+        Returns:
+            array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_x \theta/2}`
+        """
+        return math.cos(theta / 2) * self.I + 1j * math.sin(-theta / 2) * self.X
+
+
+    def Ry(self, theta):
+        r"""One-qubit rotation about the y axis.
+
+        Args:
+            theta (float): rotation angle
+        Returns:
+            array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_y \theta/2}`
+        """
+        return math.cos(theta / 2) * self.I + 1j * math.sin(-theta / 2) * self.Y
+
+
+    def Rz(self, theta):
+        r"""One-qubit rotation about the z axis.
+
+        Args:
+            theta (float): rotation angle
+        Returns:
+            array: unitary 2x2 rotation matrix :math:`e^{-i \sigma_z \theta/2}`
+        """
+        return math.cos(theta / 2) * self.I + 1j * math.sin(-theta / 2) * self.Z
+
 
     def test_finite_shots_error(self):
         """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
@@ -596,18 +602,18 @@ class TestAdjointJacobianQNode:
         # manual gradient
         grad_true0 = (
             expZ(
-                Rx(reused_p) @ Rz(other_p) @ Ry(reused_p + np.pi / 2) @ Rx(extra_param) @ zero_state
+                self.Rx(reused_p) @ self.Rz(other_p) @ self.Ry(reused_p + np.pi / 2) @ self.Rx(extra_param) @ zero_state
             )
             - expZ(
-                Rx(reused_p) @ Rz(other_p) @ Ry(reused_p - np.pi / 2) @ Rx(extra_param) @ zero_state
+                self.Rx(reused_p) @ self.Rz(other_p) @ self.Ry(reused_p - np.pi / 2) @ self.Rx(extra_param) @ zero_state
             )
         ) / 2
         grad_true1 = (
             expZ(
-                Rx(reused_p + np.pi / 2) @ Rz(other_p) @ Ry(reused_p) @ Rx(extra_param) @ zero_state
+                self.Rx(reused_p + np.pi / 2) @ self.Rz(other_p) @ self.Ry(reused_p) @ self.Rx(extra_param) @ zero_state
             )
             - expZ(
-                Rx(reused_p - np.pi / 2) @ Rz(other_p) @ Ry(reused_p) @ Rx(extra_param) @ zero_state
+                self.Rx(reused_p - np.pi / 2) @ self.Rz(other_p) @ self.Ry(reused_p) @ self.Rx(extra_param) @ zero_state
             )
         ) / 2
         expected = grad_true0 + grad_true1  # product rule

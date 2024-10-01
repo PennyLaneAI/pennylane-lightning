@@ -89,7 +89,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             py::arg("state") = nullptr, py::arg("wires") = nullptr,
             py::arg("async") = false,
             "Set the state vector to a basis state on GPU.")
-
         .def(
             "setStateVector",
             [](StateVectorT &sv, const np_arr_sparse_ind &indices,
