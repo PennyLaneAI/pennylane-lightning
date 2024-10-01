@@ -88,7 +88,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      *
      * @param rng An already existing instance of a random number generator
      */
-    void setRNG(std::mt19937 rng) { this->rng = std::move(rng); }
+    void setRNG(std::mt19937 rng) { this->rng = rng; }
 
     /**
      * @brief Calculate the expectation value for a general Observable.

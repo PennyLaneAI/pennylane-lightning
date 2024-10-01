@@ -1324,7 +1324,7 @@ TEST_CASE("Samples", "[MeasurementsBase]") {
 
 TEST_CASE("Seeded samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
-        std::mt19937 rng(37.42);
+        std::mt19937 rng(37);
         testSamples<TestStateVectorBackends>(rng);
     }
 }
