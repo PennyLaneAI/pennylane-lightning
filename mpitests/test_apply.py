@@ -372,10 +372,10 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
-        dev_mpi._statevector.reset_state(False)
+        dev_mpi._statevector.reset_state()
 
         gpumpi_qnode = qml.QNode(circuit, dev_mpi)
-        dev_mpi._statevector.reset_state(False)
+        dev_mpi._statevector.reset_state()
 
         local_state_vector = gpumpi_qnode()
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
@@ -647,7 +647,7 @@ class TestGenerateSample:
         dev_mpi = qml.device(
             "lightning.gpu", wires=num_wires, mpi=True, shots=1000, c_dtype=C_DTYPE
         )
-        dev_mpi._statevector.reset_state(False)
+        dev_mpi._statevector.reset_state()
 
         @qml.qnode(dev_mpi)
         def circuit():
