@@ -498,10 +498,7 @@ class TestVectorJacobianProduct:
                 qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
             tape.trainable_params = {0}
 
-            if device_name == "lightning.gpu":
-                statevector.reset_state(True)
-            else:
-                statevector.reset_state()
+            statevector.reset_state()
 
             vjp = self.calculate_vjp(statevector, tape, dy)
 
