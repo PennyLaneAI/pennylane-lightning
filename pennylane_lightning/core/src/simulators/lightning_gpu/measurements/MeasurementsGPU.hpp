@@ -25,6 +25,7 @@
 #include <cuda.h>
 #include <cusparse.h>
 #include <custatevec.h> // custatevecApplyMatrix
+#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
