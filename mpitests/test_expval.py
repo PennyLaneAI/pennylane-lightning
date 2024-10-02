@@ -50,9 +50,9 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
 
     c_dtype = dev_mpi.c_dtype
 
-    expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
+    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
+    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
     comm.Bcast(state_vector, root=0)
@@ -85,9 +85,9 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
 
     c_dtype = dev_mpi.c_dtype
 
-    expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
+    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
+    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
     comm.Bcast(state_vector, root=0)
@@ -274,7 +274,7 @@ class TestExpval:
         obs = qml.Hermitian(U, wires=range(n_wires))
 
         init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state = init_state / np.linalg.norm(init_state)
         init_state = init_state.astype(dev.c_dtype)
         comm.Bcast(init_state, root=0)
 

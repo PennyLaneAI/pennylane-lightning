@@ -35,7 +35,6 @@ class LightningBaseStateVector(ABC):
         num_wires(int): the number of wires to initialize the device with
         dtype: Datatypes for state-vector representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        sync Optional(bool): immediately sync with host-sv after applying operation.
     """
 
     def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64]):

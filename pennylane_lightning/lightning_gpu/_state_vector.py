@@ -153,7 +153,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         >>> print(dev.state)
         [0.+0.j 1.+0.j]
         """
-        state = np.zeros(1 << self._num_local_wires, dtype=self.dtype)
+        state = np.zeros(2**self._num_local_wires, dtype=self.dtype)
         self.syncD2H(state)
         return state
 
@@ -221,7 +221,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             if self.num_wires == self._num_local_wires:
                 self.syncH2D(np.reshape(state, output_shape))
                 return
-            local_state = np.zeros(1 << self._num_local_wires, dtype=self._dtype)
+            local_state = np.zeros(2**self._num_local_wires, dtype=self._dtype)
             self._mpi_handler.mpi_manager.Scatter(state, local_state, 0)
             self.syncH2D(np.reshape(local_state, output_shape))
             return
@@ -230,7 +230,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
 
         # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((1 << len(device_wires), self.num_wires), dtype=int)
+        unravelled_indices = np.zeros((2**len(device_wires), self.num_wires), dtype=int)
         unravelled_indices[:, device_wires] = basis_states
 
         # get indices for which the state is changed to input state vector elements

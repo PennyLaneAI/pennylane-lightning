@@ -40,7 +40,7 @@ def create_random_init_state(numWires, c_dtype, seed_value=48):
 
     r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
-    num_elements = 1 << numWires
+    num_elements = 2**numWires
     init_state = np.random.rand(num_elements).astype(r_dtype) + 1j * np.random.rand(
         num_elements
     ).astype(r_dtype)
@@ -59,9 +59,9 @@ def apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires):
 
     c_dtype = dev_mpi.c_dtype
 
-    expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
+    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
+    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
     comm.Bcast(state_vector, root=0)
@@ -94,9 +94,9 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
 
     c_dtype = dev_mpi.c_dtype
 
-    expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
-    local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
-    local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+    expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
+    local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
+    local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
     state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
     comm.Bcast(state_vector, root=0)
@@ -252,10 +252,10 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         else:
             c_dtype = np.complex128
 
-        state_vector = np.zeros(1 << num_wires).astype(c_dtype)
-        expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
-        local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
-        local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+        state_vector = np.zeros(2**num_wires).astype(c_dtype)
+        expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
+        local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
+        local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
 
@@ -314,10 +314,10 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         else:
             c_dtype = np.complex128
 
-        state_vector = np.zeros(1 << num_wires).astype(c_dtype)
-        expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
-        local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
-        local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+        state_vector = np.zeros(2**num_wires).astype(c_dtype)
+        expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
+        local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
+        local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
 
@@ -350,10 +350,10 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         else:
             c_dtype = np.complex128
 
-        state_vector = np.zeros(1 << num_wires).astype(c_dtype)
-        expected_output_cpu = np.zeros(1 << num_wires).astype(c_dtype)
-        local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
-        local_expected_output_cpu = np.zeros(1 << num_local_wires).astype(c_dtype)
+        state_vector = np.zeros(2**num_wires).astype(c_dtype)
+        expected_output_cpu = np.zeros(2**num_wires).astype(c_dtype)
+        local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
+        local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
 
@@ -411,7 +411,7 @@ class TestSparseHamExpval:  # pylint: disable=too-few-public-methods,missing-fun
 
         state_vector /= np.linalg.norm(state_vector)
 
-        local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
+        local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
         comm.Scatter(state_vector, local_state_vector, root=0)
 
         H_sparse = qml.SparseHamiltonian(Hmat, wires=range(3))
@@ -462,7 +462,7 @@ class TestExpval:
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
         comm.Bcast(state_vector, root=0)
 
-        local_state_vector = np.zeros(1 << num_local_wires).astype(c_dtype)
+        local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
