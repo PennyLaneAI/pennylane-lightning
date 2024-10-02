@@ -29,7 +29,6 @@
 
 /* Kernels */
 #include "cpu_kernels/GateImplementationsLM.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 #include "TestHelpers.hpp" // createProductState, createRandomStateVectorData
 #include "TestHelpersWires.hpp"
