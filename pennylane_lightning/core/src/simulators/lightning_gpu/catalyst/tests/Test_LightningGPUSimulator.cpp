@@ -31,7 +31,7 @@
 namespace {
 using namespace Catalyst::Runtime::Simulator;
 using namespace Pennylane::Util;
-using LKSimulator = LightningGPUSimulator;
+using LGPUSimulator = LightningGPUSimulator;
 using QDevice = Catalyst::Runtime::QuantumDevice;
 
 GENERATE_DEVICE_FACTORY(LightningGPUSimulator,
@@ -45,45 +45,45 @@ GENERATE_DEVICE_FACTORY(LightningGPUSimulator,
  */
 TEST_CASE("LightningGPUSimulator::constructor", "[constructibility]") {
     SECTION("LightningGPUSimulator") {
-        REQUIRE(std::is_constructible<LKSimulator>::value);
+        REQUIRE(std::is_constructible<LGPUSimulator>::value);
     }
     SECTION("LightningGPUSimulator(string))") {
-        REQUIRE(std::is_constructible<LKSimulator, std::string>::value);
+        REQUIRE(std::is_constructible<LGPUSimulator, std::string>::value);
     }
 }
 
 TEST_CASE("Test the device factory method", "[constructibility]") {
-    std::unique_ptr<QDevice> LKsim(LightningGPUSimulatorFactory(""));
-    REQUIRE(LKsim->GetNumQubits() == 0);
+    std::unique_ptr<QDevice> LGPUsim(LightningGPUSimulatorFactory(""));
+    REQUIRE(LGPUsim->GetNumQubits() == 0);
 }
 
 TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
     SECTION("Managing Qubits") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(0);
-        REQUIRE(LKsim->GetNumQubits() == 0);
-        LKsim->AllocateQubits(2);
-        REQUIRE(LKsim->GetNumQubits() == 2);
-        LKsim->AllocateQubits(2);
-        REQUIRE(LKsim->GetNumQubits() == 4);
-        LKsim->ReleaseQubit(0);
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(0);
+        REQUIRE(LGPUsim->GetNumQubits() == 0);
+        LGPUsim->AllocateQubits(2);
+        REQUIRE(LGPUsim->GetNumQubits() == 2);
+        LGPUsim->AllocateQubits(2);
+        REQUIRE(LGPUsim->GetNumQubits() == 4);
+        LGPUsim->ReleaseQubit(0);
         REQUIRE(
-            LKsim->GetNumQubits() ==
+            LGPUsim->GetNumQubits() ==
             4); // releasing only one qubit does not change the total number.
-        LKsim->ReleaseAllQubits();
-        REQUIRE(LKsim->GetNumQubits() ==
+        LGPUsim->ReleaseAllQubits();
+        REQUIRE(LGPUsim->GetNumQubits() ==
                 0); // releasing all qubits resets the simulator.
     }
     SECTION("Tape recording") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(1);
-        REQUIRE_NOTHROW(LKsim->StartTapeRecording());
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(1);
+        REQUIRE_NOTHROW(LGPUsim->StartTapeRecording());
         REQUIRE_THROWS_WITH(
-            LKsim->StartTapeRecording(),
+            LGPUsim->StartTapeRecording(),
             Catch::Matchers::Contains("Cannot re-activate the cache manager"));
-        REQUIRE_NOTHROW(LKsim->StopTapeRecording());
+        REQUIRE_NOTHROW(LGPUsim->StopTapeRecording());
         REQUIRE_THROWS_WITH(
-            LKsim->StopTapeRecording(),
+            LGPUsim->StopTapeRecording(),
             Catch::Matchers::Contains(
                 "Cannot stop an already stopped cache manager"));
     }
@@ -91,22 +91,22 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
 
 TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     SECTION("Identity gate") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 10;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            Qs[ind] = LKsim->AllocateQubit();
+            Qs[ind] = LGPUsim->AllocateQubit();
         }
 
         for (std::size_t ind = 0; ind < n_qubits; ind += 2) {
-            LKsim->NamedOperation("Identity", {}, {Qs[ind]}, false);
+            LGPUsim->NamedOperation("Identity", {}, {Qs[ind]}, false);
         }
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state.at(0) == std::complex<double>{1, 0});
 
@@ -119,25 +119,25 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("PauliX gate") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 3;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            Qs[ind] = LKsim->AllocateQubit();
+            Qs[ind] = LGPUsim->AllocateQubit();
         }
 
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            LKsim->NamedOperation("PauliX", {}, {Qs[ind]}, false);
+            LGPUsim->NamedOperation("PauliX", {}, {Qs[ind]}, false);
         }
         for (std::size_t ind = n_qubits; ind > 0; ind--) {
-            LKsim->NamedOperation("PauliX", {}, {Qs[ind - 1]}, false);
+            LGPUsim->NamedOperation("PauliX", {}, {Qs[ind - 1]}, false);
         }
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state.at(0) == std::complex<double>{1, 0});
 
@@ -150,22 +150,22 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("PauliY gate") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            Qs[ind] = LKsim->AllocateQubit();
+            Qs[ind] = LGPUsim->AllocateQubit();
         }
 
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            LKsim->NamedOperation("PauliY", {}, {Qs[ind]}, false);
+            LGPUsim->NamedOperation("PauliY", {}, {Qs[ind]}, false);
         }
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state.at(0) == std::complex<double>{0, 0});
         CHECK(state.at(1) == std::complex<double>{0, 0});
@@ -174,21 +174,21 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("PauliY and PauliZ gates") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            Qs[ind] = LKsim->AllocateQubit();
+            Qs[ind] = LGPUsim->AllocateQubit();
         }
 
-        LKsim->NamedOperation("PauliY", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("PauliZ", {}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("PauliY", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("PauliZ", {}, {Qs[1]}, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state.at(0) == std::complex<double>{0, 0});
         CHECK(state.at(1) == std::complex<double>{0, 0});
@@ -197,22 +197,22 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard gate") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            Qs[ind] = LKsim->AllocateQubit();
+            Qs[ind] = LGPUsim->AllocateQubit();
         }
 
         for (std::size_t ind = 0; ind < n_qubits; ind++) {
-            LKsim->NamedOperation("Hadamard", {}, {Qs[ind]}, false);
+            LGPUsim->NamedOperation("Hadamard", {}, {Qs[ind]}, false);
         }
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state[0] ==
               PLApproxComplex(std::complex<double>{0.5, 0}).epsilon(1e-5));
@@ -222,20 +222,20 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("R(X, Y, Z) and PauliX gates") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 4;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("PauliX", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("PauliX", {}, {Qs[0]}, false);
 
-        LKsim->NamedOperation("RX", {0.123}, {Qs[1]}, false);
-        LKsim->NamedOperation("RY", {0.456}, {Qs[2]}, false);
-        LKsim->NamedOperation("RZ", {0.789}, {Qs[3]}, false);
+        LGPUsim->NamedOperation("RX", {0.123}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("RY", {0.456}, {Qs[2]}, false);
+        LGPUsim->NamedOperation("RZ", {0.789}, {Qs[3]}, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         // calculated by pennylane.
         CHECK(state.at(0) == std::complex<double>{0, 0});
@@ -269,24 +269,24 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, RX, PhaseShift with cache manager") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
 
-        Qs[0] = LKsim->AllocateQubit();
-        Qs[1] = LKsim->AllocateQubit();
+        Qs[0] = LGPUsim->AllocateQubit();
+        Qs[1] = LGPUsim->AllocateQubit();
 
-        LKsim->StartTapeRecording();
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("RX", {0.123}, {Qs[1]}, false);
-        LKsim->NamedOperation("PhaseShift", {0.456}, {Qs[0]}, false);
-        LKsim->StopTapeRecording();
+        LGPUsim->StartTapeRecording();
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("RX", {0.123}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("PhaseShift", {0.456}, {Qs[0]}, false);
+        LGPUsim->StopTapeRecording();
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         // calculated by pennylane.
         CHECK(state[0] == PLApproxComplex(std::complex<double>{0.7057699753, 0})
@@ -303,28 +303,28 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         std::tuple<std::size_t, std::size_t, std::size_t,
                    std::vector<std::string>, std::vector<intptr_t>>
             expected{3, 0, 2, {"Hadamard", "RX", "PhaseShift"}, {}};
-        REQUIRE(LKsim->CacheManagerInfo() == expected);
+        REQUIRE(LGPUsim->CacheManagerInfo() == expected);
     }
 
     // ============= 2-qubit operations =============
 
     SECTION("PauliX and CNOT") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
         Qs.reserve(n_qubits);
 
         for (std::size_t i = 0; i < n_qubits; i++) {
-            Qs[i] = LKsim->AllocateQubit();
+            Qs[i] = LGPUsim->AllocateQubit();
         }
 
-        LKsim->NamedOperation("PauliX", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+        LGPUsim->NamedOperation("PauliX", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state.at(0) == std::complex<double>{0, 0});
         CHECK(state.at(1) == std::complex<double>{0, 0});
@@ -333,19 +333,19 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard and CR(X, Y, Z)") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 4;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("CRX", {0.123}, {Qs[0], Qs[1]}, false);
-        LKsim->NamedOperation("CRY", {0.456}, {Qs[0], Qs[2]}, false);
-        LKsim->NamedOperation("CRZ", {0.789}, {Qs[0], Qs[3]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("CRX", {0.123}, {Qs[0], Qs[1]}, false);
+        LGPUsim->NamedOperation("CRY", {0.456}, {Qs[0], Qs[2]}, false);
+        LGPUsim->NamedOperation("CRZ", {0.789}, {Qs[0], Qs[3]}, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         // calculated by pennylane.
         CHECK(
@@ -381,18 +381,18 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard and CRot") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("CRot", {M_PI, M_PI_2, 0.5}, {Qs[0], Qs[1]},
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("CRot", {M_PI, M_PI_2, 0.5}, {Qs[0], Qs[1]},
                               false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(
             state[0] ==
@@ -410,19 +410,19 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, PauliZ, IsingXY, SWAP") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("PauliZ", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("IsingXY", {0.2}, {Qs[1], Qs[0]}, false);
-        LKsim->NamedOperation("SWAP", {}, {Qs[0], Qs[1]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("PauliZ", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("IsingXY", {0.2}, {Qs[1], Qs[0]}, false);
+        LGPUsim->NamedOperation("SWAP", {}, {Qs[0], Qs[1]}, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(
             state[0] ==
@@ -436,18 +436,18 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, PauliX and Toffoli") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 3;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("PauliX", {}, {Qs[1]}, false);
-        LKsim->NamedOperation("Toffoli", {}, {Qs[0], Qs[1], Qs[2]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("PauliX", {}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("Toffoli", {}, {Qs[0], Qs[1], Qs[2]}, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state.at(0) == std::complex<double>{0, 0});
         CHECK(state.at(1) == std::complex<double>{0, 0});
@@ -464,34 +464,34 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("RX, Hadamard and MultiRZ") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("RX", {M_PI}, {Qs[1]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
-        LKsim->NamedOperation("MultiRZ", {M_PI}, {Qs[0], Qs[1]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("RX", {M_PI}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("MultiRZ", {M_PI}, {Qs[0], Qs[1]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state[2] ==
               PLApproxComplex(std::complex<double>{-1, 0}).epsilon(1e-5));
     }
 
     SECTION("Hadamard, CNOT and Matrix") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
 
         const std::vector<intptr_t> wires = {Qs[0]};
         std::vector<std::complex<double>> matrix{
@@ -500,11 +500,11 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
             {-0.2376311670004963, 0.3096798175687841},
             {-0.8818365947322423, -0.26456390390903695},
         };
-        LKsim->MatrixOperation(matrix, wires, false);
+        LGPUsim->MatrixOperation(matrix, wires, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state[0] ==
               PLApproxComplex(std::complex<double>{-0.474432, -0.44579})
@@ -521,15 +521,15 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, CR(X, Y, Z) and Matrix") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 4;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("CRX", {0.123}, {Qs[0], Qs[1]}, false);
-        LKsim->NamedOperation("CRY", {0.456}, {Qs[0], Qs[2]}, false);
-        LKsim->NamedOperation("CRZ", {0.789}, {Qs[0], Qs[3]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("CRX", {0.123}, {Qs[0], Qs[1]}, false);
+        LGPUsim->NamedOperation("CRY", {0.456}, {Qs[0], Qs[2]}, false);
+        LGPUsim->NamedOperation("CRZ", {0.789}, {Qs[0], Qs[3]}, false);
 
         const std::vector<intptr_t> wires = {Qs[0], Qs[1], Qs[2]};
         std::vector<std::complex<double>> matrix{
@@ -598,11 +598,11 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
             {-0.15840033949128557, -0.2727320427534386},
             {-0.21590866323269536, -0.1191163626522938},
         };
-        LKsim->MatrixOperation(matrix, wires, false);
+        LGPUsim->MatrixOperation(matrix, wires, false);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         CHECK(state[0] ==
               PLApproxComplex(std::complex<double>{-0.141499, -0.230993})
@@ -631,20 +631,20 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard and IsingZZ and cache manager") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
-        LKsim->StartTapeRecording();
-        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
-        LKsim->NamedOperation("IsingZZ", {M_PI_4}, {Qs[0], Qs[1]}, false);
-        LKsim->StopTapeRecording();
+        LGPUsim->StartTapeRecording();
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LGPUsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
+        LGPUsim->NamedOperation("IsingZZ", {M_PI_4}, {Qs[0], Qs[1]}, false);
+        LGPUsim->StopTapeRecording();
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         std::complex<double> c1{0.4619397663, -0.1913417162};
         std::complex<double> c2{0.4619397663, 0.1913417162};
@@ -657,22 +657,22 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         std::tuple<std::size_t, std::size_t, std::size_t,
                    std::vector<std::string>, std::vector<intptr_t>>
             expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
-        REQUIRE(LKsim->CacheManagerInfo() == expected);
+        REQUIRE(LGPUsim->CacheManagerInfo() == expected);
     }
 
     SECTION("Test setStateVector") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
         constexpr std::size_t n_qubits = 2;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
         std::vector<std::complex<double>> data = {{0.5, 0.5}, {0.0, 0.0}};
         DataView<std::complex<double>, 1> data_view(data);
         std::vector<QubitIdType> wires = {1};
-        LKsim->SetState(data_view, wires);
+        LGPUsim->SetState(data_view, wires);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         std::complex<double> c1{0.5, 0.5};
         std::complex<double> c2{0.0, 0.0};
@@ -683,18 +683,18 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Test setBasisState") {
-        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
         constexpr std::size_t n_qubits = 1;
-        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+        std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
         std::vector<int8_t> data = {0};
         DataView<int8_t, 1> data_view(data);
         std::vector<QubitIdType> wires = {0};
-        LKsim->SetBasisState(data_view, wires);
+        LGPUsim->SetBasisState(data_view, wires);
 
-        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
-        LKsim->State(view);
+        LGPUsim->State(view);
 
         std::complex<double> c1{1.0, 0.0};
         std::complex<double> c2{0.0, 0.0};

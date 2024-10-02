@@ -33,19 +33,19 @@ template <typename T, std::size_t R> struct MemRefT {
     std::size_t strides[R];
 };
 using namespace Catalyst::Runtime::Simulator;
-using LKSimulator = LightningGPUSimulator;
+using LGPUSimulator = LightningGPUSimulator;
 } // namespace
 /// @endcond
 
 TEST_CASE("NameObs test with invalid number of wires", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     REQUIRE_THROWS_WITH(sim->Observable(ObsId::PauliX, {}, {1}),
                         Catch::Contains("Invalid number of wires"));
 }
 
 TEST_CASE("NameObs test with invalid given wires for NamedObs", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     sim->AllocateQubit();
 
@@ -54,7 +54,7 @@ TEST_CASE("NameObs test with invalid given wires for NamedObs", "[Measures]") {
 }
 
 TEST_CASE("HermitianObs test with invalid number of wires", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     REQUIRE_THROWS_WITH(sim->Observable(ObsId::Hermitian, {}, {1}),
                         Catch::Contains("Invalid number of wires"));
@@ -62,7 +62,7 @@ TEST_CASE("HermitianObs test with invalid number of wires", "[Measures]") {
 
 TEST_CASE("HermitianObs test with invalid given wires for HermitianObs",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
     sim->AllocateQubit();
 
     REQUIRE_THROWS_WITH(sim->Observable(ObsId::Hermitian, {}, {1}),
@@ -78,7 +78,7 @@ TEST_CASE("Check an unsupported observable", "[Measures]") {
 }
 
 TEST_CASE("Measurement collapse test with 2 wires", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     constexpr std::size_t n = 2;
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
@@ -105,7 +105,7 @@ TEST_CASE("Measurement collapse test with 2 wires", "[Measures]") {
 
 TEST_CASE("Measurement collapse concrete logical qubit difference",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     constexpr std::size_t n = 1;
     // The first time an array is allocated, logical and concrete qubits
@@ -135,7 +135,7 @@ TEST_CASE("Measurement collapse concrete logical qubit difference",
 }
 
 TEST_CASE("Mid-circuit measurement naive test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     intptr_t q;
 
@@ -149,7 +149,7 @@ TEST_CASE("Mid-circuit measurement naive test", "[Measures]") {
 }
 
 TEST_CASE("Mid-circuit measurement test with postselect = 0", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     intptr_t q;
 
@@ -163,7 +163,7 @@ TEST_CASE("Mid-circuit measurement test with postselect = 0", "[Measures]") {
 }
 
 TEST_CASE("Mid-circuit measurement test with postselect = 1", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     intptr_t q;
 
@@ -178,7 +178,7 @@ TEST_CASE("Mid-circuit measurement test with postselect = 1", "[Measures]") {
 
 TEST_CASE("Mid-circuit measurement test with invalid postselect value",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     intptr_t q;
 
@@ -192,14 +192,14 @@ TEST_CASE("Mid-circuit measurement test with invalid postselect value",
 
 TEST_CASE("Expval(ObsT) test with invalid key for cached observables",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     REQUIRE_THROWS_WITH(sim->Expval(0),
                         Catch::Contains("Invalid key for cached observables"));
 }
 
 TEST_CASE("Expval(NamedObs) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -224,7 +224,7 @@ TEST_CASE("Expval(NamedObs) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(NamedObs) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -251,7 +251,7 @@ TEST_CASE("Expval(NamedObs) shots test", "[Measures]") {
 }
 
 TEST_CASE("Expval(HermitianObs) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -276,7 +276,7 @@ TEST_CASE("Expval(HermitianObs) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(HermitianObs) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -307,7 +307,7 @@ TEST_CASE("Expval(HermitianObs) shots test", "[Measures]") {
 }
 
 TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -337,7 +337,7 @@ TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
 }
 
 TEST_CASE("Expval(TensorProd(NamedObs)) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -365,7 +365,7 @@ TEST_CASE("Expval(TensorProd(NamedObs)) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(TensorProd(NamedObs)) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -396,7 +396,7 @@ TEST_CASE("Expval(TensorProd(NamedObs)) shots test", "[Measures]") {
 }
 
 TEST_CASE("Expval(TensorProd(NamedObs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -426,8 +426,8 @@ TEST_CASE("Expval(TensorProd(NamedObs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(TensorProd(NamedObs[])) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
-    std::unique_ptr<LKSimulator> sim0 = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
+    std::unique_ptr<LGPUSimulator> sim0 = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -461,7 +461,7 @@ TEST_CASE("Expval(TensorProd(NamedObs[])) shots test", "[Measures]") {
 }
 
 TEST_CASE("Expval(TensorProd(HermitianObs))", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -488,7 +488,7 @@ TEST_CASE("Expval(TensorProd(HermitianObs))", "[Measures]") {
 }
 
 TEST_CASE("Expval(TensorProd(HermitianObs[]))", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -513,7 +513,7 @@ TEST_CASE("Expval(TensorProd(HermitianObs[]))", "[Measures]") {
 }
 
 TEST_CASE("Expval(TensorProd(Obs[]))", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -542,7 +542,7 @@ TEST_CASE("Expval(TensorProd(Obs[]))", "[Measures]") {
 
 TEST_CASE("Expval(Tensor(Hamiltonian(NamedObs[]), NamedObs)) test",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -567,7 +567,7 @@ TEST_CASE("Expval(Tensor(Hamiltonian(NamedObs[]), NamedObs)) test",
 }
 
 TEST_CASE("Expval(Tensor(HermitianObs, Hamiltonian()) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 3;
@@ -590,7 +590,7 @@ TEST_CASE("Expval(Tensor(HermitianObs, Hamiltonian()) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(Hamiltonian(NamedObs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -614,7 +614,7 @@ TEST_CASE("Expval(Hamiltonian(NamedObs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(Hamiltonian(NamedObs[])) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -641,7 +641,7 @@ TEST_CASE("Expval(Hamiltonian(NamedObs[])) shots test", "[Measures]") {
 }
 
 TEST_CASE("Expval(Hamiltonian(TensorObs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -667,7 +667,7 @@ TEST_CASE("Expval(Hamiltonian(TensorObs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(Hamiltonian(Hermitian[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -694,7 +694,7 @@ TEST_CASE("Expval(Hamiltonian(Hermitian[])) test", "[Measures]") {
 }
 
 TEST_CASE("Expval(Hamiltonian({TensorProd, Hermitian}[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -723,7 +723,7 @@ TEST_CASE("Expval(Hamiltonian({TensorProd, Hermitian}[])) test", "[Measures]") {
 
 TEST_CASE("Expval(Hamiltonian({Hamiltonian, Hermitian}[])) test",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -752,7 +752,7 @@ TEST_CASE("Expval(Hamiltonian({Hamiltonian, Hermitian}[])) test",
 
 TEST_CASE("Expval(Hamiltonian({Hamiltonian(Hamiltonian), Hermitian}[])) test",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -781,7 +781,7 @@ TEST_CASE("Expval(Hamiltonian({Hamiltonian(Hamiltonian), Hermitian}[])) test",
 }
 
 TEST_CASE("Var(NamedObs) test with numWires=4", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -806,7 +806,7 @@ TEST_CASE("Var(NamedObs) test with numWires=4", "[Measures]") {
 }
 
 TEST_CASE("Var(NamedObs) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -828,7 +828,7 @@ TEST_CASE("Var(NamedObs) shots test", "[Measures]") {
 }
 
 TEST_CASE("Var(HermitianObs) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -853,7 +853,7 @@ TEST_CASE("Var(HermitianObs) test", "[Measures]") {
 }
 
 TEST_CASE("Var(TensorProd(NamedObs)) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -881,7 +881,7 @@ TEST_CASE("Var(TensorProd(NamedObs)) test", "[Measures]") {
 }
 
 TEST_CASE("Var(TensorProd(NamedObs)) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -909,7 +909,7 @@ TEST_CASE("Var(TensorProd(NamedObs)) shots test", "[Measures]") {
 }
 
 TEST_CASE("Var(TensorProd(NamedObs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -935,7 +935,7 @@ TEST_CASE("Var(TensorProd(NamedObs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Var(TensorProd(HermitianObs)) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -962,7 +962,7 @@ TEST_CASE("Var(TensorProd(HermitianObs)) test", "[Measures]") {
 }
 
 TEST_CASE("Var(TensorProd(HermitianObs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 2;
@@ -987,7 +987,7 @@ TEST_CASE("Var(TensorProd(HermitianObs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Var(TensorProd(Obs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1015,7 +1015,7 @@ TEST_CASE("Var(TensorProd(Obs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Var(Tensor(Hamiltonian(NamedObs[]), NamedObs)) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1040,7 +1040,7 @@ TEST_CASE("Var(Tensor(Hamiltonian(NamedObs[]), NamedObs)) test", "[Measures]") {
 }
 
 TEST_CASE("Var(Tensor(NamedObs[])) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1068,7 +1068,7 @@ TEST_CASE("Var(Tensor(NamedObs[])) shots test", "[Measures]") {
 TEST_CASE("Var(Tensor(NamedObs[])) shots test without gates "
           "(influenced from a bug in Lightning)",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 3;
@@ -1094,7 +1094,7 @@ TEST_CASE("Var(Tensor(NamedObs[])) shots test without gates "
 }
 
 TEST_CASE("Var(Tensor(HermitianObs, Hamiltonian()) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 3;
@@ -1116,7 +1116,7 @@ TEST_CASE("Var(Tensor(HermitianObs, Hamiltonian()) test", "[Measures]") {
 }
 
 TEST_CASE("Var(Tensor(HermitianObs, Hamiltonian()) shots test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 3;
@@ -1136,7 +1136,7 @@ TEST_CASE("Var(Tensor(HermitianObs, Hamiltonian()) shots test", "[Measures]") {
 }
 
 TEST_CASE("Var(Hamiltonian(NamedObs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1160,7 +1160,7 @@ TEST_CASE("Var(Hamiltonian(NamedObs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Var(Hamiltonian(TensorObs[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1186,7 +1186,7 @@ TEST_CASE("Var(Hamiltonian(TensorObs[])) test", "[Measures]") {
 }
 
 TEST_CASE("Var(Hamiltonian(Hermitian[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1213,7 +1213,7 @@ TEST_CASE("Var(Hamiltonian(Hermitian[])) test", "[Measures]") {
 }
 
 TEST_CASE("Var(Hamiltonian({TensorProd, Hermitian}[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1241,7 +1241,7 @@ TEST_CASE("Var(Hamiltonian({TensorProd, Hermitian}[])) test", "[Measures]") {
 }
 
 TEST_CASE("Var(Hamiltonian({Hamiltonian, Hermitian}[])) test", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1270,7 +1270,7 @@ TEST_CASE("Var(Hamiltonian({Hamiltonian, Hermitian}[])) test", "[Measures]") {
 
 TEST_CASE("Var(Hamiltonian({Hamiltonian(Hamiltonian), Hermitian}[])) test",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1299,7 +1299,7 @@ TEST_CASE("Var(Hamiltonian({Hamiltonian(Hamiltonian), Hermitian}[])) test",
 }
 
 TEST_CASE("State test with incorrect size", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1313,7 +1313,7 @@ TEST_CASE("State test with incorrect size", "[Measures]") {
 }
 
 TEST_CASE("State test with numWires=4", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1341,7 +1341,7 @@ TEST_CASE("State test with numWires=4", "[Measures]") {
 
 TEST_CASE("PartialProbs test with incorrect numWires and numAlloc",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1374,7 +1374,7 @@ TEST_CASE("PartialProbs test with incorrect numWires and numAlloc",
 }
 
 TEST_CASE("Probs and PartialProbs tests with numWires=0-4", "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1433,7 +1433,7 @@ TEST_CASE("Probs and PartialProbs tests with numWires=0-4", "[Measures]") {
 
 TEST_CASE("Probs and PartialProbs shots tests with numWires=0-4",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1495,7 +1495,7 @@ TEST_CASE("Probs and PartialProbs shots tests with numWires=0-4",
 
 TEST_CASE("PartialSample test with incorrect numWires and numAlloc",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1534,7 +1534,7 @@ TEST_CASE("PartialSample test with incorrect numWires and numAlloc",
 
 TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1572,7 +1572,7 @@ TEST_CASE("PartialCounts test with incorrect numWires and numAlloc",
 
 TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1629,8 +1629,8 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
 TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
           "shots=1000 mcmc=True num_burnin=200",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim =
-        std::make_unique<LKSimulator>("{mcmc : True, num_burnin : 200}");
+    std::unique_ptr<LGPUSimulator> sim =
+        std::make_unique<LGPUSimulator>("{mcmc : True, num_burnin : 200}");
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1686,7 +1686,7 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
 
 TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
           "[Measures]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     // state-vector with #qubits = n
     constexpr std::size_t n = 4;
@@ -1755,8 +1755,8 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
 
 TEST_CASE("Measurement with a seeded device", "[Measures]") {
     for (std::size_t _ = 0; _ < 5; _++) {
-        std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
-        std::unique_ptr<LKSimulator> sim1 = std::make_unique<LKSimulator>();
+        std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> sim1 = std::make_unique<LGPUSimulator>();
 
         std::mt19937 gen(37);
         sim->SetDevicePRNG(&gen);

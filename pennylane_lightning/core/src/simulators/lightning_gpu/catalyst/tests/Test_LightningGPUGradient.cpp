@@ -26,20 +26,20 @@ template <typename T, std::size_t R> struct MemRefT {
     std::size_t strides[R];
 };
 using namespace Catalyst::Runtime::Simulator;
-using LKSimulator = LightningGPUSimulator;
+using LGPUSimulator = LightningGPUSimulator;
 } // namespace
 /// @endcond
 
 TEST_CASE("Zero qubits. Zero parameters", "[Gradient]") {
-    std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
 
     std::vector<DataView<double, 1>> gradients;
-    std::vector<intptr_t> Qs = LKsim->AllocateQubits(0);
-    REQUIRE_NOTHROW(LKsim->Gradient(gradients, {}));
+    std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(0);
+    REQUIRE_NOTHROW(LGPUsim->Gradient(gradients, {}));
 }
 
 TEST_CASE("Test Gradient with zero number of obs", "[Gradient]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     std::vector<double> buffer(1);
     std::vector<DataView<double, 1>> gradients;
@@ -60,7 +60,7 @@ TEST_CASE("Test Gradient with zero number of obs", "[Gradient]") {
 }
 
 TEST_CASE("Test Gradient with Var", "[Gradient]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     std::vector<double> buffer(1);
     std::vector<DataView<double, 1>> gradients;
@@ -88,7 +88,7 @@ TEST_CASE("Test Gradient with Var", "[Gradient]") {
 }
 
 TEST_CASE("Test Gradient with Op=RX, Obs=Z", "[Gradient]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     std::vector<double> buffer(1);
     std::vector<DataView<double, 1>> gradients;
@@ -117,7 +117,7 @@ TEST_CASE("Test Gradient with Op=RX, Obs=Z", "[Gradient]") {
 }
 
 TEST_CASE("Test Gradient with Op=RX, Obs=Hermitian", "[Gradient]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     std::vector<double> buffer(1);
     std::vector<DataView<double, 1>> gradients;
@@ -153,7 +153,7 @@ TEST_CASE("Test Gradient with Op=RX, Obs=Hermitian", "[Gradient]") {
 }
 
 TEST_CASE("Test Gradient with Op=[RX,RX,RX,CZ], Obs=[Z,Z,Z]", "[Gradient]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     constexpr std::size_t num_parms = 3;
 
@@ -201,7 +201,7 @@ TEST_CASE("Test Gradient with Op=[RX,RX,RX,CZ], Obs=[Z,Z,Z]", "[Gradient]") {
 
 TEST_CASE("Test Gradient with Op=Mixed, Obs=Hamiltonian([Z@Z, H], {0.2, 0.6})",
           "[Gradient]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     constexpr std::size_t num_parms = 6;
 
@@ -258,7 +258,7 @@ TEST_CASE("Test Gradient with Op=Mixed, Obs=Hamiltonian([Z@Z, H], {0.2, 0.6})",
 }
 
 TEST_CASE("Test Gradient with QubitUnitary", "[Gradient]") {
-    std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
+    std::unique_ptr<LGPUSimulator> sim = std::make_unique<LGPUSimulator>();
 
     std::vector<double> buffer(1);
     std::vector<DataView<double, 1>> gradients;
