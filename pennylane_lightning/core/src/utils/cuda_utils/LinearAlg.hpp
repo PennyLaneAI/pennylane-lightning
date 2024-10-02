@@ -274,6 +274,34 @@ inline auto scaleC_CUDA(const CFP_t a, T *v1, const int data_size,
                 data_type);
 }
 
+/**
+ * @brief cuBLAS backed GPU data normalization.
+ *
+ * @tparam T Float data-type. Accepts float and double
+ * @param a scaling factor
+ * @param v1 Device data pointer
+ * @param data_size Length of device data.
+ * @param dev_id the device on which the function should be executed.
+ * @param stream_id the CUDA stream on which the operation should be executed.
+ * @param cublas the CublasCaller object that manages the cuBLAS handle.
+ */
+template <class CFP_t = cuDoubleComplex, class DevTypeID = int>
+inline auto normalize_CUDA(CFP_t *v1, const int data_size, DevTypeID dev_id,
+                           cudaStream_t stream_id, const CublasCaller &cublas) {
+    if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                  std::is_same_v<CFP_t, double2>) {
+        double norm{0.0};
+        cublas.call(cublasDznrm2, dev_id, stream_id, data_size, v1, 1, &norm);
+        const double alpha = 1.0 / norm;
+        cublas.call(cublasZdscal, dev_id, stream_id, data_size, &alpha, v1, 1);
+    } else {
+        float norm{0.0};
+        cublas.call(cublasScnrm2, dev_id, stream_id, data_size, v1, 1, &norm);
+        const float alpha = 1.0 / norm;
+        cublas.call(cublasCsscal, dev_id, stream_id, data_size, &alpha, v1, 1);
+    }
+}
+
 /** @brief `%CudaScopedDevice` uses RAII to select a CUDA device context.
  *
  * @see https://taskflow.github.io/taskflow/classtf_1_1cudaScopedDevice.html
