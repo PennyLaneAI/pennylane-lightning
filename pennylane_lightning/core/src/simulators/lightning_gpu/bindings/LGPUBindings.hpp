@@ -90,6 +90,13 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Create Basis State on GPU.")
         .def(
+            "setBasisState",
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires, const bool use_async) {
+                sv.setBasisState(state, wires, use_async);
+            },
+            "Create Basis State on GPU.")
+        .def(
             "setStateVector",
             [](StateVectorT &sv, const np_arr_sparse_ind &indices,
                const np_arr_c &state, const bool use_async) {
