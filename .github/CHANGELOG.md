@@ -23,6 +23,9 @@
 
 ### Breaking changes
 
+* Deprecate PI gates implementation.
+  [(#925)](https://github.com/PennyLaneAI/pennylane-lightning/pull/925)
+
 * Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
   [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
 
