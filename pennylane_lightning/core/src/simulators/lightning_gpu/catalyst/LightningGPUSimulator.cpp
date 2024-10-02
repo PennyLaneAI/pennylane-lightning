@@ -37,7 +37,7 @@ auto LightningGPUSimulator::AllocateQubit() -> QubitIdType {
         *src = std::complex<double>(.0, .0);
     }
 
-    this->device_sv = std::make_unique<StateVectorT>(data);
+    this->device_sv = std::make_unique<StateVectorT>(data.data(), data.size());
     return this->qubit_manager.Allocate(num_qubits);
 }
 
@@ -133,8 +133,8 @@ void LightningGPUSimulator::SetState(DataView<std::complex<double>, 1> &data,
     std::size_t expected_wires = static_cast<std::size_t>(log2(data.size()));
     RT_ASSERT(expected_wires == wires.size());
     std::vector<std::complex<double>> data_vector(data.begin(), data.end());
-    // question mark???????
-    this->device_sv->setStateVector(data_vector, getDeviceWires(wires));
+    this->device_sv->setStateVector(data_vector.data(), data_vector.size(),
+                                    getDeviceWires(wires));
 }
 
 void LightningGPUSimulator::SetBasisState(DataView<int8_t, 1> &data,
@@ -193,23 +193,12 @@ void LightningGPUSimulator::MatrixOperation(
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    std::vector<std::complex<double>> matrix_kok;
-    matrix_kok.resize(matrix.size());
-    std::transform(matrix.begin(), matrix.end(), matrix_kok.begin(),
-                   [](auto c) { return static_cast<std::complex<double>>(c); });
-
-    std::complex<double> *gate_matrix("gate_matrix", matrix_kok.size());
-    // Kokkos::deep_copy(gate_matrix,
-    // UnmanagedComplexHostView(matrix_kok.data(),
-    //                                                         matrix_kok.size()));
-
-    // Update the state-vector
-    this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+    this->device_sv->applyMatrix(matrix, dev_wires, inverse);
 
     // Update tape caching if required
     if (this->tape_recording) {
         this->cache_manager.addOperation("QubitUnitary", {}, dev_wires, inverse,
-                                         matrix_kok, {/*controlled_wires*/},
+                                         matrix, {/*controlled_wires*/},
                                          {/*controlled_values*/});
     }
 }
@@ -543,12 +532,14 @@ void LightningGPUSimulator::Gradient(
         }
     }
 
-    auto &&state = this->device_sv->getDataVector();
-
     // construct the Jacobian data
     Pennylane::Algorithms::JacobianData<StateVectorT> tape{
-        num_params, state.size(), state.data(),
-        obs_vec,    ops,          tp_empty ? all_params : trainParams};
+        num_params,
+        this->device_sv->getLength(),
+        this->device_sv->getData(),
+        obs_vec,
+        ops,
+        tp_empty ? all_params : trainParams};
 
     Pennylane::LightningGPU::Algorithms::AdjointJacobian<StateVectorT> adj;
     std::vector<double> jacobian(jac_size, 0);
