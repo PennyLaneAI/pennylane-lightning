@@ -71,7 +71,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
-            _ = dev.compute_derivatives(qs, config)
+            dev.compute_derivatives(qs, config)
 
         qs = QuantumScript([qml.RX(1.23, 0)], [qml.state()], trainable_params=[0])
 
@@ -79,7 +79,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.QuantumFunctionError,
             match="Adjoint differentiation method does not support measurement StateMP.",
         ):
-            _ = dev.compute_derivatives(qs, config)
+            dev.compute_derivatives(qs, config)
 
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_finite_shots_warns(self, dev, batch_obs):
@@ -94,7 +94,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.QuantumFunctionError,
             match="Requested adjoint differentiation to be computed with finite shots.",
         ):
-            _ = dev.compute_derivatives(qs, config)
+            dev.compute_derivatives(qs, config)
 
     def test_empty_measurements(self, dev):
         """Tests if an empty array is returned when the measurements of the tape is empty."""
@@ -125,7 +125,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             LightningException,
             match="The operation is not supported using the adjoint differentiation method",
         ):
-            _ = dev.compute_derivatives(qs, config)
+            dev.compute_derivatives(qs, config)
 
     @pytest.mark.skip("WIP: Need a deep review if LGPU accept Projector")
     @pytest.mark.parametrize("batch_obs", [True, False])
@@ -144,7 +144,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.QuantumFunctionError,
             match="differentiation method does not support the Projector",
         ):
-            _ = dev.compute_derivatives(qs, config)
+            dev.compute_derivatives(qs, config)
 
         qs = QuantumScript(
             [qml.CRX(0.1, wires=[0, 1])],
@@ -156,7 +156,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             qml.QuantumFunctionError,
             match="differentiation method does not support the Projector",
         ):
-            _ = dev.compute_derivatives(qs, config)
+            dev.compute_derivatives(qs, config)
 
     @staticmethod
     def tol_for_allclose(c_dtype):
@@ -221,7 +221,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.parametrize("param", [1, -2, 1.623, -0.051, 0])  # integers, floats, zero
     @pytest.mark.parametrize(
-        "rotation,obs,expected_func",
+        "rotation, meas, expected_func",
         [
             (qml.RY, qml.PauliX, lambda x: np.cos(x)),  # pylint: disable=unnecessary-lambda
             (qml.RX, qml.PauliZ, lambda x: -np.sin(x)),  # pylint: disable=unnecessary-lambda
@@ -229,13 +229,13 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
     )
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_r_gradient(
-        self, tol, param, rotation, obs, expected_func, batch_obs, dev
+        self, tol, param, rotation, meas, expected_func, batch_obs, dev
     ):  # pylint: disable=too-many-arguments
         """Test for the gradient of the rotation gate matches the known formula."""
 
         qs = QuantumScript(
             [rotation(param, wires=0)],
-            [qml.expval(obs(0))],
+            [qml.expval(meas(0))],
             trainable_params=[0],
         )
 
@@ -247,11 +247,11 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
     @staticmethod
-    def process_and_execute_multiple_rx(dev, params, obs, batch_obs):
+    def process_and_execute_multiple_rx(dev, params, meas, batch_obs):
         """Compute the circuit with multiple RX gates"""
         qs = QuantumScript(
             [qml.RX(params[0], wires=0), qml.RX(params[1], wires=1), qml.RX(params[2], wires=2)],
-            obs,
+            meas,
             trainable_params=[0, 1, 2],
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
@@ -266,10 +266,10 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result."""
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        obs = [qml.expval(qml.PauliZ(idx)) for idx in range(3)]
+        meas = [qml.expval(qml.PauliZ(idx)) for idx in range(3)]
 
         # circuit jacobians
-        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, meas, batch_obs)
         expected_jacobian = -np.diag(np.sin(params))
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
@@ -281,10 +281,10 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        obs = [qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)]
+        meas= [qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)]
 
         # circuit jacobians
-        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, meas, batch_obs)
         expected_jacobian = -np.diag(np.sin(params))
 
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
@@ -296,7 +296,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        obs = [
+        meas = [
             qml.expval(
                 qml.Hermitian(
                     [[1, 0, 0, 0], [0, -1, 0, 0], [0, 0, -1, 0], [0, 0, 0, 1]],
@@ -305,7 +305,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             )
         ]
 
-        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, meas, batch_obs)
         expected_jacobian = np.array(
             [
                 -np.sin(params[0]) * np.cos(params[2]),
@@ -323,7 +323,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         """
         params = np.array([np.pi / 3, np.pi / 4, np.pi / 5])
 
-        obs = [
+        meas = [
             qml.expval(
                 qml.Hamiltonian(
                     [1.0, 0.3, 0.3, 0.4],
@@ -340,7 +340,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
             )
         ]
 
-        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, obs, batch_obs)
+        dev_jacobian = self.process_and_execute_multiple_rx(dev, params, meas, batch_obs)
         expected_jacobian = (
             0.3 * np.array([-np.sin(params[0]), 0, 0])
             + 0.3 * np.array([0, -np.sin(params[1]), 0])
@@ -357,7 +357,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
-        "obs",
+        "meas",
         [
             [qml.expval(qml.PauliX(wires=0)), qml.expval(qml.PauliZ(wires=1))],
             [qml.expval(qml.PauliY(wires=0)), qml.expval(qml.PauliZ(wires=1))],
@@ -384,7 +384,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         ],
     )
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_gradients_pauliz_hermitian(self, op, obs, batch_obs, dev):
+    def test_gradients_pauliz_hermitian(self, op, meas, batch_obs, dev):
         """Tests that the gradients of circuits match between the finite difference and device
         methods."""
         # op.num_wires and op.num_params must be initialized a priori
@@ -399,7 +399,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
                 qml.adjoint(qml.RY(0.5, wires=1), lazy=False),
                 qml.CNOT(wires=[0, 1]),
             ],
-            obs,
+            meas,
             trainable_params=list(range(1, 1 + op.num_params)),
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
@@ -414,7 +414,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
-        "obs",
+        "meas",
         [
             [qml.expval(qml.PauliZ(0))],
             [qml.expval(qml.Hermitian([[0, 1], [1, 1]], wires=0))],
@@ -429,7 +429,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         ],
     )
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_gradient_gate_with_multiple_parameters(self, obs, batch_obs, dev):
+    def test_gradient_gate_with_multiple_parameters(self, meas, batch_obs, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
 
@@ -439,7 +439,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
                 qml.Rot(x, y, z, wires=[0]),
                 qml.RY(-0.2, wires=[0]),
             ],
-            obs,
+            meas,
             trainable_params=[1, 2, 3],
         )
         config = ExecutionConfig(gradient_method="adjoint", device_options={"batch_obs": batch_obs})
@@ -668,7 +668,7 @@ class TestAdjointJacobianQNode:
             qml.RY(tf.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        if dev.R_DTYPE == np.float32:
+        if dev.r_dtype == np.float32:
             tf_r_dtype = tf.float32
         else:
             tf_r_dtype = tf.float64
@@ -742,10 +742,10 @@ class TestAdjointJacobianQNode:
             qml.RY(jax.numpy.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        R_DTYPE = np.float32 if dev.c_dtype == np.complex64 else np.float64
+        r_dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
 
-        params1 = jax.numpy.array(0.3, R_DTYPE)
-        params2 = jax.numpy.array(0.4, R_DTYPE)
+        params1 = jax.numpy.array(0.3, r_dtype)
+        params2 = jax.numpy.array(0.4, r_dtype)
 
         h = self.tol_for_allclose(dev.c_dtype)
         tol = self.tol_for_allclose(dev.c_dtype)

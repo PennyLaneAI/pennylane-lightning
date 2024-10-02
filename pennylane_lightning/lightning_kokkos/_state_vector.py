@@ -145,7 +145,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         >>> dev = qml.device('lightning.kokkos', wires=1)
         >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
+        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.c_dtype)
         >>> dev.sync_d2h(state_vector)
         >>> print(state_vector)
         [0.+0.j 1.+0.j]

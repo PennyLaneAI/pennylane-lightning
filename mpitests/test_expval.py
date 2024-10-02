@@ -25,16 +25,16 @@ from mpi4py import MPI
 numQubits = 8
 
 
-def create_random_init_state(numWires, C_DTYPE, seed_value=48):
+def create_random_init_state(numWires, c_dtype, seed_value=48):
     """Returns a random initial state of a certain type."""
     np.random.seed(seed_value)
 
-    R_DTYPE = np.float64 if C_DTYPE == np.complex128 else np.float32
+    r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
     num_elements = 2**numWires
-    init_state = np.random.rand(num_elements).astype(R_DTYPE) + 1j * np.random.rand(
+    init_state = np.random.rand(num_elements).astype(r_dtype) + 1j * np.random.rand(
         num_elements
-    ).astype(R_DTYPE)
+    ).astype(r_dtype)
 
     init_state = init_state / np.linalg.norm(init_state)
     return init_state
@@ -110,7 +110,7 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
-@pytest.mark.parametrize("C_DTYPE", [np.complex128, np.complex64])
+@pytest.mark.parametrize("c_dtype", [np.complex128, np.complex64])
 @pytest.mark.parametrize("batch_obs", [True, False])
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
@@ -126,16 +126,16 @@ class TestExpval:
         ],
     )
     @pytest.mark.parametrize("wires", [0, 1, 2, numQubits - 2, numQubits - 1])
-    def test_expval_single_wire_no_parameters(self, tol, operation, wires, C_DTYPE, batch_obs):
+    def test_expval_single_wire_no_parameters(self, tol, operation, wires, c_dtype, batch_obs):
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         num_wires = numQubits
         comm = MPI.COMM_WORLD
 
         dev_mpi = qml.device(
-            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+            "lightning.gpu", wires=numQubits, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
+        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
 
         state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
         comm.Bcast(state_vector, root=0)
@@ -164,13 +164,13 @@ class TestExpval:
             qml.PauliZ(numQubits - 2) @ qml.PauliZ(numQubits - 1),
         ],
     )
-    def test_expval_multiple_obs(self, obs, tol, C_DTYPE, batch_obs):
+    def test_expval_multiple_obs(self, obs, tol, c_dtype, batch_obs):
         """Test expval with Hamiltonian"""
         num_wires = numQubits
 
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
+        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -210,15 +210,15 @@ class TestExpval:
             ),
         ],
     )
-    def test_expval_hamiltonian(self, obs, coeffs, tol, C_DTYPE, batch_obs):
+    def test_expval_hamiltonian(self, obs, coeffs, tol, c_dtype, batch_obs):
         """Test expval with Hamiltonian"""
         num_wires = numQubits
 
         ham = qml.Hamiltonian(coeffs, obs)
 
-        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=C_DTYPE)
+        dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
         dev_mpi = qml.device(
-            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+            "lightning.gpu", wires=num_wires, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
 
         def circuit():
@@ -231,10 +231,10 @@ class TestExpval:
 
         assert np.allclose(cpu_qnode(), mpi_qnode(), atol=tol, rtol=0)
 
-    def test_expval_non_pauli_word_hamiltionian(self, tol, C_DTYPE, batch_obs):
+    def test_expval_non_pauli_word_hamiltionian(self, tol, c_dtype, batch_obs):
         """Tests expectation values of non-Pauli word Hamiltonians."""
         dev_mpi = qml.device(
-            "lightning.gpu", wires=3, mpi=True, c_dtype=C_DTYPE, batch_obs=batch_obs
+            "lightning.gpu", wires=3, mpi=True, c_dtype=c_dtype, batch_obs=batch_obs
         )
         dev_cpu = qml.device("lightning.qubit", wires=3)
 
@@ -257,12 +257,12 @@ class TestExpval:
 
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize("n_wires", range(1, numQubits))
-    def test_hermitian_expectation(self, n_wires, theta, phi, tol, C_DTYPE, batch_obs):
+    def test_hermitian_expectation(self, n_wires, theta, phi, tol, c_dtype, batch_obs):
         """Test that Hadamard expectation value is correct"""
         n_qubits = numQubits - 1
         dev_def = qml.device("default.qubit", wires=n_qubits)
         dev = qml.device(
-            device_name, mpi=True, wires=n_qubits, c_dtype=C_DTYPE, batch_obs=batch_obs
+            device_name, mpi=True, wires=n_qubits, c_dtype=c_dtype, batch_obs=batch_obs
         )
         comm = MPI.COMM_WORLD
 

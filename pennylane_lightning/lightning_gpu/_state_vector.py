@@ -133,7 +133,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         >>> dev = qml.device('lightning.gpu', wires=1)
         >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
+        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.c_type)
         >>> dev.syncD2H(state_vector)
         >>> print(state_vector)
         [0.+0.j 1.+0.j]
