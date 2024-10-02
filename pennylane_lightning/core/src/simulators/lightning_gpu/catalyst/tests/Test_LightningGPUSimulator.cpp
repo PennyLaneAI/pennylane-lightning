@@ -59,7 +59,8 @@ TEST_CASE("Test the device factory method", "[constructibility]") {
 
 TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
     SECTION("Managing Qubits") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(0);
         REQUIRE(LGPUsim->GetNumQubits() == 0);
         LGPUsim->AllocateQubits(2);
@@ -75,7 +76,8 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
                 0); // releasing all qubits resets the simulator.
     }
     SECTION("Tape recording") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(1);
         REQUIRE_NOTHROW(LGPUsim->StartTapeRecording());
         REQUIRE_THROWS_WITH(
@@ -91,7 +93,8 @@ TEST_CASE("LightningGPUSimulator::unit_tests", "[unit tests]") {
 
 TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     SECTION("Identity gate") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 10;
         std::vector<intptr_t> Qs;
@@ -119,7 +122,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("PauliX gate") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 3;
         std::vector<intptr_t> Qs;
@@ -150,7 +154,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("PauliY gate") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
@@ -174,7 +179,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("PauliY and PauliZ gates") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
@@ -197,7 +203,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard gate") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
@@ -222,7 +229,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("R(X, Y, Z) and PauliX gates") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 4;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -269,7 +277,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, RX, PhaseShift with cache manager") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
@@ -309,7 +318,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     // ============= 2-qubit operations =============
 
     SECTION("PauliX and CNOT") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
@@ -333,7 +343,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard and CR(X, Y, Z)") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 4;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -381,14 +392,15 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard and CRot") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
         LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
         LGPUsim->NamedOperation("CRot", {M_PI, M_PI_2, 0.5}, {Qs[0], Qs[1]},
-                              false);
+                                false);
 
         std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
@@ -410,7 +422,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, PauliZ, IsingXY, SWAP") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -436,7 +449,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, PauliX and Toffoli") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 3;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -464,7 +478,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("RX, Hadamard and MultiRZ") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -485,7 +500,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, CNOT and Matrix") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -521,7 +537,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, CR(X, Y, Z) and Matrix") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 4;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -631,7 +648,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard and IsingZZ and cache manager") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -661,7 +679,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Test setStateVector") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
@@ -683,7 +702,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Test setBasisState") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
         constexpr std::size_t n_qubits = 1;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
