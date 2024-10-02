@@ -67,6 +67,17 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                                const std::size_t index, bool async,
                                cudaStream_t stream_id);
 
+extern void collapseStateVector_CUDA(cuComplex *sv, const std::size_t num_sv,
+                                     const std::size_t stride, const bool k,
+                                     std::size_t thread_per_block,
+                                     cudaStream_t stream_id);
+
+extern void collapseStateVector_CUDA(cuDoubleComplex *sv,
+                                     const std::size_t num_sv,
+                                     const std::size_t stride, const bool k,
+                                     std::size_t thread_per_block,
+                                     cudaStream_t stream_id);
+
 extern void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
                                         cuComplex phase,
                                         std::size_t thread_per_block,
@@ -434,6 +445,40 @@ class StateVectorCudaManaged
         applyMatrix(gate_matrix.data(), wires, adjoint);
     }
 
+    /**
+     * @brief Collapse the state vector after having measured one of the qubit.
+     *
+     * Note: The branch parameter imposes the measurement result on the given
+     * wire.
+     *
+     * @tparam thread_per_block Number of threads per block. Default is 256.
+     * @param wire Wire to measure.
+     * @param branch Branch 0 or 1.
+     */
+    template <std::size_t thread_per_block = 256>
+    void collapse(const std::size_t wire, const bool branch) {
+        PL_ABORT_IF_NOT(wire < BaseType::getNumQubits(), "Invalid wire index.");
+
+        const std::size_t stride = std::size_t{1U}
+                                   << (BaseType::getNumQubits() - (1 + wire));
+        // zero half the entries
+        // the "half" entries depend on the stride
+        // *_*_*_*_ for stride 1
+        // **__**__ for stride 2
+        // ****____ for stride 4
+        const bool k = branch ? 0 : 1;
+
+        collapseStateVector_CUDA(
+            BaseType::getData(), BaseType::getLength(), stride, k,
+            thread_per_block,
+            BaseType::getDataBuffer().getDevTag().getStreamID());
+
+        normalize_CUDA<CFP_t>(
+            BaseType::getData(), BaseType::getLength(),
+            BaseType::getDataBuffer().getDevTag().getDeviceID(),
+            BaseType::getDataBuffer().getDevTag().getStreamID(),
+            this->getCublasCaller());
+    }
     //****************************************************************************//
     // Explicit gate calls for bindings
     //****************************************************************************//
