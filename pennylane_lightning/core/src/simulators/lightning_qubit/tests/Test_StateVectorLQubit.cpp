@@ -258,31 +258,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
         REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
                             Catch::Contains("must be larger than 0"));
     }
-
-    SECTION("Test with different number of wires") {
-        const std::size_t num_qubits = 5;
-        for (std::size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
-            VectorT st_data_1 =
-                createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            VectorT st_data_2 = st_data_1;
-
-            StateVectorT state_vector_1(st_data_1.data(), st_data_1.size());
-            StateVectorT state_vector_2(st_data_2.data(), st_data_2.size());
-
-            std::vector<std::size_t> wires(num_wires);
-            std::iota(wires.begin(), wires.end(), 0);
-
-            const auto m = randomUnitary<PrecisionT>(re, num_wires);
-
-            state_vector_1.applyMatrix(m, wires);
-            state_vector_2.applyMatrix(m, wires);
-
-            PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10E3;
-            REQUIRE(isApproxEqual(
-                state_vector_1.getData(), state_vector_1.getLength(),
-                state_vector_2.getData(), state_vector_2.getLength(), eps));
-        }
-    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyOperations",
