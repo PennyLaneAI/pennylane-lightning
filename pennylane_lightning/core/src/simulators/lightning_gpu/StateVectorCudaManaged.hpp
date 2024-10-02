@@ -122,7 +122,9 @@ class StateVectorCudaManaged
         : StateVectorCudaBase<Precision, StateVectorCudaManaged<Precision>>(
               num_qubits),
           handle_(make_shared_cusv_handle()),
-          cublascaller_(make_shared_cublas_caller()), gate_cache_(true){};
+          cublascaller_(make_shared_cublas_caller()), gate_cache_(true) {
+        BaseType::initSV();
+    };
 
     StateVectorCudaManaged(
         std::size_t num_qubits, const DevTag<int> &dev_tag, bool alloc = true,

@@ -116,7 +116,7 @@ void LightningGPUSimulator::PrintState() {
 
     std::vector<std::complex<double>> state(size, {0.0, 0.0});
 
-    this->device_sv->CopyHostDataToGpu(state, size);
+    this->device_sv->CopyGpuDataToHost(state.data(), size);
 
     std::size_t idx = 0;
     cout << "*** State-Vector of Size " << size << " ***" << endl;
@@ -272,7 +272,7 @@ void LightningGPUSimulator::State(DataView<std::complex<double>, 1> &state) {
     // create a temporary buffer to copy the underlying state-vector to
     std::vector<std::complex<double>> buffer(size);
     // copy data from device to host
-    this->device_sv->CopyHostDataToGpu(buffer, size);
+    this->device_sv->CopyGpuDataToHost(buffer.data(), size);
 
     // move data to state leveraging MemRefIter
     std::move(buffer.begin(), buffer.end(), state.begin());

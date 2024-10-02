@@ -27,8 +27,8 @@ target_sources(lightning_gpu_catalyst_tests INTERFACE runner_lightning_gpu_catal
 # Define targets
 ################################################################################
 set(TEST_SOURCES    Test_LightningGPUSimulator.cpp
-                    #Test_LightningGPUMeasures.cpp
-                    #Test_LightningGPUGradient.cpp
+                    Test_LightningGPUMeasures.cpp
+                    Test_LightningGPUGradient.cpp
 )
 
 add_executable(lightning_gpu_catalyst_tests_runner ${TEST_SOURCES})
