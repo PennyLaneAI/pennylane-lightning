@@ -230,7 +230,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
 
         # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2**len(device_wires), self.num_wires), dtype=int)
+        unravelled_indices = np.zeros((2 ** len(device_wires), self.num_wires), dtype=int)
         unravelled_indices[:, device_wires] = basis_states
 
         # get indices for which the state is changed to input state vector elements

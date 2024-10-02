@@ -281,7 +281,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
         params = np.array([np.pi, np.pi / 2, np.pi / 3])
 
-        meas= [qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)]
+        meas = [qml.expval(qml.Hermitian([[1, 0], [0, -1]], wires=[idx])) for idx in range(3)]
 
         # circuit jacobians
         dev_jacobian = self.process_and_execute_multiple_rx(dev, params, meas, batch_obs)

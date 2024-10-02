@@ -67,7 +67,7 @@ def apply_probs_nonparam(tol, operation, GateWires, Wires, c_dtype):
     r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
     if rank == 0:
-        probs_mpi = np.zeros(2**len(Wires)).astype(r_dtype)
+        probs_mpi = np.zeros(2 ** len(Wires)).astype(r_dtype)
     else:
         probs_mpi = None
         probs_cpu = None
@@ -110,7 +110,7 @@ def apply_probs_param(tol, operation, par, GateWires, Wires, c_dtype):
     r_dtype = np.float64 if c_dtype == np.complex128 else np.float32
 
     if rank == 0:
-        probs_mpi = np.zeros(2**len(Wires)).astype(r_dtype)
+        probs_mpi = np.zeros(2 ** len(Wires)).astype(r_dtype)
     else:
         probs_mpi = None
         probs_cpu = None
