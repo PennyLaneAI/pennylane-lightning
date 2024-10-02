@@ -291,7 +291,6 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
 
         self._sync = sync
         self._batch_obs = batch_obs
-        self._create_basis_state(0)
 
     def _mpi_init_helper(self, num_wires):
         """Set up MPI checks."""
@@ -420,15 +419,6 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
         """
         self._gpu_state.HostToDevice(state_vector.ravel(order="C"), use_async)
 
-    def _create_basis_state(self, index, use_async=False):
-        """Return a computational basis state over all wires.
-        Args:
-            index (int): integer representing the computational basis state.
-            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
-            Note: This function only supports synchronized memory copy.
-        """
-        self._gpu_state.setBasisState(index, use_async)
-
     def _apply_state_vector(self, state, device_wires, use_async=False):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
@@ -467,24 +457,14 @@ class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attribut
             wires (Wires): wires that the provided computational state should be initialized on
         Note: This function does not support broadcasted inputs yet.
         """
-        # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
-
-        # length of basis state parameter
-        n_basis_state = len(state)
-        state = state.tolist() if hasattr(state, "tolist") else state
-        if not set(state).issubset({0, 1}):
+        if not set(state.tolist()).issubset({0, 1}):
             raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
 
-        if n_basis_state != len(device_wires):
+        if len(state) != len(wires):
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
-        # get computational basis state number
-        basis_states = 2 ** (self.num_wires - 1 - np.array(device_wires))
-        basis_states = qml.math.convert_like(basis_states, state)
-        num = int(qml.math.dot(state, basis_states))
-
-        self._create_basis_state(num)
+        # Return a computational basis state over all wires.
+        self._gpu_state.setBasisState(list(state), list(wires), False)
 
     def apply_lightning(self, operations):
         """Apply a list of operations to the state tensor.

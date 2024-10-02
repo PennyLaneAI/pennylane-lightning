@@ -1153,7 +1153,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
 }
 // LCOV_EXCL_STOP
 
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetBasisStates",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
     using PrecisionT = TestType;
     const std::size_t num_qubits = 3;
@@ -1178,6 +1178,25 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
         std::complex<PrecisionT> values = init_state[1];
 
         sv.setBasisState(values, index, false);
+
+        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
+
+    SECTION("Set basis state on device with data on the host") {
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        StateVectorCudaManaged<TestType> sv{num_qubits};
+        sv.CopyHostDataToGpu(init_state.data(), init_state.size());
+
+        std::vector<std::size_t> state = {0, 1, 0};
+        std::vector<std::size_t> wires = {0, 1, 2};
+
+        sv.setBasisState(state, wires, false);
+
+        std::vector<std::complex<PrecisionT>> expected_state(init_state.size(),
+                                                             {0, 0});
+        expected_state[2] = std::complex<PrecisionT>({1, 0});
 
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }

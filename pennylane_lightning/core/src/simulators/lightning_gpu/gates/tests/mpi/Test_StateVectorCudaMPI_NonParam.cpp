@@ -190,7 +190,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
+TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetBasisStates",
                    "[StateVectorCudaMPI_Nonparam]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
@@ -241,6 +241,29 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
                              static_cast<std::size_t>(subSvLength));
 
         CHECK(expected_local_state == Pennylane::Util::approx(h_sv0));
+    }
+
+    SECTION("Set basis state on device with data on the host") {
+        StateVectorCudaMPI<PrecisionT> sv(mpi_manager, dt_local, mpi_buffersize,
+                                          nGlobalIndexBits, nLocalIndexBits);
+
+        std::vector<std::size_t> state(num_qubits, 1);
+        std::vector<std::size_t> wires(num_qubits);
+        std::iota(wires.begin(), wires.end(), 0);
+        sv.setBasisState(state, wires, false);
+
+        auto expected_state_vector =
+            std::vector<cp_t>(Pennylane::Util::exp2(num_qubits), {0, 0});
+        expected_state_vector[Pennylane::Util::exp2(num_qubits) - 1] = {1.0, 0};
+
+        auto expected_local_state_vector =
+            mpi_manager.scatter(expected_state_vector, 0);
+
+        std::vector<cp_t> h_sv0(subSvLength, {0.0, 0.0});
+        sv.CopyGpuDataToHost(h_sv0.data(),
+                             static_cast<std::size_t>(subSvLength));
+
+        CHECK(expected_local_state_vector == Pennylane::Util::approx(h_sv0));
     }
 }
 

@@ -182,6 +182,36 @@ class StateVectorCudaManaged
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
         setBasisState_CUDA(BaseType::getData(), value_cu, index, async,
                            stream_id);
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     * @param async Use an asynchronous memory copy.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires,
+                       const bool async = false) {
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
+        const auto num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(
+            std::find_if(wires.begin(), wires.end(),
+                         [&num_qubits](const auto i) {
+                             return i >= num_qubits;
+                         }) == wires.end(),
+            "wires must take values lower than the number of qubits.");
+        const auto n_wires = wires.size();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        ComplexT value{1.0, 0.0};
+        setBasisState(value, index, async);
     }
 
     /**

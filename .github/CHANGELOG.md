@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* Add `setBasisState(state, wire)` support to the `lightning.gpu` C++ layer.
+  [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
+
 * Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
   [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
 
