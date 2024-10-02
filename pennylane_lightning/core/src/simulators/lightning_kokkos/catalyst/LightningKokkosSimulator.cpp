@@ -342,7 +342,8 @@ void LightningKokkosSimulator::PartialProbs(
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-std::vector<size_t> LightningKokkosSimulator::GenerateSamples(const size_t shots) {
+std::vector<size_t>
+LightningKokkosSimulator::GenerateSamples(const size_t shots) {
     // generate_samples is a member function of the Measures class.
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};

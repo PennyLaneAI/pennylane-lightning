@@ -1789,7 +1789,7 @@ TEST_CASE("Sample with a seeded device", "[Measures]") {
         MemRefT<double, 2> buffer{
             samples.data(), samples.data(), 0, {shots, 1}, {1, 1}};
         DataView<double, 2> view(buffer.data_aligned, buffer.offset,
-                                  buffer.sizes, buffer.strides);
+                                 buffer.sizes, buffer.strides);
 
         std::vector<double> samples1(shots * 4);
         MemRefT<double, 2> buffer1{
@@ -1815,7 +1815,7 @@ TEST_CASE("Sample with a seeded device", "[Measures]") {
         sim1->NamedOperation("RX", {0.5}, {Qs1[0]}, false);
         sim1->Sample(view1, shots);
 
-        for (std::size_t i = 0; i < shots * 4; i++){
+        for (std::size_t i = 0; i < shots * 4; i++) {
             CHECK((samples[i] == samples1[i]));
         }
     }

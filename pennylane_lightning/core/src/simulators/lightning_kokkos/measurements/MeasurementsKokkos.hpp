@@ -678,8 +678,8 @@ class Measurements final
             });
 
         // Sampling using Random_XorShift64_Pool
-        auto rand_pool =
-            seed.has_value() ? Kokkos::Random_XorShift64_Pool<>(seed.value())
+        auto rand_pool = seed.has_value()
+                             ? Kokkos::Random_XorShift64_Pool<>(seed.value())
                              : Kokkos::Random_XorShift64_Pool<>(
                                    std::chrono::high_resolution_clock::now()
                                        .time_since_epoch()
