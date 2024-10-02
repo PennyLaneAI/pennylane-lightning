@@ -63,8 +63,8 @@ class LightningGPUAdjointJacobian(LightningBaseAdjointJacobian):
     Args:
         qubit_state(LightningGPUStateVector): State Vector to calculate the adjoint Jacobian with.
         batch_obs(bool): If serialized tape is to be batched or not.
-            For Lightning GPU, distribute the observations across gpus in the same node.
-            For Lightning GPU + MPI, if `batch_obs=False` the computation requires more memory and is faster,
+            For Lightning GPU, distribute the observations across GPUs in the same node. Defaults to False.
+            For Lightning GPU-MPI, if `batch_obs=False` the computation requires more memory and is faster,
             while `batch_obs=True` allows a larger number of qubits simulation
             at the expense of high computational cost. Defaults to False.
     """
