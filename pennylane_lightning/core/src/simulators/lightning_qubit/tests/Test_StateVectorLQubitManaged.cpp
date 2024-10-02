@@ -27,7 +27,6 @@
 #include "StateVectorLQubitRaw.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData, TestVector
 #include "TestHelpersWires.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 /**
  * @file
