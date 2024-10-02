@@ -34,6 +34,9 @@
 
 ### Improvements
 
+* The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
+  [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
+
 * Always decompose `qml.QFT` in Lightning.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
 
