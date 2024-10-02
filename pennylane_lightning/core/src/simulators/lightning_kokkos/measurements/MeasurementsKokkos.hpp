@@ -14,6 +14,7 @@
 #pragma once
 #include <chrono>
 #include <cstdint>
+#include <optional>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -678,7 +679,7 @@ class Measurements final
 
         // Sampling using Random_XorShift64_Pool
         Kokkos::Random_XorShift64_Pool<> rand_pool =
-            seed.has_value() ? Kokkos::Random_XorShift64_Pool<>((seed.value()))
+            seed.has_value() ? Kokkos::Random_XorShift64_Pool<>(seed.value())
                              : Kokkos::Random_XorShift64_Pool<>(
                                    std::chrono::high_resolution_clock::now()
                                        .time_since_epoch()

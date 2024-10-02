@@ -21,7 +21,6 @@ using Pennylane::Util::isApproxEqual;
 /// @endcond
 #include <algorithm>
 #include <optional>
-#include <random>
 #include <string>
 
 #ifdef _ENABLE_PLQUBIT
