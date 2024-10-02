@@ -35,7 +35,7 @@ using Pennylane::Util::LightningException;
 
 TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
     auto pds = PriorityDispatchSet();
-    pds.emplace(Pennylane::Gates::KernelType::PI, 10U,
+    pds.emplace(Pennylane::Gates::KernelType::LM, 10U,
                 Util::IntegerInterval<std::size_t>(10, 20));
 
     SECTION("Test conflict") {
@@ -45,7 +45,7 @@ TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
     }
 
     SECTION("Get Kernel") {
-        REQUIRE(pds.getKernel(15) == Pennylane::Gates::KernelType::PI);
+        REQUIRE(pds.getKernel(15) == Pennylane::Gates::KernelType::LM);
         PL_CHECK_THROWS_MATCHES(pds.getKernel(30), LightningException,
                                 "Cannot find a kernel");
     }
@@ -143,12 +143,12 @@ TEST_CASE("Test KernelMap functionalities", "[KernelMap]") {
         instance.assignKernelForOp(
             Pennylane::Gates::GateOperation::PauliX, Threading::SingleThread,
             CPUMemoryModel::Unaligned, 100, Util::full_domain<std::size_t>(),
-            KernelType::PI);
+            KernelType::LM);
 
         REQUIRE(instance.getKernelMap(24, Threading::SingleThread,
                                       CPUMemoryModel::Unaligned)
                     [Pennylane::Gates::GateOperation::PauliX] ==
-                KernelType::PI);
+                KernelType::LM);
 
         instance.removeKernelForOp(Pennylane::Gates::GateOperation::PauliX,
                                    Threading::SingleThread,
