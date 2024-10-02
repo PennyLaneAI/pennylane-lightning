@@ -131,8 +131,8 @@ format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
-	isort --py 311 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning ./mpitests ./tests ./scripts $(ICHECK) $(VERBOSE)
-	black -l 100 ./pennylane_lightning ./mpitests ./tests ./scripts $(CHECK) $(VERBOSE)
+	isort --py 312 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning ./mpitests ./tests ./scripts $(ICHECK) $(VERBOSE)
+	black -t py310 -t py311 -t py312 -l 100 ./pennylane_lightning ./mpitests ./tests ./scripts $(CHECK) $(VERBOSE)
 
 .PHONY: check-tidy
 check-tidy:

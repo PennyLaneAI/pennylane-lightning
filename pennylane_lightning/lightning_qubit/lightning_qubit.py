@@ -139,7 +139,6 @@ _operations = frozenset(
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
-        "QFT",
         "ECR",
         "BlockEncode",
         "C(BlockEncode)",
@@ -170,13 +169,6 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
-    if isinstance(op, qml.QFT):
-        return len(op.wires) < 10
-    if isinstance(op, qml.GroverOperator):
-        return len(op.wires) < 13
-
     # As ControlledQubitUnitary == C(QubitUnitrary),
     # it can be removed from `_operations` to keep
     # consistency with `lightning_qubit.toml`
