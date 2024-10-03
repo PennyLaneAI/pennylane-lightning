@@ -260,13 +260,11 @@ class StateVectorCudaMPI final
      */
     void setBasisState(const std::complex<Precision> &value,
                        const std::size_t index, const bool async = false) {
-        std::size_t rankId = index >> BaseType::getNumQubits();
+        const std::size_t rankId = index >> this->getNumLocalQubits();
 
-        std::size_t local_index =
-            static_cast<std::size_t>(
-                rankId * std::pow(2.0, static_cast<long double>(
-                                           BaseType::getNumQubits()))) ^
-            index;
+        const std::size_t local_index =
+            compute_local_index(index, this->getNumLocalQubits());
+
         BaseType::getDataBuffer().zeroInit();
 
         CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
@@ -280,6 +278,45 @@ class StateVectorCudaMPI final
         mpi_manager_.Barrier();
     }
 
+    /**
+     * @brief Prepare a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     * @param use_async Use an asynchronous memory copy.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires,
+                       const bool use_async) {
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
+
+        const auto n_wires = this->getTotalNumQubits();
+
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = state[k];
+            index |= bit << (n_wires - 1 - wires[k]);
+        }
+
+        const std::size_t rankId = index >> this->getNumLocalQubits();
+        const std::size_t local_index =
+            compute_local_index(index, this->getNumLocalQubits());
+
+        const std::complex<PrecisionT> value(1.0, 0.0);
+        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+
+        BaseType::getDataBuffer().zeroInit();
+
+        auto stream_id = localStream_.get();
+
+        if (mpi_manager_.getRank() == rankId) {
+            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
+                               use_async, stream_id);
+        }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
+    }
     /**
      * @brief Set values for a batch of elements of the state-vector. This
      * method is implemented by the customized CUDA kernel defined in the
@@ -307,11 +344,9 @@ class StateVectorCudaMPI final
                 static_cast<std::size_t>(index) >> BaseType::getNumQubits();
 
             if (rankId == mpi_manager_.getRank()) {
-                int local_index =
-                    static_cast<std::size_t>(
-                        rankId * std::pow(2.0, static_cast<long double>(
-                                                   BaseType::getNumQubits()))) ^
-                    index;
+                int local_index = static_cast<int>(
+                    compute_local_index(static_cast<std::size_t>(index),
+                                        this->getNumLocalQubits()));
                 indices_local.push_back(local_index);
                 values_local.push_back(values[i]);
             }

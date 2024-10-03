@@ -38,13 +38,13 @@ def test_create_device():
 
 
 def test_unsupported_mpi_buf_size():
-    with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
+    with pytest.raises(ValueError, match="Unsupported mpi_buf_size value"):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)
-    with pytest.raises(TypeError, match="Unsupported mpi_buf_size value"):
+    with pytest.raises(ValueError, match="Unsupported mpi_buf_size value"):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=3)
-    with pytest.warns(
-        RuntimeWarning,
-        match="The MPI buffer size is larger than the local state vector size",
+    with pytest.raises(
+        RuntimeError,
+        match="The MPI buffer size is larger than the local state vector size.",
     ):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=2**4)
     with pytest.raises(
