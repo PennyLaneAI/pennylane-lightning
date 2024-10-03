@@ -259,9 +259,11 @@ class StateVectorCudaManaged
      * @param state_ptr Pointer to the initial state data.
      * @param num_states Length of the initial state data.
      * @param wires Wires.
+     * @param use_async Use an asynchronous memory copy.
      */
     void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
-                        const std::vector<std::size_t> &wires) {
+                        const std::vector<std::size_t> &wires,
+                        const bool use_async = false) {
         PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
@@ -285,11 +287,13 @@ class StateVectorCudaManaged
             std::size_t index{0U};
             for (std::size_t j = 0; j < wires.size(); j++) {
                 const std::size_t bit = (i & (one << j)) >> j;
-                index |= bit << (num_qubits - 1 - wires[wires.size() - 1 - j]);
+                const std::size_t wire = wires.size() - 1 - j;
+                index |= bit << (num_qubits - 1 - wire);
             }
             indices[i] = index;
         }
-        setStateVector<index_type>(num_states, state_ptr, indices.data());
+        setStateVector<index_type>(num_states, state_ptr, indices.data(),
+                                   use_async);
     }
 
     /**
