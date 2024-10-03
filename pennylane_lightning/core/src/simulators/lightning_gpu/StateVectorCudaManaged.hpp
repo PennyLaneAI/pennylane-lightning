@@ -358,6 +358,19 @@ class StateVectorCudaManaged
                     cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
                 applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
             }
+        } else if (opName == "Matrix") {
+            DataBuffer<CFP_t, int> d_matrix{
+                gate_matrix.size(), BaseType::getDataBuffer().getDevTag(),
+                true};
+            d_matrix.CopyHostDataToGpu(gate_matrix.data(), d_matrix.getLength(),
+                                       false);
+            // ensure wire indexing correctly preserved for tensor-observables
+            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
+                                                       ctrls.rend()};
+            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
+                                                      tgts.rend()};
+            applyDeviceMatrixGate(d_matrix.getData(), ctrls_local, tgts_local,
+                                  adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
@@ -437,7 +450,7 @@ class StateVectorCudaManaged
                      const std::vector<std::size_t> &wires,
                      bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        const std::string opName = {};
+        const std::string opName = "Matrix";
         std::size_t n = std::size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
                                                            gate_matrix + n * n);
