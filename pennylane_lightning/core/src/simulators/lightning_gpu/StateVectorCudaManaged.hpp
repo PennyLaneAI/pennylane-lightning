@@ -193,7 +193,8 @@ class StateVectorCudaManaged
      *
      * @param state Binary number representing the index
      * @param wires Wires.
-     * @param use_async(Optional[bool]): immediately sync with host-sv after applying operation.
+     * @param use_async(Optional[bool]): immediately sync with host-sv after
+     * applying operation.
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
