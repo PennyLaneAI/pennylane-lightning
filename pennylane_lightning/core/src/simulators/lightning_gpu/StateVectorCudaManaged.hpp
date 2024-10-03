@@ -111,7 +111,10 @@ class StateVectorCudaManaged
         : StateVectorCudaBase<Precision, StateVectorCudaManaged<Precision>>(
               num_qubits),
           handle_(make_shared_cusv_handle()),
-          cublascaller_(make_shared_cublas_caller()), gate_cache_(true){};
+          cublascaller_(make_shared_cublas_caller()), gate_cache_(true) {
+        BaseType::initSV();
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+    };
 
     StateVectorCudaManaged(
         std::size_t num_qubits, const DevTag<int> &dev_tag, bool alloc = true,
@@ -125,6 +128,7 @@ class StateVectorCudaManaged
           cusparsehandle_(std::move(cusparsehandle_in)),
           gate_cache_(true, dev_tag) {
         BaseType::initSV();
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
     };
 
     StateVectorCudaManaged(const CFP_t *gpu_data, std::size_t length)
@@ -189,9 +193,7 @@ class StateVectorCudaManaged
      *
      * @param state Binary number representing the index
      * @param wires Wires.
-     * @param use_async(Optional[bool]): immediately sync with host-sv after
-     applying operation.
-
+     * @param use_async(Optional[bool]): immediately sync with host-sv after applying operation.
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
@@ -212,12 +214,8 @@ class StateVectorCudaManaged
             index |= bit << (num_qubits - 1 - wires[k]);
         }
 
-        BaseType::getDataBuffer().zeroInit();
         const std::complex<PrecisionT> value(1.0, 0.0);
-        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-        setBasisState_CUDA(BaseType::getData(), value_cu, index, use_async,
-                           stream_id);
+        setBasisState(value, index, use_async);
     }
 
     /**

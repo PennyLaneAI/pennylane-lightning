@@ -204,7 +204,7 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
      */
     void initSV(bool async = false) {
         std::size_t index = 0;
-        const std::complex<Precision> value(1, 0);
+        const std::complex<Precision> value(1.0, 0.0);
         static_cast<Derived *>(this)->setBasisState(value, index, async);
     };
 

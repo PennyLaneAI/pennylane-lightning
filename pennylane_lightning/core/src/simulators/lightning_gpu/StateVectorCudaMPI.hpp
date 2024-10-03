@@ -119,6 +119,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        BaseType::initSV();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -137,6 +138,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        BaseType::initSV();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -155,6 +157,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        BaseType::initSV();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -299,23 +302,8 @@ class StateVectorCudaMPI final
             index |= bit << (n_wires - 1 - wires[k]);
         }
 
-        const std::size_t rankId = index >> this->getNumLocalQubits();
-        const std::size_t local_index =
-            compute_local_index(index, this->getNumLocalQubits());
-
         const std::complex<PrecisionT> value(1.0, 0.0);
-        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
-
-        BaseType::getDataBuffer().zeroInit();
-
-        auto stream_id = localStream_.get();
-
-        if (mpi_manager_.getRank() == rankId) {
-            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
-                               use_async, stream_id);
-        }
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager_.Barrier();
+        setBasisState(value, index, use_async);
     }
     /**
      * @brief Set values for a batch of elements of the state-vector. This

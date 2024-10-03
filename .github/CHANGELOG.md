@@ -40,6 +40,9 @@
 
 ### Improvements
 
+* Add zero state initialization to `lightning.gpu` C++ ctors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
+  [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+
 * Always decompose `qml.QFT` in Lightning.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
 
