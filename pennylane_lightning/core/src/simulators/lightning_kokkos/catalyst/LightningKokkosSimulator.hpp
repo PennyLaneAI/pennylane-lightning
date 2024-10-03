@@ -96,7 +96,7 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
         return res;
     }
 
-    auto GenerateSamples(const size_t shots) -> std::vector<size_t>;
+    auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 
   public:
     explicit LightningKokkosSimulator(const std::string &kwargs = "{}") {
@@ -157,16 +157,16 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     void Probs(DataView<double, 1> &probs) override;
     void PartialProbs(DataView<double, 1> &probs,
                       const std::vector<QubitIdType> &wires) override;
-    void Sample(DataView<double, 2> &samples, const std::size_t shots) override;
+    void Sample(DataView<double, 2> &samples, std::size_t shots) override;
     void PartialSample(DataView<double, 2> &samples,
                        const std::vector<QubitIdType> &wires,
-                       const std::size_t shots) override;
+                       std::size_t shots) override;
     void Counts(DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
-                const std::size_t shots) override;
+                std::size_t shots) override;
     void PartialCounts(DataView<double, 1> &eigvals,
                        DataView<int64_t, 1> &counts,
                        const std::vector<QubitIdType> &wires,
-                       const std::size_t shots) override;
+                       std::size_t shots) override;
     auto Measure(QubitIdType wire,
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;

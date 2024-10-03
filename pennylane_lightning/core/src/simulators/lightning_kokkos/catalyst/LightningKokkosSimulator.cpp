@@ -342,8 +342,7 @@ void LightningKokkosSimulator::PartialProbs(
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-std::vector<size_t>
-LightningKokkosSimulator::GenerateSamples(const size_t shots) {
+std::vector<size_t> LightningKokkosSimulator::GenerateSamples(size_t shots) {
     // generate_samples is a member function of the Measures class.
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
@@ -357,7 +356,7 @@ LightningKokkosSimulator::GenerateSamples(const size_t shots) {
 }
 
 void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
-                                      const std::size_t shots) {
+                                      std::size_t shots) {
     auto li_samples = this->GenerateSamples(shots);
 
     RT_FAIL_IF(samples.size() != li_samples.size(),
@@ -379,7 +378,7 @@ void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
 }
 void LightningKokkosSimulator::PartialSample(
     DataView<double, 2> &samples, const std::vector<QubitIdType> &wires,
-    const std::size_t shots) {
+    std::size_t shots) {
     const std::size_t numWires = wires.size();
     const std::size_t numQubits = this->GetNumQubits();
 
@@ -408,7 +407,7 @@ void LightningKokkosSimulator::PartialSample(
 
 void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
                                       DataView<int64_t, 1> &counts,
-                                      const std::size_t shots) {
+                                      std::size_t shots) {
     const std::size_t numQubits = this->GetNumQubits();
     const std::size_t numElements = 1U << numQubits;
 
@@ -440,7 +439,7 @@ void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
 
 void LightningKokkosSimulator::PartialCounts(
     DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
-    const std::vector<QubitIdType> &wires, const std::size_t shots) {
+    const std::vector<QubitIdType> &wires, std::size_t shots) {
     const std::size_t numWires = wires.size();
     const std::size_t numQubits = this->GetNumQubits();
     const std::size_t numElements = 1U << numWires;
