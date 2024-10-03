@@ -1763,7 +1763,7 @@ TEST_CASE("Measurement with a seeded device", "[Measures]") {
         Qs.reserve(1);
         Qs.push_back(sim.AllocateQubit());
         sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        auto m = sim->Measure(Qs[0]);
+        auto m = sim.Measure(Qs[0]);
         return m;
     };
 
