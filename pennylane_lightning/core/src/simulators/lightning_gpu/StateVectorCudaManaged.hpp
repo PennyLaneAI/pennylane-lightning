@@ -211,7 +211,7 @@ class StateVectorCudaManaged
         const auto n_wires = wires.size();
         std::size_t index{0U};
         for (std::size_t k = 0; k < n_wires; k++) {
-            const auto bit = static_cast<std::size_t>(state[k]);
+            const auto bit = state[k];
             index |= bit << (num_qubits - 1 - wires[k]);
         }
 
