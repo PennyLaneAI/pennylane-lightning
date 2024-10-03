@@ -31,7 +31,6 @@ try:
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
-from itertools import product
 from typing import Union
 
 import numpy as np
@@ -226,20 +225,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
             self.syncH2D(np.reshape(local_state, output_shape))
             return
 
-        # generate basis states on subset of qubits via the cartesian product
-        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
-
-        # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2 ** len(device_wires), self.num_wires), dtype=int)
-        unravelled_indices[:, device_wires] = basis_states
-
-        # get indices for which the state is changed to input state vector elements
-        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
-
-        # set the state vector on GPU with the unravelled_indices and their corresponding values
-        self._qubit_state.setStateVector(
-            ravelled_indices, state, use_async
-        )  # this operation on device
+        # set the state vector on GPU with provided state and their corresponding wires
+        self._qubit_state.setStateVector(state, list(device_wires))
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
