@@ -16,921 +16,496 @@ r"""
 This module contains the :class:`~.LightningGPU` class, a PennyLane simulator device that
 interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enabled calculations.
 """
+from __future__ import annotations
 
 from ctypes.util import find_library
+from dataclasses import replace
 from importlib import util as imp_util
-from itertools import product
 from pathlib import Path
-from typing import List, Union
+from typing import List, Optional, Union
 from warnings import warn
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, DeviceError, QuantumFunctionError, Rot, StatePrep, math
-from pennylane.measurements import Expectation, State
-from pennylane.ops.op_math import Adjoint
-from pennylane.wires import Wires
-from scipy.sparse import csr_matrix
+from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.devices.preprocess import (
+    decompose,
+    mid_circuit_measurements,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
+from pennylane.measurements import MidMeasureMP
+from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.ops import Prod, SProd, Sum
+from pennylane.tape import QuantumScript
+from pennylane.transforms.core import TransformProgram
+from pennylane.typing import Result
 
-from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_phase_diagonal
-from pennylane_lightning.core._version import __version__
-
-# pylint: disable=import-error, no-name-in-module, ungrouped-imports
-from pennylane_lightning.core.lightning_base import LightningBase
+from pennylane_lightning.core.lightning_newAPI_base import (
+    LightningBase,
+    QuantumTape_or_Batch,
+    Result_or_ResultBatch,
+)
 
 try:
     from pennylane_lightning.lightning_gpu_ops import (
         DevPool,
-        MeasurementsC64,
-        MeasurementsC128,
-        StateVectorC64,
-        StateVectorC128,
         backend_info,
         get_gpu_arch,
         is_gpu_supported,
     )
-    from pennylane_lightning.lightning_gpu_ops.algorithms import (
-        AdjointJacobianC64,
-        AdjointJacobianC128,
-        create_ops_listC64,
-        create_ops_listC128,
-    )
-
-    try:
-        # pylint: disable=no-name-in-module
-        from pennylane_lightning.lightning_gpu_ops import (
-            DevTag,
-            MeasurementsMPIC64,
-            MeasurementsMPIC128,
-            MPIManager,
-            StateVectorMPIC64,
-            StateVectorMPIC128,
-        )
-        from pennylane_lightning.lightning_gpu_ops.algorithmsMPI import (
-            AdjointJacobianMPIC64,
-            AdjointJacobianMPIC128,
-            create_ops_listMPIC64,
-            create_ops_listMPIC128,
-        )
-
-        MPI_SUPPORT = True
-    except ImportError as ex:
-        warn(str(ex), UserWarning)
-        MPI_SUPPORT = False
-
-    if find_library("custatevec") is None and not imp_util.find_spec(
-        "cuquantum"
-    ):  # pragma: no cover
-        raise ImportError(
-            "custatevec libraries not found. Please pip install the appropriate custatevec library in a virtual environment."
-        )
-    if not DevPool.getTotalDevices():  # pragma: no cover
-        raise ValueError("No supported CUDA-capable device found")
-
-    if not is_gpu_supported():  # pragma: no cover
-        raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
 
     LGPU_CPP_BINARY_AVAILABLE = True
+
 except (ImportError, ValueError) as ex:
     warn(str(ex), UserWarning)
-    backend_info = None
     LGPU_CPP_BINARY_AVAILABLE = False
+    backend_info = None
 
+from ._adjoint_jacobian import LightningGPUAdjointJacobian
+from ._measurements import LightningGPUMeasurements
+from ._mpi_handler import MPIHandler
+from ._state_vector import LightningGPUStateVector
 
-def _gpu_dtype(dtype, mpi=False):
-    if dtype not in [np.complex128, np.complex64]:  # pragma: no cover
-        raise ValueError(f"Data type is not supported for state-vector computation: {dtype}")
-    if mpi:
-        return StateVectorMPIC128 if dtype == np.complex128 else StateVectorMPIC64
-    return StateVectorC128 if dtype == np.complex128 else StateVectorC64
+# The set of supported operations.
+_operations = frozenset(
+    {
+        "Identity",
+        "QubitStateVector",
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "GlobalPhase",
+        "C(GlobalPhase)",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "ECR",
+        "BlockEncode",
+        "C(BlockEncode)",
+    }
+)
+# End the set of supported operations.
 
-
-def _adj_dtype(use_csingle, mpi=False):
-    if mpi:
-        return AdjointJacobianMPIC64 if use_csingle else AdjointJacobianMPIC128
-    return AdjointJacobianC64 if use_csingle else AdjointJacobianC128
-
-
-def _mebibytesToBytes(mebibytes):
-    return mebibytes * 1024 * 1024
-
-
-allowed_operations = {
-    "Identity",
-    "BasisState",
-    "QubitStateVector",
-    "StatePrep",
-    "QubitUnitary",
-    "ControlledQubitUnitary",
-    "MultiControlledX",
-    "DiagonalQubitUnitary",
-    "PauliX",
-    "PauliY",
-    "PauliZ",
-    "MultiRZ",
-    "GlobalPhase",
-    "C(GlobalPhase)",
-    "Hadamard",
-    "S",
-    "Adjoint(S)",
-    "T",
-    "Adjoint(T)",
-    "SX",
-    "Adjoint(SX)",
-    "CNOT",
-    "SWAP",
-    "ISWAP",
-    "PSWAP",
-    "Adjoint(ISWAP)",
-    "SISWAP",
-    "Adjoint(SISWAP)",
-    "SQISW",
-    "CSWAP",
-    "Toffoli",
-    "CY",
-    "CZ",
-    "PhaseShift",
-    "ControlledPhaseShift",
-    "RX",
-    "RY",
-    "RZ",
-    "Rot",
-    "CRX",
-    "CRY",
-    "CRZ",
-    "CRot",
-    "IsingXX",
-    "IsingYY",
-    "IsingZZ",
-    "IsingXY",
-    "SingleExcitation",
-    "SingleExcitationPlus",
-    "SingleExcitationMinus",
-    "DoubleExcitation",
-    "DoubleExcitationPlus",
-    "DoubleExcitationMinus",
-    "QubitCarry",
-    "QubitSum",
-    "OrbitalRotation",
-    "ECR",
-    "BlockEncode",
-    "C(BlockEncode)",
-}
-
-allowed_observables = {
-    "PauliX",
-    "PauliY",
-    "PauliZ",
-    "Hadamard",
-    "SparseHamiltonian",
-    "Hamiltonian",
-    "LinearCombination",
-    "Hermitian",
-    "Identity",
-    "Projector",
-    "Sum",
-    "Prod",
-    "SProd",
-}
-
-gate_cache_needs_hash = (
-    qml.BlockEncode,
-    qml.ControlledQubitUnitary,
-    qml.DiagonalQubitUnitary,
-    qml.MultiControlledX,
-    qml.OrbitalRotation,
-    qml.PSWAP,
-    qml.QubitUnitary,
+# The set of supported observables.
+_observables = frozenset(
+    {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "SparseHamiltonian",
+        "Hamiltonian",
+        "LinearCombination",
+        "Hermitian",
+        "Identity",
+        "Projector",
+        "Sum",
+        "Prod",
+        "SProd",
+    }
 )
 
 
-class LightningGPU(LightningBase):  # pylint: disable=too-many-instance-attributes
+def stopping_condition(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
+    # To avoid building matrices beyond the given thresholds.
+    # This should reduce runtime overheads for larger systems.
+    if isinstance(op, qml.QFT):
+        return len(op.wires) < 10
+    if isinstance(op, qml.GroverOperator):
+        return len(op.wires) < 13
+    if isinstance(op, qml.PauliRot):
+        return False
+
+    return op.name in _operations
+
+
+def stopping_condition_shots(op: Operator) -> bool:
+    """A function that determines whether or not an operation is supported by ``lightning.gpu``
+    with finite shots."""
+    if isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional)):
+        # LightningGPU does not support Mid-circuit measurements.
+        return False
+    return stopping_condition(op)
+
+
+def accepted_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
+    return obs.name in _observables
+
+
+def adjoint_observables(obs: Operator) -> bool:
+    """A function that determines whether or not an observable is supported by ``lightning.gpu``
+    when using the adjoint differentiation method."""
+    if isinstance(obs, qml.Projector):
+        return False
+
+    if isinstance(obs, Tensor):
+        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
+            return False
+        return True
+
+    if isinstance(obs, SProd):
+        return adjoint_observables(obs.base)
+
+    if isinstance(obs, (Sum, Prod)):
+        return all(adjoint_observables(o) for o in obs)
+
+    return obs.name in _observables
+
+
+def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
+    """Specifies whether or not an observable is compatible with adjoint differentiation on DefaultQubit."""
+    return isinstance(mp, qml.measurements.ExpectationMP)
+
+
+def _supports_adjoint(circuit):
+    if circuit is None:
+        return True
+
+    prog = TransformProgram()
+    _add_adjoint_transforms(prog)
+
+    try:
+        prog((circuit,))
+    except (DecompositionUndefinedError, qml.DeviceError, AttributeError):
+        return False
+    return True
+
+
+def _adjoint_ops(op: qml.operation.Operator) -> bool:
+    """Specify whether or not an Operator is supported by adjoint differentiation."""
+    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
+
+
+def _add_adjoint_transforms(program: TransformProgram) -> None:
+    """Private helper function for ``preprocess`` that adds the transforms specific
+    for adjoint differentiation.
+
+    Args:
+        program (TransformProgram): where we will add the adjoint differentiation transforms
+
+    Side Effects:
+        Adds transforms to the input program.
+
+    """
+
+    name = "adjoint + lightning.gpu"
+    program.add_transform(no_sampling, name=name)
+    program.add_transform(
+        decompose,
+        stopping_condition=_adjoint_ops,
+        stopping_condition_shots=stopping_condition_shots,
+        name=name,
+        skip_initial_state_prep=False,
+    )
+    program.add_transform(validate_observables, accepted_observables, name=name)
+    program.add_transform(
+        validate_measurements, analytic_measurements=adjoint_measurements, name=name
+    )
+    program.add_transform(qml.transforms.broadcast_expand)
+    program.add_transform(validate_adjoint_trainable_params)
+
+
+# LightningGPU specific methods
+def check_gpu_resources() -> None:
+    """Check the available resources of each Nvidia GPU"""
+    if find_library("custatevec") is None and not imp_util.find_spec("cuquantum"):
+
+        raise ImportError(
+            "cuStateVec libraries not found. Please pip install the appropriate cuStateVec library in a virtual environment."
+        )
+
+    if not DevPool.getTotalDevices():
+        raise ValueError("No supported CUDA-capable device found")
+
+    if not is_gpu_supported():
+        raise ValueError(f"CUDA device is an unsupported version: {get_gpu_arch()}")
+
+
+@simulator_tracking
+@single_tape_support
+class LightningGPU(LightningBase):
     """PennyLane Lightning GPU device.
 
-    A GPU-backed Lightning device using NVIDIA cuQuantum SDK.
+    A device that interfaces with C++ to perform fast linear algebra calculations.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/lightning_gpu/installation` guide for more details.
 
     Args:
         wires (int): the number of wires to initialize the device with
-        mpi (bool): enable MPI support. MPI support will be enabled if ``mpi`` is set as``True``.
-        mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-        sync (bool): immediately sync with host-sv after applying operations
-        c_dtype: Datatypes for statevector representation. Must be one of ``np.complex64`` or ``np.complex128``.
+        c_dtype: Datatypes for statevector representation. Must be one of
+            ``np.complex64`` or ``np.complex128``.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
             the expectation values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        batch_obs (Union[bool, int]): determine whether to use multiple GPUs within the same node or not
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian. This value is only relevant when the lightning.gpu
+            is built with MPI. Default is False.
+        mpi (bool): declare if the device will use the MPI support.
+        mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
+        sync (bool): is host-device data copy synchronized or not.
     """
 
-    name = "Lightning GPU PennyLane plugin"
-    short_name = "lightning.gpu"
+    # General device options
+    _device_options = ("c_dtype", "batch_obs")
 
-    operations = allowed_operations
-    observables = allowed_observables
-    _backend_info = backend_info
-    config = Path(__file__).parent / "lightning_gpu.toml"
+    # Device specific options
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
+    _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
-    def __init__(
+    # This `config` is used in Catalyst-Frontend
+    config = Path(__file__).parent / "lightning_gpu.toml"
+
+    # TODO: Move supported ops/obs to TOML file
+    operations = _operations
+    # The names of the supported operations.
+
+    observables = _observables
+    # The names of the supported observables.
+
+    def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires,
+        wires: Union[int, List],
         *,
+        c_dtype: Union[np.complex128, np.complex64] = np.complex128,
+        shots: Union[int, List] = None,
+        batch_obs: bool = False,
+        # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
-        sync=False,
-        c_dtype=np.complex128,
-        shots=None,
-        batch_obs: Union[bool, int] = False,
-    ):  # pylint: disable=too-many-arguments
-        if c_dtype is np.complex64:
-            self.use_csingle = True
-        elif c_dtype is np.complex128:
-            self.use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex type: {c_dtype}")
-
-        super().__init__(wires, shots=shots, c_dtype=c_dtype)
-
-        self._dp = DevPool()
-
-        if not mpi:
-            self._mpi = False
-            self._num_local_wires = self.num_wires
-            self._gpu_state = _gpu_dtype(c_dtype)(self._num_local_wires)
-        else:
-            self._mpi = True
-            self._mpi_init_helper(self.num_wires)
-
-            if mpi_buf_size < 0:
-                raise TypeError(f"Unsupported mpi_buf_size value: {mpi_buf_size}")
-
-            if mpi_buf_size:
-                if mpi_buf_size & (mpi_buf_size - 1):
-                    raise TypeError(
-                        f"Unsupported mpi_buf_size value: {mpi_buf_size}. mpi_buf_size should be power of 2."
-                    )
-                # Memory size in bytes
-                sv_memsize = np.dtype(c_dtype).itemsize * (1 << self._num_local_wires)
-                if _mebibytesToBytes(mpi_buf_size) > sv_memsize:
-                    w_msg = "The MPI buffer size is larger than the local state vector size."
-                    warn(
-                        w_msg,
-                        RuntimeWarning,
-                    )
-
-            self._gpu_state = _gpu_dtype(c_dtype, mpi)(
-                self._mpi_manager,
-                self._devtag,
-                mpi_buf_size,
-                self._num_global_wires,
-                self._num_local_wires,
+        sync: bool = False,
+    ):
+        if not self._CPP_BINARY_AVAILABLE:
+            raise ImportError(
+                "Pre-compiled binaries for lightning.gpu are not available. "
+                "To manually compile from source, follow the instructions at "
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
 
-        self._sync = sync
-        self._batch_obs = batch_obs
-        self._create_basis_state(0)
+        check_gpu_resources()
 
-    def _mpi_init_helper(self, num_wires):
-        """Set up MPI checks."""
-        if not MPI_SUPPORT:
-            raise ImportError("MPI related APIs are not found.")
-        # initialize MPIManager and config check in the MPIManager ctor
-        self._mpi_manager = MPIManager()
-        # check if number of GPUs per node is larger than
-        # number of processes per node
-        numDevices = self._dp.getTotalDevices()
-        numProcsNode = self._mpi_manager.getSizeNode()
-        if numDevices < numProcsNode:
-            raise ValueError(
-                "Number of devices should be larger than or equal to the number of processes on each node."
-            )
-        # check if the process number is larger than number of statevector elements
-        if self._mpi_manager.getSize() > (1 << (num_wires - 1)):
-            raise ValueError(
-                "Number of processes should be smaller than the number of statevector elements."
-            )
-        # set the number of global and local wires
-        commSize = self._mpi_manager.getSize()
-        self._num_global_wires = commSize.bit_length() - 1
-        self._num_local_wires = num_wires - self._num_global_wires
-        # set GPU device
-        rank = self._mpi_manager.getRank()
-        deviceid = rank % numProcsNode
-        self._dp.setDeviceID(deviceid)
-        self._devtag = DevTag(deviceid)
-
-    @staticmethod
-    def _asarray(arr, dtype=None):
-        arr = np.asarray(arr)  # arr is not copied
-
-        if arr.dtype.kind not in ["f", "c"]:
-            return arr
-
-        if not dtype:
-            dtype = arr.dtype
-
-        return arr
-
-    # pylint disable=missing-function-docstring
-    def reset(self):
-        """Reset the device"""
-        super().reset()
-        # init the state vector to |00..0>
-        self._gpu_state.resetGPU(False)  # Sync reset
-
-    @property
-    def state(self):
-        # pylint disable=missing-function-docstring
-        """Copy the state vector data from the device to the host.
-
-        A state vector Numpy array is explicitly allocated on the host to store and return the data.
-
-        **Example**
-
-        >>> dev = qml.device('lightning.gpu', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> print(dev.state)
-        [0.+0.j 1.+0.j]
-        """
-        state = np.zeros(1 << self._num_local_wires, dtype=self.C_DTYPE)
-        state = self._asarray(state, dtype=self.C_DTYPE)
-        self.syncD2H(state)
-        return state
-
-    @property
-    def create_ops_list(self):
-        """Returns create_ops_list function of the matching precision."""
-        if self._mpi:
-            return create_ops_listMPIC64 if self.use_csingle else create_ops_listMPIC128
-        return create_ops_listC64 if self.use_csingle else create_ops_listC128
-
-    @property
-    def measurements(self):
-        """Returns Measurements constructor of the matching precision."""
-        if self._mpi:
-            return (
-                MeasurementsMPIC64(self._gpu_state)
-                if self.use_csingle
-                else MeasurementsMPIC128(self._gpu_state)
-            )
-        return (
-            MeasurementsC64(self._gpu_state)
-            if self.use_csingle
-            else MeasurementsC128(self._gpu_state)
+        super().__init__(
+            wires=wires,
+            c_dtype=c_dtype,
+            shots=shots,
+            batch_obs=batch_obs,
         )
 
-    def syncD2H(self, state_vector, use_async=False):
-        """Copy the state vector data on device to a state vector on the host provided by the user
-        Args:
-            state_vector(array[complex]): the state vector array on host
-            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
-            Note: This function only supports synchronized memory copy.
+        # Set the attributes to call the LightningGPU classes
+        self._set_lightning_classes()
 
-        **Example**
-        >>> dev = qml.device('lightning.gpu', wires=1)
-        >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
-        >>> dev.syncD2H(state_vector)
-        >>> print(state_vector)
-        [0.+0.j 1.+0.j]
+        # GPU specific options
+        self._dp = DevPool()
+        self._sync = sync
+
+        # Creating the state vector
+        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
+        )
+
+    @property
+    def name(self):
+        """The name of the device."""
+        return "lightning.gpu"
+
+    def _set_lightning_classes(self):
+        """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
+        self.LightningStateVector = LightningGPUStateVector
+        self.LightningMeasurements = LightningGPUMeasurements
+        self.LightningAdjointJacobian = LightningGPUAdjointJacobian
+
+    def _setup_execution_config(self, config):
         """
-        self._gpu_state.DeviceToHost(state_vector.ravel(order="C"), use_async)
-
-    def syncH2D(self, state_vector, use_async=False):
-        """Copy the state vector data on host provided by the user to the state vector on the device
-        Args:
-            state_vector(array[complex]): the state vector array on host.
-            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
-            Note: This function only supports synchronized memory copy.
-
-        **Example**
-        >>> dev = qml.device('lightning.gpu', wires=3)
-        >>> obs = qml.Identity(0) @ qml.PauliX(1) @ qml.PauliY(2)
-        >>> obs1 = qml.Identity(1)
-        >>> H = qml.Hamiltonian([1.0, 1.0], [obs1, obs])
-        >>> state_vector = np.array([0.0 + 0.0j, 0.0 + 0.1j, 0.1 + 0.1j, 0.1 + 0.2j,
-            0.2 + 0.2j, 0.3 + 0.3j, 0.3 + 0.4j, 0.4 + 0.5j,], dtype=np.complex64,)
-        >>> dev.syncH2D(state_vector)
-        >>> res = dev.expval(H)
-        >>> print(res)
-        1.0
+        Update the execution config with choices for how the device should be used and the device options.
         """
-        self._gpu_state.HostToDevice(state_vector.ravel(order="C"), use_async)
+        updated_values = {}
+        if config.gradient_method == "best":
+            updated_values["gradient_method"] = "adjoint"
+        if config.use_device_gradient is None:
+            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+        if config.grad_on_execution is None:
+            updated_values["grad_on_execution"] = True
 
-    def _create_basis_state(self, index, use_async=False):
-        """Return a computational basis state over all wires.
-        Args:
-            index (int): integer representing the computational basis state.
-            use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
-            Note: This function only supports synchronized memory copy.
-        """
-        self._gpu_state.setBasisState(index, use_async)
+        new_device_options = dict(config.device_options)
+        for option in self._device_options:
+            if option not in new_device_options:
+                new_device_options[option] = getattr(self, f"_{option}", None)
 
-    def _apply_state_vector(self, state, device_wires, use_async=False):
-        """Initialize the state vector on GPU with a specified state on host.
-        Note that any use of this method will introduce host-overheads.
-        Args:
-        state (array[complex]): normalized input state (on host) of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-        device_wires (Wires): wires that get initialized in the state
-        use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
-        Note: This function only supports synchronized memory copy from host to device.
-        """
-        # translate to wire labels used by device
-        device_wires = self.map_wires(device_wires)
+        # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
+        mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0, "rng": None}
+        new_device_options.update(mcmc_default)
 
-        state = self._asarray(state, dtype=self.C_DTYPE)  # this operation on host
-        output_shape = [2] * self._num_local_wires
+        return replace(config, **updated_values, device_options=new_device_options)
 
-        if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
-            # Initialize the entire device state with the input state
-            if self.num_wires == self._num_local_wires:
-                self.syncH2D(self._reshape(state, output_shape))
-                return
-            local_state = np.zeros(1 << self._num_local_wires, dtype=self.C_DTYPE)
-            self._mpi_manager.Scatter(state, local_state, 0)
-            # Initialize the entire device state with the input state
-            self.syncH2D(self._reshape(local_state, output_shape))
-            return
-
-        # generate basis states on subset of qubits via the cartesian product
-        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
-
-        # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2 ** len(device_wires), self.num_wires), dtype=int)
-        unravelled_indices[:, device_wires] = basis_states
-
-        # get indices for which the state is changed to input state vector elements
-        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
-
-        # set the state vector on GPU with the unravelled_indices and their corresponding values
-        self._gpu_state.setStateVector(
-            ravelled_indices, state, use_async
-        )  # this operation on device
-
-    def _apply_basis_state(self, state, wires):
-        """Initialize the state vector in a specified computational basis state on GPU directly.
-            Args:
-            state (array[int]): computational basis state (on host) of shape ``(wires,)``
-                consisting of 0s and 1s.
-            wires (Wires): wires that the provided computational state should be initialized on
-        Note: This function does not support broadcasted inputs yet.
-        """
-        # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
-
-        # length of basis state parameter
-        n_basis_state = len(state)
-        state = state.tolist() if hasattr(state, "tolist") else state
-        if not set(state).issubset({0, 1}):
-            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
-
-        if n_basis_state != len(device_wires):
-            raise ValueError("BasisState parameter and wires must be of equal length.")
-
-        # get computational basis state number
-        basis_states = 2 ** (self.num_wires - 1 - np.array(device_wires))
-        basis_states = qml.math.convert_like(basis_states, state)
-        num = int(qml.math.dot(state, basis_states))
-
-        self._create_basis_state(num)
-
-    def apply_lightning(self, operations):
-        """Apply a list of operations to the state tensor.
+    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
-            operations (list[~pennylane.operation.Operation]): operations to apply
-            dtype (type): Type of numpy ``complex`` to be used. Can be important
-            to specify for large systems for memory allocation purposes.
+            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
+                parameters needed to fully describe the execution.
 
         Returns:
-            array[complex]: the output state tensor
+            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
+            with unset specifications filled in.
+
+        This device:
+
+        * Supports any qubit operations that provide a matrix
+        * Currently does not support finite shots
+        * Currently does not intrinsically support parameter broadcasting
+
         """
-        # Skip over identity operations instead of performing
-        # matrix multiplication with the identity.
-        for ops in operations:
-            if isinstance(ops, qml.Identity):
-                continue
-            if isinstance(ops, Adjoint):
-                name = ops.base.name
-                invert_param = True
-            else:
-                name = ops.name
-                invert_param = False
-            method = getattr(self._gpu_state, name, None)
-            wires = self.wires.indices(ops.wires)
+        exec_config = self._setup_execution_config(execution_config)
+        program = TransformProgram()
 
-            if isinstance(ops, qml.ops.op_math.Controlled) and isinstance(
-                ops.base, qml.GlobalPhase
-            ):
-                controls = ops.control_wires
-                control_values = ops.control_values
-                param = ops.base.parameters[0]
-                matrix = global_phase_diagonal(param, self.wires, controls, control_values)
-                self._gpu_state.apply(name, wires, False, [], matrix)
-            elif method is None:
-                # Inverse can be set to False since qml.matrix(ops) is already in inverted form
-                try:
-                    mat = qml.matrix(ops)
-                except AttributeError:  # pragma: no cover
-                    # To support older versions of PL
-                    mat = ops.matrix
-                r_dtype = np.float32 if self.use_csingle else np.float64
-                param = [[r_dtype(ops.hash)]] if isinstance(ops, gate_cache_needs_hash) else []
-                if len(mat) == 0:
-                    raise ValueError("Unsupported operation")
-                self._gpu_state.apply(
-                    name,
-                    wires,
-                    False,
-                    param,
-                    mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
-                )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
+        program.add_transform(validate_measurements, name=self.name)
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        program.add_transform(
+            mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
+        )
 
-            else:
-                param = ops.parameters
-                method(wires, invert_param, param)
+        program.add_transform(
+            decompose,
+            stopping_condition=stopping_condition,
+            stopping_condition_shots=stopping_condition_shots,
+            skip_initial_state_prep=True,
+            name=self.name,
+        )
+        program.add_transform(qml.transforms.broadcast_expand)
+
+        if exec_config.gradient_method == "adjoint":
+            _add_adjoint_transforms(program)
+        return program, exec_config
 
     # pylint: disable=unused-argument
-    def apply(self, operations, rotations=None, **kwargs):
-        """Applies a list of operations to the state tensor."""
-        # State preparation is currently done in Python
-        if operations:  # make sure operations[0] exists
-            if isinstance(operations[0], StatePrep):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
-                operations = operations[1:]
-            elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
-                operations = operations[1:]
-
-        for operation in operations:
-            if isinstance(operation, (StatePrep, BasisState)):
-                raise DeviceError(
-                    f"Operation {operation.name} cannot be used after other "
-                    + f"Operations have already been applied on a {self.short_name} device."
-                )
-
-        self.apply_lightning(operations)
-
-    @staticmethod
-    def _check_adjdiff_supported_operations(operations):
-        """Check Lightning adjoint differentiation method support for a tape.
-
-        Raise ``QuantumFunctionError`` if ``tape`` contains not supported measurements,
-        observables, or operations by the Lightning adjoint differentiation method.
+    def execute(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Result_or_ResultBatch:
+        """Execute a circuit or a batch of circuits and turn it into results.
 
         Args:
-            tape (.QuantumTape): quantum tape to differentiate.
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            execution_config (ExecutionConfig): a datastructure with additional information required for execution
+
+        Returns:
+            TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        for op in operations:
-            if op.num_params > 1 and not isinstance(op, Rot):
-                raise QuantumFunctionError(
-                    f"The {op.name} operation is not supported using "
-                    'the "adjoint" differentiation method'
+        results = []
+        for circuit in circuits:
+            if self._wire_map is not None:
+                [circuit], _ = qml.map_wires(circuit, self._wire_map)
+            results.append(
+                self.simulate(
+                    circuit,
+                    self._statevector,
                 )
-
-    def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
-        """Generate an initial state vector for ``_process_jacobian_tape``."""
-        if starting_state is not None:
-            if starting_state.size != 2 ** len(self.wires):
-                raise QuantumFunctionError(
-                    "The number of qubits of starting_state must be the same as "
-                    "that of the device."
-                )
-            self._apply_state_vector(starting_state, self.wires)
-        elif not use_device_state:
-            self.reset()
-            self.apply(tape.operations)
-        return self._gpu_state
-
-    # pylint: disable=too-many-branches
-    def adjoint_jacobian(self, tape, starting_state=None, use_device_state=False):
-        """Implements the adjoint method outlined in
-        `Jones and Gacon <https://arxiv.org/abs/2009.02823>`__ to differentiate an input tape.
-
-        After a forward pass, the circuit is reversed by iteratively applying adjoint
-        gates to scan backwards through the circuit.
-        """
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint differentiation method.",
-                UserWarning,
             )
 
-        tape_return_type = self._check_adjdiff_supported_measurements(tape.measurements)
+        return tuple(results)
 
-        if not tape_return_type:  # the tape does not have measurements
-            return np.array([], dtype=self.state.dtype)
+    def supports_derivatives(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
+    ) -> bool:
+        """Check whether or not derivatives are available for a given configuration and circuit.
 
-        if tape_return_type is State:  # pragma: no cover
-            raise QuantumFunctionError(
-                "Adjoint differentiation method does not support measurement StateMP."
-                "Use vjp method instead for this purpose."
-            )
-
-        # Check adjoint diff support
-        self._check_adjdiff_supported_operations(tape.operations)
-
-        if self._mpi:
-            split_obs = False  # with MPI batched means compute Jacobian one observables at a time, no point splitting linear combinations
-        else:
-            split_obs = self._dp.getTotalDevices() if self._batch_obs else False
-        processed_data = self._process_jacobian_tape(
-            tape, starting_state, use_device_state, self._mpi, split_obs
-        )
-
-        if not processed_data:  # training_params is empty
-            return np.array([], dtype=self.state.dtype)
-
-        trainable_params = processed_data["tp_shift"]
-        # pylint: disable=pointless-string-statement
-        """
-        This path enables controlled batching over the requested observables, be they explicit, or part of a Hamiltonian.
-        The traditional path will assume there exists enough free memory to preallocate all arrays and run through each observable iteratively.
-        However, for larger system, this becomes impossible, and we hit memory issues very quickly. the batching support here enables several functionalities:
-        - Pre-allocate memory for all observables on the primary GPU (`batch_obs=False`, default behaviour): This is the simplest path, and works best for few observables, and moderate qubit sizes. All memory is preallocated for each observable, and run through iteratively on a single GPU.
-        - Evenly distribute the observables over all available GPUs (`batch_obs=True`): This will evenly split the data into ceil(num_obs/num_gpus) chunks, and allocate enough space on each GPU up-front before running through them concurrently. This relies on C++ threads to handle the orchestration.
-        - Allocate at most `n` observables per GPU (`batch_obs=n`): Providing an integer value restricts each available GPU to at most `n` copies of the statevector, and hence `n` given observables for a given batch. This will iterate over the data in chnuks of size `n*num_gpus`.
-        """
-        adjoint_jacobian = _adj_dtype(self.use_csingle, self._mpi)()
-
-        if self._batch_obs:  # Batching of Measurements
-            jac = adjoint_jacobian.batched(
-                self._gpu_state,
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
-        else:
-            jac = adjoint_jacobian(
-                self._gpu_state,
-                processed_data["obs_serialized"],
-                processed_data["ops_serialized"],
-                trainable_params,
-            )
-        jac = np.array(jac)
-        has_shape0 = bool(len(jac))
-
-        num_obs = len(np.unique(processed_data["obs_indices"]))
-        rows = processed_data["obs_indices"]
-        cols = np.arange(len(rows), dtype=int)
-        data = np.ones(len(rows))
-        red_mat = csr_matrix((data, (rows, cols)), shape=(num_obs, len(rows)))
-        jac = red_mat @ jac.reshape((len(rows), -1))
-        jac = jac.reshape(-1, len(trainable_params)) if has_shape0 else jac
-        jac_r = np.zeros((jac.shape[0], processed_data["all_params"]))
-        jac_r[:, processed_data["record_tp_rows"]] = jac
-        return self._adjoint_jacobian_processing(jac_r)
-
-    # pylint: disable=inconsistent-return-statements, line-too-long, missing-function-docstring
-    def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
-        """Generate the processing function required to compute the vector-Jacobian products
-        of a tape.
-
-        This function can be used with multiple expectation values or a quantum state.
-        When a quantum state is given,
-
-        .. code-block:: python
-
-            vjp_f = dev.vjp([qml.state()], grad_vec)
-            vjp = vjp_f(tape)
-
-        computes :math:`w = (w_1,\\cdots,w_m)` where
-
-        .. math::
-
-            w_k = \\langle v| \\frac{\\partial}{\\partial \\theta_k} | \\psi_{\\pmb{\\theta}} \\rangle.
-
-        Here, :math:`m` is the total number of trainable parameters,
-        :math:`\\pmb{\\theta}` is the vector of trainable parameters and
-        :math:`\\psi_{\\pmb{\\theta}}` is the output quantum state.
+        ``LightningGPU`` supports adjoint differentiation with analytic results.
 
         Args:
-            measurements (list): List of measurement processes for vector-Jacobian product.
-                Now it must be expectation values or a quantum state.
-            grad_vec (tensor_like): Gradient-output vector. Must have shape matching the output
-                shape of the corresponding tape, i.e. number of measurements if the return
-                type is expectation or :math:`2^N` if the return type is statevector
-            starting_state (tensor_like): post-forward pass state to start execution with.
-                It should be complex-valued. Takes precedence over ``use_device_state``.
-            use_device_state (bool): use current device state to initialize.
-                A forward pass of the same circuit should be the last thing the device
-                has executed. If a ``starting_state`` is provided, that takes precedence.
+            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
+            circuit (QuantumTape): An optional circuit to check derivatives support for.
 
         Returns:
-            The processing function required to compute the vector-Jacobian products of a tape.
+            Bool: Whether or not a derivative can be calculated provided the given information
+
         """
-        if self.shots is not None:
-            warn(
-                "Requested adjoint differentiation to be computed with finite shots."
-                " The derivative is always exact when using the adjoint differentiation method.",
-                UserWarning,
-            )
+        if execution_config is None and circuit is None:
+            return True
+        if execution_config.gradient_method not in {"adjoint", "best"}:
+            return False
+        if circuit is None:
+            return True
+        return _supports_adjoint(circuit=circuit)
 
-        tape_return_type = self._check_adjdiff_supported_measurements(measurements)
-
-        if math.allclose(grad_vec, 0) or tape_return_type is None:
-            return lambda tape: math.convert_like(np.zeros(len(tape.trainable_params)), grad_vec)
-
-        if tape_return_type is Expectation:
-            if len(grad_vec) != len(measurements):
-                raise ValueError(
-                    "Number of observables in the tape must be the same as the length of grad_vec in the vjp method"
-                )
-
-            if np.iscomplexobj(grad_vec):
-                raise ValueError(
-                    "The vjp method only works with a real-valued grad_vec when the tape is returning an expectation value"
-                )
-
-            ham = qml.Hamiltonian(grad_vec, [m.obs for m in measurements])
-
-            # pylint: disable=protected-access
-            def processing_fn(tape):
-                nonlocal ham
-                num_params = len(tape.trainable_params)
-
-                if num_params == 0:
-                    return np.array([], dtype=self.state.dtype)
-
-                new_tape = tape.copy()
-                new_tape._measurements = [qml.expval(ham)]
-
-                return self.adjoint_jacobian(new_tape, starting_state, use_device_state)
-
-            return processing_fn
-
-    # pylint: disable=attribute-defined-outside-init
-    def sample(self, observable, shot_range=None, bin_size=None, counts=False):
-        """Return samples of an observable."""
-        diagonalizing_gates = observable.diagonalizing_gates()
-        if diagonalizing_gates:
-            self.apply(diagonalizing_gates)
-        if not isinstance(observable, qml.PauliZ):
-            self._samples = self.generate_samples()
-        results = super().sample(
-            observable, shot_range=shot_range, bin_size=bin_size, counts=counts
-        )
-        if diagonalizing_gates:
-            self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
-        return results
-
-    def generate_samples(self):
-        """Generate samples
-
-        Returns:
-            array[int]: array of samples in binary representation with shape
-            ``(dev.shots, dev.num_wires)``
-        """
-        shots = self.shots if isinstance(self.shots, int) else self.shots.total_shots
-
-        return self.measurements.generate_samples(len(self.wires), shots).astype(int, copy=False)
-
-    # pylint: disable=protected-access
-    def expval(self, observable, shot_range=None, bin_size=None):
-        """Expectation value of the supplied observable.
+    def simulate(
+        self,
+        circuit: QuantumScript,
+        state: LightningGPUStateVector,
+    ) -> Result:
+        """Simulate a single quantum script.
 
         Args:
-            observable: A PennyLane observable.
-            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
-                to use. If not specified, all samples are used.
-            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
-                returns the measurement statistic separately over each bin. If not
-                provided, the entire shot range is treated as a single bin.
+            circuit (QuantumTape): The single circuit to simulate
+            state (LightningGPUStateVector): handle to Lightning state vector
 
         Returns:
-            Expectation value of the observable
+            Tuple[TensorLike]: The results of the simulation
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        if isinstance(observable, qml.Projector):
-            diagonalizing_gates = observable.diagonalizing_gates()
-            if self.shots is None and diagonalizing_gates:
-                self.apply(diagonalizing_gates)
-            results = super().expval(observable, shot_range=shot_range, bin_size=bin_size)
-            if self.shots is None and diagonalizing_gates:
-                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
-            return results
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+            raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
 
-        if self.shots is not None:
-            # estimate the expectation value
-            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
-            return np.squeeze(np.mean(samples, axis=0))
-
-        if isinstance(observable, qml.SparseHamiltonian):
-            if self._mpi:
-                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
-                # host(cpu) memory requirements
-                obs = qml.Identity(0)
-                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
-                # CSR_SparseHamiltonian for rank == 0
-                if self._mpi_manager.getRank() == 0:
-                    CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
-            else:
-                CSR_SparseHamiltonian = observable.sparse_matrix().tocsr()
-
-            return self.measurements.expval(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
-            )
-
-        # use specialized functors to compute expval(Hermitian)
-        if isinstance(observable, qml.Hermitian):
-            observable_wires = self.map_wires(observable.wires)
-            if self._mpi and len(observable_wires) > self._num_local_wires:
-                raise RuntimeError(
-                    "MPI backend does not support Hermitian with number of target wires larger than local wire number."
-                )
-            matrix = observable.matrix()
-            return self.measurements.expval(matrix, observable_wires)
-
-        if (
-            isinstance(observable, qml.ops.Hamiltonian)
-            or (observable.arithmetic_depth > 0)
-            or isinstance(observable.name, List)
-        ):
-            ob_serialized = QuantumScriptSerializer(
-                self.short_name, self.use_csingle, self._mpi
-            )._ob(observable, self.wire_map)
-            return self.measurements.expval(ob_serialized)
-
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(observable.wires)
-
-        return self.measurements.expval(observable.name, observable_wires)
-
-    def probability_lightning(self, wires=None):
-        """Return the probability of each computational basis state.
-
-        Args:
-            wires (Iterable[Number, str], Number, str, Wires): wires to return
-                marginal probabilities for. Wires not provided are traced out of the system.
-
-        Returns:
-            array[float]: list of the probabilities
-        """
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(wires)
-        # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
-        local_prob = self.measurements.probs(observable_wires)
-        if len(local_prob) > 0:
-            num_local_wires = len(local_prob).bit_length() - 1 if len(local_prob) > 0 else 0
-            return local_prob.reshape([2] * num_local_wires).transpose().reshape(-1)
-        return local_prob
-
-    def var(self, observable, shot_range=None, bin_size=None):
-        """Variance of the supplied observable.
-
-        Args:
-            observable: A PennyLane observable.
-            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
-                to use. If not specified, all samples are used.
-            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
-                returns the measurement statistic separately over each bin. If not
-                provided, the entire shot range is treated as a single bin.
-
-        Returns:
-            Variance of the observable
-        """
-        if isinstance(observable, qml.Projector):
-            diagonalizing_gates = observable.diagonalizing_gates()
-            if self.shots is None and diagonalizing_gates:
-                self.apply(diagonalizing_gates)
-            results = super().var(observable, shot_range=shot_range, bin_size=bin_size)
-            if self.shots is None and diagonalizing_gates:
-                self.apply([qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)])
-            return results
-
-        if self.shots is not None:
-            # estimate the var
-            # Lightning doesn't support sampling yet
-            samples = self.sample(observable, shot_range=shot_range, bin_size=bin_size)
-            return np.squeeze(np.var(samples, axis=0))
-
-        if isinstance(observable, qml.SparseHamiltonian):
-            csr_hamiltonian = observable.sparse_matrix(wire_order=self.wires).tocsr(copy=False)
-            return self.measurements.var(
-                csr_hamiltonian.indptr,
-                csr_hamiltonian.indices,
-                csr_hamiltonian.data,
-            )
-
-        if (
-            isinstance(observable, (qml.Hermitian, qml.ops.Hamiltonian))
-            or (observable.arithmetic_depth > 0)
-            or isinstance(observable.name, List)
-        ):
-            ob_serialized = QuantumScriptSerializer(
-                self.short_name, self.use_csingle, self._mpi
-            )._ob(observable, self.wire_map)
-            return self.measurements.var(ob_serialized)
-
-        # translate to wire labels used by device
-        observable_wires = self.map_wires(observable.wires)
-
-        return self.measurements.var(observable.name, observable_wires)
+        state.reset_state()
+        final_state = state.get_final_state(circuit)
+        return self.LightningMeasurements(final_state).measure_final_state(circuit)

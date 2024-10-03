@@ -280,7 +280,7 @@ class Measurements final
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
             this->_statevector.getCusvHandle(), sampler, bitStrings.data(),
             bitOrdering.data(), bitStringLen, rand_nums.data(), num_samples,
-            CUSTATEVEC_SAMPLER_OUTPUT_ASCENDING_ORDER));
+            CUSTATEVEC_SAMPLER_OUTPUT_RANDNUM_ORDER));
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
             this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 

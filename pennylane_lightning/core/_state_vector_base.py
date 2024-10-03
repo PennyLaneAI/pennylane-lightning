@@ -16,7 +16,7 @@ Class implementation for state-vector manipulation.
 """
 
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Optional, Union
 
 import numpy as np
 from pennylane import BasisState, StatePrep
@@ -101,7 +101,7 @@ class LightningBaseStateVector(ABC):
         self._qubit_state.resetStateVector()
 
     @abstractmethod
-    def _apply_state_vector(self, state, device_wires: Wires):
+    def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
         """Initialize the internal state vector in a specified state.
         Args:
             state (array[complex]): normalized input state of length ``2**len(wires)``
@@ -117,6 +117,7 @@ class LightningBaseStateVector(ABC):
                 consisting of 0s and 1s.
             wires (Wires): wires that the provided computational state should be
                 initialized on
+            use_async(Optional[bool]): immediately sync with host-sv after applying operation.
 
         Note: This function does not support broadcasted inputs yet.
         """
