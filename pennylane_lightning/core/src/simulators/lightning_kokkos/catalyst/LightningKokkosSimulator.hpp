@@ -96,6 +96,8 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
         return res;
     }
 
+    auto GenerateSamples(size_t shots) -> std::vector<size_t>;
+
   public:
     explicit LightningKokkosSimulator(const std::string &kwargs = "{}") {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
