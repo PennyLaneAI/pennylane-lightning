@@ -496,7 +496,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         LGPUsim->State(view);
 
         CHECK(state[2] ==
-              PLApproxComplex(std::complex<double>{-1, 0}).epsilon(1e-5));
+              PLApproxComplex(std::complex<double>{-1, 0}).margin(1e-5));
     }
 
     SECTION("Hadamard, CNOT and Matrix") {
