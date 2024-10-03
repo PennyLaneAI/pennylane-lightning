@@ -241,12 +241,10 @@ class OperationKernelMap {
     OperationKernelMap()
         : allowed_kernels_{
               // LCOV_EXCL_START
-              {CPUMemoryModel::Unaligned, {KernelType::LM, KernelType::PI}},
-              {CPUMemoryModel::Aligned256,
-               {KernelType::LM, KernelType::PI, KernelType::AVX2}},
+              {CPUMemoryModel::Unaligned, {KernelType::LM}},
+              {CPUMemoryModel::Aligned256, {KernelType::LM, KernelType::AVX2}},
               {CPUMemoryModel::Aligned512,
-               {KernelType::LM, KernelType::PI, KernelType::AVX2,
-                KernelType::AVX512}},
+               {KernelType::LM, KernelType::AVX2, KernelType::AVX512}},
               // LCOV_EXCL_STOP
           } {}
 

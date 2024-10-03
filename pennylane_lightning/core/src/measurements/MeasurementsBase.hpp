@@ -77,7 +77,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     /**
      * @brief Randomly set the seed of the internal random generator
      *
-     * @param seed Seed
      */
     void setRandomSeed() {
         std::random_device rd;

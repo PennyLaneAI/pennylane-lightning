@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_kokkos state-vector manipulation.
 """
+from warnings import warn
 
 try:
     from pennylane_lightning.lightning_kokkos_ops import (
@@ -23,8 +24,10 @@ try:
         allocate_aligned_array,
         print_configuration,
     )
-except ImportError:
-    pass
+except ImportError as ex:
+    warn(str(ex), UserWarning)
+
+from typing import Union
 
 import numpy as np
 import pennylane as qml
@@ -59,17 +62,16 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
     def __init__(
         self,
-        num_wires,
-        dtype=np.complex128,
+        num_wires: int,
+        dtype: Union[np.complex128, np.complex64] = np.complex128,
         kokkos_args=None,
-        sync=True,
-    ):  # pylint: disable=too-many-arguments
+    ):
+
         super().__init__(num_wires, dtype)
 
         self._device_name = "lightning.kokkos"
 
         self._kokkos_config = {}
-        self._sync = sync
 
         # Initialize the state vector
         if kokkos_args is None:
@@ -143,7 +145,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         >>> dev = qml.device('lightning.kokkos', wires=1)
         >>> dev.apply([qml.PauliX(wires=[0])])
-        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.C_DTYPE)
+        >>> state_vector = np.zeros(2**dev.num_wires).astype(dev.c_dtype)
         >>> dev.sync_d2h(state_vector)
         >>> print(state_vector)
         [0.+0.j 1.+0.j]
@@ -269,9 +271,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                paulis = operation._hyperparameters["pauli_word"]
+                # pylint: disable=protected-access
+                paulis = operation._hyperparameters[
+                    "pauli_word"
+                ]  # pylint: disable=protected-access
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
-                word = "".join(p for p in paulis if p != "I")  # pylint: disable=protected-access
+                word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters

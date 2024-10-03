@@ -50,7 +50,6 @@ jobs:
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         uses: actions/checkout@v4
 
-
       - uses: actions/setup-python@v5
         if: ${{ matrix.pl_backend == 'lightning_qubit'}}
         with:

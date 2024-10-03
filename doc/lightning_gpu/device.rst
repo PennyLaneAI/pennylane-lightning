@@ -11,9 +11,9 @@ A ``lightning.gpu`` device can be loaded using:
     import pennylane as qml
     dev = qml.device("lightning.gpu", wires=2)
 
-If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. If the libraries are not correctly installed, or available on path, the device will fall-back to ``lightning.qubit`` and perform all simulation on the CPU.
+If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. If the libraries are not correctly installed, or available on path, the device will raise an error.
 
-The ``lightning.gpu`` device also directly supports quantum circuit gradients using the adjoint differentiation method. This can be enabled at the PennyLane QNode level with:
+The ``lightning.gpu`` device supports quantum circuit gradients using the adjoint differentiation method by default. This can be enabled at the PennyLane QNode level with:
 
 .. code-block:: python
 
@@ -281,3 +281,6 @@ To enable the memory-optimized adjoint method with MPI support, ``batch_obs`` sh
     dev = qml.device('lightning.gpu', wires= n_wires, mpi=True, batch_obs=True)
 
 For the adjoint method, each MPI process will provide the overall simulation results.
+
+.. note::
+    The observable ``Projector``` does not have support with the multi-GPU backend.
