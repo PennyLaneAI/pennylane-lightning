@@ -287,7 +287,7 @@ class StateVectorCudaManaged
             std::size_t index{0U};
             for (std::size_t j = 0; j < wires.size(); j++) {
                 const std::size_t bit = (i & (one << j)) >> j;
-                const std::size_t wire = wires.size() - 1 - j;
+                const std::size_t wire = wires[wires.size() - 1 - j];
                 index |= bit << (num_qubits - 1 - wire);
             }
             indices[i] = index;
