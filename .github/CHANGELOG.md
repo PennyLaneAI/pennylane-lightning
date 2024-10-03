@@ -42,6 +42,9 @@
 
 * Add zero state initialization to `lightning.gpu` C++ ctors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+  
+* The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
+  [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
 
 * Always decompose `qml.QFT` in Lightning.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
@@ -114,7 +117,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
 
 ---
 
