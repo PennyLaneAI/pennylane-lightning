@@ -98,6 +98,9 @@
 
 ### Bug fixes
 
+* Bug fix for `applyMatrix` in `lightning.tensor`. Matrix operator data is not stored in the `cuGateCache` object to support `TensorProd` obs with multiple `Hermitian` obs.
+  [(#932)](https://github.com/PennyLaneAI/pennylane-lightning/pull/932)
+
 * Bug fix for `_pauli_word` of `QuantumScriptSerializer`. `_pauli_word` can process `PauliWord` object: `I`.
   [(#919)](https://github.com/PennyLaneAI/pennylane-lightning/pull/919)
 
