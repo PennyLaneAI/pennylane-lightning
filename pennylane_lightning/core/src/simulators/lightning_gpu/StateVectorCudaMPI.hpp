@@ -317,63 +317,6 @@ class StateVectorCudaMPI final
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     }
-    /**
-     * @brief Set values for a batch of elements of the state-vector. This
-     * method is implemented by the customized CUDA kernel defined in the
-     * DataBuffer class.
-     *
-     * @param num_indices Number of elements to be passed to the state vector.
-     * @param values Pointer to values to be set for the target elements.
-     * @param indices Pointer to indices of the target elements.
-     * @param async Use an asynchronous memory copy.
-     */
-    template <class index_type, std::size_t thread_per_block = 256>
-    void setStateVector(const index_type num_indices,
-                        const std::complex<Precision> *values,
-                        const index_type *indices, const bool async = false) {
-        BaseType::getDataBuffer().zeroInit();
-
-        std::vector<index_type> indices_local;
-        std::vector<std::complex<Precision>> values_local;
-
-        for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices);
-             i++) {
-            int index = indices[i];
-            PL_ASSERT(index >= 0);
-            std::size_t rankId =
-                static_cast<std::size_t>(index) >> BaseType::getNumQubits();
-
-            if (rankId == mpi_manager_.getRank()) {
-                int local_index = static_cast<int>(
-                    compute_local_index(static_cast<std::size_t>(index),
-                                        this->getNumLocalQubits()));
-                indices_local.push_back(local_index);
-                values_local.push_back(values[i]);
-            }
-        }
-
-        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-
-        index_type num_elements = indices_local.size();
-
-        DataBuffer<index_type, int> d_indices{
-            static_cast<std::size_t>(num_elements), device_id, stream_id, true};
-
-        DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
-                                        device_id, stream_id, true};
-
-        d_indices.CopyHostDataToGpu(indices_local.data(), d_indices.getLength(),
-                                    async);
-        d_values.CopyHostDataToGpu(values_local.data(), d_values.getLength(),
-                                   async);
-
-        setStateVector_CUDA(BaseType::getData(), num_elements,
-                            d_values.getData(), d_indices.getData(),
-                            thread_per_block, stream_id);
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager_.Barrier();
-    }
 
     /**
      * @brief Set values for a batch of elements of the state-vector.
@@ -381,10 +324,10 @@ class StateVectorCudaMPI final
      * @param state_ptr Pointer to initial state data.
      * @param num_states Length of initial state data.
      * @param wires Wires.
-     * @param use_async Use an asynchronous memory copy.
+     * @param use_async Use an asynchronous memory copy. Default is false.
      */
     void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
-                        const std::vector<std::size_t> &wires, bool use_async) {
+                        const std::vector<std::size_t> &wires, bool use_async = false) {
         PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
@@ -412,8 +355,8 @@ class StateVectorCudaMPI final
             }
             indices[i] = static_cast<index_type>(index);
         }
-        setStateVector<index_type>(num_states, state_ptr, indices.data(),
-                                   use_async);
+        setStateVector_<index_type>(num_states, state_ptr, indices.data(),
+                                    use_async);
         mpi_manager_.Barrier();
     }
 
@@ -1616,6 +1559,64 @@ class StateVectorCudaMPI final
                            return BaseType::getNumQubits() - 1 - i;
                        });
         return t_indices;
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector. This
+     * method is implemented by the customized CUDA kernel defined in the
+     * DataBuffer class.
+     *
+     * @param num_indices Number of elements to be passed to the state vector.
+     * @param values Pointer to values to be set for the target elements.
+     * @param indices Pointer to indices of the target elements.
+     * @param async Use an asynchronous memory copy.
+     */
+    template <class index_type, std::size_t thread_per_block = 256>
+    void setStateVector_(const index_type num_indices,
+                         const std::complex<Precision> *values,
+                         const index_type *indices, const bool async = false) {
+        BaseType::getDataBuffer().zeroInit();
+
+        std::vector<index_type> indices_local;
+        std::vector<std::complex<Precision>> values_local;
+
+        for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices);
+             i++) {
+            int index = indices[i];
+            PL_ASSERT(index >= 0);
+            std::size_t rankId =
+                static_cast<std::size_t>(index) >> BaseType::getNumQubits();
+
+            if (rankId == mpi_manager_.getRank()) {
+                int local_index = static_cast<int>(
+                    compute_local_index(static_cast<std::size_t>(index),
+                                        this->getNumLocalQubits()));
+                indices_local.push_back(local_index);
+                values_local.push_back(values[i]);
+            }
+        }
+
+        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+
+        index_type num_elements = indices_local.size();
+
+        DataBuffer<index_type, int> d_indices{
+            static_cast<std::size_t>(num_elements), device_id, stream_id, true};
+
+        DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
+                                        device_id, stream_id, true};
+
+        d_indices.CopyHostDataToGpu(indices_local.data(), d_indices.getLength(),
+                                    async);
+        d_values.CopyHostDataToGpu(values_local.data(), d_values.getLength(),
+                                   async);
+
+        setStateVector_CUDA(BaseType::getData(), num_elements,
+                            d_values.getData(), d_indices.getData(),
+                            thread_per_block, stream_id);
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
     }
 
     /**
