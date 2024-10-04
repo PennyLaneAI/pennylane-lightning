@@ -68,7 +68,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         device_name(string): state vector device name. Options: ["lightning.gpu"]
         mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
             Provides functionality to distribute the state-vector to multiple devices.
-        sync (bool): is host-device data copy synchronized or not.
+        use_async (bool): is host-device data copy asynchronized or not.
     """
 
     def __init__(
@@ -76,7 +76,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
         mpi_handler: MPIHandler = None,
-        sync: bool = True,
+        use_async: bool = False,
     ):
 
         super().__init__(num_wires, dtype)
@@ -91,7 +91,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._num_local_wires = mpi_handler.num_local_wires
 
         self._mpi_handler = mpi_handler
-        self._sync = sync
+        self._use_async = use_async
 
         # Initialize the state vector
         if self._mpi_handler.use_mpi:  # using MPI
@@ -121,7 +121,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         # without MPI
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-    def syncD2H(self, state_vector, use_async=False):
+    def syncD2H(self, state_vector, use_async: bool = False):
         """Copy the state vector data on device to a state vector on the host provided by the user.
         Args:
             state_vector(array[complex]): the state vector array on host.
@@ -156,7 +156,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self.syncD2H(state)
         return state
 
-    def syncH2D(self, state_vector, use_async=False):
+    def syncH2D(self, state_vector, use_async: bool = False):
         """Copy the state vector data on host provided by the user to the state vector on the device
         Args:
             state_vector(array[complex]): the state vector array on host.

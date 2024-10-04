@@ -296,7 +296,7 @@ class LightningGPU(LightningBase):
             is built with MPI. Default is False.
         mpi (bool): declare if the device will use the MPI support.
         mpi_buf_size (int): size of GPU memory (in MiB) set for MPI operation and its default value is 64 MiB.
-        sync (bool): is host-device data copy synchronized or not.
+        use_async (bool): is host-device data copy asynchronized or not.
     """
 
     # General device options
@@ -326,7 +326,7 @@ class LightningGPU(LightningBase):
         # GPU and MPI arguments
         mpi: bool = False,
         mpi_buf_size: int = 0,
-        sync: bool = False,
+        use_async: bool = False,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -349,13 +349,13 @@ class LightningGPU(LightningBase):
 
         # GPU specific options
         self._dp = DevPool()
-        self._sync = sync
+        self._use_async = use_async
 
         # Creating the state vector
         self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._sync
+            num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._use_async
         )
 
     @property
