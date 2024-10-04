@@ -355,7 +355,10 @@ class LightningGPU(LightningBase):
         self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
 
         self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=c_dtype, mpi_handler=self._mpi_handler, sync=self._use_async
+            num_wires=len(self.wires),
+            dtype=c_dtype,
+            mpi_handler=self._mpi_handler,
+            use_async=self._use_async,
         )
 
     @property
