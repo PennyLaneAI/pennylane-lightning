@@ -43,7 +43,7 @@
 
 ### Improvements
 
-* Add zero-state initialization to `lightning.gpu` C++ ctors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
+* Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
   
 * The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
