@@ -94,14 +94,6 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             py::arg("async") = false,
             "Set the state vector to a basis state on GPU.")
         .def(
-            "setBasisStateIndex",
-            [](StateVectorT &sv, const std::size_t index,
-               const bool use_async) {
-                const std::complex<PrecisionT> value(1, 0);
-                sv.setBasisState(value, index, use_async);
-            },
-            "Create Basis State on GPU.")
-        .def(
             "setStateVector",
             [](StateVectorT &sv, const np_arr_sparse_ind &indices,
                const np_arr_c &state, const bool use_async) {
