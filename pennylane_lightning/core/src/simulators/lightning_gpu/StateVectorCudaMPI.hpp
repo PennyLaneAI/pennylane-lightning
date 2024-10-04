@@ -282,8 +282,7 @@ class StateVectorCudaMPI final
 
         std::size_t index{0U};
         for (std::size_t k = 0; k < n_wires; k++) {
-            const auto bit = state[k];
-            index |= bit << (n_wires - 1 - wires[k]);
+            index |= state[k] << (n_wires - 1 - wires[k]);
         }
 
         const std::complex<PrecisionT> value(1.0, 0.0);
