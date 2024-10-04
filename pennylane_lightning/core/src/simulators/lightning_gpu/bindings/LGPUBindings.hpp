@@ -91,28 +91,12 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "Set the state vector to a basis state on GPU.")
         .def(
             "setStateVector",
-            [](StateVectorT &sv, const np_arr_sparse_ind &indices,
-               const np_arr_c &state, const bool use_async) {
-                using index_type = typename std::conditional<
-                    std::is_same<ParamT, float>::value, int32_t, int64_t>::type;
-
-                sv.template setStateVector<index_type>(
-                    static_cast<index_type>(indices.request().size),
-                    static_cast<std::complex<PrecisionT> *>(
-                        state.request().ptr),
-                    static_cast<index_type *>(indices.request().ptr),
-                    use_async);
-            },
-            "Set State Vector on GPU with values and their corresponding "
-            "indices for the state vector on device")
-        .def(
-            "setStateVector",
             [](StateVectorT &sv, const np_arr_c &state,
-               const std::vector<std::size_t> &wires) {
+               const std::vector<std::size_t> &wires, const bool async) {
                 const auto state_buffer = state.request();
                 const auto state_ptr =
                     static_cast<const std::complex<ParamT> *>(state_buffer.ptr);
-                sv.setStateVector(state_ptr, state_buffer.size, wires);
+                sv.setStateVector(state_ptr, state_buffer.size, wires, async);
             },
             "Set State Vector on GPU with values for the state vector and "
             "wires on the host memory.")

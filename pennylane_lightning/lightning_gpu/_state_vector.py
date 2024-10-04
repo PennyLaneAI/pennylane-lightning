@@ -190,7 +190,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         return arr
 
-    def _apply_state_vector(self, state, device_wires, use_async=False):
+    def _apply_state_vector(self, state, device_wires, use_async: bool = False):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
         Args:
@@ -226,7 +226,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             return
 
         # set the state vector on GPU with provided state and their corresponding wires
-        self._qubit_state.setStateVector(state, list(device_wires))
+        self._qubit_state.setStateVector(state, list(device_wires), use_async)
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.

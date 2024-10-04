@@ -381,9 +381,10 @@ class StateVectorCudaMPI final
      * @param state_ptr Pointer to initial state data.
      * @param num_states Length of initial state data.
      * @param wires Wires.
+     * @param use_async Use an asynchronous memory copy.
      */
     void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
-                        const std::vector<std::size_t> &wires) {
+                        const std::vector<std::size_t> &wires, bool use_async) {
         PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
@@ -411,9 +412,8 @@ class StateVectorCudaMPI final
             }
             indices[i] = static_cast<index_type>(index);
         }
-        mpi_manager_.Barrier();
-
-        setStateVector<index_type>(num_states, state_ptr, indices.data());
+        setStateVector<index_type>(num_states, state_ptr, indices.data(),
+                                   use_async);
         mpi_manager_.Barrier();
     }
 
