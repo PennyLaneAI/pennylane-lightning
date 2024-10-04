@@ -159,26 +159,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
             "the host") {
         StateVectorCudaMPI<PrecisionT> sv(mpi_manager, dt_local, mpi_buffersize,
                                           nGlobalIndexBits, nLocalIndexBits);
-        // The setStates will shuffle the state vector values on the device with
-        // the following indices and values setting on host. For example, the
-        // values[i] is used to set the indices[i] th element of state vector on
-        // the device. For example, values[2] (init_state[5]) will be copied to
-        // indices[2]th or (4th) element of the state vector.
 
-        sv.template setStateVector<index_type>(
-            init_state.size(), init_state.data(), indices.data(), false);
-
-        mpi_manager.Barrier();
-        sv.CopyGpuDataToHost(local_state.data(),
-                             static_cast<std::size_t>(subSvLength));
-        mpi_manager.Barrier();
-
-        CHECK(expected_local_state == Pennylane::Util::approx(local_state));
-
-        sv.initSV();
-        std::vector<std::complex<PrecisionT>> values(init_state.size());
-        std::copy(init_state.begin(), init_state.end(),
-                  values.begin()); // copy the data to values
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
         sv.setStateVector(values.data(), values.size(), wires);

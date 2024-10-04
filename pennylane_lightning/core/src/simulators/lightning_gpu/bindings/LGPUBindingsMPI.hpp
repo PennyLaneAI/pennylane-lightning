@@ -63,10 +63,6 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
     using ParamT = PrecisionT;        // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using np_arr_sparse_ind = typename std::conditional<
-        std::is_same<ParamT, float>::value,
-        py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
-        py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
 

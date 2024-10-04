@@ -229,7 +229,8 @@ class StateVectorCudaManaged
      * @param use_async Use an asynchronous memory copy. Default is false.
      */
     void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
-                        const std::vector<std::size_t> &wires, bool use_async = false) {
+                        const std::vector<std::size_t> &wires,
+                        bool use_async = false) {
         PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
