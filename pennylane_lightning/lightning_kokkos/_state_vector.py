@@ -191,15 +191,24 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         state = self.state_vector
 
+        basename = operation.base.name
+        method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
-        name = operation.name
-        # Apply GlobalPhase
-        inv = False
-        param = operation.parameters[0]
-        wires = self.wires.indices(operation.wires)
-        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
-        state.apply(name, wires, inv, [[param]], matrix)
+        target_wires = list(operation.target_wires)
+        if method is not None:  # apply n-controlled specialized gate
+            inv = False
+            param = operation.parameters
+            method(control_wires, control_values, target_wires, inv, param)
+        else:  # apply gate as an n-controlled matrix
+            method = getattr(state, "applyControlledMatrix")
+            method(
+                qml.matrix(operation.base),
+                control_wires,
+                control_values,
+                target_wires,
+                False,
+            )
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -279,7 +288,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             elif isinstance(operation, qml.ops.Controlled) and isinstance(
                 operation.base, qml.GlobalPhase
             ):  # apply n-controlled gate
-                # Kokkos do not support the controlled gates except for GlobalPhase
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in

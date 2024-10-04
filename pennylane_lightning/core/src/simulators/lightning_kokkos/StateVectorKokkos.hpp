@@ -407,25 +407,32 @@ class StateVectorKokkos final
                         bool inverse = false,
                         const std::vector<fp_t> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
-        PL_ABORT_IF_NOT(controlled_wires.empty(),
-                        "Controlled kernels not implemented.");
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
-        applyOperation(opName, wires, inverse, params, gate_matrix);
+
+        //TODO: applyNCMultiQubitOp()
     }
 
-    /**
-     * @brief Apply a multi qubit operator to the state vector using a matrix
-     *
-     * @param matrix Kokkos gate matrix in the device space
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+    /** //TODO: should this be in gates?
+     * @brief 
+     * 
+     * @param matrix 
+     * @param controlled_wires 
+     * @param controlled_values 
+     * @param wires 
+     * @param inverse 
      */
-    void applyMultiQubitOp(const KokkosVector matrix,
+    void applyNCMultiQubitOp(const KokkosVector matrix,
+                           const std::vector<std::size_t> &controlled_wires,
+                           const std::vector<bool> &controlled_values,
                            const std::vector<std::size_t> &wires,
                            bool inverse = false) {
-        auto &&num_qubits = this->getNumQubits();
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        
+       auto &&num_qubits = this->getNumQubits();
         std::size_t two2N = std::exp2(num_qubits - wires.size());
         std::size_t dim = std::exp2(wires.size());
         KokkosVector matrix_trans("matrix_trans", matrix.size());
@@ -440,6 +447,22 @@ class StateVectorKokkos final
         } else {
             matrix_trans = matrix;
         }
+       
+        // Calculate offsets
+        std::vector<std::size_t> all_wires;
+        all_wires.reserve(nw_tot);
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + wires.size(),
+                         controlled_wires.begin(), controlled_wires.end());
+        const auto revs = reverseWires(num_qubits, all_wires, {});
+        const auto &rev_wires = revs.first;
+        const std::vector<std::size_t> parity =
+            Pennylane::Util::revWireParity(rev_wires);
+        std::vector<std::size_t> indices =
+            Gates::generateBitPatterns(wires, num_qubits);
+        Gates::controlBitPatterns(indices, num_qubits, controlled_wires,
+                                  controlled_values);
+
         switch (wires.size()) {
         case 1:
             Kokkos::parallel_for(
@@ -472,6 +495,23 @@ class StateVectorKokkos final
                                                 matrix_trans, wires));
             break;
         }
+
+
+
+    }
+
+    /**
+     * @brief Apply a multi qubit operator to the state vector using a matrix
+     *
+     * @param matrix Kokkos gate matrix in the device space
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    void applyMultiQubitOp(const KokkosVector matrix,
+                           const std::vector<std::size_t> &wires,
+                           bool inverse = false) {
+        applyNCMultiQubitOp(matrix, {}, {}, wires, inverse)
+        
     }
 
     /**
@@ -711,3 +751,43 @@ class StateVectorKokkos final
 };
 
 }; // namespace Pennylane::LightningKokkos
+
+/* Old apply function from kokkos bindings
+.def(
+            "apply",
+            [](StateVectorT &sv, const std::string &str,
+               const std::vector<std::size_t> &wires, bool inv,
+               [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
+               [[maybe_unused]] const np_arr_c &gate_matrix) {
+                const auto m_buffer = gate_matrix.request();
+                std::vector<Kokkos::complex<ParamT>> conv_matrix;
+                if (m_buffer.size) {
+                    const auto m_ptr =
+                        static_cast<const Kokkos::complex<ParamT> *>(
+                            m_buffer.ptr);
+                    conv_matrix = std::vector<Kokkos::complex<ParamT>>{
+                        m_ptr, m_ptr + m_buffer.size};
+                }
+                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
+                                  conv_matrix);
+            },
+            "Apply operation via the gate matrix")*/
+
+/* Old _apply_lightning_controled from _state_vector.py
+         state = self.state_vector
+
+        basename = operation.base.name
+        method = getattr(state, f"{basename}", None)
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        name = operation.name
+        # Apply GlobalPhase
+        inv = False
+        param = operation.parameters[0]
+        wires = self.wires.indices(operation.wires)
+        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
+        state.apply(name, wires, inv, [[param]], matrix)
+
+*/
