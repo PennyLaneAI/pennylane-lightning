@@ -251,6 +251,7 @@ class StateVectorCudaManaged
         setStateVector_CUDA(BaseType::getData(), num_elements,
                             d_values.getData(), d_indices.getData(),
                             thread_per_block, stream_id);
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
     }
 
     /**
@@ -262,8 +263,7 @@ class StateVectorCudaManaged
      * @param use_async Use an asynchronous memory copy.
      */
     void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
-                        const std::vector<std::size_t> &wires,
-                        const bool use_async = false) {
+                        const std::vector<std::size_t> &wires) {
         PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
@@ -287,13 +287,12 @@ class StateVectorCudaManaged
             std::size_t index{0U};
             for (std::size_t j = 0; j < wires.size(); j++) {
                 const std::size_t bit = (i & (one << j)) >> j;
-                const std::size_t wire = wires[wires.size() - 1 - j];
-                index |= bit << (num_qubits - 1 - wire);
+                index |= bit << (num_qubits - 1 - wires[wires.size() - 1 - j]);
             }
-            indices[i] = index;
+            indices[i] = static_cast<index_type>(index);
         }
-        setStateVector<index_type>(num_states, state_ptr, indices.data(),
-                                   use_async);
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        setStateVector<index_type>(num_states, state_ptr, indices.data());
     }
 
     /**

@@ -226,7 +226,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
             return
 
         # set the state vector on GPU with provided state and their corresponding wires
-        self._qubit_state.setStateVector(state, list(device_wires), use_async)
+        self._qubit_state.setStateVector(state, list(device_wires))
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
