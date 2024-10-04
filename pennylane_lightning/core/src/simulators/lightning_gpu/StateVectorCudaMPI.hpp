@@ -1550,18 +1550,6 @@ class StateVectorCudaMPI final
     }
 
     /**
-     * @brief Set the |0...0> element of the state-vector to 1.
-     *
-     * @param use_async Use an asynchronous memory copy or not. Default is
-     * false.
-     */
-    void setZeroState_(const bool use_async = false) {
-        std::size_t index = 0;
-        ComplexT value(1.0, 0.0);
-        setBasisState_(value, index, use_async);
-    }
-
-    /**
      * @brief Set value for a single element of the state-vector on device. This
      * method is implemented by cudaMemcpy.
      *
