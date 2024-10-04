@@ -43,7 +43,6 @@ TEMPLATE_TEST_CASE("LightningGPU:applyOperation", "[LightningGPU_Param]",
                    double) {
     const std::size_t num_qubits = 1;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     SECTION("Catch failures caused by unsupported named gates") {
         std::string obs = "paulix";
@@ -56,7 +55,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRX", "[LightningGPU_Param]", double) {
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 1;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{{0.1}, {0.6}};
 
@@ -188,7 +186,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRZ", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     // Test using |+++> state
     sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
@@ -250,7 +247,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPhaseShift", "[LightningGPU_Param]",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     // Test using |+++> state
     sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
@@ -313,7 +309,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyControlledPhaseShift",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     // Test using |+++> state
     sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
@@ -387,7 +382,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
     SECTION("Apply directly") {
         for (std::size_t index = 0; index < num_qubits; index++) {
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
-            sv_direct.initSV();
 
             sv_direct.applyRot({index}, adjoint, angles[index][0],
                                angles[index][1], angles[index][2]);
@@ -396,7 +390,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
         }
         for (std::size_t index = 0; index < num_qubits; index++) {
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
-            sv_direct.initSV();
 
             sv_direct.applyRot({index}, adjoint, angles[index]);
             CHECK(sv_direct.getDataVector() ==
@@ -406,7 +399,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < num_qubits; index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("Rot", {index}, adjoint, angles[index]);
             CHECK(sv_dispatch.getDataVector() ==
@@ -422,7 +414,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
 
@@ -441,7 +432,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
         SECTION("CRot0,1 |000> -> |000>") {
             {
                 StateVectorCudaManaged<TestType> sv_direct{num_qubits};
-                sv_direct.initSV();
 
                 sv_direct.applyCRot({0, 1}, adjoint, angles[0], angles[1],
                                     angles[2]);
@@ -451,7 +441,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
             }
             {
                 StateVectorCudaManaged<TestType> sv_direct{num_qubits};
-                sv_direct.initSV();
 
                 sv_direct.applyCRot({0, 1}, adjoint, angles);
 
@@ -461,7 +450,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
         }
         SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
-            sv_direct.initSV();
 
             sv_direct.applyOperation("PauliX", {0});
             sv_direct.applyCRot({0, 1}, adjoint, angles[0], angles[1],
@@ -473,7 +461,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
     SECTION("Apply using dispatcher") {
         SECTION("CRot0,1 |100> -> |1>(a|0>+b|1>)|0>") {
             StateVectorCudaManaged<TestType> sv_direct{num_qubits};
-            sv_direct.initSV();
 
             sv_direct.applyOperation("PauliX", {0});
             sv_direct.applyOperation("CRot", {0, 1}, adjoint, angles);
@@ -489,7 +476,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -642,7 +628,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -722,8 +707,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
-
+            sv_dispatch.resetStateVector();
             sv_dispatch.applyOperation("IsingYY", {0, 1}, true,
                                        {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
@@ -737,7 +721,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -796,7 +779,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("IsingZZ", {0, 1}, true,
                                        {angles[index]});
@@ -988,7 +970,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitation",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -1021,7 +1002,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitation",
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
             sv_dispatch.applyOperation("SingleExcitation", {0, 1}, false,
                                        {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
@@ -1035,7 +1015,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -1101,7 +1080,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("SingleExcitationMinus", {0, 1}, true,
                                        {angles[index]});
@@ -1116,7 +1094,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -1182,7 +1159,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("SingleExcitationPlus", {0, 1}, true,
                                        {angles[index]});
@@ -1197,7 +1173,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitation",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 4;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
 
@@ -1221,7 +1196,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitation",
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("DoubleExcitation", {0, 1, 2, 3}, false,
                                        {angles[index]});
@@ -1236,7 +1210,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 4;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -1278,7 +1251,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
                                        true, {angles[index]});
@@ -1293,7 +1265,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 4;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -1336,7 +1307,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
             sv_dispatch.applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
                                        true, {angles[index]});
             CHECK(sv_dispatch.getDataVector() ==
@@ -1350,7 +1320,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
     StateVectorCudaManaged<TestType> sv{num_qubits};
-    sv.initSV();
 
     const std::vector<TestType> angles{0.3, 0.8};
 
@@ -1412,7 +1381,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
     SECTION("Apply using dispatcher") {
         for (std::size_t index = 0; index < angles.size(); index++) {
             StateVectorCudaManaged<TestType> sv_dispatch{num_qubits};
-            sv_dispatch.initSV();
 
             sv_dispatch.applyOperation("MultiRZ", {0, 1}, true,
                                        {angles[index]});
@@ -1437,10 +1405,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
         SECTION("Apply using dispatcher") {
             StateVectorCudaManaged<TestType> sv{num_qubits};
-            sv.initSV();
 
             StateVectorCudaManaged<TestType> sv_expected{num_qubits};
-            sv_expected.initSV();
 
             for (std::size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliX"}, {"PauliZ"}},
@@ -1459,9 +1425,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
         SECTION("Apply using dispatcher") {
             StateVectorCudaManaged<TestType> sv{num_qubits};
-            sv.initSV();
             StateVectorCudaManaged<TestType> sv_expected{num_qubits};
-            sv_expected.initSV();
 
             for (std::size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliZ"}, {"PauliX"}},
@@ -1478,9 +1442,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
         SECTION("Apply using dispatcher") {
             StateVectorCudaManaged<TestType> sv{num_qubits};
-            sv.initSV();
             StateVectorCudaManaged<TestType> sv_expected{num_qubits};
-            sv_expected.initSV();
 
             for (std::size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliX"}, {"PauliY"}},
@@ -1497,9 +1459,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
         SECTION("Apply using dispatcher") {
             StateVectorCudaManaged<TestType> sv{num_qubits};
-            sv.initSV();
             StateVectorCudaManaged<TestType> sv_expected{num_qubits};
-            sv_expected.initSV();
 
             for (std::size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliY"}, {"PauliX"}},
@@ -1517,9 +1477,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
         SECTION("Apply using dispatcher") {
             StateVectorCudaManaged<TestType> sv{num_qubits};
-            sv.initSV();
             StateVectorCudaManaged<TestType> sv_expected{num_qubits};
-            sv_expected.initSV();
 
             for (std::size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliY"}, {"PauliZ"}},
@@ -1537,9 +1495,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
 
         SECTION("Apply using dispatcher") {
             StateVectorCudaManaged<TestType> sv{num_qubits};
-            sv.initSV();
             StateVectorCudaManaged<TestType> sv_expected{num_qubits};
-            sv_expected.initSV();
 
             for (std::size_t index = 0; index < num_qubits; index++) {
                 sv_expected.applyOperations({{"PauliZ"}, {"PauliY"}},
@@ -1557,7 +1513,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyOperation multiple wires",
     const std::size_t num_qubits = 3;
 
     StateVectorCudaManaged<TestType> sv_init{num_qubits};
-    sv_init.initSV();
 
     sv_init.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                             {{0}, {1}, {2}}, {false, false, false});

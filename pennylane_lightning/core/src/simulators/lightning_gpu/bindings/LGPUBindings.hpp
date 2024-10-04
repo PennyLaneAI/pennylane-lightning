@@ -154,7 +154,9 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("dataLength", &StateVectorT::getLength)
         .def(
             "resetStateVector",
-            [](StateVectorT &gpu_sv, bool async) { gpu_sv.initSV(async); },
+            [](StateVectorT &gpu_sv, bool async) {
+                gpu_sv.resetStateVector(async);
+            },
             py::arg("async") = false,
             "Initialize the statevector data to the |0...0> state")
         .def(

@@ -50,7 +50,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=RX, Obs=Z",
             auto ops = OpsData<StateVectorT>({"RX"}, {{p}}, {{0}}, {false});
 
             StateVectorT psi(num_qubits);
-            psi.initSV();
 
             JacobianData<StateVectorT> tape{
                 param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
@@ -80,7 +79,6 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
             auto ops = OpsData<StateVectorT>({"RY"}, {{p}}, {{0}}, {false});
 
             StateVectorT psi(num_qubits);
-            psi.initSV();
 
             JacobianData<StateVectorT> tape{
                 param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
@@ -112,7 +110,6 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=[QubitStateVector, "
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<std::size_t>{0});
@@ -150,7 +147,6 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RX, Obs=[Z,Z]",
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<std::size_t>{0});
@@ -183,7 +179,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z]",
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<std::size_t>{0});
@@ -225,7 +220,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Op=[RX,RX,RX], Obs=[Z,Z,Z],"
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<std::size_t>{0});
@@ -265,7 +259,6 @@ TEST_CASE("Algorithms::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>(
@@ -304,7 +297,6 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Mixed, Obs=[XXX]",
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>(
@@ -553,7 +545,6 @@ TEST_CASE("Algorithms::adjointJacobian Op=RX, Obs=Ham[Z0+Z1]", "[Algorithms]") {
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<std::size_t>{0});
@@ -588,7 +579,6 @@ TEST_CASE(
         std::vector<double> jacobian(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         auto obs1 = std::make_shared<NamedObs<StateVectorT>>(
             "PauliZ", std::vector<std::size_t>{0});
@@ -630,7 +620,6 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
         std::vector<double> jacobian2(num_obs * tp.size(), 0);
 
         StateVectorT psi(num_qubits);
-        psi.initSV();
 
         auto obs1 = std::make_shared<TensorProdObs<StateVectorT>>(
             std::make_shared<NamedObs<StateVectorT>>(
