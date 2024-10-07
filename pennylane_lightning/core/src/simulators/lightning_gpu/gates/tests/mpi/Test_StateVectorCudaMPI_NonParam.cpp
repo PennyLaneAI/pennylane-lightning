@@ -175,7 +175,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
 
         CHECK(expected_local_state == Pennylane::Util::approx(local_state));
 
-        sv.initSV();
         std::vector<std::complex<PrecisionT>> values(init_state.size());
         std::copy(init_state.begin(), init_state.end(),
                   values.begin()); // copy the data to values
