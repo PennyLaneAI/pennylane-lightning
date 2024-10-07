@@ -317,7 +317,7 @@ class StateVectorCudaMPI final
                                       int32_t, int64_t>::type;
 
         // Calculate the indices of the state-vector to be set.
-        // TODO: Could move to GPU calculation if the state size is large.
+        // TODO: Could move to GPU/MPI calculation if the state size is large.
         std::vector<index_type> indices(num_states);
         constexpr std::size_t one{1U};
         for (std::size_t i = 0; i < num_states; i++) {
