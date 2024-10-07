@@ -25,6 +25,7 @@
 #include <cuda.h>
 #include <cusparse.h>
 #include <custatevec.h> // custatevecApplyMatrix
+#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -218,7 +219,9 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples,
+                          const std::optional<std::size_t> &seed = std::nullopt)
+        -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -238,7 +241,11 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        this->setRandomSeed();
+        if (seed.has_value()) {
+            this->setSeed(seed.value());
+        } else {
+            this->setRandomSeed();
+        }
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
             rand_nums[n] = dis(this->rng);
@@ -273,7 +280,7 @@ class Measurements final
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
             this->_statevector.getCusvHandle(), sampler, bitStrings.data(),
             bitOrdering.data(), bitStringLen, rand_nums.data(), num_samples,
-            CUSTATEVEC_SAMPLER_OUTPUT_ASCENDING_ORDER));
+            CUSTATEVEC_SAMPLER_OUTPUT_RANDNUM_ORDER));
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
             this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 

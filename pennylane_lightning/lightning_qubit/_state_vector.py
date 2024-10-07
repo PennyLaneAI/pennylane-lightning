@@ -14,6 +14,7 @@
 """
 Class implementation for lightning_qubit state-vector manipulation.
 """
+from warnings import warn
 
 try:
     from pennylane_lightning.lightning_qubit_ops import (
@@ -21,8 +22,10 @@ try:
         StateVectorC128,
         allocate_aligned_array,
     )
-except ImportError:
-    pass
+except ImportError as ex:
+    warn(str(ex), UserWarning)
+
+from typing import Union
 
 import numpy as np
 import pennylane as qml
@@ -50,7 +53,8 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         device_name(string): state vector device name. Options: ["lightning.qubit"]
     """
 
-    def __init__(self, num_wires, dtype=np.complex128):
+    def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64] = np.complex128):
+
         super().__init__(num_wires, dtype)
 
         self._device_name = "lightning.qubit"

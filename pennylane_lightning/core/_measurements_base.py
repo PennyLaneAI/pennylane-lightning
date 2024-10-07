@@ -56,6 +56,7 @@ class LightningBaseMeasurements(ABC):
     ) -> None:
         self._qubit_state = qubit_state
 
+        self._use_mpi = False
         # Dummy for the C++ bindings
         self._measurement_lightning = None
 
@@ -94,7 +95,6 @@ class LightningBaseMeasurements(ABC):
         self._qubit_state.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
         return result
 
-    # pylint: disable=protected-access
     def expval(self, measurementprocess: MeasurementProcess):
         """Expectation value of the supplied observable contained in the MeasurementProcess.
 
@@ -121,8 +121,9 @@ class LightningBaseMeasurements(ABC):
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
+            # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
-                self._qubit_state.device_name, self.dtype == np.complex64
+                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._ob(measurementprocess.obs)
             return self._measurement_lightning.expval(ob_serialized)
 
@@ -130,24 +131,37 @@ class LightningBaseMeasurements(ABC):
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
+    def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
+        """Convert the data structure from the C++ backend to a common structure through lightning devices.
+        Args:
+            probs_result (Any): Result provided by C++ backend.
+        Returns:
+            np.ndarray with probabilities of the supplied observable or wires.
+        """
+        return probs_results
+
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to apply to the state
+            measurementprocess (StateMeasurement): measurement to apply to the state.
 
         Returns:
-            Probabilities of the supplied observable or wires
+            Probabilities of the supplied observable or wires.
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
+
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
+
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
-        return results
+
+        return self._probs_retval_conversion(results)
 
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess.
@@ -175,8 +189,9 @@ class LightningBaseMeasurements(ABC):
             or (measurementprocess.obs.arithmetic_depth > 0)
             or isinstance(measurementprocess.obs.name, List)
         ):
+            # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(
-                self._qubit_state.device_name, self.dtype == np.complex64
+                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._ob(measurementprocess.obs)
             return self._measurement_lightning.var(ob_serialized)
 
@@ -187,6 +202,7 @@ class LightningBaseMeasurements(ABC):
     def get_measurement_function(
         self, measurementprocess: MeasurementProcess
     ) -> Callable[[MeasurementProcess, TensorLike], TensorLike]:
+        # pylint: disable=too-many-return-statements
         """Get the appropriate method for performing a measurement.
 
         Args:
@@ -197,16 +213,24 @@ class LightningBaseMeasurements(ABC):
         """
         if isinstance(measurementprocess, StateMeasurement):
             if isinstance(measurementprocess, ExpectationMP):
-                if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
-                    return self.state_diagonalizing_gates
+                if self._use_mpi:
+                    if isinstance(measurementprocess.obs, (qml.Projector)):
+                        return self.state_diagonalizing_gates
+                else:
+                    if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
+                        return self.state_diagonalizing_gates
                 return self.expval
 
             if isinstance(measurementprocess, ProbabilityMP):
                 return self.probs
 
             if isinstance(measurementprocess, VarianceMP):
-                if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
-                    return self.state_diagonalizing_gates
+                if self._use_mpi:
+                    if isinstance(measurementprocess.obs, (qml.Projector)):
+                        return self.state_diagonalizing_gates
+                else:
+                    if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
+                        return self.state_diagonalizing_gates
                 return self.var
             if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates

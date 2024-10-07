@@ -24,8 +24,6 @@
 #include <tuple>
 #include <vector>
 
-#include <iostream>
-
 #include "BitUtil.hpp" // revWireParity
 #include "Error.hpp"
 #include "GateIndices.hpp"

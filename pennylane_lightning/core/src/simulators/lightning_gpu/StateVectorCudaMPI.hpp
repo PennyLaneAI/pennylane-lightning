@@ -119,6 +119,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -137,6 +138,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -155,6 +157,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -193,7 +196,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
-        BaseType::initSV();
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     }
@@ -251,35 +254,41 @@ class StateVectorCudaMPI final
     }
 
     /**
-     * @brief Set value for a single element of the state-vector on device. This
-     * method is implemented by cudaMemcpy.
-     *
-     * @param value Value to be set for the target element.
-     * @param index Index of the target element.
-     * @param async Use an asynchronous memory copy.
+     * @brief the statevector data to the |0...0> state.
+     * @param use_async Use an asynchronous memory copy or not. Default is
+     * false.
      */
-    void setBasisState(const std::complex<Precision> &value,
-                       const std::size_t index, const bool async = false) {
-        std::size_t rankId = index >> BaseType::getNumQubits();
-
-        std::size_t local_index =
-            static_cast<std::size_t>(
-                rankId * std::pow(2.0, static_cast<long double>(
-                                           BaseType::getNumQubits()))) ^
-            index;
+    void resetStateVector(bool use_async = false) {
         BaseType::getDataBuffer().zeroInit();
+        std::size_t index = 0;
+        ComplexT value(1.0, 0.0);
+        setBasisState_(value, index, use_async);
+    };
 
-        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
-        auto stream_id = localStream_.get();
+    /**
+     * @brief Prepare a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     * @param use_async Use an asynchronous memory copy.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires,
+                       const bool use_async) {
+        PL_ABORT_IF_NOT(state.size() == wires.size(),
+                        "state and wires must have equal dimensions.");
 
-        if (mpi_manager_.getRank() == rankId) {
-            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
-                               async, stream_id);
+        const auto n_wires = this->getTotalNumQubits();
+
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            index |= state[k] << (n_wires - 1 - wires[k]);
         }
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager_.Barrier();
-    }
 
+        const std::complex<PrecisionT> value(1.0, 0.0);
+        BaseType::getDataBuffer().zeroInit();
+        setBasisState_(value, index, use_async);
+    }
     /**
      * @brief Set values for a batch of elements of the state-vector. This
      * method is implemented by the customized CUDA kernel defined in the
@@ -307,11 +316,9 @@ class StateVectorCudaMPI final
                 static_cast<std::size_t>(index) >> BaseType::getNumQubits();
 
             if (rankId == mpi_manager_.getRank()) {
-                int local_index =
-                    static_cast<std::size_t>(
-                        rankId * std::pow(2.0, static_cast<long double>(
-                                                   BaseType::getNumQubits()))) ^
-                    index;
+                int local_index = static_cast<int>(
+                    compute_local_index(static_cast<std::size_t>(index),
+                                        this->getNumLocalQubits()));
                 indices_local.push_back(local_index);
                 values_local.push_back(values[i]);
             }
@@ -405,6 +412,19 @@ class StateVectorCudaMPI final
                     cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
                 applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
             }
+        } else if (opName == "Matrix") {
+            DataBuffer<CFP_t, int> d_matrix{
+                gate_matrix.size(), BaseType::getDataBuffer().getDevTag(),
+                true};
+            d_matrix.CopyHostDataToGpu(gate_matrix.data(), d_matrix.getLength(),
+                                       false);
+            // ensure wire indexing correctly preserved for tensor-observables
+            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
+                                                       ctrls.rend()};
+            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
+                                                      tgts.rend()};
+            applyDeviceMatrixGate(d_matrix.getData(), ctrls_local, tgts_local,
+                                  adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
@@ -484,7 +504,7 @@ class StateVectorCudaMPI final
                      const std::vector<std::size_t> &wires,
                      bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        const std::string opName = {};
+        const std::string opName = "Matrix";
         std::size_t n = std::size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
                                                            gate_matrix + n * n);
@@ -1526,6 +1546,32 @@ class StateVectorCudaMPI final
                            return BaseType::getNumQubits() - 1 - i;
                        });
         return t_indices;
+    }
+
+    /**
+     * @brief Set value for a single element of the state-vector on device. This
+     * method is implemented by cudaMemcpy.
+     *
+     * @param value Value to be set for the target element.
+     * @param index Index of the target element.
+     * @param async Use an asynchronous memory copy.
+     */
+    void setBasisState_(const std::complex<Precision> &value,
+                        const std::size_t index, const bool async = false) {
+        const std::size_t rankId = index >> this->getNumLocalQubits();
+
+        const std::size_t local_index =
+            compute_local_index(index, this->getNumLocalQubits());
+
+        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+        auto stream_id = localStream_.get();
+
+        if (mpi_manager_.getRank() == rankId) {
+            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
+                               async, stream_id);
+        }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
     }
 
     /**
