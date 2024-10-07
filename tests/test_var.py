@@ -24,7 +24,6 @@ from conftest import device_name
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-
 np.random.seed(42)
 
 

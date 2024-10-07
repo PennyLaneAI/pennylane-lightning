@@ -203,20 +203,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetBasisStates",
         std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
     std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
     std::size_t subSvLength = 1 << nLocalIndexBits;
-    mpi_manager.Barrier();
-
-    int index;
-    if (mpi_manager.getRank() == 0) {
-        std::mt19937 re{1337};
-        std::uniform_int_distribution<> distr(
-            0, Pennylane::Util::exp2(num_qubits) - 1);
-        index = distr(re);
-    }
-    mpi_manager.Bcast(index, 0);
 
     std::vector<cp_t> expected_state(Pennylane::Util::exp2(num_qubits), {0, 0});
     if (mpi_manager.getRank() == 0) {
-        expected_state[index] = {1.0, 0};
+        expected_state[expected_state.size() - 1] = {1.0, 0};
     }
 
     auto expected_local_state = mpi_manager.scatter(expected_state, 0);
@@ -233,8 +223,10 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetBasisStates",
         "Set Ith element of the state state on device with data on the host") {
         StateVectorCudaMPI<PrecisionT> sv(mpi_manager, dt_local, mpi_buffersize,
                                           nGlobalIndexBits, nLocalIndexBits);
-        std::complex<PrecisionT> values = {1.0, 0};
-        sv.setBasisState(values, index, false);
+        std::vector<std::size_t> state(num_qubits, 1);
+        std::vector<std::size_t> wires(num_qubits);
+        std::iota(wires.begin(), wires.end(), 0);
+        sv.setBasisState(state, wires, false);
 
         std::vector<cp_t> h_sv0(subSvLength, {0.0, 0.0});
         sv.CopyGpuDataToHost(h_sv0.data(),

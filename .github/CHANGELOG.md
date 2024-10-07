@@ -24,7 +24,13 @@
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
+* Lightning-GPU migrated to the new device API.
+  [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
+
 ### Breaking changes
+
+* Deprecate `initSV()` and add `resetStateVector()` to `lightning.gpu`.
+  [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
 
 * Deprecate PI gates implementation.
   [(#925)](https://github.com/PennyLaneAI/pennylane-lightning/pull/925)
@@ -40,11 +46,11 @@
 
 ### Improvements
 
-* Add `setBasisState(state, wire)` support to the `lightning.gpu` C++ layer.
-  [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
-
-* Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
-  [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
+* Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
+  [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+  
+* The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
+  [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
 
 * Always decompose `qml.QFT` in Lightning.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
@@ -104,6 +110,9 @@
 
 ### Bug fixes
 
+* Bug fix for `applyMatrix` in `lightning.tensor`. Matrix operator data is not stored in the `cuGateCache` object to support `TensorProd` obs with multiple `Hermitian` obs.
+  [(#932)](https://github.com/PennyLaneAI/pennylane-lightning/pull/932)
+
 * Bug fix for `_pauli_word` of `QuantumScriptSerializer`. `_pauli_word` can process `PauliWord` object: `I`.
   [(#919)](https://github.com/PennyLaneAI/pennylane-lightning/pull/919)
 
@@ -114,7 +123,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
 
 ---
 

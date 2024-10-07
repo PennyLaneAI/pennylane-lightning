@@ -123,7 +123,8 @@ class StateVectorCudaManaged
               num_qubits),
           handle_(make_shared_cusv_handle()),
           cublascaller_(make_shared_cublas_caller()), gate_cache_(true) {
-        BaseType::initSV();
+        resetStateVector();
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
     };
 
     StateVectorCudaManaged(
@@ -137,7 +138,8 @@ class StateVectorCudaManaged
           cublascaller_(std::move(cublascaller_in)),
           cusparsehandle_(std::move(cusparsehandle_in)),
           gate_cache_(true, dev_tag) {
-        BaseType::initSV();
+        resetStateVector();
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
     };
 
     StateVectorCudaManaged(const CFP_t *gpu_data, std::size_t length)
@@ -180,37 +182,31 @@ class StateVectorCudaManaged
     ~StateVectorCudaManaged() = default;
 
     /**
-     * @brief Set value for a single element of the state-vector on device. This
-     * method is implemented by cudaMemcpy.
-     *
-     * @param value Value to be set for the target element.
-     * @param index Index of the target element.
-     * @param async Use an asynchronous memory copy.
+     * @brief the statevector data to the |0...0> state.
+     * @param use_async Use an asynchronous memory copy or not. Default is
+     * false.
      */
-    void setBasisState(const std::complex<Precision> &value,
-                       const std::size_t index, const bool async = false) {
+    void resetStateVector(bool use_async = false) {
         BaseType::getDataBuffer().zeroInit();
-
-        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-        setBasisState_CUDA(BaseType::getData(), value_cu, index, async,
-                           stream_id);
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-    }
+        std::size_t index = 0;
+        ComplexT value(1.0, 0.0);
+        setBasisState_(value, index, use_async);
+    };
 
     /**
-     * @brief Prepares a single computational basis state.
+     * @brief Prepare a single computational basis state.
      *
      * @param state Binary number representing the index
      * @param wires Wires.
-     * @param async Use an asynchronous memory copy.
+     * @param use_async(Optional[bool]): immediately sync with host-sv after
+     * applying operation.
      */
     void setBasisState(const std::vector<std::size_t> &state,
                        const std::vector<std::size_t> &wires,
-                       const bool async = false) {
+                       const bool use_async = false) {
         PL_ABORT_IF_NOT(state.size() == wires.size(),
                         "state and wires must have equal dimensions.");
-        const auto num_qubits = this->getNumQubits();
+        const auto num_qubits = BaseType::getNumQubits();
         PL_ABORT_IF_NOT(
             std::find_if(wires.begin(), wires.end(),
                          [&num_qubits](const auto i) {
@@ -220,11 +216,13 @@ class StateVectorCudaManaged
         const auto n_wires = wires.size();
         std::size_t index{0U};
         for (std::size_t k = 0; k < n_wires; k++) {
-            const auto bit = static_cast<std::size_t>(state[k]);
-            index |= bit << (num_qubits - 1 - wires[k]);
+            index |= state[k] << (num_qubits - 1 - wires[k]);
         }
-        ComplexT value{1.0, 0.0};
-        setBasisState(value, index, async);
+
+        const std::complex<PrecisionT> value(1.0, 0.0);
+
+        BaseType::getDataBuffer().zeroInit();
+        setBasisState_(value, index, use_async);
     }
 
     /**
@@ -1430,6 +1428,22 @@ class StateVectorCudaManaged
                            return BaseType::getNumQubits() - 1 - i;
                        });
         return t_indices;
+    }
+
+    /**
+     * @brief Set value for a single element of the state-vector on device. This
+     * method is implemented by cudaMemcpy.
+     *
+     * @param value Value to be set for the target element.
+     * @param index Index of the target element.
+     * @param async Use an asynchronous memory copy.
+     */
+    void setBasisState_(const std::complex<Precision> &value,
+                        const std::size_t index, const bool async = false) {
+        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+        setBasisState_CUDA(BaseType::getData(), value_cu, index, async,
+                           stream_id);
     }
 
     /**
