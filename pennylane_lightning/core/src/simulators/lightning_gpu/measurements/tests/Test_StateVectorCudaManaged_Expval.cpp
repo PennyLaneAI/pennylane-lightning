@@ -50,7 +50,6 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaManaged_Expval]", float,
     const std::size_t num_qubits = 3;
     auto ONE = TestType(1);
     StateVectorT sv{num_qubits};
-    sv.initSV();
     auto m = Measurements(sv);
 
     SECTION("Using expval") {
@@ -73,7 +72,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
 
         SECTION("Using expval") {
             StateVectorT sv{num_qubits};
-            sv.initSV();
             auto m = Measurements(sv);
             sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                {{0}, {0, 1}, {1, 2}},
@@ -85,7 +83,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
 
         SECTION("Using expval: Plus states") {
             StateVectorT sv{num_qubits};
-            sv.initSV();
             auto m = Measurements(sv);
             sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -96,7 +93,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaManaged_Expval]", float,
 
         SECTION("Using expval: Minus states") {
             StateVectorT sv{num_qubits};
-            sv.initSV();
             auto m = Measurements(sv);
             sv.applyOperations(
                 {{"PauliX"},
@@ -126,7 +122,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
 
         SECTION("Using expval") {
             StateVectorT sv{num_qubits};
-            sv.initSV();
             auto m = Measurements(sv);
             sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                {{0}, {0, 1}, {1, 2}},
@@ -138,7 +133,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
 
         SECTION("Using expval: Plus i states") {
             StateVectorT sv{num_qubits};
-            sv.initSV();
             auto m = Measurements(sv);
             sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                {{false}, {false}, {false}},
@@ -150,7 +144,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaManaged_Expval]", float,
 
         SECTION("Using expval: Minus i states") {
             StateVectorT sv{num_qubits};
-            sv.initSV();
             auto m = Measurements(sv);
             sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                {{false}, {false}, {false}},
@@ -191,7 +184,6 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaManaged_Expval]", float,
 
         SECTION("Using expval") {
             StateVectorT sv{num_qubits};
-            sv.initSV();
             auto m = Measurements(sv);
             sv.applyOperation("PauliX", {0});
             auto ob = NamedObs<StateVectorT>("Hadamard", {0});
@@ -209,7 +201,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::Hamiltonian_expval",
 
     SECTION("GetExpectationIdentity") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements(sv);
         std::vector<std::size_t> wires{0, 1, 2};
 
