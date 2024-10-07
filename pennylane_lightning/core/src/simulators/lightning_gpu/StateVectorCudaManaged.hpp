@@ -243,13 +243,13 @@ class StateVectorCudaManaged
         // Calculate the indices of the state-vector to be set.
         // TODO: Could move to GPU calculation if the state size is large.
         std::vector<index_type> indices(num_states);
+        const std::size_t num_wires = wires.size();
         constexpr std::size_t one{1U};
         for (std::size_t i = 0; i < num_states; i++) {
             std::size_t index{0U};
-            for (std::size_t j = 0; j < wires.size(); j++) {
+            for (std::size_t j = 0; j < num_wires; j++) {
                 const std::size_t bit = (i & (one << j)) >> j;
-                const std::size_t wire = wires[wires.size() - 1 - j];
-                index |= bit << (num_qubits - 1 - wire);
+                index |= bit << (num_qubits - 1 - wires[num_wires - 1 - j]);
             }
             indices[i] = static_cast<index_type>(index);
         }
