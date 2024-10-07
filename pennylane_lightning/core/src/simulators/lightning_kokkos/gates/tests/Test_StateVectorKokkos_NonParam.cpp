@@ -797,6 +797,73 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyCSWAP",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
+                   "one-qubit with controls",
+                   "[StateVectorKokkos_NonParam]", float, double) {
+    // using PrecisionT = TestType;
+    // using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const std::size_t num_qubits = 4;
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire = GENERATE(0, 1, 2, 3);
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+    
+    kokkos_sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                                {{0}, {1}, {2}, {3}}, {{false}, {false}, {false}, {false}});
+
+    auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                        kokkos_sv.getView());
+    StateVectorKokkos<TestType> sv_gate{num_qubits};
+    StateVectorKokkos<TestType> sv_control{num_qubits};
+
+    SECTION("N-controlled PauliX ") {
+        if (control != wire) {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
+
+            sv_gate.applyOperation("CNOT", {control, wire});
+            sv_control.applyOperation("PauliX", std::vector<std::size_t>{control}, 
+                                      std::vector<bool>{true},
+                                      std::vector<std::size_T>{wire});
+            auto sv_gate_host = Kokkos:create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+            auto sv_control_host = Kokkos:create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_control.getView());
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK(imag(sv_gate_host[j]) == Approx(imag(sv_control_host[j])));
+                    CHECK(real(sv_gate_host[j]) == Approx(real(sv_control_host[j])));
+                }
+        }
+
+        if (control != 0 && wire != 0) {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
+
+            sv_gate.applyOperation("Toffoli", {0, control, wire});
+            sv_control.applyOperation("PauliX", std::vector<std::size_t>{0, control},
+                               std::vector<bool>{true, true},
+                               std::vector<std::size_t>{wire});
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) == Approx(imag(sv_control_host[j])));
+                CHECK(real(sv_gate_host[j]) == Approx(real(sv_control_host[j])));
+            }
+
+            sv_gate.applyOperation("Toffoli", {control, 0, wire});
+            sv_control.applyOperation("PauliX", std::vector<std::size_t>{control, 0},
+                               std::vector<bool>{true, true},
+                               std::vector<std::size_t>{wire});
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) == Approx(imag(sv_control_host[j])));
+                CHECK(real(sv_gate_host[j]) == Approx(real(sv_control_host[j])));
+            }
+            
+        }
+
+
+    }
+
+                   }
+
 TEMPLATE_TEST_CASE("StateVectorKokkos::SetStateVector",
                    "[StateVectorKokkos_Nonparam]", float, double) {
     using PrecisionT = TestType;
