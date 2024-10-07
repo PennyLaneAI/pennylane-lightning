@@ -1,46 +1,45 @@
-# TODO: verify the contents of this file against what the device reports.
 schema = 2
 
 # The union of all gate types listed in this section must match what
 # the device considers "supported" through PennyLane's device API.
 [operators.gates.native]
 
-Identity               = { properties = [ "differentiable" ] }
-PauliX                 = { properties = [ "differentiable" ] }
-PauliY                 = { properties = [ "differentiable" ] }
-PauliZ                 = { properties = [ "differentiable" ] }
-Hadamard               = { properties = [ "differentiable" ] }
-S                      = { properties = [ "differentiable" ] }
-T                      = { properties = [ "differentiable" ] }
-PhaseShift             = { properties = [ "differentiable" ] }
-RX                     = { properties = [ "differentiable" ] }
-RY                     = { properties = [ "differentiable" ] }
-RZ                     = { properties = [ "differentiable" ] }
-Rot                    = { properties = [ "differentiable" ] }
-CNOT                   = { properties = [ "differentiable" ] }
-CY                     = { properties = [ "differentiable" ] }
-CZ                     = { properties = [ "differentiable" ] }
-SWAP                   = { properties = [ "differentiable" ] }
-CSWAP                  = { properties = [ "differentiable" ] }
-Toffoli                = { properties = [ "differentiable" ] }
-IsingXX                = { properties = [ "differentiable" ] }
-IsingXY                = { properties = [ "differentiable" ] }
-IsingYY                = { properties = [ "differentiable" ] }
-IsingZZ                = { properties = [ "differentiable" ] }
-ControlledPhaseShift   = { properties = [ "differentiable" ] }
-CRX                    = { properties = [ "differentiable" ] }
-CRY                    = { properties = [ "differentiable" ] }
-CRZ                    = { properties = [ "differentiable" ] }
-CRot                   = { properties = [ "differentiable" ] }
-SingleExcitation       = { properties = [ "differentiable" ] }
-SingleExcitationPlus   = { properties = [ "differentiable" ] }
-SingleExcitationMinus  = { properties = [ "differentiable" ] }
-DoubleExcitation       = { properties = [ "differentiable" ] }
-DoubleExcitationPlus   = { properties = [ "differentiable" ] }
-DoubleExcitationMinus  = { properties = [ "differentiable" ] }
-MultiRZ                = { properties = [ "differentiable" ] }
-QubitUnitary           = { properties = [ "differentiable" ] }
-GlobalPhase            = { properties = [ "differentiable" ] }
+Identity               = { properties = [ "invertible", "differentiable" ] }
+PauliX                 = { properties = [ "invertible", "differentiable" ] }
+PauliY                 = { properties = [ "invertible", "differentiable" ] }
+PauliZ                 = { properties = [ "invertible", "differentiable" ] }
+Hadamard               = { properties = [ "invertible", "differentiable" ] }
+S                      = { properties = [ "invertible", "differentiable" ] }
+T                      = { properties = [ "invertible", "differentiable" ] }
+PhaseShift             = { properties = [ "invertible", "differentiable" ] }
+RX                     = { properties = [ "invertible", "differentiable" ] }
+RY                     = { properties = [ "invertible", "differentiable" ] }
+RZ                     = { properties = [ "invertible", "differentiable" ] }
+Rot                    = { properties = [ "invertible", "differentiable" ] }
+CNOT                   = { properties = [ "invertible", "differentiable" ] }
+CY                     = { properties = [ "invertible", "differentiable" ] }
+CZ                     = { properties = [ "invertible", "differentiable" ] }
+SWAP                   = { properties = [ "invertible", "differentiable" ] }
+CSWAP                  = { properties = [ "invertible", "differentiable" ] }
+Toffoli                = { properties = [ "invertible", "differentiable" ] }
+IsingXX                = { properties = [ "invertible", "differentiable" ] }
+IsingXY                = { properties = [ "invertible", "differentiable" ] }
+IsingYY                = { properties = [ "invertible", "differentiable" ] }
+IsingZZ                = { properties = [ "invertible", "differentiable" ] }
+ControlledPhaseShift   = { properties = [ "invertible", "differentiable" ] }
+CRX                    = { properties = [ "invertible", "differentiable" ] }
+CRY                    = { properties = [ "invertible", "differentiable" ] }
+CRZ                    = { properties = [ "invertible", "differentiable" ] }
+CRot                   = { properties = [ "invertible", "differentiable" ] }
+SingleExcitation       = { properties = [ "invertible", "differentiable" ] }
+SingleExcitationPlus   = { properties = [ "invertible", "differentiable" ] }
+SingleExcitationMinus  = { properties = [ "invertible", "differentiable" ] }
+DoubleExcitation       = { properties = [ "invertible", "differentiable" ] }
+DoubleExcitationPlus   = { properties = [ "invertible", "differentiable" ] }
+DoubleExcitationMinus  = { properties = [ "invertible", "differentiable" ] }
+MultiRZ                = { properties = [ "invertible", "differentiable" ] }
+QubitUnitary           = { properties = [ "invertible", "differentiable" ] }
+GlobalPhase            = { properties = [ "invertible", "differentiable" ] }
 
 # Operators that should be decomposed according to the algorithm used
 # by PennyLane's device API.
@@ -74,14 +73,14 @@ DiagonalQubitUnitary   = {}
 # Observables supported by the device
 [operators.observables]
 
-Identity               = {}
-PauliX                 = {}
-PauliY                 = {}
-PauliZ                 = {}
-Hadamard               = {}
-Hermitian              = {}
-Hamiltonian            = {}
-SparseHamiltonian      = {}
+Identity               = {properties = [ "differentiable" ]}
+PauliX                 = {properties = [ "differentiable" ]}
+PauliY                 = {properties = [ "differentiable" ]}
+PauliZ                 = {properties = [ "differentiable" ]}
+Hadamard               = {properties = [ "differentiable" ]}
+Hermitian              = {properties = [ "differentiable" ]}
+Hamiltonian            = {properties = [ "differentiable" ]}
+SparseHamiltonian      = {properties = [ "differentiable" ]}
 
 [measurement_processes]
 
@@ -94,7 +93,7 @@ Counts                  = { condition = [ "finiteshots" ] }
 
 [compilation]
 # If the device is compatible with qjit
-qjit_compatible = false
+qjit_compatible = true
 # If the device requires run time generation of the quantum circuit.
 runtime_code_generation = false
 # If the device supports mid circuit measurements natively
