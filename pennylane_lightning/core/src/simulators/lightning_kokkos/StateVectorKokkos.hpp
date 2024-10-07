@@ -531,6 +531,64 @@ class StateVectorKokkos final
         applyMultiQubitOp(matrix_, wires, inverse);
     }
 
+    /** TODO: UPDATE
+     * @brief Apply a given controlled-matrix directly to the statevector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void
+    applyControlledMatrix(const ComplexT *matrix,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          bool inverse = false) {
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = BaseType::getData();
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        const auto kernel = [n_wires = wires.size(), this]() {
+            switch (n_wires) {
+            case 1:
+                return getKernelForControlledMatrix(
+                    ControlledMatrixOperation::NCSingleQubitOp);
+            case 2:
+                return getKernelForControlledMatrix(
+                    ControlledMatrixOperation::NCTwoQubitOp);
+            default:
+                return getKernelForControlledMatrix(
+                    ControlledMatrixOperation::NCMultiQubitOp);
+            }
+        }();
+        dispatcher.applyControlledMatrix(kernel, arr, BaseType::getNumQubits(),
+                                         matrix, controlled_wires,
+                                         controlled_values, wires, inverse);
+    }
+
+    /** TODO: UPDATE
+     * @brief Apply a given controlled-matrix directly to the statevector.
+     *
+     * @param matrix Vector containing the statevector data (in row-major
+     * format).
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void
+    applyControlledMatrix(const std::vector<ComplexT> matrix,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          bool inverse = false) {
+        applyControlledMatrix(matrix.data(), controlled_wires,
+                              controlled_values, wires, inverse);
+    }
     /**
      * @brief Apply a given matrix directly to the statevector.
      *
