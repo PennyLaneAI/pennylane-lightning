@@ -119,6 +119,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -137,6 +138,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -155,6 +157,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, mpi_buf_size, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     };
@@ -193,7 +196,7 @@ class StateVectorCudaMPI final
               handle_.get(), mpi_manager_, 0, BaseType::getData(),
               num_local_qubits, localStream_.get())),
           gate_cache_(true, dev_tag) {
-        BaseType::initSV();
+        resetStateVector();
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     }
@@ -251,32 +254,16 @@ class StateVectorCudaMPI final
     }
 
     /**
-     * @brief Set value for a single element of the state-vector on device. This
-     * method is implemented by cudaMemcpy.
-     *
-     * @param value Value to be set for the target element.
-     * @param index Index of the target element.
-     * @param async Use an asynchronous memory copy.
+     * @brief the statevector data to the |0...0> state.
+     * @param use_async Use an asynchronous memory copy or not. Default is
+     * false.
      */
-    void setBasisState(const std::complex<Precision> &value,
-                       const std::size_t index, const bool async = false) {
-        const std::size_t rankId = index >> this->getNumLocalQubits();
-
-        const std::size_t local_index =
-            compute_local_index(index, this->getNumLocalQubits());
-
+    void resetStateVector(bool use_async = false) {
         BaseType::getDataBuffer().zeroInit();
-
-        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
-        auto stream_id = localStream_.get();
-
-        if (mpi_manager_.getRank() == rankId) {
-            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
-                               async, stream_id);
-        }
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager_.Barrier();
-    }
+        std::size_t index = 0;
+        ComplexT value(1.0, 0.0);
+        setBasisState_(value, index, use_async);
+    };
 
     /**
      * @brief Prepare a single computational basis state.
@@ -295,27 +282,12 @@ class StateVectorCudaMPI final
 
         std::size_t index{0U};
         for (std::size_t k = 0; k < n_wires; k++) {
-            const auto bit = state[k];
-            index |= bit << (n_wires - 1 - wires[k]);
+            index |= state[k] << (n_wires - 1 - wires[k]);
         }
-
-        const std::size_t rankId = index >> this->getNumLocalQubits();
-        const std::size_t local_index =
-            compute_local_index(index, this->getNumLocalQubits());
 
         const std::complex<PrecisionT> value(1.0, 0.0);
-        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
-
         BaseType::getDataBuffer().zeroInit();
-
-        auto stream_id = localStream_.get();
-
-        if (mpi_manager_.getRank() == rankId) {
-            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
-                               use_async, stream_id);
-        }
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
-        mpi_manager_.Barrier();
+        setBasisState_(value, index, use_async);
     }
 
     /**
@@ -1617,6 +1589,30 @@ class StateVectorCudaMPI final
         setStateVector_CUDA(BaseType::getData(), num_elements,
                             d_values.getData(), d_indices.getData(),
                             thread_per_block, stream_id);
+    }
+
+    /**
+     * @brief Set value for a single element of the state-vector on device. This
+     * method is implemented by cudaMemcpy.
+     *
+     * @param value Value to be set for the target element.
+     * @param index Index of the target element.
+     * @param async Use an asynchronous memory copy.
+     */
+    void setBasisState_(const std::complex<Precision> &value,
+                        const std::size_t index, const bool async = false) {
+        const std::size_t rankId = index >> this->getNumLocalQubits();
+
+        const std::size_t local_index =
+            compute_local_index(index, this->getNumLocalQubits());
+
+        CFP_t value_cu = cuUtil::complexToCu<std::complex<Precision>>(value);
+        auto stream_id = localStream_.get();
+
+        if (mpi_manager_.getRank() == rankId) {
+            setBasisState_CUDA(BaseType::getData(), value_cu, local_index,
+                               async, stream_id);
+        }
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
     }
@@ -1684,8 +1680,8 @@ class StateVectorCudaMPI final
     }
 
     /**
-     * @brief Apply parametric Pauli gates to local statevector using custateVec
-     * calls.
+     * @brief Apply parametric Pauli gates to local statevector using
+     * custateVec calls.
      *
      * @param pauli_words List of Pauli words representing operation.
      * @param ctrls Control wires
@@ -1755,7 +1751,8 @@ class StateVectorCudaMPI final
             });
 
         // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
+        // elements as zeros, which assumes there is no target and control
+        // wire.
         std::vector<int> statusWires(this->getTotalNumQubits(),
                                      WireStatus::Default);
 
@@ -1915,7 +1912,8 @@ class StateVectorCudaMPI final
             });
 
         // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
+        // elements as zeros, which assumes there is no target and control
+        // wire.
         std::vector<int> statusWires(this->getTotalNumQubits(),
                                      WireStatus::Default);
 
@@ -2056,7 +2054,8 @@ class StateVectorCudaMPI final
             });
 
         // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
+        // elements as zeros, which assumes there is no target and control
+        // wire.
         std::vector<int> statusWires(this->getTotalNumQubits(),
                                      WireStatus::Default);
 

@@ -26,6 +26,9 @@
 
 ### Breaking changes
 
+* Deprecate `initSV()` and add `resetStateVector()` to `lightning.gpu`.
+  [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+
 * Deprecate PI gates implementation.
   [(#925)](https://github.com/PennyLaneAI/pennylane-lightning/pull/925)
 
@@ -43,6 +46,9 @@
 * Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
   [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
 
+* Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
+  [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+  
 * The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
   [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
 
