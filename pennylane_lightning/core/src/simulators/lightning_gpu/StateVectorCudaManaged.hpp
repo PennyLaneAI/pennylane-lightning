@@ -498,28 +498,41 @@ class StateVectorCudaManaged
      */
     void collapse(const std::size_t wire, const bool branch) {
         PL_ABORT_IF_NOT(wire < BaseType::getNumQubits(), "Invalid wire index.");
+        cudaDataType_t data_type;
 
-        std::vector<ComplexT> matrix(4, ComplexT(0.0, 0.0));
-
-        for (std::size_t i = 0; i < matrix.size(); i++) {
-            matrix[i] = ((i == 0 && branch == 0) || (i == 3 && branch == 1))
-                            ? ComplexT{1.0, 0.0}
-                            : ComplexT{0.0, 0.0};
+        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                      std::is_same_v<CFP_t, double2>) {
+            data_type = CUDA_C_64F;
+        } else {
+            data_type = CUDA_C_32F;
         }
 
-        applyMatrix(matrix, {wire}, false);
+        std::vector<int> basisBits(1, BaseType::getNumQubits() - 1 - wire);
 
-        auto norm2 = norm2_CUDA<CFP_t>(
-            BaseType::getData(), BaseType::getLength(),
-            BaseType::getDataBuffer().getDevTag().getDeviceID(),
-            BaseType::getDataBuffer().getDevTag().getStreamID(),
-            this->getCublasCaller());
+        double abs2sum0, abs2sum1;
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* double * */ &abs2sum0,
+            /* double * */ &abs2sum1,
+            /* const int32_t * */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size()));
 
-        normalize_CUDA<PrecisionT, CFP_t>(
-            norm2, BaseType::getData(), BaseType::getLength(),
-            BaseType::getDataBuffer().getDevTag().getDeviceID(),
-            BaseType::getDataBuffer().getDevTag().getStreamID(),
-            this->getCublasCaller());
+        double norm = (branch == 0) ? abs2sum0 : abs2sum1;
+
+        int parity = branch;
+
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecCollapseOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* const int32_t parity */ parity,
+            /* const int32_t *basisBits */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size(),
+            /* double norm */ norm));
     }
 
     //****************************************************************************//

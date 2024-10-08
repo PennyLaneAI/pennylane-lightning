@@ -347,37 +347,22 @@ class StateVectorCudaMPI final
         PL_ABORT_IF_NOT(wire < this->getTotalNumQubits(),
                         "Invalid wire index.");
 
-        std::vector<ComplexT> matrix(4, ComplexT(0.0, 0.0));
+        const int wireInt =
+            static_cast<int>(this->getTotalNumQubits() - 1 - wire);
 
-        for (std::size_t i = 0; i < matrix.size(); i++) {
-            matrix[i] = ((i == 0 && branch == 0) || (i == 3 && branch == 1))
-                            ? ComplexT{1.0, 0.0}
-                            : ComplexT{0.0, 0.0};
+        if (static_cast<std::size_t>(wireInt) < BaseType::getNumQubits()) {
+            // local wire
+            collapse_local_(wireInt, branch);
+        } else {
+            // global wire
+            int local_wire = 0;
+            std::vector<int2> wirePairs{make_int2(wireInt, local_wire)};
+            applyMPI_Dispatcher(wirePairs, &StateVectorCudaMPI::collapse_local_,
+                                local_wire, branch);
+
+            PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
+            PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         }
-
-        mpi_manager_.Barrier();
-
-        applyMatrix(matrix, {wire}, false);
-
-        auto local_norm2 = norm2_CUDA<CFP_t>(
-            BaseType::getData(), BaseType::getLength(),
-            BaseType::getDataBuffer().getDevTag().getDeviceID(),
-            BaseType::getDataBuffer().getDevTag().getStreamID(),
-            this->getCublasCaller());
-
-        local_norm2 *= local_norm2;
-
-        mpi_manager_.Barrier();
-
-        auto norm2 = mpi_manager_.allreduce(local_norm2, "sum");
-
-        norm2 = std::sqrt(norm2);
-
-        normalize_CUDA<PrecisionT, CFP_t>(
-            norm2, BaseType::getData(), BaseType::getLength(),
-            BaseType::getDataBuffer().getDevTag().getDeviceID(),
-            BaseType::getDataBuffer().getDevTag().getStreamID(),
-            this->getCublasCaller());
 
         mpi_manager_.Barrier();
     }
@@ -1663,6 +1648,54 @@ class StateVectorCudaMPI final
         }
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager_.Barrier();
+    }
+
+    /**
+     * @brief collapse the state vector to a given basis state.
+     *
+     * @param wire_local Local wire index.
+     * @param branch Branch index.
+     */
+    void collapse_local_(const int wire_local, const bool branch) {
+        cudaDataType_t data_type;
+
+        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                      std::is_same_v<CFP_t, double2>) {
+            data_type = CUDA_C_64F;
+        } else {
+            data_type = CUDA_C_32F;
+        }
+
+        std::vector<int> basisBits(1, wire_local);
+
+        double abs2sum0_local, abs2sum1_local;
+
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* double * */ &abs2sum0_local,
+            /* double * */ &abs2sum1_local,
+            /* const int32_t * */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size()));
+
+        auto abs2sum0 = mpi_manager_.allreduce(abs2sum0_local, "sum");
+        auto abs2sum1 = mpi_manager_.allreduce(abs2sum1_local, "sum");
+
+        double norm = (branch == 0) ? abs2sum0 : abs2sum1;
+
+        int parity = branch;
+
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecCollapseOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* const int32_t parity */ parity,
+            /* const int32_t *basisBits */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size(),
+            /* double norm */ norm));
     }
 
     /**
