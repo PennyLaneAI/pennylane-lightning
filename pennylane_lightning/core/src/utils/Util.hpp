@@ -24,7 +24,7 @@
 #include <numbers>
 #include <numeric> // transform_reduce
 #include <set>
-#include <type_traits> // is_same_v
+#include <type_traits> // integral, floating_point, is_same_v
 #include <vector>
 
 #include "Error.hpp"
