@@ -31,7 +31,6 @@ try:
 except ImportError as ex:
     warn(str(ex), UserWarning)
 
-from itertools import product
 from typing import Union
 
 import numpy as np
@@ -69,7 +68,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         device_name(string): state vector device name. Options: ["lightning.gpu"]
         mpi_handler(MPIHandler): MPI handler for PennyLane Lightning GPU device.
             Provides functionality to distribute the state-vector to multiple devices.
-        sync (bool): is host-device data copy synchronized or not.
+        use_async (bool): is host-device data copy asynchronized or not.
     """
 
     def __init__(
@@ -77,7 +76,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         num_wires: int,
         dtype: Union[np.complex128, np.complex64] = np.complex128,
         mpi_handler: MPIHandler = None,
-        sync: bool = True,
+        use_async: bool = False,
     ):
 
         super().__init__(num_wires, dtype)
@@ -92,7 +91,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._num_local_wires = mpi_handler.num_local_wires
 
         self._mpi_handler = mpi_handler
-        self._sync = sync
+        self._use_async = use_async
 
         # Initialize the state vector
         if self._mpi_handler.use_mpi:  # using MPI
@@ -120,7 +119,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         # without MPI
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-    def syncD2H(self, state_vector, use_async=False):
+    def syncD2H(self, state_vector, use_async: bool = False):
         """Copy the state vector data on device to a state vector on the host provided by the user.
         Args:
             state_vector(array[complex]): the state vector array on host.
@@ -155,7 +154,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self.syncD2H(state)
         return state
 
-    def syncH2D(self, state_vector, use_async=False):
+    def syncH2D(self, state_vector, use_async: bool = False):
         """Copy the state vector data on host provided by the user to the state vector on the device
         Args:
             state_vector(array[complex]): the state vector array on host.
@@ -189,7 +188,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         return arr
 
-    def _apply_state_vector(self, state, device_wires, use_async=False):
+    def _apply_state_vector(self, state, device_wires, use_async: bool = False):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
         Args:
@@ -224,20 +223,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
             self.syncH2D(np.reshape(local_state, output_shape))
             return
 
-        # generate basis states on subset of qubits via the cartesian product
-        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
-
-        # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2 ** len(device_wires), self.num_wires), dtype=int)
-        unravelled_indices[:, device_wires] = basis_states
-
-        # get indices for which the state is changed to input state vector elements
-        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
-
-        # set the state vector on GPU with the unravelled_indices and their corresponding values
-        self._qubit_state.setStateVector(
-            ravelled_indices, state, use_async
-        )  # this operation on device
+        # set the state vector on GPU with provided state and their corresponding wires
+        self._qubit_state.setStateVector(state, list(device_wires), use_async)
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.

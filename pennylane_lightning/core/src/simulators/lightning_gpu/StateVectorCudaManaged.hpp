@@ -215,36 +215,46 @@ class StateVectorCudaManaged
     }
 
     /**
-     * @brief Set values for a batch of elements of the state-vector. This
-     * method is implemented by the customized CUDA kernel defined in the
-     * DataBuffer class.
+     * @brief Set values for a batch of elements of the state-vector.
      *
-     * @param num_indices Number of elements to be passed to the state vector.
-     * @param values Pointer to values to be set for the target elements.
-     * @param indices Pointer to indices of the target elements.
-     * @param async Use an asynchronous memory copy.
+     * @param state_ptr Pointer to the initial state data.
+     * @param num_states Length of the initial state data.
+     * @param wires Wires.
+     * @param use_async Use an asynchronous memory copy. Default is false.
      */
-    template <class index_type, std::size_t thread_per_block = 256>
-    void setStateVector(const index_type num_indices,
-                        const std::complex<Precision> *values,
-                        const index_type *indices, const bool async = false) {
-        BaseType::getDataBuffer().zeroInit();
+    void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
+                        const std::vector<std::size_t> &wires,
+                        bool use_async = false) {
+        PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.");
 
-        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+        const auto num_qubits = BaseType::getNumQubits();
 
-        index_type num_elements = num_indices;
-        DataBuffer<index_type, int> d_indices{
-            static_cast<std::size_t>(num_elements), device_id, stream_id, true};
-        DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
-                                        device_id, stream_id, true};
+        PL_ABORT_IF_NOT(std::find_if(wires.begin(), wires.end(),
+                                     [&num_qubits](const auto i) {
+                                         return i >= num_qubits;
+                                     }) == wires.end(),
+                        "Invalid wire index.");
 
-        d_indices.CopyHostDataToGpu(indices, d_indices.getLength(), async);
-        d_values.CopyHostDataToGpu(values, d_values.getLength(), async);
+        using index_type =
+            typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                      int32_t, int64_t>::type;
 
-        setStateVector_CUDA(BaseType::getData(), num_elements,
-                            d_values.getData(), d_indices.getData(),
-                            thread_per_block, stream_id);
+        // Calculate the indices of the state-vector to be set.
+        // TODO: Could move to GPU calculation if the state size is large.
+        std::vector<index_type> indices(num_states);
+        const std::size_t num_wires = wires.size();
+        constexpr std::size_t one{1U};
+        for (std::size_t i = 0; i < num_states; i++) {
+            std::size_t index{0U};
+            for (std::size_t j = 0; j < num_wires; j++) {
+                const std::size_t bit = (i & (one << j)) >> j;
+                index |= bit << (num_qubits - 1 - wires[num_wires - 1 - j]);
+            }
+            indices[i] = static_cast<index_type>(index);
+        }
+        setStateVector_<index_type>(num_states, state_ptr, indices.data(),
+                                    use_async);
     }
 
     /**
@@ -1381,9 +1391,8 @@ class StateVectorCudaManaged
         return t_indices;
     }
 
-    /**
-     * @brief Set value for a single element of the state-vector on device. This
-     * method is implemented by cudaMemcpy.
+    /** @brief Set value for a single element of the state-vector on device.
+     * This method is implemented by cudaMemcpy.
      *
      * @param value Value to be set for the target element.
      * @param index Index of the target element.
@@ -1395,6 +1404,40 @@ class StateVectorCudaManaged
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
         setBasisState_CUDA(BaseType::getData(), value_cu, index, async,
                            stream_id);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector. This
+     * method is implemented by the customized CUDA kernel defined in the
+     * DataBuffer class.
+     *
+     * @param num_indices Number of elements to be passed to the state vector.
+     * @param values Pointer to values to be set for the target elements.
+     * @param indices Pointer to indices of the target elements.
+     * @param async Use an asynchronous memory copy.
+     */
+    template <class index_type, std::size_t thread_per_block = 256>
+    void setStateVector_(const index_type num_indices,
+                         const std::complex<Precision> *values,
+                         const index_type *indices, const bool async = false) {
+        BaseType::getDataBuffer().zeroInit();
+
+        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+
+        index_type num_elements = num_indices;
+        DataBuffer<index_type, int> d_indices{
+            static_cast<std::size_t>(num_elements), device_id, stream_id, true};
+        DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
+                                        device_id, stream_id, true};
+
+        d_indices.CopyHostDataToGpu(indices, d_indices.getLength(), async);
+        d_values.CopyHostDataToGpu(values, d_values.getLength(), async);
+
+        setStateVector_CUDA(BaseType::getData(), num_elements,
+                            d_values.getData(), d_indices.getData(),
+                            thread_per_block, stream_id);
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
     }
 
     /**

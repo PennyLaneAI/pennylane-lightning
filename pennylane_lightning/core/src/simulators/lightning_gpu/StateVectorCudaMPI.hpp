@@ -289,61 +289,48 @@ class StateVectorCudaMPI final
         BaseType::getDataBuffer().zeroInit();
         setBasisState_(value, index, use_async);
     }
+
     /**
-     * @brief Set values for a batch of elements of the state-vector. This
-     * method is implemented by the customized CUDA kernel defined in the
-     * DataBuffer class.
+     * @brief Set values for a batch of elements of the state-vector.
      *
-     * @param num_indices Number of elements to be passed to the state vector.
-     * @param values Pointer to values to be set for the target elements.
-     * @param indices Pointer to indices of the target elements.
-     * @param async Use an asynchronous memory copy.
+     * @param state_ptr Pointer to initial state data.
+     * @param num_states Length of initial state data.
+     * @param wires Wires.
+     * @param use_async Use an asynchronous memory copy. Default is false.
      */
-    template <class index_type, std::size_t thread_per_block = 256>
-    void setStateVector(const index_type num_indices,
-                        const std::complex<Precision> *values,
-                        const index_type *indices, const bool async = false) {
-        BaseType::getDataBuffer().zeroInit();
+    void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
+                        const std::vector<std::size_t> &wires,
+                        bool use_async = false) {
+        PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.");
 
-        std::vector<index_type> indices_local;
-        std::vector<std::complex<Precision>> values_local;
+        const auto num_qubits = this->getTotalNumQubits();
 
-        for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices);
-             i++) {
-            int index = indices[i];
-            PL_ASSERT(index >= 0);
-            std::size_t rankId =
-                static_cast<std::size_t>(index) >> BaseType::getNumQubits();
+        PL_ABORT_IF_NOT(std::find_if(wires.begin(), wires.end(),
+                                     [&num_qubits](const auto i) {
+                                         return i >= num_qubits;
+                                     }) == wires.end(),
+                        "Invalid wire index.");
 
-            if (rankId == mpi_manager_.getRank()) {
-                int local_index = static_cast<int>(
-                    compute_local_index(static_cast<std::size_t>(index),
-                                        this->getNumLocalQubits()));
-                indices_local.push_back(local_index);
-                values_local.push_back(values[i]);
+        using index_type =
+            typename std::conditional<std::is_same<PrecisionT, float>::value,
+                                      int32_t, int64_t>::type;
+
+        // Calculate the indices of the state-vector to be set.
+        // TODO: Could move to GPU/MPI calculation if the state size is large.
+        std::vector<index_type> indices(num_states);
+        const std::size_t num_wires = wires.size();
+        constexpr std::size_t one{1U};
+        for (std::size_t i = 0; i < num_states; i++) {
+            std::size_t index{0U};
+            for (std::size_t j = 0; j < num_wires; j++) {
+                const std::size_t bit = (i & (one << j)) >> j;
+                index |= bit << (num_qubits - 1 - wires[num_wires - 1 - j]);
             }
+            indices[i] = static_cast<index_type>(index);
         }
-
-        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-
-        index_type num_elements = indices_local.size();
-
-        DataBuffer<index_type, int> d_indices{
-            static_cast<std::size_t>(num_elements), device_id, stream_id, true};
-
-        DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
-                                        device_id, stream_id, true};
-
-        d_indices.CopyHostDataToGpu(indices_local.data(), d_indices.getLength(),
-                                    async);
-        d_values.CopyHostDataToGpu(values_local.data(), d_values.getLength(),
-                                   async);
-
-        setStateVector_CUDA(BaseType::getData(), num_elements,
-                            d_values.getData(), d_indices.getData(),
-                            thread_per_block, stream_id);
-        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        setStateVector_<index_type>(num_states, state_ptr, indices.data(),
+                                    use_async);
         mpi_manager_.Barrier();
     }
 
@@ -1597,6 +1584,62 @@ class StateVectorCudaMPI final
     }
 
     /**
+     * @brief Set values for a batch of elements of the state-vector. This
+     * method is implemented by the customized CUDA kernel defined in the
+     * DataBuffer class.
+     *
+     * @param num_indices Number of elements to be passed to the state vector.
+     * @param values Pointer to values to be set for the target elements.
+     * @param indices Pointer to indices of the target elements.
+     * @param async Use an asynchronous memory copy.
+     */
+    template <class index_type, std::size_t thread_per_block = 256>
+    void setStateVector_(const index_type num_indices,
+                         const std::complex<Precision> *values,
+                         const index_type *indices, const bool async = false) {
+        BaseType::getDataBuffer().zeroInit();
+
+        std::vector<index_type> indices_local;
+        std::vector<std::complex<Precision>> values_local;
+
+        for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices);
+             i++) {
+            int index = indices[i];
+            PL_ASSERT(index >= 0);
+            std::size_t rankId =
+                static_cast<std::size_t>(index) >> BaseType::getNumQubits();
+
+            if (rankId == mpi_manager_.getRank()) {
+                int local_index = static_cast<int>(
+                    compute_local_index(static_cast<std::size_t>(index),
+                                        this->getNumLocalQubits()));
+                indices_local.push_back(local_index);
+                values_local.push_back(values[i]);
+            }
+        }
+
+        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
+        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
+
+        index_type num_elements = indices_local.size();
+
+        DataBuffer<index_type, int> d_indices{
+            static_cast<std::size_t>(num_elements), device_id, stream_id, true};
+
+        DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
+                                        device_id, stream_id, true};
+
+        d_indices.CopyHostDataToGpu(indices_local.data(), d_indices.getLength(),
+                                    async);
+        d_values.CopyHostDataToGpu(values_local.data(), d_values.getLength(),
+                                   async);
+
+        setStateVector_CUDA(BaseType::getData(), num_elements,
+                            d_values.getData(), d_indices.getData(),
+                            thread_per_block, stream_id);
+    }
+
+    /**
      * @brief Set value for a single element of the state-vector on device. This
      * method is implemented by cudaMemcpy.
      *
@@ -1685,8 +1728,8 @@ class StateVectorCudaMPI final
     }
 
     /**
-     * @brief Apply parametric Pauli gates to local statevector using custateVec
-     * calls.
+     * @brief Apply parametric Pauli gates to local statevector using
+     * custateVec calls.
      *
      * @param pauli_words List of Pauli words representing operation.
      * @param ctrls Control wires
@@ -1756,7 +1799,8 @@ class StateVectorCudaMPI final
             });
 
         // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
+        // elements as zeros, which assumes there is no target and control
+        // wire.
         std::vector<int> statusWires(this->getTotalNumQubits(),
                                      WireStatus::Default);
 
@@ -1916,7 +1960,8 @@ class StateVectorCudaMPI final
             });
 
         // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
+        // elements as zeros, which assumes there is no target and control
+        // wire.
         std::vector<int> statusWires(this->getTotalNumQubits(),
                                      WireStatus::Default);
 
@@ -2057,7 +2102,8 @@ class StateVectorCudaMPI final
             });
 
         // Initialize a vector to store the status of wires and default its
-        // elements as zeros, which assumes there is no target and control wire.
+        // elements as zeros, which assumes there is no target and control
+        // wire.
         std::vector<int> statusWires(this->getTotalNumQubits(),
                                      WireStatus::Default);
 
