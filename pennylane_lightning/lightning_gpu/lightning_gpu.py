@@ -173,10 +173,7 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``
     with finite shots."""
-    if isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional)):
-        # LightningGPU does not support Mid-circuit measurements.
-        return False
-    return stopping_condition(op)
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -460,6 +457,7 @@ class LightningGPU(LightningBase):
                 self.simulate(
                     circuit,
                     self._statevector,
+                    postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
             )
 
@@ -494,20 +492,44 @@ class LightningGPU(LightningBase):
         self,
         circuit: QuantumScript,
         state: LightningGPUStateVector,
+        postselect_mode: Optional[str] = None,
     ) -> Result:
         """Simulate a single quantum script.
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
             state (LightningGPUStateVector): handle to Lightning state vector
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
+        #if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+        #    raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
+            results = []
+            aux_circ = qml.tape.QuantumScript(
+                circuit.operations,
+                circuit.measurements,
+                shots=[1],
+                trainable_params=circuit.trainable_params,
+            )
+            for _ in range(circuit.shots.total_shots):
+                state.reset_state()
+                mid_measurements = {}
+                final_state = state.get_final_state(
+                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+                )
+                results.append(
+                    self.LightningMeasurements(final_state).measure_final_state(
+                        aux_circ, mid_measurements=mid_measurements
+                    )
+                )
+            return tuple(results)
 
         state.reset_state()
         final_state = state.get_final_state(circuit)

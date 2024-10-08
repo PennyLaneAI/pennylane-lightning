@@ -21,7 +21,7 @@ import pytest
 from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
 
-if device_name not in ("lightning.qubit", "lightning.kokkos"):
+if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access

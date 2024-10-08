@@ -154,6 +154,8 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             },
             py::arg("async") = false,
             "Initialize the statevector data to the |0...0> state")
+        .def("collapse", &StateVectorT::collapse,
+             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
