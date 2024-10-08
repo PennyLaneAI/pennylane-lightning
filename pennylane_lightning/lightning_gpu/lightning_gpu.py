@@ -87,6 +87,7 @@ _operations = frozenset(
         "MultiRZ",
         "GlobalPhase",
         "C(GlobalPhase)",
+        "C(MultiRZ)",
         "Hadamard",
         "S",
         "Adjoint(S)",

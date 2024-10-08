@@ -352,17 +352,17 @@ class StateVectorCudaManaged
         } else if (opName == "GlobalPhase") {
             globalPhaseStateVector(adjoint, params[0]);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
-            applyParametricPauliGate({opName}, ctrls, tgts, params.front(),
-                                     adjoint);
+            applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
+                                      adjoint);
         } else if (opName == "Rot" || opName == "CRot") {
             if (adjoint) {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
-                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, true);
+                applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, true);
             } else {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
+                applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, false);
             }
         } else if (opName == "Matrix") {
             DataBuffer<CFP_t, int> d_matrix{
@@ -375,8 +375,8 @@ class StateVectorCudaManaged
                                                        ctrls.rend()};
             const std::vector<std::size_t> tgts_local{tgts.rbegin(),
                                                       tgts.rend()};
-            applyDeviceMatrixGate(d_matrix.getData(), ctrls_local, tgts_local,
-                                  adjoint);
+            applyDeviceMatrixGate_(d_matrix.getData(), ctrls_local, tgts_local,
+                                   adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
@@ -395,7 +395,7 @@ class StateVectorCudaManaged
             } else if (!gate_cache_.gateExists(opName, par[0])) {
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
-            applyDeviceMatrixGate(
+            applyDeviceMatrixGate_(
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls_local,
                 tgts_local, adjoint);
         }
@@ -405,27 +405,141 @@ class StateVectorCudaManaged
      * @brief Apply a single gate to the state vector.
      *
      * @param opName Name of gate to apply.
-     * @param controlled_wires Control wires.
-     * @param controlled_values Control values (false or true).
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+     * @param ctrls Control wires.
+     * @param ctrls_values Control values (false or true).
+     * @param tgts Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
-     * @param params Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Optional gate matrix vector on the host if opName
+     * doesn't exist.
      */
-    template <template <typename...> class complex_t>
-    void
-    applyOperation(const std::string &opName,
-                   const std::vector<std::size_t> &controlled_wires,
-                   const std::vector<bool> &controlled_values,
-                   const std::vector<std::size_t> &wires, bool inverse = false,
-                   const std::vector<Precision> &params = {0.0},
-                   const std::vector<complex_t<Precision>> &gate_matrix = {}) {
-        PL_ABORT_IF_NOT(controlled_wires.empty(),
-                        "Controlled kernels not implemented.");
-        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
-                        "`controlled_wires` must have the same size as "
-                        "`controlled_values`.");
-        applyOperation(opName, wires, inverse, params, gate_matrix);
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &ctrls,
+                        const std::vector<bool> &ctrls_values,
+                        const std::vector<std::size_t> &tgts,
+                        bool adjoint = false,
+                        const std::vector<Precision> &params = {0.0},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF(ctrls.size() != ctrls_values.size(),
+                    "`ctrls` and `ctrls_values` must have the same size.");
+        std::vector<int> ctrlsInt(ctrls.size());
+        std::vector<int> tgtsInt(tgts.size());
+        std::vector<int> ctrls_valuesInt(ctrls.size());
+
+        std::transform(
+            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
+                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
+            });
+        std::transform(
+            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
+                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
+            });
+
+        std::transform(ctrls_values.begin(), ctrls_values.end(),
+                       ctrls_valuesInt.begin(),
+                       [&](bool x) { return static_cast<int>(x); });
+        if (opName == "MultiRZ") {
+            const std::vector<std::string> names(tgts.size(), {"RZ"});
+            applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
+                                             tgtsInt, params.front(), adjoint);
+        } else if (native_gates_.find(opName) != native_gates_.end()) {
+            applyParametricPauliGeneralGate_({opName}, ctrlsInt,
+                                             ctrls_valuesInt, tgtsInt,
+                                             params.front(), adjoint);
+        } else if (opName == "Rot" || opName == "CRot") {
+            if (adjoint) {
+                auto rot_matrix =
+                    cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
+                applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
+                                        ctrls_valuesInt, true);
+            } else {
+                auto rot_matrix =
+                    cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+                applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
+                                        ctrls_valuesInt, false);
+            }
+        } else if (opName == "Matrix") {
+            DataBuffer<CFP_t, int> d_matrix{
+                gate_matrix.size(), BaseType::getDataBuffer().getDevTag(),
+                true};
+            d_matrix.CopyHostDataToGpu(gate_matrix.data(), d_matrix.getLength(),
+                                       false);
+
+            applyDeviceGeneralGate_(d_matrix.getData(), ctrlsInt, tgtsInt,
+                                    ctrls_valuesInt, adjoint);
+        } else if (par_gates_.find(opName) != par_gates_.end()) {
+            auto &gateMap =
+                cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
+            auto &&matrix_cu = gateMap.getGateData(opName, params);
+
+            gate_cache_.add_gate(opName, params[0], matrix_cu);
+
+            applyDeviceGeneralGate_(
+                gate_cache_.get_gate_device_ptr(opName, params[0]), ctrlsInt,
+                tgtsInt, ctrls_valuesInt, adjoint);
+        } else { // No offloadable function call; defer to matrix passing
+            auto &&par =
+                (params.empty()) ? std::vector<Precision>{0.0} : params;
+            if (!gate_cache_.gateExists(opName, par[0]) &&
+                gate_matrix.empty()) {
+                std::string message = "Currently unsupported gate: " + opName;
+                throw LightningException(message);
+            } else if (!gate_cache_.gateExists(opName, par[0])) {
+                std::vector<CFP_t> matrix_cu(gate_matrix.size());
+                std::transform(
+                    gate_matrix.begin(), gate_matrix.end(), matrix_cu.begin(),
+                    [](const std::complex<Precision> &x) {
+                        return cuUtil::complexToCu<std::complex<Precision>>(x);
+                    });
+
+                gate_cache_.add_gate(opName, par[0], matrix_cu);
+            }
+            applyDeviceGeneralGate_(
+                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrlsInt,
+                tgtsInt, ctrls_valuesInt, adjoint);
+        }
+    }
+
+    /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param gate_matrix Gate matrix data (in row-major format).
+     * @param ctrls Control wires.
+     * @param ctrls_values Control values (false or true).
+     * @param tgts Target wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    void applyControlledMatrix(const ComplexT *gate_matrix,
+                               const std::size_t matrix_size,
+                               const std::vector<std::size_t> &ctrls,
+                               const std::vector<bool> &ctrls_values,
+                               const std::vector<std::size_t> &tgts,
+                               bool inverse = false) {
+        PL_ABORT_IF(ctrls.size() != ctrls_values.size(),
+                    "`ctrls` and `ctrls_values` must have the same size.");
+        DataBuffer<CFP_t, int> d_matrix{
+            matrix_size, BaseType::getDataBuffer().getDevTag(), true};
+        d_matrix.CopyHostDataToGpu(gate_matrix, matrix_size, false);
+        // ensure wire indexing correctly preserved for tensor-observables
+        std::vector<int> ctrlsInt(ctrls.size());
+        std::vector<int> tgtsInt(tgts.size());
+        std::vector<int> ctrls_valuesInt(ctrls.size());
+
+        std::transform(
+            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
+                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
+            });
+        std::transform(
+            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
+                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
+            });
+
+        std::transform(ctrls_values.begin(), ctrls_values.end(),
+                       ctrls_valuesInt.begin(),
+                       [&](bool x) { return static_cast<int>(x); });
+
+        applyDeviceGeneralGate_(d_matrix.getData(), ctrlsInt, tgtsInt,
+                                ctrls_valuesInt, inverse);
     }
 
     /**
@@ -500,65 +614,65 @@ class StateVectorCudaManaged
                             bool adjoint) {
         static const std::string name{"PauliX"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyPauliY(const std::vector<std::size_t> &wires,
                             bool adjoint) {
         static const std::string name{"PauliY"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyPauliZ(const std::vector<std::size_t> &wires,
                             bool adjoint) {
         static const std::string name{"PauliZ"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyHadamard(const std::vector<std::size_t> &wires,
                               bool adjoint) {
         static const std::string name{"Hadamard"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyS(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"S"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyT(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"T"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyRX(const std::vector<std::size_t> &wires, bool adjoint,
                         Precision param) {
         static const std::vector<std::string> name{{"RX"}};
-        applyParametricPauliGate(name, {wires.begin(), wires.end() - 1},
-                                 {wires.back()}, param, adjoint);
+        applyParametricPauliGate_(name, {wires.begin(), wires.end() - 1},
+                                  {wires.back()}, param, adjoint);
     }
     inline void applyRY(const std::vector<std::size_t> &wires, bool adjoint,
                         Precision param) {
         static const std::vector<std::string> name{{"RY"}};
-        applyParametricPauliGate(name, {wires.begin(), wires.end() - 1},
-                                 {wires.back()}, param, adjoint);
+        applyParametricPauliGate_(name, {wires.begin(), wires.end() - 1},
+                                  {wires.back()}, param, adjoint);
     }
     inline void applyRZ(const std::vector<std::size_t> &wires, bool adjoint,
                         Precision param) {
         static const std::vector<std::string> name{{"RZ"}};
-        applyParametricPauliGate(name, {wires.begin(), wires.end() - 1},
-                                 {wires.back()}, param, adjoint);
+        applyParametricPauliGate_(name, {wires.begin(), wires.end() - 1},
+                                  {wires.back()}, param, adjoint);
     }
     inline void applyRot(const std::vector<std::size_t> &wires, bool adjoint,
                          Precision param0, Precision param1, Precision param2) {
@@ -578,53 +692,53 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getPhaseShift<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
 
     /* two-qubit gates */
     inline void applyCNOT(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"CNOT"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyCY(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"CY"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyCZ(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"CZ"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applySWAP(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"SWAP"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param), {},
+                               wires, adjoint);
     }
     inline void applyIsingXX(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         static const std::vector<std::string> names(wires.size(), {"RX"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
     inline void applyIsingYY(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         static const std::vector<std::string> names(wires.size(), {"RY"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
     inline void applyIsingZZ(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         static const std::vector<std::string> names(wires.size(), {"RZ"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
     inline void applyIsingXY(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
@@ -633,8 +747,8 @@ class StateVectorCudaManaged
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key, cuGates::getIsingXY<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
     inline void applyCRot(const std::vector<std::size_t> &wires, bool adjoint,
                           const std::vector<Precision> &params) {
@@ -672,8 +786,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getSingleExcitation<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
     inline void
     applySingleExcitationMinus(const std::vector<std::size_t> &wires,
@@ -684,8 +798,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getSingleExcitationMinus<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
     inline void applySingleExcitationPlus(const std::vector<std::size_t> &wires,
                                           bool adjoint, Precision param) {
@@ -695,8 +809,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getSingleExcitationPlus<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
 
     /* three-qubit gates */
@@ -704,42 +818,42 @@ class StateVectorCudaManaged
                              bool adjoint) {
         static const std::string name{"Toffoli"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyCSWAP(const std::vector<std::size_t> &wires,
                            bool adjoint) {
         static const std::string name{"SWAP"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.front()}, {wires.begin() + 1, wires.end()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.front()},
+                               {wires.begin() + 1, wires.end()}, adjoint);
     }
 
     /* four-qubit gates */
     inline void applyDoubleExcitation(const std::vector<std::size_t> &wires,
                                       bool adjoint, Precision param) {
         auto &&mat = cuGates::getDoubleExcitation<CFP_t>(param);
-        applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
+        applyDeviceMatrixGate_(mat.data(), {}, wires, adjoint);
     }
     inline void
     applyDoubleExcitationMinus(const std::vector<std::size_t> &wires,
                                bool adjoint, Precision param) {
         auto &&mat = cuGates::getDoubleExcitationMinus<CFP_t>(param);
-        applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
+        applyDeviceMatrixGate_(mat.data(), {}, wires, adjoint);
     }
     inline void applyDoubleExcitationPlus(const std::vector<std::size_t> &wires,
                                           bool adjoint, Precision param) {
         auto &&mat = cuGates::getDoubleExcitationPlus<CFP_t>(param);
-        applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
+        applyDeviceMatrixGate_(mat.data(), {}, wires, adjoint);
     }
 
     /* Multi-qubit gates */
     inline void applyMultiRZ(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         const std::vector<std::string> names(wires.size(), {"RZ"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
 
     /* Gate generators */
@@ -805,8 +919,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingXX<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -818,8 +932,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingYY<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -831,8 +945,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingZZ<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -845,8 +959,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingXY<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return static_cast<PrecisionT>(0.5);
     }
 
@@ -933,8 +1047,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorSingleExcitation<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -947,8 +1061,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorSingleExcitationMinus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -961,8 +1075,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorSingleExcitationPlus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -976,8 +1090,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorDoubleExcitation<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -990,8 +1104,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorDoubleExcitationMinus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -1004,8 +1118,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorDoubleExcitationPlus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1014,8 +1128,8 @@ class StateVectorCudaManaged
         static const std::string name{"PauliZ"};
         static const Precision param = 0.0;
         for (const auto &w : wires) {
-            applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                                  {}, {w}, adjoint);
+            applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                                   {}, {w}, adjoint);
         }
         return -static_cast<PrecisionT>(0.5);
     }
@@ -1414,12 +1528,10 @@ class StateVectorCudaManaged
      * @param tgts target wires.
      * @param use_adjoint Take adjoint of operation.
      */
-    void applyParametricPauliGate(const std::vector<std::string> &pauli_words,
-                                  std::vector<std::size_t> ctrls,
-                                  std::vector<std::size_t> tgts,
-                                  Precision param, bool use_adjoint = false) {
-        int nIndexBits = BaseType::getNumQubits();
-
+    void applyParametricPauliGate_(const std::vector<std::string> &pauli_words,
+                                   std::vector<std::size_t> ctrls,
+                                   std::vector<std::size_t> tgts,
+                                   Precision param, bool use_adjoint = false) {
         std::vector<int> ctrlsInt(ctrls.size());
         std::vector<int> tgtsInt(tgts.size());
 
@@ -1432,6 +1544,29 @@ class StateVectorCudaManaged
             tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
                 return static_cast<int>(BaseType::getNumQubits() - 1 - x);
             });
+
+        const std::vector<int> ctrls_valuesInt(ctrls.size(), 1);
+
+        applyParametricPauliGeneralGate_(pauli_words, ctrlsInt, ctrls_valuesInt,
+                                         tgtsInt, param, use_adjoint);
+    }
+
+    /**
+     * @brief Apply a parametric Pauli gate using custateVec calls.
+     *
+     * @param pauli_words List of Pauli words representing operation.
+     * @param ctrls Control wires
+     * @param ctrls_values Control values
+     * @param tgts target wires.
+     * @param param Rotation angle.
+     * @param use_adjoint Take adjoint of operation.
+     */
+    void applyParametricPauliGeneralGate_(
+        const std::vector<std::string> &pauli_words,
+        const std::vector<int> &ctrlsInt,
+        const std::vector<int> &ctrls_valuesInt, const std::vector<int> tgtsInt,
+        Precision param, bool use_adjoint = false) {
+        int nIndexBits = BaseType::getNumQubits();
 
         cudaDataType_t data_type;
 
@@ -1457,10 +1592,10 @@ class StateVectorCudaManaged
             /* double */ local_angle,
             /* const custatevecPauli_t* */ pauli_enums.data(),
             /* const int32_t* */ tgtsInt.data(),
-            /* const uint32_t */ tgts.size(),
+            /* const uint32_t */ tgtsInt.size(),
             /* const int32_t* */ ctrlsInt.data(),
-            /* const int32_t* */ nullptr,
-            /* const uint32_t */ ctrls.size()));
+            /* const int32_t* */ ctrls_valuesInt.data(),
+            /* const uint32_t */ ctrlsInt.size()));
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
             BaseType::getDataBuffer().getDevTag().getStreamID()));
     }
@@ -1477,14 +1612,10 @@ class StateVectorCudaManaged
      * @param tgts Target qubits.
      * @param use_adjoint Use adjoint of given gate.
      */
-    void applyDeviceMatrixGate(const CFP_t *matrix,
-                               const std::vector<std::size_t> &ctrls,
-                               const std::vector<std::size_t> &tgts,
-                               bool use_adjoint = false) {
-        void *extraWorkspace = nullptr;
-        std::size_t extraWorkspaceSizeInBytes = 0;
-        int nIndexBits = BaseType::getNumQubits();
-
+    void applyDeviceMatrixGate_(const CFP_t *matrix,
+                                const std::vector<std::size_t> &ctrls,
+                                const std::vector<std::size_t> &tgts,
+                                bool use_adjoint = false) {
         std::vector<int> ctrlsInt(ctrls.size());
         std::vector<int> tgtsInt(tgts.size());
 
@@ -1496,6 +1627,34 @@ class StateVectorCudaManaged
             tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
                 return static_cast<int>(BaseType::getNumQubits() - 1 - x);
             });
+
+        const std::vector<int> ctrls_values(ctrls.size(), 1);
+
+        applyDeviceGeneralGate_(matrix, ctrlsInt, tgtsInt, ctrls_values,
+                                use_adjoint);
+    }
+
+    /**
+     * @brief Apply a given host or device-stored array representing the gate
+     * `matrix` to the state vector at qubit indices given by `tgts` and
+     * control-lines given by `ctrls`. The adjoint can be taken by setting
+     * `use_adjoint` to true.
+     *
+     * @param matrix Device data array in row-major order representing
+     * a given gate.
+     * @param ctrls Control line qubits.
+     * @param tgts Target qubits.
+     * @param ctrls_values Control values.
+     * @param use_adjoint Use adjoint of given gate. Defaults to false.
+     */
+    void applyDeviceGeneralGate_(const CFP_t *matrix,
+                                 const std::vector<int> &ctrls,
+                                 const std::vector<int> &tgts,
+                                 const std::vector<int> &ctrls_values,
+                                 bool use_adjoint = false) {
+        void *extraWorkspace = nullptr;
+        std::size_t extraWorkspaceSizeInBytes = 0;
+        int nIndexBits = BaseType::getNumQubits();
 
         cudaDataType_t data_type;
         custatevecComputeType_t compute_type;
@@ -1544,10 +1703,10 @@ class StateVectorCudaManaged
             /* cudaDataType_t */ data_type,
             /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
             /* const int32_t */ use_adjoint,
-            /* const int32_t* */ tgtsInt.data(),
+            /* const int32_t* */ tgts.data(),
             /* const uint32_t */ tgts.size(),
-            /* const int32_t* */ ctrlsInt.data(),
-            /* const int32_t* */ nullptr,
+            /* const int32_t* */ ctrls.data(),
+            /* const int32_t* */ ctrls_values.data(),
             /* const uint32_t */ ctrls.size(),
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
