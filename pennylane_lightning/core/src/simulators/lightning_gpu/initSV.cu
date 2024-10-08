@@ -107,66 +107,6 @@ void setStateVector_CUDA_call(GPUDataT *sv, index_type &num_indices,
 }
 
 /**
- * @brief The CUDA kernel that collapses the state vector data on GPU device
- * based on the input values (on device) and their corresponding indices (on
- * device) information.
- *
- * @param sv Complex data pointer of state vector on device.
- * @param half_num_sv Number of state vector elements.
- * @param stride Number of elements in the input values array.
- * @param k Boolean flag to indicate whether to collapse or not.
- */
-template <class GPUDataT>
-__global__ void
-collapseStateVectorKernel(GPUDataT *sv, const std::size_t half_num_sv,
-                          const std::size_t stride, const bool k) {
-    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= half_num_sv) {
-        return;
-    }
-
-    const unsigned int id = i / stride;
-    const unsigned int ids = i % stride;
-    const unsigned int offset = (2 * id + k) * stride;
-    const unsigned int idx = offset + ids;
-
-    sv[idx].x = 0.0;
-    sv[idx].y = 0.0;
-}
-
-/**
- * @brief The CUDA kernel call wrapper that collapses the state vector data on
- * GPU device based on the input values (on device) and their corresponding
- * indices (on device) information.
- *
- * @param sv Complex data pointer of state vector on device.
- * @param num_sv Number of state vector elements.
- * @param stride Number of elements in the input values array.
- * @param k Boolean flag to indicate whether to collapse or not.
- * @param thread_per_block Number of threads set per block.
- * @param stream_id Stream id of CUDA calls
- */
-template <class GPUDataT>
-void collapseStateVector_CUDA_call(GPUDataT *sv, std::size_t num_sv,
-                                   const std::size_t stride, const bool k,
-                                   const std::size_t thread_per_block,
-                                   cudaStream_t stream_id) {
-    const std::size_t half_num_sv = num_sv / 2;
-    auto dv = std::div(static_cast<long long>(half_num_sv),
-                       static_cast<long long>(thread_per_block));
-
-    const std::size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
-    const std::size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
-    dim3 blockSize(thread_per_block, 1, 1);
-    dim3 gridSize(block_per_grid, 1);
-
-    collapseStateVectorKernel<GPUDataT>
-        <<<gridSize, blockSize, 0, stream_id>>>(sv, half_num_sv, stride, k);
-
-    PL_CUDA_IS_SUCCESS(cudaGetLastError());
-}
-
-/**
  * @brief The CUDA kernel that multiplies the state vector data on GPU device
  * by a global phase.
  *
@@ -301,22 +241,6 @@ void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                         const std::size_t index, bool async,
                         cudaStream_t stream_id) {
     setBasisState_CUDA_call(sv, value, index, async, stream_id);
-}
-
-void collapseStateVector_CUDA(cuComplex *sv, const std::size_t num_sv,
-                              const std::size_t stride, const bool k,
-                              std::size_t thread_per_block,
-                              cudaStream_t stream_id) {
-    collapseStateVector_CUDA_call(sv, num_sv, stride, k, thread_per_block,
-                                  stream_id);
-}
-
-void collapseStateVector_CUDA(cuDoubleComplex *sv, std::size_t num_sv,
-                              const std::size_t stride, const bool k,
-                              std::size_t thread_per_block,
-                              cudaStream_t stream_id) {
-    collapseStateVector_CUDA_call(sv, num_sv, stride, k, thread_per_block,
-                                  stream_id);
 }
 
 void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,

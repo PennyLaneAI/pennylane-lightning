@@ -348,6 +348,54 @@ class StateVectorCudaMPI final
     }
 
     /**
+     * @brief Collapse the state vector after having measured one of the qubit.
+     *
+     * Note: The branch parameter imposes the measurement result on the given
+     * wire.
+     *
+     * @param wire Wire to measure.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse(const std::size_t wire, const bool branch) {
+        PL_ABORT_IF_NOT(wire < this->getTotalNumQubits(),
+                        "Invalid wire index.");
+
+        std::vector<ComplexT> matrix(4, ComplexT(0.0, 0.0));
+
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ((i == 0 && branch == 0) || (i == 3 && branch == 1))
+                            ? ComplexT{1.0, 0.0}
+                            : ComplexT{0.0, 0.0};
+        }
+
+        mpi_manager_.Barrier();
+
+        applyMatrix(matrix, {wire}, false);
+
+        auto local_norm2 = norm2_CUDA<CFP_t>(
+            BaseType::getData(), BaseType::getLength(),
+            BaseType::getDataBuffer().getDevTag().getDeviceID(),
+            BaseType::getDataBuffer().getDevTag().getStreamID(),
+            this->getCublasCaller());
+
+        local_norm2 *= local_norm2;
+
+        mpi_manager_.Barrier();
+
+        auto norm2 = mpi_manager_.allreduce(local_norm2, "sum");
+
+        norm2 = std::sqrt(norm2);
+
+        normalize_CUDA<PrecisionT, CFP_t>(
+            norm2, BaseType::getData(), BaseType::getLength(),
+            BaseType::getDataBuffer().getDevTag().getDeviceID(),
+            BaseType::getDataBuffer().getDevTag().getStreamID(),
+            this->getCublasCaller());
+
+        mpi_manager_.Barrier();
+    }
+
+    /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached
      * gate values on the device. Lastly, accepts a host-provided matrix if

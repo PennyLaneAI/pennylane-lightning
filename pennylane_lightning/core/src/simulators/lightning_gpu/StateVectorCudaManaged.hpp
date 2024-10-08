@@ -67,17 +67,6 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                                const std::size_t index, bool async,
                                cudaStream_t stream_id);
 
-extern void collapseStateVector_CUDA(cuComplex *sv, const std::size_t num_sv,
-                                     const std::size_t stride, const bool k,
-                                     std::size_t thread_per_block,
-                                     cudaStream_t stream_id);
-
-extern void collapseStateVector_CUDA(cuDoubleComplex *sv,
-                                     const std::size_t num_sv,
-                                     const std::size_t stride, const bool k,
-                                     std::size_t thread_per_block,
-                                     cudaStream_t stream_id);
-
 extern void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
                                         cuComplex phase,
                                         std::size_t thread_per_block,
@@ -494,34 +483,35 @@ class StateVectorCudaManaged
      * Note: The branch parameter imposes the measurement result on the given
      * wire.
      *
-     * @tparam thread_per_block Number of threads per block. Default is 256.
      * @param wire Wire to measure.
      * @param branch Branch 0 or 1.
      */
-    template <std::size_t thread_per_block = 256>
     void collapse(const std::size_t wire, const bool branch) {
         PL_ABORT_IF_NOT(wire < BaseType::getNumQubits(), "Invalid wire index.");
 
-        const std::size_t stride = std::size_t{1U}
-                                   << (BaseType::getNumQubits() - (1 + wire));
-        // zero half the entries
-        // the "half" entries depend on the stride
-        // *_*_*_*_ for stride 1
-        // **__**__ for stride 2
-        // ****____ for stride 4
-        const bool k = branch ? 0 : 1;
+        std::vector<ComplexT> matrix(4, ComplexT(0.0, 0.0));
 
-        collapseStateVector_CUDA(
-            BaseType::getData(), BaseType::getLength(), stride, k,
-            thread_per_block,
-            BaseType::getDataBuffer().getDevTag().getStreamID());
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ((i == 0 && branch == 0) || (i == 3 && branch == 1))
+                            ? ComplexT{1.0, 0.0}
+                            : ComplexT{0.0, 0.0};
+        }
 
-        normalize_CUDA<CFP_t>(
+        applyMatrix(matrix, {wire}, false);
+
+        auto norm2 = norm2_CUDA<CFP_t>(
             BaseType::getData(), BaseType::getLength(),
             BaseType::getDataBuffer().getDevTag().getDeviceID(),
             BaseType::getDataBuffer().getDevTag().getStreamID(),
             this->getCublasCaller());
+
+        normalize_CUDA<PrecisionT, CFP_t>(
+            norm2, BaseType::getData(), BaseType::getLength(),
+            BaseType::getDataBuffer().getDevTag().getDeviceID(),
+            BaseType::getDataBuffer().getDevTag().getStreamID(),
+            this->getCublasCaller());
     }
+
     //****************************************************************************//
     // Explicit gate calls for bindings
     //****************************************************************************//
