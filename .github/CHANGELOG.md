@@ -43,6 +43,9 @@
 
 ### Improvements
 
+* Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
+  [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
+
 * Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
   
