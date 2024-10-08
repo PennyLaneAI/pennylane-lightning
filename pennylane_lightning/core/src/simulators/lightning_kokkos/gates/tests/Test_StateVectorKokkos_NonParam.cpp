@@ -758,6 +758,81 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyNCMultiQubitOp",
+                   "[StateVectorKokkos_Nonparam][Inverse]", float, double) {
+    const bool inverse = GENERATE(true, false);
+    std::size_t num_qubits = 3;
+    StateVectorKokkos<TestType> sv_normal{num_qubits};
+    StateVectorKokkos<TestType> sv_mq{num_qubits};
+    using UnmanagedComplexHostView =
+        Kokkos::View<Kokkos::complex<TestType> *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+
+    SECTION("0 Controlled Single Qubit via applyOperation") {
+        std::vector<std::size_t> wires = {0};
+        sv_normal.applyOperation("PauliX", wires, inverse);
+        auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_normal.getView());
+
+        std::vector<std::size_t> controlled_wire = {};
+        std::vector<bool> controlled_value = {};
+        std::vector<std::size_t> wire = {0};
+        auto matrix = getPauliX<Kokkos::complex, TestType>();
+        sv_mq.applyOperation("XXXXXXXX", controlled_wire, controlled_value, wire, inverse, {}, matrix);
+        auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_mq.getView());
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_normal_host[j]) == Approx(imag(sv_mq_host[j])));
+            CHECK(real(sv_normal_host[j]) == Approx(real(sv_mq_host[j])));
+        }
+    }
+
+    SECTION("Controlled Single Qubit via applyOperation") {
+        std::vector<std::size_t> wires = {0, 1};
+        sv_normal.applyOperation("CNOT", wires, inverse);
+        auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_normal.getView());
+
+        std::vector<std::size_t> controlled_wire = {0};
+        std::vector<bool> controlled_value = {true};
+        std::vector<std::size_t> wire = {1};
+        auto matrix = getPauliX<Kokkos::complex, TestType>();
+        sv_mq.applyOperation("XXXXXXXX", controlled_wire, controlled_value, wire, inverse, {}, matrix);
+        auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_mq.getView());
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_normal_host[j]) == Approx(imag(sv_mq_host[j])));
+            CHECK(real(sv_normal_host[j]) == Approx(real(sv_mq_host[j])));
+        }
+    }
+
+    SECTION("Single Qubit via applyNCMultiQubitOp") {
+        std::vector<std::size_t> wires = {0, 1};
+        sv_normal.applyOperation("CNOT", wires, inverse);
+        auto sv_normal_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_normal.getView());
+
+        std::vector<std::size_t> controlled_wire = {0};
+        std::vector<bool> controlled_value = {true};
+        std::vector<std::size_t> wire = {1};
+        auto matrix = getPauliX<Kokkos::complex, TestType>();
+        Kokkos::View<Kokkos::complex<TestType> *> device_matrix("device_matrix",
+                                                                matrix.size());
+        Kokkos::deep_copy(device_matrix, UnmanagedComplexHostView(
+                                             matrix.data(), matrix.size()));
+        sv_mq.applyNCMultiQubitOp(device_matrix, controlled_wire, controlled_value, wire, inverse);
+        auto sv_mq_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_mq.getView());
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_normal_host[j]) == Approx(imag(sv_mq_host[j])));
+            CHECK(real(sv_normal_host[j]) == Approx(real(sv_mq_host[j])));
+        }
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyCSWAP",
                    "[StateVectorKokkos_Nonparam]", float, double) {
     {
@@ -823,10 +898,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             sv_gate.applyOperation("CNOT", {control, wire});
             sv_control.applyOperation("PauliX", std::vector<std::size_t>{control}, 
                                       std::vector<bool>{true},
-                                      std::vector<std::size_T>{wire});
-            auto sv_gate_host = Kokkos:create_mirror_view_and_copy(
+                                      std::vector<std::size_t>{wire});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
                 Kokkos::HostSpace{}, sv_gate.getView());
-            auto sv_control_host = Kokkos:create_mirror_view_and_copy(
+            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
                 Kokkos::HostSpace{}, sv_control.getView());
 
             for (std::size_t j = 0; j < exp2(num_qubits); j++) {
@@ -843,6 +918,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             sv_control.applyOperation("PauliX", std::vector<std::size_t>{0, control},
                                std::vector<bool>{true, true},
                                std::vector<std::size_t>{wire});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_control.getView());
             for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(imag(sv_gate_host[j]) == Approx(imag(sv_control_host[j])));
                 CHECK(real(sv_gate_host[j]) == Approx(real(sv_control_host[j])));
@@ -852,14 +931,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             sv_control.applyOperation("PauliX", std::vector<std::size_t>{control, 0},
                                std::vector<bool>{true, true},
                                std::vector<std::size_t>{wire});
+            Kokkos::deep_copy(sv_gate_host, sv_gate.getView());
+            Kokkos::deep_copy(sv_control_host, sv_control.getView());
             for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(imag(sv_gate_host[j]) == Approx(imag(sv_control_host[j])));
                 CHECK(real(sv_gate_host[j]) == Approx(real(sv_control_host[j])));
             }
-            
         }
-
-
     }
 
                    }

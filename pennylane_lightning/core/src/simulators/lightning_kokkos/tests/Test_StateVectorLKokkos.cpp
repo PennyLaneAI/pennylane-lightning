@@ -229,7 +229,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
             state_vector.applyOperations({"PauliX", "PauliY"}, {{0}, {1}},
                                          {false}),
             LightningException, "must all be equal"); // invalid inverse
-        PL_REQUIRE_THROWS_MATCHES(
+        PL_REQUIRE_THROWS_MATCHES( // TODO: need to update
             state_vector.applyOperation("PauliX", std::vector<std::size_t>{0},
                                         std::vector<bool>{false},
                                         std::vector<std::size_t>{1}),

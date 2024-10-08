@@ -171,7 +171,25 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
              "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         .def("normalize", &StateVectorT::normalize,
              "Normalize the statevector to norm 1.")
-        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>>,
+        .def("apply",
+            [](StateVectorT &sv, const std::string &str,
+               const std::vector<std::size_t> &wires, bool inv,
+               [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
+               [[maybe_unused]] const np_arr_c &gate_matrix) {
+                const auto m_buffer = gate_matrix.request();
+                std::vector<Kokkos::complex<ParamT>> conv_matrix;
+                if (m_buffer.size) {
+                    const auto m_ptr =
+                        static_cast<const Kokkos::complex<ParamT> *>(
+                            m_buffer.ptr);
+                    conv_matrix = std::vector<Kokkos::complex<ParamT>>{
+                        m_ptr, m_ptr + m_buffer.size};
+                }
+                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
+                                  conv_matrix);
+            },
+            "Apply operation via the gate matrix")
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
              "Apply controlled operation");
 }
 

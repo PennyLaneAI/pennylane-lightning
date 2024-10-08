@@ -19,6 +19,7 @@
 #pragma once
 #include <Kokkos_Core.hpp>
 
+#include "Util.hpp"
 #include "BitUtil.hpp"
 
 /// @cond DEV
@@ -76,6 +77,21 @@ inline auto pointer2view(const T *vec, const std::size_t num)
 template <typename T>
 inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
     return pointer2view(vec.data(), vec.size());
+}
+
+/**
+ * @brief Specialized TODO:
+ * 
+ * @param vec 
+ * @return Kokkos::View<int *> 
+ */
+inline auto vector2view(const std::vector<bool> &vec) -> Kokkos::View<int *> {
+    std::vector<int> vec_int(vec.size());
+    for(int i : vec) {
+        vec_int.push_back(i);
+    }
+
+    return pointer2view(vec_int.data(), vec_int.size());
 }
 
 /**
@@ -162,17 +178,16 @@ inline auto reverseWires(const std::size_t num_qubits,
 
 inline auto generateControlBitPatterns(const std::size_t num_qubits,
                                   const std::vector<std::size_t> &controlled_wires,
-                                  const std::vector<std::size_t>& controlled_values,
+                                  const std::vector<bool>& controlled_values,
                                   const std::vector<std::size_t> &wires)
     -> KokkosIntVector {
     std::vector<std::size_t> indices_;
-    indices_.reserve(exp2(wires.size()));
+    indices_.reserve(Pennylane::Util::exp2(wires.size()));
     indices_.emplace_back(0);
 
     for (auto index_it = wires.rbegin(); index_it != wires.rend();
          index_it++) {
-        const std::size_t value =
-            maxDecimalForQubit(*index_it, num_qubits);
+        const std::size_t value = Pennylane::Util::maxDecimalForQubit(*index_it, num_qubits);
         const std::size_t currentSize = indices_.size();
         for (std::size_t j = 0; j < currentSize; j++) {
             indices_.emplace_back(indices_[j] + value);
@@ -213,4 +228,6 @@ inline std::size_t parity_2_offset(const KokkosIntVector &parity,
         }
         return offset;
 
-} // namespace Pennylane::LightningKokkos::Util
+} 
+
+}// namespace Pennylane::LightningKokkos::Util
