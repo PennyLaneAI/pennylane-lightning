@@ -26,6 +26,7 @@
 #include <set>
 #include <type_traits> // integral, floating_point, is_same_v
 #include <vector>
+#include <concepts> // integral, floating_point
 
 #include "Error.hpp"
 #include "TypeTraits.hpp" // remove_complex_t
