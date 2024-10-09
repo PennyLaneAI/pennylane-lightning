@@ -43,6 +43,9 @@
 
 ### Improvements
 
+* The `prob` data return `lightning.gpu` C++ layer is aligned with other state-vector backends and `lightning.gpu` supports out-of-order `qml.prob`.
+    [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
+
 * Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
   [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
 
