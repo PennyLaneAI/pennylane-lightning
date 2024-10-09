@@ -67,17 +67,6 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                                const std::size_t index, bool async,
                                cudaStream_t stream_id);
 
-extern void collapseStateVector_CUDA(cuComplex *sv, const std::size_t num_sv,
-                                     const std::size_t stride, const bool k,
-                                     std::size_t thread_per_block,
-                                     cudaStream_t stream_id);
-
-extern void collapseStateVector_CUDA(cuDoubleComplex *sv,
-                                     const std::size_t num_sv,
-                                     const std::size_t stride, const bool k,
-                                     std::size_t thread_per_block,
-                                     cudaStream_t stream_id);
-
 extern void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
                                         cuComplex phase,
                                         std::size_t thread_per_block,
@@ -504,34 +493,48 @@ class StateVectorCudaManaged
      * Note: The branch parameter imposes the measurement result on the given
      * wire.
      *
-     * @tparam thread_per_block Number of threads per block. Default is 256.
      * @param wire Wire to measure.
      * @param branch Branch 0 or 1.
      */
-    template <std::size_t thread_per_block = 256>
     void collapse(const std::size_t wire, const bool branch) {
         PL_ABORT_IF_NOT(wire < BaseType::getNumQubits(), "Invalid wire index.");
+        cudaDataType_t data_type;
 
-        const std::size_t stride = std::size_t{1U}
-                                   << (BaseType::getNumQubits() - (1 + wire));
-        // zero half the entries
-        // the "half" entries depend on the stride
-        // *_*_*_*_ for stride 1
-        // **__**__ for stride 2
-        // ****____ for stride 4
-        const bool k = branch ? 0 : 1;
+        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                      std::is_same_v<CFP_t, double2>) {
+            data_type = CUDA_C_64F;
+        } else {
+            data_type = CUDA_C_32F;
+        }
 
-        collapseStateVector_CUDA(
-            BaseType::getData(), BaseType::getLength(), stride, k,
-            thread_per_block,
-            BaseType::getDataBuffer().getDevTag().getStreamID());
+        std::vector<int> basisBits(1, BaseType::getNumQubits() - 1 - wire);
 
-        normalize_CUDA<CFP_t>(
-            BaseType::getData(), BaseType::getLength(),
-            BaseType::getDataBuffer().getDevTag().getDeviceID(),
-            BaseType::getDataBuffer().getDevTag().getStreamID(),
-            this->getCublasCaller());
+        double abs2sum0, abs2sum1;
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* double * */ &abs2sum0,
+            /* double * */ &abs2sum1,
+            /* const int32_t * */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size()));
+
+        double norm = (branch == 0) ? abs2sum0 : abs2sum1;
+
+        int parity = branch;
+
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecCollapseOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* const int32_t parity */ parity,
+            /* const int32_t *basisBits */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size(),
+            /* double norm */ norm));
     }
+
     //****************************************************************************//
     // Explicit gate calls for bindings
     //****************************************************************************//
