@@ -26,6 +26,7 @@
 #include <set>
 #include <type_traits> // is_same_v
 #include <vector>
+#include <concepts> // integral, floating_point
 
 #include "Error.hpp"
 #include "TypeTraits.hpp" // remove_complex_t
@@ -41,6 +42,7 @@ namespace Pennylane::Util {
  * @return constexpr std::complex<T>
  */
 template <class T, class U = T>
+    requires std::integral<U> || std::floating_point<U>
 inline static constexpr auto ConstMult(U a, std::complex<T> b)
     -> std::complex<T> {
     return {a * b.real(), a * b.imag()};
