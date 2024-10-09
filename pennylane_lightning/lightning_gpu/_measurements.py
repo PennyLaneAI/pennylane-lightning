@@ -34,7 +34,7 @@ try:
 except ImportError as error_import:
     warn(str(error_import), UserWarning)
 
-from typing import Any, List
+from typing import List
 
 import numpy as np
 import pennylane as qml
@@ -200,20 +200,3 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
         return self._measurement_lightning.expval(
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
-
-    def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
-        """Convert the data structure from the C++ backend to a common structure through lightning devices.
-
-        Args:
-            probs_result (Any): Result provided by C++ backend.
-
-        Returns:
-            np.ndarray with probabilities of the supplied observable or wires.
-        """
-
-        # Device returns as col-major orderings, so perform transpose on data for bit-index shuffle for now.
-        if len(probs_results) > 0:
-            num_local_wires = len(probs_results).bit_length() - 1 if len(probs_results) > 0 else 0
-            return probs_results.reshape([2] * num_local_wires).transpose().reshape(-1)
-
-        return probs_results

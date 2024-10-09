@@ -58,7 +58,7 @@ template <typename TypeList> void testProbabilities() {
             input = {// Bit index reodering conducted in the python layer
                      // for L-GPU. Also L-GPU backend doesn't support
                      // out of order wires for probability calculation
-                     {{2, 1, 0},
+                     {{0, 1, 2},
                       {0.67078706, 0.03062806, 0.0870997, 0.00397696,
                        0.17564072, 0.00801973, 0.02280642, 0.00104134}}};
 
@@ -386,7 +386,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
-            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
             auto prob_all = mpi_manager.allgather(prob);
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
         }
