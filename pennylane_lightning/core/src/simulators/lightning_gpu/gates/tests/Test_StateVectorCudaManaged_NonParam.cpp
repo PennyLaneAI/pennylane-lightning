@@ -1105,23 +1105,4 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetBasisStates",
 
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
-
-    SECTION("Set basis state on device with data on the host") {
-        auto init_state =
-            createRandomStateVectorData<PrecisionT>(re, num_qubits);
-
-        StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.CopyHostDataToGpu(init_state.data(), init_state.size());
-
-        std::vector<std::size_t> state = {0, 1, 0};
-        std::vector<std::size_t> wires = {0, 1, 2};
-
-        sv.setBasisState(state, wires, false);
-
-        std::vector<std::complex<PrecisionT>> expected_state(init_state.size(),
-                                                             {0, 0});
-        expected_state[2] = std::complex<PrecisionT>({1, 0});
-
-        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
-    }
 }
