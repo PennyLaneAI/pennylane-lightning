@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Tests for default qubit preprocessing."""
-from mpi4py import MPI
 import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
+from mpi4py import MPI
 
 if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
@@ -45,4 +45,3 @@ def test_unspported_mid_measurement():
         match=f"LightningGPU-MPI does not support Mid-circuit measurements.",
     ):
         func(*params)
-
