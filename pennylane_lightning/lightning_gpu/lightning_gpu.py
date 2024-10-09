@@ -508,8 +508,6 @@ class LightningGPU(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
-        #if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-        #    raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             results = []
             aux_circ = qml.tape.QuantumScript(
