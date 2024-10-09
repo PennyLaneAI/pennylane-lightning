@@ -94,16 +94,11 @@ class Measurements final
      */
     auto probs(const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
-        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()) ||
-                            std::is_sorted(wires.rbegin(), wires.rend()),
-                        "LightningGPU does not currently support out-of-order "
-                        "wire indices with probability calculations");
 
         // Data return type fixed as double in custatevec function call
         std::vector<double> probabilities(Pennylane::Util::exp2(wires.size()));
         // this should be built upon by the wires not participating
-        int maskLen =
-            0; // static_cast<int>(BaseType::getNumQubits() - wires.size());
+        int maskLen = 0;
         int *maskBitString = nullptr; //
         int *maskOrdering = nullptr;
 
@@ -124,6 +119,8 @@ class Measurements final
                            return static_cast<int>(
                                this->_statevector.getNumQubits() - 1 - x);
                        });
+
+        std::reverse(wires_int.begin(), wires_int.end());
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumArray(
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
