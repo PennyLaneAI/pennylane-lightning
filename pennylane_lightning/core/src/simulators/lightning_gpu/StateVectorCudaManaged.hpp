@@ -269,45 +269,6 @@ class StateVectorCudaManaged
     }
 
     /**
-     * @brief Set values for a batch of elements of the state-vector.
-     *
-     * @param state_ptr Pointer to the initial state data.
-     * @param num_states Length of the initial state data.
-     * @param wires Wires.
-     */
-    void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
-                        const std::vector<std::size_t> &wires) {
-        PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
-                        "Inconsistent state and wires dimensions.");
-
-        const auto num_qubits = BaseType::getNumQubits();
-
-        PL_ABORT_IF_NOT(std::find_if(wires.begin(), wires.end(),
-                                     [&num_qubits](const auto i) {
-                                         return i >= num_qubits;
-                                     }) == wires.end(),
-                        "Invalid wire index.");
-
-        using index_type =
-            typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                      int32_t, int64_t>::type;
-
-        // Calculate the indices of the state-vector to be set.
-        // TODO: Could move to GPU calculation if the state size is large.
-        std::vector<index_type> indices(num_states);
-        constexpr std::size_t one{1U};
-        for (std::size_t i = 0; i < num_states; i++) {
-            std::size_t index{0U};
-            for (std::size_t j = 0; j < wires.size(); j++) {
-                const std::size_t bit = (i & (one << j)) >> j;
-                index |= bit << (num_qubits - 1 - wires[wires.size() - 1 - j]);
-            }
-            indices[i] = index;
-        }
-        setStateVector<index_type>(num_states, state_ptr, indices.data());
-    }
-
-    /**
      * @brief Multiplies the state-vector by a global phase.
      *
      * @param adjoint Indicates whether to use adjoint of gate.

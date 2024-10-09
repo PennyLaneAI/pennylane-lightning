@@ -21,12 +21,12 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <concepts> // integral, floating_point
 #include <numbers>
 #include <numeric> // transform_reduce
 #include <set>
 #include <type_traits> // is_same_v
 #include <vector>
-#include <concepts> // integral, floating_point
 
 #include "Error.hpp"
 #include "TypeTraits.hpp" // remove_complex_t

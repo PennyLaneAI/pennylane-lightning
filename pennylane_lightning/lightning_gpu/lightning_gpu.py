@@ -18,14 +18,14 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 from __future__ import annotations
 
+import os
+import sys
 from ctypes.util import find_library
 from dataclasses import replace
 from importlib import util as imp_util
 from pathlib import Path
 from typing import List, Optional, Union
 from warnings import warn
-import sys
-import os
 
 import numpy as np
 import pennylane as qml
@@ -514,7 +514,7 @@ class LightningGPU(LightningBase):
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state).measure_final_state(circuit)
-    
+
     @staticmethod
     def get_c_interface():
         """Returns a tuple consisting of the device name, and
