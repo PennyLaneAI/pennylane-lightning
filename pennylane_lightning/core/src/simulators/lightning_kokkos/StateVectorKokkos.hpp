@@ -503,7 +503,7 @@ class StateVectorKokkos final
                            bool inverse = false) {
         
        auto &&num_qubits = this->getNumQubits();
-        std::size_t two2N = std::exp2(num_qubits - wires.size());
+        std::size_t two2N = std::exp2(num_qubits - wires.size() - controlled_wires.size());
         std::size_t dim = std::exp2(wires.size());
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 

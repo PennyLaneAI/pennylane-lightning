@@ -268,8 +268,8 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
         ComplexT v1 = arr(i1 + offset);
 
 
-        arr(i0) = matrix(0B00) * v0 + matrix(0B01) * v1;
-        arr(i1) = matrix(0B10) * v0 + matrix(0B11) * v1;
+        arr(i0 + offset) = matrix(0B00) * v0 + matrix(0B01) * v1;
+        arr(i1 + offset) = matrix(0B10) * v0 + matrix(0B11) * v1;
     }
 };
 
@@ -384,13 +384,13 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
         ComplexT v11 = arr(i11 + offset);
 
 
-        arr(i00) = matrix(0B0000) * v00 + matrix(0B0001) * v01 +
+        arr(i00 + offset) = matrix(0B0000) * v00 + matrix(0B0001) * v01 +
                    matrix(0B0010) * v10 + matrix(0B0011) * v11;
-        arr(i01) = matrix(0B0100) * v00 + matrix(0B0101) * v01 +
+        arr(i01 + offset) = matrix(0B0100) * v00 + matrix(0B0101) * v01 +
                    matrix(0B0110) * v10 + matrix(0B0111) * v11;
-        arr(i10) = matrix(0B1000) * v00 + matrix(0B1001) * v01 +
+        arr(i10 + offset) = matrix(0B1000) * v00 + matrix(0B1001) * v01 +
                    matrix(0B1010) * v10 + matrix(0B1011) * v11;
-        arr(i11) = matrix(0B1100) * v00 + matrix(0B1101) * v01 +
+        arr(i11 + offset) = matrix(0B1100) * v00 + matrix(0B1101) * v01 +
                    matrix(0B1110) * v10 + matrix(0B1111) * v11;
     }
 };
@@ -516,14 +516,14 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
         ComplexT v110 = arr(i110 + offset);
         ComplexT v111 = arr(i111 + offset);
 
-        arr(i000) = GATESUM3(0B000);
-        arr(i001) = GATESUM3(0B001);
-        arr(i010) = GATESUM3(0B010);
-        arr(i011) = GATESUM3(0B011);
-        arr(i100) = GATESUM3(0B100);
-        arr(i101) = GATESUM3(0B101);
-        arr(i110) = GATESUM3(0B110);
-        arr(i111) = GATESUM3(0B111);
+        arr(i000 + offset) = GATESUM3(0B000);
+        arr(i001 + offset) = GATESUM3(0B001);
+        arr(i010 + offset) = GATESUM3(0B010);
+        arr(i011 + offset) = GATESUM3(0B011);
+        arr(i100 + offset) = GATESUM3(0B100);
+        arr(i101 + offset) = GATESUM3(0B101);
+        arr(i110 + offset) = GATESUM3(0B110);
+        arr(i111 + offset) = GATESUM3(0B111);
     }
 };
 
