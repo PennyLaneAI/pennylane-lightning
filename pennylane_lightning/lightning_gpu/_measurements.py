@@ -34,7 +34,7 @@ try:
 except ImportError as error_import:
     warn(str(error_import), UserWarning)
 
-from typing import Any, List
+from typing import List
 
 import numpy as np
 import pennylane as qml

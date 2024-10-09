@@ -94,7 +94,6 @@ class Measurements final
      */
     auto probs(const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
-
         // Data return type fixed as double in custatevec function call
         std::vector<double> probabilities(Pennylane::Util::exp2(wires.size()));
         // this should be built upon by the wires not participating
