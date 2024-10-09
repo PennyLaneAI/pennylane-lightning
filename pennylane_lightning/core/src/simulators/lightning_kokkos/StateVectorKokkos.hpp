@@ -469,6 +469,11 @@ class StateVectorKokkos final
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
+
+        if (controlled_wires.empty()) {
+            return applyOperation(opName, wires, inverse, params, gate_matrix);
+        }
+        
         if (opName == "Identity") {
             // No op
         } else if (array_contains(gate_names, std::string_view{opName})) {
