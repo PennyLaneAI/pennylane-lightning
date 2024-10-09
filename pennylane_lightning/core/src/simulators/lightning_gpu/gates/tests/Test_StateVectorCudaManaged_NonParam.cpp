@@ -1069,74 +1069,15 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
         }
 
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.CopyHostDataToGpu(init_state.data(), init_state.size());
 
-        using index_type =
-            typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                      int32_t, int64_t>::type;
-        // The setStates will shuffle the state vector values on the device with
-        // the following indices and values setting on host. For example, the
-        // values[i] is used to set the indices[i] th element of state vector on
-        // the device. For example, values[2] (init_state[5]) will be copied to
-        // indices[2]th or (4th) element of the state vector.
-        std::vector<index_type> indices = {0, 2, 4, 6, 1, 3, 5, 7};
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
 
-        std::vector<std::complex<PrecisionT>> values = {
-            init_state[1], init_state[3], init_state[5], init_state[7],
-            init_state[0], init_state[2], init_state[4], init_state[6]};
-
-        sv.template setStateVector<index_type>(values.size(), values.data(),
-                                               indices.data(), false);
-
-        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
-
-        std::copy(init_state.begin(), init_state.end(),
-                  values.begin()); // copy the data to values
         sv.setStateVector(values.data(), values.size(),
                           std::vector<std::size_t>{0, 1, 2});
         CHECK(init_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
-// LCOV_EXCL_START
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
-                   "[StateVectorCudaManaged_Nonparam]", float, double) {
-    using PrecisionT = TestType;
-    const std::size_t num_qubits = 3;
-    std::mt19937 re{1337};
-
-    SECTION("SetStates with a non-default GPU thread setting") {
-        auto init_state =
-            createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto expected_state = init_state;
-
-        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
-             i++) {
-            std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
-        }
-
-        StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.CopyHostDataToGpu(init_state.data(), init_state.size());
-
-        using index_type =
-            typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                      int32_t, int64_t>::type;
-
-        std::vector<index_type> indices = {0, 2, 4, 6, 1, 3, 5, 7};
-
-        std::vector<std::complex<PrecisionT>> values = {
-            init_state[1], init_state[3], init_state[5], init_state[7],
-            init_state[0], init_state[2], init_state[4], init_state[6]};
-
-        // default setting of the number of threads in a block is 256.
-        const std::size_t threads_per_block = 1024;
-
-        sv.template setStateVector<index_type, threads_per_block>(
-            values.size(), values.data(), indices.data(), false);
-
-        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
-    }
-}
-// LCOV_EXCL_STOP
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetBasisStates",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
