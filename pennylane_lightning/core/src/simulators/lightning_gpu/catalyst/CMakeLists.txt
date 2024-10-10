@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(lightning_gpu_catalyst LANGUAGES CXX)
 
-set(LK_CATALYST_FILES LightningGPUSimulator.cpp CACHE INTERNAL "")
-add_library(lightning_gpu_catalyst SHARED ${LK_CATALYST_FILES})
+set(LGPU_CATALYST_FILES LightningGPUSimulator.cpp CACHE INTERNAL "")
+add_library(lightning_gpu_catalyst SHARED ${LGPU_CATALYST_FILES})
 
 include(FetchContent)
 

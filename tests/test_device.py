@@ -141,6 +141,21 @@ def test_supported_linux_platform_kokkos():
 
 
 @pytest.mark.skipif(
+    (device_name != "lightning.gpu" or sys.platform != "linux"),
+    reason="This test is for LGPU under Linux only.",
+)
+def test_supported_linux_platform_gpu():
+    """Test supported Linux platform for LGPU."""
+
+    dev = qml.device(device_name, wires=1)
+
+    dev_name, shared_lib_name = dev.get_c_interface()
+
+    assert dev_name == "LightningGPUSimulator"
+    assert "liblightning_gpu_catalyst.so" in shared_lib_name
+
+
+@pytest.mark.skipif(
     (device_name != "lightning.kokkos" or sys.platform != "darwin"),
     reason="This test is for Kokkos under MacOS only.",
 )
