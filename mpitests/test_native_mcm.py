@@ -18,9 +18,6 @@ import pytest
 from conftest import LightningDevice, device_name
 from mpi4py import MPI
 
-if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
-    pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
-
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
@@ -41,7 +38,6 @@ def test_unspported_mid_measurement():
     comm.Barrier()
 
     with pytest.raises(
-        qml.DeviceError,
-        match=f"LightningGPU-MPI does not support Mid-circuit measurements.",
+        qml.DeviceError, match="LightningGPU-MPI does not support Mid-circuit measurements."
     ):
         func(*params)

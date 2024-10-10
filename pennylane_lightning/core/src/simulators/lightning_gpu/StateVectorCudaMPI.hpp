@@ -355,7 +355,7 @@ class StateVectorCudaMPI final
             collapse_local_(wireInt, branch);
         } else {
             // global wire
-            int local_wire = 0;
+            constexpr int local_wire = 0;
             std::vector<int2> wirePairs{make_int2(wireInt, local_wire)};
             applyMPI_Dispatcher(wirePairs, &StateVectorCudaMPI::collapse_local_,
                                 local_wire, branch);
@@ -1680,12 +1680,12 @@ class StateVectorCudaMPI final
             /* const int32_t * */ basisBits.data(),
             /* const uint32_t nBasisBits */ basisBits.size()));
 
-        auto abs2sum0 = mpi_manager_.allreduce(abs2sum0_local, "sum");
-        auto abs2sum1 = mpi_manager_.allreduce(abs2sum1_local, "sum");
+        auto abs2sum0 = mpi_manager_.allreduce<double>(abs2sum0_local, "sum");
+        auto abs2sum1 = mpi_manager_.allreduce<double>(abs2sum1_local, "sum");
 
         double norm = (branch == 0) ? abs2sum0 : abs2sum1;
 
-        int parity = branch;
+        const int parity = static_cast<int>(branch);
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecCollapseOnZBasis(
             /* custatevecHandle_t */ handle_.get(),

@@ -522,7 +522,7 @@ class StateVectorCudaManaged
 
         double norm = (branch == 0) ? abs2sum0 : abs2sum1;
 
-        int parity = branch;
+        const int parity = static_cast<int>(branch);
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecCollapseOnZBasis(
             /* custatevecHandle_t */ handle_.get(),
