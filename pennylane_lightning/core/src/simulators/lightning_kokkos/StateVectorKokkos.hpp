@@ -476,13 +476,12 @@ class StateVectorKokkos final
         
         if (opName == "Identity") {
             // No op
-        } else if (array_contains(gate_names, std::string_view{opName})) {
-            //TODO:
-            PL_ABORT("Controlled named gate not yet supported"); 
+        } else if (array_contains(controlled_gate_names, std::string_view{opName})) {
             const std::size_t num_qubits = this->getNumQubits();
-            const GateOperation gateop =
-                reverse_lookup(gate_names, std::string_view{opName});
-            applyNamedOperation<KokkosExecSpace>(gateop, *data_, num_qubits,
+            const ControlledGateOperation gateop =
+                reverse_lookup(controlled_gate_names, std::string_view{opName});
+            applyNCNamedOperation<KokkosExecSpace>(gateop, *data_, num_qubits,
+                                                 controlled_wires, controlled_values,
                                                  wires, inverse, params);
         } else {
             PL_ABORT_IF(gate_matrix.empty(),
@@ -543,7 +542,7 @@ class StateVectorKokkos final
                                                     controlled_values, wires));
             break;
         default: //TODO: to update
-            PL_ABORT("NOT YET SUPPORTED");
+            PL_ABORT("Controlled operation not yet implemented for >3 wires ");
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
                                        ScratchViewSizeT::shmem_size(dim);
             Kokkos::parallel_for(

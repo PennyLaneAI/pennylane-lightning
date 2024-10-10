@@ -80,21 +80,6 @@ inline auto vector2view(const std::vector<T> &vec) -> Kokkos::View<T *> {
 }
 
 /**
- * @brief Specialized TODO:
- * 
- * @param vec 
- * @return Kokkos::View<int *> 
- */
-inline auto vector2view(const std::vector<bool> &vec) -> Kokkos::View<int *> {
-    std::vector<int> vec_int(vec.size());
-    for(int i : vec) {
-        vec_int.push_back(i);
-    }
-
-    return pointer2view(vec_int.data(), vec_int.size());
-}
-
-/**
  * @brief Compute the parities and shifts for multi-qubit operations.
  *
  * @param num_qubits Number of qubits in the state vector.
