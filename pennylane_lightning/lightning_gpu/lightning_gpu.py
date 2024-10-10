@@ -514,7 +514,7 @@ class LightningGPU(LightningBase):
                 raise qml.DeviceError("LightningGPU-MPI does not support Mid-circuit measurements.")
 
             results = []
-            aux_circ = qml.tape.QuantumScript(
+            aux_circ = QuantumScript(
                 circuit.operations,
                 circuit.measurements,
                 shots=[1],
