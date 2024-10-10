@@ -411,7 +411,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[MeasuresMPI]", double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
     std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
-        input = {{{2, 1, 0},
+        input = {{{0, 1, 2},
                   {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                    0.00801973, 0.02280642, 0.00104134}}};
 

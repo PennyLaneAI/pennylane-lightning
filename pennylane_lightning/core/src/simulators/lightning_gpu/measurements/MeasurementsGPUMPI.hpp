@@ -130,6 +130,8 @@ class MeasurementsMPI final
             }
         }
 
+        std::reverse(wires_local.begin(), wires_local.end());
+
         std::vector<double> local_probabilities(
             Pennylane::Util::exp2(wires_local.size()));
 

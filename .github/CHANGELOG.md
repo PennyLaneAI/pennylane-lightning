@@ -43,6 +43,9 @@
 
 ### Improvements
 
+* The `prob` data return `lightning.gpu` C++ layer is aligned with other state-vector backends and `lightning.gpu` supports out-of-order `qml.prob`.
+    [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
+
 * Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
   [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
 
@@ -109,6 +112,9 @@
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
+
+* Add concept restriction to ensure `ConstMult` inline function only hit with arithmetic-values times complex values. Fixes build failures with the test suite when enabling OpenMP, and disabling BLAS and Python under clang.
+  [(#936)](https://github.com/PennyLaneAI/pennylane-lightning/pull/936)
 
 * Bug fix for `applyMatrix` in `lightning.tensor`. Matrix operator data is not stored in the `cuGateCache` object to support `TensorProd` obs with multiple `Hermitian` obs.
   [(#932)](https://github.com/PennyLaneAI/pennylane-lightning/pull/932)
