@@ -59,7 +59,7 @@ void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                         cudaStream_t stream_id);
 
 /**
- * @brief The CUDA kernel that setS state vector data on GPU device from the
+ * @brief The CUDA kernel that sets state vector data on GPU device from the
  * input values (on device) and their corresponding indices (on device)
  * information.
  *

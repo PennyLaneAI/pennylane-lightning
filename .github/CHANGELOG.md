@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `mid-circuit measurements` support to `lightning.gpu`'s single-GPU backend.
+  [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
+
 * Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
   [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
