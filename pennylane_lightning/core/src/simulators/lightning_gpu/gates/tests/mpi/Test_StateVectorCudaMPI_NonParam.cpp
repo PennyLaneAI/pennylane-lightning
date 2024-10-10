@@ -173,7 +173,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetIthStates",
+TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetBasisStates",
                    "[StateVectorCudaMPI_Nonparam]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;

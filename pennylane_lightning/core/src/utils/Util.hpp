@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
-#include <concepts> // integral, floating_point
 #include <numbers>
 #include <numeric> // transform_reduce
 #include <set>
@@ -42,7 +41,6 @@ namespace Pennylane::Util {
  * @return constexpr std::complex<T>
  */
 template <class T, class U = T>
-    requires std::integral<U> || std::floating_point<U>
 inline static constexpr auto ConstMult(U a, std::complex<T> b)
     -> std::complex<T> {
     return {a * b.real(), a * b.imag()};
