@@ -73,18 +73,22 @@ else()
 
 endif()
 
+if(Kokkos_ENABLE_CUDA)
+    message(STATUS "Kokkos_ENABLE_CUDA is ON")
+
+    target_compile_definitions(lightning_kokkos_catalyst PRIVATE
+        Kokkos_ENABLE_OPENMP=OFF
+        Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF
+        KOKKOS_CUDA_OPTIONS="disable_malloc_async enable_lambda enable_constexpr"
+    )
+endif()
+
 target_include_directories(lightning_kokkos_catalyst INTERFACE  ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_kokkos_catalyst PUBLIC  lightning_compile_options
-                                                        lightning_external_libs
-                                                        lightning_base
-                                                        lightning_gates
-                                                        lightning_utils
-                                                        lightning_kokkos
                                                         lightning_kokkos_algorithms
-                                                        lightning_kokkos_gates
                                                         lightning_kokkos_measurements
-                                                        lightning_kokkos_utils
 )
+
 
 if (BUILD_TESTS)
     enable_testing()
