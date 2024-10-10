@@ -49,7 +49,52 @@ using StateVectorBackends =
                               StateVectorKokkos<double>, void>;
 
 /**
- * @brief Get a gate kernel map for a statevector.
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
+
+/**
+ * @brief Get a controlled matrix and gate kernel map for a statevector.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
@@ -61,6 +106,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
+
 
     pyclass.def(
         "applyPauliRot",
@@ -121,8 +167,11 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 }
             },
             "Synchronize data from the host device to GPU.")
-        .def(
-            "apply",
+        .def("collapse", &StateVectorT::collapse,
+             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
+        .def("normalize", &StateVectorT::normalize,
+             "Normalize the statevector to norm 1.")
+        .def("apply",
             [](StateVectorT &sv, const std::string &str,
                const std::vector<std::size_t> &wires, bool inv,
                [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
@@ -140,10 +189,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                   conv_matrix);
             },
             "Apply operation via the gate matrix")
-        .def("collapse", &StateVectorT::collapse,
-             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
-        .def("normalize", &StateVectorT::normalize,
-             "Normalize the statevector to norm 1.");
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+             "Apply controlled operation");
 }
 
 /**

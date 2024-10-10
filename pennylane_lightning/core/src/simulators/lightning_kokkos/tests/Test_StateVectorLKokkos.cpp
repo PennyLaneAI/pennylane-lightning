@@ -230,12 +230,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
                                          {false}),
             LightningException, "must all be equal"); // invalid inverse
         PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyOperation("PauliX", std::vector<std::size_t>{0},
-                                        std::vector<bool>{false},
-                                        std::vector<std::size_t>{1}),
-            LightningException,
-            "Controlled kernels not implemented."); // invalid controlled_wires
-        PL_REQUIRE_THROWS_MATCHES(
             state_vector.applyOperation("PauliX", {}, std::vector<bool>{false},
                                         std::vector<std::size_t>{1}, false,
                                         {0.0}, std::vector<ComplexT>{}),
