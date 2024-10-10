@@ -131,15 +131,6 @@ class LightningBaseMeasurements(ABC):
             measurementprocess.obs.name, measurementprocess.obs.wires
         )
 
-    def _probs_retval_conversion(self, probs_results: Any) -> np.ndarray:
-        """Convert the data structure from the C++ backend to a common structure through lightning devices.
-        Args:
-            probs_result (Any): Result provided by C++ backend.
-        Returns:
-            np.ndarray with probabilities of the supplied observable or wires.
-        """
-        return probs_results
-
     def probs(self, measurementprocess: MeasurementProcess):
         """Probabilities of the supplied observable or wires contained in the MeasurementProcess.
 
@@ -161,7 +152,7 @@ class LightningBaseMeasurements(ABC):
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
 
-        return self._probs_retval_conversion(results)
+        return results
 
     def var(self, measurementprocess: MeasurementProcess):
         """Variance of the supplied observable contained in the MeasurementProcess.
