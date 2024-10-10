@@ -100,8 +100,6 @@ void registerBackendClassSpecificBindingsMPI(PyClass &pyclass) {
             },
             "Set State Vector on GPU with values for the state vector and "
             "wires on the host memory.")
-        .def("collapse", &StateVectorT::collapse,
-             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         .def(
             "DeviceToDevice",
             [](StateVectorT &sv, const StateVectorT &other, bool async) {
