@@ -37,7 +37,7 @@ jobs:
     name: Determine runner type to use
     uses: ./.github/workflows/determine-workflow-runner.yml
     with:
-      default_runner: ubuntu-22.04
+      default_runner: ubuntu-latest
 
 
   linux-wheels-x86-64:
@@ -137,7 +137,7 @@ jobs:
         pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     permissions:
       id-token: write
     if: |
