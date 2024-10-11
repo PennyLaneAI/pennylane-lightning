@@ -154,6 +154,7 @@ _observables = frozenset(
         "Sum",
         "Prod",
         "SProd",
+        "Exp",
     }
 )
 
