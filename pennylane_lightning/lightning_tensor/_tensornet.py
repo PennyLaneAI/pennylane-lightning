@@ -223,27 +223,37 @@ class LightningTensorNet:
 
         local_dev_wires = np.array(device_wires.tolist())[::-1]
 
-        # generate basis states on subset of qubits via broadcasting
+        # generate basis states on subset of qubits via broadcasting as substitute of cartesian product.
+
+        # Allocate a single row as a base to avoid a large array allocation with
+        # the cartesian product algorithm.
+        # Initialize the base with the pattern [0 1 0 1 ...].
         base = np.tile([0, 1], 2 ** (len(local_dev_wires) - 1)).astype(dtype=np.int64)
+        # Allocate the array where it will accumulate the value of the indexes depending on
+        # the value of the basis.
         indexes = np.zeros(2 ** (len(local_dev_wires)), dtype=np.int64)
 
         max_dev_wire = self._num_wires - 1
 
-        # get basis states to alter on full set of qubits
+        # Iterate over all device wires.
         for i, wire in enumerate(local_dev_wires):
 
-            # get indices for which the state is changed to input state vector elements
+            # Accumulate indexes from the basis.
             indexes += base * 2 ** (max_dev_wire - wire)
 
             if i == len(local_dev_wires) - 1:
                 continue
 
-            two_n = 2 ** (i + 1)
+            two_n = 2 ** (i + 1)  # Compute the value of the base.
+
+            # Update the value of the base without reallocating a new array.
+            # Reshape the basis to swap the internal columns.
             base = base.reshape(-1, two_n * 2)
             swapper_A = two_n // 2
             swapper_B = swapper_A + two_n
 
             base[:, swapper_A:swapper_B] = base[:, swapper_A:swapper_B][:, ::-1]
+            # Flatten the base array
             base = base.reshape(-1)
 
         # get full state vector to be factorized into MPS
