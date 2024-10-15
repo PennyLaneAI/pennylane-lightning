@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-22.04]
         arch: [aarch64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
@@ -124,7 +124,8 @@ jobs:
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
       - name: Install dependencies
-        run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
+        run: python -m pip install cibuildwheel~=2.20.0 tomlkit
+
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
 
