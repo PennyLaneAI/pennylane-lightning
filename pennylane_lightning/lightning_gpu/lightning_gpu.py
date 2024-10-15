@@ -351,7 +351,7 @@ class LightningGPU(LightningBase):
         # Creating the state vector
         self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
 
-        #TODO: Remove this line after the MPI support for Mid-Measurement is added
+        # TODO: Remove this line after the MPI support for Mid-Measurement is added
         self._use_mpi = mpi
 
         self._statevector = self.LightningStateVector(
@@ -513,7 +513,9 @@ class LightningGPU(LightningBase):
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             if self._use_mpi:
-                raise qml.DeviceError("LightningGPU-MPI does not support Mid-circuit measurements.")
+                raise qml.DeviceError(
+                    "Lightning-GPU-MPI does not support Mid-circuit measurements."
+                )
 
             results = []
             aux_circ = QuantumScript(
