@@ -43,6 +43,9 @@
 
 ### Improvements
 
+* Optimize the cartesian product to reduce the amount of memory necessary to set the StatePrep with LightningTensor. 
+  [(#943)](https://github.com/PennyLaneAI/pennylane-lightning/pull/943)
+
 * The `prob` data return `lightning.gpu` C++ layer is aligned with other state-vector backends and `lightning.gpu` supports out-of-order `qml.prob`.
     [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
 
