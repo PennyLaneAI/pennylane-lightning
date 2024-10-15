@@ -496,7 +496,7 @@ class StateVectorCudaManaged
      * @param wire Wire to measure.
      * @param branch Branch 0 or 1.
      */
-    void collapse(const std::size_t wire, const bool branch) {
+    void collapse(std::size_t wire, bool branch) {
         PL_ABORT_IF_NOT(wire < BaseType::getNumQubits(), "Invalid wire index.");
         cudaDataType_t data_type;
 
@@ -509,7 +509,9 @@ class StateVectorCudaManaged
 
         std::vector<int> basisBits(1, BaseType::getNumQubits() - 1 - wire);
 
-        double abs2sum0, abs2sum1;
+        double abs2sum0;
+        double abs2sum1;
+
         PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumOnZBasis(
             /* custatevecHandle_t */ handle_.get(),
             /* void *sv */ BaseType::getData(),
@@ -520,7 +522,7 @@ class StateVectorCudaManaged
             /* const int32_t * */ basisBits.data(),
             /* const uint32_t nBasisBits */ basisBits.size()));
 
-        double norm = branch ? abs2sum1 : abs2sum0;
+        const double norm = branch ? abs2sum1 : abs2sum0;
 
         const int parity = static_cast<int>(branch);
 

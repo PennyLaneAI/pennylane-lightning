@@ -276,7 +276,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::collapse",
 
     std::size_t wire = GENERATE(0, 1, 2);
     std::size_t branch = GENERATE(0, 1);
-    const std::size_t num_qubits = 3;
+    constexpr std::size_t num_qubits = 3;
 
     // TODO @tomlqc use same template for testing all Lightning flavours?
 

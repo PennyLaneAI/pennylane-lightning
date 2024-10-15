@@ -87,6 +87,10 @@ class MPIHandler:  # pylint: disable=too-few-public-methods
             self.num_local_wires = num_wires
             self.num_global_wires = num_wires
 
+    def use_mpi(self):
+        """Return if the device is using MPI or not."""
+        return self.use_mpi
+
     def _mebibytesToBytes(self, mebibytes):
         return mebibytes * 1024 * 1024
 
