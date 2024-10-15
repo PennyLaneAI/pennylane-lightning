@@ -380,7 +380,6 @@ TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
         std::string obs = "paulix";
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV();
         PL_CHECK_THROWS_MATCHES(sv.applyOperation(obs, {0}), LightningException,
                                 "Currently unsupported gate: paulix");
     }

@@ -47,7 +47,6 @@ T                      = { properties = [ "invertible", "controllable", "differe
 # default, but can be useful to express a deviation from this device's regular
 # strategy in PennyLane.
 MultiControlledX       = {}
-QFT                    = {}
 
 # Gates which should be translated to QubitUnitary
 [operators.gates.matrix]

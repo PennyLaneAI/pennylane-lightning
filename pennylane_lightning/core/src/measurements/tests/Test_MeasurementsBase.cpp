@@ -20,6 +20,7 @@ using Pennylane::Util::isApproxEqual;
 } // namespace
 /// @endcond
 #include <algorithm>
+#include <optional>
 #include <string>
 
 #ifdef _ENABLE_PLQUBIT
@@ -84,44 +85,33 @@ template <typename TypeList> void testProbabilities() {
         // Expected results calculated with Pennylane default.qubit:
         std::vector<
             std::pair<std::vector<std::size_t>, std::vector<PrecisionT>>>
-            input = {
-#if defined(_ENABLE_PLGPU)
-                // Bit index reodering conducted in the python layer
-                // for L-GPU. Also L-GPU backend doesn't support
-                // out of order wires for probability calculation
-                {{2, 1, 0},
-                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                  0.00801973, 0.02280642, 0.00104134}}
-#else
-                // LightningQubit currently supports arbitrary wire index
-                // ordering.
-                {{0, 2, 1},
-                 {0.67078706, 0.0870997, 0.03062806, 0.00397696, 0.17564072,
-                  0.02280642, 0.00801973, 0.00104134}},
-                {{1, 0, 2},
-                 {0.67078706, 0.03062806, 0.17564072, 0.00801973, 0.0870997,
-                  0.00397696, 0.02280642, 0.00104134}},
-                {{1, 2, 0},
-                 {0.67078706, 0.17564072, 0.03062806, 0.00801973, 0.0870997,
-                  0.02280642, 0.00397696, 0.00104134}},
-                {{2, 0, 1},
-                 {0.67078706, 0.0870997, 0.17564072, 0.02280642, 0.03062806,
-                  0.00397696, 0.00801973, 0.00104134}},
-                {{2, 1, 0},
-                 {0.67078706, 0.17564072, 0.0870997, 0.02280642, 0.03062806,
-                  0.00801973, 0.00397696, 0.00104134}},
-                {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
-                {{0, 1, 2},
-                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                  0.00801973, 0.02280642, 0.00104134}},
-                {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
-                {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
-                {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
-                {{0}, {0.79249179, 0.20750821}},
-                {{1}, {0.88507558, 0.11492442}},
-                {{2}, {0.9563339, 0.0436661}}
-#endif
-            };
+            input = {// LightningQubit currently supports arbitrary wire index
+                     // ordering.
+                     {{0, 2, 1},
+                      {0.67078706, 0.0870997, 0.03062806, 0.00397696,
+                       0.17564072, 0.02280642, 0.00801973, 0.00104134}},
+                     {{1, 0, 2},
+                      {0.67078706, 0.03062806, 0.17564072, 0.00801973,
+                       0.0870997, 0.00397696, 0.02280642, 0.00104134}},
+                     {{1, 2, 0},
+                      {0.67078706, 0.17564072, 0.03062806, 0.00801973,
+                       0.0870997, 0.02280642, 0.00397696, 0.00104134}},
+                     {{2, 0, 1},
+                      {0.67078706, 0.0870997, 0.17564072, 0.02280642,
+                       0.03062806, 0.00397696, 0.00801973, 0.00104134}},
+                     {{2, 1, 0},
+                      {0.67078706, 0.17564072, 0.0870997, 0.02280642,
+                       0.03062806, 0.00801973, 0.00397696, 0.00104134}},
+                     {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
+                     {{0, 1, 2},
+                      {0.67078706, 0.03062806, 0.0870997, 0.00397696,
+                       0.17564072, 0.00801973, 0.02280642, 0.00104134}},
+                     {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+                     {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+                     {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+                     {{0}, {0.79249179, 0.20750821}},
+                     {{1}, {0.88507558, 0.11492442}},
+                     {{2}, {0.9563339, 0.0436661}}};
 
         // Defining the Statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
@@ -403,11 +393,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
 
-#ifdef _ENABLE_PLGPU
-            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
-#else
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
-#endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
         }
@@ -433,11 +419,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
-#ifdef _ENABLE_PLGPU
-            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
-#else
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
-#endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
         }
@@ -1251,7 +1233,9 @@ TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
         testTensorProdObsVarShot<TestStateVectorBackends>();
     }
 }
-template <typename TypeList> void testSamples() {
+
+template <typename TypeList>
+void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -1281,7 +1265,10 @@ template <typename TypeList> void testSamples() {
         std::size_t num_qubits = 3;
         std::size_t N = std::pow(2, num_qubits);
         std::size_t num_samples = 100000;
-        auto &&samples = Measurer.generate_samples(num_samples);
+        auto &&samples =
+            seed.has_value()
+                ? Measurer.generate_samples(num_samples, seed.value())
+                : Measurer.generate_samples(num_samples);
 
         std::vector<std::size_t> counts(N, 0);
         std::vector<std::size_t> samples_decimal(num_samples, 0);
@@ -1307,13 +1294,19 @@ template <typename TypeList> void testSamples() {
             REQUIRE_THAT(probabilities,
                          Catch::Approx(expected_probabilities).margin(.05));
         }
-        testSamples<typename TypeList::Next>();
+        testSamples<typename TypeList::Next>(seed);
     }
 }
 
 TEST_CASE("Samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testSamples<TestStateVectorBackends>();
+    }
+}
+
+TEST_CASE("Seeded samples", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSamples<TestStateVectorBackends>(37);
     }
 }
 

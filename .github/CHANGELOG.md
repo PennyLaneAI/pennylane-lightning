@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users. 
+* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
   [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
 * Add shot measurement support to `lightning.tensor`.
@@ -21,7 +21,16 @@
 * Lightning-Kokkos migrated to the new device API.
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
+* Lightning-GPU migrated to the new device API.
+  [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
+
 ### Breaking changes
+
+* Deprecate `initSV()` and add `resetStateVector()` to `lightning.gpu`.
+  [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+
+* Deprecate PI gates implementation.
+  [(#925)](https://github.com/PennyLaneAI/pennylane-lightning/pull/925)
 
 * Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
   [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
@@ -33,6 +42,33 @@
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* The `prob` data return `lightning.gpu` C++ layer is aligned with other state-vector backends and `lightning.gpu` supports out-of-order `qml.prob`.
+    [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
+
+* Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
+  [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
+
+* Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
+  [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+  
+* The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
+  [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
+
+* Always decompose `qml.QFT` in Lightning.
+  [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
+
+* Uniform Python format to adhere PennyLane style.
+  [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
+
+* Remove dynamic decomposition rules in Lightning.
+  [(#926)](https://github.com/PennyLaneAI/pennylane-lightning/pull/926)
+
+* Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
+  [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
+
+* Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
+  [(#911)](https://github.com/PennyLaneAI/pennylane-lightning/pull/911)
 
 * Update the test suite to remove deprecated code.
   [(#912)](https://github.com/PennyLaneAI/pennylane-lightning/pull/912)
@@ -72,7 +108,19 @@
 
 ### Documentation
 
+* Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
+  [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
+
 ### Bug fixes
+
+* Add concept restriction to ensure `ConstMult` inline function only hit with arithmetic-values times complex values. Fixes build failures with the test suite when enabling OpenMP, and disabling BLAS and Python under clang.
+  [(#936)](https://github.com/PennyLaneAI/pennylane-lightning/pull/936)
+
+* Bug fix for `applyMatrix` in `lightning.tensor`. Matrix operator data is not stored in the `cuGateCache` object to support `TensorProd` obs with multiple `Hermitian` obs.
+  [(#932)](https://github.com/PennyLaneAI/pennylane-lightning/pull/932)
+
+* Bug fix for `_pauli_word` of `QuantumScriptSerializer`. `_pauli_word` can process `PauliWord` object: `I`.
+  [(#919)](https://github.com/PennyLaneAI/pennylane-lightning/pull/919)
 
 * Bug fix for analytic `probs` in the `lightning.tensor` C++ layer.
   [(#906)](https://github.com/PennyLaneAI/pennylane-lightning/pull/906)
@@ -81,7 +129,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
 
 ---
 

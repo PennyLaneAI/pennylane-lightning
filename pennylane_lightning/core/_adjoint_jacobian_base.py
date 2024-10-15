@@ -111,6 +111,7 @@ class LightningBaseAdjointJacobian(ABC):
             self._qubit_state.device_name, use_csingle, use_mpi, split_obs
         ).serialize_ops(tape)
 
+        # pylint: disable=not-callable
         ops_serialized = self._create_ops_list_lightning(*ops_serialized)
 
         # We need to filter out indices in trainable_params which do not

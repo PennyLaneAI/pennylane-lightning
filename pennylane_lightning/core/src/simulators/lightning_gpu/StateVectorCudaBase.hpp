@@ -198,16 +198,6 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
         data_buffer_ = std::move(other);
     }
 
-    /**
-     * @brief Initialize the statevector data to the |0...0> state
-     *
-     */
-    void initSV(bool async = false) {
-        std::size_t index = 0;
-        const std::complex<Precision> value(1, 0);
-        static_cast<Derived *>(this)->setBasisState(value, index, async);
-    };
-
   protected:
     using ParFunc = std::function<void(const std::vector<std::size_t> &, bool,
                                        const std::vector<Precision> &)>;

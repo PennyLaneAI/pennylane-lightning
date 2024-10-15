@@ -1,6 +1,4 @@
-name: Testing::Linux::x86_64::MPSTNCuda::Python
-# TODO remove MPS from the workflow name and the workflow filename once exact is in.
-# TODO remove the `pl_tensor_method` once exact TN is added.
+name: Testing::x86_64::GPU::Python
 on:
   workflow_call:
     inputs:
@@ -18,16 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths-ignore:
-      - .github/**
-      - '!.github/workflows/tests_lmps_tncuda_python.yml'
-      - pennylane_lightning/core/src/simulators/lightning_kokkos/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
-      - pennylane_lightning/core/src/simulators/lightning_gpu/**
-      - pennylane_lightning/core/_version.py
-      - pennylane_lightning/lightning_gpu/**
-      - pennylane_lightning/lightning_qubit/**
-      - pennylane_lightning/lightning_kokkos/**
   push:
     branches:
       - master
@@ -38,12 +26,12 @@ env:
   GCC_VERSION: 11
 
 concurrency:
-  group: tests_lmps_tncuda_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
+  group: tests_gpu_python-${{ github.ref }}-${{ github.event_name }}-${{ inputs.lightning-version }}-${{ inputs.pennylane-version }}
   cancel-in-progress: true
 
 jobs:
   builddeps:
-    if: github.event.pull_request.draft == false
+    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -52,8 +40,6 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_tensor"]
         cuda_version: ["12"]
 
     steps:
@@ -67,20 +53,16 @@ jobs:
           nvcc --version
           nvidia-smi
 
-  pythontestswithMPSTNCuda:
-    if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
+  pythontestswithGPU:
     needs: [builddeps]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_tensor"]
-        pl_tensor_method: ["mps"]
-        pl_tensor_backend: ["cutensornet"]
+        pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
 
-    name: Python Tests (${{ matrix.pl_backend }}, method-${{ matrix.pl_tensor_method }}, backend-${{ matrix.pl_tensor_backend }}, cuda-${{ matrix.cuda_version }})
+    name: Python Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
     runs-on:
-      - ${{ matrix.os }}
+      - ubuntu-22.04
       - self-hosted
       - gpu
 
@@ -95,20 +77,32 @@ jobs:
           nvcc --version
           nvidia-smi
 
-      - name: Checkout PennyLane-Lightning-Tensor-MPS-TNCuda
+      - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release' && matrix.pl_backend == 'lightning.qubit'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable' && matrix.pl_backend == 'lightning.qubit'
+        run: |
+          git fetch --tags --force
+          git checkout latest_release
 
       - uses: actions/setup-python@v5
         name: Install Python
         with:
           python-version: '3.10'
 
-      # Since the self-hosted runner can be re-used. It is best to set up all package
-      # installations in a virtual environment that gets cleaned at the end of each workflow run
       - name: Setup Python virtual environment
         id: setup_venv
         env:
-          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}
+          VENV_NAME: ${{ github.workspace }}/venv_${{ steps.setup_python.outputs.python-version }}_${{ github.sha }}_${{ matrix.pl_backend }}
         run: |
           # Clear any pre-existing venvs
           rm -rf venv_*
@@ -137,13 +131,24 @@ jobs:
           echo "Python Interpreter Path => $py_path"
           echo "python=$py_path" >> $GITHUB_OUTPUT
 
-          echo "PIP Path => $py_path"
-          echo "pip=$py_path" >> $GITHUB_OUTPUT
+          pip_path=$(which python)
+          echo "PIP Path => $pip_path"
+          echo "pip=$pip_path" >> $GITHUB_OUTPUT
 
       - name: Install required packages
         run: |
           python -m pip install -r requirements-dev.txt
-          python -m pip install ninja cmake scipy custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }} openfermionpyscf
+          python -m pip install cmake openfermionpyscf
+
+      - name: Install required lightning_gpu only packages
+        if: matrix.pl_backend == 'lightning_gpu'
+        run: |
+          python -m pip install custatevec-cu${{ matrix.cuda_version }}
+
+      - name: Install required lightning_tensor only packages
+        if: matrix.pl_backend == 'lightning_tensor'
+        run: |
+          python -m pip install cutensornet-cu${{ matrix.cuda_version }}
 
       - name: Checkout PennyLane for release build
         if: inputs.pennylane-version == 'release'
@@ -165,35 +170,51 @@ jobs:
         run: |
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane
 
-      - name: Configure and install required backends
+      - name: Build and install package
+        env:
+          CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
         run: |
           rm -rf build
-          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" python -m pip install . -vv
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=lightning_qubit SKIP_COMPILATION=True python -m pip install . -vv
 
           rm -rf build
-          PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
-          CMAKE_ARGS="-DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)" python -m pip install . -vv
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
+          PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
-      - name: Run PennyLane-Lightning-Tensor unit tests
-        if: ${{ matrix.pl_backend != 'all'}}
+      - name: Run PennyLane unit tests
+        env:
+          OMP_NUM_THREADS: 1
+          OMP_PROC_BIND: false
+        if: matrix.pl_backend == 'lightning_gpu'
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests $COVERAGE_FLAGS
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Run PennyLane Lightning unit tests
+        env:
+          OMP_NUM_THREADS: 1
+          OMP_PROC_BIND: false
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+
+      - name: Move coverage file
+        run: |
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: ubuntu-codecov-results-python-${{ matrix.pl_backend }}
           path: coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
 
-
   upload-to-codecov-linux-python:
-    needs: [pythontestswithMPSTNCuda]
+    needs: [pythontestswithGPU]
     name: Upload coverage data to codecov
     runs-on: ubuntu-latest
     steps:
@@ -203,7 +224,8 @@ jobs:
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          pattern: ubuntu-codecov-*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4

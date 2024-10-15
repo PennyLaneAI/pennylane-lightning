@@ -1754,26 +1754,71 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
 }
 
 TEST_CASE("Measurement with a seeded device", "[Measures]") {
-    for (std::size_t _ = 0; _ < 5; _++) {
-        std::unique_ptr<LKSimulator> sim = std::make_unique<LKSimulator>();
-        std::unique_ptr<LKSimulator> sim1 = std::make_unique<LKSimulator>();
+    std::array<std::unique_ptr<LKSimulator>, 2> sims;
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
 
-        std::mt19937 gen(37);
-        sim->SetDevicePRNG(&gen);
+    auto circuit = [](LKSimulator &sim, std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
         std::vector<intptr_t> Qs;
         Qs.reserve(1);
-        Qs.push_back(sim->AllocateQubit());
-        sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        auto m = sim->Measure(Qs[0]);
+        Qs.push_back(sim.AllocateQubit());
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        auto m = sim.Measure(Qs[0]);
+        return m;
+    };
 
-        std::mt19937 gen1(37);
-        sim1->SetDevicePRNG(&gen1);
-        std::vector<intptr_t> Qs1;
-        Qs1.reserve(1);
-        Qs1.push_back(sim1->AllocateQubit());
-        sim1->NamedOperation("Hadamard", {}, {Qs1[0]}, false);
-        auto m1 = sim1->Measure(Qs1[0]);
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LKSimulator>();
+        sims[1] = std::make_unique<LKSimulator>();
 
-        CHECK(*m == *m1);
+        auto m0 = circuit(*(sims[0]), gens[0]);
+        auto m1 = circuit(*(sims[1]), gens[1]);
+
+        CHECK(*m0 == *m1);
+    }
+}
+
+TEST_CASE("Sample with a seeded device", "[Measures]") {
+    std::size_t shots = 100;
+    std::array<std::unique_ptr<LKSimulator>, 2> sims;
+    std::vector<std::vector<double>> sample_vec(2,
+                                                std::vector<double>(shots * 4));
+
+    std::vector<MemRefT<double, 2>> buffers{
+        MemRefT<double, 2>{
+            sample_vec[0].data(), sample_vec[0].data(), 0, {shots, 1}, {1, 1}},
+        MemRefT<double, 2>{
+            sample_vec[1].data(), sample_vec[1].data(), 0, {shots, 1}, {1, 1}},
+    };
+    std::vector<DataView<double, 2>> views{
+        DataView<double, 2>(buffers[0].data_aligned, buffers[0].offset,
+                            buffers[0].sizes, buffers[0].strides),
+        DataView<double, 2>(buffers[1].data_aligned, buffers[1].offset,
+                            buffers[1].sizes, buffers[1].strides)};
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [shots](LKSimulator &sim, DataView<double, 2> &view,
+                           std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        std::vector<intptr_t> Qs;
+        Qs.reserve(1);
+        Qs.push_back(sim.AllocateQubit());
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("RX", {0.5}, {Qs[0]}, false);
+        sim.Sample(view, shots);
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LKSimulator>();
+        sims[1] = std::make_unique<LKSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), views[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < sample_vec[0].size(); i++) {
+            CHECK((sample_vec[0][i] == sample_vec[1][i]));
+        }
     }
 }

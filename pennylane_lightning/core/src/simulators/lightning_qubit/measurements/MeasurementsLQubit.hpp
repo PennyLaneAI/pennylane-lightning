@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
+#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -573,14 +574,17 @@ class Measurements final
      * Reference: https://en.wikipedia.org/wiki/Alias_method
      *
      * @param num_samples The number of samples to generate.
+     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
+    std::vector<std::size_t>
+    generate_samples(const std::size_t num_samples,
+                     const std::optional<std::size_t> &seed = std::nullopt) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
-        return generate_samples(wires, num_samples);
+        return generate_samples(wires, num_samples, seed);
     }
 
     /**
@@ -588,15 +592,21 @@ class Measurements final
      *
      * @param wires Sample are generated for the specified wires.
      * @param num_samples The number of samples to generate.
+     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
-                     const std::size_t num_samples) {
+                     const std::size_t num_samples,
+                     const std::optional<std::size_t> &seed = std::nullopt) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        this->setRandomSeed();
+        if (seed.has_value()) {
+            this->setSeed(seed.value());
+        } else {
+            this->setRandomSeed();
+        }
         DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -

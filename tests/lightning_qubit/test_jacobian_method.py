@@ -51,7 +51,6 @@ class TestJacobian:
 
     @staticmethod
     def process_and_execute(statevector, tape, execute_and_derivatives=False):
-
         wires = statevector.num_wires
         device = LightningDevice(wires)
         if execute_and_derivatives:

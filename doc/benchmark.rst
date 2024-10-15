@@ -30,9 +30,6 @@ One can also choose a specific datatype by providing an option:
     $ ./benchmarks/plot_gate_benchmark.py --precision float ./bench_result.json # Results for std::complex<float>
     $ ./benchmarks/plot_gate_benchmark.py --precision double ./bench_result.json # Results for std::complex<double>
 
-
-Currently, we have two different kernels in ``Lightning Qubit`` named ``PI`` and ``LM``. For difference between two kernels, see the documents :cpp:class:`Pennylane::Gates::GateImplementationsPI` and :cpp:class:`Pennylane::Gates::GateImplementationsLM`.
-
 Here are some example plots:
 
 .. image:: ./_static/benchmark/PauliX.png

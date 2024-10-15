@@ -18,7 +18,7 @@ interfaces with C++ for fast linear algebra calculations.
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import List, Optional, Sequence, Union
 from warnings import warn
 
 import numpy as np
@@ -48,10 +48,6 @@ from pennylane_lightning.core.lightning_newAPI_base import (
     Result_or_ResultBatch,
 )
 
-from ._adjoint_jacobian import LightningAdjointJacobian
-from ._measurements import LightningMeasurements
-from ._state_vector import LightningStateVector
-
 try:
     from pennylane_lightning.lightning_qubit_ops import backend_info
 
@@ -59,6 +55,10 @@ try:
 except ImportError as ex:
     warn(str(ex), UserWarning)
     LQ_CPP_BINARY_AVAILABLE = False
+
+from ._adjoint_jacobian import LightningAdjointJacobian
+from ._measurements import LightningMeasurements
+from ._state_vector import LightningStateVector
 
 # The set of supported operations.
 _operations = frozenset(
@@ -139,7 +139,6 @@ _operations = frozenset(
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
-        "QFT",
         "ECR",
         "BlockEncode",
         "C(BlockEncode)",
@@ -170,13 +169,6 @@ _observables = frozenset(
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
-    if isinstance(op, qml.QFT):
-        return len(op.wires) < 10
-    if isinstance(op, qml.GroverOperator):
-        return len(op.wires) < 13
-
     # As ControlledQubitUnitary == C(QubitUnitrary),
     # it can be removed from `_operations` to keep
     # consistency with `lightning_qubit.toml`
@@ -331,16 +323,16 @@ class LightningQubit(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires,
+        wires: Union[int, List],
         *,
-        c_dtype=np.complex128,
-        shots=None,
-        batch_obs=False,
+        c_dtype: Union[np.complex128, np.complex64] = np.complex128,
+        shots: Union[int, List] = None,
+        batch_obs: bool = False,
         # Markov Chain Monte Carlo (MCMC) sampling method arguments
-        seed="global",
-        mcmc=False,
-        kernel_name="Local",
-        num_burnin=100,
+        seed: Union[str, int] = "global",
+        mcmc: bool = False,
+        kernel_name: str = "Local",
+        num_burnin: int = 100,
     ):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError(
@@ -567,4 +559,4 @@ class LightningQubit(LightningBase):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        return LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
