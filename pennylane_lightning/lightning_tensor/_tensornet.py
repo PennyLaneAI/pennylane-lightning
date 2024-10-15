@@ -240,8 +240,8 @@ class LightningTensorNet:
 
             two_n = 2 ** (i + 1)
             base = base.reshape(-1, two_n * 2)
-            swaper_A = two_n // 2
-            swaper_B = swaper_A + two_n
+            swapper_A = two_n // 2
+            swapper_B = swapper_A + two_n
 
             base[:, swaper_A:swaper_B] = base[:, swaper_A:swaper_B][:, ::-1]
             base = base.reshape(-1)
