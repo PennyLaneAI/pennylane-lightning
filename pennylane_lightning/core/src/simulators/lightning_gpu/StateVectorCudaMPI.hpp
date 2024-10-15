@@ -344,13 +344,16 @@ class StateVectorCudaMPI final
      * @param branch Branch 0 or 1.
      */
     void collapse(const std::size_t wire, const bool branch) {
+        /*
         PL_ABORT_IF_NOT(wire < this->getTotalNumQubits(),
                         "Invalid wire index.");
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
 
         const int wireInt =
             static_cast<int>(this->getTotalNumQubits() - 1 - wire);
 
-        if (static_cast<std::size_t>(wireInt) < BaseType::getNumQubits()) {
+        if (static_cast<std::size_t>(wireInt) < getNumLocalQubits()) {
             // local wire
             collapse_local_(wireInt, branch);
         } else {
@@ -363,6 +366,43 @@ class StateVectorCudaMPI final
             PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(localStream_.get()));
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         }
+
+        mpi_manager_.Barrier();
+        */
+        PL_ABORT_IF_NOT(wire < this->getTotalNumQubits(),
+                        "Invalid wire index.");
+
+        std::vector<ComplexT> matrix(4, ComplexT(0.0, 0.0));
+
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ((i == 0 && branch == 0) || (i == 3 && branch == 1))
+                            ? ComplexT{1.0, 0.0}
+                            : ComplexT{0.0, 0.0};
+        }
+
+        mpi_manager_.Barrier();
+
+        applyMatrix(matrix, {wire}, false);
+
+        auto local_norm2 = norm2_CUDA<CFP_t>(
+            BaseType::getData(), BaseType::getLength(),
+            BaseType::getDataBuffer().getDevTag().getDeviceID(),
+            BaseType::getDataBuffer().getDevTag().getStreamID(),
+            this->getCublasCaller());
+
+        local_norm2 *= local_norm2;
+
+        mpi_manager_.Barrier();
+
+        auto norm2 = mpi_manager_.allreduce<PrecisionT>(local_norm2, "sum");
+
+        norm2 = std::sqrt(norm2);
+
+        normalize_CUDA<PrecisionT, CFP_t>(
+            norm2, BaseType::getData(), BaseType::getLength(),
+            BaseType::getDataBuffer().getDevTag().getDeviceID(),
+            BaseType::getDataBuffer().getDevTag().getStreamID(),
+            this->getCublasCaller());
 
         mpi_manager_.Barrier();
     }
@@ -383,6 +423,8 @@ class StateVectorCudaMPI final
                         const std::vector<std::size_t> &wires, bool adjoint,
                         const std::vector<Precision> &params,
                         [[maybe_unused]] const std::vector<ComplexT> &matrix) {
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
         std::vector<CFP_t> matrix_cu(matrix.size());
         std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
                        [](const std::complex<Precision> &x) {
@@ -408,6 +450,8 @@ class StateVectorCudaMPI final
         const std::string &opName, const std::vector<std::size_t> &wires,
         bool adjoint = false, const std::vector<Precision> &params = {0.0},
         [[maybe_unused]] const std::vector<CFP_t> &gate_matrix = {}) {
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
         const auto ctrl_offset = (BaseType::getCtrlMap().find(opName) !=
                                   BaseType::getCtrlMap().end())
                                      ? BaseType::getCtrlMap().at(opName)
@@ -467,6 +511,8 @@ class StateVectorCudaMPI final
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls_local,
                 tgts_local, adjoint);
         }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
     }
 
     /**
@@ -524,6 +570,8 @@ class StateVectorCudaMPI final
                      const std::vector<std::size_t> &wires,
                      bool adjoint = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
         const std::string opName = "Matrix";
         std::size_t n = std::size_t{1} << wires.size();
         const std::vector<std::complex<PrecisionT>> matrix(gate_matrix,
@@ -535,6 +583,8 @@ class StateVectorCudaMPI final
                                x);
                        });
         applyOperation(opName, wires, adjoint, {}, matrix_cu);
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
     }
 
     /**
@@ -1674,7 +1724,7 @@ class StateVectorCudaMPI final
             /* custatevecHandle_t */ handle_.get(),
             /* void *sv */ BaseType::getData(),
             /* cudaDataType_t */ data_type,
-            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* const uint32_t nIndexBits */ getNumLocalQubits(),
             /* double * */ &abs2sum0_local,
             /* double * */ &abs2sum1_local,
             /* const int32_t * */ basisBits.data(),
@@ -1691,7 +1741,7 @@ class StateVectorCudaMPI final
             /* custatevecHandle_t */ handle_.get(),
             /* void *sv */ BaseType::getData(),
             /* cudaDataType_t */ data_type,
-            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* const uint32_t nIndexBits */ getNumLocalQubits(),
             /* const int32_t parity */ parity,
             /* const int32_t *basisBits */ basisBits.data(),
             /* const uint32_t nBasisBits */ basisBits.size(),
@@ -1980,6 +2030,8 @@ class StateVectorCudaMPI final
                                const std::vector<std::size_t> &ctrls,
                                const std::vector<std::size_t> &tgts,
                                bool use_adjoint = false) {
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
         std::vector<int> ctrlsInt(ctrls.size());
         std::vector<int> tgtsInt(tgts.size());
 

@@ -265,7 +265,7 @@ class MeasurementsMPI final
      * number between 0 and num_samples-1.
      */
     auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
-        double epsilon = 1e-15;
+        double epsilon = std::numeric_limits<double>::epsilon() * 1.0e2;
         std::size_t nSubSvs = 1UL << (this->_statevector.getNumGlobalQubits());
         std::vector<double> rand_nums(num_samples);
         std::vector<std::size_t> samples(
@@ -280,8 +280,8 @@ class MeasurementsMPI final
             bitOrdering[i] = i;
         }
 
-        std::vector<custatevecIndex_t> localBitStrings(num_samples);
-        std::vector<custatevecIndex_t> globalBitStrings(num_samples);
+        std::vector<custatevecIndex_t> localBitStrings(num_samples, 0);
+        std::vector<custatevecIndex_t> globalBitStrings(num_samples, 0);
 
         if (mpi_manager_.getRank() == 0) {
             for (std::size_t n = 0; n < num_samples; n++) {
@@ -320,6 +320,8 @@ class MeasurementsMPI final
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
             /* custatevecSamplerDescriptor_t */ sampler,
             /* double * */ &subNorm));
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+        mpi_manager_.Barrier();
 
         int source = (mpi_manager_.getRank() - 1 + mpi_manager_.getSize()) %
                      mpi_manager_.getSize();
@@ -353,6 +355,8 @@ class MeasurementsMPI final
             /* uint32_t */ nSubSvs,
             /* double */ precumulative,
             /* double */ norm));
+
+        norm = (norm < epsilon) ? epsilon : norm;
 
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         auto low = std::lower_bound(rand_nums.begin(), rand_nums.end(),
