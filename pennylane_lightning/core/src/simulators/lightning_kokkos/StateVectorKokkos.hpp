@@ -466,14 +466,12 @@ class StateVectorKokkos final
                         bool inverse = false,
                         const std::vector<fp_t> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
-        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
-
         if (controlled_wires.empty()) {
             return applyOperation(opName, wires, inverse, params, gate_matrix);
         }
-        
         if (opName == "Identity") {
             // No op
         } else if (array_contains(controlled_gate_names, std::string_view{opName})) {
@@ -541,12 +539,11 @@ class StateVectorKokkos final
                                                     matrix_trans, controlled_wires, 
                                                     controlled_values, wires));
             break;
-        default: //TODO: to update
-            PL_ABORT("Controlled operation not yet implemented for >3 wires ");
+        default: 
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
                                        ScratchViewSizeT::shmem_size(dim);
             Kokkos::parallel_for(
-                "multiQubitOpFunctor",
+                "multiNCQubitOpFunctor",
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
                     .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
                 NCMultiQubitOpFunctor<PrecisionT>(*data_, num_qubits,

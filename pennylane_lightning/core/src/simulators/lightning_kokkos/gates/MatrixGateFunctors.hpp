@@ -107,7 +107,6 @@ template <class Precision> struct multiQubitOpFunctor {
     }
 };
 
-// TODO: not yet supported
 template <class Precision> struct NCMultiQubitOpFunctor {
     using KokkosComplexVector = Kokkos::View<Kokkos::complex<Precision> *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
@@ -123,55 +122,41 @@ template <class Precision> struct NCMultiQubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    KokkosIntVector wires;
+    KokkosIntVector indices;
     KokkosIntVector parity;
+    KokkosIntVector rev_wires;
     KokkosIntVector rev_wire_shifts;
     std::size_t dim;
     std::size_t num_qubits;
 
     NCMultiQubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
-                         [[maybe_unused]] const std::vector<std::size_t> &controlled_wires_,
-                         [[maybe_unused]] const std::vector<bool> &controlled_values_,
+                         const std::vector<std::size_t> &controlled_wires_,
+                         const std::vector<bool> &controlled_values_,
                          const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
         dim = one << wires_.size();
-        num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        num_qubits = num_qubits_;
+        std::tie(parity, rev_wires) = reverseWires(num_qubits_, wires_, controlled_wires_);
+        indices = generateControlBitPatterns(num_qubits_, controlled_wires_, controlled_values_, wires_);
     }
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const MemberType &teamMember) const {
         const std::size_t k = teamMember.league_rank();
         ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
-        ScratchViewSizeT indices(teamMember.team_scratch(0), dim);
+        //ScratchViewSizeT indices(teamMember.team_scratch(0), dim);
+        const std::size_t offset = parity_2_offset(parity, k);
         if (teamMember.team_rank() == 0) {
-            std::size_t idx = (k & parity(0));
-            for (std::size_t i = 1; i < parity.size(); i++) {
-                idx |= ((k << i) & parity(i));
+            for (std::size_t i = 0; i < dim; i++) {
+                coeffs_in(i) = arr(indices(i) + offset);
             }
-            indices(0) = idx;
-            coeffs_in(0) = arr(idx);
-
-            Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, 1, dim),
-                                 [&](const std::size_t inner_idx) {
-                                     std::size_t index = indices(0);
-                                     for (std::size_t i = 0; i < wires.size();
-                                          i++) {
-                                         if ((inner_idx & (one << i)) != 0) {
-                                             index |= rev_wire_shifts(i);
-                                         }
-                                     }
-                                     indices(inner_idx) = index;
-                                     coeffs_in(inner_idx) = arr(index);
-                                 });
         }
-        teamMember.team_barrier();
+
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, dim), [&](const std::size_t i) {
-                const auto idx = indices(i);
+                const auto idx = indices(i) + offset;
                 arr(idx) = 0.0;
                 const std::size_t base_idx = i * dim;
 

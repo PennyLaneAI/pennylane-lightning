@@ -94,7 +94,7 @@ void registerControlledGate(PyClass &pyclass) {
 }
 
 /**
- * @brief Get a controlled matrix and gate kernel map for a statevector.
+ * @brief Get a controlled matrix for a statevector.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
@@ -106,7 +106,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
-
+    registerControlledGate<StateVectorT>(pyclass);
 
     pyclass.def(
         "applyPauliRot",

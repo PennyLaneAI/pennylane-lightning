@@ -34,6 +34,58 @@ using Pennylane::LightningKokkos::Util::vector2view;
 namespace Pennylane::LightningKokkos::Functors {
 
 
+template <class PrecisionT, class FuncT> 
+class applyNCNFunctor {
+    using KokkosComplexVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+    using ScratchViewComplex =
+        Kokkos::View<Kokkos::complex<PrecisionT> *,
+                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using ScratchViewSizeT =
+        Kokkos::View<std::size_t *,
+                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+    using MemberType = Kokkos::TeamPolicy<>::member_type;
+    
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+    const FuncT core_function;
+    KokkosIntVector indices;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wires;
+    KokkosIntVector rev_wire_shifts;
+    std::size_t dim;
+
+  public:
+    template <class ExecutionSpace>
+    applyNCNFunctor([[maybe_unused]] ExecutionSpace exec,
+                    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                    std::size_t num_qubits,
+                    const std::vector<std::size_t> &controlled_wires,
+                    const std::vector<bool> &controlled_values,
+                    const std::vector<std::size_t> &wires, FuncT core_function_)
+        : arr(arr_), core_function(core_function_) {
+
+        
+        std::size_t two2N = std::exp2(num_qubits - wires.size() - controlled_wires.size());
+        dim = std::exp2(wires.size());
+        std::tie(parity, rev_wires) = Util::reverseWires(num_qubits, wires, controlled_wires);
+        indices = Util::generateControlBitPatterns(num_qubits, controlled_wires, controlled_values, wires);
+        std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
+                                       ScratchViewSizeT::shmem_size(dim);
+        Kokkos::parallel_for(
+            Kokkos::TeamPolicy(two2N, Kokkos::AUTO, dim).set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
+            *this);
+    }
+    KOKKOS_FUNCTION void operator()(const MemberType &teamMember) const {
+        const std::size_t k = teamMember.league_rank();
+        //ScratchViewSizeT indices(teamMember.team_scratch(0), dim);
+        const std::size_t offset = Util::parity_2_offset(parity, k);
+        Kokkos::parallel_for(Kokkos::TeamThreadRange(teamMember, dim), [&](const std::size_t i) {
+            core_function(arr, i, indices, offset);
+        });
+    }
+};
 template <class PrecisionT, class FuncT, 
           bool has_controls = true> class applyNC1Functor {
 };
@@ -1677,7 +1729,37 @@ void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         });
 }
 
-// TODO: implement NCMultiRZ
+template <class ExecutionSpace, class PrecisionT>
+void applyNCMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                  const std::size_t num_qubits,
+                  const std::vector<std::size_t> &controlled_wires,
+                  const std::vector<bool> &controlled_values,
+                  const std::vector<std::size_t> &wires,
+                  const bool inverse = false,
+                  const std::vector<PrecisionT> &params = {}) {
+    const PrecisionT &angle = params[0];
+    const Kokkos::complex<PrecisionT> shift_0 = Kokkos::complex<PrecisionT>{
+        std::cos(angle / 2),
+        (inverse) ? std::sin(angle / 2) : -std::sin(angle / 2)};
+    const Kokkos::complex<PrecisionT> shift_1 = conj(shift_0);
+    std::size_t wires_parity = 0U;
+    for (std::size_t wire : wires) {
+        wires_parity |=
+            (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
+    }
+    auto core_function = KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr, 
+    const std::size_t i,
+                                       Kokkos::View<std::size_t *> indices, 
+                                       std::size_t offset){
+            const std::size_t index = indices(i);
+            arr(index + offset) *= (Kokkos::Impl::bit_count((index + offset) & wires_parity) % 2 == 0) 
+                           ? shift_0
+                           : shift_1;
+        };
+
+
+    applyNCNFunctor(ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values, wires, core_function);
+}
 
 template <class ExecutionSpace, class PrecisionT>
 void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
@@ -1733,16 +1815,48 @@ void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       const std::size_t num_qubits,
+                      const std::vector<std::size_t> &controlled_wires,
+                      const std::vector<bool> &controlled_values,
                       [[maybe_unused]] const std::vector<std::size_t> &wires,
                       const bool inverse = false,
                       const std::vector<PrecisionT> &params = {}) {
     const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
         Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
-        KOKKOS_LAMBDA(const std::size_t k) { arr_(k) *= phase; });
+    auto core_function = KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i0, const std::size_t i1) {
+            arr(i1) *= phase;
+            arr(i0) *= phase;
+        };
+    std::size_t target{0U};
+    if (!controlled_wires.empty()) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
+                if (std::find(controlled_wires.begin(), controlled_wires.end(),
+                              i) == controlled_wires.end()) {
+                    target = i;
+                    break;
+                }
+            }
+        }
+    if (controlled_wires.empty()) {
+    applyNC1Functor<PrecisionT, decltype(core_function), false>(
+            ExecutionSpace{}, arr_, num_qubits, {target}, core_function);
+    } else {
+    applyNC1Functor<PrecisionT, decltype(core_function), true>(
+            ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values, {target},
+            core_function);
+                
+    }
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                      const std::size_t num_qubits,
+                      [[maybe_unused]] const std::vector<std::size_t> &wires,
+                      const bool inverse = false,
+                      const std::vector<PrecisionT> &params = {}) {
+    applyNCGlobalPhase<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {}, wires, inverse, params);
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -1946,13 +2060,11 @@ void applyNCNamedOperation(const ControlledGateOperation gateop,
     case ControlledGateOperation::DoubleExcitationPlus:
         applyNCDoubleExcitationPlus<ExecutionSpace>(arr_, num_qubits, controlled_wires, controlled_values, wires, inverse, params);
         return;
-    case ControlledGateOperation::GlobalPhase: // TODO: implement
-        PL_ABORT("Controlled GlobalPhase not yet implemented in Lightning Kokkos");
-    //    applyNCGlobalPhase<ExecutionSpace>(arr_, num_qubits, controlled_wires, controlled_values, wires, inverse, params);
+    case ControlledGateOperation::GlobalPhase: 
+        applyNCGlobalPhase<ExecutionSpace>(arr_, num_qubits, controlled_wires, controlled_values, wires, inverse, params);
         return;
-    case ControlledGateOperation::MultiRZ: // TODO: implement
-        PL_ABORT("Controlled MultiRZ not yet implemented in Lightning Kokkos");
-    //    applyNCMultiRZ<ExecutionSpace>(arr_, num_qubits, controlled_wires, controlled_values, wires, inverse, params);
+    case ControlledGateOperation::MultiRZ:
+        applyNCMultiRZ<ExecutionSpace>(arr_, num_qubits, controlled_wires, controlled_values, wires, inverse, params);
         return;
     default:
         PL_ABORT("Controlled gate operation does not exist.");
