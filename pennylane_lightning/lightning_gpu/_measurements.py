@@ -34,6 +34,7 @@ try:
 except ImportError as error_import:
     warn(str(error_import), UserWarning)
 
+from functools import reduce
 from typing import List
 
 import numpy as np
@@ -105,8 +106,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
         self._apply_diagonalizing_gates(mps)
 
         # Specific for LGPU:
-        total_indices = self._qubit_state.num_wires
-        wires = qml.wires.Wires(range(total_indices))
+        # total_indices = self._qubit_state.num_wires
+        # wires = qml.wires.Wires(range(total_indices))
+        wires = reduce(sum, (mp.wires for mp in mps))
 
         def _process_single_shot(samples):
             processed = []
