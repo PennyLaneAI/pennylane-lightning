@@ -243,7 +243,7 @@ class LightningTensorNet:
             swapper_A = two_n // 2
             swapper_B = swapper_A + two_n
 
-            base[:, swaper_A:swaper_B] = base[:, swaper_A:swaper_B][:, ::-1]
+            base[:, swapper_A:swapper_B] = base[:, swapper_A:swapper_B][:, ::-1]
             base = base.reshape(-1)
 
         # get full state vector to be factorized into MPS
