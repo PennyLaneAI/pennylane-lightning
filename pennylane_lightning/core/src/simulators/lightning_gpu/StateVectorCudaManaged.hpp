@@ -520,7 +520,7 @@ class StateVectorCudaManaged
             /* const int32_t * */ basisBits.data(),
             /* const uint32_t nBasisBits */ basisBits.size()));
 
-        double norm = (branch == 0) ? abs2sum0 : abs2sum1;
+        double norm = branch ? abs2sum1 : abs2sum0;
 
         const int parity = static_cast<int>(branch);
 
