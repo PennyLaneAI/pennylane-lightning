@@ -222,7 +222,7 @@ class LightningTensorNet:
             return np.reshape(state, output_shape).ravel(order="C")
 
         local_dev_wires = device_wires.tolist().copy()
-        local_dev_wires = local_dev_wires[::1]
+        local_dev_wires = local_dev_wires[::-1]
 
         # generate basis states on subset of qubits via broadcasting as substitute of cartesian product.
 
