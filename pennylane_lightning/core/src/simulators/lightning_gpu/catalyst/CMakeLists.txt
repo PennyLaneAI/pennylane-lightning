@@ -75,15 +75,8 @@ endif()
 
 target_include_directories(lightning_gpu_catalyst INTERFACE  ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_gpu_catalyst PUBLIC  lightning_compile_options
-                                                        lightning_external_libs
-                                                        lightning_base
-                                                        lightning_gates
-                                                        lightning_utils
-                                                        lightning_gpu
                                                         lightning_gpu_algorithms
-                                                        lightning_gpu_gates
                                                         lightning_gpu_measurements
-                                                        lightning_gpu_utils
 )
 
 if (BUILD_TESTS)
