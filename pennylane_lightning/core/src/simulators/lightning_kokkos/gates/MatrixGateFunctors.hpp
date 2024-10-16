@@ -23,8 +23,8 @@
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
-using Pennylane::LightningKokkos::Util::one;
 using Pennylane::LightningKokkos::Util::generateControlBitPatterns;
+using Pennylane::LightningKokkos::Util::one;
 using Pennylane::LightningKokkos::Util::parity_2_offset;
 using Pennylane::LightningKokkos::Util::reverseWires;
 using Pennylane::LightningKokkos::Util::vector2view;

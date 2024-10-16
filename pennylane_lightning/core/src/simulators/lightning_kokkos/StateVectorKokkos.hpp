@@ -492,7 +492,8 @@ class StateVectorKokkos final
         }
     }
     /**
-     * @brief Apply a controlled-multi qubit operator to the state vector using a matrix
+     * @brief Apply a controlled-multi qubit operator to the state vector using
+     * a matrix
      *
      * @param matrix Kokkos gate matrix in the device space.
      * @param controlled_wires Control wires.

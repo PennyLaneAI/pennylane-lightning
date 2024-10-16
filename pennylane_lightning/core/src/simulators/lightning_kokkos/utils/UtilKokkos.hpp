@@ -118,11 +118,12 @@ inline auto wires2Parity(const std::size_t num_qubits,
 
 /**
  * @brief Compute parity and reverse wires for multi-qubit control operations
- * 
+ *
  * @param num_qubits Number of qubits in the state vector.
  * @param wires List of target wires.
  * @param controlled_wires List of control wires.
- * @return std::pair<KokkosIntVector, KokkosIntVector> Parities and reverse wires for control multi-qubit operations
+ * @return std::pair<KokkosIntVector, KokkosIntVector> Parities and reverse
+ * wires for control multi-qubit operations
  */
 inline auto reverseWires(const std::size_t num_qubits,
                          const std::vector<std::size_t> &wires,
@@ -163,8 +164,8 @@ inline auto reverseWires(const std::size_t num_qubits,
 
 /**
  * @brief Generate control bit patterns for control multi-qubit operations
- * 
- * @param num_qubits 
+ *
+ * @param num_qubits
  * @param controlled_wires List of control wires.
  * @param controlled_values List of target values (true or false).
  * @param wires List of target wires.
@@ -216,7 +217,7 @@ generateControlBitPatterns(const std::size_t num_qubits,
 
 /**
  * @brief Compute index offset from parity for control operations
- * 
+ *
  * @param parity List of parities for control operation.
  * @param k Iteration index for applying control operation.
  * @return std::size_t Index offset.
