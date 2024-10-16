@@ -67,25 +67,6 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                                const std::size_t index, bool async,
                                cudaStream_t stream_id);
 
-extern void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
-                                        cuComplex phase,
-                                        std::size_t thread_per_block,
-                                        cudaStream_t stream_id);
-extern void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, std::size_t num_sv,
-                                        cuDoubleComplex phase,
-                                        std::size_t thread_per_block,
-                                        cudaStream_t stream_id);
-
-extern void cGlobalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
-                                         bool adjoint, cuComplex *phase,
-                                         std::size_t thread_per_block,
-                                         cudaStream_t stream_id);
-extern void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv,
-                                         std::size_t num_sv, bool adjoint,
-                                         cuDoubleComplex *phase,
-                                         std::size_t thread_per_block,
-                                         cudaStream_t stream_id);
-
 /**
  * @brief Managed memory CUDA state-vector class using custateVec backed
  * gate-calls.
@@ -258,44 +239,6 @@ class StateVectorCudaManaged
     }
 
     /**
-     * @brief Multiplies the state-vector by a global phase.
-     *
-     * @param adjoint Indicates whether to use adjoint of gate.
-     * @param param Complex phase generator.
-     */
-    template <std::size_t thread_per_block = 256>
-    void globalPhaseStateVector(const bool adjoint, const Precision param) {
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-        std::complex<Precision> phase =
-            std::exp(std::complex<Precision>{0, (adjoint) ? param : -param});
-        auto cuPhase = complexToCu(phase);
-        globalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
-                                    cuPhase, thread_per_block, stream_id);
-    }
-
-    /**
-     * @brief Multiplies the state-vector by a controlled global phase.
-     *
-     * @param phase Controlled complex phase vector.
-     */
-    template <std::size_t thread_per_block = 256>
-    void cGlobalPhaseStateVector(const bool adjoint,
-                                 const std::vector<CFP_t> &phase,
-                                 const bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == phase.size(),
-                        "The state-vector data must have the same size as the "
-                        "controlled-phase data.")
-        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-        DataBuffer<CFP_t, int> d_phase{phase.size(), device_id, stream_id,
-                                       true};
-        d_phase.CopyHostDataToGpu(phase.data(), d_phase.getLength(), async);
-        cGlobalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
-                                     adjoint, d_phase.getData(),
-                                     thread_per_block, stream_id);
-    }
-
-    /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached
      * gate values on the device. Lastly, accepts a host-provided matrix if
@@ -347,10 +290,14 @@ class StateVectorCudaManaged
                                             wires.end()};
         if (opName == "Identity") {
             return;
-        } else if (opName == "C(GlobalPhase)") {
-            cGlobalPhaseStateVector(adjoint, gate_matrix);
         } else if (opName == "GlobalPhase") {
-            globalPhaseStateVector(adjoint, params[0]);
+            //TODO: Check the performance GlobalPhase implementation via scaling the statevector
+            const std::vector<std::string> names(BaseType::getNumQubits(), "I");
+            std::vector<std::size_t> tgts_all(BaseType::getNumQubits());
+            std::iota(tgts_all.begin(), tgts_all.end(), 0);
+            std::reverse(tgts_all.begin(), tgts_all.end());
+            applyParametricPauliGate_(names, {}, tgts_all, 2 * params[0],
+                                      adjoint);
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
@@ -442,6 +389,11 @@ class StateVectorCudaManaged
             const std::vector<std::string> names(tgts.size(), {"RZ"});
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, params.front(), adjoint);
+        } else if (opName == "GlobalPhase") {
+            const std::vector<std::string> names(tgts.size(), "I");
+            applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
+                                             tgtsInt, 2 * params[0], adjoint);
+
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGeneralGate_({opName}, ctrlsInt,
                                              ctrls_valuesInt, tgtsInt,
