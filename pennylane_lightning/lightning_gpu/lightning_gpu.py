@@ -353,7 +353,6 @@ class LightningGPU(LightningBase):
 
         # Creating the state vector
         self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
-        self._use_mpi = mpi
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires),
