@@ -526,11 +526,11 @@ class StateVectorCudaManaged
         std::vector<int> ctrls_valuesInt(ctrls.size());
 
         std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
+            ctrls.rbegin(), ctrls.rend(), ctrlsInt.begin(), [&](std::size_t x) {
                 return static_cast<int>(BaseType::getNumQubits() - 1 - x);
             });
         std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
+            tgts.rbegin(), tgts.rend(), tgtsInt.begin(), [&](std::size_t x) {
                 return static_cast<int>(BaseType::getNumQubits() - 1 - x);
             });
 
