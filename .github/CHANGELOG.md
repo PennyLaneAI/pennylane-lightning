@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add `mid-circuit measurements` support to `lightning.gpu`'s single-GPU backend.
+  [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
+
 * Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
   [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
@@ -42,6 +45,12 @@
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+* Optimize the cartesian product to reduce the amount of memory necessary to set the StatePrep with LightningTensor. 
+  [(#943)](https://github.com/PennyLaneAI/pennylane-lightning/pull/943)
+
+* The `prob` data return `lightning.gpu` C++ layer is aligned with other state-vector backends and `lightning.gpu` supports out-of-order `qml.prob`.
+    [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
 
 * Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
   [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
@@ -109,6 +118,12 @@
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
+
+* Fix missing `liblightning_kokkos_catalyst.so` in Lightning-Kokkos editable installation.
+  [(#945)](https://github.com/PennyLaneAI/pennylane-lightning/pull/945)
+
+* Add concept restriction to ensure `ConstMult` inline function only hit with arithmetic-values times complex values. Fixes build failures with the test suite when enabling OpenMP, and disabling BLAS and Python under clang.
+  [(#936)](https://github.com/PennyLaneAI/pennylane-lightning/pull/936)
 
 * Bug fix for `applyMatrix` in `lightning.tensor`. Matrix operator data is not stored in the `cuGateCache` object to support `TensorProd` obs with multiple `Hermitian` obs.
   [(#932)](https://github.com/PennyLaneAI/pennylane-lightning/pull/932)

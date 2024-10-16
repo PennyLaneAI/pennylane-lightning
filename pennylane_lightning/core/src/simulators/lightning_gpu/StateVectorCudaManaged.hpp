@@ -601,6 +601,56 @@ class StateVectorCudaManaged
         applyMatrix(gate_matrix.data(), wires, adjoint);
     }
 
+    /**
+     * @brief Collapse the state vector after having measured one of the qubit.
+     *
+     * Note: The branch parameter imposes the measurement result on the given
+     * wire.
+     *
+     * @param wire Wire to measure.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse(std::size_t wire, bool branch) {
+        PL_ABORT_IF_NOT(wire < BaseType::getNumQubits(), "Invalid wire index.");
+        cudaDataType_t data_type;
+
+        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                      std::is_same_v<CFP_t, double2>) {
+            data_type = CUDA_C_64F;
+        } else {
+            data_type = CUDA_C_32F;
+        }
+
+        std::vector<int> basisBits(1, BaseType::getNumQubits() - 1 - wire);
+
+        double abs2sum0;
+        double abs2sum1;
+
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* double * */ &abs2sum0,
+            /* double * */ &abs2sum1,
+            /* const int32_t * */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size()));
+
+        const double norm = branch ? abs2sum1 : abs2sum0;
+
+        const int parity = static_cast<int>(branch);
+
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecCollapseOnZBasis(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void *sv */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t nIndexBits */ BaseType::getNumQubits(),
+            /* const int32_t parity */ parity,
+            /* const int32_t *basisBits */ basisBits.data(),
+            /* const uint32_t nBasisBits */ basisBits.size(),
+            /* double norm */ norm));
+    }
+
     //****************************************************************************//
     // Explicit gate calls for bindings
     //****************************************************************************//

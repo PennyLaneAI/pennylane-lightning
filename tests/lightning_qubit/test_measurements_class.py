@@ -669,7 +669,7 @@ class TestMeasurements:
             assert np.allclose(r, e, atol=dtol, rtol=dtol)
 
     @pytest.mark.skipif(
-        device_name in ("lightning.gpu", "lightning.tensor"),
+        device_name in ("lightning.tensor"),
         reason=f"{device_name} does not support out of order probs.",
     )
     @pytest.mark.parametrize(
