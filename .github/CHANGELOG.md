@@ -119,6 +119,9 @@
 
 ### Bug fixes
 
+* Fix missing `liblightning_kokkos_catalyst.so` in Lightning-Kokkos editable installation.
+  [(#945)](https://github.com/PennyLaneAI/pennylane-lightning/pull/945)
+
 * Add concept restriction to ensure `ConstMult` inline function only hit with arithmetic-values times complex values. Fixes build failures with the test suite when enabling OpenMP, and disabling BLAS and Python under clang.
   [(#936)](https://github.com/PennyLaneAI/pennylane-lightning/pull/936)
 
