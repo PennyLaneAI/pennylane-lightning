@@ -573,7 +573,7 @@ class LightningGPU(LightningBase):
         #   lib.<system>-<architecture>-<python-id>"
         # To avoid mismatching the folder name, we search for the shared object instead.
         # TODO: locate where the naming convention of the folder is decided and replicate it here.
-        editable_mode_path = package_root.parent.parent / "build_lightning_gpu"
+        editable_mode_path = package_root.parent.parent / "build"
         for path, _, files in os.walk(editable_mode_path):
             if lib_name in files:
                 lib_location = (Path(path) / lib_name).as_posix()
