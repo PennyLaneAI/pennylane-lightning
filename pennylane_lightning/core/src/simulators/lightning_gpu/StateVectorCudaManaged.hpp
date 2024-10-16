@@ -291,7 +291,8 @@ class StateVectorCudaManaged
         if (opName == "Identity") {
             return;
         } else if (opName == "GlobalPhase") {
-            //TODO: Check the performance GlobalPhase implementation via scaling the statevector
+            // TODO: Check the performance GlobalPhase implementation via
+            // scaling the statevector
             const std::vector<std::string> names(BaseType::getNumQubits(), "I");
             std::vector<std::size_t> tgts_all(BaseType::getNumQubits());
             std::iota(tgts_all.begin(), tgts_all.end(), 0);
@@ -486,7 +487,7 @@ class StateVectorCudaManaged
                 return static_cast<int>(BaseType::getNumQubits() - 1 - x);
             });
 
-        std::transform(ctrls_values.begin(), ctrls_values.end(),
+        std::transform(ctrls_values.rbegin(), ctrls_values.rend(),
                        ctrls_valuesInt.begin(),
                        [&](bool x) { return static_cast<int>(x); });
 
