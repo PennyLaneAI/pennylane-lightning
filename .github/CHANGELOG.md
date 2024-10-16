@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Integrate the Lightning-GPU with Catalyst.
+  [(#928)](https://github.com/PennyLaneAI/pennylane-lightning/pull/928)
+
 * Add `mid-circuit measurements` support to `lightning.gpu`'s single-GPU backend.
   [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
 
