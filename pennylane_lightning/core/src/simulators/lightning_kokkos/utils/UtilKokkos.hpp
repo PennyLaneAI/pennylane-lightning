@@ -19,8 +19,8 @@
 #pragma once
 #include <Kokkos_Core.hpp>
 
-#include "Util.hpp"
 #include "BitUtil.hpp"
+#include "Util.hpp"
 
 /// @cond DEV
 namespace {
@@ -117,12 +117,12 @@ inline auto wires2Parity(const std::size_t num_qubits,
 }
 
 /**
- * @brief 
+ * @brief Compute parity and reverse wires for multi-qubit control operations
  * 
- * @param num_qubits 
- * @param all_wires 
- * @param controlled_values 
- * @return std::tuple<KokkosIntVector, KokkosIntVector, KokkosIntVector> 
+ * @param num_qubits Number of qubits in the state vector.
+ * @param wires List of target wires.
+ * @param controlled_wires List of control wires.
+ * @return std::pair<KokkosIntVector, KokkosIntVector> Parities and reverse wires for control multi-qubit operations
  */
 inline auto reverseWires(const std::size_t num_qubits,
                          const std::vector<std::size_t> &wires,
@@ -137,9 +137,9 @@ inline auto reverseWires(const std::size_t num_qubits,
     std::vector<std::size_t> all_wires;
     all_wires.reserve(nw_tot);
     all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
-    all_wires.insert(all_wires.begin() + wires.size(),
-                        controlled_wires.begin(), controlled_wires.end());
-                        
+    all_wires.insert(all_wires.begin() + wires.size(), controlled_wires.begin(),
+                     controlled_wires.end());
+
     std::vector<std::size_t> rev_wires_(nw_tot);
     for (std::size_t k = 0; k < nw_tot; k++) {
         rev_wires_[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
@@ -161,18 +161,28 @@ inline auto reverseWires(const std::size_t num_qubits,
     return {parity, rev_wires};
 }
 
-inline auto generateControlBitPatterns(const std::size_t num_qubits,
-                                  const std::vector<std::size_t> &controlled_wires,
-                                  const std::vector<bool>& controlled_values,
-                                  const std::vector<std::size_t> &wires)
+/**
+ * @brief Generate control bit patterns for control multi-qubit operations
+ * 
+ * @param num_qubits 
+ * @param controlled_wires List of control wires.
+ * @param controlled_values List of target values (true or false).
+ * @param wires List of target wires.
+ * @return KokkosIntVector List of indices containing control bit patterns
+ */
+inline auto
+generateControlBitPatterns(const std::size_t num_qubits,
+                           const std::vector<std::size_t> &controlled_wires,
+                           const std::vector<bool> &controlled_values,
+                           const std::vector<std::size_t> &wires)
     -> KokkosIntVector {
     std::vector<std::size_t> indices_;
     indices_.reserve(Pennylane::Util::exp2(wires.size()));
     indices_.emplace_back(0);
 
-    for (auto index_it = wires.rbegin(); index_it != wires.rend();
-         index_it++) {
-        const std::size_t value = Pennylane::Util::maxDecimalForQubit(*index_it, num_qubits);
+    for (auto index_it = wires.rbegin(); index_it != wires.rend(); index_it++) {
+        const std::size_t value =
+            Pennylane::Util::maxDecimalForQubit(*index_it, num_qubits);
         const std::size_t currentSize = indices_.size();
         for (std::size_t j = 0; j < currentSize; j++) {
             indices_.emplace_back(indices_[j] + value);
@@ -193,7 +203,7 @@ inline auto generateControlBitPatterns(const std::size_t num_qubits,
                 i = (i & ~(one << rev_wire)) | (value << rev_wire);
             }
         });
-        
+
     KokkosIntVector indices;
     Kokkos::View<const std::size_t *, Kokkos::HostSpace,
                  Kokkos::MemoryTraits<Kokkos::Unmanaged>>
@@ -201,18 +211,23 @@ inline auto generateControlBitPatterns(const std::size_t num_qubits,
     Kokkos::resize(indices, indices_host.size());
     Kokkos::deep_copy(indices, indices_host);
 
-
     return indices;
 }
 
+/**
+ * @brief Compute index offset from parity for control operations
+ * 
+ * @param parity List of parities for control operation.
+ * @param k Iteration index for applying control operation.
+ * @return std::size_t Index offset.
+ */
 inline std::size_t parity_2_offset(const KokkosIntVector &parity,
-                                       const std::size_t k) {
-        std::size_t offset{0U};
-        for (std::size_t i = 0; i < parity.size(); i++) {
-            offset |= ((k << i) & parity(i));
-        }
-        return offset;
+                                   const std::size_t k) {
+    std::size_t offset{0U};
+    for (std::size_t i = 0; i < parity.size(); i++) {
+        offset |= ((k << i) & parity(i));
+    }
+    return offset;
+}
 
-} 
-
-}// namespace Pennylane::LightningKokkos::Util
+} // namespace Pennylane::LightningKokkos::Util

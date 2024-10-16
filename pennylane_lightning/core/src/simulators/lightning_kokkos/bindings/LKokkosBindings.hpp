@@ -171,7 +171,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
              "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         .def("normalize", &StateVectorT::normalize,
              "Normalize the statevector to norm 1.")
-        .def("apply",
+        .def(
+            "apply",
             [](StateVectorT &sv, const std::string &str,
                const std::vector<std::size_t> &wires, bool inv,
                [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
