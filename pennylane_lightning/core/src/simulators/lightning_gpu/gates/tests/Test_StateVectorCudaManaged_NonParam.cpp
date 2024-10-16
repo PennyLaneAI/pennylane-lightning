@@ -1079,7 +1079,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetBasisStates",
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
     using PrecisionT = TestType;
     const std::size_t num_qubits = 3;
