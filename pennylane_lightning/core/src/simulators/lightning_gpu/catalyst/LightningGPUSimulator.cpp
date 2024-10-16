@@ -309,13 +309,20 @@ void LightningGPUSimulator::PartialProbs(
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-void LightningGPUSimulator::Sample(DataView<double, 2> &samples,
-                                   std::size_t shots) {
+std::vector<size_t> LightningGPUSimulator::GenerateSamples(size_t shots) {
+    // generate_samples is a member function of the Measures class.
     Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
-    // PL-Lightning-GPU generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+
+    if (this->gen) {
+        return m.generate_samples(shots, (*(this->gen))());
+    }
+    return m.generate_samples(shots);
+}
+
+void LightningGPUSimulator::Sample(DataView<double, 2> &samples,
+                                   std::size_t shots) {
+    auto li_samples = this->GenerateSamples(shots);
 
     RT_FAIL_IF(samples.size() != li_samples.size(),
                "Invalid size for the pre-allocated samples");
@@ -348,13 +355,7 @@ void LightningGPUSimulator::PartialSample(DataView<double, 2> &samples,
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    // generate_samples is a member function of the MeasuresGPU class.
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
-    // PL-Lightning-GPU generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = this->GenerateSamples(shots);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
@@ -378,13 +379,7 @@ void LightningGPUSimulator::Counts(DataView<double, 1> &eigvals,
     RT_FAIL_IF(eigvals.size() != numElements || counts.size() != numElements,
                "Invalid size for the pre-allocated counts");
 
-    // generate_samples is a member function of the MeasuresGPU class.
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
-    // PL-Lightning-GPU generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = this->GenerateSamples(shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
@@ -423,13 +418,7 @@ void LightningGPUSimulator::PartialCounts(DataView<double, 1> &eigvals,
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    // generate_samples is a member function of the MeasuresGPU class.
-    Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
-    // PL-Lightning-GPU generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = this->GenerateSamples(shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
