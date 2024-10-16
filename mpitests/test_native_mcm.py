@@ -23,7 +23,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 
 
 def test_unspported_mid_measurement():
-    """Test unsupported mid_measurement for lightning.gpu-mpi."""
+    """Test unsupported mid_measurement for Lightning-GPU-MPI."""
     comm = MPI.COMM_WORLD
     dev = qml.device(device_name, wires=2, mpi=True, shots=1000)
     params = np.pi / 4 * np.ones(2)
@@ -38,6 +38,6 @@ def test_unspported_mid_measurement():
     comm.Barrier()
 
     with pytest.raises(
-        qml.DeviceError, match="LightningGPU-MPI does not support Mid-circuit measurements."
+        qml.DeviceError, match="Lightning-GPU-MPI does not support Mid-circuit measurements."
     ):
         func(*params)
