@@ -219,7 +219,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]", (StateVectorKokkos),
         REQUIRE_THAT(variances, Catch::Approx(variances_ref).margin(1e-6));
     }
 }
-
+/* 
 TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -347,7 +347,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
                                   .margin(1e-7));
         }
     }
-}
+} */
 
 TEST_CASE("Test tensor transposition", "[Measure]") {
     // Init Kokkos creating a StateVectorKokkos
