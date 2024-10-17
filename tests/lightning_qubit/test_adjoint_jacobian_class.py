@@ -481,6 +481,7 @@ class TestVectorJacobianProduct:
             tape.trainable_params = {0}
 
             statevector.reset_state()
+
             vjp = self.calculate_vjp(statevector, tape, dy)
 
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
@@ -498,6 +499,7 @@ class TestVectorJacobianProduct:
             tape.trainable_params = {0}
 
             statevector.reset_state()
+
             vjp = self.calculate_vjp(statevector, tape, dy)
 
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)

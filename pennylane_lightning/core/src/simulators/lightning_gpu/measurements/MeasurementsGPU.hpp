@@ -25,6 +25,7 @@
 #include <cuda.h>
 #include <cusparse.h>
 #include <custatevec.h> // custatevecApplyMatrix
+#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -93,16 +94,10 @@ class Measurements final
      */
     auto probs(const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
-        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()) ||
-                            std::is_sorted(wires.rbegin(), wires.rend()),
-                        "LightningGPU does not currently support out-of-order "
-                        "wire indices with probability calculations");
-
         // Data return type fixed as double in custatevec function call
         std::vector<double> probabilities(Pennylane::Util::exp2(wires.size()));
         // this should be built upon by the wires not participating
-        int maskLen =
-            0; // static_cast<int>(BaseType::getNumQubits() - wires.size());
+        int maskLen = 0;
         int *maskBitString = nullptr; //
         int *maskOrdering = nullptr;
 
@@ -123,6 +118,8 @@ class Measurements final
                            return static_cast<int>(
                                this->_statevector.getNumQubits() - 1 - x);
                        });
+
+        std::reverse(wires_int.begin(), wires_int.end());
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumArray(
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
@@ -218,7 +215,9 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples,
+                          const std::optional<std::size_t> &seed = std::nullopt)
+        -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -238,7 +237,11 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        this->setRandomSeed();
+        if (seed.has_value()) {
+            this->setSeed(seed.value());
+        } else {
+            this->setRandomSeed();
+        }
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
             rand_nums[n] = dis(this->rng);
@@ -273,7 +276,7 @@ class Measurements final
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
             this->_statevector.getCusvHandle(), sampler, bitStrings.data(),
             bitOrdering.data(), bitStringLen, rand_nums.data(), num_samples,
-            CUSTATEVEC_SAMPLER_OUTPUT_ASCENDING_ORDER));
+            CUSTATEVEC_SAMPLER_OUTPUT_RANDNUM_ORDER));
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
             this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 

@@ -16,6 +16,7 @@
 #include <complex>
 #include <iostream>
 #include <limits>
+#include <numeric>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -74,7 +75,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::StateVectorCudaManaged",
                                            {0, 0}, {0, 0}, {0, 0}, {0, 0}};
         SECTION("GPU <-> host data: std::complex") {
             StateVectorCudaManaged<TestType> sv{num_qubits};
-            sv.initSV();
             std::vector<cp_t> out_data(Pennylane::Util::exp2(num_qubits),
                                        {0.5, 0.5});
             std::vector<cp_t> ref_data(Pennylane::Util::exp2(num_qubits),
@@ -100,7 +100,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyHadamard",
         SECTION("Apply directly") {
             for (std::size_t index = 0; index < num_qubits; index++) {
                 StateVectorCudaManaged<TestType> sv{num_qubits};
-                sv.initSV();
                 CHECK(sv.getDataVector()[0] == cp_t{1, 0});
                 sv.applyHadamard({index}, inverse);
                 CAPTURE(sv.getDataVector());
@@ -120,7 +119,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyHadamard",
         SECTION("Apply using dispatcher") {
             for (std::size_t index = 0; index < num_qubits; index++) {
                 StateVectorCudaManaged<TestType> sv{num_qubits};
-                sv.initSV();
 
                 CHECK(sv.getDataVector()[0] == cp_t{1, 0});
                 sv.applyOperation("Hadamard", {index}, inverse);
@@ -148,7 +146,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliX",
         SECTION("Apply directly") {
             for (std::size_t index = 0; index < num_qubits; index++) {
                 StateVectorCudaManaged<TestType> sv{num_qubits};
-                sv.initSV();
                 CHECK(sv.getDataVector()[0] ==
                       cuUtil::ONE<std::complex<TestType>>());
                 sv.applyPauliX({index}, inverse);
@@ -161,7 +158,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliX",
         SECTION("Apply using dispatcher") {
             for (std::size_t index = 0; index < num_qubits; index++) {
                 StateVectorCudaManaged<TestType> sv{num_qubits};
-                sv.initSV();
                 CHECK(sv.getDataVector()[0] ==
                       cuUtil::ONE<std::complex<TestType>>());
                 sv.applyOperation("PauliX", {index}, inverse);
@@ -181,7 +177,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliY",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
         // Test using |+++> state
         sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                            {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -229,7 +224,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyPauliZ",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
         // Test using |+++> state
         sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                            {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -274,7 +268,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyS",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
         // Test using |+++> state
         sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                            {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -323,7 +316,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyT",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
         // Test using |+++> state
         sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                            {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -372,7 +364,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCNOT",
     {
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
 
         // Test using |+00> state to generate 3-qubit GHZ state
         sv.applyOperation("Hadamard", {0});
@@ -414,7 +405,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySWAP",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
 
         // Test using |+10> state
         sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
@@ -593,7 +583,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCY",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
 
         // Test using |+10> state
         sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
@@ -762,7 +751,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCZ",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
 
         // Test using |+10> state
         sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
@@ -876,7 +864,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyToffoli",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
 
         // Test using |+10> state
         sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
@@ -983,7 +970,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyCSWAP",
         using cp_t = std::complex<TestType>;
         const std::size_t num_qubits = 3;
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.initSV();
 
         // Test using |+10> state
         sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
@@ -1083,68 +1069,15 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
         }
 
         StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.CopyHostDataToGpu(init_state.data(), init_state.size());
 
-        using index_type =
-            typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                      int32_t, int64_t>::type;
-        // The setStates will shuffle the state vector values on the device with
-        // the following indices and values setting on host. For example, the
-        // values[i] is used to set the indices[i] th element of state vector on
-        // the device. For example, values[2] (init_state[5]) will be copied to
-        // indices[2]th or (4th) element of the state vector.
-        std::vector<index_type> indices = {0, 2, 4, 6, 1, 3, 5, 7};
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
 
-        std::vector<std::complex<PrecisionT>> values = {
-            init_state[1], init_state[3], init_state[5], init_state[7],
-            init_state[0], init_state[2], init_state[4], init_state[6]};
-
-        sv.template setStateVector<index_type>(values.size(), values.data(),
-                                               indices.data(), false);
-
-        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+        sv.setStateVector(values.data(), values.size(),
+                          std::vector<std::size_t>{0, 1, 2});
+        CHECK(init_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
-// LCOV_EXCL_START
-TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVectorwith_thread_setting",
-                   "[StateVectorCudaManaged_Nonparam]", float, double) {
-    using PrecisionT = TestType;
-    const std::size_t num_qubits = 3;
-    std::mt19937 re{1337};
-
-    SECTION("SetStates with a non-default GPU thread setting") {
-        auto init_state =
-            createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto expected_state = init_state;
-
-        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
-             i++) {
-            std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
-        }
-
-        StateVectorCudaManaged<TestType> sv{num_qubits};
-        sv.CopyHostDataToGpu(init_state.data(), init_state.size());
-
-        using index_type =
-            typename std::conditional<std::is_same<PrecisionT, float>::value,
-                                      int32_t, int64_t>::type;
-
-        std::vector<index_type> indices = {0, 2, 4, 6, 1, 3, 5, 7};
-
-        std::vector<std::complex<PrecisionT>> values = {
-            init_state[1], init_state[3], init_state[5], init_state[7],
-            init_state[0], init_state[2], init_state[4], init_state[6]};
-
-        // default setting of the number of threads in a block is 256.
-        const std::size_t threads_per_block = 1024;
-
-        sv.template setStateVector<index_type, threads_per_block>(
-            values.size(), values.data(), indices.data(), false);
-
-        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
-    }
-}
-// LCOV_EXCL_STOP
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
@@ -1156,21 +1089,19 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
         "Set Ith element of the state state on device with data on the host") {
         auto init_state =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto expected_state = init_state;
+        std::vector<std::complex<PrecisionT>> expected_state(init_state.size(),
+                                                             {0, 0});
 
-        expected_state[0] = expected_state[1];
-
-        for (std::size_t i = 1; i < Pennylane::Util::exp2(num_qubits); i++) {
-            expected_state[i] = {0, 0};
-        }
+        expected_state[expected_state.size() - 1] = {1.0, 0};
 
         StateVectorCudaManaged<TestType> sv{num_qubits};
         sv.CopyHostDataToGpu(init_state.data(), init_state.size());
 
-        std::size_t index = 0;
-        std::complex<PrecisionT> values = init_state[1];
+        std::vector<std::size_t> state(num_qubits, 1);
+        std::vector<std::size_t> wires(num_qubits, 0);
+        std::iota(wires.begin(), wires.end(), 0);
 
-        sv.setBasisState(values, index, false);
+        sv.setBasisState(state, wires, false);
 
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }

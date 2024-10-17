@@ -16,10 +16,14 @@ Class implementation for state vector measurements.
 """
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
+from __future__ import annotations
+
+from warnings import warn
+
 try:
     from pennylane_lightning.lightning_qubit_ops import MeasurementsC64, MeasurementsC128
-except ImportError:
-    pass
+except ImportError as ex:
+    warn(str(ex), UserWarning)
 
 from functools import reduce
 from typing import List
@@ -53,7 +57,7 @@ class LightningMeasurements(LightningBaseMeasurements):  # pylint: disable=too-f
 
     def __init__(
         self,
-        qubit_state,
+        qubit_state: LightningStateVector,  # pylint: disable=undefined-variable
         mcmc: bool = None,
         kernel_name: str = None,
         num_burnin: int = None,
