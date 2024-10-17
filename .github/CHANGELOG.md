@@ -119,7 +119,7 @@
 
 ### Bug fixes
 
-* Fix build failure for Lightning-Kokkos editable installation on MacOS due to `liblightning_kokkos_catalyst.so` copy.
+* Fix build failure for Lightning-Kokkos editable installation on non-linux systems due to `liblightning_kokkos_catalyst.so` copy.
   [(#947)](https://github.com/PennyLaneAI/pennylane-lightning/pull/947)
 
 * Fix missing `liblightning_kokkos_catalyst.so` in Lightning-Kokkos editable installation.
