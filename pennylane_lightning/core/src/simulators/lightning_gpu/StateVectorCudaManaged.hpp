@@ -399,7 +399,7 @@ class StateVectorCudaManaged
             applyParametricPauliGeneralGate_({opName}, ctrlsInt,
                                              ctrls_valuesInt, tgtsInt,
                                              params.front(), adjoint);
-        } else if (opName == "Rot" || opName == "CRot") {
+        } else if (opName == "Rot") {
             if (adjoint) {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
@@ -411,15 +411,6 @@ class StateVectorCudaManaged
                 applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
                                         ctrls_valuesInt, false);
             }
-        } else if (opName == "Matrix") {
-            DataBuffer<CFP_t, int> d_matrix{
-                gate_matrix.size(), BaseType::getDataBuffer().getDevTag(),
-                true};
-            d_matrix.CopyHostDataToGpu(gate_matrix.data(), d_matrix.getLength(),
-                                       false);
-
-            applyDeviceGeneralGate_(d_matrix.getData(), ctrlsInt, tgtsInt,
-                                    ctrls_valuesInt, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             auto &gateMap =
                 cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
