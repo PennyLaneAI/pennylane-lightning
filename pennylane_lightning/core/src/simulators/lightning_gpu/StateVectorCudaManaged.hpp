@@ -291,14 +291,14 @@ class StateVectorCudaManaged
         if (opName == "Identity") {
             return;
         } else if (opName == "GlobalPhase") {
-            // TODO: Check the performance GlobalPhase implementation via
-            // scaling the statevector
-            const std::vector<std::string> names(BaseType::getNumQubits(), "I");
-            std::vector<std::size_t> tgts_all(BaseType::getNumQubits());
-            std::iota(tgts_all.begin(), tgts_all.end(), 0);
-            std::reverse(tgts_all.begin(), tgts_all.end());
-            applyParametricPauliGate_(names, {}, tgts_all, 2 * params[0],
-                                      adjoint);
+            PrecisionT param = adjoint ? -params[0] : params[0];
+            CFP_t scale_factor{std::cos(param), -std::sin(param)};
+            scaleC_CUDA<CFP_t, CFP_t, int>(
+                scale_factor, BaseType::getDataBuffer().getData(),
+                BaseType::getDataBuffer().getLength(),
+                BaseType::getDataBuffer().getDevTag().getDeviceID(),
+                BaseType::getDataBuffer().getDevTag().getStreamID(),
+                getCublasCaller());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
