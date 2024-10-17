@@ -323,8 +323,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 operation.base, qml.GlobalPhase
             ):  # apply n-controlled gate
                 # LGPU do not support the controlled gates except for GlobalPhase
-                if self._mpi_handler.use_mpi: 
-                    raise DeviceError("Lightning-GPU-MPI does not support Controlled GlobalPhase gates.")
+                if self._mpi_handler.use_mpi:
+                    raise DeviceError(
+                        "Lightning-GPU-MPI does not support Controlled GlobalPhase gates."
+                    )
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 try:
