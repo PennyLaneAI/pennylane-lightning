@@ -43,7 +43,6 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningGPUMeasurements
@@ -331,7 +330,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
-                # LGPU do not support the controlled gates except for GlobalPhase
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 try:
