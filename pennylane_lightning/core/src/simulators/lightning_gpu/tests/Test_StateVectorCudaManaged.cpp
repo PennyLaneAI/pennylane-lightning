@@ -194,14 +194,15 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",
                                         std::vector<std::size_t>{1}, false,
                                         {0.0}, std::vector<ComplexT>{}),
             LightningException,
-            "Controlled kernels not implemented."); // invalid controlled_wires
+            "Only GlobalPhase gate is supported."); // invalid controlled_wires
         PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyOperation("PauliX", {}, std::vector<bool>{false},
+            state_vector.applyOperation("GlobalPhase", {},
+                                        std::vector<bool>{false},
                                         std::vector<std::size_t>{1}, false,
                                         {0.0}, std::vector<ComplexT>{}),
             LightningException,
-            "`controlled_wires` must have the same size "
-            "as"); // invalid controlled_wires
+            "`ctrls` and `ctrls_values` must have the "
+            "same size."); // invalid controlled_wires
     }
 
     SECTION("Test invalid arguments with parameters") {
