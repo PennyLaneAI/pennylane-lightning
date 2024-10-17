@@ -67,25 +67,6 @@ extern void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                                const std::size_t index, bool async,
                                cudaStream_t stream_id);
 
-extern void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
-                                        cuComplex phase,
-                                        std::size_t thread_per_block,
-                                        cudaStream_t stream_id);
-extern void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, std::size_t num_sv,
-                                        cuDoubleComplex phase,
-                                        std::size_t thread_per_block,
-                                        cudaStream_t stream_id);
-
-extern void cGlobalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
-                                         bool adjoint, cuComplex *phase,
-                                         std::size_t thread_per_block,
-                                         cudaStream_t stream_id);
-extern void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv,
-                                         std::size_t num_sv, bool adjoint,
-                                         cuDoubleComplex *phase,
-                                         std::size_t thread_per_block,
-                                         cudaStream_t stream_id);
-
 /**
  * @brief Managed memory CUDA state-vector class using custateVec backed
  * gate-calls.
@@ -258,44 +239,6 @@ class StateVectorCudaManaged
     }
 
     /**
-     * @brief Multiplies the state-vector by a global phase.
-     *
-     * @param adjoint Indicates whether to use adjoint of gate.
-     * @param param Complex phase generator.
-     */
-    template <std::size_t thread_per_block = 256>
-    void globalPhaseStateVector(const bool adjoint, const Precision param) {
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-        std::complex<Precision> phase =
-            std::exp(std::complex<Precision>{0, (adjoint) ? param : -param});
-        auto cuPhase = complexToCu(phase);
-        globalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
-                                    cuPhase, thread_per_block, stream_id);
-    }
-
-    /**
-     * @brief Multiplies the state-vector by a controlled global phase.
-     *
-     * @param phase Controlled complex phase vector.
-     */
-    template <std::size_t thread_per_block = 256>
-    void cGlobalPhaseStateVector(const bool adjoint,
-                                 const std::vector<CFP_t> &phase,
-                                 const bool async = false) {
-        PL_ABORT_IF_NOT(BaseType::getLength() == phase.size(),
-                        "The state-vector data must have the same size as the "
-                        "controlled-phase data.")
-        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-        DataBuffer<CFP_t, int> d_phase{phase.size(), device_id, stream_id,
-                                       true};
-        d_phase.CopyHostDataToGpu(phase.data(), d_phase.getLength(), async);
-        cGlobalPhaseStateVector_CUDA(BaseType::getData(), BaseType::getLength(),
-                                     adjoint, d_phase.getData(),
-                                     thread_per_block, stream_id);
-    }
-
-    /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached
      * gate values on the device. Lastly, accepts a host-provided matrix if
@@ -347,13 +290,18 @@ class StateVectorCudaManaged
                                             wires.end()};
         if (opName == "Identity") {
             return;
-        } else if (opName == "C(GlobalPhase)") {
-            cGlobalPhaseStateVector(adjoint, gate_matrix);
         } else if (opName == "GlobalPhase") {
-            globalPhaseStateVector(adjoint, params[0]);
+            PrecisionT param = adjoint ? -params[0] : params[0];
+            CFP_t scale_factor{std::cos(param), -std::sin(param)};
+            scaleC_CUDA<CFP_t, CFP_t, int>(
+                scale_factor, BaseType::getDataBuffer().getData(),
+                BaseType::getDataBuffer().getLength(),
+                BaseType::getDataBuffer().getDevTag().getDeviceID(),
+                BaseType::getDataBuffer().getDevTag().getStreamID(),
+                getCublasCaller());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
-            applyParametricPauliGate({opName}, ctrls, tgts, params.front(),
-                                     adjoint);
+            applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
+                                      adjoint);
         } else if (opName == "Rot" || opName == "CRot") {
             if (adjoint) {
                 auto rot_matrix =
@@ -407,25 +355,44 @@ class StateVectorCudaManaged
      * @param opName Name of gate to apply.
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+     * @param tgt_wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
      * @param params Optional std gate matrix if opName doesn't exist.
      */
-    template <template <typename...> class complex_t>
-    void
-    applyOperation(const std::string &opName,
-                   const std::vector<std::size_t> &controlled_wires,
-                   const std::vector<bool> &controlled_values,
-                   const std::vector<std::size_t> &wires, bool inverse = false,
-                   const std::vector<Precision> &params = {0.0},
-                   const std::vector<complex_t<Precision>> &gate_matrix = {}) {
-        PL_ABORT_IF_NOT(controlled_wires.empty(),
-                        "Controlled kernels not implemented.");
-        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
-                        "`controlled_wires` must have the same size as "
-                        "`controlled_values`.");
-        applyOperation(opName, wires, inverse, params, gate_matrix);
+    void applyOperation(
+        const std::string &opName, const std::vector<std::size_t> &ctrl_wires,
+        const std::vector<bool> &ctrl_values,
+        const std::vector<std::size_t> &tgt_wires, bool adjoint = false,
+        const std::vector<Precision> &params = {0.0},
+        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(opName == "GlobalPhase",
+                        "Only GlobalPhase gate is supported.");
+        PL_ABORT_IF(ctrl_wires.size() != ctrl_values.size(),
+                    "`ctrls` and `ctrls_values` must have the same size.");
+        std::vector<int> ctrlsInt(ctrl_wires.size());
+        std::vector<int> tgtsInt(tgt_wires.size());
+        std::vector<int> ctrls_valuesInt(ctrl_wires.size());
+
+        std::transform(ctrl_wires.begin(), ctrl_wires.end(), ctrlsInt.begin(),
+                       [&](std::size_t x) {
+                           return static_cast<int>(BaseType::getNumQubits() -
+                                                   1 - x);
+                       });
+        std::transform(tgt_wires.begin(), tgt_wires.end(), tgtsInt.begin(),
+                       [&](std::size_t x) {
+                           return static_cast<int>(BaseType::getNumQubits() -
+                                                   1 - x);
+                       });
+
+        std::transform(ctrl_values.begin(), ctrl_values.end(),
+                       ctrls_valuesInt.begin(),
+                       [&](bool x) { return static_cast<int>(x); });
+        if (opName == "GlobalPhase") {
+            const std::vector<std::string> names(tgt_wires.size(), "I");
+            applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
+                                             tgtsInt, 2 * params[0], adjoint);
+        }
     }
 
     /**
@@ -595,20 +562,20 @@ class StateVectorCudaManaged
     inline void applyRX(const std::vector<std::size_t> &wires, bool adjoint,
                         Precision param) {
         static const std::vector<std::string> name{{"RX"}};
-        applyParametricPauliGate(name, {wires.begin(), wires.end() - 1},
-                                 {wires.back()}, param, adjoint);
+        applyParametricPauliGate_(name, {wires.begin(), wires.end() - 1},
+                                  {wires.back()}, param, adjoint);
     }
     inline void applyRY(const std::vector<std::size_t> &wires, bool adjoint,
                         Precision param) {
         static const std::vector<std::string> name{{"RY"}};
-        applyParametricPauliGate(name, {wires.begin(), wires.end() - 1},
-                                 {wires.back()}, param, adjoint);
+        applyParametricPauliGate_(name, {wires.begin(), wires.end() - 1},
+                                  {wires.back()}, param, adjoint);
     }
     inline void applyRZ(const std::vector<std::size_t> &wires, bool adjoint,
                         Precision param) {
         static const std::vector<std::string> name{{"RZ"}};
-        applyParametricPauliGate(name, {wires.begin(), wires.end() - 1},
-                                 {wires.back()}, param, adjoint);
+        applyParametricPauliGate_(name, {wires.begin(), wires.end() - 1},
+                                  {wires.back()}, param, adjoint);
     }
     inline void applyRot(const std::vector<std::size_t> &wires, bool adjoint,
                          Precision param0, Precision param1, Precision param2) {
@@ -664,17 +631,17 @@ class StateVectorCudaManaged
     inline void applyIsingXX(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         static const std::vector<std::string> names(wires.size(), {"RX"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
     inline void applyIsingYY(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         static const std::vector<std::string> names(wires.size(), {"RY"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
     inline void applyIsingZZ(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         static const std::vector<std::string> names(wires.size(), {"RZ"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
     inline void applyIsingXY(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
@@ -789,7 +756,7 @@ class StateVectorCudaManaged
     inline void applyMultiRZ(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
         const std::vector<std::string> names(wires.size(), {"RZ"});
-        applyParametricPauliGate(names, {}, wires, param, adjoint);
+        applyParametricPauliGate_(names, {}, wires, param, adjoint);
     }
 
     /* Gate generators */
@@ -1464,12 +1431,10 @@ class StateVectorCudaManaged
      * @param tgts target wires.
      * @param use_adjoint Take adjoint of operation.
      */
-    void applyParametricPauliGate(const std::vector<std::string> &pauli_words,
-                                  std::vector<std::size_t> ctrls,
-                                  std::vector<std::size_t> tgts,
-                                  Precision param, bool use_adjoint = false) {
-        int nIndexBits = BaseType::getNumQubits();
-
+    void applyParametricPauliGate_(const std::vector<std::string> &pauli_words,
+                                   std::vector<std::size_t> ctrls,
+                                   std::vector<std::size_t> tgts,
+                                   Precision param, bool use_adjoint = false) {
         std::vector<int> ctrlsInt(ctrls.size());
         std::vector<int> tgtsInt(tgts.size());
 
@@ -1483,6 +1448,29 @@ class StateVectorCudaManaged
                 return static_cast<int>(BaseType::getNumQubits() - 1 - x);
             });
 
+        const std::vector<int> ctrls_valuesInt(ctrls.size(), 1);
+
+        applyParametricPauliGeneralGate_(pauli_words, ctrlsInt, ctrls_valuesInt,
+                                         tgtsInt, param, use_adjoint);
+    }
+
+    /**
+     * @brief Apply a parametric Pauli gate using custateVec calls.
+     *
+     * @param pauli_words List of Pauli words representing operation.
+     * @param ctrls Control wires
+     * @param ctrls_values Control values
+     * @param tgts target wires.
+     * @param param Rotation angle.
+     * @param use_adjoint Take adjoint of operation.
+     */
+    void applyParametricPauliGeneralGate_(
+        const std::vector<std::string> &pauli_words,
+        const std::vector<int> &ctrlsInt,
+        const std::vector<int> &ctrls_valuesInt, const std::vector<int> tgtsInt,
+        Precision param, bool use_adjoint = false) {
+        int nIndexBits = BaseType::getNumQubits();
+
         cudaDataType_t data_type;
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
@@ -1491,14 +1479,12 @@ class StateVectorCudaManaged
         } else {
             data_type = CUDA_C_32F;
         }
-
         std::vector<custatevecPauli_t> pauli_enums;
         pauli_enums.reserve(pauli_words.size());
         for (const auto &pauli_str : pauli_words) {
             pauli_enums.push_back(native_gates_.at(pauli_str));
         }
         const auto local_angle = (use_adjoint) ? param / 2 : -param / 2;
-
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyPauliRotation(
             /* custatevecHandle_t */ handle_.get(),
             /* void* */ BaseType::getData(),
@@ -1507,10 +1493,10 @@ class StateVectorCudaManaged
             /* double */ local_angle,
             /* const custatevecPauli_t* */ pauli_enums.data(),
             /* const int32_t* */ tgtsInt.data(),
-            /* const uint32_t */ tgts.size(),
+            /* const uint32_t */ tgtsInt.size(),
             /* const int32_t* */ ctrlsInt.data(),
-            /* const int32_t* */ nullptr,
-            /* const uint32_t */ ctrls.size()));
+            /* const int32_t* */ ctrls_valuesInt.data(),
+            /* const uint32_t */ ctrlsInt.size()));
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
             BaseType::getDataBuffer().getDevTag().getStreamID()));
     }
