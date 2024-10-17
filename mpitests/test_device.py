@@ -17,6 +17,8 @@ Unit tests for Lightning devices creation.
 # pylint: disable=protected-access,unused-variable,missing-function-docstring,c-extension-no-member
 
 import pennylane as qml
+from pennylane import DeviceError
+from pennylane.tape import QuantumScript
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name
@@ -52,3 +54,12 @@ def test_unsupported_mpi_buf_size():
         match="Number of processes should be smaller than the number of statevector elements",
     ):
         dev = qml.device(device_name, mpi=True, wires=1)
+
+def test_unsupported_gate():
+    comm = MPI.COMM_WORLD
+    dev = qml.device(device_name, mpi=True, wires=4)
+    op = qml.ctrl(qml.GlobalPhase(0.1, wires=[1,2,3]), [0], control_values=[True])
+    tape = QuantumScript([op])
+    with pytest.raises(DeviceError, match="Lightning-GPU-MPI does not support Controlled GlobalPhase gates"):
+        dev.execute(tape)
+        comm.Barrier()
