@@ -166,7 +166,7 @@ class TestAdjointJacobian:
             self.calculate_jacobian(lightning_sv(num_wires=1), tape)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
+        device_name not in ("lightning.qubit", "lightning.gpu"),
         reason="N-controlled operations only implemented in lightning.qubit.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
