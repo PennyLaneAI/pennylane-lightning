@@ -369,6 +369,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires,
                         bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
@@ -420,6 +424,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                         const std::vector<std::size_t> &wires, bool inverse,
                         const std::vector<PrecisionT> &params,
                         const std::vector<ComplexT, Alloc> &matrix) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
@@ -569,6 +577,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                           const std::vector<bool> &controlled_values,
                           const std::vector<std::size_t> &wires,
                           bool inverse = false) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
         applyControlledMatrix(matrix.data(), controlled_wires,
                               controlled_values, wires, inverse);
     }
