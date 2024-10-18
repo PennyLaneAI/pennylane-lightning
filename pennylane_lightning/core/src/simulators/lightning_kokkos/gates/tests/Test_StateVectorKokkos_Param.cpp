@@ -595,6 +595,22 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
         }
     }
+
+    SECTION("Controlled GlobalPhase") {
+        const TestType pi2 = 1.5707963267948966;
+        auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+        StateVectorKokkos<TestType> kokkos_sv(
+            reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+        kokkos_sv.applyOperation("GlobalPhase", {0, 1}, {0, 1}, {2}, inverse,
+                                 {-pi2});
+        auto result_sv = kokkos_sv.getDataVector();
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
+            tmp *= ComplexT(sv_data[j]);
+            CHECK((real(result_sv[j])) == Approx(real(tmp)));
+            CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledPhaseShift",
