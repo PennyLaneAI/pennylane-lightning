@@ -23,7 +23,10 @@
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
+using Pennylane::LightningKokkos::Util::generateControlBitPatterns;
 using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::parity_2_offset;
+using Pennylane::LightningKokkos::Util::reverseWires;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::wires2Parity;
 using std::size_t;
@@ -111,8 +114,6 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    const std::size_t n_wires = 1;
-    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
     std::size_t rev_wire;
     std::size_t rev_wire_shift;
@@ -145,6 +146,46 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     }
 };
 
+template <class PrecisionT> struct applyNC1QubitOpFunctor {
+    using ComplexT = Kokkos::complex<PrecisionT>;
+    using KokkosComplexVector = Kokkos::View<ComplexT *>;
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    KokkosComplexVector arr;
+    KokkosComplexVector matrix;
+    KokkosIntVector indices;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wires;
+    KokkosIntVector rev_wire_shifts;
+    std::size_t num_qubits;
+
+    applyNC1QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
+                           const KokkosComplexVector &matrix_,
+                           const std::vector<std::size_t> &controlled_wires_,
+                           const std::vector<bool> &controlled_values_,
+                           const std::vector<std::size_t> &wires_) {
+        arr = arr_;
+        matrix = matrix_;
+        num_qubits = num_qubits_;
+        std::tie(parity, rev_wires) =
+            reverseWires(num_qubits_, wires_, controlled_wires_);
+        indices = generateControlBitPatterns(num_qubits_, controlled_wires_,
+                                             controlled_values_, wires_);
+    }
+
+    KOKKOS_INLINE_FUNCTION
+    void operator()(const std::size_t k) const {
+        const std::size_t offset = parity_2_offset(parity, k);
+        std::size_t i0 = indices(0B00);
+        std::size_t i1 = indices(0B01);
+        ComplexT v0 = arr(i0 + offset);
+        ComplexT v1 = arr(i1 + offset);
+
+        arr(i0 + offset) = matrix(0B00) * v0 + matrix(0B01) * v1;
+        arr(i1 + offset) = matrix(0B10) * v0 + matrix(0B11) * v1;
+    }
+};
+
 template <class PrecisionT> struct apply2QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
@@ -152,8 +193,6 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    const std::size_t n_wires = 2;
-    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
     std::size_t rev_wire0;
     std::size_t rev_wire1;
@@ -223,17 +262,13 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    KokkosIntVector wires;
     KokkosIntVector parity;
     KokkosIntVector rev_wire_shifts;
-    const std::size_t n_wires = 3;
-    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     apply3QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -293,17 +328,13 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    KokkosIntVector wires;
     KokkosIntVector parity;
     KokkosIntVector rev_wire_shifts;
-    const std::size_t n_wires = 4;
-    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     apply4QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -399,17 +430,13 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
 
     KokkosComplexVector arr;
     KokkosComplexVector matrix;
-    KokkosIntVector wires;
     KokkosIntVector parity;
     KokkosIntVector rev_wire_shifts;
-    const std::size_t n_wires = 5;
-    const std::size_t dim = one << n_wires;
     std::size_t num_qubits;
 
     apply5QubitOpFunctor(KokkosComplexVector arr_, std::size_t num_qubits_,
                          const KokkosComplexVector &matrix_,
                          const std::vector<std::size_t> &wires_) {
-        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;

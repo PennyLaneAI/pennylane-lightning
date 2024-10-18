@@ -48,6 +48,35 @@ using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
 
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
+
 /**
  * @brief Get a gate kernel map for a statevector.
  */
@@ -61,7 +90,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
-
+    registerControlledGate<StateVectorT>(pyclass);
     pyclass.def(
         "applyPauliRot",
         [](StateVectorT &sv, const std::vector<std::size_t> &wires,

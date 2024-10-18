@@ -390,32 +390,6 @@ class StateVectorKokkos final
     }
 
     /**
-     * @brief Apply a single gate to the state vector.
-     *
-     * @param opName Name of gate to apply.
-     * @param controlled_wires Control wires.
-     * @param controlled_values Control values (false or true).
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     * @param params Optional parameter list for parametric gates.
-     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
-     */
-    void applyOperation(const std::string &opName,
-                        const std::vector<std::size_t> &controlled_wires,
-                        const std::vector<bool> &controlled_values,
-                        const std::vector<std::size_t> &wires,
-                        bool inverse = false,
-                        const std::vector<fp_t> &params = {},
-                        const std::vector<ComplexT> &gate_matrix = {}) {
-        PL_ABORT_IF_NOT(controlled_wires.empty(),
-                        "Controlled kernels not implemented.");
-        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
-                        "`controlled_wires` must have the same size as "
-                        "`controlled_values`.");
-        applyOperation(opName, wires, inverse, params, gate_matrix);
-    }
-
-    /**
      * @brief Apply a multi qubit operator to the state vector using a matrix
      *
      * @param matrix Kokkos gate matrix in the device space
@@ -475,6 +449,98 @@ class StateVectorKokkos final
     }
 
     /**
+     * @brief Apply a controlled-single gate to the state vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
+                        const std::vector<fp_t> &params = {},
+                        const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        if (controlled_wires.empty()) {
+            return applyOperation(opName, wires, inverse, params, gate_matrix);
+        }
+        if (opName == "Identity") {
+            // No op
+        } else if (array_contains(controlled_gate_names,
+                                  std::string_view{opName})) {
+            const std::size_t num_qubits = this->getNumQubits();
+            const ControlledGateOperation gateop =
+                reverse_lookup(controlled_gate_names, std::string_view{opName});
+            applyNCNamedOperation<KokkosExecSpace>(
+                gateop, *data_, num_qubits, controlled_wires, controlled_values,
+                wires, inverse, params);
+        } else {
+            PL_ABORT_IF(gate_matrix.empty(),
+                        std::string("Operation does not exist for ") + opName +
+                            std::string(" and no matrix provided."));
+            return applyNCMultiQubitOp(vector2view(gate_matrix),
+                                       controlled_wires, controlled_values,
+                                       wires, inverse);
+        }
+    }
+    /**
+     * @brief Apply a controlled-multi qubit operator to the state vector using
+     * a matrix
+     *
+     * @param matrix Kokkos gate matrix in the device space.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    void applyNCMultiQubitOp(const KokkosVector matrix,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse = false) {
+
+        auto &&num_qubits = this->getNumQubits();
+        std::size_t two2N =
+            std::exp2(num_qubits - wires.size() - controlled_wires.size());
+        std::size_t dim = std::exp2(wires.size());
+        KokkosVector matrix_trans("matrix_trans", matrix.size());
+
+        if (inverse) {
+            Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d({0, 0}, {dim, dim});
+            Kokkos::parallel_for(
+                policy_2d,
+                KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
+                    matrix_trans(i + j * dim) = conj(matrix(i * dim + j));
+                });
+        } else {
+            matrix_trans = matrix;
+        }
+
+        switch (wires.size()) {
+        case 1:
+            Kokkos::parallel_for(two2N, applyNC1QubitOpFunctor<fp_t>(
+                                            *data_, num_qubits, matrix_trans,
+                                            controlled_wires, controlled_values,
+                                            wires));
+            break;
+        default:
+            PL_ABORT("Controlled multi-qubit gates not yet supported in Lightning Kokkos");
+            break;
+        }
+    }
+
+    /**
      * @brief Apply a given matrix directly to the statevector using a
      * raw matrix pointer vector.
      *
@@ -489,23 +555,6 @@ class StateVectorKokkos final
         std::size_t n = static_cast<std::size_t>(1U) << wires.size();
         KokkosVector matrix_(matrix, n * n);
         applyMultiQubitOp(matrix_, wires, inverse);
-    }
-
-    /**
-     * @brief Apply a given matrix directly to the statevector.
-     *
-     * @param matrix Matrix data (in row-major format).
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
-     */
-    inline void applyMatrix(std::vector<ComplexT> &matrix,
-                            const std::vector<std::size_t> &wires,
-                            bool inverse = false) {
-        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
-                    "The size of matrix does not match with the given "
-                    "number of wires");
-        applyMatrix(matrix.data(), wires, inverse);
     }
 
     /**
@@ -594,7 +643,7 @@ class StateVectorKokkos final
         PrecisionT squaredNorm = 0.0;
         Kokkos::parallel_reduce(
             sv_view.size(),
-            KOKKOS_LAMBDA(std::size_t i, PrecisionT & sum) {
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
                 const PrecisionT norm = Kokkos::abs(sv_view(i));
                 sum += norm * norm;
             },

@@ -36,13 +36,14 @@ void applyGenPhaseShift(
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
-    applyNC1Functor(
-        ExecutionSpace{}, arr_, num_qubits, wires,
+    auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
-            [[maybe_unused]] auto i1_ = i1;
-            arr(i0) = 0.0;
-        });
+        [[maybe_unused]] auto i1_ = i1;
+        arr(i0) = 0.0;
+    };
+    applyNC1Functor<PrecisionT, decltype(core_function), false>(
+        ExecutionSpace{}, arr_, num_qubits, wires, core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
