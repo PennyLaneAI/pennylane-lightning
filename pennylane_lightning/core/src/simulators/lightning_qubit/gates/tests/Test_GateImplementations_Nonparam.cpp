@@ -674,6 +674,14 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
                     << PrecisionToName<PrecisionT>::value) {
+        if (control == wire) {
+            REQUIRE_THROWS_AS(
+                sv0.applyOperation("PauliX", std::vector<std::size_t>{control},
+                                   std::vector<bool>{true},
+                                   std::vector<std::size_t>{wire}),
+                LightningException);
+        }
+
         if (control != wire) {
             auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
             sv0.updateData(st0);
@@ -687,7 +695,7 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                     approx(sv1.getDataVector()).margin(margin));
         }
 
-        if (control != 0 && wire != 0) {
+        if (control != 0 && wire != 0 && control != wire) {
             sv0.applyOperation("Toffoli", {0, control, wire});
             sv1.applyOperation("PauliX", std::vector<std::size_t>{0, control},
                                std::vector<bool>{true, true},
@@ -759,6 +767,15 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                                std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
+        }
+
+        if (control == wire) {
+            const auto matrix = getHadamard<std::complex, PrecisionT>();
+            REQUIRE_THROWS_AS(sv0.applyControlledMatrix(
+                                  matrix, std::vector<std::size_t>{control},
+                                  std::vector<bool>{true},
+                                  std::vector<std::size_t>{wire}),
+                              LightningException);
         }
     }
     DYNAMIC_SECTION("N-controlled S - "
