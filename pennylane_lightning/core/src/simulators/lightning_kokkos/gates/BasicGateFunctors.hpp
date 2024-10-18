@@ -1637,6 +1637,7 @@ void applyNCNamedOperation(const ControlledGateOperation gateop,
         applyNCGlobalPhase<ExecutionSpace>(arr_, num_qubits, controlled_wires,
                                            controlled_values, wires, inverse,
                                            params);
+        return;
     default:
         PL_ABORT("Controlled gate operation does not exist.");
     }
