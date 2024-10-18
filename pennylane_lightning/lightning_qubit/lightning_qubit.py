@@ -474,6 +474,13 @@ class LightningQubit(LightningBase):
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
+                
+            # Tmp function to get the amount of gates
+            gates = {}
+            for i, ops in enumerate(circuit.__dict__['_ops']):
+                gates[ops._name] = gates.get(ops._name, 0) + 1
+            print('FDX:', gates)
+
             results.append(
                 self.simulate(
                     circuit,

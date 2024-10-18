@@ -19,6 +19,9 @@ from dataclasses import replace
 from numbers import Number
 from typing import Callable, Optional, Sequence, Tuple, Union
 from warnings import warn
+from ctypes.util import find_library
+from importlib import util as imp_util
+
 
 import numpy as np
 import pennylane as qml
@@ -263,7 +266,7 @@ class LightningTensor(Device):
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
+    _device_options = ("backend", "max_bond_dim", "cutoff", "cutoff_mode", "custom_MPS")
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
@@ -287,6 +290,11 @@ class LightningTensor(Device):
         if not self._CPP_BINARY_AVAILABLE:
             raise ImportError("Pre-compiled binaries for lightning.tensor are not available. ")
 
+        if find_library("cutensornet") is None and not imp_util.find_spec("cuquantum"):
+
+            raise ImportError(
+                "cuStateVec libraries not found. Please pip install the appropriate cuStateVec library in a virtual environment.")
+            
         if not accepted_methods(method):
             raise ValueError(f"Unsupported method: {method}")
 
@@ -311,6 +319,8 @@ class LightningTensor(Device):
         self._cutoff = kwargs.get("cutoff", 0)
         self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
         self._backend = kwargs.get("backend", "cutensornet")
+        
+        self._custom_MPS = kwargs.get("custom_MPS",[])
 
         for arg in kwargs:
             if arg not in self._device_options:
@@ -361,6 +371,7 @@ class LightningTensor(Device):
             self._max_bond_dim,
             self._cutoff,
             self._cutoff_mode,
+            self._custom_MPS,
         )
 
     dtype = c_dtype
@@ -440,6 +451,12 @@ class LightningTensor(Device):
         for circuit in circuits:
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
+            # Tmp function to print the number of gates
+            gates = {}
+            for i, ops in enumerate(circuit.__dict__['_ops']):
+                gates[ops._name] = gates.get(ops._name, 0) + 1
+            total_gates = sum([gates[i] for i in gates])
+            print('Execute Gates:', gates, "Total:",total_gates)
             results.append(simulate(circuit, self._tensornet()))
 
         return tuple(results)

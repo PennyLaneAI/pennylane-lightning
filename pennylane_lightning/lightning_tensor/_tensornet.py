@@ -21,6 +21,8 @@ try:
 except ImportError:
     pass
 
+from typing import List
+
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
@@ -117,6 +119,47 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
 
     return mpos, sorted_wires
 
+def setBondDims(num_qubits, max_bond_dim):
+    
+    log_max_bond_dim = np.log2(max_bond_dim)
+    localBondDims = [0 for _ in range(num_qubits-1)]
+    
+    for i in range(len(localBondDims)):
+        bondDim = min(i+1, num_qubits - i - 1)
+        if bondDim <= log_max_bond_dim:
+            localBondDims[i] = 2**bondDim
+    
+    return localBondDims
+
+def setSitesExtents(num_qubits, max_bond_dim):
+    
+    bondDims = setBondDims(num_qubits, max_bond_dim)    
+    qubitDims = [2 for _ in range(num_qubits)]
+
+    localSiteExtents = []
+    for i in range(num_qubits):
+        if i == 0: 
+            localSite = [qubitDims[i], bondDims[i]]
+        elif i == num_qubits - 1:
+            localSite = [bondDims[i-1], qubitDims[i]]
+        else:
+            localSite = [bondDims[i-1], qubitDims[i], bondDims[i]]
+        
+        localSiteExtents.append(localSite)
+    
+    return localSiteExtents
+
+def custom_MPS_checks(MPS, num_wires, max_bond_dim):
+    
+    MPS_shape_dest = setSitesExtents(num_wires, max_bond_dim)
+    
+    MPS_shape_source = [list(site.shape) for site in MPS]
+    
+    same_shape = [s == d for s, d in zip(MPS_shape_source, MPS_shape_dest)]
+    
+    if not all(same_shape):
+        raise ValueError(f"The custom MPS does not have the correct layout for lightning.tensor.\n MPS source  shape {MPS_shape_source}\n MPS destiny shape {MPS_shape_dest}")
+    
 
 # pylint: disable=too-many-instance-attributes
 class LightningTensorNet:
@@ -144,6 +187,7 @@ class LightningTensorNet:
         max_bond_dim: int = 128,
         cutoff: float = 0,
         cutoff_mode: str = "abs",
+        custom_MPS: List = [],
         device_name="lightning.tensor",
     ):
         self._num_wires = num_wires
@@ -152,6 +196,8 @@ class LightningTensorNet:
         self._cutoff = cutoff
         self._cutoff_mode = cutoff_mode
         self._c_dtype = c_dtype
+        
+        self._custom_MPS = custom_MPS
 
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
@@ -271,11 +317,24 @@ class LightningTensorNet:
             device_wires (Wires): wires that get initialized in the state
         """
 
-        state = self._preprocess_state_vector(state, device_wires)
-        mps_site_shape = [2]
-        M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
+        if self._custom_MPS == []:
+            print("Create MPS site from state")
 
-        self._tensornet.updateMPSSitesData(M)
+            state = self._preprocess_state_vector(state, device_wires)
+            mps_site_shape = [2]
+            M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
+            
+            # print('Lightning.Tensor MPS shape')
+            # [print(i.shape) for i in M]
+
+            self._tensornet.updateMPSSitesData(M)            
+        else: 
+            # Custom MPS.
+            print("Pass MPS site at run time")
+            # Checking for the MPS shape.
+            
+            custom_MPS_checks(self._custom_MPS, self._num_wires, self._max_bond_dim)
+            self._tensornet.updateMPSSitesData(self._custom_MPS)
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
