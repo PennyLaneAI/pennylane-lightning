@@ -46,6 +46,9 @@
 
 ### Improvements
 
+* Add joint check for the N-controlled wires support in `lightning.qubit`.
+  [(#949)](https://github.com/PennyLaneAI/pennylane-lightning/pull/949)
+
 * Optimize `GlobalPhase` and `C(GlobalPhase)` gate implementation for `lightning.gpu`.
   [(#946)](https://github.com/PennyLaneAI/pennylane-lightning/pull/946)
 
