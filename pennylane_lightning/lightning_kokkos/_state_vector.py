@@ -202,7 +202,9 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
         else:
-            raise qml.DeviceError("No gate operation supplied and controlled matrix not yet supported")
+            raise qml.DeviceError(
+                "No gate operation supplied and controlled matrix not yet supported"
+            )
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str

@@ -431,7 +431,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.RX,
         qml.RY,
         qml.RZ,
-        qml.Rot
+        qml.Rot,
     ],
 )
 @pytest.mark.parametrize("control_value", [False, True])
@@ -481,6 +481,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
             assert np.allclose(circ(), circ_def(), tol)
+
 
 @pytest.mark.skipif(
     device_name not in ("lightning.qubit", "lightning.tensor"),
@@ -695,4 +696,3 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
             assert np.allclose(circ(), circ_def(), tol)
-            
