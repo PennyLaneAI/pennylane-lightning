@@ -584,7 +584,7 @@ std::vector<T1> cast_vector(const std::vector<T0> &vec) {
  */
 template <typename T = std::size_t>
 bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
-    std::set<std::size_t> s0(v1.begin(), v1.end());
+    std::set<T> s0(v1.begin(), v1.end());
     s0.insert(v2.begin(), v2.end());
     return s0.size() == v1.size() + v2.size();
 }
