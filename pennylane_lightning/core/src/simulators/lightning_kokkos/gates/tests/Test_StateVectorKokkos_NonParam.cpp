@@ -960,9 +960,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             Kokkos::deep_copy(sv_control.getView(), ini_sv);
 
             REQUIRE_THROWS_AS(sv_control.applyOperation(
-                "PauliX", std::vector<std::size_t>{control},
-                std::vector<bool>{true}, std::vector<std::size_t>{wire}), 
-                LightningException);
+                                  "PauliX", std::vector<std::size_t>{control},
+                                  std::vector<bool>{true},
+                                  std::vector<std::size_t>{wire}),
+                              LightningException);
         }
 
         if (control != wire) {

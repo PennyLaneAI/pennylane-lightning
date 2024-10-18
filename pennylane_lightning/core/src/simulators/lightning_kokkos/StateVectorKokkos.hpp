@@ -535,7 +535,8 @@ class StateVectorKokkos final
                                             wires));
             break;
         default:
-            PL_ABORT("Controlled multi-qubit gates not yet supported in Lightning Kokkos");
+            PL_ABORT("Controlled multi-qubit gates not yet supported in "
+                     "Lightning Kokkos");
             break;
         }
     }

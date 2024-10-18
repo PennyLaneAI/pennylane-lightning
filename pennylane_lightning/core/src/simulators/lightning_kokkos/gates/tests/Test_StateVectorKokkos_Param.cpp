@@ -139,8 +139,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Controlled Operation",
     }
 
     const bool inverse = GENERATE(false, true);
-    const std::string gate_name = GENERATE(
-        "PhaseShift", "RX", "RY", "RZ", "Rot");
+    const std::string gate_name =
+        GENERATE("PhaseShift", "RX", "RY", "RZ", "Rot");
     DYNAMIC_SECTION("N-controlled Matrix - Gate = "
                     << gate_name << " Inverse = " << inverse) {
         auto gate_op =
@@ -583,16 +583,16 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
                                          {1.0, 0.}, {1.0, 0.}};
 
     SECTION("C(GlobalPhase)") {
-    auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
-    StateVectorKokkos<TestType> kokkos_sv(
-        reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
-    kokkos_sv.applyOperation("C(GlobalPhase)", {index}, inverse, {}, phase);
-    auto result_sv = kokkos_sv.getDataVector();
-    for (std::size_t j = 0; j < exp2(num_qubits); j++) {
-        ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
-        tmp *= ComplexT(sv_data[j]);
-        CHECK((real(result_sv[j])) == Approx(real(tmp)));
-        CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+        auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
+        StateVectorKokkos<TestType> kokkos_sv(
+            reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
+        kokkos_sv.applyOperation("C(GlobalPhase)", {index}, inverse, {}, phase);
+        auto result_sv = kokkos_sv.getDataVector();
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
+            tmp *= ComplexT(sv_data[j]);
+            CHECK((real(result_sv[j])) == Approx(real(tmp)));
+            CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
         }
     }
 

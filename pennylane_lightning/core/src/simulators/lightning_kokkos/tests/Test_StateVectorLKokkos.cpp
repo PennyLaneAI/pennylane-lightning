@@ -237,8 +237,12 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
             "`controlled_wires` must have the same size "
             "as"); // invalid controlled_wires
         PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyOperation("PauliX", std::vector<std::size_t>{0, 1}, std::vector<bool>{true, true}, std::vector<std::size_t>{1, 2}, false, {}), LightningException, "`controlled_wires` and `target wires` must be disjoint."
-        );
+            state_vector.applyOperation(
+                "PauliX", std::vector<std::size_t>{0, 1},
+                std::vector<bool>{true, true}, std::vector<std::size_t>{1, 2},
+                false, {}),
+            LightningException,
+            "`controlled_wires` and `target wires` must be disjoint.");
     }
 
     SECTION("Test invalid arguments with parameters") {
