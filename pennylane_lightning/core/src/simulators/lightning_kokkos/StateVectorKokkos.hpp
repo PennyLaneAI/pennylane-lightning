@@ -492,7 +492,7 @@ class StateVectorKokkos final
             PL_ABORT("Controlled matrix operation not yet supported");
             return;
         }
-    }468
+    }
 
     /**
      * @brief Apply a given matrix directly to the statevector using a
