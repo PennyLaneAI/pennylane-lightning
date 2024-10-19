@@ -489,55 +489,8 @@ class StateVectorKokkos final
             PL_ABORT_IF(gate_matrix.empty(),
                         std::string("Operation does not exist for ") + opName +
                             std::string(" and no matrix provided."));
-            return applyNCMultiQubitOp(vector2view(gate_matrix),
-                                       controlled_wires, controlled_values,
-                                       wires, inverse);
-        }
-    }
-    /**
-     * @brief Apply a controlled-multi qubit operator to the state vector using
-     * a matrix
-     *
-     * @param matrix Kokkos gate matrix in the device space.
-     * @param controlled_wires Control wires.
-     * @param controlled_values Control values (true or false).
-     * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
-     */
-    void applyNCMultiQubitOp(const KokkosVector matrix,
-                             const std::vector<std::size_t> &controlled_wires,
-                             const std::vector<bool> &controlled_values,
-                             const std::vector<std::size_t> &wires,
-                             bool inverse = false) {
-
-        auto &&num_qubits = this->getNumQubits();
-        std::size_t two2N =
-            std::exp2(num_qubits - wires.size() - controlled_wires.size());
-        std::size_t dim = std::exp2(wires.size());
-        KokkosVector matrix_trans("matrix_trans", matrix.size());
-
-        if (inverse) {
-            Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d({0, 0}, {dim, dim});
-            Kokkos::parallel_for(
-                policy_2d,
-                KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
-                    matrix_trans(i + j * dim) = conj(matrix(i * dim + j));
-                });
-        } else {
-            matrix_trans = matrix;
-        }
-
-        switch (wires.size()) {
-        case 1:
-            Kokkos::parallel_for(two2N, applyNC1QubitOpFunctor<fp_t>(
-                                            *data_, num_qubits, matrix_trans,
-                                            controlled_wires, controlled_values,
-                                            wires));
-            break;
-        default:
-            PL_ABORT("Controlled multi-qubit gates not yet supported in "
-                     "Lightning Kokkos");
-            break;
+            PL_ABORT("Controlled matrix operation not yet supported");
+            return;
         }
     }
 
