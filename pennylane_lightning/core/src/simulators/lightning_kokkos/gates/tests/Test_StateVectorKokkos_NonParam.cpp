@@ -822,6 +822,17 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
     StateVectorKokkos<TestType> sv_control{num_qubits};
 
     SECTION("N-controlled PauliX ") {
+
+        if (control == wire) {
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
+
+            REQUIRE_THROWS_AS(sv_control.applyOperation(
+                                  "PauliX", std::vector<std::size_t>{control},
+                                  std::vector<bool>{true},
+                                  std::vector<std::size_t>{wire}),
+                              LightningException);
+        }
+
         if (control != wire) {
             Kokkos::deep_copy(sv_gate.getView(), ini_sv);
             Kokkos::deep_copy(sv_control.getView(), ini_sv);
@@ -843,7 +854,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             }
         }
 
-        if (control != 0 && wire != 0) {
+        if (control != 0 && wire != 0 && control != wire) {
             Kokkos::deep_copy(sv_gate.getView(), ini_sv);
             Kokkos::deep_copy(sv_control.getView(), ini_sv);
 
