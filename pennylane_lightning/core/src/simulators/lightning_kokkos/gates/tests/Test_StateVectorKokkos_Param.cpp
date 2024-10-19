@@ -228,6 +228,348 @@ TEMPLATE_TEST_CASE(
     }
 }
 
+TEMPLATE_TEST_CASE(
+    "StateVectorKokkos::applyOperation param two-qubit with controls",
+    "[StateVectorKokkos_Operation]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = StateVectorT::PrecisionT;
+    using ComplexT = Kokkos::complex<PrecisionT>;
+
+    const std::size_t num_qubits = 4;
+    const TestType EP = 1e-4;
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    const bool inverse = GENERATE(false, true);
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire0 = GENERATE(0, 1, 2, 3);
+    const std::size_t wire1 = GENERATE(0, 1, 2, 3);
+    const PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+
+    auto getControlledGate = [](std::vector<ComplexT> matrix) {
+        std::vector<ComplexT> cmatrix(matrix.size() * 4);
+        for (std::size_t i = 0; i < 4; i++) {
+            cmatrix[i * 8 + i] = ComplexT{1.0};
+        }
+        for (std::size_t i = 0; i < 4; i++) {
+            for (std::size_t j = 0; j < 4; j++) {
+                cmatrix[(i + 4) * 8 + j + 4] = matrix[i * 4 + j];
+            }
+        }
+        return cmatrix;
+    };
+
+    SECTION("N-controlled IsingXX") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingXX<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingXX", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled IsingXY") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingXY<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingXY", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled IsingYY") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingYY<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingYY", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled IsingZZ") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingZZ<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingZZ", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled SingleExcitation") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getSingleExcitation<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "SingleExcitation", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled SingleExcitationMinus") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getSingleExcitationMinus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "SingleExcitationMinus", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled SingleExcitationPlus") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getSingleExcitationPlus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "SingleExcitationPlus", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "StateVectorKokkos::applyOperation param four-qubit with controls",
+    "[StateVectorKokkos_Operation]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = StateVectorT::PrecisionT;
+    using ComplexT = Kokkos::complex<PrecisionT>;
+
+    const std::size_t num_qubits = 5;
+    const TestType EP = 1e-4;
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    const bool inverse = GENERATE(false, true);
+    const std::size_t control = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire0 = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire1 = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire2 = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire3 = GENERATE(0, 1, 2, 3, 4);
+    const PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+
+    auto getControlledGate = [](std::vector<ComplexT> matrix) {
+        std::vector<ComplexT> cmatrix(matrix.size() * 4);
+        for (std::size_t i = 0; i < 16; i++) {
+            cmatrix[i * 32 + i] = ComplexT{1.0};
+        }
+        for (std::size_t i = 0; i < 16; i++) {
+            for (std::size_t j = 0; j < 16; j++) {
+                cmatrix[(i + 16) * 32 + j + 16] = matrix[i * 16 + j];
+            }
+        }
+        return cmatrix;
+    };
+
+    SECTION("N-controlled DoubleExcitation") {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getDoubleExcitation<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+
+            kokkos_sv_mat.applyMatrix(
+                cmatrix, {control, wire0, wire1, wire2, wire3}, inverse);
+            kokkos_sv_op.applyOperation(
+                "DoubleExcitation", std::vector<std::size_t>{control},
+                std::vector<bool>{true},
+                std::vector<std::size_t>{wire0, wire1, wire2, wire3}, inverse,
+                {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled DoubleExcitationPlus") {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getDoubleExcitationPlus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+
+            kokkos_sv_mat.applyMatrix(
+                cmatrix, {control, wire0, wire1, wire2, wire3}, inverse);
+            kokkos_sv_op.applyOperation(
+                "DoubleExcitationPlus", std::vector<std::size_t>{control},
+                std::vector<bool>{true},
+                std::vector<std::size_t>{wire0, wire1, wire2, wire3}, inverse,
+                {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled DoubleExcitationMinus") {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getDoubleExcitationMinus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+
+            kokkos_sv_mat.applyMatrix(
+                cmatrix, {control, wire0, wire1, wire2, wire3}, inverse);
+            kokkos_sv_op.applyOperation(
+                "DoubleExcitationMinus", std::vector<std::size_t>{control},
+                std::vector<bool>{true},
+                std::vector<std::size_t>{wire0, wire1, wire2, wire3}, inverse,
+                {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXY",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     {

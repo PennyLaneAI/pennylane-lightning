@@ -822,17 +822,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
     StateVectorKokkos<TestType> sv_control{num_qubits};
 
     SECTION("N-controlled PauliX ") {
-
-        if (control == wire) {
-            Kokkos::deep_copy(sv_control.getView(), ini_sv);
-
-            REQUIRE_THROWS_AS(sv_control.applyOperation(
-                                  "PauliX", std::vector<std::size_t>{control},
-                                  std::vector<bool>{true},
-                                  std::vector<std::size_t>{wire}),
-                              LightningException);
-        }
-
         if (control != wire) {
             Kokkos::deep_copy(sv_gate.getView(), ini_sv);
             Kokkos::deep_copy(sv_control.getView(), ini_sv);
@@ -854,7 +843,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             }
         }
 
-        if (control != 0 && wire != 0 && control != wire) {
+        if (control != 0 && wire != 0) {
             Kokkos::deep_copy(sv_gate.getView(), ini_sv);
             Kokkos::deep_copy(sv_control.getView(), ini_sv);
 
@@ -955,6 +944,93 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
                       Approx(real(sv_control_host[j])));
             }
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
+                   "two-qubit with controls",
+                   "[StateVectorKokkos_NonParam]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+
+    const TestType EP = 1e-4;
+    const std::size_t num_qubits = 4;
+    const bool inverse = GENERATE(true, false);
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire0 = GENERATE(0, 1, 2, 3);
+    const std::size_t wire1 = GENERATE(0, 1, 2, 3);
+
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    SECTION("N-controlled SWAP") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+
+            StateVectorT kokkos_sv0{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv1{ini_st.data(), ini_st.size()};
+            kokkos_sv0.applyOperation("CSWAP", {control, wire0, wire1},
+                                      inverse);
+            auto matrix = getSWAP<Kokkos::complex, TestType>();
+            kokkos_sv1.applyOperation("SWAP", std::vector<std::size_t>{control},
+                                      std::vector<bool>{true},
+                                      std::vector<std::size_t>{wire0, wire1},
+                                      inverse);
+            auto result_sv0 = kokkos_sv0.getDataVector();
+            auto result_sv1 = kokkos_sv1.getDataVector();
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_sv0[j]) ==
+                      Approx(real(result_sv1[j])).margin(EP));
+                CHECK(imag(result_sv0[j]) ==
+                      Approx(imag(result_sv1[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled SWAP with matrix") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv0{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv1{ini_st.data(), ini_st.size()};
+            kokkos_sv0.applyOperation("CSWAP", {control, wire0, wire1},
+                                      inverse);
+            auto matrix = getSWAP<Kokkos::complex, TestType>();
+            kokkos_sv1.applyOperation(
+                "XXXXXXXX", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {}, matrix);
+            auto result_sv0 = kokkos_sv0.getDataVector();
+            auto result_sv1 = kokkos_sv1.getDataVector();
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_sv0[j]) ==
+                      Approx(real(result_sv1[j])).margin(EP));
+                CHECK(imag(result_sv0[j]) ==
+                      Approx(imag(result_sv1[j])).margin(EP));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation controlled Toffoli",
+                   "[StateVectorKokkos_NonParam]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+
+    const TestType EP = 1e-4;
+    const std::size_t num_qubits = 6;
+    const bool inverse = GENERATE(true, false);
+    const std::size_t control = GENERATE(0, 1, 2);
+
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+    StateVectorT kokkos_sv0{ini_st.data(), ini_st.size()};
+    StateVectorT kokkos_sv1{ini_st.data(), ini_st.size()};
+    auto matrix = getToffoli<Kokkos::complex, TestType>();
+    kokkos_sv0.applyOperation(
+        "Matrix", std::vector<std::size_t>{control}, std::vector<bool>{true},
+        std::vector<std::size_t>{3, 4, 5}, inverse, {}, matrix);
+    kokkos_sv1.applyOperation("PauliX", std::vector<std::size_t>{control, 3, 4},
+                              std::vector<bool>{true, true, true},
+                              std::vector<std::size_t>{5}, inverse);
+    auto result_sv0 = kokkos_sv0.getDataVector();
+    auto result_sv1 = kokkos_sv1.getDataVector();
+    for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+        CHECK(real(result_sv0[j]) == Approx(real(result_sv1[j])).margin(EP));
+        CHECK(imag(result_sv0[j]) == Approx(imag(result_sv1[j])).margin(EP));
     }
 }
 

@@ -416,7 +416,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
 
 @pytest.mark.skipif(
     device_name != "lightning.kokkos",
-    reason="Controlled Single Qubit gate supported by Lightning Kokkos",
+    reason="Controlled 1/2/3/4 Qubit gate supported by Lightning Kokkos",
 )
 @pytest.mark.parametrize(
     "operation",
@@ -432,12 +432,23 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.RY,
         qml.RZ,
         qml.Rot,
+        qml.SWAP,
+        qml.IsingXX,
+        qml.IsingXY,
+        qml.IsingYY,
+        qml.IsingZZ,
+        qml.SingleExcitation,
+        qml.SingleExcitationMinus,
+        qml.SingleExcitationPlus,
+        qml.DoubleExcitation,
+        qml.DoubleExcitationMinus,
+        qml.DoubleExcitationPlus,
         qml.GlobalPhase,
     ],
 )
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
+def test_controlled_qubit_gates_kokkos(operation, n_qubits, control_value, tol):
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)

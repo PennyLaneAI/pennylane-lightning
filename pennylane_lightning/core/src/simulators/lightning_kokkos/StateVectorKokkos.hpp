@@ -466,9 +466,6 @@ class StateVectorKokkos final
                         bool inverse = false,
                         const std::vector<fp_t> &params = {},
                         const std::vector<ComplexT> &gate_matrix = {}) {
-        PL_ABORT_IF_NOT(
-            areVecsDisjoint<std::size_t>(controlled_wires, wires),
-            "`controlled_wires` and `target wires` must be disjoint.");
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
