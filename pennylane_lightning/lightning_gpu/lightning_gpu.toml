@@ -73,14 +73,14 @@ DiagonalQubitUnitary   = {}
 # Observables supported by the device
 [operators.observables]
 
-Identity               = {properties = [ "differentiable" ]}
-PauliX                 = {properties = [ "differentiable" ]}
-PauliY                 = {properties = [ "differentiable" ]}
-PauliZ                 = {properties = [ "differentiable" ]}
-Hadamard               = {properties = [ "differentiable" ]}
-Hermitian              = {properties = [ "differentiable" ]}
-Hamiltonian            = {properties = [ "differentiable" ]}
-SparseHamiltonian      = {properties = [ "differentiable" ]}
+Identity               = { properties = [ "differentiable" ] }
+PauliX                 = { properties = [ "differentiable" ] }
+PauliY                 = { properties = [ "differentiable" ] }
+PauliZ                 = { properties = [ "differentiable" ] }
+Hadamard               = { properties = [ "differentiable" ] }
+Hermitian              = { properties = [ "differentiable" ] }
+Hamiltonian            = { properties = [ "differentiable" ] }
+SparseHamiltonian      = { properties = [ "differentiable" ] }
 Sum                    = { properties = [ "differentiable" ] }
 SProd                  = { properties = [ "differentiable" ] }
 Prod                   = { properties = [ "differentiable" ] }
