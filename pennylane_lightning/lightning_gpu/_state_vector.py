@@ -329,7 +329,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
+            elif (
+                isinstance(operation, qml.ops.Controlled) and not self._mpi_handler.use_mpi
+            ):  # MPI backend does not have native controlled gates support
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 try:
