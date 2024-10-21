@@ -49,6 +49,9 @@
 * Optimize `GlobalPhase` and `C(GlobalPhase)` gate implementation in `lightning.gpu`.
   [(#946)](https://github.com/PennyLaneAI/pennylane-lightning/pull/946)
 
+* Add joint check for the N-controlled wires support in `lightning.qubit`.
+  [(#949)](https://github.com/PennyLaneAI/pennylane-lightning/pull/949)
+
 * Optimize the cartesian product to reduce the amount of memory necessary to set the StatePrep with LightningTensor. 
   [(#943)](https://github.com/PennyLaneAI/pennylane-lightning/pull/943)
 
@@ -121,6 +124,9 @@
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
+
+* Fix build failure for Lightning-Kokkos editable installation on MacOS due to `liblightning_kokkos_catalyst.so` copy.
+  [(#947)](https://github.com/PennyLaneAI/pennylane-lightning/pull/947)
 
 * Fix missing `liblightning_kokkos_catalyst.so` in Lightning-Kokkos editable installation.
   [(#945)](https://github.com/PennyLaneAI/pennylane-lightning/pull/945)
