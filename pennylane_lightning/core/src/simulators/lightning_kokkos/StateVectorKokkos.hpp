@@ -597,7 +597,7 @@ class StateVectorKokkos final
         PrecisionT squaredNorm = 0.0;
         Kokkos::parallel_reduce(
             sv_view.size(),
-            KOKKOS_LAMBDA(std::size_t i, PrecisionT &sum) {
+            KOKKOS_LAMBDA(std::size_t i, PrecisionT & sum) {
                 const PrecisionT norm = Kokkos::abs(sv_view(i));
                 sum += norm * norm;
             },
