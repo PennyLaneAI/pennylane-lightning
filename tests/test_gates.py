@@ -432,7 +432,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.RY,
         qml.RZ,
         qml.Rot,
-        qml.GlobalPhase
+        qml.GlobalPhase,
     ],
 )
 @pytest.mark.parametrize("control_value", [False, True])
