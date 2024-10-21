@@ -704,7 +704,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyCSWAP",
     }
 }
 
-
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Controlled-Operation",
                    "[StateVectorKokkos_Nonparam]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
@@ -857,7 +856,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorKokkos::applyNCMultiQubitOp","[StateVectorKokkos_Nonparam][Inverse]", float, double) {
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyNCMultiQubitOp",
+                   "[StateVectorKokkos_Nonparam][Inverse]", float, double) {
     const bool inverse = GENERATE(true, false);
     std::size_t num_qubits = 3;
     StateVectorKokkos<TestType> sv_normal{num_qubits};

@@ -613,7 +613,7 @@ class StateVectorKokkos final
                     "number of wires");
         applyMatrix(matrix.data(), wires, inverse);
     }
-        inline void applyControlledMatrix(
+    inline void applyControlledMatrix(
         ComplexT *matrix, const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool inverse = false) {
@@ -662,7 +662,7 @@ class StateVectorKokkos final
         applyControlledMatrix(matrix.data(), controlled_wires,
                               controlled_values, wires, inverse);
     }
-    
+
     /**
      * @brief Apply a single generator to the state vector using the given
      * kernel.

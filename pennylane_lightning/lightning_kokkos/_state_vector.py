@@ -201,7 +201,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
-        else: # apply gate as an n-controlled matrix
+        else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
                 qml.matrix(operation.base),

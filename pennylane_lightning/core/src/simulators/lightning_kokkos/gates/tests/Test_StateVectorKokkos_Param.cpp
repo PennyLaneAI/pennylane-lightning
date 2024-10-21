@@ -116,7 +116,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Operation",
     }
 }
 
-
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Controlled Operation",
                    "[StateVectorKokkos_Operation]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
