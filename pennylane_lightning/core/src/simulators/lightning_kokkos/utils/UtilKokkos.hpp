@@ -222,8 +222,8 @@ generateControlBitPatterns(const std::size_t num_qubits,
  * @param k Iteration index for applying control operation.
  * @return std::size_t Index offset.
  */
-inline std::size_t parity_2_offset(const KokkosIntVector &parity,
-                                   const std::size_t k) {
+KOKKOS_INLINE_FUNCTION std::size_t
+parity_2_offset(const KokkosIntVector &parity, const std::size_t k) {
     std::size_t offset{0U};
     for (std::size_t i = 0; i < parity.size(); i++) {
         offset |= ((k << i) & parity(i));
