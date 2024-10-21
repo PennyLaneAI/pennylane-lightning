@@ -128,8 +128,7 @@ _operations = frozenset(
         "C(DoubleExcitation)",
         "C(DoubleExcitationMinus)",
         "C(DoubleExcitationPlus)",
-        "C(MultiRZ)"
-        "CRot",
+        "C(MultiRZ)" "CRot",
         "IsingXX",
         "IsingYY",
         "IsingZZ",
