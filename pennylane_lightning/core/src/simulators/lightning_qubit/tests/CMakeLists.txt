@@ -27,7 +27,8 @@ target_sources(lightning_qubit_tests INTERFACE runner_lightning_qubit.cpp)
 # Define targets
 ################################################################################
 
-set(TEST_SOURCES    Test_StateVectorLQubit.cpp
+set(TEST_SOURCES    Test_MyAlgorithm.cpp
+                    Test_StateVectorLQubit.cpp
                     Test_StateVectorLQubitManaged.cpp
                     )
 
