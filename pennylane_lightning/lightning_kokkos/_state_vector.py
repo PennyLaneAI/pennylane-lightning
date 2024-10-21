@@ -285,7 +285,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif isinstance(operation, qml.ops.Controlled) and not isinstance(
-                operation.base, (qml.QubitUnitary, qml.BlockEncode)
+                operation.base, (qml.QubitUnitary, qml.BlockEncode, qml.MultiRZ)
             ):  # apply n-controlled gate
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
