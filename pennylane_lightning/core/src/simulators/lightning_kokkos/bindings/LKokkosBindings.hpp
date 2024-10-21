@@ -47,7 +47,26 @@ namespace Pennylane::LightningKokkos {
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
+/**
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
 
+/**
+ * @brief Register controlled gates.
+ */
 template <class StateVectorT, class PyClass>
 void registerControlledGate(PyClass &pyclass) {
     using PrecisionT =
@@ -172,7 +191,9 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("collapse", &StateVectorT::collapse,
              "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         .def("normalize", &StateVectorT::normalize,
-             "Normalize the statevector to norm 1.");
+             "Normalize the statevector to norm 1.")
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+             "Apply controlled operation");
 }
 
 /**
