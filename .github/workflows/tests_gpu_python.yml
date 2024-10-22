@@ -204,6 +204,7 @@ jobs:
         if : matrix.pl_backend == 'lightning_gpu'
         run: |
           python -m pip install -r requirements.txt
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
           python -m build
           python -m pip install *.whl
