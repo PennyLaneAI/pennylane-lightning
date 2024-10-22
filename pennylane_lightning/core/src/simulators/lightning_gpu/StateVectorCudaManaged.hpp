@@ -41,6 +41,7 @@
 #include "cuStateVec_helpers.hpp"
 
 #include "LinearAlg.hpp"
+#include "Util.hpp"
 
 /// @cond DEV
 namespace {
@@ -358,7 +359,7 @@ class StateVectorCudaManaged
      * @param tgt_wires Wires to apply gate to.
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
-     * @param params Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(
         const std::string &opName,
@@ -371,24 +372,13 @@ class StateVectorCudaManaged
                         "Only GlobalPhase gate is supported.");
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`ctrls` and `ctrls_values` must have the same size.");
-        std::vector<int> ctrlsInt(controlled_wires.size());
-        std::vector<int> tgtsInt(tgt_wires.size());
-        std::vector<int> ctrls_valuesInt(controlled_wires.size());
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            controlled_wires, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgt_wires, BaseType::getNumQubits());
+        auto ctrls_valuesInt =
+            Pennylane::Util::cast_vector<bool, int>(controlled_values);
 
-        std::transform(controlled_wires.begin(), controlled_wires.end(),
-                       ctrlsInt.begin(), [&](std::size_t x) {
-                           return static_cast<int>(BaseType::getNumQubits() -
-                                                   1 - x);
-                       });
-        std::transform(tgt_wires.begin(), tgt_wires.end(), tgtsInt.begin(),
-                       [&](std::size_t x) {
-                           return static_cast<int>(BaseType::getNumQubits() -
-                                                   1 - x);
-                       });
-
-        std::transform(controlled_values.begin(), controlled_values.end(),
-                       ctrls_valuesInt.begin(),
-                       [&](bool x) { return static_cast<int>(x); });
         if (opName == "GlobalPhase") {
             const std::vector<std::string> names(tgt_wires.size(), "I");
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
@@ -1436,18 +1426,11 @@ class StateVectorCudaManaged
                                    std::vector<std::size_t> ctrls,
                                    std::vector<std::size_t> tgts,
                                    Precision param, bool use_adjoint = false) {
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-
         // Transform indices between PL & cuQuantum ordering
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            ctrls, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgts, BaseType::getNumQubits());
 
         const std::vector<int> ctrls_valuesInt(ctrls.size(), 1);
 
