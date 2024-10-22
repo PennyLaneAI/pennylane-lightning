@@ -207,7 +207,7 @@ jobs:
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
           python -m build
-          python -m pip install *.whl
+          python -m pip install dist/*.whl
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
 
       - name: Move coverage file
