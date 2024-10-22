@@ -368,6 +368,9 @@ class StateVectorCudaManaged
                         bool adjoint = false,
                         const std::vector<Precision> &params = {0.0},
                         const std::vector<ComplexT> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(ctrls, tgts),
+            "`controlled_wires` and `target wires` must be disjoint.");
         PL_ABORT_IF(ctrls.size() != ctrls_values.size(),
                     "`ctrls` and `ctrls_values` must have the same size.");
         std::vector<int> ctrlsInt(ctrls.size());
