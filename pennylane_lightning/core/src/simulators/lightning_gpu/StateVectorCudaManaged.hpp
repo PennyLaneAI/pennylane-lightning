@@ -361,21 +361,22 @@ class StateVectorCudaManaged
      * @param params Optional std gate matrix if opName doesn't exist.
      */
     void applyOperation(
-        const std::string &opName, const std::vector<std::size_t> &ctrl_wires,
-        const std::vector<bool> &ctrl_values,
+        const std::string &opName,
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &tgt_wires, bool adjoint = false,
         const std::vector<Precision> &params = {0.0},
         [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
         PL_ABORT_IF_NOT(opName == "GlobalPhase",
                         "Only GlobalPhase gate is supported.");
-        PL_ABORT_IF(ctrl_wires.size() != ctrl_values.size(),
+        PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`ctrls` and `ctrls_values` must have the same size.");
-        std::vector<int> ctrlsInt(ctrl_wires.size());
+        std::vector<int> ctrlsInt(controlled_wires.size());
         std::vector<int> tgtsInt(tgt_wires.size());
-        std::vector<int> ctrls_valuesInt(ctrl_wires.size());
+        std::vector<int> ctrls_valuesInt(controlled_wires.size());
 
-        std::transform(ctrl_wires.begin(), ctrl_wires.end(), ctrlsInt.begin(),
-                       [&](std::size_t x) {
+        std::transform(controlled_wires.begin(), controlled_wires.end(),
+                       ctrlsInt.begin(), [&](std::size_t x) {
                            return static_cast<int>(BaseType::getNumQubits() -
                                                    1 - x);
                        });
@@ -385,7 +386,7 @@ class StateVectorCudaManaged
                                                    1 - x);
                        });
 
-        std::transform(ctrl_values.begin(), ctrl_values.end(),
+        std::transform(controlled_values.begin(), controlled_values.end(),
                        ctrls_valuesInt.begin(),
                        [&](bool x) { return static_cast<int>(x); });
         if (opName == "GlobalPhase") {
@@ -1425,10 +1426,10 @@ class StateVectorCudaManaged
     /**
      * @brief Apply parametric Pauli gates using custateVec calls.
      *
-     * @param angle Rotation angle.
      * @param pauli_words List of Pauli words representing operation.
      * @param ctrls Control wires
      * @param tgts target wires.
+     * @param params Rotation parameters.
      * @param use_adjoint Take adjoint of operation.
      */
     void applyParametricPauliGate_(const std::vector<std::string> &pauli_words,
@@ -1458,9 +1459,9 @@ class StateVectorCudaManaged
      * @brief Apply a parametric Pauli gate using custateVec calls.
      *
      * @param pauli_words List of Pauli words representing operation.
-     * @param ctrls Control wires
-     * @param ctrls_values Control values
-     * @param tgts target wires.
+     * @param ctrlsInt Control wires
+     * @param ctrls_valuesInt Control values
+     * @param tgtsInt target wires.
      * @param param Rotation angle.
      * @param use_adjoint Take adjoint of operation.
      */
