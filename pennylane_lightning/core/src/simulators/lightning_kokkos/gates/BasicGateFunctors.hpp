@@ -562,8 +562,11 @@ class applyNC2Functor<PrecisionT, FuncT, true> {
 
         std::tie(parity, rev_wires) =
             Util::reverseWires(num_qubits, wires, controlled_wires);
-        indices = Util::generateControlBitPatterns(num_qubits, controlled_wires,
-                                                   controlled_values, wires);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires, num_qubits);
+        ControlBitPatterns(indices_, num_qubits, controlled_wires,
+                           controlled_values);
+        indices = vector2view(indices_);
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(
                 0, exp2(num_qubits - controlled_wires.size() - wires.size())),
@@ -1302,8 +1305,11 @@ class applyNC4Functor<PrecisionT, FuncT, true> {
 
         std::tie(parity, rev_wires) =
             Util::reverseWires(num_qubits, wires, controlled_wires);
-        indices = Util::generateControlBitPatterns(num_qubits, controlled_wires,
-                                                   controlled_values, wires);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires, num_qubits);
+        ControlBitPatterns(indices_, num_qubits, controlled_wires,
+                           controlled_values);
+        indices = vector2view(indices_);
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(
                 0, exp2(num_qubits - controlled_wires.size() - wires.size())),
