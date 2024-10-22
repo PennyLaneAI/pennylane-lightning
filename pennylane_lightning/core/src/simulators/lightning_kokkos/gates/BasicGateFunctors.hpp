@@ -72,8 +72,11 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
         dim = std::exp2(wires.size());
         std::tie(parity, rev_wires) =
             Util::reverseWires(num_qubits, wires, controlled_wires);
-        indices = Util::generateControlBitPatterns(num_qubits, controlled_wires,
-                                                   controlled_values, wires);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires, num_qubits);
+        ControlBitPatterns(indices_, num_qubits, controlled_wires,
+                           controlled_values);
+        indices = vector2view(indices_);
         std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
                                    ScratchViewSizeT::shmem_size(dim);
         Kokkos::parallel_for(
