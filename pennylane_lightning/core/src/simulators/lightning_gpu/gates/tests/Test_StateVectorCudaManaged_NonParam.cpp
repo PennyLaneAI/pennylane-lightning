@@ -1312,3 +1312,43 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::controlled Toffoli",
                        std::vector<std::size_t>{5});
     REQUIRE(sv0.getDataVector() == approx(sv1.getDataVector()).margin(margin));
 }
+
+TEMPLATE_TEST_CASE(
+    "StateVectorCudaManaged::controlled_gate_direct_matrix_offload",
+    "[StateVectorCudaManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 6;
+    const auto margin = PrecisionT{1e-5};
+    const std::size_t control = GENERATE(0, 1, 2);
+    auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+    StateVectorCudaManaged<PrecisionT> sv0(num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv1(num_qubits);
+
+    sv0.CopyHostDataToGpu(st0.data(), st0.size());
+    sv1.CopyHostDataToGpu(st0.data(), st0.size());
+
+    SECTION("Catch failures caused by unsupported named gates") {
+        PL_CHECK_THROWS_MATCHES(
+            sv0.applyOperation("paulix",
+                               std::vector<std::size_t>{control, 3, 4},
+                               std::vector<bool>{true, true, true},
+                               std::vector<std::size_t>{5}),
+            LightningException, "Currently unsupported gate: paulix");
+    }
+
+    SECTION("direct base matrix offload") {
+        const std::vector<std::complex<PrecisionT>> matrix = {
+            {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+        sv0.applyControlledMatrix(matrix.data(), matrix.size(),
+                                  std::vector<std::size_t>{control, 3, 4},
+                                  std::vector<bool>{true, true, true},
+                                  std::vector<std::size_t>{5});
+        sv1.applyOperation("Paulix", std::vector<std::size_t>{control, 3, 4},
+                           std::vector<bool>{true, true, true},
+                           std::vector<std::size_t>{5}, false, {0.0}, matrix);
+        REQUIRE(sv0.getDataVector() ==
+                approx(sv1.getDataVector()).margin(margin));
+    }
+}
