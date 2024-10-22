@@ -193,7 +193,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",
                                         std::vector<std::size_t>{1}, false,
                                         {0.0}, std::vector<ComplexT>{}),
             LightningException,
-            "`ctrls` and `ctrls_values` must have the "
+            "`ctrls` and `controlled_values` must have the "
             "same size."); // invalid controlled_wires
     }
 
