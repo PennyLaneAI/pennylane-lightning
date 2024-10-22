@@ -169,9 +169,8 @@ inline auto reverseWires(const std::size_t num_qubits,
  * @param num_qubits
  * @return std::vector List of indices containing control bit patterns
  */
-inline auto
-generateBitPatterns(const std::vector<std::size_t> &wires,
-                    const std::size_t num_qubits)
+inline auto generateBitPatterns(const std::vector<std::size_t> &wires,
+                                const std::size_t num_qubits)
     -> std::vector<std::size_t> {
     std::vector<std::size_t> indices;
     indices.reserve(Pennylane::Util::exp2(wires.size()));
@@ -197,11 +196,10 @@ generateBitPatterns(const std::vector<std::size_t> &wires,
  * @param controlled_wires Control wires.
  * @param controlled_values Control values (false or true).
  */
-inline void
-ControlBitPatterns(std::vector<std::size_t> &indices,
-                        const std::size_t num_qubits,
-                        const std::vector<std::size_t> &controlled_wires,
-                        const std::vector<bool> &controlled_values) {
+inline void ControlBitPatterns(std::vector<std::size_t> &indices,
+                               const std::size_t num_qubits,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values) {
     if (controlled_wires.empty()) {
         return;
     }
