@@ -238,9 +238,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Returns:
             None
         """
-        if self._mpi_handler.use_mpi:
-            raise DeviceError("Lightning-GPU-MPI does not support Controlled GlobalPhase gates.")
-
         state = self.state_vector
 
         basename = operation.base.name
@@ -336,6 +333,14 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 isinstance(operation, qml.ops.Controlled) and not self._mpi_handler.use_mpi
             ):  # MPI backend does not have native controlled gates support
                 self._apply_lightning_controlled(operation)
+            elif (
+                self._mpi_handler.use_mpi
+                and isinstance(operation, qml.ops.Controlled)
+                and isinstance(operation.base, qml.GlobalPhase)
+            ):
+                raise DeviceError(
+                    "Lightning-GPU-MPI does not support Controlled GlobalPhase gates."
+                )
             else:  # apply gate as a matrix
                 try:
                     mat = qml.matrix(operation)
