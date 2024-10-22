@@ -23,7 +23,8 @@
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
-using Pennylane::LightningKokkos::Util::generateControlBitPatterns;
+using Pennylane::LightningKokkos::Util::ControlBitPatterns;
+using Pennylane::LightningKokkos::Util::generateBitPatterns;
 using Pennylane::LightningKokkos::Util::one;
 using Pennylane::LightningKokkos::Util::parity_2_offset;
 using Pennylane::LightningKokkos::Util::reverseWires;
@@ -140,8 +141,11 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         num_qubits = num_qubits_;
         std::tie(parity, rev_wires) =
             reverseWires(num_qubits_, wires_, controlled_wires_);
-        indices = generateControlBitPatterns(num_qubits_, controlled_wires_,
-                                             controlled_values_, wires_);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires_, num_qubits_);
+        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+                           controlled_values_);
+        indices = vector2view(indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -230,8 +234,11 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
         num_qubits = num_qubits_;
         std::tie(parity, rev_wires) =
             reverseWires(num_qubits_, wires_, controlled_wires_);
-        indices = generateControlBitPatterns(num_qubits_, controlled_wires_,
-                                             controlled_values_, wires_);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires_, num_qubits_);
+        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+                           controlled_values_);
+        indices = vector2view(indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -331,8 +338,11 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
         num_qubits = num_qubits_;
         std::tie(parity, rev_wires) =
             reverseWires(num_qubits_, wires_, controlled_wires_);
-        indices = generateControlBitPatterns(num_qubits_, controlled_wires_,
-                                             controlled_values_, wires_);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires_, num_qubits_);
+        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+                           controlled_values_);
+        indices = vector2view(indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -443,8 +453,11 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
         num_qubits = num_qubits_;
         std::tie(parity, rev_wires) =
             reverseWires(num_qubits_, wires_, controlled_wires_);
-        indices = generateControlBitPatterns(num_qubits_, controlled_wires_,
-                                             controlled_values_, wires_);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires_, num_qubits_);
+        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+                           controlled_values_);
+        indices = vector2view(indices_);
     }
 
     KOKKOS_INLINE_FUNCTION
