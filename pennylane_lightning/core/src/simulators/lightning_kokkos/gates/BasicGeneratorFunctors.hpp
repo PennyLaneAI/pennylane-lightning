@@ -472,6 +472,95 @@ PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
         PL_ABORT("Generator operation does not exist.");
         /// LCOV_EXCL_STOP
     }
+
+template <class ExecutionSpace, class PrecisionT>
+PrecisionT applyNCNamedGenerator(const ControlledGeneratorOperation generator_op,
+                               Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                               const std::size_t num_qubits,
+                               const std::vector<std::size_t> &wires,
+                               const bool inverse = false,
+                               const std::vector<PrecisionT> &params = {}) {
+    switch (generator_op) {
+    case GeneratorOperation::RX:
+        applyNamedOperation<ExecutionSpace>(GateOperation::PauliX, arr_,
+                                            num_qubits, wires, inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::RY:
+        applyNamedOperation<ExecutionSpace>(GateOperation::PauliY, arr_,
+                                            num_qubits, wires, inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::RZ:
+        applyNamedOperation<ExecutionSpace>(GateOperation::PauliZ, arr_,
+                                            num_qubits, wires, inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::PhaseShift:
+        applyGenPhaseShift<ExecutionSpace>(arr_, num_qubits, wires, inverse,
+                                           params);
+        return static_cast<PrecisionT>(1.0);
+    case GeneratorOperation::ControlledPhaseShift:
+        applyGenControlledPhaseShift<ExecutionSpace>(arr_, num_qubits, wires,
+                                                     inverse, params);
+        return static_cast<PrecisionT>(1);
+    case GeneratorOperation::CRX:
+        applyGenCRX<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::CRY:
+        applyGenCRY<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::CRZ:
+        applyGenCRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingXX:
+        applyGenIsingXX<ExecutionSpace>(arr_, num_qubits, wires, inverse,
+                                        params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingXY:
+        applyGenIsingXY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
+                                        params);
+        return static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingYY:
+        applyGenIsingYY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
+                                        params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::IsingZZ:
+        applyGenIsingZZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
+                                        params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::SingleExcitation:
+        applyGenSingleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
+                                                 inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::SingleExcitationMinus:
+        applyGenSingleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
+                                                      inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::SingleExcitationPlus:
+        applyGenSingleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
+                                                     inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::DoubleExcitation:
+        applyGenDoubleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
+                                                 inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::DoubleExcitationMinus:
+        applyGenDoubleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
+                                                      inverse, params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::DoubleExcitationPlus:
+        applyGenDoubleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
+                                                     inverse, params);
+        return static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::MultiRZ:
+        applyGenMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
+                                        params);
+        return -static_cast<PrecisionT>(0.5);
+    case GeneratorOperation::GlobalPhase:
+        return static_cast<PrecisionT>(-1.0);
+    /// LCOV_EXCL_START
+    default:
+        PL_ABORT("Generator operation does not exist.");
+        /// LCOV_EXCL_STOP
+    }
 }
 
 } // namespace Pennylane::LightningKokkos::Functors
