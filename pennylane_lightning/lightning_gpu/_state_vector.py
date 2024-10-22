@@ -238,6 +238,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Returns:
             None
         """
+        if self._mpi_handler.use_mpi:
+            raise DeviceError("Lightning-GPU-MPI does not support Controlled GlobalPhase gates.")
+
         state = self.state_vector
 
         basename = operation.base.name

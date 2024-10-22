@@ -152,5 +152,4 @@ void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                         cudaStream_t stream_id) {
     setBasisState_CUDA_call(sv, value, index, async, stream_id);
 }
-
 } // namespace Pennylane::LightningGPU

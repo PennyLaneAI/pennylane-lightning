@@ -353,48 +353,50 @@ class StateVectorCudaManaged
      * @brief Apply a single gate to the state vector.
      *
      * @param opName Name of gate to apply.
-     * @param ctrls Control wires.
-     * @param ctrls_values Control values (false or true).
-     * @param tgts Wires to apply gate to.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param tgt_wires Wires to apply gate to.
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Optional gate matrix vector on the host if opName
      * doesn't exist.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<std::size_t> &ctrls,
-                        const std::vector<bool> &ctrls_values,
-                        const std::vector<std::size_t> &tgts,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &tgt_wires,
                         bool adjoint = false,
                         const std::vector<Precision> &params = {0.0},
                         const std::vector<ComplexT> &gate_matrix = {}) {
         PL_ABORT_IF_NOT(
-            areVecsDisjoint<std::size_t>(ctrls, tgts),
+            areVecsDisjoint<std::size_t>(controlled_wires, tgt_wires),
             "`controlled_wires` and `target wires` must be disjoint.");
-        PL_ABORT_IF(ctrls.size() != ctrls_values.size(),
-                    "`ctrls` and `ctrls_values` must have the same size.");
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-        std::vector<int> ctrls_valuesInt(ctrls.size());
+        PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
+                    "`ctrls` and `controlled_values` must have the same size.");
+        std::vector<int> ctrlsInt(controlled_wires.size());
+        std::vector<int> tgtsInt(tgt_wires.size());
+        std::vector<int> ctrls_valuesInt(controlled_wires.size());
 
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
+        std::transform(controlled_wires.begin(), controlled_wires.end(),
+                       ctrlsInt.begin(), [&](std::size_t x) {
+                           return static_cast<int>(BaseType::getNumQubits() -
+                                                   1 - x);
+                       });
+        std::transform(tgt_wires.begin(), tgt_wires.end(), tgtsInt.begin(),
+                       [&](std::size_t x) {
+                           return static_cast<int>(BaseType::getNumQubits() -
+                                                   1 - x);
+                       });
 
-        std::transform(ctrls_values.begin(), ctrls_values.end(),
+        std::transform(controlled_values.begin(), controlled_values.end(),
                        ctrls_valuesInt.begin(),
                        [&](bool x) { return static_cast<int>(x); });
         if (opName == "MultiRZ") {
-            const std::vector<std::string> names(tgts.size(), {"RZ"});
+            const std::vector<std::string> names(tgtsInt.size(), {"RZ"});
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, params.front(), adjoint);
         } else if (opName == "GlobalPhase") {
-            const std::vector<std::string> names(tgts.size(), "I");
+            const std::vector<std::string> names(tgtsInt.size(), "I");
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, 2 * params[0], adjoint);
 
@@ -1519,10 +1521,10 @@ class StateVectorCudaManaged
     /**
      * @brief Apply parametric Pauli gates using custateVec calls.
      *
-     * @param angle Rotation angle.
      * @param pauli_words List of Pauli words representing operation.
      * @param ctrls Control wires
      * @param tgts target wires.
+     * @param params Rotation parameters.
      * @param use_adjoint Take adjoint of operation.
      */
     void applyParametricPauliGate_(const std::vector<std::string> &pauli_words,
@@ -1552,9 +1554,9 @@ class StateVectorCudaManaged
      * @brief Apply a parametric Pauli gate using custateVec calls.
      *
      * @param pauli_words List of Pauli words representing operation.
-     * @param ctrls Control wires
-     * @param ctrls_values Control values
-     * @param tgts target wires.
+     * @param ctrlsInt Control wires
+     * @param ctrls_valuesInt Control values
+     * @param tgtsInt target wires.
      * @param param Rotation angle.
      * @param use_adjoint Take adjoint of operation.
      */
@@ -1573,14 +1575,12 @@ class StateVectorCudaManaged
         } else {
             data_type = CUDA_C_32F;
         }
-
         std::vector<custatevecPauli_t> pauli_enums;
         pauli_enums.reserve(pauli_words.size());
         for (const auto &pauli_str : pauli_words) {
             pauli_enums.push_back(native_gates_.at(pauli_str));
         }
         const auto local_angle = (use_adjoint) ? param / 2 : -param / 2;
-
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyPauliRotation(
             /* custatevecHandle_t */ handle_.get(),
             /* void* */ BaseType::getData(),
