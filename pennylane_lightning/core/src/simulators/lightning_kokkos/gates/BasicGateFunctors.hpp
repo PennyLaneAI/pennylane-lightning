@@ -28,6 +28,10 @@ using namespace Pennylane::Util;
 using Kokkos::kokkos_swap;
 using Pennylane::Gates::GateOperation;
 using Pennylane::LightningKokkos::Util::vector2view;
+using Pennylane::LightningKokkos::Util::reverseWires;
+using Pennylane::LightningKokkos::Util::generateBitPatterns;
+using Pennylane::LightningKokkos::Util::ControlBitPatterns;
+using Pennylane::LightningKokkos::Util::parity_2_offset;
 } // namespace
 /// @endcond
 
@@ -57,17 +61,17 @@ class applyNC1Functor<PrecisionT, FuncT, true> {
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
 
-        std::tie(parity, rev_wires) =
-            Util::reverseWires(num_qubits, wires, controlled_wires);
-        indices = Util::generateControlBitPatterns(num_qubits, controlled_wires,
-                                                   controlled_values, wires);
+        std::tie(parity, rev_wires) = reverseWires(num_qubits, wires, controlled_wires);
+        std::vector<std::size_t> indices_ = generateBitPatterns(wires, num_qubits);
+        ControlBitPatterns(indices_, num_qubits, controlled_wires, controlled_values);
+        indices = vector2view(indices_);
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(
                 0, exp2(num_qubits - controlled_wires.size() - wires.size())),
             *this);
     }
     KOKKOS_FUNCTION void operator()(const std::size_t k) const {
-        const std::size_t offset = Util::parity_2_offset(parity, k);
+        const std::size_t offset = parity_2_offset(parity, k);
         std::size_t i0 = indices(0B00);
         std::size_t i1 = indices(0B01);
 
