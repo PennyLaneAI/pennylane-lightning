@@ -392,12 +392,22 @@ class applyNCGenerator1Functor {
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
-
         const std::size_t n_contr = controlled_wires.size();
+        const std::size_t n_wires = wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
+        PL_ASSERT(n_wires == 1);
+        PL_ASSERT(num_qubits >= nw_tot);
+
+        std::vector<std::size_t> all_wires;
+        all_wires.reserve(nw_tot);
+        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin(), controlled_wires.begin(),
+                         controlled_wires.end());
+
         std::tie(parity, rev_wires) =
             reverseWires(num_qubits, wires, controlled_wires);
         std::vector<std::size_t> indices_ =
-            generateBitPatterns(wires, num_qubits);
+            generateBitPatterns(all_wires, num_qubits);
         for (std::size_t k = 0; k < controlled_values.size(); k++) {
             mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
                     << k;
