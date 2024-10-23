@@ -486,9 +486,6 @@ class StateVectorKokkos final
                 gateop, *data_, num_qubits, controlled_wires, controlled_values,
                 wires, inverse, params);
         } else {
-            PL_ABORT_IF(gate_matrix.empty(),
-                        std::string("Operation does not exist for ") + opName +
-                            std::string(" and no matrix provided."));
             PL_ABORT("Controlled matrix operation not yet supported");
             return;
         }

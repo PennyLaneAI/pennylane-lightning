@@ -801,11 +801,23 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation Controlled",
+                   "[StateVectorKokkos_Nonparam]", float, double) {
+    
+
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = StateVectorT::PrecisionT;
+        const std::size_t num_qubits = 3;
+        StateVectorKokkos<TestType> state_vector{num_qubits};
+        auto matrix = getIdentity<Kokkos::complex, PrecisionT>();
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyOperation("XXX", {0}, {true}, {1}, false, {}, matrix), LightningException,
+            "Controlled matrix operation not yet supported");
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
                    "one-qubit with controls",
                    "[StateVectorKokkos_NonParam]", float, double) {
-    // using PrecisionT = TestType;
-    // using ComplexT = StateVectorKokkos<TestType>::ComplexT;
     const bool inverse = GENERATE(true, false);
     const std::size_t num_qubits = 4;
     const std::size_t control = GENERATE(0, 1, 2, 3);
@@ -919,29 +931,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             sv_gate.applyOperation("CZ", {control, wire}, inverse);
             sv_control.applyOperation(
                 "PauliZ", std::vector<std::size_t>{control},
-                std::vector<bool>{true}, std::vector<std::size_t>{wire});
-            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
-                Kokkos::HostSpace{}, sv_gate.getView());
-            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
-                Kokkos::HostSpace{}, sv_control.getView());
-
-            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
-                CHECK(imag(sv_gate_host[j]) ==
-                      Approx(imag(sv_control_host[j])));
-                CHECK(real(sv_gate_host[j]) ==
-                      Approx(real(sv_control_host[j])));
-            }
-        }
-    }
-
-    SECTION("N-controlled Hadamard ") {
-        if (control != wire) {
-            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
-            Kokkos::deep_copy(sv_control.getView(), ini_sv);
-
-            sv_gate.applyOperation("CY", {control, wire}, inverse);
-            sv_control.applyOperation(
-                "PauliY", std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
                 Kokkos::HostSpace{}, sv_gate.getView());
