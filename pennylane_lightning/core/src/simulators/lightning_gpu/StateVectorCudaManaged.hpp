@@ -41,6 +41,7 @@
 #include "cuStateVec_helpers.hpp"
 
 #include "LinearAlg.hpp"
+#include "Util.hpp"
 
 /// @cond DEV
 namespace {
@@ -373,24 +374,13 @@ class StateVectorCudaManaged
             "`controlled_wires` and `target wires` must be disjoint.");
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`ctrls` and `controlled_values` must have the same size.");
-        std::vector<int> ctrlsInt(controlled_wires.size());
-        std::vector<int> tgtsInt(tgt_wires.size());
-        std::vector<int> ctrls_valuesInt(controlled_wires.size());
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            controlled_wires, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgt_wires, BaseType::getNumQubits());
+        auto ctrls_valuesInt =
+            Pennylane::Util::cast_vector<bool, int>(controlled_values);
 
-        std::transform(controlled_wires.begin(), controlled_wires.end(),
-                       ctrlsInt.begin(), [&](std::size_t x) {
-                           return static_cast<int>(BaseType::getNumQubits() -
-                                                   1 - x);
-                       });
-        std::transform(tgt_wires.begin(), tgt_wires.end(), tgtsInt.begin(),
-                       [&](std::size_t x) {
-                           return static_cast<int>(BaseType::getNumQubits() -
-                                                   1 - x);
-                       });
-
-        std::transform(controlled_values.begin(), controlled_values.end(),
-                       ctrls_valuesInt.begin(),
-                       [&](bool x) { return static_cast<int>(x); });
         if (opName == "MultiRZ") {
             const std::vector<std::string> names(tgtsInt.size(), {"RZ"});
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
@@ -453,39 +443,34 @@ class StateVectorCudaManaged
      * @brief Apply a single gate to the state vector.
      *
      * @param gate_matrix Gate matrix data (in row-major format).
-     * @param ctrls Control wires.
-     * @param ctrls_values Control values (false or true).
-     * @param tgts Target wires to apply gate to.
+     * @param matrix_size Size of the matrix.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param tgt_wires Target wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      */
     void applyControlledMatrix(const ComplexT *gate_matrix,
                                const std::size_t matrix_size,
-                               const std::vector<std::size_t> &ctrls,
-                               const std::vector<bool> &ctrls_values,
-                               const std::vector<std::size_t> &tgts,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &tgt_wires,
                                bool inverse = false) {
-        PL_ABORT_IF(ctrls.size() != ctrls_values.size(),
-                    "`ctrls` and `ctrls_values` must have the same size.");
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, tgt_wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
+                    "`controlled_wires` and `controlled_values` must have the "
+                    "same size.");
         DataBuffer<CFP_t, int> d_matrix{
             matrix_size, BaseType::getDataBuffer().getDevTag(), true};
         d_matrix.CopyHostDataToGpu(gate_matrix, matrix_size, false);
         // ensure wire indexing correctly preserved for tensor-observables
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-        std::vector<int> ctrls_valuesInt(ctrls.size());
-
-        std::transform(
-            ctrls.rbegin(), ctrls.rend(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.rbegin(), tgts.rend(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-
-        std::transform(ctrls_values.rbegin(), ctrls_values.rend(),
-                       ctrls_valuesInt.begin(),
-                       [&](bool x) { return static_cast<int>(x); });
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            controlled_wires, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgt_wires, BaseType::getNumQubits());
+        auto ctrls_valuesInt =
+            Pennylane::Util::cast_vector<bool, int>(controlled_values);
 
         applyDeviceGeneralGate_(d_matrix.getData(), ctrlsInt, tgtsInt,
                                 ctrls_valuesInt, inverse);
@@ -1531,18 +1516,11 @@ class StateVectorCudaManaged
                                    std::vector<std::size_t> ctrls,
                                    std::vector<std::size_t> tgts,
                                    Precision param, bool use_adjoint = false) {
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-
         // Transform indices between PL & cuQuantum ordering
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            ctrls, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgts, BaseType::getNumQubits());
 
         const std::vector<int> ctrls_valuesInt(ctrls.size(), 1);
 
