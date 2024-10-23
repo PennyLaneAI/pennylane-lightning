@@ -430,7 +430,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
 
     const bool inverse = GENERATE(true, false);
     const std::string controlled_gate_name = GENERATE(
-        "RX");
+        "RX", "RY", "RZ", "PhaseShift");
     {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
