@@ -43,7 +43,6 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningGPUMeasurements
@@ -239,17 +238,19 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Returns:
             None
         """
+        if self._mpi_handler.use_mpi:
+            raise DeviceError("Lightning-GPU-MPI does not support Controlled GlobalPhase gates.")
+
         state = self.state_vector
 
+        basename = operation.base.name
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
-        name = operation.name
+        target_wires = list(operation.target_wires)
         # Apply GlobalPhase
         inv = False
-        param = operation.parameters[0]
-        wires = self.wires.indices(operation.wires)
-        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
-        state.apply(name, wires, inv, [[param]], matrix)
+        param = operation.parameters
+        state.apply(basename, control_wires, control_values, target_wires, inv, param)
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
