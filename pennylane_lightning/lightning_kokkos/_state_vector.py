@@ -38,6 +38,7 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
+from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningKokkosMeasurements
@@ -192,12 +193,20 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         state = self.state_vector
 
-        basename = operation.base.name
-        method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
+        basename = operation.base.name
+        method = getattr(state, f"{basename}", None)
         target_wires = list(operation.target_wires)
-        if method is not None:  # apply n-controlled specialized gate
+        if isinstance(operation.base, qml.GlobalPhase):
+            name = operation.name
+            # Apply GlobalPhase
+            inv = False
+            param = operation.parameters[0]
+            wires = self.wires.indices(operation.wires)
+            matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
+            state.apply(name, wires, inv, [[param]], matrix)
+        elif method is not None:  # apply n-controlled specialized gate
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
@@ -285,7 +294,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif (
-                isinstance(operation, qml.ops.Controlled) and (len(wires) == 1 or isinstance(operation.base, qml.GlobalPhase))
+                isinstance(operation, qml.ops.Controlled) and (isinstance(operation.base, qml.GlobalPhase) or len(operation.target_wires) == 1)
             ):  # apply n-controlled gate
                 # Kokkos does not support controlled gates except for GlobalPhase and single-qubit
                 self._apply_lightning_controlled(operation)
