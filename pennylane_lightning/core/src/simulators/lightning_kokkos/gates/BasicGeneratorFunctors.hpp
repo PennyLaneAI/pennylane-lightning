@@ -34,8 +34,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenPhaseShift(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
@@ -50,8 +49,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenControlledPhaseShift(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -69,8 +67,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits,
                  const std::vector<std::size_t> &wires,
-                 [[maybe_unused]] const bool inverse = false,
-                 [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+                 [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -86,8 +83,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits,
                  const std::vector<std::size_t> &wires,
-                 [[maybe_unused]] const bool inverse = false,
-                 [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+                 [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -105,8 +101,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  const std::size_t num_qubits,
                  const std::vector<std::size_t> &wires,
-                 [[maybe_unused]] const bool inverse = false,
-                 [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+                 [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -123,8 +118,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingXX(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -139,8 +133,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingXY(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -156,8 +149,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingYY(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -174,8 +166,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenIsingZZ(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -193,8 +184,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenSingleExcitation(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -212,8 +202,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenSingleExcitationMinus(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -232,8 +221,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenSingleExcitationPlus(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
         const std::size_t i01, const std::size_t i10, const std::size_t i11) {
@@ -254,8 +242,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenDoubleExcitation(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0000, const std::size_t i0001,
@@ -293,8 +280,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenDoubleExcitationMinus(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0000, const std::size_t i0001,
@@ -331,8 +317,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenDoubleExcitationPlus(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0000, const std::size_t i0001,
@@ -369,8 +354,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenMultiRZ(
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false,
-    [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    [[maybe_unused]] const bool inverse = false) {
     std::size_t wires_parity = static_cast<std::size_t>(0U);
     for (std::size_t wire : wires) {
         wires_parity |=
@@ -384,86 +368,150 @@ void applyGenMultiRZ(
         });
 }
 
+template <class PrecisionT, class FuncT>
+class applyNCGenerator1Functor {
+    using KokkosIntVector = Kokkos::View<std::size_t *>;
+
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
+    const FuncT core_function;
+    KokkosIntVector indices;
+    KokkosIntVector parity;
+    KokkosIntVector rev_wires;
+    KokkosIntVector rev_wire_shifts;
+    std::size_t mask{0U};
+    static constexpr std::size_t one{1U};
+    std::size_t i0;
+    std::size_t i1;
+
+  public:
+    template <class ExecutionSpace>
+    applyNCGenerator1Functor([[maybe_unused]] ExecutionSpace exec,
+                    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                    std::size_t num_qubits,
+                    const std::vector<std::size_t> &controlled_wires,
+                    const std::vector<bool> &controlled_values,
+                    const std::vector<std::size_t> &wires, FuncT core_function_)
+        : arr(arr_), core_function(core_function_) {
+
+        const std::size_t n_contr = controlled_wires.size();
+        std::tie(parity, rev_wires) =
+            reverseWires(num_qubits, wires, controlled_wires);
+        std::vector<std::size_t> indices_ =
+            generateBitPatterns(wires, num_qubits);
+        for (std::size_t k = 0; k < controlled_values.size(); k++) {
+            mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
+                    << k;
+        }
+        i0 = indices_[mask << one];
+        i1 = indices_[(mask << one) | one];
+        indices = vector2view(indices_);
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(
+                0, exp2(num_qubits - controlled_wires.size() - wires.size())),
+            *this);
+    }
+    KOKKOS_FUNCTION void operator()(const std::size_t k) const {
+        const std::size_t offset = parity_2_offset(parity, k);
+        for (std::size_t i = 0; i < indices.size(); i++) {
+                if ((i >> one) == mask) {
+                    continue;
+                }
+                arr(indices(i) + offset) = 0.0;
+        }
+        core_function(arr, i0 + offset, i1 + offset);
+    }
+};
+
+template <class ExecutionSpace, class PrecisionT>
+void applyNCGenRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                 const std::size_t num_qubits,
+                    const std::vector<std::size_t> &controlled_wires,
+                    const std::vector<bool> &controlled_values,
+                 const std::vector<std::size_t> &wires,
+                 [[maybe_unused]] const bool inverse = false) {
+                    auto core_function =
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i0, const std::size_t i1) {
+        kokkos_swap(arr(i0), arr(i1));
+    };
+    applyNCGenerator1Functor<PrecisionT, decltype(core_function)>(
+        ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values, wires,
+        core_function);
+}
+
 template <class ExecutionSpace, class PrecisionT>
 PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
                                Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                const std::size_t num_qubits,
                                const std::vector<std::size_t> &wires,
-                               const bool inverse = false,
-                               const std::vector<PrecisionT> &params = {}) {
+                               const bool inverse = false) {
     switch (generator_op) {
     case GeneratorOperation::RX:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliX, arr_,
-                                            num_qubits, wires, inverse, params);
+                                            num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::RY:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliY, arr_,
-                                            num_qubits, wires, inverse, params);
+                                            num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::RZ:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliZ, arr_,
-                                            num_qubits, wires, inverse, params);
+                                            num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::PhaseShift:
-        applyGenPhaseShift<ExecutionSpace>(arr_, num_qubits, wires, inverse,
-                                           params);
+        applyGenPhaseShift<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return static_cast<PrecisionT>(1.0);
     case GeneratorOperation::ControlledPhaseShift:
         applyGenControlledPhaseShift<ExecutionSpace>(arr_, num_qubits, wires,
-                                                     inverse, params);
+                                                     inverse);
         return static_cast<PrecisionT>(1);
     case GeneratorOperation::CRX:
-        applyGenCRX<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        applyGenCRX<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::CRY:
-        applyGenCRY<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        applyGenCRY<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::CRZ:
-        applyGenCRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        applyGenCRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::IsingXX:
-        applyGenIsingXX<ExecutionSpace>(arr_, num_qubits, wires, inverse,
-                                        params);
+        applyGenIsingXX<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::IsingXY:
-        applyGenIsingXY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
-                                        params);
+        applyGenIsingXY<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return static_cast<PrecisionT>(0.5);
     case GeneratorOperation::IsingYY:
-        applyGenIsingYY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
-                                        params);
+        applyGenIsingYY<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::IsingZZ:
-        applyGenIsingZZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
-                                        params);
+        applyGenIsingZZ<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::SingleExcitation:
         applyGenSingleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
-                                                 inverse, params);
+                                                 inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::SingleExcitationMinus:
         applyGenSingleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
-                                                      inverse, params);
+                                                      inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::SingleExcitationPlus:
         applyGenSingleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
-                                                     inverse, params);
+                                                     inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::DoubleExcitation:
         applyGenDoubleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
-                                                 inverse, params);
+                                                 inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::DoubleExcitationMinus:
         applyGenDoubleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
-                                                      inverse, params);
+                                                      inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::DoubleExcitationPlus:
         applyGenDoubleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
-                                                     inverse, params);
+                                                     inverse);
         return static_cast<PrecisionT>(0.5);
     case GeneratorOperation::MultiRZ:
-        applyGenMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
-                                        params);
+        applyGenMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::GlobalPhase:
         return static_cast<PrecisionT>(-1.0);
@@ -472,93 +520,82 @@ PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
         PL_ABORT("Generator operation does not exist.");
         /// LCOV_EXCL_STOP
     }
+}
 
 template <class ExecutionSpace, class PrecisionT>
 PrecisionT applyNCNamedGenerator(const ControlledGeneratorOperation generator_op,
                                Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                const std::size_t num_qubits,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
-                               const bool inverse = false,
-                               const std::vector<PrecisionT> &params = {}) {
+                               const bool inverse = false) {
     switch (generator_op) {
-    case GeneratorOperation::RX:
-        applyNamedOperation<ExecutionSpace>(GateOperation::PauliX, arr_,
-                                            num_qubits, wires, inverse, params);
+    case ControlledGeneratorOperation::RX:
+        applyNCGenRX<ExecutionSpace>(arr_,
+                                            num_qubits, controlled_wires, controlled_values, wires, inverse);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::RY:
+    /* case ControlledGeneratorOperation::RY:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliY, arr_,
                                             num_qubits, wires, inverse, params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::RZ:
+    case ControlledGeneratorOperation::RZ:
         applyNamedOperation<ExecutionSpace>(GateOperation::PauliZ, arr_,
                                             num_qubits, wires, inverse, params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::PhaseShift:
+    case ControlledGeneratorOperation::PhaseShift:
         applyGenPhaseShift<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                            params);
         return static_cast<PrecisionT>(1.0);
-    case GeneratorOperation::ControlledPhaseShift:
-        applyGenControlledPhaseShift<ExecutionSpace>(arr_, num_qubits, wires,
-                                                     inverse, params);
-        return static_cast<PrecisionT>(1);
-    case GeneratorOperation::CRX:
-        applyGenCRX<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::CRY:
-        applyGenCRY<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::CRZ:
-        applyGenCRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
-        return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::IsingXX:
+    case ControlledGeneratorOperation::IsingXX:
         applyGenIsingXX<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::IsingXY:
+    case ControlledGeneratorOperation::IsingXY:
         applyGenIsingXY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
         return static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::IsingYY:
+    case ControlledGeneratorOperation::IsingYY:
         applyGenIsingYY<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::IsingZZ:
+    case ControlledGeneratorOperation::IsingZZ:
         applyGenIsingZZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::SingleExcitation:
+    case ControlledGeneratorOperation::SingleExcitation:
         applyGenSingleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
                                                  inverse, params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::SingleExcitationMinus:
+    case ControlledGeneratorOperation::SingleExcitationMinus:
         applyGenSingleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
                                                       inverse, params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::SingleExcitationPlus:
+    case ControlledGeneratorOperation::SingleExcitationPlus:
         applyGenSingleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
                                                      inverse, params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::DoubleExcitation:
+    case ControlledGeneratorOperation::DoubleExcitation:
         applyGenDoubleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
                                                  inverse, params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::DoubleExcitationMinus:
+    case ControlledGeneratorOperation::DoubleExcitationMinus:
         applyGenDoubleExcitationMinus<ExecutionSpace>(arr_, num_qubits, wires,
                                                       inverse, params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::DoubleExcitationPlus:
+    case ControlledGeneratorOperation::DoubleExcitationPlus:
         applyGenDoubleExcitationPlus<ExecutionSpace>(arr_, num_qubits, wires,
                                                      inverse, params);
         return static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::MultiRZ:
+    case ControlledGeneratorOperation::MultiRZ:
         applyGenMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse,
                                         params);
         return -static_cast<PrecisionT>(0.5);
-    case GeneratorOperation::GlobalPhase:
+    case ControlledGeneratorOperation::GlobalPhase:
         return static_cast<PrecisionT>(-1.0);
-    /// LCOV_EXCL_START
+    /// LCOV_EXCL_START */
     default:
-        PL_ABORT("Generator operation does not exist.");
+        PL_ABORT("Controlled Generator operation does not exist.");
         /// LCOV_EXCL_STOP
     }
 }
