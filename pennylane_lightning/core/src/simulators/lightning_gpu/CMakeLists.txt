@@ -74,6 +74,7 @@ endif()
 ###############################################################################
 set(COMPONENT_SUBDIRS      algorithms
                            bindings
+                           catalyst
                            measurements
                            gates
                            observables
