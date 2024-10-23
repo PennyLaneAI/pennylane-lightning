@@ -26,6 +26,7 @@ from typing import List
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
+from pennylane.labs import MPSPrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
@@ -132,6 +133,7 @@ def setBondDims(num_qubits, max_bond_dim):
     return localBondDims
 
 def setSitesExtents(num_qubits, max_bond_dim):
+    """Compute the MPS sites dimensions on base to the number of wires."""
     
     bondDims = setBondDims(num_qubits, max_bond_dim)    
     qubitDims = [2 for _ in range(num_qubits)]
@@ -149,7 +151,8 @@ def setSitesExtents(num_qubits, max_bond_dim):
     
     return localSiteExtents
 
-def custom_MPS_checks(MPS, num_wires, max_bond_dim):
+def custom_MPS_checks(MPS: List, num_wires: int, max_bond_dim: int):
+    """Check if the provided MPS has the correct dimension for C++ backend."""
     
     MPS_shape_dest = setSitesExtents(num_wires, max_bond_dim)
     
@@ -357,6 +360,24 @@ class LightningTensorNet:
             raise ValueError("BasisState parameter and wires must be of equal length.")
 
         self._tensornet.setBasisState(state)
+        
+    def _load_mps_state(self, state: List, wires: List):
+        """Prepares an initial state using MPS.
+
+        Args:
+            state (List): A list of different numpy array with the MPS sites values. The structure should be as follows:
+                [ (2, 2), (2, 2, 4), (4, 2, 8), ..., 
+                  (8, 2, 4), (4, 2, 2), (2, 2) ]
+            wires (List): wires that the provided computational state should be
+                initialized on.
+                
+            Note: The correct MPS sites format and layout are user responsible. 
+        """
+        mps = state.data
+        custom_MPS_checks(mps, self._num_wires, self._max_bond_dim)
+        self._tensornet.updateMPSSitesData(mps)
+
+        
 
     def _apply_MPO(self, gate_matrix, wires):
         """Apply a matrix product operator to the quantum state.
@@ -468,6 +489,10 @@ class LightningTensorNet:
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
+            elif isinstance(operations[0], MPSPrep):
+                self._load_mps_state(operations[0].parameters[0], operations[0].wires)
+                operations = operations[1:]
+
 
         self._apply_lightning(operations)
 

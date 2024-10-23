@@ -112,15 +112,8 @@ def LTensor_circuit(wires, custom_MPS):
     state_one = state_one + state_one * 0j
     state_one[0] = 1.0 + 0j
     
-    dev = qml.device("lightning.tensor", 
-                     wires=wires, 
-                     cutoff=1e-7, 
-                     max_bond_dim=128, 
-                     # Extra argument for LTensor to pass the MPS
-                     # If custom_MPS is [] or None then compute the normal StatePrep
-                     custom_MPS=custom_MPS # MPS sites
-                     )
-
+    dev = qml.device("lightning.tensor", wires=wires, cutoff=1e-7, max_bond_dim=128)
+    
     dev_wires = dev.wires.tolist()
 
     @qml.qnode(dev)
@@ -133,6 +126,25 @@ def LTensor_circuit(wires, custom_MPS):
     result = circuit()
     
     # print(f"Circuit result: \n{result}")
+
+# Dummy circuit
+def LTensor_circuit_MPS(wires, custom_MPS):
+    
+    dev = qml.device("lightning.tensor", wires=wires, cutoff=1e-7, max_bond_dim=128)
+
+    dev_wires = dev.wires.tolist()
+    
+    @qml.qnode(dev)
+    def circuit(custom_MPS=custom_MPS):
+        
+        qml.MPSPrep(custom_MPS, wires=dev_wires[1:])
+        
+        return qml.state()
+        
+    result = circuit()
+    
+    # print(f"Circuit result: \n{result}")
+
 
 if __name__ == '__main__':
     
@@ -155,7 +167,7 @@ if __name__ == '__main__':
     MPS_example = create_custom_MPS(wires)
     [print(f'{site.shape}') for site in MPS_example]
 
-    LTensor_circuit(wires, MPS_example) # Passing a custom_MPS
+    LTensor_circuit_MPS(wires, MPS_example) # Passing a custom_MPS
     
     
     

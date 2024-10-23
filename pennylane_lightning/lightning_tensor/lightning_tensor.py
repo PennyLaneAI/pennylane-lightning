@@ -74,6 +74,7 @@ _operations = frozenset(
     {
         "Identity",
         "BasisState",
+        "MPSPrep",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "DiagonalQubitUnitary",
@@ -171,6 +172,9 @@ _observables = frozenset(
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
     if isinstance(op, qml.ControlledQubitUnitary):
+        return True
+
+    if isinstance(op, qml.labs.MPSPrep):
         return True
 
     return op.has_matrix and op.name in _operations
