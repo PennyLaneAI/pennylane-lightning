@@ -407,6 +407,7 @@ class StateVectorCudaManaged
                                         ctrls_valuesInt, false);
             }
         } else if (par_gates_.find(opName) != par_gates_.end()) {
+            //TODO: offload to par_gates_ if available
             auto &gateMap =
                 cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
             auto &&matrix_cu = gateMap.getGateData(opName, params);
@@ -433,6 +434,9 @@ class StateVectorCudaManaged
 
                 gate_cache_.add_gate(opName, par[0], matrix_cu);
             }
+            std::reverse(ctrlsInt.begin(), ctrlsInt.end());
+            std::reverse(tgtsInt.begin(), tgtsInt.end());
+            std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
             applyDeviceGeneralGate_(
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrlsInt,
                 tgtsInt, ctrls_valuesInt, adjoint);
