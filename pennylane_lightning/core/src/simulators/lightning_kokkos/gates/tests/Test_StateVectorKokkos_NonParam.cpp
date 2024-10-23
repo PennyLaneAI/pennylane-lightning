@@ -803,16 +803,15 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation Controlled",
                    "[StateVectorKokkos_Nonparam]", float, double) {
-    
 
     using StateVectorT = StateVectorKokkos<TestType>;
     using PrecisionT = StateVectorT::PrecisionT;
-        const std::size_t num_qubits = 3;
-        StateVectorKokkos<TestType> state_vector{num_qubits};
-        auto matrix = getIdentity<Kokkos::complex, PrecisionT>();
-        PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyOperation("XXX", {0}, {true}, {1}, false, {}, matrix), LightningException,
-            "Controlled matrix operation not yet supported");
+    const std::size_t num_qubits = 3;
+    StateVectorKokkos<TestType> state_vector{num_qubits};
+    auto matrix = getIdentity<Kokkos::complex, PrecisionT>();
+    PL_REQUIRE_THROWS_MATCHES(
+        state_vector.applyOperation("XXX", {0}, {true}, {1}, false, {}, matrix),
+        LightningException, "Controlled matrix operation not yet supported");
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
