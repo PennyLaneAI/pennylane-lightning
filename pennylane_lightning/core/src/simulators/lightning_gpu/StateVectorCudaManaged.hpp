@@ -407,7 +407,7 @@ class StateVectorCudaManaged
                                         ctrls_valuesInt, false);
             }
         } else if (par_gates_.find(opName) != par_gates_.end()) {
-            //TODO: offload to par_gates_ if available
+            // TODO: offload to par_gates_ if available
             auto &gateMap =
                 cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
             auto &&matrix_cu = gateMap.getGateData(opName, params);
