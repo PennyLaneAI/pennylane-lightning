@@ -878,6 +878,39 @@ void applyNCGenDoubleExcitationPlus(
 }
 
 template <class ExecutionSpace, class PrecisionT>
+void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                       const std::size_t num_qubits,
+                       const std::vector<std::size_t> &controlled_wires,
+                       const std::vector<bool> &controlled_values,
+                       const std::vector<std::size_t> &wires,
+                       [[maybe_unused]] const bool inverse = false) {
+    constexpr std::size_t one{1U};
+    auto ctrls_mask = static_cast<std::size_t>(0U);
+    for (std::size_t i = 0; i < controlled_wires.size(); i++) {
+        ctrls_mask |= (static_cast<std::size_t>(controlled_values[i])
+                       << (num_qubits - controlled_wires[i] - 1));
+    }
+    auto ctrls_parity = static_cast<std::size_t>(0U);
+    for (std::size_t wire : controlled_wires) {
+        ctrls_parity |= (one << (num_qubits - wire - 1));
+    }
+    auto wires_parity = static_cast<std::size_t>(0U);
+    for (std::size_t wire : wires) {
+        wires_parity |= (one << (num_qubits - wire - 1));
+    }
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        KOKKOS_LAMBDA(const std::size_t k) {
+            if (ctrls_mask == (ctrls_parity & k)) {
+                arr_(k) *= static_cast<PrecisionT>(
+                    1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
+            } else {
+                arr_(k) = 0.0;
+            }
+        });
+}
+
+template <class ExecutionSpace, class PrecisionT>
 PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
                                Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                const std::size_t num_qubits,
@@ -1032,10 +1065,10 @@ applyNCNamedGenerator(const ControlledGeneratorOperation generator_op,
             arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return static_cast<PrecisionT>(0.5);
-    /* case ControlledGeneratorOperation::MultiRZ:
+    case ControlledGeneratorOperation::MultiRZ:
         applyNCGenMultiRZ<ExecutionSpace>(arr_, num_qubits, controlled_wires,
-                                             controlled_values, wires, inverse);
-        return -static_cast<PrecisionT>(0.5); */
+                                          controlled_values, wires, inverse);
+        return -static_cast<PrecisionT>(0.5);
     case ControlledGeneratorOperation::GlobalPhase:
         applyNCGenGlobalPhase<ExecutionSpace>(
             arr_, num_qubits, controlled_wires, controlled_values, wires,

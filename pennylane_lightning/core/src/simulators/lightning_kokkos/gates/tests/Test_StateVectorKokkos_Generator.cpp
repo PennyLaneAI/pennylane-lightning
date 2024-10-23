@@ -443,7 +443,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         "RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "IsingXX", "IsingXY",
         "IsingYY", "IsingZZ", "SingleExcitation", "SingleExcitationMinus",
         "SingleExcitationPlus", "DoubleExcitation", "DoubleExcitationMinus",
-        "DoubleExcitationPlus");
+        "DoubleExcitationPlus", "MultiRZ");
     {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
