@@ -412,3 +412,56 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationPlus",
         }
     }
 }
+
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
+                   "[StateVectorKokkos_Generator]", float, double) {    
+    using StateVectorT = StateVectorKokkos<TestType>;
+    const std::size_t num_qubits = 5;
+    const TestType ep = 1e-3;
+    const TestType EP = 1e-4;
+
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    std::unordered_map<std::string, ControlledGateOperation> str_to_controlled_gates_{};
+    for (const auto &[gate_op, controlled_gate_name] : Constant::controlled_gate_names) {
+        str_to_controlled_gates_.emplace(controlled_gate_name, gate_op);
+    }
+
+    const bool inverse = GENERATE(true, false);
+    const std::string controlled_gate_name = GENERATE(
+        "RX");
+    {
+        StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
+                                                   ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
+                                                    ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
+                                                    ini_st.size()};
+
+        const auto wires = createWires(str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        const std::vector<std::size_t> control_wires = {num_qubits - 1};
+        const std::vector<bool> control_values = {true};
+        auto scale = kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires, control_values, wires, inverse);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep);
+        kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires, control_values, wires, inverse, {h});
+        kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires, control_values, wires, inverse, {-h});
+
+        auto result_gntr_sv = kokkos_gntr_sv.getDataVector();
+        auto result_gate_svp = kokkos_gate_svp.getDataVector();
+        auto result_gate_svm = kokkos_gate_svm.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep)
+                      .margin(EP));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep)
+                      .margin(EP));
+        }
+    }
+}
