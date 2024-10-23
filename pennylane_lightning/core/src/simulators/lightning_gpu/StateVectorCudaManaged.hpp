@@ -472,6 +472,10 @@ class StateVectorCudaManaged
         auto ctrls_valuesInt =
             Pennylane::Util::cast_vector<bool, int>(controlled_values);
 
+        std::reverse(ctrlsInt.begin(), ctrlsInt.end());
+        std::reverse(tgtsInt.begin(), tgtsInt.end());
+        std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
+
         applyDeviceGeneralGate_(d_matrix.getData(), ctrlsInt, tgtsInt,
                                 ctrls_valuesInt, inverse);
     }
@@ -1591,19 +1595,11 @@ class StateVectorCudaManaged
                                 const std::vector<std::size_t> &ctrls,
                                 const std::vector<std::size_t> &tgts,
                                 bool use_adjoint = false) {
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-
-        const std::vector<int> ctrls_values(ctrls.size(), 1);
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            ctrls, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgts, BaseType::getNumQubits());
+        auto ctrls_values = std::vector<int>(ctrls.size(), 1);
 
         applyDeviceGeneralGate_(matrix, ctrlsInt, tgtsInt, ctrls_values,
                                 use_adjoint);
