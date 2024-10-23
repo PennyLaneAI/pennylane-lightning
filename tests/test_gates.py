@@ -413,80 +413,9 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                 circ_def = qml.QNode(circuit, dev_def)
                 assert np.allclose(circ(), circ_def(), tol)
 
-
 @pytest.mark.skipif(
-    device_name != "lightning.kokkos",
-    reason="Controlled Single Qubit gate supported by Lightning Kokkos",
-)
-@pytest.mark.parametrize(
-    "operation",
-    [
-        qml.PauliX,
-        qml.PauliY,
-        qml.PauliZ,
-        qml.Hadamard,
-        qml.S,
-        qml.T,
-        qml.PhaseShift,
-        qml.RX,
-        qml.RY,
-        qml.RZ,
-        qml.Rot,
-        qml.GlobalPhase,
-    ],
-)
-@pytest.mark.parametrize("control_value", [False, True])
-@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
-    """Test that multi-controlled gates are correctly applied to a state"""
-    dev_def = qml.device("default.qubit", wires=n_qubits)
-    dev = qml.device(device_name, wires=n_qubits)
-    threshold = 5 if device_name == "lightning.tensor" else 250
-    num_wires = max(operation.num_wires, 1)
-
-    for n_wires in range(num_wires + 1, num_wires + 4):
-        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
-        n_perms = len(wire_lists) * n_wires
-        if n_perms > threshold:
-            wire_lists = wire_lists[0 :: (n_perms // threshold)]
-        for all_wires in wire_lists:
-            target_wires = all_wires[0:num_wires]
-            control_wires = all_wires[num_wires:]
-            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-            init_state /= np.linalg.norm(init_state)
-
-            def circuit():
-                qml.StatePrep(init_state, wires=range(n_qubits))
-                if operation.num_params == 0:
-                    qml.ctrl(
-                        operation(target_wires),
-                        control_wires,
-                        control_values=(
-                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                            if device_name != "lightning.tensor"
-                            else [control_value for _ in control_wires]
-                        ),
-                    )
-                else:
-                    qml.ctrl(
-                        operation(*tuple([0.1234] * operation.num_params), target_wires),
-                        control_wires,
-                        control_values=(
-                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
-                            if device_name != "lightning.tensor"
-                            else [control_value for _ in control_wires]
-                        ),
-                    )
-                return qml.state()
-
-            circ = qml.QNode(circuit, dev)
-            circ_def = qml.QNode(circuit, dev_def)
-            assert np.allclose(circ(), circ_def(), tol)
-
-
-@pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.tensor"),
-    reason="N-controlled operations only implemented in lightning.qubit and lightning.tensor.",
+    device_name not in ("lightning.qubit", "lightning.tensor", "lightning.kokkos"),
+    reason="N-controlled operations only implemented in lightning.qubit, lightning.tensor and lightning.kokkos.",
 )
 @pytest.mark.parametrize(
     "operation",
@@ -525,6 +454,8 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
+    if device_name == "lightning.kokkos" and num_wires > 1:
+        pytest.skip("lightning.kokkos only supports single qubit controlled gates.")
 
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
