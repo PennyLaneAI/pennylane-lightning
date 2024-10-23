@@ -327,7 +327,9 @@ class StateVectorCudaManaged
             applyDeviceMatrixGate(d_matrix.getData(), ctrls_local, tgts_local,
                                   adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
-            par_gates_.at(opName)(wires, adjoint, params);
+            const std::vector<std::size_t> wires_local{wires.rbegin(),
+                                                       wires.rend()};
+            par_gates_.at(opName)(wires_local, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
