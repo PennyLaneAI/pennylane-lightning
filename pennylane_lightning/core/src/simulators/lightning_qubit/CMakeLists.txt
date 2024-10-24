@@ -83,6 +83,7 @@ set_property(TARGET lightning_qubit PROPERTY POSITION_INDEPENDENT_CODE ON)
 ###############################################################################
 set(COMPONENT_SUBDIRS   algorithms
                         bindings
+                        catalyst
                         gates
                         measurements
                         observables
