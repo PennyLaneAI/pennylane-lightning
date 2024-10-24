@@ -226,6 +226,106 @@ TEMPLATE_TEST_CASE(
             }
         }
     }
+
+    SECTION("N-controlled PhaseShift") {
+        if (control != wire) {
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_cop{ini_st.data(), ini_st.size()};
+
+            kokkos_sv_cop.applyOperation("ControlledPhaseShift",
+                                         {control, wire}, inverse,
+                                         std::vector<PrecisionT>{param});
+            kokkos_sv_op.applyOperation(
+                "PhaseShift", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire},
+                inverse, std::vector<PrecisionT>{param});
+
+            auto result_op = kokkos_sv_op.getDataVector();
+            auto result_cop = kokkos_sv_cop.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_cop[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_cop[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled S") {
+        if (control != wire) {
+            const TestType pi2 = TestType(M_PI_2);
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_cop{ini_st.data(), ini_st.size()};
+
+            kokkos_sv_cop.applyOperation("ControlledPhaseShift",
+                                         {control, wire}, inverse,
+                                         std::vector<PrecisionT>{pi2});
+            kokkos_sv_op.applyOperation(
+                "S", std::vector<std::size_t>{control}, std::vector<bool>{true},
+                std::vector<std::size_t>{wire}, inverse);
+
+            auto result_op = kokkos_sv_op.getDataVector();
+            auto result_cop = kokkos_sv_cop.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_cop[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_cop[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled T") {
+        if (control != wire) {
+            const TestType pi4 = TestType(M_PI_4);
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_cop{ini_st.data(), ini_st.size()};
+
+            kokkos_sv_cop.applyOperation("ControlledPhaseShift",
+                                         {control, wire}, inverse,
+                                         std::vector<PrecisionT>{pi4});
+            kokkos_sv_op.applyOperation(
+                "T", std::vector<std::size_t>{control}, std::vector<bool>{true},
+                std::vector<std::size_t>{wire}, inverse);
+
+            auto result_op = kokkos_sv_op.getDataVector();
+            auto result_cop = kokkos_sv_cop.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_cop[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_cop[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled Hadamard") {
+        if (control != wire) {
+            const TestType pi2 = TestType(M_PI_2);
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_cop{ini_st.data(), ini_st.size()};
+
+            kokkos_sv_cop.applyOperation("CRY", {control, wire}, false,
+                                         std::vector<PrecisionT>{pi2});
+            kokkos_sv_cop.applyOperation("CNOT", {control, wire}, false);
+            kokkos_sv_op.applyOperation(
+                "Hadamard", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire}, false);
+
+            auto result_op = kokkos_sv_op.getDataVector();
+            auto result_cop = kokkos_sv_cop.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_cop[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_cop[j])).margin(EP));
+            }
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXY",
