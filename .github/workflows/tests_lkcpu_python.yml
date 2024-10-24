@@ -215,11 +215,19 @@ jobs:
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
       - name: Checkout PennyLane for release build
-        if: inputs.pennylane-version == 'release'
+        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
+
+      - name: Switch to latest build of PennyLane
+        if: inputs.pennylane-version == 'latest'
+        run: |
+          cd pennylane
+          git fetch --all
+          git checkout master
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'
@@ -244,7 +252,6 @@ jobs:
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
-          pip list
           PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
             --store-durations --durations-path='.github/workflows/python_lightning_kokkos_test_durations.json' --splitting-algorithm=least_duration
           mv .github/workflows/python_lightning_kokkos_test_durations.json ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
