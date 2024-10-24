@@ -15,6 +15,9 @@ r"""
 This module contains the LightningQubit class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+import os
+import sys
+
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
@@ -560,3 +563,45 @@ class LightningQubit(LightningBase):
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+    
+    @staticmethod
+    def get_c_interface():
+        """Returns a tuple consisting of the device name, and
+        the location to the shared object with the C/C++ device implementation.
+        """
+
+        # The shared object file extension varies depending on the underlying operating system
+        file_extension = ""
+        OS = sys.platform
+        if OS == "linux":
+            file_extension = ".so"
+        elif OS == "darwin":
+            file_extension = ".dylib"
+        else:
+            raise RuntimeError(
+                f"'LightningSimulator' shared library not available for '{OS}' platform"
+            )
+
+        lib_name = "liblightning_qubit_catalyst" + file_extension
+        package_root = Path(__file__).parent
+
+        # The absolute path of the plugin shared object varies according to the installation mode.
+
+        # Wheel mode:
+        # Fixed location at the root of the project
+        wheel_mode_location = package_root.parent / lib_name
+        if wheel_mode_location.is_file():
+            return "LightningSimulator", wheel_mode_location.as_posix()
+
+        # Editable mode:
+        # The build directory contains a folder which varies according to the platform:
+        #   lib.<system>-<architecture>-<python-id>"
+        # To avoid mismatching the folder name, we search for the shared object instead.
+        # TODO: locate where the naming convention of the folder is decided and replicate it here.
+        editable_mode_path = package_root.parent.parent / "build"
+        for path, _, files in os.walk(editable_mode_path):
+            if lib_name in files:
+                lib_location = (Path(path) / lib_name).as_posix()
+                return "LightningSimulator", lib_location
+
+        raise RuntimeError("'LightningSimulator' shared library not found")
