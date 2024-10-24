@@ -396,7 +396,7 @@ Lightning-Qubit should be installed before Lightning-Tensor (compilation is not 
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
 
-Then a ``CUQUANTUM_SDK`` environment variable can be set.
+Then a ``CUQUANTUM_SDK`` environment variable can be set:
 
 .. code-block:: bash
 
