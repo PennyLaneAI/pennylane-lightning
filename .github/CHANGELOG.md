@@ -46,6 +46,9 @@
 
 ### Improvements
 
+*  Fix PTM stable-latest.
+  [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
+
 * Optimize `GlobalPhase` and `C(GlobalPhase)` gate implementation in `lightning.gpu`.
   [(#946)](https://github.com/PennyLaneAI/pennylane-lightning/pull/946)
 
