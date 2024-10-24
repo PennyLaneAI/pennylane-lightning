@@ -157,7 +157,7 @@ class CMakeBuild(build_ext):
         )
 
         # Ensure that catalyst shared object is copied to the build directory for pip editable install
-        if backend in ("lightning_kokkos"):
+        if backend in ("lightning_kokkos", "lightning_qubit"):
             if platform.system() in ["Linux", "Darwin"]:
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
                 source = os.path.join(f"{extdir}", f"lib{backend}_catalyst{shared_lib_ext}")
