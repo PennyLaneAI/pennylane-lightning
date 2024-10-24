@@ -84,7 +84,7 @@ jobs:
           rm -fr $(python -m pip cache dir)/selfcheck/
           python -m pip install -r requirements-dev.txt
 
-      - name: Checkout PennyLane for release build
+      - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:

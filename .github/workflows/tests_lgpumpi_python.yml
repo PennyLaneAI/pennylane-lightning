@@ -120,7 +120,7 @@ jobs:
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
 
-      - name: Checkout PennyLane for release build
+      - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:

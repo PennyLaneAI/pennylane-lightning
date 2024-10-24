@@ -214,7 +214,7 @@ jobs:
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
-      - name: Checkout PennyLane for release build
+      - name: Checkout PennyLane for release or latest build
         if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
