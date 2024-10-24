@@ -1564,7 +1564,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
     std::mt19937_64 re{1337};
     const std::size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
-    const std::size_t index = GENERATE(0, 1, 2);
     /* The `phase` array contains the diagonal entries of the controlled-phase
        operator. It can be created in Python using the following command
 
@@ -1582,7 +1581,11 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
     auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
     StateVectorCudaManaged<TestType> sv(
         reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
-    sv.applyOperation("C(GlobalPhase)", {index}, inverse, {}, phase);
+    std::vector<std::size_t> ctrls = {0, 1};
+    std::vector<bool> ctrl_vals = {0, 1};
+    std::vector<std::size_t> tgts = {2};
+    const TestType param = -M_PI_2;
+    sv.applyOperation("GlobalPhase", ctrls, ctrl_vals, tgts, inverse, {param});
     auto result_sv = sv.getDataVector();
     for (std::size_t j = 0; j < exp2(num_qubits); j++) {
         ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
