@@ -294,7 +294,23 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif isinstance(operation, qml.ops.Controlled) and (
-                isinstance(operation.base, qml.GlobalPhase) or len(operation.target_wires) == 1
+                isinstance(
+                    operation.base,
+                    (
+                        qml.GlobalPhase,
+                        qml.PauliX,
+                        qml.PauliY,
+                        qml.PauliZ,
+                        qml.Hadamard,
+                        qml.S,
+                        qml.T,
+                        qml.PhaseShift,
+                        qml.RX,
+                        qml.RY,
+                        qml.RZ,
+                        qml.Rot,
+                    ),
+                )
             ):  # apply n-controlled gate
                 # Kokkos does not support controlled gates except for GlobalPhase and single-qubit
                 self._apply_lightning_controlled(operation)
