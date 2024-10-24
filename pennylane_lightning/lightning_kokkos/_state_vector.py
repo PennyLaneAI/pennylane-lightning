@@ -38,7 +38,6 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningKokkosMeasurements
@@ -193,20 +192,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         state = self.state_vector
 
-        control_wires = list(operation.control_wires)
-        control_values = operation.control_values
         basename = operation.base.name
         method = getattr(state, f"{basename}", None)
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        if isinstance(operation.base, qml.GlobalPhase):
-            name = operation.name
-            # Apply GlobalPhase
-            inv = False
-            param = operation.parameters[0]
-            wires = self.wires.indices(operation.wires)
-            matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
-            state.apply(name, wires, inv, [[param]], matrix)
-        elif method is not None:  # apply n-controlled specialized gate
+        if method is not None:  # apply n-controlled specialized gate
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
