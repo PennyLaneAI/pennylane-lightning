@@ -224,7 +224,7 @@ To install Lightning-GPU from the package sources using the direct SDK path, Lig
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
-Then a ``CUQUANTUM_SDK`` environment variable can be set.
+Then a ``CUQUANTUM_SDK`` environment variable can be set:
 
 .. code-block:: bash
 
