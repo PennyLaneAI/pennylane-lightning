@@ -339,7 +339,8 @@ class StateVectorCudaManaged
 
             if (!gate_cache_.gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
-                std::string message = "Currently unsupported gate: " + opName;
+                std::string message = "Currently unsupported gate: " + opName +
+                                      "and no matrix is provided.";
                 throw LightningException(message);
             } else if (!gate_cache_.gateExists(opName, par[0])) {
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
@@ -373,7 +374,8 @@ class StateVectorCudaManaged
             areVecsDisjoint<std::size_t>(controlled_wires, tgt_wires),
             "`controlled_wires` and `target wires` must be disjoint.");
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
-                    "`ctrls` and `controlled_values` must have the same size.");
+                    "`controlled_wires` and `controlled_values` must have the "
+                    "same size.");
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             controlled_wires, BaseType::getNumQubits());
         auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
@@ -422,7 +424,8 @@ class StateVectorCudaManaged
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
             if (!gate_cache_.gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
-                std::string message = "Currently unsupported gate: " + opName;
+                std::string message = "Currently unsupported gate: " + opName +
+                                      " and no matrix provided.";
                 throw LightningException(message);
             } else if (!gate_cache_.gateExists(opName, par[0])) {
                 std::vector<CFP_t> matrix_cu(gate_matrix.size());

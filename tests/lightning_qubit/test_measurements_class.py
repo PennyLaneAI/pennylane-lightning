@@ -799,8 +799,8 @@ class TestControlledOps:
                     assert np.allclose(result, expected, tol * 10)
 
     @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.tensor", "lightning.gpu"),
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        device_name in ("lightning.kokkos"),
+        reason="N-controlled operations are not implemented in lightning.kokkos.",
     )
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
         n_qubits = 10

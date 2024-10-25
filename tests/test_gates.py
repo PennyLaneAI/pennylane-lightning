@@ -373,7 +373,7 @@ def test_state_prep(n_targets, tol):
 
 @pytest.mark.skipif(
     device_name not in ("lightning.qubit", "lightning.gpu"),
-    reason="N-controlled operations only implemented in lightning.qubit.",
+    reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
 )
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
@@ -498,7 +498,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
 
 @pytest.mark.skipif(
     device_name not in ("lightning.qubit", "lightning.gpu"),
-    reason="N-controlled operations only implemented in lightning.qubit.",
+    reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
 )
 def test_controlled_qubit_unitary_from_op(tol):
     n_qubits = 10
@@ -558,8 +558,8 @@ def test_paulirot(n_wires, n_targets, tol):
 
 
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.tensor", "lightning.gpu"),
-    reason="N-controlled operations only implemented in lightning.qubit.",
+    device_name in ("lightning.kokkos"),
+    reason="N-controlled operations are not implemented in lightning.kokkos.",
 )
 @pytest.mark.parametrize("control_wires", range(4))
 @pytest.mark.parametrize("target_wires", range(4))
