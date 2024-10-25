@@ -172,6 +172,13 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Patching tests following deprecation FIXME(remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
+        run: |
+          pushd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          popd
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:
