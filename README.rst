@@ -224,11 +224,10 @@ To install Lightning-GPU from the package sources using the direct SDK path, Lig
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
-.. note::
-    *If cuQuantum SDK is not installed in Python environment ``site-packages`` directory*, a ``CUQUANTUM_SDK`` environment variable has to be set with:
-    .. code-block:: bash
+*If cuQuantum SDK is not installed in Python environment ``site-packages`` directory*, a ``CUQUANTUM_SDK`` environment variable has to be set with:
+.. code-block:: bash
 
-        export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
+    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-GPU can then be installed with ``pip``:
 
@@ -396,11 +395,10 @@ Lightning-Qubit should be installed before Lightning-Tensor (compilation is not 
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
 
-.. note::
-    *If cuQuantum SDK is not installed in Python environment ``site-packages`` directory*, a ``CUQUANTUM_SDK`` environment variable has to be set with:
-    .. code-block:: bash
+*If cuQuantum SDK is not installed in Python environment ``site-packages`` directory*, a ``CUQUANTUM_SDK`` environment variable has to be set with:
+.. code-block:: bash
 
-        export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
+    export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
 The Lightning-Tensor can then be installed with ``pip``:
 
