@@ -269,7 +269,7 @@ class TestAdjointJacobian:
 
     @pytest.mark.skipif(
         device_name not in ("lightning.qubit", "lightning.gpu"),
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
@@ -818,7 +818,7 @@ class TestAdjointJacobianQNode:
 
     @pytest.mark.skipif(
         device_name not in ("lightning.qubit", "lightning.gpu"),
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
     )
     @pytest.mark.parametrize(
         "operation",

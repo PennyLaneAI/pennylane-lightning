@@ -397,17 +397,12 @@ class StateVectorCudaManaged
                                              ctrls_valuesInt, tgtsInt,
                                              params.front(), adjoint);
         } else if (opName == "Rot") {
-            if (adjoint) {
-                auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
-                applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
-                                        ctrls_valuesInt, true);
-            } else {
-                auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-                applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
-                                        ctrls_valuesInt, false);
-            }
+            auto rot_matrix =
+                adjoint
+                    ? cuGates::getRot<CFP_t>(params[2], params[1], params[0])
+                    : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+            applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
+                                    ctrls_valuesInt, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             // TODO: offload to par_gates_ if available
             auto &gateMap =
