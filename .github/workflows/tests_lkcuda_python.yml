@@ -247,6 +247,13 @@ jobs:
           python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
+      - name: Patching tests following deprecation FIXME(remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
+        run: |
+          pushd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          popd
+
       - name: Install backend device
         if: ${{ matrix.pl_backend != 'all'}}
         run: |
@@ -260,13 +267,6 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
           python -m pip install . -vv
 
-      - name: Patching tests following deprecation FIXME(remove after v0.39)
-        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
-        run: |
-          pushd tests
-          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
-          popd
-  
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
         env:
