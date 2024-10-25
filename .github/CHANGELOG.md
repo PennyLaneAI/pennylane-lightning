@@ -49,6 +49,12 @@
 
 ### Improvements
 
+*  Fix PTM stable-latest.
+  [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
+
+* Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
+  [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
+
 * Optimize `GlobalPhase` and `C(GlobalPhase)` gate implementation in `lightning.gpu`.
   [(#946)](https://github.com/PennyLaneAI/pennylane-lightning/pull/946)
 
