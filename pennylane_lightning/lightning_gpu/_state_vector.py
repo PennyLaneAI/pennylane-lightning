@@ -287,7 +287,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
-    # pylint: disable=unused-argument
+    # pylint: disable=unused-argument, too-many-branches
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
@@ -338,6 +338,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 and isinstance(operation, qml.ops.Controlled)
                 and isinstance(operation.base, qml.GlobalPhase)
             ):
+                # TODO: To move this line to the _apply_lightning_controlled method once the MPI backend supports controlled gates natively
                 raise DeviceError(
                     "Lightning-GPU-MPI does not support Controlled GlobalPhase gates."
                 )
