@@ -120,12 +120,19 @@ jobs:
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
 
-      - name: Checkout PennyLane for release build
-        if: inputs.pennylane-version == 'release'
+      - name: Checkout PennyLane for release or latest build
+        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
+
+      - name: Switch to latest build of PennyLane
+        if: inputs.pennylane-version == 'latest'
+        run: |
+          cd pennylane
+          git checkout master
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'
