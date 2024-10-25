@@ -152,6 +152,13 @@ jobs:
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install . -vv
 
+      - name: Patching tests following deprecation FIXME(remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
+        run: |
+          pushd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          popd
+
       # There are issues running py-cov with MPI. A solution is to use coverage as reported
       # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
       - name: Run unit tests for MPI-enabled lightning.gpu device

@@ -189,6 +189,13 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
           PL_BACKEND=${{ matrix.pl_backend }} python -m pip install . -vv
 
+      - name: Patching tests following deprecation FIXME(remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
+        run: |
+          pushd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          popd
+  
       - name: Run PennyLane unit tests
         env:
           OMP_NUM_THREADS: 1
