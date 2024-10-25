@@ -224,7 +224,6 @@ jobs:
         if: inputs.pennylane-version == 'latest'
         run: |
           cd pennylane
-          git fetch origin master
           git checkout master
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
   
