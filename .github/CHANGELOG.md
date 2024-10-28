@@ -121,6 +121,9 @@
 * LightningKokkos gains native support for the `PauliRot` gate.
   [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
 
+* Add a Catalyst-specific wrapping class for Lightning Qubit.
+  [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
+
 ### Documentation
 
 * Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
@@ -150,7 +153,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
+Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Raul Torres, Haochen Paul Wang
 
 ---
 
