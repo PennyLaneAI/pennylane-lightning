@@ -1134,6 +1134,13 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                                std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
+        } else {
+            PL_REQUIRE_THROWS_MATCHES(
+                sv0.applyOperation("PauliX", std::vector<std::size_t>{control},
+                                   std::vector<bool>{true},
+                                   std::vector<std::size_t>{wire}),
+                LightningException,
+                "`controlled_wires` and `target wires` must be disjoint.");
         }
 
         if (control != 0 && wire != 0 && control != wire) {
