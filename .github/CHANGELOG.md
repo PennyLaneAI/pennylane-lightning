@@ -46,6 +46,9 @@
 
 ### Improvements
 
+*  Fix PTM stable latest related to the default.qubit.legacy. 
+  [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
+  
 *  Fix PTM stable-latest.
   [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
 
