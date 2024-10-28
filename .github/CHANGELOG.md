@@ -46,6 +46,9 @@
 
 ### Improvements
 
+*  Fix PTM stable-latest.
+  [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
+
 * Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
   [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
 
