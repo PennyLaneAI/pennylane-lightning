@@ -172,7 +172,6 @@ jobs:
           git log -1 --format='%H'
           git status
 
-
       - uses: actions/setup-python@v5
         name: Install Python
         with:
