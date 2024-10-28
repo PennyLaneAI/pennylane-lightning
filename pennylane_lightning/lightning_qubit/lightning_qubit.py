@@ -563,7 +563,7 @@ class LightningQubit(LightningBase):
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
-    
+
     @staticmethod
     def get_c_interface():
         """Returns a tuple consisting of the device name, and
