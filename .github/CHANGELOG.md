@@ -46,9 +46,6 @@
 
 ### Improvements
 
-*  Fix PTM stable latest related to the default.qubit.legacy. 
-  [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
-  
 *  Fix PTM stable-latest.
   [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
 
@@ -133,6 +130,9 @@
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
+
+*  Fix PTM stable latest related to `default.qubit.legacy`. 
+  [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
 
 * Fix build failure for Lightning-Kokkos editable installation on MacOS due to `liblightning_kokkos_catalyst.so` copy.
   [(#947)](https://github.com/PennyLaneAI/pennylane-lightning/pull/947)
