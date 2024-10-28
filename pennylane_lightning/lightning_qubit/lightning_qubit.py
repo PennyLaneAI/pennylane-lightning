@@ -17,7 +17,6 @@ interfaces with C++ for fast linear algebra calculations.
 """
 import os
 import sys
-
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
