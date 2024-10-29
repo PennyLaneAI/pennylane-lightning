@@ -11,7 +11,6 @@ on:
       - pennylane_lightning/core/src/**
       - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
       - '!pennylane_lightning/core/src/simulators/lightning_kokkos/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_qubit/catalyst/include/**'
   push:
     branches:
       - master
