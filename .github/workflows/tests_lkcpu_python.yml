@@ -266,12 +266,13 @@ jobs:
 
       - name: Test editable install
         run: |
-          make clean
+          rm build
+          pip uninstall pennylane-lightning pennylane-lightning-kokkos
           python scripts/configure_pyproject_toml.py
-          SKIP_COMPILATION=True python -m pip -e . --config-settings editable_mode=compat
+          SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
-          python -m pip install -e . --force-reinstall --config-settings editable_mode=compat -vv
+          python -m pip install -e . --config-settings editable_mode=compat -vv
           PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS
 
       - name: Upload test durations
