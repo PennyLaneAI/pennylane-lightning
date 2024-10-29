@@ -159,7 +159,7 @@ class CMakeBuild(build_ext):
         # Ensure that catalyst shared object is copied to the build directory for pip editable install
         if backend in ("lightning_gpu"):
             source = os.path.join(f"{extdir}", f"lib{backend}_catalyst.so")
-            destination = os.path.join(os.getcwd(), "build")
+            destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)
     
         if backend in ("lightning_kokkos"):
