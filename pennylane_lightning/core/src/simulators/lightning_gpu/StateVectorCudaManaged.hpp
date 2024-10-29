@@ -314,31 +314,12 @@ class StateVectorCudaManaged
                 applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, false);
             }
         } else if (opName == "Matrix") {
-            DataBuffer<CFP_t, int> d_matrix{
-                gate_matrix.size(), BaseType::getDataBuffer().getDevTag(),
-                true};
-            d_matrix.CopyHostDataToGpu(gate_matrix.data(), d_matrix.getLength(),
-                                       false);
-            // ensure wire indexing correctly preserved for tensor-observables
-            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
-                                                       ctrls.rend()};
-            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
-                                                      tgts.rend()};
-            applyDeviceMatrixGate_(d_matrix.getData(), ctrls_local, tgts_local,
-                                   adjoint);
+            applyDeviceMatrixGate_(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
-            const std::vector<std::size_t> wires_local{wires.rbegin(),
-                                                       wires.rend()};
-            par_gates_.at(opName)(wires_local, adjoint, params);
+            par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
-            // ensure wire indexing correctly preserved for tensor-observables
-            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
-                                                       ctrls.rend()};
-            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
-                                                      tgts.rend()};
-
             if (!gate_cache_.gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
                 std::string message = "Currently unsupported gate: " + opName +
@@ -348,8 +329,8 @@ class StateVectorCudaManaged
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
             applyDeviceMatrixGate_(
-                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls_local,
-                tgts_local, adjoint);
+                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls, tgts,
+                adjoint);
         }
     }
 
@@ -411,10 +392,6 @@ class StateVectorCudaManaged
                 cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
             auto &&matrix_cu = gateMap.getGateData(opName, params);
 
-            std::reverse(ctrlsInt.begin(), ctrlsInt.end());
-            std::reverse(tgtsInt.begin(), tgtsInt.end());
-            std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
-
             gate_cache_.add_gate(opName, params[0], matrix_cu);
 
             applyDeviceGeneralGate_(
@@ -438,9 +415,6 @@ class StateVectorCudaManaged
 
                 gate_cache_.add_gate(opName, par[0], matrix_cu);
             }
-            std::reverse(ctrlsInt.begin(), ctrlsInt.end());
-            std::reverse(tgtsInt.begin(), tgtsInt.end());
-            std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
             applyDeviceGeneralGate_(
                 gate_cache_.get_gate_device_ptr(opName, par[0]), ctrlsInt,
                 tgtsInt, ctrls_valuesInt, adjoint);
@@ -479,10 +453,6 @@ class StateVectorCudaManaged
             tgt_wires, BaseType::getNumQubits());
         auto ctrls_valuesInt =
             Pennylane::Util::cast_vector<bool, int>(controlled_values);
-
-        std::reverse(ctrlsInt.begin(), ctrlsInt.end());
-        std::reverse(tgtsInt.begin(), tgtsInt.end());
-        std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
 
         applyDeviceGeneralGate_(d_matrix.getData(), ctrlsInt, tgtsInt,
                                 ctrls_valuesInt, inverse);
@@ -1626,10 +1596,9 @@ class StateVectorCudaManaged
      * @param ctrls_values Control values.
      * @param use_adjoint Use adjoint of given gate. Defaults to false.
      */
-    void applyDeviceGeneralGate_(const CFP_t *matrix,
-                                 const std::vector<int> &ctrls,
-                                 const std::vector<int> &tgts,
-                                 const std::vector<int> &ctrls_values,
+    void applyDeviceGeneralGate_(const CFP_t *matrix, std::vector<int> &ctrls,
+                                 std::vector<int> &tgts,
+                                 std::vector<int> &ctrls_values,
                                  bool use_adjoint = false) {
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
@@ -1646,6 +1615,10 @@ class StateVectorCudaManaged
             data_type = CUDA_C_32F;
             compute_type = CUSTATEVEC_COMPUTE_32F;
         }
+
+        std::reverse(tgts.begin(), tgts.end());
+        std::reverse(ctrls.begin(), ctrls.end());
+        std::reverse(ctrls_values.begin(), ctrls_values.end());
 
         // check the size of external workspace
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrixGetWorkspaceSize(
