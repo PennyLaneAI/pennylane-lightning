@@ -266,7 +266,7 @@ jobs:
 
       - name: Test editable install
         run: |
-          rm build
+          rm -r build
           pip uninstall pennylane-lightning pennylane-lightning-kokkos
           python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
