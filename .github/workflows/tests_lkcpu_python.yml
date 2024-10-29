@@ -282,9 +282,112 @@ jobs:
           if-no-files-found: error
           include-hidden-files: true
 
+  build_and_test_lightning_kokkos_editable:
+    needs: [determine_runner, build_and_cache_Kokkos]
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        pl_backend: ["lightning_kokkos"]
+        group: [1, 2, 3, 4, 5, 6, 7]
+        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
+        kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
+    timeout-minutes: 60
+    name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}, test-group-${{ matrix.group }})
+    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    steps:
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Switch to release build of Lightning
+        if: inputs.lightning-version == 'release'
+        run: |
+          git fetch --all
+          git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
+
+      - name: Switch to stable build of Lightning
+        if: inputs.lightning-version == 'stable'
+        run: |
+          git fetch --tags --force
+          git checkout latest_release
+          git log -1 --format='%H'
+          git status
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.10'
+
+      - name: Restoring cached dependencies
+        id: kokkos-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+
+      - name: Copy cached libraries
+        if: steps.kokkos-cache.outputs.cache-hit == 'true'
+        run: |
+          rm -rf Kokkos
+          mkdir Kokkos/
+          cp -rf ${{ github.workspace}}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
+          pwd
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+          python -m pip install scipy wheel
+
+      - name: Get required Python packages
+        run: |
+          python -m pip install -r requirements-dev.txt
+
+      - name: Install editable ${{ inputs.lightning-version }}
+        run: |
+          PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+          SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install -e . --config-settings editable_mode=compat -vv
+      
+      - name: Install ML libraries for interfaces
+        run: |
+          python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
+          python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
+
+      - name: Run PennyLane-Lightning unit tests
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          # Remove `python -m` to avoid running tests with relative modules
+          PL_DEVICE=${DEVICENAME} pytest tests/ $COVERAGE_FLAGS --splits 7 --group ${{ matrix.group }} \
+            --store-durations --durations-path='.github/workflows/python_lightning_kokkos_editable_test_durations.json' --splitting-algorithm=least_duration
+          mv .github/workflows/python_lightning_kokkos_editable_test_durations.json ${{ github.workspace }}/.test_durations_editable-${{ matrix.exec_model }}-${{ matrix.group }}
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+          mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-editable-${{ matrix.pl_backend }}-${{ matrix.group }}
+
+      - name: Upload test durations
+        uses: actions/upload-artifact@v4
+        with:
+          name: .test_durations_editable-${{ matrix.exec_model }}-${{ matrix.group }}
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+          path: ${{ github.workspace }}/.test_durations_editable-${{ matrix.exec_model }}-${{ matrix.group }}
+
+      - name: Upload code coverage results
+        uses: actions/upload-artifact@v4
+        with:
+          name: .coverage-${{ github.job }}-editable-${{ matrix.pl_backend }}-${{ matrix.group }}
+          path: ${{ github.workspace }}/.coverage-${{ github.job }}-editable-${{ matrix.pl_backend }}-${{ matrix.group }}
+          retention-days: 1
+          if-no-files-found: error
+          include-hidden-files: true
+
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
-    needs: [determine_runner, test_lightning_kokkos_wheels]
+    needs: [determine_runner, test_lightning_kokkos_wheels, build_and_test_lightning_kokkos_editable]
     name: Upload python coverage data to codecov
     runs-on: ${{ needs.determine_runner.outputs.runner_group }}
     steps:
