@@ -36,13 +36,16 @@ from typing import Union
 import numpy as np
 import pennylane as qml
 from pennylane import DeviceError
+from pennylane.measurements import MidMeasureMP
+from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
+from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
+from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import MPIHandler
 
 gate_cache_needs_hash = (
@@ -235,27 +238,47 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Returns:
             None
         """
+        if self._mpi_handler.use_mpi:
+            raise DeviceError("Lightning-GPU-MPI does not support Controlled GlobalPhase gates.")
+
         state = self.state_vector
 
+        basename = operation.base.name
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
-        name = operation.name
+        target_wires = list(operation.target_wires)
         # Apply GlobalPhase
         inv = False
-        param = operation.parameters[0]
-        wires = self.wires.indices(operation.wires)
-        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
-        state.apply(name, wires, inv, [[param]], matrix)
+        param = operation.parameters
+        state.apply(basename, control_wires, control_values, target_wires, inv, param)
 
-    def _apply_lightning_midmeasure(self):
+    def _apply_lightning_midmeasure(
+        self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
+    ):
         """Execute a MidMeasureMP operation and return the sample in mid_measurements.
 
         Args:
+            operation (~pennylane.operation.Operation): mid-circuit measurement
+            mid_measurements (None, dict): Dictionary of mid-circuit measurements
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots.
 
         Returns:
             None
         """
-        raise DeviceError("LightningGPU does not support Mid-circuit measurements.")
+        wires = self.wires.indices(operation.wires)
+        wire = list(wires)[0]
+        if postselect_mode == "fill-shots" and operation.postselect is not None:
+            sample = operation.postselect
+        else:
+            circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
+            sample = LightningGPUMeasurements(self).measure_final_state(circuit)
+            sample = np.squeeze(sample)
+        mid_measurements[operation] = sample
+        getattr(self.state_vector, "collapse")(wire, bool(sample))
+        if operation.reset and bool(sample):
+            self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     # pylint: disable=unused-argument
     def _apply_lightning(
@@ -289,7 +312,14 @@ class LightningGPUStateVector(LightningBaseStateVector):
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
-            if method is not None:  # apply specialized gate
+            if isinstance(operation, Conditional):
+                if operation.meas_val.concretize(mid_measurements):
+                    self._apply_lightning([operation.base])
+            elif isinstance(operation, MidMeasureMP):
+                self._apply_lightning_midmeasure(
+                    operation, mid_measurements, postselect_mode=postselect_mode
+                )
+            elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif isinstance(operation, qml.ops.Controlled) and isinstance(
