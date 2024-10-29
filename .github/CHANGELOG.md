@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
+  [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
+
 * Add `mid-circuit measurements` support to `lightning.gpu`'s single-GPU backend.
   [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
 
@@ -45,6 +48,9 @@
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
+
+*  Fix PTM stable-latest.
+  [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
 
 * Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
   [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
@@ -127,6 +133,9 @@
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
+
+*  Fix PTM stable latest related to `default.qubit.legacy`. 
+  [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
 
 * Fix build failure for Lightning-Kokkos editable installation on MacOS due to `liblightning_kokkos_catalyst.so` copy.
   [(#947)](https://github.com/PennyLaneAI/pennylane-lightning/pull/947)

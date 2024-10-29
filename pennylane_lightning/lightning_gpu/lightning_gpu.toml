@@ -6,41 +6,41 @@ schema = 2
 [operators.gates.native]
 
 Identity               = { properties = [ "differentiable" ] }
-PauliX                 = { properties = [ "differentiable" ] }
-PauliY                 = { properties = [ "differentiable" ] }
-PauliZ                 = { properties = [ "differentiable" ] }
-Hadamard               = { properties = [ "differentiable" ] }
-S                      = { properties = [ "differentiable" ] }
-T                      = { properties = [ "differentiable" ] }
-PhaseShift             = { properties = [ "differentiable" ] }
-RX                     = { properties = [ "differentiable" ] }
-RY                     = { properties = [ "differentiable" ] }
-RZ                     = { properties = [ "differentiable" ] }
-Rot                    = { properties = [ "differentiable" ] }
+PauliX                 = { properties = [ "controllable", "differentiable" ] }
+PauliY                 = { properties = [ "controllable", "differentiable" ] }
+PauliZ                 = { properties = [ "controllable", "differentiable" ] }
+Hadamard               = { properties = [ "controllable", "differentiable" ] }
+S                      = { properties = [ "controllable", "differentiable" ] }
+T                      = { properties = [ "controllable", "differentiable" ] }
+PhaseShift             = { properties = [ "controllable", "differentiable" ] }
+RX                     = { properties = [ "controllable", "differentiable" ] }
+RY                     = { properties = [ "controllable", "differentiable" ] }
+RZ                     = { properties = [ "controllable", "differentiable" ] }
+Rot                    = { properties = [ "controllable", "differentiable" ] }
 CNOT                   = { properties = [ "differentiable" ] }
 CY                     = { properties = [ "differentiable" ] }
 CZ                     = { properties = [ "differentiable" ] }
-SWAP                   = { properties = [ "differentiable" ] }
+SWAP                   = { properties = [ "controllable", "differentiable" ] }
 CSWAP                  = { properties = [ "differentiable" ] }
 Toffoli                = { properties = [ "differentiable" ] }
-IsingXX                = { properties = [ "differentiable" ] }
-IsingXY                = { properties = [ "differentiable" ] }
-IsingYY                = { properties = [ "differentiable" ] }
-IsingZZ                = { properties = [ "differentiable" ] }
+IsingXX                = { properties = [ "controllable", "differentiable" ] }
+IsingXY                = { properties = [ "controllable", "differentiable" ] }
+IsingYY                = { properties = [ "controllable", "differentiable" ] }
+IsingZZ                = { properties = [ "controllable", "differentiable" ] }
 ControlledPhaseShift   = { properties = [ "differentiable" ] }
 CRX                    = { properties = [ "differentiable" ] }
 CRY                    = { properties = [ "differentiable" ] }
 CRZ                    = { properties = [ "differentiable" ] }
 CRot                   = { properties = [ "differentiable" ] }
-SingleExcitation       = { properties = [ "differentiable" ] }
-SingleExcitationPlus   = { properties = [ "differentiable" ] }
-SingleExcitationMinus  = { properties = [ "differentiable" ] }
-DoubleExcitation       = { properties = [ "differentiable" ] }
-DoubleExcitationPlus   = { properties = [ "differentiable" ] }
-DoubleExcitationMinus  = { properties = [ "differentiable" ] }
-MultiRZ                = { properties = [ "differentiable" ] }
+SingleExcitation       = { properties = [ "controllable", "differentiable" ] }
+SingleExcitationPlus   = { properties = [ "controllable", "differentiable" ] }
+SingleExcitationMinus  = { properties = [ "controllable", "differentiable" ] }
+DoubleExcitation       = { properties = [ "controllable", "differentiable" ] }
+DoubleExcitationPlus   = { properties = [ "controllable", "differentiable" ] }
+DoubleExcitationMinus  = { properties = [ "controllable", "differentiable" ] }
+MultiRZ                = { properties = [ "controllable", "differentiable" ] }
 QubitUnitary           = { properties = [ "differentiable" ] }
-GlobalPhase            = { properties = [ "differentiable" ] }
+GlobalPhase            = { properties = [ "controllable", "differentiable" ] }
 
 # Operators that should be decomposed according to the algorithm used
 # by PennyLane's device API.
@@ -58,7 +58,7 @@ MultiControlledX       = {}
 [operators.gates.matrix]
 
 BlockEncode            = {properties = [ "controllable" ]}
-GlobalPhase            = {properties = [ "controllable" ]}
+GlobalPhase            = {}
 ControlledQubitUnitary = {}
 ECR                    = {}
 SX                     = {}
@@ -90,7 +90,7 @@ Var                    = {}
 Probs                  = {}
 State                  = { condition = [ "analytic" ] }
 Sample                 = { condition = [ "finiteshots" ] }
-Counts                  = { condition = [ "finiteshots" ] }
+Counts                 = { condition = [ "finiteshots" ] }
 
 [compilation]
 # If the device is compatible with qjit

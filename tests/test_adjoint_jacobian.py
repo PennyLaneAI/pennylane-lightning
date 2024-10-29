@@ -268,8 +268,8 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        device_name not in ("lightning.qubit", "lightning.gpu"),
+        reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
@@ -817,8 +817,8 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        device_name not in ("lightning.qubit", "lightning.gpu"),
+        reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
     )
     @pytest.mark.parametrize(
         "operation",
@@ -848,7 +848,7 @@ class TestAdjointJacobianQNode:
     def test_controlled_jacobian(self, par, n_qubits, control_value, operation, tol):
         """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
         par = np.array([0.1234, par, 0.5678])
-        dev = qml.device("lightning.qubit", wires=n_qubits)
+        dev = qml.device(device_name, wires=n_qubits)
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
