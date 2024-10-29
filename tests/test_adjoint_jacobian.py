@@ -848,7 +848,7 @@ class TestAdjointJacobianQNode:
     def test_controlled_jacobian(self, par, n_qubits, control_value, operation, tol):
         """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
         par = np.array([0.1234, par, 0.5678])
-        dev = qml.device("lightning.qubit", wires=n_qubits)
+        dev = qml.device(device_name, wires=n_qubits)
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
