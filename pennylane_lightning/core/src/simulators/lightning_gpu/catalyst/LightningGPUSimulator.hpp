@@ -18,8 +18,6 @@
 
 #pragma once
 
-#define __device_lightning_gpu
-
 #include <bitset>
 #include <cmath>
 #include <cstdint>
