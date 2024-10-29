@@ -213,13 +213,20 @@ jobs:
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
 
-      - name: Checkout PennyLane for release build
-        if: inputs.pennylane-version == 'release'
+      - name: Checkout PennyLane for release or latest build
+        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
 
+      - name: Switch to latest build of PennyLane
+        if: inputs.pennylane-version == 'latest'
+        run: |
+          cd pennylane
+          git checkout master
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
+  
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'
         run: |
@@ -253,6 +260,14 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
           python -m pip install . -vv
 
+      - name: Patching tests following deprecation FIXME(remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
+        run: |
+          cd main/
+          pushd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          popd
+  
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
         env:

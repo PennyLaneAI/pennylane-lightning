@@ -191,6 +191,12 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Patching tests following deprecation FIXME(remove after v0.39)
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
+        run: |
+          pushd tests
+          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
+          popd
 
       - uses: actions/download-artifact@v4
         with:
@@ -214,12 +220,19 @@ jobs:
           fi
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
 
-      - name: Checkout PennyLane for release build
-        if: inputs.pennylane-version == 'release'
+      - name: Checkout PennyLane for release or latest build
+        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
+
+      - name: Switch to latest build of PennyLane
+        if: inputs.pennylane-version == 'latest'
+        run: |
+          cd pennylane
+          git checkout master
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'

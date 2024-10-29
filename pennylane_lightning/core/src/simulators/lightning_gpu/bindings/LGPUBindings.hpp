@@ -154,6 +154,17 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
              "Collapse the statevector onto the 0 or 1 branch of a given wire.")
         .def(
             "apply",
+            [](StateVectorT &sv, const std::string &gate_name,
+               const std::vector<std::size_t> &controlled_wires,
+               const std::vector<bool> &controlled_values,
+               const std::vector<std::size_t> &wires, bool inverse,
+               const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            },
+            "Apply operation via the gate matrix")
+        .def(
+            "apply",
             [](StateVectorT &sv, const std::string &str,
                const std::vector<std::size_t> &wires, bool inv,
                const std::vector<std::vector<ParamT>> &params,
