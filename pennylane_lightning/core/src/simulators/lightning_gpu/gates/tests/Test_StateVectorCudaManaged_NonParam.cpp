@@ -1140,7 +1140,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                                    std::vector<bool>{true},
                                    std::vector<std::size_t>{wire}),
                 LightningException,
-                "`controlled_wires` and `target wires` must be disjoint.");
+                "`controlled_wires` and target wires must be disjoint.");
         }
 
         if (control != 0 && wire != 0 && control != wire) {

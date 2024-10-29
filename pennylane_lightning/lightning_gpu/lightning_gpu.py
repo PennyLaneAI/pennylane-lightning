@@ -110,7 +110,7 @@ _operations = frozenset(
         "C(DoubleExcitationPlus)",
         "C(MultiRZ)",
         "C(GlobalPhase)",
-        "C(QubitUnitary)",
+        "ControlledQubitUnitary",
         "Hadamard",
         "S",
         "Adjoint(S)",

@@ -372,7 +372,7 @@ class StateVectorCudaManaged
                         const std::vector<ComplexT> &gate_matrix = {}) {
         PL_ABORT_IF_NOT(
             areVecsDisjoint<std::size_t>(controlled_wires, tgt_wires),
-            "`controlled_wires` and `target wires` must be disjoint.");
+            "`controlled_wires` and target wires must be disjoint.");
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`controlled_wires` and `controlled_values` must have the "
                     "same size.");
