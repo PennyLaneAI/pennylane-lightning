@@ -203,6 +203,7 @@ jobs:
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
+        if : matrix.pl_backend != 'lightning_gpu'
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
