@@ -411,6 +411,10 @@ class StateVectorCudaManaged
                 cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
             auto &&matrix_cu = gateMap.getGateData(opName, params);
 
+            std::reverse(ctrlsInt.begin(), ctrlsInt.end());
+            std::reverse(tgtsInt.begin(), tgtsInt.end());
+            std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
+
             gate_cache_.add_gate(opName, params[0], matrix_cu);
 
             applyDeviceGeneralGate_(
