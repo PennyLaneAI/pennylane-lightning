@@ -399,41 +399,18 @@ class StateVectorCudaMPI final
             applyParametricPauliGate({opName}, ctrls, tgts, params.front(),
                                      adjoint);
         } else if (opName == "Rot" || opName == "CRot") {
-            if (adjoint) {
-                auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
-                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, true);
-            } else {
-                auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
-            }
+            auto rot_matrix =
+                adjoint
+                    ? cuGates::getRot<CFP_t>(params[2], params[1], params[0])
+                    : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+            applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, adjoint);
         } else if (opName == "Matrix") {
-            DataBuffer<CFP_t, int> d_matrix{
-                gate_matrix.size(), BaseType::getDataBuffer().getDevTag(),
-                true};
-            d_matrix.CopyHostDataToGpu(gate_matrix.data(), d_matrix.getLength(),
-                                       false);
-            // ensure wire indexing correctly preserved for tensor-observables
-            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
-                                                       ctrls.rend()};
-            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
-                                                      tgts.rend()};
-            applyDeviceMatrixGate(d_matrix.getData(), ctrls_local, tgts_local,
-                                  adjoint);
+            applyDeviceMatrixGate(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
-            const std::vector<std::size_t> wires_local{wires.rbegin(),
-                                                       wires.rend()};
-            par_gates_.at(opName)(wires_local, adjoint, params);
+            par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
-            // ensure wire indexing correctly preserved for tensor-observables
-            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
-                                                       ctrls.rend()};
-            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
-                                                      tgts.rend()};
-
             if (!gate_cache_.gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
                 std::string message = "Currently unsupported gate: " + opName;
@@ -442,8 +419,8 @@ class StateVectorCudaMPI final
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
             applyDeviceMatrixGate(
-                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls_local,
-                tgts_local, adjoint);
+                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls, tgts,
+                adjoint);
         }
     }
 
@@ -1828,9 +1805,8 @@ class StateVectorCudaMPI final
      * @param tgts Target qubits.
      * @param use_adjoint Use adjoint of given gate.
      */
-    void applyCuSVDeviceMatrixGate(const CFP_t *matrix,
-                                   const std::vector<int> &ctrls,
-                                   const std::vector<int> &tgts,
+    void applyCuSVDeviceMatrixGate(const CFP_t *matrix, std::vector<int> &ctrls,
+                                   std::vector<int> &tgts,
                                    bool use_adjoint = false) {
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
@@ -1847,6 +1823,9 @@ class StateVectorCudaMPI final
             data_type = CUDA_C_32F;
             compute_type = CUSTATEVEC_COMPUTE_32F;
         }
+        
+        std::reverse(tgts.begin(), tgts.end());
+        std::reverse(ctrls.begin(), ctrls.end());
 
         // check the size of external workspace
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrixGetWorkspaceSize(
