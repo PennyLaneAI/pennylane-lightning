@@ -107,6 +107,7 @@ void LightningGPUSimulator::SetDevicePRNG(std::mt19937 *gen) {
 }
 
 /// LCOV_EXCL_START
+// TODO: TBD whether to remove this function or add it to coverage test
 void LightningGPUSimulator::PrintState() {
     using std::cout;
     using std::endl;
