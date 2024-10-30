@@ -25,6 +25,7 @@
 /// @cond DEV
 namespace {
 // MemRef type definition (Helper)
+// TODO: Move this to a common header file
 template <typename T, std::size_t R> struct MemRefT {
     T *data_allocated;
     T *data_aligned;
