@@ -211,7 +211,7 @@ jobs:
         if : matrix.pl_backend == 'lightning_gpu'
         run: |
           python -m pip install -r requirements-dev.txt
-          python scripts/configure_pyproject_toml.py
+          PL_BACKEND=lightning_qubit python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install . -vv
 
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
