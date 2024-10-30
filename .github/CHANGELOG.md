@@ -1,4 +1,4 @@
-# Release 0.39.0-dev
+# Release 0.39.0
 
 ### New features since last release
 
@@ -134,6 +134,9 @@
 
 ### Bug fixes
 
+*  Fix `liblightning_kokkos_catalyst.so` not copied to correct build path for editable installation.
+  [(#968)](https://github.com/PennyLaneAI/pennylane-lightning/pull/968)
+
 *  Fix PTM stable latest related to `default.qubit.legacy`. 
   [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
 
@@ -159,7 +162,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
+Ali Asadi, Amintor Dusko, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
 
 ---
 

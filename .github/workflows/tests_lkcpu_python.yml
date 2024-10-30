@@ -264,6 +264,17 @@ jobs:
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
 
+      - name: Test editable install
+        run: |
+          rm -r build
+          pip uninstall pennylane-lightning pennylane-lightning-kokkos -y
+          python scripts/configure_pyproject_toml.py
+          SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
+          python -m pip install -e . --config-settings editable_mode=compat -vv
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS
+
       - name: Upload test durations
         uses: actions/upload-artifact@v4
         with:
