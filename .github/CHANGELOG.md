@@ -46,6 +46,9 @@
 
 ### Improvements
 
+* Update `lightning_kokkos_catalyst` CUDA target to work with Catalyst.
+  [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
+
 *  Fix PTM stable-latest.
   [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
 
@@ -69,7 +72,7 @@
 
 * Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
-  
+
 * The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
   [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
 
