@@ -17,10 +17,10 @@
  * Defines utility functions for Bitwise operations.
  */
 #pragma once
-#include <Kokkos_Core.hpp>
-
 #include "BitUtil.hpp"
 #include "Util.hpp"
+#include <Kokkos_Core.hpp>
+#include <ranges>
 
 /// @cond DEV
 namespace {
@@ -137,14 +137,13 @@ inline auto reverseWires(const std::size_t num_qubits,
     const std::size_t nw_tot = n_contr + n_wires;
     std::vector<std::size_t> all_wires;
     all_wires.reserve(nw_tot);
-    all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
-    all_wires.insert(all_wires.begin() + wires.size(), controlled_wires.begin(),
-                     controlled_wires.end());
+    std::copy(wires.begin(), wires.end(), std::back_inserter(all_wires));
+    std::copy(controlled_wires.begin(), controlled_wires.end(),
+              std::back_inserter(all_wires));
 
-    std::vector<std::size_t> rev_wires_(nw_tot);
-    for (std::size_t k = 0; k < nw_tot; k++) {
-        rev_wires_[k] = (num_qubits - 1) - all_wires[(nw_tot - 1) - k];
-    }
+    std::vector<std::size_t> rev_wires_(nw_tot, (num_qubits - 1));
+    std::transform(rev_wires_.begin(), rev_wires_.end(), all_wires.rbegin(),
+                   rev_wires_.begin(), std::minus<>{});
     const std::vector<std::size_t> parity_ = revWireParity(rev_wires_);
 
     Kokkos::View<const std::size_t *, Kokkos::HostSpace,
@@ -176,9 +175,9 @@ inline auto generateBitPatterns(const std::vector<std::size_t> &wires,
     indices.reserve(Pennylane::Util::exp2(wires.size()));
     indices.emplace_back(0);
 
-    for (auto index_it = wires.rbegin(); index_it != wires.rend(); index_it++) {
+    for (auto index_it : wires | std::views::reverse) {
         const std::size_t value =
-            Pennylane::Util::maxDecimalForQubit(*index_it, num_qubits);
+            Pennylane::Util::maxDecimalForQubit(index_it, num_qubits);
         const std::size_t currentSize = indices.size();
         for (std::size_t j = 0; j < currentSize; j++) {
             indices.emplace_back(indices[j] + value);
