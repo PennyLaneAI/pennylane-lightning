@@ -50,8 +50,8 @@ else()
     endforeach()
 
     # Fetching include hpp headers
-    set(INCLUDE_HEADERS DataView.hpp
-                        Exception.hpp
+    set(INCLUDE_HEADERS Exception.hpp
+                        DataView.hpp
                         QuantumDevice.hpp
                         RuntimeCAPI.h
                         Types.h
@@ -76,9 +76,16 @@ endif()
 if(Kokkos_ENABLE_CUDA)
     message(STATUS "Kokkos_ENABLE_CUDA is ON")
 
+    # KOKKOS_CUDA_OPTIONS:
+    # - disable_malloc_async: Disable asynchronous memory allocation to ensure
+    #   that memory operations complete before proceeding.
+    # - enable_lambda: Allow the use of lambda expressions in parallel
+    #   execution policies, used in LK kernel functors, and this flag is
+    #   required when calling those functors from an external library.
+    # - enable_constexpr: Enable compile-time evaluations for constants.
+    #   There are some undefined behaviour when executing end-to-end Catalyst
+    #   programs related to the value of `constexpr`s in the definition of gate kernels.
     target_compile_definitions(lightning_kokkos_catalyst PRIVATE
-        Kokkos_ENABLE_OPENMP=OFF
-        Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=OFF
         KOKKOS_CUDA_OPTIONS="disable_malloc_async enable_lambda enable_constexpr"
     )
 endif()
