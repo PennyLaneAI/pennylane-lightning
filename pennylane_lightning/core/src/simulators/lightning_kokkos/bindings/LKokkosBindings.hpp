@@ -62,7 +62,7 @@ void registerControlledGate(PyClass &pyclass) {
             const auto gate_name =
                 std::string(lookup(Constant::controlled_gate_names, gate_op));
             const std::string doc = "Apply the " + gate_name + " gate.";
-            auto func = [gate_name = gate_name](
+            auto func = [&gate_name](
                             StateVectorT &sv,
                             const std::vector<std::size_t> &controlled_wires,
                             const std::vector<bool> &controlled_values,

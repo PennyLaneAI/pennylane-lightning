@@ -117,6 +117,7 @@ _operations = frozenset(
         "C(RY)",
         "C(RZ)",
         "C(Rot)",
+        "C(GlobalPhase)",
         "CRot",
         "IsingXX",
         "IsingYY",

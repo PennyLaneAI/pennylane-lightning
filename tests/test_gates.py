@@ -415,8 +415,8 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
 
 
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.tensor", "lightning.kokkos"),
-    reason="N-controlled operations only implemented in lightning.qubit, lightning.tensor and lightning.kokkos.",
+    device_name in ("lightning.gpu"), 
+    reason="N-controlled operation is not supported by lightning.gpu" 
 )
 @pytest.mark.parametrize(
     "operation",

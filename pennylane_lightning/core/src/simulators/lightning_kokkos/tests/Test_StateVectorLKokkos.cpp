@@ -242,7 +242,7 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
                 std::vector<bool>{true, true}, std::vector<std::size_t>{1, 2},
                 false, {}),
             LightningException,
-            "`controlled_wires` and `target wires` must be disjoint.");
+            "`controlled_wires` and target wires must be disjoint.");
     }
 
     SECTION("Test invalid arguments with parameters") {
