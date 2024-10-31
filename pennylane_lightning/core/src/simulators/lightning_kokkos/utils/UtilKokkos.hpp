@@ -175,7 +175,7 @@ inline auto generateBitPatterns(const std::vector<std::size_t> &wires,
     indices.reserve(Pennylane::Util::exp2(wires.size()));
     indices.emplace_back(0);
 
-    for (auto index_it : wires | std::views::reverse) {
+    for (auto index_it : wires | std::ranges::views::reverse) {
         const std::size_t value =
             Pennylane::Util::maxDecimalForQubit(index_it, num_qubits);
         const std::size_t currentSize = indices.size();
