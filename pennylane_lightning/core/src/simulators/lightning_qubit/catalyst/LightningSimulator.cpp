@@ -99,7 +99,7 @@ void LightningSimulator::PrintState() {
     const size_t num_qubits = this->device_sv->getNumQubits();
     const size_t size = Pennylane::Util::exp2(num_qubits);
     size_t idx = 0;
-    cout << "*** State-Vector of Size " << size << " ***" << endl;
+    cout << "*** State-Vector of Size " << size << " ***\n";
     cout << "[";
     auto &&state = this->device_sv->getDataVector();
     for (; idx < size - 1; idx++) {
