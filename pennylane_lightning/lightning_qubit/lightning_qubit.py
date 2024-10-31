@@ -579,7 +579,7 @@ class LightningQubit(LightningBase):
         else:
             raise RuntimeError(
                 f"'LightningSimulator' shared library not available for '{OS}' platform"
-            ) # pragma: no cover
+            )  # pragma: no cover
 
         lib_name = "liblightning_qubit_catalyst" + file_extension
         package_root = Path(__file__).parent
@@ -603,4 +603,4 @@ class LightningQubit(LightningBase):
                 lib_location = (Path(path) / lib_name).as_posix()
                 return "LightningSimulator", lib_location
 
-        raise RuntimeError("'LightningSimulator' shared library not found") # pragma: no cover
+        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
