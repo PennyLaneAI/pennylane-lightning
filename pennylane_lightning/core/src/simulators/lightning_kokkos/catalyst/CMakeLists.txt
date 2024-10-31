@@ -82,12 +82,22 @@ if(Kokkos_ENABLE_CUDA)
     # - enable_lambda: Allow the use of lambda expressions in parallel
     #   execution policies, used in LK kernel functors, and this flag is
     #   required when calling those functors from an external library.
+    #   It's supported starting from NVCC v7.0.
     # - enable_constexpr: Enable compile-time evaluations for constants.
     #   There are some undefined behaviour when executing end-to-end Catalyst
     #   programs related to the value of `constexpr`s in the definition of gate kernels.
-    target_compile_definitions(lightning_kokkos_catalyst PRIVATE
-        KOKKOS_CUDA_OPTIONS="disable_malloc_async enable_lambda enable_constexpr"
-    )
+    #   This flag should be enforced for NVCC v7.5+.
+    if(NVCC_VERSION VERSION_LESS "7.0")
+        message(WARNING "Building lightning_kokkos_catalyst without lambda and constexpr support.")
+        target_compile_definitions(lightning_kokkos_catalyst PRIVATE KOKKOS_CUDA_OPTIONS="disable_malloc_async")
+    elseif(NVCC_VERSION VERSION_LESS "7.5")
+        message(WARNING "Building lightning_kokkos_catalyst without constexpr support.")
+        target_compile_definitions(lightning_kokkos_catalyst PRIVATE KOKKOS_CUDA_OPTIONS="disable_malloc_async enable_lambda")
+    else()
+        target_compile_definitions(lightning_kokkos_catalyst PRIVATE
+            KOKKOS_CUDA_OPTIONS="disable_malloc_async enable_lambda enable_constexpr"
+        )
+    endif()
 endif()
 
 target_include_directories(lightning_kokkos_catalyst INTERFACE  ${CMAKE_CURRENT_SOURCE_DIR})
