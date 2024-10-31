@@ -58,7 +58,6 @@ MultiControlledX       = {}
 [operators.gates.matrix]
 
 BlockEncode            = {properties = [ "controllable" ]}
-GlobalPhase            = {}
 ControlledQubitUnitary = {}
 ECR                    = {}
 SX                     = {}
