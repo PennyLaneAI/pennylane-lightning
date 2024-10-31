@@ -20,7 +20,6 @@
 #include "BitUtil.hpp"
 #include "Util.hpp"
 #include <Kokkos_Core.hpp>
-#include <ranges>
 
 /// @cond DEV
 namespace {
@@ -175,9 +174,9 @@ inline auto generateBitPatterns(const std::vector<std::size_t> &wires,
     indices.reserve(Pennylane::Util::exp2(wires.size()));
     indices.emplace_back(0);
 
-    for (auto index_it : wires | std::ranges::views::reverse) {
+    for (auto index_it = wires.rbegin(); index_it != wires.rend(); index_it++) {
         const std::size_t value =
-            Pennylane::Util::maxDecimalForQubit(index_it, num_qubits);
+            Pennylane::Util::maxDecimalForQubit(*index_it, num_qubits);
         const std::size_t currentSize = indices.size();
         for (std::size_t j = 0; j < currentSize; j++) {
             indices.emplace_back(indices[j] + value);
