@@ -328,6 +328,199 @@ TEMPLATE_TEST_CASE(
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
+                   "one-qubit with multiple-controls",
+                   "[StateVectorKokkos_Param]", float, double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const bool inverse = false;
+    const std::size_t num_qubits = 3;
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+
+    kokkos_sv.applyOperations(
+        {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+        {{0}, {1}, {2}}, {{false}, {false}, {false}
+        });
+
+    auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                      kokkos_sv.getView());
+    StateVectorKokkos<TestType> sv_gate{num_qubits};
+    StateVectorKokkos<TestType> expected_result{num_qubits};
+
+    SECTION("2-controlled PhaseShift") {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+            const std::vector<std::size_t> control_wires = {0, 2};
+            const std::vector<bool> control_values = {true, false};
+            const std::vector<std::size_t> target_wire = {1};
+            const TestType param = 0.234;
+            sv_gate.applyOperation("PhaseShift", control_wires, control_values, target_wire, inverse, {param});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+
+            std::vector<ComplexT> expected_result{
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.34391789, 0.08197855},
+            ComplexT{0.35355339, 0.0},
+        };
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(expected_result[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(expected_result[j])));
+            }
+        }
+
+        SECTION("2-controlled RX") {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+            const std::vector<std::size_t> control_wires = {0, 2};
+            const std::vector<bool> control_values = {true, false};
+            const std::vector<std::size_t> target_wire = {1};
+            const TestType param = 0.234;
+            sv_gate.applyOperation("RX", control_wires, control_values, target_wire, inverse, {param});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+
+            std::vector<ComplexT> expected_result{
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35113625, -0.04127144},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35113625, -0.04127144},
+            ComplexT{0.35355339, 0.0},
+        };
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(expected_result[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(expected_result[j])));
+            }
+        }
+
+        SECTION("2-controlled RY") {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+            const std::vector<std::size_t> control_wires = {0, 2};
+            const std::vector<bool> control_values = {true, false};
+            const std::vector<std::size_t> target_wire = {1};
+            const TestType param = 0.234;
+            sv_gate.applyOperation("RY", control_wires, control_values, target_wire, inverse, {param});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+
+            std::vector<ComplexT> expected_result{
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.30986482, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.39240769, 0.0},
+            ComplexT{0.35355339, 0.0},
+        };
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(expected_result[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(expected_result[j])));
+            }
+        }
+
+        SECTION("2-controlled RZ") {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+            const std::vector<std::size_t> control_wires = {0, 2};
+            const std::vector<bool> control_values = {true, false};
+            const std::vector<std::size_t> target_wire = {1};
+            const TestType param = 0.234;
+            sv_gate.applyOperation("RZ", control_wires, control_values, target_wire, inverse, {param});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+
+            std::vector<ComplexT> expected_result{
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35113625, -0.04127144},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35113625, 0.04127144},
+            ComplexT{0.35355339, 0.0}
+        };
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(expected_result[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(expected_result[j])));
+            }
+        }
+
+        SECTION("2-controlled Rot") {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+            const std::vector<std::size_t> control_wires = {0, 2};
+            const std::vector<bool> control_values = {true, false};
+            const std::vector<std::size_t> target_wire = {1};
+            const TestType param = 0.234;
+            sv_gate.applyOperation("Rot", control_wires, control_values, target_wire, inverse, {param, param, param});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+
+            std::vector<ComplexT> expected_result{
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.30029525, -0.08141809},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.38283807, 0.08141809},
+            ComplexT{0.35355339, 0.0},
+        };
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(expected_result[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(expected_result[j])));
+            }
+        }
+
+        SECTION("2-controlled GlobalPhase") {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+            const std::vector<std::size_t> control_wires = {0, 2};
+            const std::vector<bool> control_values = {true, false};
+            const std::vector<std::size_t> target_wire = {1};
+            const TestType param = 0.234;
+            sv_gate.applyOperation("GlobalPhase", control_wires, control_values, target_wire, inverse, {param});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+
+            std::vector<ComplexT> expected_result{
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.34391789, -0.08197855},
+            ComplexT{0.35355339, 0.0},
+            ComplexT{0.34391789, -0.08197855},
+            ComplexT{0.35355339, 0.0},
+        };
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(expected_result[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(expected_result[j])));
+            }
+        }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXY",
                    "[StateVectorKokkosManaged_Param]", float, double) {
     {
