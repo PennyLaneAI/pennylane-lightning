@@ -126,6 +126,20 @@ else
 	cmake --build ./BuildTests $(VERBOSE) --target test
 endif
 
+######## Added target:
+#	rm -rf ./BuildTests
+jzaia-demo:
+	rm -rf ./BuildTests/jzaia_files ./BuildTests/lq_grover
+	cmake -BBuildTests -G Ninja \
+		  -DCMAKE_BUILD_TYPE=Debug \
+		  -DBUILD_TESTS=OFF \
+		  -DENABLE_WARNINGS=ON \
+		  -DPL_BACKEND=$(PL_BACKEND) \
+		  $(OPTIONS)
+	cmake --build ./BuildTests $(VERBOSE)
+	./BuildTests/lq_grover
+######## End added target
+
 test-cpp-mpi:
 	rm -rf ./BuildTests
 	cmake -BBuildTests -G Ninja \
