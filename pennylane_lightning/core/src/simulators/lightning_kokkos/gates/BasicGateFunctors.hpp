@@ -195,9 +195,12 @@ void applyNCPauliZ(
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] const bool inverse = false,
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
-    auto core_function = KOKKOS_LAMBDA(
-        Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-        [[maybe_unused]] const std::size_t i0, const std::size_t i1) {
+    auto core_function =
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i0, const std::size_t i1) {
+        [[maybe_unused]] const auto i0_ = i0;
+        // Note: this is to avoid Clang complain [[maybe_unused]]
+        // attribute for lambda function arguments
         arr(i1) *= -1.0;
     };
     if (controlled_wires.empty()) {
@@ -231,7 +234,7 @@ void applyNCHadamard(
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-        [[maybe_unused]] const std::size_t i0, const std::size_t i1) {
+        const std::size_t i0, const std::size_t i1) {
         const Kokkos::complex<PrecisionT> v0 = arr(i0);
         const Kokkos::complex<PrecisionT> v1 = arr(i1);
         arr(i0) = M_SQRT1_2 * (v0 + v1); // M_SQRT1_2 * v0 + M_SQRT1_2 * v1
@@ -269,7 +272,8 @@ void applyNCS(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   : Kokkos::complex<PrecisionT>{0.0, 1.0};
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-        [[maybe_unused]] const std::size_t i0, const std::size_t i1) {
+        const std::size_t i0, const std::size_t i1) {
+        [[maybe_unused]] const auto i0_ = i0;
         arr(i1) *= shift;
     };
     if (controlled_wires.empty()) {
@@ -305,7 +309,8 @@ void applyNCT(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                         0, static_cast<PrecisionT>(M_PI_4)));
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-        [[maybe_unused]] const std::size_t i0, const std::size_t i1) {
+        const std::size_t i0, const std::size_t i1) {
+        [[maybe_unused]] const auto i0_ = i0;
         arr(i1) *= shift;
     };
     if (controlled_wires.empty()) {
@@ -341,7 +346,8 @@ void applyNCPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   : exp(Kokkos::complex<PrecisionT>(0, angle));
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-        [[maybe_unused]] const std::size_t i0, const std::size_t i1) {
+        const std::size_t i0, const std::size_t i1) {
+        [[maybe_unused]] const auto i0_ = i0;
         arr(i1) *= shift;
     };
     if (controlled_wires.empty()) {
