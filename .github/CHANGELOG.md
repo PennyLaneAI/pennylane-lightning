@@ -2,21 +2,11 @@
 
 ### New features since last release
 
-* Integrate Lightning-GPU with Catalyst.
-  [(#928)](https://github.com/PennyLaneAI/pennylane-lightning/pull/928)
-
 * Add `mid-circuit measurements` support to `lightning.gpu`'s single-GPU backend.
   [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
 
-* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
-  [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
-
-* Add shot measurement support to `lightning.tensor`.
-  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
-
-* Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
-  [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
-  [(#905)](https://github.com/PennyLaneAI/pennylane-lightning/pull/905)
+* Integrate Lightning-GPU with Catalyst.
+  [(#928)](https://github.com/PennyLaneAI/pennylane-lightning/pull/928)
 
 * Add `Projector` observable support via diagonalization to Lightning-GPU.
   [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
@@ -24,11 +14,21 @@
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
   [(#880)](https://github.com/PennyLaneAI/pennylane-lightning/pull/880)
 
-* Lightning-Kokkos migrated to the new device API.
-  [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
+* Build and upload Lightning-Tensor wheels (x86_64, AARCH64) to PyPI.
+  [(#862)](https://github.com/PennyLaneAI/pennylane-lightning/pull/862)
+  [(#905)](https://github.com/PennyLaneAI/pennylane-lightning/pull/905)
+
+* Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
+  [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
 * Lightning-GPU migrated to the new device API.
   [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
+
+* Add shot measurement support to `lightning.tensor`.
+  [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
+
+* Lightning-Kokkos migrated to the new device API.
+  [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
 ### Breaking changes
 
@@ -38,11 +38,11 @@
 * Deprecate PI gates implementation.
   [(#925)](https://github.com/PennyLaneAI/pennylane-lightning/pull/925)
 
-* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
-  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
-
 * Remove PowerPC wheel build recipe for Lightning-Qubit.
   [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
+
+* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
+  [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
 
 * Remove support for Python 3.9.
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
@@ -55,26 +55,29 @@
 * Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
   [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
 
-* Optimize `GlobalPhase` and `C(GlobalPhase)` gate implementation in `lightning.gpu`.
-  [(#946)](https://github.com/PennyLaneAI/pennylane-lightning/pull/946)
-
 * Add joint check for the N-controlled wires support in `lightning.qubit`.
   [(#949)](https://github.com/PennyLaneAI/pennylane-lightning/pull/949)
+
+* Optimize `GlobalPhase` and `C(GlobalPhase)` gate implementation in `lightning.gpu`.
+  [(#946)](https://github.com/PennyLaneAI/pennylane-lightning/pull/946)
 
 * Optimize the cartesian product to reduce the amount of memory necessary to set the StatePrep with LightningTensor. 
   [(#943)](https://github.com/PennyLaneAI/pennylane-lightning/pull/943)
 
 * The `prob` data return `lightning.gpu` C++ layer is aligned with other state-vector backends and `lightning.gpu` supports out-of-order `qml.prob`.
-    [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
-
-* Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
-  [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
+  [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
 
 * Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
+
+* Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
+  [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
   
 * The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
   [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
+
+* Remove dynamic decomposition rules in Lightning.
+  [(#926)](https://github.com/PennyLaneAI/pennylane-lightning/pull/926)
 
 * Always decompose `qml.QFT` in Lightning.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
@@ -82,17 +85,14 @@
 * Uniform Python format to adhere PennyLane style.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
 
-* Remove dynamic decomposition rules in Lightning.
-  [(#926)](https://github.com/PennyLaneAI/pennylane-lightning/pull/926)
-
 * Add the `ci:use-gpu-runner` GitHub label to `lightning.kokkos` GPU Testing CIs.
   [(#916)](https://github.com/PennyLaneAI/pennylane-lightning/pull/916)
 
-* Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
-  [(#911)](https://github.com/PennyLaneAI/pennylane-lightning/pull/911)
-
 * Update the test suite to remove deprecated code.
   [(#912)](https://github.com/PennyLaneAI/pennylane-lightning/pull/912)
+
+* Merge `lightning.gpu` and `lightning.tensor` GPU tests in single Python and C++ CIs controlled by the `ci:use-gpu-runner` label.
+  [(#911)](https://github.com/PennyLaneAI/pennylane-lightning/pull/911)
 
 * Skip the compilation of Lightning simulators and development requirements to boost the build of public docs up to 5x.
   [(#904)](https://github.com/PennyLaneAI/pennylane-lightning/pull/904)
