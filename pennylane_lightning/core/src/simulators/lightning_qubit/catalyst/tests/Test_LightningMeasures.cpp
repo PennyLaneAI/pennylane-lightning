@@ -84,7 +84,7 @@ TEST_CASE("Measurement collapse test with 2 wires", "[Measures]") {
     std::vector<intptr_t> Qs = sim->AllocateQubits(n);
 
     sim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-    auto m = sim->Measure(Qs[0]);
+    auto *m = sim->Measure(Qs[0]);
     std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
     DataView<std::complex<double>, 1> view(state);
     sim->State(view);
@@ -143,7 +143,7 @@ TEST_CASE("Mid-circuit measurement naive test", "[Measures]") {
 
     sim->NamedOperation("PauliX", {}, {q}, false);
 
-    auto m = sim->Measure(q);
+    auto *m = sim->Measure(q);
 
     CHECK(*m);
 }
@@ -157,7 +157,7 @@ TEST_CASE("Mid-circuit measurement test with postselect = 0", "[Measures]") {
 
     sim->NamedOperation("Hadamard", {}, {q}, false);
 
-    auto m = sim->Measure(q, 0);
+    auto *m = sim->Measure(q, 0);
 
     CHECK(*m == 0);
 }
@@ -171,7 +171,7 @@ TEST_CASE("Mid-circuit measurement test with postselect = 1", "[Measures]") {
 
     sim->NamedOperation("Hadamard", {}, {q}, false);
 
-    auto m = sim->Measure(q, 1);
+    auto *m = sim->Measure(q, 1);
 
     CHECK(*m == 1);
 }
@@ -1616,14 +1616,18 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 shots=100",
                               buffer4.sizes, buffer4.strides);
     sim->Sample(view4, shots);
 
-    for (std::size_t i = 0; i < shots * 1; i++)
+    for (std::size_t i = 0; i < shots * 1; i++) {
         CHECK((samples1[i] == 0. || samples1[i] == 1.));
-    for (std::size_t i = 0; i < shots * 2; i++)
+    }
+    for (std::size_t i = 0; i < shots * 2; i++) {
         CHECK((samples2[i] == 0. || samples2[i] == 1.));
-    for (std::size_t i = 0; i < shots * 4; i++)
+    }
+    for (std::size_t i = 0; i < shots * 4; i++) {
         CHECK((samples3[i] == 0. || samples3[i] == 1.));
-    for (std::size_t i = 0; i < shots * 4; i++)
+    }
+    for (std::size_t i = 0; i < shots * 4; i++) {
         CHECK((samples4[i] == 0. || samples4[i] == 1.));
+    }
 }
 
 TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
@@ -1674,14 +1678,18 @@ TEST_CASE("Sample and PartialSample tests with numWires=0-4 "
                               buffer4.sizes, buffer4.strides);
     sim->Sample(view4, shots);
 
-    for (std::size_t i = 0; i < shots * 1; i++)
+    for (std::size_t i = 0; i < shots * 1; i++) {
         CHECK((samples1[i] == 0. || samples1[i] == 1.));
-    for (std::size_t i = 0; i < shots * 2; i++)
+    }
+    for (std::size_t i = 0; i < shots * 2; i++) {
         CHECK((samples2[i] == 0. || samples2[i] == 1.));
-    for (std::size_t i = 0; i < shots * 4; i++)
+    }
+    for (std::size_t i = 0; i < shots * 4; i++) {
         CHECK((samples3[i] == 0. || samples3[i] == 1.));
-    for (std::size_t i = 0; i < shots * 4; i++)
+    }
+    for (std::size_t i = 0; i < shots * 4; i++) {
         CHECK((samples4[i] == 0. || samples4[i] == 1.));
+    }
 }
 
 TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
@@ -1744,7 +1752,8 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
     CHECK(counts1[0] + counts1[1] == static_cast<int64_t>(shots));
     CHECK(counts2[0] + counts2[1] + counts2[2] + counts2[3] ==
           static_cast<int64_t>(shots));
-    std::size_t sum3 = 0, sum4 = 0;
+    std::size_t sum3 = 0;
+    std::size_t sum4 = 0;
     for (std::size_t i = 0; i < 16; i++) {
         sum3 += counts3[i];
         sum4 += counts4[i];
@@ -1763,7 +1772,7 @@ TEST_CASE("Measurement with a seeded device", "[Measures]") {
         Qs.reserve(1);
         Qs.push_back(sim.AllocateQubit());
         sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        auto m = sim.Measure(Qs[0]);
+        auto *m = sim.Measure(Qs[0]);
         return m;
     };
 
