@@ -245,7 +245,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        if method is not None:  # apply n-controlled specialized gate
+        if method:  # apply n-controlled specialized gate
             inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)

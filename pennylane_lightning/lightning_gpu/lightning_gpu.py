@@ -260,6 +260,7 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
+    # FIXME: This is a temporary solution to avoid adjoint differentiation for N-controlled gates.
     if op.name in _unsupported_adjoint_ops:
         # "C(SingleExcitation)" is not supported by the lightning.gpu after decomposition.
         if op.name == "C(SingleExcitation)":
