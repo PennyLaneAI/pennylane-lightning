@@ -261,13 +261,13 @@ def _supports_adjoint(circuit):
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
     if op.name in _unsupported_adjoint_ops:
+        # "C(SingleExcitation)" is not supported by the lightning.gpu after decomposition.
+        if op.name == "C(SingleExcitation)":
+            raise qml.DeviceError(
+                "C(SingleExcitation) is not supported by adjoint differentiation."
+            )
         return False
     return adjoint_ops(op) and not isinstance(op, qml.PauliRot)
-    #return (
-    #    not isinstance(op, qml.PauliRot)
-    #    and (op.name not in _unsupported_adjoint_ops)
-    #    and adjoint_ops(op) 
-    #)
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
