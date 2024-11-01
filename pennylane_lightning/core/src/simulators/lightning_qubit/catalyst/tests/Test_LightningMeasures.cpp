@@ -1780,8 +1780,8 @@ TEST_CASE("Measurement with a seeded device", "[Measures]") {
         sims[0] = std::make_unique<LQSimulator>();
         sims[1] = std::make_unique<LQSimulator>();
 
-        auto m0 = circuit(*(sims[0]), gens[0]);
-        auto m1 = circuit(*(sims[1]), gens[1]);
+        auto *m0 = circuit(*(sims[0]), gens[0]);
+        auto *m1 = circuit(*(sims[1]), gens[1]);
 
         CHECK(*m0 == *m1);
     }
