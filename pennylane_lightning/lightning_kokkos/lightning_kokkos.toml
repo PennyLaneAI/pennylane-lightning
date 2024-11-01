@@ -16,30 +16,30 @@ CZ                     = { properties = [ "invertible",                 "differe
 DoubleExcitationMinus  = { properties = [ "invertible",                 "differentiable" ] }
 DoubleExcitationPlus   = { properties = [ "invertible",                 "differentiable" ] }
 DoubleExcitation       = { properties = [ "invertible",                 "differentiable" ] }
-GlobalPhase            = { properties = [ "invertible",                 "differentiable" ] }
-Hadamard               = { properties = [ "invertible",                 "differentiable" ] }
+GlobalPhase            = { properties = [ "invertible", "controllable", "differentiable" ] }
+Hadamard               = { properties = [ "invertible", "controllable", "differentiable" ] }
 Identity               = { properties = [ "invertible",                 "differentiable" ] }
 IsingXX                = { properties = [ "invertible",                 "differentiable" ] }
 IsingXY                = { properties = [ "invertible",                 "differentiable" ] }
 IsingYY                = { properties = [ "invertible",                 "differentiable" ] }
 IsingZZ                = { properties = [ "invertible",                 "differentiable" ] }
 MultiRZ                = { properties = [ "invertible",                 "differentiable" ] }
-PauliX                 = { properties = [ "invertible",                 "differentiable" ] }
-PauliY                 = { properties = [ "invertible",                 "differentiable" ] }
-PauliZ                 = { properties = [ "invertible",                 "differentiable" ] }
-PhaseShift             = { properties = [ "invertible",                 "differentiable" ] }
+PauliX                 = { properties = [ "invertible", "controllable", "differentiable" ] }
+PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
+PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
+PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
 QubitUnitary           = { properties = [ "invertible",                                  ] }
-Rot                    = { properties = [ "invertible",                                  ] }
-RX                     = { properties = [ "invertible",                 "differentiable" ] }
-RY                     = { properties = [ "invertible",                 "differentiable" ] }
-RZ                     = { properties = [ "invertible",                 "differentiable" ] }
-SingleExcitationMinus  = { properties = [ "invertible",                 "differentiable" ] }
+Rot                    = { properties = [ "invertible", "controllable"                   ] }
+RX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
+RY                     = { properties = [ "invertible", "controllable", "differentiable" ] }
+RZ                     = { properties = [ "invertible", "controllable", "differentiable" ] }
+SingleExcitationMinus  = { properties = [ "invertible", "controllable", "differentiable" ] }
 SingleExcitationPlus   = { properties = [ "invertible",                 "differentiable" ] }
 SingleExcitation       = { properties = [ "invertible",                 "differentiable" ] }
 S                      = { properties = [ "invertible",                 "differentiable" ] }
-SWAP                   = { properties = [ "invertible",                 "differentiable" ] }
+SWAP                   = { properties = [ "invertible", "controllable", "differentiable" ] }
 Toffoli                = { properties = [ "invertible",                 "differentiable" ] }
-T                      = { properties = [ "invertible",                 "differentiable" ] }
+T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 
 # Operators that should be decomposed according to the algorithm used
 # by PennyLane's device API.
