@@ -36,15 +36,13 @@
 namespace Catalyst::Runtime::Simulator {
 class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
-    using StateVectorT =
-        Pennylane::LightningQubit::StateVectorLQubitDynamic<double>;
+    using StateVectorT = Pennylane::LightningQubit::StateVectorLQubitDynamic<double>;
 
     // static constants for RESULT values
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
     static constexpr bool GLOBAL_RESULT_FALSE_CONST = false;
 
-    static constexpr size_t default_num_burnin{
-        100}; // tidy: readability-magic-numbers
+    static constexpr size_t default_num_burnin{100}; // tidy: readability-magic-numbers
     static constexpr std::string_view default_kernel_name{
         "Local"}; // tidy: readability-magic-numbers
 
@@ -62,62 +60,61 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningObsManager<double> obs_manager{};
 
-    inline auto isValidQubit(QubitIdType wire) -> bool {
+    inline auto isValidQubit(QubitIdType wire) -> bool
+    {
         return this->qubit_manager.isValidQubitId(wire);
     }
 
-    inline auto isValidQubits(const std::vector<QubitIdType> &wires) -> bool {
-        return std::all_of(wires.begin(), wires.end(), [this](QubitIdType w) {
-            return this->isValidQubit(w);
-        });
+    inline auto isValidQubits(const std::vector<QubitIdType> &wires) -> bool
+    {
+        return std::all_of(wires.begin(), wires.end(),
+                           [this](QubitIdType w) { return this->isValidQubit(w); });
     }
 
-    inline auto isValidQubits(size_t numWires, const QubitIdType *wires)
-        -> bool {
-        return std::all_of(wires, wires + numWires, [this](QubitIdType w) {
-            return this->isValidQubit(w);
-        });
+    inline auto isValidQubits(size_t numWires, const QubitIdType *wires) -> bool
+    {
+        return std::all_of(wires, wires + numWires,
+                           [this](QubitIdType w) { return this->isValidQubit(w); });
     }
 
-    inline auto getDeviceWires(const std::vector<QubitIdType> &wires)
-        -> std::vector<size_t> {
+    inline auto getDeviceWires(const std::vector<QubitIdType> &wires) -> std::vector<size_t>
+    {
         std::vector<size_t> res;
         res.reserve(wires.size());
-        std::transform(
-            wires.begin(), wires.end(), std::back_inserter(res),
-            [this](auto w) { return this->qubit_manager.getDeviceId(w); });
+        std::transform(wires.begin(), wires.end(), std::back_inserter(res),
+                       [this](auto w) { return this->qubit_manager.getDeviceId(w); });
         return res;
     }
 
   public:
-    explicit LightningSimulator(const std::string &kwargs = "{}") {
+    explicit LightningSimulator(const std::string &kwargs = "{}") // NOLINT(hicpp-member-init)
+    {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots")
-                           ? static_cast<size_t>(std::stoll(args["shots"]))
-                           : 0;
+        device_shots = args.contains("shots") ? static_cast<size_t>(std::stoll(args["shots"])) : 0;
         mcmc = args.contains("mcmc") ? args["mcmc"] == "True" : false;
         num_burnin = args.contains("num_burnin")
                          ? static_cast<size_t>(std::stoll(args["num_burnin"]))
                          : default_num_burnin;
-        kernel_name = args.contains("kernel_name") ? args["kernel_name"]
-                                                   : default_kernel_name;
+        kernel_name = args.contains("kernel_name") ? args["kernel_name"] : default_kernel_name;
     }
     ~LightningSimulator() override = default;
 
-    void SetDevicePRNG(std::mt19937 *) override;
-    void SetState(DataView<std::complex<double>, 1> &,
-                  std::vector<QubitIdType> &) override;
-    void SetBasisState(DataView<int8_t, 1> &,
-                       std::vector<QubitIdType> &) override;
+    void SetDevicePRNG(std::mt19937 *gen) override;
+    void SetState(DataView<std::complex<double>, 1> &state,
+                  std::vector<QubitIdType> &wires) override;
+    void SetBasisState(DataView<int8_t, 1> &n, std::vector<QubitIdType> &wires) override;
 
     QUANTUM_DEVICE_DEL_DECLARATIONS(LightningSimulator);
 
+    // TODO: properly refactor the common device methods,
+    // instead of using #define macros in
+    // runtime/lib/backend/common/Utils.hpp
+    // When done, remove the NOLINT(hicpp-member-init) on the class constructor
     QUANTUM_DEVICE_RT_DECLARATIONS;
     QUANTUM_DEVICE_QIS_DECLARATIONS;
 
     auto CacheManagerInfo()
-        -> std::tuple<size_t, size_t, size_t, std::vector<std::string>,
-                      std::vector<ObsIdType>>;
+        -> std::tuple<size_t, size_t, size_t, std::vector<std::string>, std::vector<ObsIdType>>;
     auto GenerateSamplesMetropolis(size_t shots) -> std::vector<size_t>;
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 };
