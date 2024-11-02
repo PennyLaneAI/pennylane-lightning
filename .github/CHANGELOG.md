@@ -134,6 +134,9 @@
 
 ### Bug fixes
 
+* Fix `qml.state()` support for `lightning.tensor`. The state returned by C++ backend is not normalized anymore to ensure the return state is aligned with `default.qubit`.
+  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
+
 *  Fix `liblightning_kokkos_catalyst.so` not copied to correct build path for editable installation.
   [(#968)](https://github.com/PennyLaneAI/pennylane-lightning/pull/968)
 
