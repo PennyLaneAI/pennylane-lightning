@@ -102,11 +102,6 @@ def test_gate_unitary_correct(op, op_name):
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")
 
-    if op_name == "QubitUnitary" and device_name == "lightning.tensor":
-        pytest.skip(
-            "Skipping QubitUnitary on lightning.tensor. It can't be decomposed into 1-wire or 2-wire gates"
-        )
-
     dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
