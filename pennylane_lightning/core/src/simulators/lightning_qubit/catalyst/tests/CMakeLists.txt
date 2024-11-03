@@ -29,6 +29,7 @@ target_sources(lightning_qubit_catalyst_tests INTERFACE runner_lightning_qubit_c
 set(TEST_SOURCES    Test_LightningSimulator.cpp
                     Test_LightningMeasures.cpp
                     Test_LightningGradient.cpp
+                    Test_LightningDriver.cpp
 )
 
 add_executable(lightning_qubit_catalyst_tests_runner ${TEST_SOURCES})
