@@ -26,7 +26,7 @@ using namespace Catalyst::Runtime;
 using namespace Catalyst::Runtime::Simulator;
 
 TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
-    std::string case1{""};
+    std::string case1;
     CHECK(parse_kwargs(case1).empty());
 
     std::string case2{"{shots : 1000}"};
