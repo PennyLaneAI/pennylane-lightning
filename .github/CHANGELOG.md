@@ -27,6 +27,9 @@
 * Lightning-GPU migrated to the new device API.
   [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
 
+* Add a Catalyst-specific wrapping class for Lightning Qubit.
+  [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
+
 ### Breaking changes
 
 * Deprecate `initSV()` and add `resetStateVector()` to `lightning.gpu`.
@@ -123,9 +126,6 @@
 
 * LightningKokkos gains native support for the `PauliRot` gate.
   [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
-
-* Add a Catalyst-specific wrapping class for Lightning Qubit.
-  [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
 
 ### Documentation
 
