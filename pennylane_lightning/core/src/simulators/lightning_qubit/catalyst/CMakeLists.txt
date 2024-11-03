@@ -13,15 +13,9 @@ FindCatalyst(lightning_qubit_catalyst)
 target_include_directories(lightning_qubit_catalyst INTERFACE  ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(lightning_qubit_catalyst PUBLIC  lightning_compile_options
                                                        lightning_external_libs
-                                                       lightning_base
-                                                       lightning_gates
-                                                       lightning_utils
-                                                       lightning_qubit
                                                        lightning_qubit_algorithms
-                                                       lightning_qubit_gates
                                                        lightning_qubit_measurements
                                                        lightning_qubit_observables
-                                                       lightning_qubit_utils
 )
 
 if (BUILD_TESTS)
