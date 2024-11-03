@@ -14,8 +14,6 @@
 
 #pragma once
 
-#define __device_lightning
-
 #include <bitset>
 #include <cmath>
 #include <cstdint>
