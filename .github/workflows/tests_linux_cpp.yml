@@ -39,16 +39,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  determine_runner:
-    if: github.event.pull_request.draft == false
-    name: Determine runner type to use
-    uses: ./.github/workflows/determine-workflow-runner.yml
-    with:
-      default_runner: ubuntu-22.04
-
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [determine_runner]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
@@ -60,7 +52,7 @@ jobs:
           enable_kernel_avx_streaming: ON
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }}), ENABLE_LAPACK=${{ matrix.enable_lapack }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
@@ -119,13 +111,12 @@ jobs:
 
   cpptestswithOpenBLAS:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [determine_runner]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, blas-ON)
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
@@ -180,15 +171,14 @@ jobs:
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
-    needs: [determine_runner]
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      runs_on: ${{ needs.determine_runner.outputs.runner_group }}
+      runs_on: pl-4-core-large-runner
       os: ubuntu-22.04
 
   cpptestswithKokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_and_cache_Kokkos, determine_runner]
+    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -197,7 +187,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
@@ -288,7 +278,7 @@ jobs:
   cpptestsWithMultipleBackends:
   # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_and_cache_Kokkos, determine_runner]
+    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -296,7 +286,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: C++ Tests (multiple-backends, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
