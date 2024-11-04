@@ -23,7 +23,7 @@ env:
   ARCHS: 'arm64'
   PYTHON3_MIN_VERSION: "10"
   PYTHON3_MAX_VERSION: "12"
-  MACOSX_DEPLOYMENT_TARGET: 14.0
+  MACOSX_DEPLOYMENT_TARGET: 13.0
 
 concurrency:
   group: wheel_macos_arm64-${{ github.ref }}
@@ -63,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12]
+        os: [macos-13]
         arch: [arm64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
