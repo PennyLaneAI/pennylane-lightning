@@ -50,8 +50,8 @@
 
 ### Improvements
 
-* Fix PTM stable-latest.
-  [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
+* Update the `lightning.tensor` Python layer unit tests, as `lightning.tensor` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to use one device per circuit for `lightning.tensor`.
+  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
 
 * Add joint check for the N-controlled wires support in `lightning.qubit`.
   [(#949)](https://github.com/PennyLaneAI/pennylane-lightning/pull/949)
@@ -62,7 +62,7 @@
 * Add missing `liblightning_kokkos_catalyst.so` when building Lightning-Kokkos in editable installation.
   [(#945)](https://github.com/PennyLaneAI/pennylane-lightning/pull/945)
 
-* Optimize the cartesian product to reduce the amount of memory necessary to set the `StatePrep` in Lightning-Tensor. 
+* Optimize the cartesian product to reduce the amount of memory necessary to set the `StatePrep` in Lightning-Tensor.
   [(#943)](https://github.com/PennyLaneAI/pennylane-lightning/pull/943)
 
 * Update the `qml.probs` data-return in Lightning-GPU C++ API to align with other state-vector devices.
@@ -73,7 +73,7 @@
 
 * Add `setStateVector(state, wire)` support to the Lightning-GPU C++ API.
   [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
-  
+
 * The `generate_samples` methods of `lightning.qubit` and `lightning.kokkos` can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
   [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
 
@@ -130,6 +130,9 @@
 
 ### Documentation
 
+* Update `lightning.tensor` usage suggestions.
+  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
+
 * Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
   [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
 
@@ -138,7 +141,8 @@
 
 ### Bug fixes
 
-*  Fix PTM stable latest related to `default.qubit.legacy`. 
+*  Fix PTM stable-latest related to `default.qubit.legacy` and the `latest` flag usage.
+  [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
   [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
 
 * Fix build failure for Lightning-Kokkos editable installation on MacOS due to `liblightning_kokkos_catalyst.so` copy and `liblightning_kokkos_catalyst.so` not copied to correct build path for editable installation.
