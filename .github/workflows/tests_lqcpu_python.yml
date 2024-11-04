@@ -33,22 +33,14 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  determine_runner:
-    if: github.event.pull_request.draft == false
-    name: Determine runner type to use
-    uses: ./.github/workflows/determine-workflow-runner.yml
-    with:
-      default_runner: ubuntu-22.04
-
   build_lightning_qubit_wheels:
-    needs: [determine_runner]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
         blas: ["OFF", "ON"]
     timeout-minutes: 60
     name: Build (${{ matrix.pl_backend }}, blas-${{ matrix.blas }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - name: Make disk space
@@ -121,7 +113,7 @@ jobs:
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
 
   test_lightning_qubit_wheels:
-    needs: [determine_runner, build_lightning_qubit_wheels]
+    needs: [build_lightning_qubit_wheels]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
@@ -129,7 +121,7 @@ jobs:
         group: [1, 2, 3, 4]
     timeout-minutes: 60
     name: Python Tests (${{ matrix.pl_backend }}, blas-${{ matrix.blas }}, test-group-${{ matrix.group }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
@@ -233,9 +225,9 @@ jobs:
 
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
-    needs: [determine_runner, test_lightning_qubit_wheels]
+    needs: [test_lightning_qubit_wheels]
     name: Upload python coverage data to codecov
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
