@@ -86,11 +86,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           cublascaller_(make_shared_cublas_caller()),
           dev_tag_({device_id, stream_id}),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
-        // TODO this code block could be moved to base class and need to revisit
-        // when working on copy ctor
-        PL_ABORT_IF(numQubits < 2,
-                    "The number of qubits should be greater than 1.");
-
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
@@ -141,6 +136,16 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
     ~TNCudaBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
+    }
+
+    
+    /**
+     * @brief Get the method of a derived class object.
+     * 
+     * @return std::string
+     */
+    [[nodiscard]] auto getMethod() const -> std::string {
+        return static_cast<const Derived *>(this)->getMethod();
     }
 
     /**
@@ -346,7 +351,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         //  We should be able to turn on/ skip this check based on the backend,
         //  if(getMethod() == "mps") { ... }
         PL_ABORT_IF(
-            wires.size() > 2,
+            wires.size() > 2 && getMethod() == "mps",
             "Unsupported gate: MPS method only supports 1, 2-wires gates");
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;

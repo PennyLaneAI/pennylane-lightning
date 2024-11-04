@@ -40,6 +40,8 @@ template <class PrecisionT, class Derived> class TensornetBase {
 
     explicit TensornetBase(const std::size_t numQubits)
         : numQubits_(numQubits) {
+        PL_ABORT_IF(numQubits < 2,
+                    "The number of qubits should be greater than 1.");
         qubitDims_ = std::vector<std::size_t>(numQubits, std::size_t{2});
     }
 
