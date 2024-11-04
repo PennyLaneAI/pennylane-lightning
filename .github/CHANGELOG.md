@@ -49,6 +49,9 @@
 
 ### Improvements
 
+* Update the `lightning.tensor` Python layer unit tests, as `lightning.tensor` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to use one device per circuit for `lightning.tensor`.
+  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
+
 *  Fix PTM stable-latest.
   [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
 
@@ -128,6 +131,9 @@
   [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
 
 ### Documentation
+
+* Update `lightning.tensor` usage suggestions.
+  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
 
 * Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
