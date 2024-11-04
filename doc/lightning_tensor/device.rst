@@ -53,8 +53,7 @@ Check out the :doc:`/lightning_tensor/installation` guide for more information.
 
 .. seealso:: `DefaultTensor <https://docs.pennylane.ai/en/latest/code/api/pennylane.devices.default_tensor.DefaultTensor.html>`__ for a CPU only tensor network simulator device.
 
-Note that it is recommended to create a ``lightning.tensor`` device for each quantum circuit simulation to ensure resources are correctly handled.
-
+Note that as `lightning.tensor` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to create a new ``lightning.tensor`` device per circuit to ensure resources are correctly handled.
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

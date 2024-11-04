@@ -104,7 +104,7 @@ def test_gate_unitary_correct(op, op_name):
 
     if op_name == "QubitUnitary" and device_name == "lightning.tensor":
         pytest.skip(
-            "Skipping QubitUnitary on lightning.tensor. `lightning.tensor` device could be cleaned up like other state vector backends do as data is attached to the graph. One device for one circuit is recommended for `lightning.tensor`."
+            "Skipping QubitUnitary on lightning.tensor. as `lightning.tensor` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to use one device per circuit for `lightning.tensor`."
         )
 
     dev = qml.device(device_name, wires=wires)

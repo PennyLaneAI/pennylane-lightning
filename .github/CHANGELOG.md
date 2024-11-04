@@ -49,7 +49,7 @@
 
 ### Improvements
 
-* Update `lightning.tensor` python layer unit tests.
+* Update the `lightning.tensor` Python layer unit tests, as `lightning.tensor` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to use one device per circuit for `lightning.tensor`.
   [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
 
 *  Fix PTM stable-latest.
