@@ -145,6 +145,9 @@
 
 ### Bug fixes
 
+*  Fix Lightning Kokkos test_device for `kokkos_args` fail for MacOS due to `np.complex256`
+  [(#974)](https://github.com/PennyLaneAI/pennylane-lightning/pull/974)
+
 *  Fix PTM stable-latest related to `default.qubit.legacy` and the `latest` flag usage.
   [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
   [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
