@@ -474,6 +474,58 @@ class StateVectorCudaManaged
         return (it->second)(wires, adjoint);
     }
 
+
+    /**
+     * @brief Apply a single controlled generator to the state vector using the
+     * given kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate. (Default to false)
+     */
+    auto
+    applyControlledGenerator(const std::string &opName,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool adjoint = false) -> PrecisionT {
+        auto it = controlled_generator_map_.find(opName);
+        PL_ABORT_IF(it == controlled_generator_map_.end(), "Unsupported controlled generator!");
+        return (it->second)(controlled_wires, controlled_values, wires, adjoint);
+    }
+
+    /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate. (Default to false)
+     */
+    auto applyGenerator(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires,
+                        bool adjoint = false) -> PrecisionT {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        if (controlled_wires.empty()) {
+            return applyGenerator(opName, wires, adjoint);
+        } else {
+            return applyControlledGenerator(opName, controlled_wires,
+                                            controlled_values, wires, adjoint);
+        }
+    }
+    }
+
     /**
      * @brief Apply a given matrix directly to the statevector using a
      * raw matrix pointer vector.
@@ -1418,6 +1470,122 @@ class StateVectorCudaManaged
                  std::forward<decltype(wires)>(wires),
                  std::forward<decltype(adjoint)>(adjoint));
          }}};
+
+    // Holds the mapping from controlled-gate labels to associated generator functions.
+    const GMap controlled_generator_map_{
+        {"PhaseShift",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorPhaseShift(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"RX",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorRX(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"RY",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorRY(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"RZ",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorRZ(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingXX",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorIsingXX(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingXY",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorIsingXY(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingYY",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorIsingYY(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"IsingZZ",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorIsingZZ(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"SingleExcitation",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorSingleExcitation(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"SingleExcitationMinus",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorSingleExcitationMinus(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"SingleExcitationPlus",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorSingleExcitationPlus(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"DoubleExcitation",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorDoubleExcitation(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"DoubleExcitationMinus",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorDoubleExcitationMinus(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"GlobalPhase",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorGlobalPhase(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+         };
 
     /**
      * @brief Normalize the index ordering to match PennyLane.
