@@ -1846,22 +1846,22 @@ void applyDeviceGeneralGate_(const CFP_t *matrix, std::vector<int> &ctrls,
 }
 
 /**
- * @brief Apply a generalized permutation matrix (diagonal x permutation) to the state vector at qubit indices given by `tgts` and
- * control-lines given by `ctrls`. The adjoint can be taken by setting
- * `use_adjoint` to true.
- * 
+ * @brief Apply a generalized permutation matrix (diagonal x permutation) to the
+ * state vector at qubit indices given by `tgts` and control-lines given by
+ * `ctrls`. The adjoint can be taken by setting `use_adjoint` to true.
+ *
  * @param permutation Vector representing permutation table.
  * @param diagonals Diagonal matrix.
  * @param ctrls Control qubits
  * @param tgts Target qubits.
  * @param ctrls_values Control Values.
- * @param use_adjoint Use adjoint of generalized permutation matrix. Defaults to false.
+ * @param use_adjoint Use adjoint of generalized permutation matrix. Defaults to
+ * false.
  */
-void applyDevicePermutationGate_(const std::vector<custatevecIndex_t> permutation,
-    const CFP_t *diagonals, std::vector<int> &ctrls,
-                             std::vector<int> &tgts,
-                             std::vector<int> &ctrls_values,
-                             bool use_adjoint = false) {
+void applyDevicePermutationGate_(
+    const std::vector<custatevecIndex_t> permutation, const CFP_t *diagonals,
+    std::vector<int> &ctrls, std::vector<int> &tgts,
+    std::vector<int> &ctrls_values, bool use_adjoint = false) {
     void *extraWorkspace = nullptr;
     std::size_t extraWorkspaceSizeInBytes = 0;
     int nIndexBits = BaseType::getNumQubits();
@@ -1883,17 +1883,18 @@ void applyDevicePermutationGate_(const std::vector<custatevecIndex_t> permutatio
     std::reverse(ctrls_values.begin(), ctrls_values.end());
 
     // check the size of external workspace
-    PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyGeneralizedPermutationMatrixGetWorkspaceSize(
-        /* custatevecHandle_t */ handle_.get(),
-        /* cudaDataType_t */ data_type,
-        /* const uint32_t */ nIndexBits,
-        /* custatevecIndex_t*  */ permutation.data(),
-        /* const void* */ diagonals,
-        /* cudaDataType_t */ data_type,
-        /* const int32_t* */ tgts.data(),
-        /* const uint32_t */ tgts.size(),
-        /* const uint32_t */ ctrls.size(),
-        /* std::size_t* */ &extraWorkspaceSizeInBytes));
+    PL_CUSTATEVEC_IS_SUCCESS(
+        custatevecApplyGeneralizedPermutationMatrixGetWorkspaceSize(
+            /* custatevecHandle_t */ handle_.get(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t */ nIndexBits,
+            /* custatevecIndex_t*  */ permutation.data(),
+            /* const void* */ diagonals,
+            /* cudaDataType_t */ data_type,
+            /* const int32_t* */ tgts.data(),
+            /* const uint32_t */ tgts.size(),
+            /* const uint32_t */ ctrls.size(),
+            /* std::size_t* */ &extraWorkspaceSizeInBytes));
 
     PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
         BaseType::getDataBuffer().getDevTag().getStreamID()));
