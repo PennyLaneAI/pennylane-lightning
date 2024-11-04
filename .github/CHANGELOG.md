@@ -33,6 +33,9 @@
 
 ### Breaking changes
 
+* Update MacOS wheel build to 13.0 for X86_64 and ARM due to the deprecation of MacOS-12 CI runners.
+  [(#969)](https://github.com/PennyLaneAI/pennylane-lightning/pull/969)
+
 * Deprecate `initSV()` and add `resetStateVector()` from the C++ API Lightning-GPU. This is to remove the `reset_state` additional call in the Python layer.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
 
