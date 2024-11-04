@@ -130,8 +130,9 @@
 
 ### Documentation
 
-* Update `lightning.tensor` usage suggestions.
+* Update Lightning-Tensor installation docs and usage suggestions.
   [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
+  [(#972)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
 
 * Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
   [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
@@ -165,7 +166,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
+Ali Asadi, Amintor Dusko, Diego Guala, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
 
 ---
 
