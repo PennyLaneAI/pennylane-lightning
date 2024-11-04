@@ -130,8 +130,9 @@ template <class TensorNetT> class MeasurementsTNCuda {
         std::vector<int64_t> projectedModeValues(projected_modes.size(), 0);
 
         if (projected_modes.size() == 0) {
-            tensor_network_.get_state_tensor(d_output_tensor.getData(), {}, {},
-                                             numHyperSamples);
+            tensor_network_.get_state_tensor(d_output_tensor.getData(),
+                                             d_output_tensor.getLength(), {},
+                                             {}, numHyperSamples);
             getProbs_CUDA(d_output_tensor.getData(), d_output_probs.getData(),
                           length, static_cast<int>(thread_per_block),
                           tensor_network_.getDevTag().getStreamID());
@@ -153,7 +154,7 @@ template <class TensorNetT> class MeasurementsTNCuda {
                 }
 
                 tensor_network_.get_state_tensor(
-                    d_output_tensor.getData(), projected_modes,
+                    d_output_tensor.getData(), length, projected_modes,
                     projectedModeValues, numHyperSamples);
 
                 getProbs_CUDA(d_output_tensor.getData(), tmp_probs.getData(),

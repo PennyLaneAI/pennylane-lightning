@@ -413,7 +413,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         DataBuffer<CFP_t, int> d_output_tensor(length, getDevTag(), true);
 
-        get_accessor_(d_output_tensor.getData(), projected_modes,
+        get_accessor_(d_output_tensor.getData(), length, projected_modes,
                       projected_mode_values, numHyperSamples);
 
         d_output_tensor.CopyGpuDataToHost(host_data, length);
@@ -423,17 +423,19 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @brief Get a slice of the full state tensor.
      *
      * @param tensor_data Pointer to the device memory for state tensor data.
+     * @param tensor_data_size Size of the state tensor data.
      * @param projected_modes Projected modes to get the state tensor for.
      * @param projected_mode_values Values of the projected modes.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is set to 1 by default.
      */
     void get_state_tensor(CFP_t *tensor_data,
+                          const std::size_t tensor_data_size,
                           const std::vector<int32_t> &projected_modes,
                           const std::vector<int64_t> &projected_mode_values,
                           const int32_t numHyperSamples = 1) const {
-        get_accessor_(tensor_data, projected_modes, projected_mode_values,
-                      numHyperSamples);
+        get_accessor_(tensor_data, tensor_data_size, projected_modes,
+                      projected_mode_values, numHyperSamples);
     }
 
   private:
@@ -441,12 +443,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @brief Get accessor of a state tensor
      *
      * @param tensor_data Pointer to the device memory for state tensor data.
+     * @param tensor_data_size Size of the tensor data.
      * @param projected_modes Projected modes to get the state tensor for.
      * @param projected_mode_values Values of the projected modes.
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is set to 1 by default.
      */
-    void get_accessor_(CFP_t *tensor_data,
+    void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
                        const std::vector<int32_t> &projected_modes,
                        const std::vector<int64_t> &projected_mode_values,
                        const int32_t numHyperSamples = 1) const {
@@ -515,6 +518,14 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cudaStream_t cudaStream */ 0x0));
 
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(getDevTag().getStreamID()));
+
+        const ComplexT scale_scalar = ComplexT{1.0, 0.0} / stateNorm2;
+
+        CFP_t scale_scalar_cu{scale_scalar.real(), scale_scalar.imag()};
+
+        scaleC_CUDA<CFP_t, CFP_t>(scale_scalar_cu, tensor_data,
+                                  tensor_data_size, getDevTag().getDeviceID(),
+                                  getDevTag().getStreamID(), getCublasCaller());
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
