@@ -49,6 +49,9 @@
 
 ### Improvements
 
+* Update `lightning.tensor` python layer unit tests.
+  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
+
 *  Fix PTM stable-latest.
   [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
 
@@ -129,13 +132,13 @@
 
 ### Documentation
 
+* Update `lightning.tensor` usage suggestions.
+  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
+
 * Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
-
-* Fix `qml.state()` support for `lightning.tensor`. The state returned by C++ backend is not normalized anymore to ensure the return state is aligned with `default.qubit`.
-  [(#971)](https://github.com/PennyLaneAI/pennylane-lightning/pull/971)
 
 *  Fix `liblightning_kokkos_catalyst.so` not copied to correct build path for editable installation.
   [(#968)](https://github.com/PennyLaneAI/pennylane-lightning/pull/968)
