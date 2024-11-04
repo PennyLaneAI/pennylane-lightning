@@ -29,7 +29,10 @@ macro(FindCatalyst target_name)
 
     else()
         if(NOT CATALYST_GIT_TAG)
-            set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")
+            #set(CATALYST_GIT_TAG "main" CACHE STRING "GIT_TAG value to build Catalyst")
+            # Build against catalyst PR https://github.com/PennyLaneAI/catalyst/pull/1273
+            # to apply lightning CI clang tidy to catalyst files that won't be moved
+            set(CATALYST_GIT_TAG "clang_tidy_runtime_capi")
         endif()
         message(INFO " Building against Catalyst GIT TAG ${CATALYST_GIT_TAG}")
 
