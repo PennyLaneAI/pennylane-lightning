@@ -1,7 +1,6 @@
 name: Clang-tidy check
 on:
-  #pull_request:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - reopened
