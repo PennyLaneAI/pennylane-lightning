@@ -633,10 +633,10 @@ Ali Asadi, Amintor Dusko, Lillian Frederiksen, Pietropaolo Frisoni, David Ittah,
 
 ### Bug fixes
 
-* Fix wire order permutations when using `qml.probs` with out-of-order wires.
+* Fix wire order permutations when using `qml.probs` with out-of-order wires in Lightning-Qubit.
   [(#707)](https://github.com/PennyLaneAI/pennylane-lightning/pull/707)
 
-* Lightning Qubit once again respects the wire order specified on device instantiation.
+* Lightning-Qubit once again respects the wire order specified on device instantiation.
   [(#705)](https://github.com/PennyLaneAI/pennylane-lightning/pull/705)
 
 * `dynamic_one_shot` was refactored to use `SampleMP` measurements as a way to return the mid-circuit measurement samples. `LightningQubit's `simulate` is modified accordingly.
