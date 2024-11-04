@@ -2,13 +2,13 @@
 
 ### New features since last release
 
-* Add `mid-circuit measurements` support to `lightning.gpu`'s single-GPU backend.
+* Add mid-circuit measurements support to `lightning.gpu`'s single-GPU backend.
   [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
 
-* Integrate Lightning-GPU with Catalyst.
+* Integrate Lightning-GPU with Catalyst so that hybrid programs can be seamlessly QJIT-compiled and executed on this device following `pip install pennylane-lightning-gpu`.
   [(#928)](https://github.com/PennyLaneAI/pennylane-lightning/pull/928)
 
-* Add `Projector` observable support via diagonalization to Lightning-GPU.
+* Add `qml.Projector` observable support via diagonalization to Lightning-GPU.
   [(#894)](https://github.com/PennyLaneAI/pennylane-lightning/pull/894)
 
 * Add 1-target wire controlled gate support to `lightning.tensor`. Note that `cutensornet` only supports 1-target wire controlled gate as of `v24.08`. A controlled gate with more than 1 target wire should be converted to dense matrix.
@@ -21,39 +21,37 @@
 * Add Matrix Product Operator (MPO) for all gates support to `lightning.tensor`. Note current C++ implementation only works for MPO sites data provided by users.
   [(#859)](https://github.com/PennyLaneAI/pennylane-lightning/pull/859)
 
-* Lightning-GPU migrated to the new device API.
-  [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
-
-* Add shot measurement support to `lightning.tensor`.
+* Add shots measurement support to `lightning.tensor`.
   [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
 
-* Lightning-Kokkos migrated to the new device API.
+* Add support for out-of-order `qml.probs` in `lightning.gpu`.
+  [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
+
+* Lightning-GPU and Lightning-Kokkos migrated to the new device API.
+  [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
   [(#810)](https://github.com/PennyLaneAI/pennylane-lightning/pull/810)
 
 ### Breaking changes
 
-* Deprecate `initSV()` and add `resetStateVector()` to `lightning.gpu`.
+* Deprecate `initSV()` and add `resetStateVector()` from the C++ API Lightning-GPU. This is to remove the `reset_state` additional call in the Python layer.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
 
-* Deprecate PI gates implementation.
+* Deprecate PI gates implementation in Lightning-Qubit. The PI gates were the first implementation of gate kernels in `lightning.qubit` using pre-computed indices, prior to the development of LM (less memory) and AVX kernels. This deprecation is in favour of reducing compilation time and ensuring that Lightning-Qubit only relies on LM kernels in the dynamic dispatcher across all platforms.
   [(#925)](https://github.com/PennyLaneAI/pennylane-lightning/pull/925)
 
 * Remove PowerPC wheel build recipe for Lightning-Qubit.
   [(#902)](https://github.com/PennyLaneAI/pennylane-lightning/pull/902)
 
-* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM.
+* Update MacOS wheel builds to require Monterey (12.0) or greater for x86_64 and ARM. This was required to update Pybind11 to the latest release (2.13.5) for enabling Numpy 2.0 support in Lightning.
   [(#901)](https://github.com/PennyLaneAI/pennylane-lightning/pull/901)
 
-* Remove support for Python 3.9.
+* Remove support for Python 3.9 for all Lightning simulators.
   [(#891)](https://github.com/PennyLaneAI/pennylane-lightning/pull/891)
 
 ### Improvements
 
-*  Fix PTM stable-latest.
+* Fix PTM stable-latest.
   [(#961)](https://github.com/PennyLaneAI/pennylane-lightning/pull/961)
-
-* Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
-  [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
 
 * Add joint check for the N-controlled wires support in `lightning.qubit`.
   [(#949)](https://github.com/PennyLaneAI/pennylane-lightning/pull/949)
@@ -61,25 +59,28 @@
 * Optimize `GlobalPhase` and `C(GlobalPhase)` gate implementation in `lightning.gpu`.
   [(#946)](https://github.com/PennyLaneAI/pennylane-lightning/pull/946)
 
-* Optimize the cartesian product to reduce the amount of memory necessary to set the StatePrep with LightningTensor. 
+* Add missing `liblightning_kokkos_catalyst.so` when building Lightning-Kokkos in editable installation.
+  [(#945)](https://github.com/PennyLaneAI/pennylane-lightning/pull/945)
+
+* Optimize the cartesian product to reduce the amount of memory necessary to set the `StatePrep` in Lightning-Tensor. 
   [(#943)](https://github.com/PennyLaneAI/pennylane-lightning/pull/943)
 
-* The `prob` data return `lightning.gpu` C++ layer is aligned with other state-vector backends and `lightning.gpu` supports out-of-order `qml.prob`.
+* Update the `qml.probs` data-return in Lightning-GPU C++ API to align with other state-vector devices.
   [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
 
-* Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the python layer ctor and refactor `setBasisState(state, wires)` in the C++ layer.
+* Add zero-state initialization to both `StateVectorCudaManaged` and `StateVectorCudaMPI` constructors to remove the `reset_state` in the Python layer ctor and refactor `setBasisState(state, wires)` in the C++ API.
   [(#933)](https://github.com/PennyLaneAI/pennylane-lightning/pull/933)
 
-* Add `setStateVector(state, wire)` support to the `lightning.gpu` C++ layer.
+* Add `setStateVector(state, wire)` support to the Lightning-GPU C++ API.
   [(#930)](https://github.com/PennyLaneAI/pennylane-lightning/pull/930)
   
-* The `generate_samples` methods of lightning.{qubit/kokkos} can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
+* The `generate_samples` methods of `lightning.qubit` and `lightning.kokkos` can now take in a seed number to make the generated samples deterministic. This can be useful when, among other things, fixing flaky tests in CI.
   [(#927)](https://github.com/PennyLaneAI/pennylane-lightning/pull/927)
 
-* Remove dynamic decomposition rules in Lightning.
+* Remove dynamic decomposition rules for all Lightning devices.
   [(#926)](https://github.com/PennyLaneAI/pennylane-lightning/pull/926)
 
-* Always decompose `qml.QFT` in Lightning.
+* Always decompose `qml.QFT` in all Lightning devices.
   [(#924)](https://github.com/PennyLaneAI/pennylane-lightning/pull/924)
 
 * Uniform Python format to adhere PennyLane style.
@@ -97,7 +98,7 @@
 * Skip the compilation of Lightning simulators and development requirements to boost the build of public docs up to 5x.
   [(#904)](https://github.com/PennyLaneAI/pennylane-lightning/pull/904)
 
-* Build Lightning wheels in `Release` mode.
+* Build Lightning wheels in `Release` mode to reduce the binary sizes.
   [(#903)](https://github.com/PennyLaneAI/pennylane-lightning/pull/903)
 
 * Update Pybind11 to 2.13.5.
@@ -112,10 +113,10 @@
 * Optimize and simplify controlled kernels in Lightning-Qubit.
   [(#882)](https://github.com/PennyLaneAI/pennylane-lightning/pull/882)
 
-* Optimize gate cache recording for `lightning.tensor` C++ layer.
+* Optimize gate cache recording for Lightning-Tensor C++ API.
   [(#879)](https://github.com/PennyLaneAI/pennylane-lightning/pull/879)
 
-* Unify Lightning-Kokkos device and Lightning-Qubit device under a Lightning Base device.
+* Unify Lightning-Kokkos and Lightning-Qubit devices under a Lightning-Base abstracted class.
   [(#876)](https://github.com/PennyLaneAI/pennylane-lightning/pull/876)
 
 * Smarter defaults for the `split_obs` argument in the serializer. The serializer splits linear combinations into chunks instead of all their terms.
@@ -124,38 +125,36 @@
 * Prefer `tomlkit` over `toml` for building Lightning wheels, and choose `tomli` and `tomllib` over `toml` when installing the package.
   [(#857)](https://github.com/PennyLaneAI/pennylane-lightning/pull/857)
 
-* LightningKokkos gains native support for the `PauliRot` gate.
+* Lightning-Kokkos gains native support for the `PauliRot` gate.
   [(#855)](https://github.com/PennyLaneAI/pennylane-lightning/pull/855)
 
 ### Documentation
 
-* Update ``lightning.tensor`` documentation to include all the new features added since pull request #756. The new features are: 1, Finite-shot measurements; 2. Expval-base quantities; 3. Support for ``qml.state()`` and ``qml.stateprep()``; 4. Support for all gates support via Matrix Product Operator (MPO).
+* Update `README.rst` installation instructions for `lightning.gpu` and `lightning.tensor`.
+  [(#957)](https://github.com/PennyLaneAI/pennylane-lightning/pull/957)
+
+* Update `lightning.tensor` documentation to include all the new features added since pull request #756. The new features are: 1. Finite-shot measurements; 2. Expval-base quantities; 3. Support for `qml.state()` and `qml.stateprep()`; 4. Support for all gates support via Matrix Product Operator (MPO).
   [(#909)](https://github.com/PennyLaneAI/pennylane-lightning/pull/909)
 
 ### Bug fixes
 
-*  Fix `liblightning_kokkos_catalyst.so` not copied to correct build path for editable installation.
-  [(#968)](https://github.com/PennyLaneAI/pennylane-lightning/pull/968)
-
 *  Fix PTM stable latest related to `default.qubit.legacy`. 
   [(#966)](https://github.com/PennyLaneAI/pennylane-lightning/pull/966)
 
-* Fix build failure for Lightning-Kokkos editable installation on MacOS due to `liblightning_kokkos_catalyst.so` copy.
+* Fix build failure for Lightning-Kokkos editable installation on MacOS due to `liblightning_kokkos_catalyst.so` copy and `liblightning_kokkos_catalyst.so` not copied to correct build path for editable installation.
   [(#947)](https://github.com/PennyLaneAI/pennylane-lightning/pull/947)
-
-* Fix missing `liblightning_kokkos_catalyst.so` in Lightning-Kokkos editable installation.
-  [(#945)](https://github.com/PennyLaneAI/pennylane-lightning/pull/945)
+  [(#968)](https://github.com/PennyLaneAI/pennylane-lightning/pull/968)
 
 * Add concept restriction to ensure `ConstMult` inline function only hit with arithmetic-values times complex values. Fixes build failures with the test suite when enabling OpenMP, and disabling BLAS and Python under clang.
   [(#936)](https://github.com/PennyLaneAI/pennylane-lightning/pull/936)
 
-* Bug fix for `applyMatrix` in `lightning.tensor`. Matrix operator data is not stored in the `cuGateCache` object to support `TensorProd` obs with multiple `Hermitian` obs.
+* Bug fix for `applyMatrix` in Lightning-Tensor. Matrix operator data is not stored in the `cuGateCache` object to support `TensorProd` obs with multiple `Hermitian` obs.
   [(#932)](https://github.com/PennyLaneAI/pennylane-lightning/pull/932)
 
 * Bug fix for `_pauli_word` of `QuantumScriptSerializer`. `_pauli_word` can process `PauliWord` object: `I`.
   [(#919)](https://github.com/PennyLaneAI/pennylane-lightning/pull/919)
 
-* Bug fix for analytic `probs` in the `lightning.tensor` C++ layer.
+* Bug fix for analytic `qml.probs` in the Lightning-Tensor C++ API.
   [(#906)](https://github.com/PennyLaneAI/pennylane-lightning/pull/906)
 
 ### Contributors
@@ -213,7 +212,7 @@ Ali Asadi, Amintor Dusko, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Micha
 * Update Lightning tests to support the generalization of basis state preparation.
   [(#864)](https://github.com/PennyLaneAI/pennylane-lightning/pull/864)
 
-* Add `SetState` and `SetBasisState` to `LightningKokkosSimulator`.
+* Add `SetState` and `SetBasisState` to `Lightning-KokkosSimulator`.
   [(#861)](https://github.com/PennyLaneAI/pennylane-lightning/pull/861)
 
 * Remove use of the deprecated `Operator.expand` in favour of `Operator.decomposition`.
@@ -225,7 +224,7 @@ Ali Asadi, Amintor Dusko, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Micha
 * Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
   [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
 
-* Update `generate_samples` in `LightningKokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
+* Update `generate_samples` in `Lightning-Kokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
   [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
@@ -1070,7 +1069,7 @@ Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ### Breaking changes
 
-* Rename `QubitStateVector` to `StatePrep` in the `LightningQubit` and `LightningKokkos` classes.
+* Rename `QubitStateVector` to `StatePrep` in the `LightningQubit` and `Lightning-Kokkos` classes.
   [(#486)](https://github.com/PennyLaneAI/pennylane-lightning/pull/486)
 
 * Modify `adjointJacobian` methods to accept a (maybe unused) reference `StateVectorT`, allowing device-backed simulators to directly access state vector data for adjoint differentiation instead of copying it back-and-forth into `JacobianData` (host memory).
