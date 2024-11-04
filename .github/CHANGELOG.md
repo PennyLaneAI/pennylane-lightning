@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add support for out-of-order `qml.probs` in `lightning.gpu`.
+  [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
+
 * Add mid-circuit measurements support to `lightning.gpu`'s single-GPU backend.
   [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
 
@@ -23,9 +26,6 @@
 
 * Add shots measurement support to `lightning.tensor`.
   [(#852)](https://github.com/PennyLaneAI/pennylane-lightning/pull/852)
-
-* Add support for out-of-order `qml.probs` in `lightning.gpu`.
-  [(#941)](https://github.com/PennyLaneAI/pennylane-lightning/pull/941)
 
 * Lightning-GPU and Lightning-Kokkos migrated to the new device API.
   [(#853)](https://github.com/PennyLaneAI/pennylane-lightning/pull/853)
@@ -228,7 +228,7 @@ Ali Asadi, Amintor Dusko, Joseph Lee, Luis Alfredo Nuñez Meneses, Vincent Micha
 * Move `setBasisState`, `setStateVector` and `resetStateVector` from `StateVectorLQubitManaged` to `StateVectorLQubit`.
   [(#841)](https://github.com/PennyLaneAI/pennylane-lightning/pull/841)
 
-* Update `generate_samples` in `Lightning-Kokkos` and `LightningGPU` to support `qml.measurements.Shots` type instances.
+* Update `generate_samples` in Lightning-Kokkos and Lightning-GPU to support `qml.measurements.Shots` type instances.
   [(#839)](https://github.com/PennyLaneAI/pennylane-lightning/pull/839)
 
 * Add a Catalyst-specific wrapping class for Lightning Kokkos.
@@ -639,13 +639,13 @@ Ali Asadi, Amintor Dusko, Lillian Frederiksen, Pietropaolo Frisoni, David Ittah,
 * Lightning Qubit once again respects the wire order specified on device instantiation.
   [(#705)](https://github.com/PennyLaneAI/pennylane-lightning/pull/705)
 
-* `dynamic_one_shot` was refactored to use `SampleMP` measurements as a way to return the mid-circuit measurement samples. `LightningQubit`'s `simulate` is modified accordingly.
+* `dynamic_one_shot` was refactored to use `SampleMP` measurements as a way to return the mid-circuit measurement samples. `LightningQubit's `simulate` is modified accordingly.
   [(#694)](https://github.com/PennyLaneAI/pennylane-lightning/pull/694)
 
-* `LightningQubit` correctly decomposes state prep operations when used in the middle of a circuit.
+* Lightning-Qubit correctly decomposes state prep operations when used in the middle of a circuit.
   [(#687)](https://github.com/PennyLaneAI/pennylane-lightning/pull/687)
 
-* `LightningQubit` correctly decomposes `qml.QFT` and `qml.GroverOperator` if `len(wires)` is greater than 9 and 12 respectively.
+* Lightning-Qubit correctly decomposes `qml.QFT` and `qml.GroverOperator` if `len(wires)` is greater than 9 and 12 respectively.
   [(#687)](https://github.com/PennyLaneAI/pennylane-lightning/pull/687)
 
 * Specify `isort` `--py` (Python version) and `-l` (max line length) to stabilize `isort` across Python versions and environments.
@@ -660,7 +660,7 @@ Ali Asadi, Amintor Dusko, Lillian Frederiksen, Pietropaolo Frisoni, David Ittah,
 * Fix the failed observable serialization unit tests.
   [(#683)](https://github.com/PennyLaneAI/pennylane-lightning/pull/683)
 
-* Update the `LightningQubit` new device API to work with Catalyst.
+* Update the Lightning-Qubit new device API to work with Catalyst.
   [(#665)](https://github.com/PennyLaneAI/pennylane-lightning/pull/665)
 
 * Update the version of `codecov-action` to v4 and fix the CodeCov issue with the PL-Lightning check-compatibility actions.
@@ -1073,7 +1073,7 @@ Ali Asadi, Amintor Dusko, Vincent Michaud-Rioux, Lee J. O'Riordan, Shuli Shu
 
 ### Breaking changes
 
-* Rename `QubitStateVector` to `StatePrep` in the `LightningQubit` and `Lightning-Kokkos` classes.
+* Rename `QubitStateVector` to `StatePrep` in the Lightning-Qubit and `Lightning-Kokkos` classes.
   [(#486)](https://github.com/PennyLaneAI/pennylane-lightning/pull/486)
 
 * Modify `adjointJacobian` methods to accept a (maybe unused) reference `StateVectorT`, allowing device-backed simulators to directly access state vector data for adjoint differentiation instead of copying it back-and-forth into `JacobianData` (host memory).
@@ -2091,7 +2091,7 @@ Thomas Bromley, Theodor Isacsson, Christina Lee, Thomas Loke, Antal Száva.
 
 ### Bug fixes
 
-* Fixes a bug where the `QNode` would swap `LightningQubit` to
+* Fixes a bug where the `QNode` would swap Lightning-Qubit to
   `DefaultQubitAutograd` on device execution due to the inherited
   `passthru_devices` entry of the `capabilities` dictionary.
   [(#61)](https://github.com/PennyLaneAI/pennylane-lightning/pull/61)
