@@ -527,7 +527,7 @@ class StateVectorCudaManaged
                                             controlled_values, wires, adjoint);
         }
     }
-}
+
 
     /**
      * @brief Apply a given matrix directly to the statevector using a
@@ -1152,10 +1152,160 @@ applyControlledGeneratorRX(const std::vector<std::size_t> &controlled_wires,
                            const std::vector<bool> &controlled_values,
                            const std::vector<std::size_t> &wires,
                            bool adj = false) {
-    applyPauliX(wires, adj);
+
+    std::vector<custatevecIndex_t> permutations{1, 0};
+    std::vector<CFP_t> diagonals{{1.0, 0.0}, {1.0, 0.0}};
+
+    auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+        controlled_wires, BaseType::getNumQubits());
+    auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+        wires, BaseType::getNumQubits());
+    auto ctrls_valuesInt =
+        Pennylane::Util::cast_vector<bool, int>(controlled_values);
+    applyDevicePermutationGate_(permutations, diagonals.data(), ctrlsInt, tgtsInt, ctrls_valuesInt, adj);
+
+    std::size_t num_ctrl = controlled_wires.size();
+    std::vector<CFP_t> ctrl_diagonals(1 << num_ctrl);
+
+    std::size_t index = 0;
+    for (size_t i = 0; i < controlled_values.size(); ++i) {
+        index |= controlled_values[i] << (controlled_values.size() - 1 - i);
+    }
+
+    ctrl_diagonals[index] = {1.0, 0.0};
+    std::vector<int> empty_control = {}; // change to forward?
+
+    applyDevicePermutationGate_({}, ctrl_diagonals.data(), empty_control, ctrlsInt, empty_control, adj);
+
     return -static_cast<PrecisionT>(0.5);
 }
 
+inline PrecisionT
+applyControlledGeneratorRY([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorRZ([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorIsingXX([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorIsingXY([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorIsingYY([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorIsingZZ([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorSingleExcitation([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+
+inline PrecisionT
+applyControlledGeneratorSingleExcitationMinus([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorSingleExcitationPlus([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorDoubleExcitation([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorDoubleExcitationMinus([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorDoubleExcitationPlus([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorPhaseShift([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
+
+inline PrecisionT
+applyControlledGeneratorGlobalPhase([[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+                           [[maybe_unused]] const std::vector<bool> &controlled_values,
+                           [[maybe_unused]] const std::vector<std::size_t> &wires,
+                           [[maybe_unused]] bool adj = false) {
+    //applyPauliX(wires, adj);
+    return -static_cast<PrecisionT>(0.5);
+}
 /**
  * @brief Access the CublasCaller the object is using.
  *
@@ -1202,9 +1352,12 @@ using ParFunc = std::function<void(const std::vector<std::size_t> &, bool,
                                    const std::vector<Precision> &)>;
 using GeneratorFunc =
     std::function<Precision(const std::vector<std::size_t> &, bool)>;
+using CGeneratorFunc =
+    std::function<Precision(const std::vector<std::size_t> &,const std::vector<bool> &,const std::vector<std::size_t> &, bool)>;
 
 using FMap = std::unordered_map<std::string, ParFunc>;
 using GMap = std::unordered_map<std::string, GeneratorFunc>;
+using CGMap = std::unordered_map<std::string, CGeneratorFunc>;
 
 const FMap par_gates_{
     // LCOV_EXCL_START
@@ -1468,7 +1621,7 @@ const GMap generator_map_{
 
 // Holds the mapping from controlled-gate labels to associated generator
 // functions.
-const GMap controlled_generator_map_{
+const CGMap controlled_generator_map_{
     {"PhaseShift",
      [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires,
          auto &&adjoint) {
@@ -1859,7 +2012,7 @@ void applyDeviceGeneralGate_(const CFP_t *matrix, std::vector<int> &ctrls,
  * false.
  */
 void applyDevicePermutationGate_(
-    const std::vector<custatevecIndex_t> permutation, const CFP_t *diagonals,
+ std::vector<custatevecIndex_t> permutation, const CFP_t *diagonals,
     std::vector<int> &ctrls, std::vector<int> &tgts,
     std::vector<int> &ctrls_values, bool use_adjoint = false) {
     void *extraWorkspace = nullptr;
@@ -1882,13 +2035,16 @@ void applyDevicePermutationGate_(
     std::reverse(ctrls.begin(), ctrls.end());
     std::reverse(ctrls_values.begin(), ctrls_values.end());
 
+    custatevecIndex_t* permutation_data = permutation.empty() ? nullptr : permutation.data();
+
+
     // check the size of external workspace
     PL_CUSTATEVEC_IS_SUCCESS(
         custatevecApplyGeneralizedPermutationMatrixGetWorkspaceSize(
             /* custatevecHandle_t */ handle_.get(),
             /* cudaDataType_t */ data_type,
             /* const uint32_t */ nIndexBits,
-            /* custatevecIndex_t*  */ permutation.data(),
+            /* custatevecIndex_t*  */ permutation_data,
             /* const void* */ diagonals,
             /* cudaDataType_t */ data_type,
             /* const int32_t* */ tgts.data(),
@@ -1908,12 +2064,12 @@ void applyDevicePermutationGate_(
     // LCOV_EXCL_STOP
 
     // apply gate
-    PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrix(
+    PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyGeneralizedPermutationMatrix(
         /* custatevecHandle_t */ handle_.get(),
         /* void* */ BaseType::getData(),
         /* cudaDataType_t */ data_type,
         /* const uint32_t */ nIndexBits,
-        /* custatevecIndex_t*  */ permutation.data(),
+        /* custatevecIndex_t*  */ permutation_data,
         /* const void* */ diagonals,
         /* cudaDataType_t */ data_type,
         /* const int32_t */ use_adjoint,

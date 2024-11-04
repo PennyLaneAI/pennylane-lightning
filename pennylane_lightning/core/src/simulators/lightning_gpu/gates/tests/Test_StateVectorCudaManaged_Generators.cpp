@@ -1661,4 +1661,37 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGeneratorGlobalPhase",
                       .margin(EP));
         }
     }
+//TODO: UPDATE
+    TEST_CASE("Generators::applyControlledGeneratorRX", "[GateGenerators]") {
+    // grad(RX) = grad(e^{-i*0.5*PauliX*a}) => -i*0.5*PauliX
+    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+        cuGates::getPauliX<typename StateVectorCudaManaged<double>::CFP_t>()};
+    std::mt19937 re{1337U};
+    for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
+        for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
+             applied_qubit++) {
+            auto init_state =
+                createRandomStateVectorData<double>(re, num_qubits);
+
+            StateVectorCudaManaged<double> psi(init_state.data(),
+                                               init_state.size());
+            StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                      init_state.size());
+            StateVectorCudaManaged<double> psi_dispatch(init_state.data(),
+                                                        init_state.size());
+
+            std::string cache_gate_name = "DirectGenRX" +
+                                          std::to_string(applied_qubit) + "_" +
+                                          std::to_string(num_qubits);
+
+            psi.applyGeneratorRX({applied_qubit}, false);
+            psi_direct.applyOperation(cache_gate_name, {applied_qubit}, false,
+                                      {0.0}, matrix);
+            psi_dispatch.applyGenerator({"RX"}, {applied_qubit}, false);
+
+            CHECK(psi.getDataVector() == psi_direct.getDataVector());
+            CHECK(psi_dispatch.getDataVector() == psi_direct.getDataVector());
+        }
+    }
+}
 }
