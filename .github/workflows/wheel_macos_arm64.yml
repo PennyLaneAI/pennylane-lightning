@@ -126,7 +126,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         if: |
-          github.event_name == 'pull_request' ||
+          github.event_name == 'release' ||
           github.event_name == 'workflow_dispatch' ||
           github.ref == 'refs/heads/master'
         with:
@@ -144,7 +144,7 @@ jobs:
         cibw_build: ${{ fromJson(needs.mac-set-matrix-arm.outputs.python_version) }}
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'pull_request' ||
+      github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
 
     steps:
