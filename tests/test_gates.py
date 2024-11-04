@@ -169,9 +169,10 @@ def test_gate_unitary_correct_lt(op, op_name):
         pytest.skip("Skipping single wire device on lightning.tensor.")
 
     unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
-    
+
     for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
         dev = qml.device(device_name, wires=wires)
+
         @qml.qnode(dev)
         def output(input):
             qml.BasisState(input, wires=range(wires))
