@@ -117,7 +117,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     /**
      * @brief Get tensor network method name.
-     * 
+     *
      * @return std::string
      */
     [[nodiscard]] auto getMethod() const -> std::string { return method_; }

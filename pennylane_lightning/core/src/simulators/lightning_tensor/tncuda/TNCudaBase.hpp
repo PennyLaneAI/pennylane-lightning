@@ -78,14 +78,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
   public:
     TNCudaBase() = delete;
 
-    // TODO: Add method to the constructor to all user to select methods at
-    // runtime in the C++ layer
     explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
                         cudaStream_t stream_id = 0)
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
           cublascaller_(make_shared_cublas_caller()),
           dev_tag_({device_id, stream_id}),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
+
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
@@ -111,10 +110,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         : BaseType(numQubits), handle_(make_shared_tncuda_handle()),
           cublascaller_(make_shared_cublas_caller()), dev_tag_(dev_tag),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(dev_tag_)) {
-        // TODO this code block could be moved to base class and need to revisit
-        // when working on copy ctor
-        PL_ABORT_IF(numQubits < 2,
-                    "The number of qubits should be greater than 1.");
         if constexpr (std::is_same_v<PrecisionT, double>) {
             typeData_ = CUDA_C_64F;
             typeCompute_ = CUTENSORNET_COMPUTE_64F;
@@ -138,10 +133,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
 
-    
     /**
      * @brief Get the method of a derived class object.
-     * 
+     *
      * @return std::string
      */
     [[nodiscard]] auto getMethod() const -> std::string {
@@ -347,11 +341,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                         bool adjoint = false,
                         const std::vector<PrecisionT> &params = {0.0},
                         const std::vector<ComplexT> &gate_matrix = {}) {
-        // TODO: Need to revisit this line of code for the exact TN backend.
-        //  We should be able to turn on/ skip this check based on the backend,
-        //  if(getMethod() == "mps") { ... }
         PL_ABORT_IF(
-            wires.size() > 2 && getMethod() == "mps",
+            wires.size() > 2 && this->getMethod() == "mps",
             "Unsupported gate: MPS method only supports 1, 2-wires gates");
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
