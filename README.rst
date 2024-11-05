@@ -389,6 +389,11 @@ Lightning-Tensor requires CUDA 12 and the `cuQuantum SDK <https://developer.nvid
 The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
 Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
 
+Standard installation
+=====================
+| For the majority of cases,
+| Lightning-Tensor can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+
 Install Lightning-Tensor from source
 ====================================
 Lightning-Qubit should be installed before Lightning-Tensor (compilation is not necessary):
