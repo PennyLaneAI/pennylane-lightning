@@ -90,7 +90,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
-        reset();
+        BaseType::reset();
         BaseType::appendInitialMPSState(getSitesExtentsPtr().data());
     }
 
@@ -101,7 +101,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
-        reset();
+        BaseType::reset();
         BaseType::appendInitialMPSState(getSitesExtentsPtr().data());
     }
 
@@ -124,6 +124,15 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     };
 
     /**
+     * @brief Get the bond dimensions.
+     *
+     * @return std::vector<std::size_t>
+     */
+    [[nodiscard]] auto getBondDims(const size_t idx) const -> std::size_t {
+        return bondDims_[idx];
+    }
+
+    /**
      * @brief Get a vector of pointers to extents of each site.
      *
      * @return std::vector<int64_t const *> Note int64_t const* is
@@ -137,53 +146,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         }
         return sitesExtentsPtr_int64;
     }
-
-    /**
-     * @brief Set current quantum state as zero state.
-     */
-    void reset() {
-        const std::vector<std::size_t> zeroState(BaseType::getNumQubits(), 0);
-        setBasisState(zeroState);
-    }
-
-    /**
-     * @brief Update quantum state with a basis state.
-     * NOTE: This API assumes the bond vector is a standard basis vector
-     * ([1,0,0,......]) and current implementation only works for qubit systems.
-     * @param basisState Vector representation of a basis state.
-     */
-    void setBasisState(const std::vector<std::size_t> &basisState) {
-        PL_ABORT_IF(BaseType::getNumQubits() != basisState.size(),
-                    "The size of a basis state should be equal to the number "
-                    "of qubits.");
-
-        bool allZeroOrOne = std::all_of(
-            basisState.begin(), basisState.end(),
-            [](std::size_t bitVal) { return bitVal == 0 || bitVal == 1; });
-
-        PL_ABORT_IF_NOT(allZeroOrOne,
-                        "Please ensure all elements of a basis state should be "
-                        "either 0 or 1.");
-
-        CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
-
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            this->tensors_[i].getDataBuffer().zeroInit();
-            std::size_t target = 0;
-            std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
-
-            // Rightmost site
-            if (i == 0) {
-                target = basisState[idx];
-            } else {
-                target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
-            }
-
-            PL_CUDA_IS_SUCCESS(
-                cudaMemcpy(&this->tensors_[i].getDataBuffer().getData()[target],
-                           &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
-        }
-    };
 
     /**
      * @brief Apply an MPO operator with the gate's MPO decomposition data

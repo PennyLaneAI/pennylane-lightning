@@ -164,6 +164,60 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Set current quantum state as zero state.
+     */
+    void reset() {
+        const std::vector<std::size_t> zeroState(BaseType::getNumQubits(), 0);
+        setBasisState(zeroState);
+    }
+
+    /**
+     * @brief Update quantum state with a basis state.
+     * NOTE: This API assumes the bond vector is a standard basis vector
+     * ([1,0,0,......]) and current implementation only works for qubit systems.
+     * @param basisState Vector representation of a basis state.
+     */
+    void setBasisState(const std::vector<std::size_t> &basisState) {
+        PL_ABORT_IF(BaseType::getNumQubits() != basisState.size(),
+                    "The size of a basis state should be equal to the number "
+                    "of qubits.");
+
+        bool allZeroOrOne = std::all_of(
+            basisState.begin(), basisState.end(),
+            [](std::size_t bitVal) { return bitVal == 0 || bitVal == 1; });
+
+        PL_ABORT_IF_NOT(allZeroOrOne,
+                        "Please ensure all elements of a basis state should be "
+                        "either 0 or 1.");
+
+        CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
+
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensors_[i].getDataBuffer().zeroInit();
+            std::size_t target = 0;
+            std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
+
+            // Rightmost site
+            if (getMethod() == "mps") {
+                if (i == 0) {
+                    target = basisState[idx];
+                } else {
+                    target =
+                        basisState[idx] == 0
+                            ? 0
+                            : static_cast<Derived *>(this)->getBondDims(i - 1);
+                }
+            } else {
+                target = basisState[idx];
+            }
+
+            PL_CUDA_IS_SUCCESS(
+                cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
+                           &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+        }
+    };
+
+    /**
      * @brief Update the ith MPS site data.
      *
      * @param site_idx Index of the MPS site.
