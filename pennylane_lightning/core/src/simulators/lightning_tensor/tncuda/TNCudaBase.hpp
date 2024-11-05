@@ -14,7 +14,8 @@
 
 /**
  * @file TNCudaBase.hpp
- * Base class for cuTensorNet-backed tensor networks, specially for common APIs of MPS and ExaTN.
+ * Base class for cuTensorNet-backed tensor networks, specially for common APIs
+ * of MPS and ExaTN.
  */
 
 #pragma once
@@ -94,6 +95,41 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      */
     auto getCublasCaller() const -> const CublasCaller & {
         return *cublascaller_;
+    }
+
+    /**
+     * @brief Get the full state vector representation of a quantum state.
+     * Note that users/developers should be responsible to ensure that there is
+     * sufficient memory on the host to store the full state vector.
+     *
+     * @param res Pointer to the host memory to store the full state vector
+     * @param res_length Length of the result vector
+     */
+    void getData(ComplexT *res, const std::size_t res_length) {
+        PL_ABORT_IF(log2(res_length) != BaseType::getNumQubits(),
+                    "The size of the result vector should be equal to the "
+                    "dimension of the quantum state.");
+
+        std::size_t avail_gpu_memory = getFreeMemorySize();
+
+        PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
+                    "State tensor size exceeds the available GPU memory!");
+        get_state_tensor(res);
+    }
+
+    /**
+     * @brief Get the full state vector representation of a quantum state.
+     *
+     * @return std::vector<ComplexT> Full state vector representation of the
+     * quantum state on host
+     */
+    auto getDataVector() -> std::vector<ComplexT> {
+        std::size_t length = std::size_t{1} << BaseType::getNumQubits();
+        std::vector<ComplexT> results(length);
+
+        getData(results.data(), results.size());
+
+        return results;
     }
 
     /**

@@ -70,7 +70,7 @@ template <class PrecisionT, class Derived> class TensornetBase {
         PL_ABORT_IF(numQubits < 2,
                     "The number of qubits should be greater than 1.");
 
-        //Ensure device is set before creating the state
+        // Ensure device is set before creating the state
         dev_tag_.refresh();
 
         qubitDims_ = std::vector<std::size_t>(numQubits, std::size_t{2});
