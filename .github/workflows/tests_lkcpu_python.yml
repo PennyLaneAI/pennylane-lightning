@@ -43,14 +43,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-
-  determine_runner:
-    if: github.event.pull_request.draft == false
-    name: Determine runner type to use
-    uses: ./.github/workflows/determine-workflow-runner.yml
-    with:
-      default_runner: ubuntu-22.04
-
   build_and_cache_Kokkos:
     if: github.event.pull_request.draft == false
     name: "Build and cache Kokkos"
@@ -60,7 +52,7 @@ jobs:
       kokkos_version: "4.3.01"
 
   build_lightning_kokkos_wheels:
-    needs: [determine_runner, build_and_cache_Kokkos]
+    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -69,7 +61,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: Build (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -149,7 +141,7 @@ jobs:
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
 
   test_lightning_kokkos_wheels:
-    needs: [determine_runner, build_and_cache_Kokkos, build_lightning_kokkos_wheels]
+    needs: [build_and_cache_Kokkos, build_lightning_kokkos_wheels]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -159,7 +151,7 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}, test-group-${{ matrix.group }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
@@ -295,9 +287,9 @@ jobs:
 
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
-    needs: [determine_runner, test_lightning_kokkos_wheels]
+    needs: [test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
