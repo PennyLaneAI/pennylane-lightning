@@ -19,9 +19,23 @@
 
 #pragma once
 
+#include <type_traits>
 #include <vector>
 
+#include <cuda.h>
+#include <cutensornet.h>
+
 #include "Error.hpp"
+#include "cuda_helpers.hpp"
+#include "tncudaError.hpp"
+#include "tncuda_helpers.hpp"
+
+/// @cond DEV
+namespace {
+namespace cuUtil = Pennylane::LightningGPU::Util;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
+} // namespace
+///@endcond
 
 namespace Pennylane::LightningTensor::TNCuda {
 /**
@@ -32,20 +46,59 @@ namespace Pennylane::LightningTensor::TNCuda {
  */
 template <class PrecisionT, class Derived> class TensornetBase {
   private:
+    DevTag<int> dev_tag_;
+
     std::size_t numQubits_;
     std::vector<std::size_t> qubitDims_;
+
+    cudaDataType_t typeData_;
+    cutensornetComputeType_t typeCompute_;
+
+    SharedTNCudaHandle handle_;
+
+    cutensornetState_t quantumState_;
+    cutensornetStatePurity_t purity_ =
+        CUTENSORNET_STATE_PURITY_PURE; // Only supports pure tensor network
+                                       // states as v24.03
 
   public:
     TensornetBase() = delete;
 
-    explicit TensornetBase(const std::size_t numQubits)
-        : numQubits_(numQubits) {
+    explicit TensornetBase(const std::size_t numQubits, int device_id = 0,
+                           cudaStream_t stream_id = 0)
+        : dev_tag_({device_id, stream_id}), numQubits_(numQubits) {
         PL_ABORT_IF(numQubits < 2,
                     "The number of qubits should be greater than 1.");
+
+        //Ensure device is set before creating the state
+        dev_tag_.refresh();
+
         qubitDims_ = std::vector<std::size_t>(numQubits, std::size_t{2});
+
+        if constexpr (std::is_same_v<PrecisionT, double>) {
+            typeData_ = CUDA_C_64F;
+            typeCompute_ = CUTENSORNET_COMPUTE_64F;
+        } else {
+            typeData_ = CUDA_C_32F;
+            typeCompute_ = CUTENSORNET_COMPUTE_32F;
+        }
+
+        handle_ = make_shared_tncuda_handle();
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateState(
+            /* const cutensornetHandle_t */ handle_.get(),
+            /* cutensornetStatePurity_t */ purity_,
+            /* int32_t numStateModes */
+            static_cast<int32_t>(getNumQubits()),
+            /* const int64_t *stateModeExtents */
+            reinterpret_cast<int64_t *>(getQubitDims().data()),
+            /* cudaDataType_t */ typeData_,
+            /* cutensornetState_t * */ &quantumState_));
     }
 
-    ~TensornetBase() = default;
+    ~TensornetBase() {
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
+    }
 
     /**
      * @brief Get dimension of each qubit
@@ -74,5 +127,42 @@ template <class PrecisionT, class Derived> class TensornetBase {
     [[nodiscard]] auto getNumQubits() const -> std::size_t {
         return numQubits_;
     };
+
+    /**
+     * @brief Get the CUDA data type.
+     *
+     * @return cudaDataType_t
+     */
+    [[nodiscard]] auto getCudaDataType() const -> cudaDataType_t {
+        return typeData_;
+    }
+
+    /**
+     * @brief Get the cutensornet handle that the object is using.
+     *
+     * @return cutensornetHandle_t
+     */
+    [[nodiscard]] auto getTNCudaHandle() const -> cutensornetHandle_t {
+        return handle_.get();
+    }
+
+    /**
+     * @brief Get the quantum state pointer.
+     *
+     * @return cutensornetState_t
+     */
+    [[nodiscard]] auto getQuantumState() const -> cutensornetState_t {
+        return quantumState_;
+    };
+
+    /**
+     * @brief Get device and Cuda stream information (device ID and the
+     * associated Cuda stream ID).
+     *
+     * @return DevTag
+     */
+    [[nodiscard]] auto getDevTag() const -> const DevTag<int> & {
+        return dev_tag_;
+    }
 };
 } // namespace Pennylane::LightningTensor::TNCuda
