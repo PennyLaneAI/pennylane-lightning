@@ -129,10 +129,10 @@ endif
 ######## Added target:
 #	rm -rf ./BuildTests
 jzaia-demo:
-	rm -rf ./BuildTests/jzaia_files ./BuildTests/lq_grover
+	rm -rf ./BuildTests/jzaia_files ./BuildTests/lq_grover ./BuildTests/lq_grover.dir
 	cmake -BBuildTests -G Ninja \
 		  -DCMAKE_BUILD_TYPE=Debug \
-		  -DBUILD_TESTS=OFF \
+		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
 		  $(OPTIONS)
