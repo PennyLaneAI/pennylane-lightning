@@ -77,9 +77,10 @@ The following table summarizes the supported platforms and the primary installat
 Lightning-Qubit installation
 ****************************
 
-Lightning-Qubit comes pre-installed with PennyLane. Please follow our 
-`installation instructions <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_ 
-to install PennyLane.
+Standard installation
+=====================
+| **Lightning-Qubit comes pre-installed with PennyLane.**
+| Please follow our `installation instructions <https://pennylane.ai/install/#high-performance-computing-and-gpus>`_ to install PennyLane.
 
 Install from source
 ===================
@@ -204,7 +205,10 @@ The C++ code can be tested with
 Lightning-GPU installation
 **************************
 
-For the majority of cases, Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+Standard installation
+=====================
+| For the majority of cases,
+| Lightning-GPU can be installed by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-GPU from source
 =================================
@@ -284,7 +288,10 @@ The C++ code is tested with
 Lightning-Kokkos installation
 *****************************
 
-On most Linux systems, Lightning-Kokkos can be installed via Spack or Docker by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
+Standard installation
+=====================
+| On most Linux systems,
+| Lightning-Kokkos can be installed via Spack or Docker by following our installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__.
 
 Install Lightning-Kokkos from source
 ====================================
