@@ -26,6 +26,13 @@ using namespace Pennylane::LightningQubit::Observables;
 #define ORACLE2_EXPECTED (std::vector<bool>{true, false, true, false, true, \
                                             false, true, false, true})
 
+#define ORACLE3_QUBITS (17)
+/* Oracle 2 selects the string: "0011001100110011" */
+#define ORACLE3_EXPECTED (std::vector<bool>{false, false, true, true, false, \
+                                            false, true, true, false, false, \
+                                            true, true, false, false, true, \
+                                            true})
+
 
 /**
  * @brief Setup up a circuit for iterations of Grover's search
@@ -122,7 +129,7 @@ void oracle1(StateVectorLQubitManaged<double> &sv) {
 }
 
 /**
- * @brief The first testing oracle for Grover's
+ * @brief The second testing oracle for Grover's
  *
  * A 10-qubit test oracle for Grover's algorithm. Applies a pauli-X to the
  * rightmost qubit if the leftmost 9 qubits are in the state |101010101>
@@ -146,6 +153,33 @@ void oracle2(StateVectorLQubitManaged<double> &sv) {
                                          {ORACLE2_QUBITS-1},
                                          false);
 }
+
+/**
+ * @brief The third testing oracle for Grover's
+ *
+ * A 17-qubit test oracle for Grover's algorithm. Applies a pauli-X to the
+ * rightmost qubit if the leftmost 16 qubits are in the state |0011001100110011>
+ *
+ * @param sv The statevector to apply the oracle to. Must be 17 qubits
+ */
+void oracle3(StateVectorLQubitManaged<double> &sv) {
+    // Sanity check statevector
+    assert(sv.getNumQubits() == ORACLE3_QUBITS);
+
+    // Define controls to be used for applying the X gate
+    std::vector<size_t> controls(ORACLE3_QUBITS-1);
+    std::iota(controls.begin(), controls.end(), 0);
+    std::vector<bool> control_vals = ORACLE3_EXPECTED;
+
+    // Apply the X gate to the ancilla, controlled on the chosen bitstring
+    GateImplementationsLM::applyNCPauliX(sv.getData(),
+                                         sv.getNumQubits(),
+                                         controls,
+                                         control_vals,
+                                         {ORACLE3_QUBITS-1},
+                                         false);
+}
+
 
 /**
  * @brief Overall function for running Grover's algorithm on a chosen oracle
@@ -212,6 +246,10 @@ int main(void) {
     // Run experiment 2: 101010101
     std::cout << "Expected: " << ORACLE2_EXPECTED << std::endl;
     run_experiment(oracle2, ORACLE2_QUBITS);
+
+    // Run experiment 3: 0011001100110011
+    std::cout << "Expected: " << ORACLE3_EXPECTED << std::endl;
+    run_experiment(oracle3, ORACLE3_QUBITS);
 
     return 0;
 }
