@@ -72,10 +72,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     const std::vector<std::vector<std::size_t>> sitesExtents_;
     const std::vector<std::vector<int64_t>> sitesExtents_int64_;
 
-    std::vector<TensorCuda<Precision>> tensors_;
-
-    std::vector<TensorCuda<Precision>> tensors_out_;
-
     std::vector<std::shared_ptr<MPOTNCuda<Precision>>> mpos_;
     std::vector<std::size_t> mpo_ids_;
 
@@ -87,8 +83,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
   public:
     MPSTNCuda() = delete;
 
-    // TODO: Add method to the constructor to allow users to select methods at
-    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
@@ -97,11 +91,9 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
         reset();
-        appendInitialMPSState_();
+        BaseType::appendInitialMPSState(getSitesExtentsPtr().data());
     }
 
-    // TODO: Add method to the constructor to allow users to select methods at
-    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
@@ -110,7 +102,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
         reset();
-        appendInitialMPSState_();
+        BaseType::appendInitialMPSState(getSitesExtentsPtr().data());
     }
 
     ~MPSTNCuda() = default;
@@ -147,63 +139,11 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     /**
-     * @brief Get a vector of pointers to tensor data of each site.
-     *
-     * @return std::vector<uint64_t *>
-     */
-    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<uint64_t *> {
-        std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensorsDataPtr[i] = reinterpret_cast<uint64_t *>(
-                tensors_[i].getDataBuffer().getData());
-        }
-        return tensorsDataPtr;
-    }
-
-    /**
-     * @brief Get a vector of pointers to tensor data of each site.
-     *
-     * @return std::vector<CFP_t *>
-     */
-    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
-        std::vector<CFP_t *> tensorsOutDataPtr(BaseType::getNumQubits());
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
-        }
-        return tensorsOutDataPtr;
-    }
-
-    /**
      * @brief Set current quantum state as zero state.
      */
     void reset() {
         const std::vector<std::size_t> zeroState(BaseType::getNumQubits(), 0);
         setBasisState(zeroState);
-    }
-
-    /**
-     * @brief Update the ith MPS site data.
-     *
-     * @param site_idx Index of the MPS site.
-     * @param host_data Pointer to the data on host.
-     * @param host_data_size Length of the data.
-     */
-    void updateMPSSiteData(const std::size_t site_idx,
-                           const ComplexT *host_data,
-                           std::size_t host_data_size) {
-        PL_ABORT_IF_NOT(
-            site_idx < BaseType::getNumQubits(),
-            "The site index should be less than the number of qubits.");
-
-        const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
-        PL_ABORT_IF_NOT(
-            host_data_size == tensors_[idx].getDataBuffer().getLength(),
-            "The length of the host data should match its copy on the device.");
-
-        tensors_[idx].getDataBuffer().zeroInit();
-
-        tensors_[idx].getDataBuffer().CopyHostDataToGpu(host_data,
-                                                        host_data_size);
     }
 
     /**
@@ -228,7 +168,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensors_[i].getDataBuffer().zeroInit();
+            this->tensors_[i].getDataBuffer().zeroInit();
             std::size_t target = 0;
             std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
 
@@ -240,7 +180,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             }
 
             PL_CUDA_IS_SUCCESS(
-                cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
+                cudaMemcpy(&this->tensors_[i].getDataBuffer().getData()[target],
                            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
         }
     };
@@ -377,7 +317,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
         BaseType::computeState(
             const_cast<int64_t **>(getSitesExtentsPtr().data()),
-            reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
+            reinterpret_cast<void **>(BaseType::getTensorsOutDataPtr().data()));
 
         // TODO: This is a dummy tensor update to allow multiple calls to the
         // `append_mps_final_state` method as well as appending additional
@@ -496,29 +436,14 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     void initTensors_() {
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             // construct mps tensors reprensentation
-            tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
-                                  sitesExtents_[i], BaseType::getDevTag());
+            this->tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
+                                        sitesExtents_[i],
+                                        BaseType::getDevTag());
 
-            tensors_out_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
-                                      sitesExtents_[i], BaseType::getDevTag());
+            this->tensors_out_.emplace_back(sitesModes_[i].size(),
+                                            sitesModes_[i], sitesExtents_[i],
+                                            BaseType::getDevTag());
         }
-    }
-
-    /**
-     * @brief Append initial MPS sites to the compute graph with data provided
-     * by a user
-     *
-     */
-    void appendInitialMPSState_() {
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
-            /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /*cutensornetState_t*/ BaseType::getQuantumState(),
-            /*cutensornetBoundaryCondition_t */
-            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
-            /*const int64_t *const* */ getSitesExtentsPtr().data(),
-            /*const int64_t *const* */ nullptr,
-            /*void ** */
-            reinterpret_cast<void **>(getTensorsDataPtr().data())));
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda

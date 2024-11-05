@@ -63,6 +63,10 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
     std::vector<std::size_t> identiy_gate_ids_;
 
+  protected:
+    std::vector<TensorCuda<PrecisionT>> tensors_;
+    std::vector<TensorCuda<PrecisionT>> tensors_out_;
+
   public:
     TNCudaBase() = delete;
 
@@ -98,6 +102,33 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get a vector of pointers to tensor data of each site.
+     *
+     * @return std::vector<uint64_t *>
+     */
+    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<uint64_t *> {
+        std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsDataPtr[i] = reinterpret_cast<uint64_t *>(
+                tensors_[i].getDataBuffer().getData());
+        }
+        return tensorsDataPtr;
+    }
+
+    /**
+     * @brief Get a vector of pointers to tensor data of each site.
+     *
+     * @return std::vector<CFP_t *>
+     */
+    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
+        std::vector<CFP_t *> tensorsOutDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
+        }
+        return tensorsOutDataPtr;
+    }
+
+    /**
      * @brief Get the full state vector representation of a quantum state.
      * Note that users/developers should be responsible to ensure that there is
      * sufficient memory on the host to store the full state vector.
@@ -130,6 +161,31 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         getData(results.data(), results.size());
 
         return results;
+    }
+
+    /**
+     * @brief Update the ith MPS site data.
+     *
+     * @param site_idx Index of the MPS site.
+     * @param host_data Pointer to the data on host.
+     * @param host_data_size Length of the data.
+     */
+    void updateMPSSiteData(const std::size_t site_idx,
+                           const ComplexT *host_data,
+                           std::size_t host_data_size) {
+        PL_ABORT_IF_NOT(
+            site_idx < BaseType::getNumQubits(),
+            "The site index should be less than the number of qubits.");
+
+        const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
+        PL_ABORT_IF_NOT(
+            host_data_size == tensors_[idx].getDataBuffer().getLength(),
+            "The length of the host data should match its copy on the device.");
+
+        tensors_[idx].getDataBuffer().zeroInit();
+
+        tensors_[idx].getDataBuffer().CopyHostDataToGpu(host_data,
+                                                        host_data_size);
     }
 
     /**
@@ -546,6 +602,23 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));
+    }
+
+    /**
+     * @brief Append initial MPS sites to the compute graph with data provided
+     * by a user
+     *
+     */
+    void appendInitialMPSState(const int64_t *const *extentsPtr) {
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
+            /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /*cutensornetState_t*/ BaseType::getQuantumState(),
+            /*cutensornetBoundaryCondition_t */
+            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+            /*const int64_t *const* */ extentsPtr,
+            /*const int64_t *const* */ nullptr,
+            /*void ** */
+            reinterpret_cast<void **>(getTensorsDataPtr().data())));
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda
