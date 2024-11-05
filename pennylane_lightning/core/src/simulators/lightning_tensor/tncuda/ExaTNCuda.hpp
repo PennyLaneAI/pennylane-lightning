@@ -20,26 +20,16 @@
 
 #pragma once
 
-#include <algorithm>
-#include <complex>
 #include <vector>
 
-#include <cuda.h>
-#include <cutensornet.h>
-
-#include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
 #include "TensornetBase.hpp"
 #include "Util.hpp"
-#include "cuda_helpers.hpp"
-#include "tncudaError.hpp"
-#include "tncuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
-namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor::TNCuda;
 using namespace Pennylane::LightningTensor::TNCuda::Util;
@@ -60,13 +50,13 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
   private:
     using BaseType = TNCudaBase<Precision, ExaTNCuda>;
 
-    const std::string method_ = "exatn";
-
     const std::vector<std::vector<std::size_t>> sitesModes_;
     const std::vector<std::vector<std::size_t>> sitesExtents_;
     const std::vector<std::vector<int64_t>> sitesExtents_int64_;
 
   public:
+    constexpr static auto method = "exatn";
+
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;
     using PrecisionT = Precision;
@@ -93,13 +83,6 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
     }
 
     ~ExaTNCuda() = default;
-
-    /**
-     * @brief Get tensor network method name.
-     *
-     * @return std::string
-     */
-    [[nodiscard]] auto getMethod() const -> std::string { return method_; }
 
     /**
      * @brief Get a vector of pointers to extents of each site.
@@ -174,7 +157,6 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
      */
     void initTensors_() {
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            // construct mps tensors reprensentation
             this->tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
                                         sitesExtents_[i],
                                         BaseType::getDevTag());

@@ -64,8 +64,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
 
-    const std::string method_ = "mps";
-
     const std::size_t maxBondDim_;
     const std::vector<std::size_t> bondDims_;
     const std::vector<std::vector<std::size_t>> sitesModes_;
@@ -76,6 +74,8 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     std::vector<std::size_t> mpo_ids_;
 
   public:
+    constexpr static auto method = "mps";
+
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;
     using PrecisionT = Precision;
@@ -106,13 +106,6 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
     }
 
     ~MPSTNCuda() = default;
-
-    /**
-     * @brief Get tensor network method name.
-     *
-     * @return std::string
-     */
-    [[nodiscard]] auto getMethod() const -> std::string { return method_; }
 
     /**
      * @brief Get the max bond dimension.

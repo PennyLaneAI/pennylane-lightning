@@ -89,7 +89,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @return std::string
      */
     [[nodiscard]] auto getMethod() const -> std::string {
-        return static_cast<const Derived *>(this)->getMethod();
+        return Derived::method;
     }
 
     /**
