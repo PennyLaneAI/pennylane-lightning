@@ -125,9 +125,9 @@ TEMPLATE_TEST_CASE("StateVectorLQubitDynamic::allocateWire /allocation",
         "Test the validity of the shranked state vector in the second half") {
         constexpr size_t num_qubits = 4;
         StateVectorLQubitDynamic<PrecisionT> sv1(num_qubits);
-        std::vector<std::complex<PrecisionT>> data(1u << num_qubits,
+        std::vector<std::complex<PrecisionT>> data(1U << num_qubits,
                                                    {0.0, 0.0});
-        data[(1u << num_qubits) - 1] = {1.0, 0.0};
+        data[(1U << num_qubits) - 1] = {1.0, 0.0};
         sv1.updateData(data);
 
         sv1.releaseWire(0);
