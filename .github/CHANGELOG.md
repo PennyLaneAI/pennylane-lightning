@@ -123,6 +123,9 @@
 
 ### Documentation
 
+* Update Lightning-Tensor installation docs and usage suggestions.
+  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
+
 * Mark ``CUQUANTUM_SDK`` environment variable set as an option.
   [(#964)](https://github.com/PennyLaneAI/pennylane-lightning/pull/964)
 
@@ -153,7 +156,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Amintor Dusko, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
+Ali Asadi, Amintor Dusko, Anton Naim Ibrahim, Luis Alfredo Nuñez Meneses, Vincent Michaud-Rioux, Lee J. O'Riordan, Mudit Pandey, Shuli Shu, Haochen Paul Wang
 
 ---
 
