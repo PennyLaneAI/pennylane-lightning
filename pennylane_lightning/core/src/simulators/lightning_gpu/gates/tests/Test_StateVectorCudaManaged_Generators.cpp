@@ -1661,37 +1661,319 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGeneratorGlobalPhase",
                       .margin(EP));
         }
     }
-//TODO: UPDATE
-    TEST_CASE("Generators::applyControlledGeneratorRX", "[GateGenerators]") {
-    // grad(RX) = grad(e^{-i*0.5*PauliX*a}) => -i*0.5*PauliX
-    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
-        cuGates::getPauliX<typename StateVectorCudaManaged<double>::CFP_t>()};
+}
+
+TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 1 wire",
+                   "[GateGenerators]", float, double) {
+
+    const std::string controlled_gate_name = GENERATE("RX", "RY", "RZ");
+    const std::size_t num_qubits = 4;
+    const TestType ep = 1e-3;
+    const TestType EP = 1e-4;
     std::mt19937 re{1337U};
-    for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
-        for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
-             applied_qubit++) {
-            auto init_state =
-                createRandomStateVectorData<double>(re, num_qubits);
 
-            StateVectorCudaManaged<double> psi(init_state.data(),
-                                               init_state.size());
-            StateVectorCudaManaged<double> psi_direct(init_state.data(),
-                                                      init_state.size());
-            StateVectorCudaManaged<double> psi_dispatch(init_state.data(),
-                                                        init_state.size());
+    const bool inverse = GENERATE(true, false);
+    const std::size_t control_wire_0 = GENERATE(0, 1, 2, 3);
+    const std::size_t control_wire_1 = GENERATE(0, 1, 2, 3);
+    const std::size_t wire = GENERATE(0, 1, 2, 3);
+    const bool control_value_0 = GENERATE(true, false);
+    const bool control_value_1 = GENERATE(true, false);
 
-            std::string cache_gate_name = "DirectGenRX" +
-                                          std::to_string(applied_qubit) + "_" +
-                                          std::to_string(num_qubits);
+    auto init_state = createRandomStateVectorData<TestType>(re, num_qubits);
 
-            psi.applyGeneratorRX({applied_qubit}, false);
-            psi_direct.applyOperation(cache_gate_name, {applied_qubit}, false,
-                                      {0.0}, matrix);
-            psi_dispatch.applyGenerator({"RX"}, {applied_qubit}, false);
+    StateVectorCudaManaged<TestType> gntr_sv{init_state.data(),
+                                             init_state.size()};
+    StateVectorCudaManaged<TestType> gate_svp{init_state.data(),
+                                              init_state.size()};
+    StateVectorCudaManaged<TestType> gate_svm{init_state.data(),
+                                              init_state.size()};
 
-            CHECK(psi.getDataVector() == psi_direct.getDataVector());
-            CHECK(psi_dispatch.getDataVector() == psi_direct.getDataVector());
+    TestType scale = 0.0;
+
+    DYNAMIC_SECTION("N-controlled generator - "
+                    << controlled_gate_name << " control wires = {"
+                    << control_wire_0 << ", " << control_wire_1 << "} "
+                    << "control values = {" << control_value_0 << ", "
+                    << control_value_1 << "} "
+                    << ", wires = {" << wire << "} - "
+                    << ", inverse = " << inverse << " - "
+                    << PrecisionToName<TestType>::value) {
+        if (control_wire_0 != wire && control_wire_1 != wire) {
+            if (control_wire_0 == control_wire_1) {
+
+                scale = gntr_sv.applyGenerator(
+                    controlled_gate_name, {control_wire_0}, {control_value_0},
+                    {wire}, inverse);
+                if (inverse) {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            {wire}, inverse, {-ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            {wire}, inverse, {ep});
+                } else {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            {wire}, inverse, {ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            {wire}, inverse, {-ep});
+                }
+            } else {
+                scale = gntr_sv.applyGenerator(
+                    controlled_gate_name, {control_wire_0, control_wire_1},
+                    {control_value_0, control_value_1}, {wire}, inverse);
+                if (inverse) {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            {wire}, inverse, {-ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            {wire}, inverse, {ep});
+                } else {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            {wire}, inverse, {ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            {wire}, inverse, {-ep});
+                }
+            }
+
+            auto result_gntr_sv = gntr_sv.getDataVector();
+            auto result_gate_svp = gate_svp.getDataVector();
+            auto result_gate_svm = gate_svm.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(-scale * imag(result_gntr_sv[j]) ==
+                      Approx(0.5 *
+                             (real(result_gate_svp[j]) -
+                              real(result_gate_svm[j])) /
+                             ep)
+                          .margin(EP));
+                CHECK(scale * real(result_gntr_sv[j]) ==
+                      Approx(0.5 *
+                             (imag(result_gate_svp[j]) -
+                              imag(result_gate_svm[j])) /
+                             ep)
+                          .margin(EP));
+            }
         }
     }
 }
+TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 2 wires",
+                   "[GateGenerators]", float, double) {
+
+    const std::string controlled_gate_name =
+        GENERATE("IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
+                 "SingleExcitationMinus", "SingleExcitationPlus");
+    const std::size_t num_qubits = 4;
+    const TestType ep = 1e-3;
+    const TestType EP = 1e-4;
+    std::mt19937 re{1337U};
+
+    const bool inverse = GENERATE(true, false);
+    const std::size_t control_wire_0 = GENERATE(1, 2, 3);
+    const std::size_t control_wire_1 = GENERATE(1, 2, 3);
+    const bool control_value_0 = GENERATE(true, false);
+    const bool control_value_1 = GENERATE(true, false);
+    const std::size_t wire = GENERATE(1, 2, 3);
+    const std::vector<std::size_t> wires = {0, wire};
+
+    auto init_state = createRandomStateVectorData<TestType>(re, num_qubits);
+
+    StateVectorCudaManaged<TestType> gntr_sv{init_state.data(),
+                                             init_state.size()};
+    StateVectorCudaManaged<TestType> gate_svp{init_state.data(),
+                                              init_state.size()};
+    StateVectorCudaManaged<TestType> gate_svm{init_state.data(),
+                                              init_state.size()};
+
+    TestType scale = 0.0;
+
+    DYNAMIC_SECTION("N-controlled generator - "
+                    << controlled_gate_name << " control wires = {"
+                    << control_wire_0 << ", " << control_wire_1 << "} "
+                    << "control values = {" << control_value_0 << ", "
+                    << control_value_1 << "} "
+                    << ", wires = {" << wires[0] << ", " << wires[1] << "} - "
+                    << ", inverse = " << inverse << " - "
+                    << PrecisionToName<TestType>::value) {
+
+        if (control_wire_0 != wire && control_wire_1 != wire) {
+            if (control_wire_0 == control_wire_1) {
+
+                scale = gntr_sv.applyGenerator(
+                    controlled_gate_name, {control_wire_0}, {control_value_0},
+                    wires, inverse);
+                if (inverse) {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {-ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {ep});
+                } else {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {-ep});
+                }
+            } else {
+                scale = gntr_sv.applyGenerator(
+                    controlled_gate_name, {control_wire_0, control_wire_1},
+                    {control_value_0, control_value_1}, wires, inverse);
+                if (inverse) {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {-ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {ep});
+                } else {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {-ep});
+                }
+
+                auto result_gntr_sv = gntr_sv.getDataVector();
+                auto result_gate_svp = gate_svp.getDataVector();
+                auto result_gate_svm = gate_svm.getDataVector();
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK(-scale * imag(result_gntr_sv[j]) ==
+                          Approx(0.5 *
+                                 (real(result_gate_svp[j]) -
+                                  real(result_gate_svm[j])) /
+                                 ep)
+                              .margin(EP));
+                    CHECK(scale * real(result_gntr_sv[j]) ==
+                          Approx(0.5 *
+                                 (imag(result_gate_svp[j]) -
+                                  imag(result_gate_svm[j])) /
+                                 ep)
+                              .margin(EP));
+                }
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 4 wires",
+                   "[GateGenerators]", float, double) {
+
+    const std::string controlled_gate_name = GENERATE("DoubleExcitation","DoubleExcitationMinus","DoubleExcitationPlus");
+    const std::size_t num_qubits = 6;
+    const TestType ep = 1e-3;
+    const TestType EP = 1e-4;
+    std::mt19937 re{1337U};
+
+    const bool inverse = GENERATE(true, false);
+    const std::size_t control_wire_0 = GENERATE(3, 4, 5);
+    const std::size_t control_wire_1 = GENERATE(3, 4, 5);
+    const bool control_value_0 = GENERATE(true, false);
+    const bool control_value_1 = GENERATE(true, false);
+    const std::size_t wire = GENERATE(3, 4, 5);
+    const std::vector<std::size_t> wires = {0, 1, 2, wire};
+
+    auto init_state = createRandomStateVectorData<TestType>(re, num_qubits);
+
+    StateVectorCudaManaged<TestType> gntr_sv{init_state.data(),
+                                             init_state.size()};
+    StateVectorCudaManaged<TestType> gate_svp{init_state.data(),
+                                              init_state.size()};
+    StateVectorCudaManaged<TestType> gate_svm{init_state.data(),
+                                              init_state.size()};
+
+    TestType scale = 0.0;
+
+    DYNAMIC_SECTION("N-controlled generator - "
+                    << controlled_gate_name << " control wires = {"
+                    << control_wire_0 << ", " << control_wire_1 << "} "
+                    << "control values = {" << control_value_0 << ", "
+                    << control_value_1 << "} "
+                    << ", wires = {" << wires[0] << ", " << wires[1] << ", "
+                    << wires[2] << ", " << wires[3] << "} - "
+                    << ", inverse = " << inverse << " - "
+                    << PrecisionToName<TestType>::value) {
+
+        if (control_wire_0 != wire && control_wire_1 != wire) {
+            if (control_wire_0 == control_wire_1) {
+
+                scale = gntr_sv.applyGenerator(
+                    controlled_gate_name, {control_wire_0}, {control_value_0},
+                    wires, inverse);
+                if (inverse) {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {-ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {ep});
+                } else {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0}, {control_value_0},
+                                            wires, inverse, {-ep});
+                }
+            } else {
+                scale = gntr_sv.applyGenerator(
+                    controlled_gate_name, {control_wire_0, control_wire_1},
+                    {control_value_0, control_value_1}, wires, inverse);
+                if (inverse) {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {-ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {ep});
+                } else {
+                    gate_svp.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {ep});
+                    gate_svm.applyOperation(controlled_gate_name,
+                                            {control_wire_0, control_wire_1},
+                                            {control_value_0, control_value_1},
+                                            wires, inverse, {-ep});
+                }
+
+                auto result_gntr_sv = gntr_sv.getDataVector();
+                auto result_gate_svp = gate_svp.getDataVector();
+                auto result_gate_svm = gate_svm.getDataVector();
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK(-scale * imag(result_gntr_sv[j]) ==
+                          Approx(0.5 *
+                                 (real(result_gate_svp[j]) -
+                                  real(result_gate_svm[j])) /
+                                 ep)
+                              .margin(EP));
+                    CHECK(scale * real(result_gntr_sv[j]) ==
+                          Approx(0.5 *
+                                 (imag(result_gate_svp[j]) -
+                                  imag(result_gate_svm[j])) /
+                                 ep)
+                              .margin(EP));
+                }
+            }
+        }
+    }
 }
