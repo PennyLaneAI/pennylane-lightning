@@ -190,7 +190,6 @@ class LightningTensorNet:
         max_bond_dim: int = 128,
         cutoff: float = 0,
         cutoff_mode: str = "abs",
-        custom_MPS: List = [],
         device_name="lightning.tensor",
     ):
         self._num_wires = num_wires
@@ -199,8 +198,6 @@ class LightningTensorNet:
         self._cutoff = cutoff
         self._cutoff_mode = cutoff_mode
         self._c_dtype = c_dtype
-        
-        self._custom_MPS = custom_MPS
 
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
@@ -320,24 +317,11 @@ class LightningTensorNet:
             device_wires (Wires): wires that get initialized in the state
         """
 
-        if self._custom_MPS == []:
-            print("Create MPS site from state")
+        state = self._preprocess_state_vector(state, device_wires)
+        mps_site_shape = [2]
+        M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
 
-            state = self._preprocess_state_vector(state, device_wires)
-            mps_site_shape = [2]
-            M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
-            
-            # print('Lightning.Tensor MPS shape')
-            # [print(i.shape) for i in M]
-
-            self._tensornet.updateMPSSitesData(M)            
-        else: 
-            # Custom MPS.
-            print("Pass MPS site at run time")
-            # Checking for the MPS shape.
-            
-            custom_MPS_checks(self._custom_MPS, self._num_wires, self._max_bond_dim)
-            self._tensornet.updateMPSSitesData(self._custom_MPS)
+        self._tensornet.updateMPSSitesData(M)
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.

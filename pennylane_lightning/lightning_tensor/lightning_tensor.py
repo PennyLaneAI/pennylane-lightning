@@ -323,8 +323,6 @@ class LightningTensor(Device):
         self._cutoff = kwargs.get("cutoff", 0)
         self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
         self._backend = kwargs.get("backend", "cutensornet")
-        
-        self._custom_MPS = kwargs.get("custom_MPS",[])
 
         for arg in kwargs:
             if arg not in self._device_options:
@@ -375,7 +373,6 @@ class LightningTensor(Device):
             self._max_bond_dim,
             self._cutoff,
             self._cutoff_mode,
-            self._custom_MPS,
         )
 
     dtype = c_dtype
