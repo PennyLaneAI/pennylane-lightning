@@ -817,8 +817,8 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="N-controlled generator operations only implemented in lightning.qubit",
+        device_name == "lightning.kokkos",
+        reason="N-controlled generator operations only implemented in lightning.qubit and lightning.gpu",
     )
     @pytest.mark.parametrize(
         "operation",
