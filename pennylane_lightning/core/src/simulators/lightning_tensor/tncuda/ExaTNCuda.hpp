@@ -50,11 +50,6 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
   private:
     using BaseType = TNCudaBase<Precision, ExaTNCuda>;
 
-    const std::vector<std::size_t> bondDims_;
-    const std::vector<std::vector<std::size_t>> sitesModes_;
-    const std::vector<std::vector<std::size_t>> sitesExtents_;
-    const std::vector<std::vector<int64_t>> sitesExtents_int64_;
-
   public:
     constexpr static auto method = "exatn";
 
@@ -65,144 +60,11 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
   public:
     ExaTNCuda() = delete;
 
-    explicit ExaTNCuda(const std::size_t numQubits)
-        : BaseType(numQubits), bondDims_(setBondDims_()),
-          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
-          sitesExtents_int64_(setSitesExtents_int64_()) {
-        initTensors_();
-        BaseType::reset();
-        BaseType::appendInitialMPSState(getSitesExtentsPtr().data());
-    }
+    explicit ExaTNCuda(const std::size_t numQubits) : BaseType(numQubits) {}
 
     explicit ExaTNCuda(const std::size_t numQubits, DevTag<int> dev_tag)
-        : BaseType(numQubits, dev_tag), bondDims_(setBondDims_()),
-          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
-          sitesExtents_int64_(setSitesExtents_int64_()) {
-        initTensors_();
-        BaseType::reset();
-        BaseType::appendInitialMPSState(getSitesExtentsPtr().data());
-    }
+        : BaseType(numQubits, dev_tag) {}
 
     ~ExaTNCuda() = default;
-
-    /**
-     * @brief Get a vector of pointers to extents of each site.
-     *
-     * @return std::vector<int64_t const *> Note int64_t const* is
-     * required by cutensornet backend.
-     */
-    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t const *> {
-        std::vector<int64_t const *> sitesExtentsPtr_int64(
-            BaseType::getNumQubits());
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            sitesExtentsPtr_int64[i] = sitesExtents_int64_[i].data();
-        }
-        return sitesExtentsPtr_int64;
-    }
-
-    [[nodiscard]] auto getBondDims([[maybe_unused]] const std::size_t idx) const
-        -> std::size_t {
-        PL_ABORT("Not supported in Exact Tensor Network.");
-        return 1;
-    }
-
-  private:
-    /**
-     * @brief Return bondDims to the member initializer
-     * NOTE: This method only works for the open boundary condition
-     * @return std::vector<std::size_t>
-     */
-    std::vector<std::size_t> setBondDims_() {
-        std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1, 1);
-        return localBondDims;
-    }
-
-    /**
-     * @brief Return siteModes to the member initializer
-     * NOTE: This method only works for the open boundary condition
-     * @return std::vector<std::vector<std::size_t>>
-     */
-    std::vector<std::vector<std::size_t>> setSitesModes_() {
-        std::vector<std::vector<std::size_t>> localSitesModes;
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            std::vector<std::size_t> localSiteModes;
-            if (i == 0) {
-                // Leftmost site (state mode, shared mode)
-                localSiteModes =
-                    std::vector<std::size_t>({i, i + BaseType::getNumQubits()});
-            } else if (i == BaseType::getNumQubits() - 1) {
-                // Rightmost site (shared mode, state mode)
-                localSiteModes = std::vector<std::size_t>(
-                    {i + BaseType::getNumQubits() - 1, i});
-            } else {
-                // Interior sites (state mode, state mode, shared mode)
-                localSiteModes =
-                    std::vector<std::size_t>({i + BaseType::getNumQubits() - 1,
-                                              i, i + BaseType::getNumQubits()});
-            }
-            localSitesModes.push_back(std::move(localSiteModes));
-        }
-        return localSitesModes;
-    }
-
-    /**
-     * @brief Return sitesExtents to the member initializer
-     * NOTE: This method only works for the open boundary condition
-     * @return std::vector<std::vector<std::size_t>>
-     */
-    std::vector<std::vector<std::size_t>> setSitesExtents_() {
-        std::vector<std::vector<std::size_t>> localSitesExtents;
-
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            std::vector<std::size_t> localSiteExtents;
-            if (i == 0) {
-                // Leftmost site (state mode, shared mode)
-                localSiteExtents = std::vector<std::size_t>(
-                    {BaseType::getQubitDims()[i], bondDims_[i]});
-            } else if (i == BaseType::getNumQubits() - 1) {
-                // Rightmost site (shared mode, state mode)
-                localSiteExtents = std::vector<std::size_t>(
-                    {bondDims_[i - 1], BaseType::getQubitDims()[i]});
-            } else {
-                // Interior sites (state mode, state mode, shared mode)
-                localSiteExtents = std::vector<std::size_t>(
-                    {bondDims_[i - 1], BaseType::getQubitDims()[i],
-                     bondDims_[i]});
-            }
-            localSitesExtents.push_back(std::move(localSiteExtents));
-        }
-        return localSitesExtents;
-    }
-
-    /**
-     * @brief Return siteExtents_int64 to the member initializer
-     * NOTE: This method only works for the open boundary condition
-     * @return std::vector<std::vector<int64_t>>
-     */
-    std::vector<std::vector<int64_t>> setSitesExtents_int64_() {
-        std::vector<std::vector<int64_t>> localSitesExtents_int64;
-
-        for (const auto &siteExtents : sitesExtents_) {
-            localSitesExtents_int64.push_back(
-                std::move(Pennylane::Util::cast_vector<std::size_t, int64_t>(
-                    siteExtents)));
-        }
-        return localSitesExtents_int64;
-    }
-
-    /**
-     * @brief The tensors init helper function for ctor.
-     */
-    void initTensors_() {
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            this->tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
-                                        sitesExtents_[i],
-                                        BaseType::getDevTag());
-
-            this->tensors_out_.emplace_back(sitesModes_[i].size(),
-                                            sitesModes_[i], sitesExtents_[i],
-                                            BaseType::getDevTag());
-        }
-    }
 };
 } // namespace Pennylane::LightningTensor::TNCuda

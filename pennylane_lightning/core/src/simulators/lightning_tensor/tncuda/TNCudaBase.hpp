@@ -56,6 +56,16 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using ComplexT = std::complex<PrecisionT>;
     using BaseType = TensornetBase<PrecisionT, Derived>;
+
+  protected:
+    const std::size_t maxBondDim_;
+    const std::vector<std::size_t> bondDims_;
+
+  private:
+    const std::vector<std::vector<std::size_t>> sitesModes_;
+    const std::vector<std::vector<std::size_t>> sitesExtents_;
+    const std::vector<std::vector<int64_t>> sitesExtents_int64_;
+
     SharedCublasCaller cublascaller_;
 
     std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
@@ -63,23 +73,39 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
     std::vector<std::size_t> identiy_gate_ids_;
 
-  protected:
     std::vector<TensorCuda<PrecisionT>> tensors_;
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
 
   public:
     TNCudaBase() = delete;
 
-    explicit TNCudaBase(const std::size_t numQubits)
-        : BaseType(numQubits), cublascaller_(make_shared_cublas_caller()),
-          gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
-              BaseType::getDevTag())) {}
-
-    explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag)
-        : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID()),
+    explicit TNCudaBase(const std::size_t numQubits,
+                        const std::size_t maxBondDim = 1)
+        : BaseType(numQubits), maxBondDim_(maxBondDim),
+          bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()),
           cublascaller_(make_shared_cublas_caller()),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
-              BaseType::getDevTag())) {}
+              BaseType::getDevTag())) {
+        initTensors_();
+        reset();
+        appendInitialMPSState_(getSitesExtentsPtr().data());
+    }
+
+    explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag,
+                        const std::size_t maxBondDim = 1)
+        : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID()),
+          maxBondDim_(maxBondDim), bondDims_(setBondDims_()),
+          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()),
+          cublascaller_(make_shared_cublas_caller()),
+          gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
+              BaseType::getDevTag())) {
+        initTensors_();
+        reset();
+        appendInitialMPSState_(getSitesExtentsPtr().data());
+    }
 
     ~TNCudaBase() {}
 
@@ -126,6 +152,21 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
         }
         return tensorsOutDataPtr;
+    }
+
+    /**
+     * @brief Get a vector of pointers to extents of each site.
+     *
+     * @return std::vector<int64_t const *> Note int64_t const* is
+     * required by cutensornet backend.
+     */
+    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t const *> {
+        std::vector<int64_t const *> sitesExtentsPtr_int64(
+            BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            sitesExtentsPtr_int64[i] = sitesExtents_int64_[i].data();
+        }
+        return sitesExtentsPtr_int64;
     }
 
     /**
@@ -198,17 +239,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
 
             // Rightmost site
-            if (getMethod() == "mps") {
-                if (i == 0) {
-                    target = basisState[idx];
-                } else {
-                    target =
-                        basisState[idx] == 0
-                            ? 0
-                            : static_cast<Derived *>(this)->getBondDims(i - 1);
-                }
-            } else {
+
+            if (i == 0) {
                 target = basisState[idx];
+            } else {
+                target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
             }
 
             PL_CUDA_IS_SUCCESS(
@@ -658,12 +693,13 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             cutensornetDestroyWorkspaceDescriptor(workDesc));
     }
 
+  private:
     /**
      * @brief Append initial MPS sites to the compute graph with data provided
      * by a user
      *
      */
-    void appendInitialMPSState(const int64_t *const *extentsPtr) {
+    void appendInitialMPSState_(const int64_t *const *extentsPtr) {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
             /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /*cutensornetState_t*/ BaseType::getQuantumState(),
@@ -673,6 +709,114 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /*const int64_t *const* */ nullptr,
             /*void ** */
             reinterpret_cast<void **>(getTensorsDataPtr().data())));
+    }
+
+    /**
+     * @brief Return bondDims to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::size_t>
+     */
+    std::vector<std::size_t> setBondDims_() {
+        std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1,
+                                               maxBondDim_);
+
+        const std::size_t ubDim = log2(maxBondDim_);
+        for (std::size_t i = 0; i < localBondDims.size(); i++) {
+            const std::size_t bondDim =
+                std::min(i + 1, BaseType::getNumQubits() - i - 1);
+
+            if (bondDim <= ubDim) {
+                localBondDims[i] = std::size_t{1} << bondDim;
+            }
+        }
+        return localBondDims;
+    }
+
+    /**
+     * @brief Return siteModes to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::vector<std::size_t>>
+     */
+    std::vector<std::vector<std::size_t>> setSitesModes_() {
+        std::vector<std::vector<std::size_t>> localSitesModes;
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            std::vector<std::size_t> localSiteModes;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteModes =
+                    std::vector<std::size_t>({i, i + BaseType::getNumQubits()});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteModes = std::vector<std::size_t>(
+                    {i + BaseType::getNumQubits() - 1, i});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
+                localSiteModes =
+                    std::vector<std::size_t>({i + BaseType::getNumQubits() - 1,
+                                              i, i + BaseType::getNumQubits()});
+            }
+            localSitesModes.push_back(std::move(localSiteModes));
+        }
+        return localSitesModes;
+    }
+
+    /**
+     * @brief Return sitesExtents to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::vector<std::size_t>>
+     */
+    std::vector<std::vector<std::size_t>> setSitesExtents_() {
+        std::vector<std::vector<std::size_t>> localSitesExtents;
+
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            std::vector<std::size_t> localSiteExtents;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {BaseType::getQubitDims()[i], bondDims_[i]});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i]});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i],
+                     bondDims_[i]});
+            }
+            localSitesExtents.push_back(std::move(localSiteExtents));
+        }
+        return localSitesExtents;
+    }
+
+    /**
+     * @brief Return siteExtents_int64 to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::vector<int64_t>>
+     */
+    std::vector<std::vector<int64_t>> setSitesExtents_int64_() {
+        std::vector<std::vector<int64_t>> localSitesExtents_int64;
+
+        for (const auto &siteExtents : sitesExtents_) {
+            localSitesExtents_int64.push_back(
+                std::move(Pennylane::Util::cast_vector<std::size_t, int64_t>(
+                    siteExtents)));
+        }
+        return localSitesExtents_int64;
+    }
+
+    /**
+     * @brief The tensors init helper function for ctor.
+     */
+    void initTensors_() {
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            // construct mps tensors reprensentation
+            tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
+                                  sitesExtents_[i], BaseType::getDevTag());
+
+            tensors_out_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
+                                      sitesExtents_[i], BaseType::getDevTag());
+        }
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda
