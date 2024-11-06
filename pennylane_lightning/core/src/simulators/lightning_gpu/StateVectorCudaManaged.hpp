@@ -1190,43 +1190,33 @@ class StateVectorCudaManaged
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
                                bool adj = false) {
-
-        /* std::vector<custatevecIndex_t> permutations{1, 0};
-        std::vector<CFP_t> diagonals{cuUtil::ONE<CFP_t>(),
-                                     cuUtil::ONE<CFP_t>()};
-
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj); */
-        // new implementation
         const std::size_t ctrl_size = controlled_wires.size();
         const std::size_t tgt_size = wires.size();
-        std::vector<custatevecIndex_t> permutations(1 << (ctrl_size + tgt_size));
-        std::iota(permutations.begin(), permutations.end(), 0);
 
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
             index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
         }
-
         std::swap(permutations[index], permutations[index + 1]);
-        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
         diagonals[index] = cuUtil::ONE<CFP_t>();
         diagonals[index + 1] = cuUtil::ONE<CFP_t>();
 
-        std::vector<int> tgtsInt(ctrl_size + tgt_size);
-
-        std::transform(controlled_wires.begin(), controlled_wires.end(), tgtsInt.begin(),
-                   [&](std::size_t i) {
-                       return static_cast<int>(i);
-                   });        
-        std::transform(wires.begin(), wires.end(), tgtsInt.begin() + ctrl_size,
-                   [&](std::size_t i) {
-                       return static_cast<int>(i);
-                   });    
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
 
         applyDevicePermutationGate_(permutations, diagonals.data(), {},
-                                    tgtsInt, {}, adj);
+                                    combined_tgts, {}, adj);
 
         return -static_cast<PrecisionT>(0.5);
     }
@@ -1236,14 +1226,33 @@ class StateVectorCudaManaged
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
                                bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        std::vector<custatevecIndex_t> permutations{1, 0};
-        std::vector<CFP_t> diagonals{-cuUtil::IMAG<CFP_t>(),
-                                     cuUtil::IMAG<CFP_t>()};
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index], permutations[index + 1]);
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 1] = cuUtil::IMAG<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1252,14 +1261,27 @@ class StateVectorCudaManaged
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
                                bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        std::vector<custatevecIndex_t> permutations{0, 1};
-        std::vector<CFP_t> diagonals{cuUtil::ONE<CFP_t>(),
-                                     -cuUtil::ONE<CFP_t>()};
+        // Generate diagonals
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1267,14 +1289,37 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{3, 2, 1, 0};
-        std::vector<CFP_t> diagonals{cuUtil::ONE<CFP_t>(), cuUtil::ONE<CFP_t>(),
-                                     cuUtil::ONE<CFP_t>(),
-                                     cuUtil::ONE<CFP_t>()};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 1], permutations[index + 2]);
+        std::swap(permutations[index], permutations[index + 3]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1282,14 +1327,34 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{0, 2, 1, 3};
-        std::vector<CFP_t> diagonals{cuUtil::ZERO<CFP_t>(),
-                                     cuUtil::ONE<CFP_t>(), cuUtil::ONE<CFP_t>(),
-                                     cuUtil::ZERO<CFP_t>()};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
         return static_cast<PrecisionT>(0.5);
     }
 
@@ -1297,14 +1362,37 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{3, 2, 1, 0};
-        std::vector<CFP_t> diagonals{-cuUtil::ONE<CFP_t>(),
-                                     cuUtil::ONE<CFP_t>(), cuUtil::ONE<CFP_t>(),
-                                     -cuUtil::ONE<CFP_t>()};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 0], permutations[index + 3]);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = -cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1312,14 +1400,30 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{0, 1, 2, 3};
-        std::vector<CFP_t> diagonals{
-            cuUtil::ONE<CFP_t>(), -cuUtil::ONE<CFP_t>(), -cuUtil::ONE<CFP_t>(),
-            cuUtil::ONE<CFP_t>()};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate diagonals
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1327,14 +1431,34 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{0, 2, 1, 3};
-        std::vector<CFP_t> diagonals{
-            cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
-            cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>()};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 1] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 2] = cuUtil::IMAG<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1342,14 +1466,36 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{0, 2, 1, 3};
-        std::vector<CFP_t> diagonals{
-            cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>(), cuUtil::IMAG<CFP_t>(),
-            cuUtil::ONE<CFP_t>()};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 2] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 3] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1357,13 +1503,35 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{0, 2, 1, 3};
-        std::vector<CFP_t> diagonals{
-            -cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
-            cuUtil::IMAG<CFP_t>(), -cuUtil::ONE<CFP_t>()};
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 2] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 3] = -cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
 
         return -static_cast<PrecisionT>(0.5);
     }
@@ -1372,15 +1540,33 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{
-            0, 1, 2, 12, 4, 5, 6, 7, 8, 9, 10, 11, 3, 13, 14, 15};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        std::vector<CFP_t> diagonals(16);
-        diagonals[3] = -cuUtil::IMAG<CFP_t>();
-        diagonals[12] = cuUtil::IMAG<CFP_t>();
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 3], permutations[index + 12]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 3] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 12] = cuUtil::IMAG<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
 
         return -static_cast<PrecisionT>(0.5);
     }
@@ -1389,15 +1575,47 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{
-            0, 1, 2, 12, 4, 5, 6, 7, 8, 9, 10, 11, 3, 13, 14, 15};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        std::vector<CFP_t> diagonals(16, cuUtil::ONE<CFP_t>());
-        diagonals[3] = -cuUtil::IMAG<CFP_t>();
-        diagonals[12] = cuUtil::IMAG<CFP_t>();
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 3], permutations[index + 12]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 4] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 5] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 6] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 7] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 8] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 9] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 10] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 11] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 12] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 13] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 14] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 15] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
 
         return -static_cast<PrecisionT>(0.5);
     }
@@ -1406,38 +1624,108 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool adj = false) {
-        std::vector<custatevecIndex_t> permutations{
-            0, 1, 2, 12, 4, 5, 6, 7, 8, 9, 10, 11, 3, 13, 14, 15};
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
-        std::vector<CFP_t> diagonals(16, -cuUtil::ONE<CFP_t>());
-        diagonals[3] = -cuUtil::IMAG<CFP_t>();
-        diagonals[12] = cuUtil::IMAG<CFP_t>();
-        applyDeviceControlledGenerator_(permutations, diagonals,
-                                        controlled_wires, controlled_values,
-                                        wires, adj);
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations(1
+                                                    << (ctrl_size + tgt_size));
+        std::iota(permutations.begin(), permutations.end(), 0);
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::swap(permutations[index + 3], permutations[index + 12]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 4] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 5] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 6] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 7] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 8] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 9] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 10] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 11] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 12] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 13] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 14] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 15] = -cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
 
         return -static_cast<PrecisionT>(0.5);
     }
 
     inline PrecisionT applyControlledGeneratorPhaseShift(
-        [[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
-        [[maybe_unused]] const std::vector<bool> &controlled_values,
-        [[maybe_unused]] const std::vector<std::size_t> &wires,
-        [[maybe_unused]] bool adj = false) {
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
 
+        // Generate diagonals
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
 
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
 
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
 
         return static_cast<PrecisionT>(1.0);
     }
 
     inline PrecisionT applyControlledGeneratorGlobalPhase(
-        [[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
-        [[maybe_unused]] const std::vector<bool> &controlled_values,
-        [[maybe_unused]] const std::vector<std::size_t> &wires,
-        [[maybe_unused]] bool adj = false) {
-        // applyPauliX(wires, adj);
-        return -static_cast<PrecisionT>(0.5);
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate diagonals
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
+                                     cuUtil::ZERO<CFP_t>());
+
+        std::fill(diagonals.begin() + index,
+                  diagonals.begin() + index + (1 << tgt_size),
+                  cuUtil::ONE<CFP_t>());
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+
+        return -static_cast<PrecisionT>(1.0);
     }
     /**
      * @brief Access the CublasCaller the object is using.
@@ -2164,13 +2452,15 @@ class StateVectorCudaManaged
         const std::vector<std::size_t> &wires, bool adj) {
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             controlled_wires, BaseType::getNumQubits());
-        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
-            wires, BaseType::getNumQubits());
+        // auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+        //     wires, BaseType::getNumQubits());
+        auto tgtsInt = wires;
         auto ctrls_valuesInt =
             Pennylane::Util::cast_vector<bool, int>(controlled_values);
 
-        applyDevicePermutationGate_(permutations, diagonals.data(), ctrlsInt,
-                                    tgtsInt, ctrls_valuesInt, adj);
+        applyDevicePermutationGate_(permutations, diagonals.data(),
+                                    controlled_wires, wires, controlled_values,
+                                    adj);
 
         std::size_t num_ctrl = controlled_wires.size();
         std::vector<CFP_t> ctrl_diagonals(1 << num_ctrl);
@@ -2183,8 +2473,9 @@ class StateVectorCudaManaged
 
         ctrl_diagonals[index] = cuUtil::ONE<CFP_t>();
 
-        applyDevicePermutationGate_({}, ctrl_diagonals.data(), {}, ctrlsInt, {},
-                                    adj);
+        // applyDevicePermutationGate_({}, ctrl_diagonals.data(), {}, ctrlsInt,
+        // {},
+        //                             adj);
     }
 
     /**
@@ -2202,9 +2493,9 @@ class StateVectorCudaManaged
      */
     void applyDevicePermutationGate_(std::vector<custatevecIndex_t> permutation,
                                      const CFP_t *diagonals,
-                                     const std::vector<int> &ctrls,
-                                     std::vector<int> &tgts,
-                                     const std::vector<int> &ctrls_values,
+                                     const std::vector<std::size_t> &ctrls,
+                                     const std::vector<std::size_t> &tgts,
+                                     const std::vector<bool> &ctrls_values,
                                      bool use_adjoint = false) {
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
@@ -2222,7 +2513,16 @@ class StateVectorCudaManaged
             compute_type = CUSTATEVEC_COMPUTE_32F;
         }
 
-        std::reverse(tgts.begin(), tgts.end());
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            ctrls, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgts, BaseType::getNumQubits());
+        auto ctrls_valuesInt =
+            Pennylane::Util::cast_vector<bool, int>(ctrls_values);
+
+        std::reverse(tgtsInt.begin(), tgtsInt.end());
+        std::reverse(ctrlsInt.begin(), ctrlsInt.end());
+        std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
 
         custatevecIndex_t *permutation_data =
             permutation.empty() ? nullptr : permutation.data();
@@ -2236,9 +2536,9 @@ class StateVectorCudaManaged
                 /* custatevecIndex_t*  */ permutation_data,
                 /* const void* */ diagonals,
                 /* cudaDataType_t */ data_type,
-                /* const int32_t* */ tgts.data(),
-                /* const uint32_t */ tgts.size(),
-                /* const uint32_t */ ctrls.size(),
+                /* const int32_t* */ tgtsInt.data(),
+                /* const uint32_t */ tgtsInt.size(),
+                /* const uint32_t */ ctrlsInt.size(),
                 /* std::size_t* */ &extraWorkspaceSizeInBytes));
 
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
@@ -2262,11 +2562,11 @@ class StateVectorCudaManaged
             /* const void* */ diagonals,
             /* cudaDataType_t */ data_type,
             /* const int32_t */ use_adjoint,
-            /* const int32_t* */ tgts.data(),
-            /* const uint32_t */ tgts.size(),
-            /* const int32_t* */ ctrls.data(),
-            /* const int32_t* */ ctrls_values.data(),
-            /* const uint32_t */ ctrls.size(),
+            /* const int32_t* */ tgtsInt.data(),
+            /* const uint32_t */ tgtsInt.size(),
+            /* const int32_t* */ ctrlsInt.data(),
+            /* const int32_t* */ ctrls_valuesInt.data(),
+            /* const uint32_t */ ctrlsInt.size(),
             /* void* */ extraWorkspace,
             /* std::size_t */ extraWorkspaceSizeInBytes));
 
