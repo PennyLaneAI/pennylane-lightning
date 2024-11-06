@@ -6,12 +6,12 @@
 
 ### Improvements
 
-* Merge v0.39.0-rc branch to the master and bump version.
-  [(#981)](https://github.com/PennyLaneAI/pennylane-lightning/pull/981)
-
 ### Documentation
 
 ### Bug fixes
+
+* Fix Pennylane dependency branch (`v0.39_rc0` to `master`).
+  [(#984)](https://github.com/PennyLaneAI/pennylane-lightning/pull/984)
 
 * Fix PTM stable latest. Removing FIXME patch for v0.39.
   [(#982)](https://github.com/PennyLaneAI/pennylane-lightning/pull/982)
@@ -20,7 +20,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses,
+Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
