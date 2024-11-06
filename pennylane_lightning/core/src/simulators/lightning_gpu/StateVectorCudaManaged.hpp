@@ -2442,49 +2442,12 @@ class StateVectorCudaManaged
     }
 
     /**
-     * TODO: FILL IN
-     */
-    void applyDeviceControlledGenerator_(
-        const std::vector<custatevecIndex_t> &permutations,
-        const std::vector<CFP_t> &diagonals,
-        const std::vector<std::size_t> &controlled_wires,
-        const std::vector<bool> &controlled_values,
-        const std::vector<std::size_t> &wires, bool adj) {
-        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
-            controlled_wires, BaseType::getNumQubits());
-        // auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
-        //     wires, BaseType::getNumQubits());
-        auto tgtsInt = wires;
-        auto ctrls_valuesInt =
-            Pennylane::Util::cast_vector<bool, int>(controlled_values);
-
-        applyDevicePermutationGate_(permutations, diagonals.data(),
-                                    controlled_wires, wires, controlled_values,
-                                    adj);
-
-        std::size_t num_ctrl = controlled_wires.size();
-        std::vector<CFP_t> ctrl_diagonals(1 << num_ctrl);
-
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (num_ctrl - 1 - i);
-            ;
-        }
-
-        ctrl_diagonals[index] = cuUtil::ONE<CFP_t>();
-
-        // applyDevicePermutationGate_({}, ctrl_diagonals.data(), {}, ctrlsInt,
-        // {},
-        //                             adj);
-    }
-
-    /**
      * @brief Apply a generalized permutation matrix (diagonal x permutation) to
      * the state vector at qubit indices given by `tgts` and control-lines given
      * by `ctrls`. The adjoint can be taken by setting `use_adjoint` to true.
      *
-     * @param permutation Vector representing permutation table.
-     * @param diagonals Diagonal matrix.
+     * @param permutation Optional vector representing permutation table.
+     * @param diagonals Diagonal matrix. (size = 2^nTargets)
      * @param ctrls Control qubits
      * @param tgts Target qubits.
      * @param ctrls_values Control Values.
