@@ -334,6 +334,66 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Mixed, Obs=[XXX]",
         CHECK(0.323846156 == Approx(jacobian[5]).margin(1e-7));
     }
 }
+TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Controlled-Mixed, Obs=[XXX]",
+          "[AdjointJacobianGPU]") {
+    using StateVectorT = StateVectorCudaManaged<double>;
+    AdjointJacobian<StateVectorT> adj;
+    std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
+    std::vector<std::size_t> tp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    {
+        const std::size_t num_qubits = 3;
+        const std::size_t num_obs = 1;
+        std::vector<double> jacobian(num_obs * tp.size(), 0);
+
+        StateVectorT psi(num_qubits);
+
+        const auto obs = std::make_shared<TensorProdObs<StateVectorT>>(
+            std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<std::size_t>{0}),
+            std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<std::size_t>{1}),
+            std::make_shared<NamedObs<StateVectorT>>(
+                "PauliX", std::vector<std::size_t>{2}));
+        auto ops = OpsData<StateVectorT>(
+            {"RZ", "RY", "RZ", "CNOT", "CNOT", "RX", "RY", "RZ","SingleExcitation","RZ", "RY", "RZ"},
+            {{param[0]},
+             {param[1]},
+             {param[2]},
+             {},
+             {},
+             {param[0]},
+             {param[1]},
+             {param[2]},
+             {param[0]},
+             {param[0]},
+             {param[1]},
+             {param[2]}},
+            {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {2}, {1}, {0, 2}, {1}, {1}, {1}},
+            {false, false, false, false, false, false, false, false, false, false, false, false},
+            {{},{},{},{},{},{},{},{},{},{},{},{}},
+            {{},{},{},{},{},{0},{0},{0},{1},{},{},{}},
+            {{},{},{},{},{},{true},{true},{true},{true},{},{},{}});
+
+        JacobianData<StateVectorT> tape{
+            param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
+
+        adj.adjointJacobian(std::span{jacobian}, tape, psi, true);
+
+        CAPTURE(jacobian);
+
+        // Computed with PennyLane using default.qubit.adjoint_jacobian
+        CHECK(0.0 == Approx(jacobian[0]).margin(1e-7));
+        CHECK(0.03722967 == Approx(jacobian[1]).margin(1e-7));
+        CHECK(0.53917582 == Approx(jacobian[2]).margin(1e-7));
+        CHECK(-0.06895157 == Approx(jacobian[3]).margin(1e-7));
+        CHECK(-0.0020095 == Approx(jacobian[4]).margin(1e-7));
+        CHECK(0.25057513 == Approx(jacobian[5]).margin(1e-7));
+        CHECK(-0.00139217 == Approx(jacobian[6]).margin(1e-7));
+        CHECK(0.52016303 == Approx(jacobian[7]).margin(1e-7));
+        CHECK(-0.09895398 == Approx(jacobian[8]).margin(1e-7));
+        CHECK(0.51843232 == Approx(jacobian[9]).margin(1e-7));
+    }
+}
 
 TEST_CASE("AdjointJacobianGPU::adjointJacobian Decomposed Rot gate, non "
           "computational basis state",
