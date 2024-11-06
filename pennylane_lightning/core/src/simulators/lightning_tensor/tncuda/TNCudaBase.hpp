@@ -45,7 +45,8 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 
 namespace Pennylane::LightningTensor::TNCuda {
 /**
- * @brief CRTP-enabled base class for cuTensorNet backends.
+ * @brief CRTP-enabled base class for cuTensorNet backends. This class stores
+ * both tensor data and gate data supported by both ExactTN and MPS.
  *
  * @tparam PrecisionT Floating point precision.
  * @tparam Derived Derived class to instantiate using CRTP.
@@ -58,8 +59,15 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     using BaseType = TensornetBase<PrecisionT, Derived>;
 
   protected:
-    const std::size_t maxBondDim_;
-    const std::vector<std::size_t> bondDims_;
+    // Note both maxBondDim_ and bondDims_ are used for both MPS and Exact
+    // Tensor Network. Per Exact Tensor Network, maxBondDim_ is 1 and bondDims_
+    // is {1}. Per Exact Tensor Network, setting bondDims_ allows call to
+    // appendInitialMPSState_() to append the initial state to the Exact Tensor
+    // Network state.
+    const std::size_t
+        maxBondDim_; // maxBondDim_ default is 1 for Exact Tensor Network
+    const std::vector<std::size_t>
+        bondDims_; // bondDims_ default is {1} for Exact Tensor Network
 
   private:
     const std::vector<std::vector<std::size_t>> sitesModes_;
@@ -90,7 +98,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
               BaseType::getDevTag())) {
         initTensors_();
         reset();
-        appendInitialMPSState_(getSitesExtentsPtr().data());
+        appendInitialMPSState_(
+            getSitesExtentsPtr()
+                .data()); // This API works for Exact Tensor Network as well,
+                          // given sitesExtents_ settings meet the requirement
+                          // of cutensornet.
     }
 
     explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag,
@@ -104,7 +116,11 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
               BaseType::getDevTag())) {
         initTensors_();
         reset();
-        appendInitialMPSState_(getSitesExtentsPtr().data());
+        appendInitialMPSState_(
+            getSitesExtentsPtr()
+                .data()); // This API works for Exact Tensor Network as well,
+                          // given sitesExtents_ settings meet the requirement
+                          // of cutensornet.
     }
 
     ~TNCudaBase() {}
@@ -130,20 +146,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     /**
      * @brief Get a vector of pointers to tensor data of each site.
      *
-     * @return std::vector<uint64_t *>
-     */
-    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<uint64_t *> {
-        std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensorsDataPtr[i] = reinterpret_cast<uint64_t *>(
-                tensors_[i].getDataBuffer().getData());
-        }
-        return tensorsDataPtr;
-    }
-
-    /**
-     * @brief Get a vector of pointers to tensor data of each site.
-     *
      * @return std::vector<CFP_t *>
      */
     [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
@@ -152,21 +154,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
         }
         return tensorsOutDataPtr;
-    }
-
-    /**
-     * @brief Get a vector of pointers to extents of each site.
-     *
-     * @return std::vector<int64_t const *> Note int64_t const* is
-     * required by cutensornet backend.
-     */
-    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t const *> {
-        std::vector<int64_t const *> sitesExtentsPtr_int64(
-            BaseType::getNumQubits());
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            sitesExtentsPtr_int64[i] = sitesExtents_int64_[i].data();
-        }
-        return sitesExtentsPtr_int64;
     }
 
     /**
@@ -431,7 +418,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                         const std::vector<PrecisionT> &params = {0.0},
                         const std::vector<ComplexT> &gate_matrix = {}) {
         PL_ABORT_IF(
-            wires.size() > 2 && this->getMethod() == "mps",
+            wires.size() > 2 && getMethod() == "mps",
             "Unsupported gate: MPS method only supports 1, 2-wires gates");
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
@@ -522,6 +509,94 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           const int32_t numHyperSamples = 1) const {
         get_accessor_(tensor_data, tensor_data_size, projected_modes,
                       projected_mode_values, numHyperSamples);
+    }
+
+  protected:
+    /**
+     * @brief Get a vector of pointers to extents of each site.
+     *
+     * @return std::vector<int64_t const *> Note int64_t const* is
+     * required by cutensornet backend.
+     */
+    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t const *> {
+        std::vector<int64_t const *> sitesExtentsPtr_int64(
+            BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            sitesExtentsPtr_int64[i] = sitesExtents_int64_[i].data();
+        }
+        return sitesExtentsPtr_int64;
+    }
+
+    /**
+     * @brief Dummy tensor operator update to allow multiple calls of
+     * appendMPSFinalize. This is a workaround to avoid the issue of the
+     * cutensornet library not allowing multiple calls of appendMPSFinalize.
+     *
+     * This function either appends a new `Identity` gate to the graph when the
+     * gate cache is empty or update the existing gate operator by itself.
+     */
+    void dummy_tensor_update() {
+        if (identiy_gate_ids_.empty()) {
+            applyOperation("Identity", {0}, false);
+        }
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* int64_t tensorId*/
+            static_cast<int64_t>(identiy_gate_ids_.front()),
+            /* void* */
+            static_cast<void *>(
+                gate_cache_->get_gate_device_ptr(identiy_gate_ids_.front())),
+            /* int32_t unitary*/ 1));
+    }
+
+    /**
+     * @brief Save quantumState information to data provided by a user
+     *
+     * @param tensorPtr Pointer to tensors provided by a user
+     */
+    void computeState(int64_t **extentsPtr, void **tensorPtr) {
+        cutensornetWorkspaceDescriptor_t workDesc;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
+            BaseType::getTNCudaHandle(), &workDesc));
+
+        // TODO we assign half (magic number is) of free memory size to the
+        // maximum memory usage.
+        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* std::size_t maxWorkspaceSizeDevice */ scratchSize,
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /*  cudaStream_t unused as of v24.03*/ 0x0));
+
+        std::size_t worksize =
+            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
+
+        PL_ABORT_IF(worksize > scratchSize,
+                    "Insufficient workspace size on Device!");
+
+        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
+        DataBuffer<std::size_t, int> d_scratch(d_scratch_length,
+                                               BaseType::getDevTag(), true);
+
+        setWorkSpaceMemory(BaseType::getTNCudaHandle(), workDesc,
+                           reinterpret_cast<void *>(d_scratch.getData()),
+                           worksize);
+
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetWorkspaceDescriptor_t */ workDesc,
+            /* int64_t * */ extentsPtr,
+            /* int64_t *stridesOut */ nullptr,
+            /* void * */ tensorPtr,
+            /* cudaStream_t */ BaseType::getDevTag().getStreamID()));
+
+        PL_CUTENSORNET_IS_SUCCESS(
+            cutensornetDestroyWorkspaceDescriptor(workDesc));
     }
 
   private:
@@ -620,80 +695,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyAccessor(accessor));
     }
 
-  protected:
-    /**
-     * @brief Dummy tensor operator update to allow multiple calls of
-     * appendMPSFinalize. This is a workaround to avoid the issue of the
-     * cutensornet library not allowing multiple calls of appendMPSFinalize.
-     *
-     * This function either appends a new `Identity` gate to the graph when the
-     * gate cache is empty or update the existing gate operator by itself.
-     */
-    void dummy_tensor_update() {
-        if (identiy_gate_ids_.empty()) {
-            applyOperation("Identity", {0}, false);
-        }
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
-            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* int64_t tensorId*/
-            static_cast<int64_t>(identiy_gate_ids_.front()),
-            /* void* */
-            static_cast<void *>(
-                gate_cache_->get_gate_device_ptr(identiy_gate_ids_.front())),
-            /* int32_t unitary*/ 1));
-    }
-
-    /**
-     * @brief Save quantumState information to data provided by a user
-     *
-     * @param tensorPtr Pointer to tensors provided by a user
-     */
-    void computeState(int64_t **extentsPtr, void **tensorPtr) {
-        cutensornetWorkspaceDescriptor_t workDesc;
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateWorkspaceDescriptor(
-            BaseType::getTNCudaHandle(), &workDesc));
-
-        // TODO we assign half (magic number is) of free memory size to the
-        // maximum memory usage.
-        const std::size_t scratchSize = cuUtil::getFreeMemorySize() / 2;
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStatePrepare(
-            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* std::size_t maxWorkspaceSizeDevice */ scratchSize,
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /*  cudaStream_t unused as of v24.03*/ 0x0));
-
-        std::size_t worksize =
-            getWorkSpaceMemorySize(BaseType::getTNCudaHandle(), workDesc);
-
-        PL_ABORT_IF(worksize > scratchSize,
-                    "Insufficient workspace size on Device!");
-
-        const std::size_t d_scratch_length = worksize / sizeof(std::size_t);
-        DataBuffer<std::size_t, int> d_scratch(d_scratch_length,
-                                               BaseType::getDevTag(), true);
-
-        setWorkSpaceMemory(BaseType::getTNCudaHandle(), workDesc,
-                           reinterpret_cast<void *>(d_scratch.getData()),
-                           worksize);
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateCompute(
-            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetWorkspaceDescriptor_t */ workDesc,
-            /* int64_t * */ extentsPtr,
-            /* int64_t *stridesOut */ nullptr,
-            /* void * */ tensorPtr,
-            /* cudaStream_t */ BaseType::getDevTag().getStreamID()));
-
-        PL_CUTENSORNET_IS_SUCCESS(
-            cutensornetDestroyWorkspaceDescriptor(workDesc));
-    }
-
-  private:
     /**
      * @brief Append initial MPS sites to the compute graph with data provided
      * by a user
@@ -708,7 +709,21 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /*const int64_t *const* */ extentsPtr,
             /*const int64_t *const* */ nullptr,
             /*void ** */
-            reinterpret_cast<void **>(getTensorsDataPtr().data())));
+            reinterpret_cast<void **>(getTensorsDataPtr_().data())));
+    }
+
+    /**
+     * @brief Get a vector of pointers to tensor data of each site.
+     *
+     * @return std::vector<uint64_t *>
+     */
+    [[nodiscard]] auto getTensorsDataPtr_() -> std::vector<uint64_t *> {
+        std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsDataPtr[i] = reinterpret_cast<uint64_t *>(
+                tensors_[i].getDataBuffer().getData());
+        }
+        return tensorsDataPtr;
     }
 
     /**

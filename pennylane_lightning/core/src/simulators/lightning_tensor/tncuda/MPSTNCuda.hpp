@@ -56,7 +56,6 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @tparam Precision Floating-point precision type.
  */
 
-// TODO check if CRTP is required by the end of project.
 template <class Precision>
 class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
   private:
