@@ -914,7 +914,6 @@ class StateVectorCudaManaged
     /**
      * @brief Gradient generator function associated with the RX gate.
      *
-     * @param sv Statevector
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
@@ -927,7 +926,6 @@ class StateVectorCudaManaged
     /**
      * @brief Gradient generator function associated with the RY gate.
      *
-     * @param sv Statevector
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
@@ -940,7 +938,6 @@ class StateVectorCudaManaged
     /**
      * @brief Gradient generator function associated with the RZ gate.
      *
-     * @param sv Statevector
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
@@ -1179,7 +1176,6 @@ class StateVectorCudaManaged
      * @brief Gradient generator function associated with the controlled-RX
      * gate.
      *
-     * @param sv Statevector
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Target wires to apply operation.

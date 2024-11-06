@@ -1823,7 +1823,7 @@ class StateVectorCudaMPI final
             data_type = CUDA_C_32F;
             compute_type = CUSTATEVEC_COMPUTE_32F;
         }
-
+        
         std::reverse(tgts.begin(), tgts.end());
         std::reverse(ctrls.begin(), ctrls.end());
 
