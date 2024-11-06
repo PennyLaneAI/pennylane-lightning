@@ -303,9 +303,9 @@ void applyNCT(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               const std::vector<std::size_t> &wires, const bool inverse = false,
               [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
     const Kokkos::complex<PrecisionT> shift =
-        (inverse) ? Kokkos::conj(exp(Kokkos::complex<PrecisionT>(
+        (inverse) ? Kokkos::conj(Kokkos::exp(Kokkos::complex<PrecisionT>(
                         0, static_cast<PrecisionT>(M_PI_4))))
-                  : exp(Kokkos::complex<PrecisionT>(
+                  : Kokkos::exp(Kokkos::complex<PrecisionT>(
                         0, static_cast<PrecisionT>(M_PI_4)));
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
@@ -342,8 +342,8 @@ void applyNCPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
     const Kokkos::complex<PrecisionT> shift =
-        (inverse) ? exp(-Kokkos::complex<PrecisionT>(0, angle))
-                  : exp(Kokkos::complex<PrecisionT>(0, angle));
+        (inverse) ? Kokkos::exp(-Kokkos::complex<PrecisionT>(0, angle))
+                  : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle));
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
@@ -380,8 +380,8 @@ void applyNCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
     const PrecisionT c = cos(angle * static_cast<PrecisionT>(0.5));
-    const PrecisionT s = (inverse) ? sin(angle * static_cast<PrecisionT>(0.5))
-                                   : sin(-angle * static_cast<PrecisionT>(0.5));
+    const PrecisionT s = (inverse) ? Kokkos::sin(angle * static_cast<PrecisionT>(0.5))
+                                   : Kokkos::sin(-angle * static_cast<PrecisionT>(0.5));
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
@@ -707,8 +707,8 @@ void applyControlledPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
     const Kokkos::complex<PrecisionT> s =
-        (inverse) ? exp(-Kokkos::complex<PrecisionT>(0, angle))
-                  : exp(Kokkos::complex<PrecisionT>(0, angle));
+        (inverse) ? Kokkos::exp(-Kokkos::complex<PrecisionT>(0, angle))
+                  : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle));
     applyNC2Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
@@ -977,8 +977,8 @@ void applySingleExcitationMinus(
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
     const Kokkos::complex<PrecisionT> e =
-        (inverse) ? exp(Kokkos::complex<PrecisionT>(0, angle / 2))
-                  : exp(Kokkos::complex<PrecisionT>(0, -angle / 2));
+        (inverse) ? Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle / 2))
+                  : Kokkos::exp(Kokkos::complex<PrecisionT>(0, -angle / 2));
     applyNC2Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
@@ -1004,8 +1004,8 @@ void applySingleExcitationPlus(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
     const Kokkos::complex<PrecisionT> e =
-        (inverse) ? exp(Kokkos::complex<PrecisionT>(0, -angle / 2))
-                  : exp(Kokkos::complex<PrecisionT>(0, angle / 2));
+        (inverse) ? Kokkos::exp(Kokkos::complex<PrecisionT>(0, -angle / 2))
+                  : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle / 2));
     applyNC2Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
@@ -1300,8 +1300,8 @@ void applyDoubleExcitationMinus(
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
     const Kokkos::complex<PrecisionT> e =
-        inverse ? exp(Kokkos::complex<PrecisionT>(0, angle / 2))
-                : exp(Kokkos::complex<PrecisionT>(0, -angle / 2));
+        inverse ? Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle / 2))
+                : Kokkos::exp(Kokkos::complex<PrecisionT>(0, -angle / 2));
     applyNC4Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
@@ -1344,8 +1344,8 @@ void applyDoubleExcitationPlus(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
     const Kokkos::complex<PrecisionT> e =
-        inverse ? exp(Kokkos::complex<PrecisionT>(0, -angle / 2))
-                : exp(Kokkos::complex<PrecisionT>(0, angle / 2));
+        inverse ? Kokkos::exp(Kokkos::complex<PrecisionT>(0, -angle / 2))
+                : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle / 2));
     applyNC4Functor(
         ExecutionSpace{}, arr_, num_qubits, wires,
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
