@@ -355,7 +355,8 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Controlled-Mixed, Obs=[XXX]",
             std::make_shared<NamedObs<StateVectorT>>(
                 "PauliX", std::vector<std::size_t>{2}));
         auto ops = OpsData<StateVectorT>(
-            {"RZ", "RY", "RZ", "CNOT", "CNOT", "RX", "RY", "RZ","SingleExcitation","RZ", "RY", "RZ"},
+            {"RZ", "RY", "RZ", "CNOT", "CNOT", "RX", "RY", "RZ",
+             "SingleExcitation", "RZ", "RY", "RZ"},
             {{param[0]},
              {param[1]},
              {param[2]},
@@ -368,11 +369,23 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=Controlled-Mixed, Obs=[XXX]",
              {param[0]},
              {param[1]},
              {param[2]}},
-            {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {2}, {1}, {0, 2}, {1}, {1}, {1}},
-            {false, false, false, false, false, false, false, false, false, false, false, false},
-            {{},{},{},{},{},{},{},{},{},{},{},{}},
-            {{},{},{},{},{},{0},{0},{0},{1},{},{},{}},
-            {{},{},{},{},{},{true},{true},{true},{true},{},{},{}});
+            {{0},
+             {0},
+             {0},
+             {0, 1},
+             {1, 2},
+             {1},
+             {2},
+             {1},
+             {0, 2},
+             {1},
+             {1},
+             {1}},
+            {false, false, false, false, false, false, false, false, false,
+             false, false, false},
+            {{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}},
+            {{}, {}, {}, {}, {}, {0}, {0}, {0}, {1}, {}, {}, {}},
+            {{}, {}, {}, {}, {}, {true}, {true}, {true}, {true}, {}, {}, {}});
 
         JacobianData<StateVectorT> tape{
             param.size(), psi.getLength(), psi.getData(), {obs}, ops, tp};
