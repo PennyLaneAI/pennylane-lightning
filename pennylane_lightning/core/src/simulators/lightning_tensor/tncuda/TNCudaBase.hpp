@@ -144,19 +144,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Get a vector of pointers to tensor data of each site.
-     *
-     * @return std::vector<CFP_t *>
-     */
-    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
-        std::vector<CFP_t *> tensorsOutDataPtr(BaseType::getNumQubits());
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
-        }
-        return tensorsOutDataPtr;
-    }
-
-    /**
      * @brief Get the full state vector representation of a quantum state.
      * Note that users/developers should be responsible to ensure that there is
      * sufficient memory on the host to store the full state vector.
@@ -240,15 +227,14 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     };
 
     /**
-     * @brief Update the ith MPS site data.
+     * @brief Update the ith tensor data.
      *
-     * @param site_idx Index of the MPS site.
+     * @param site_idx Index of the site.
      * @param host_data Pointer to the data on host.
      * @param host_data_size Length of the data.
      */
-    void updateMPSSiteData(const std::size_t site_idx,
-                           const ComplexT *host_data,
-                           std::size_t host_data_size) {
+    void updateSiteData(const std::size_t site_idx, const ComplexT *host_data,
+                        std::size_t host_data_size) {
         PL_ABORT_IF_NOT(
             site_idx < BaseType::getNumQubits(),
             "The site index should be less than the number of qubits.");
@@ -512,6 +498,19 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     }
 
   protected:
+    /**
+     * @brief Get a vector of pointers to tensor data of each site.
+     *
+     * @return std::vector<CFP_t *>
+     */
+    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
+        std::vector<CFP_t *> tensorsOutDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
+        }
+        return tensorsOutDataPtr;
+    }
+
     /**
      * @brief Get a vector of pointers to extents of each site.
      *
