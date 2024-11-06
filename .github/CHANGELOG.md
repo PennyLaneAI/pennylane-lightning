@@ -123,7 +123,7 @@
 
 ### Documentation
 
-* Update Lightning-Tensor installation docs and usage suggestions.
+* Update Lightning installation docs and usage suggestions.
   [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 * Mark ``CUQUANTUM_SDK`` environment variable set as an option.
