@@ -1,4 +1,5 @@
 #include <cassert>
+#include <chrono>
 #include <cstddef>
 #include <iostream>
 #include <vector>
@@ -239,17 +240,52 @@ void run_experiment(void (*oracle) (StateVectorLQubitManaged<double> &),
 
 
 int main(void) {
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+
     // Run experiment 1: 11010
-    std::cout << "Expected: " << ORACLE1_EXPECTED << std::endl;
+    std::cout << "Running Oracle 1. Expected: " << ORACLE1_EXPECTED << std::endl;
+    auto start_time = high_resolution_clock::now();
+
     run_experiment(oracle1, ORACLE1_QUBITS);
 
+    const duration time_oracle1 = duration_cast<milliseconds>(
+        high_resolution_clock::now() - start_time);
+
+    std::cout << std::endl;
+
+
     // Run experiment 2: 101010101
-    std::cout << "Expected: " << ORACLE2_EXPECTED << std::endl;
+    std::cout << "Running Oracle 2. Expected: " << ORACLE2_EXPECTED << std::endl;
+    start_time = high_resolution_clock::now();
+
     run_experiment(oracle2, ORACLE2_QUBITS);
 
+    const duration time_oracle2 = duration_cast<milliseconds>(
+        high_resolution_clock::now() - start_time);
+
+    std::cout << std::endl;
+
+
+
     // Run experiment 3: 0011001100110011
-    std::cout << "Expected: " << ORACLE3_EXPECTED << std::endl;
+    std::cout << "Running Oracle 3. Expected: " << ORACLE3_EXPECTED << std::endl;
+    start_time = high_resolution_clock::now();
+
     run_experiment(oracle3, ORACLE3_QUBITS);
+
+    const duration time_oracle3 = duration_cast<milliseconds>(
+        high_resolution_clock::now() - start_time);
+
+    std::cout << std::endl;
+
+
+    std::cout << "Time to run oracle 1: " << time_oracle1.count() << "ms\n";
+    std::cout << "Time to run oracle 2: " << time_oracle2.count() << "ms\n";
+    std::cout << "Time to run oracle 3: " << time_oracle3.count() << "ms\n";
 
     return 0;
 }

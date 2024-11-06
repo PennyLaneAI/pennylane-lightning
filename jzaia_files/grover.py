@@ -107,9 +107,24 @@ def gen_oracle(i):
 
 
 if __name__ == '__main__':
-    # Run all experiments
-    for i in range(len(ORACLES)):
-        print('Expecting:', ORACLES[i][1])
-        print('Got:')
-        run_experiment(*gen_oracle(i))
-        print()
+    import cProfile
+    import time
+
+    # Dummy run to let the interpreter run all functions once
+    run_experiment(*gen_oracle(0))
+
+    def main():
+        times = []
+        # Run all experiments
+        for i in range(len(ORACLES)):
+            print('Expecting:', ORACLES[i][1])
+            print('Got:')
+            start_time = time.time()
+            run_experiment(*gen_oracle(i))
+            times.append(time.time() - start_time)
+            print()
+
+        for i in range(len(times)):
+            print(f'Time to run oracle {i+1}: {int(1000*times[i])}ms')
+
+    cProfile.run('main()', sort='cumtime')
