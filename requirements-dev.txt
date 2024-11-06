@@ -18,4 +18,4 @@ cmake
 custatevec-cu12
 cutensornet-cu12
 pylint==2.7.4
-git+https://github.com/PennyLaneAI/pennylane.git@v0.39.0-rc0
+git+https://github.com/PennyLaneAI/pennylane.git@master
