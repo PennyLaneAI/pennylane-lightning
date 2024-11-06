@@ -1190,8 +1190,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1226,8 +1226,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1265,8 +1265,8 @@ class StateVectorCudaManaged
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
             index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
         }
-        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
-                                     cuUtil::ZERO<CFP_t>());
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
         diagonals[index] = cuUtil::ONE<CFP_t>();
         diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
 
@@ -1289,8 +1289,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1327,8 +1327,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1362,8 +1362,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1404,8 +1404,8 @@ class StateVectorCudaManaged
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
             index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
         }
-        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
-                                     cuUtil::ZERO<CFP_t>());
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
         diagonals[index] = cuUtil::ONE<CFP_t>();
         diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
         diagonals[index + 2] = -cuUtil::ONE<CFP_t>();
@@ -1431,8 +1431,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1466,8 +1466,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1503,8 +1503,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1540,8 +1540,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1575,8 +1575,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1624,8 +1624,8 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate permutation
-        std::vector<custatevecIndex_t> permutations(1
-                                                    << (ctrl_size + tgt_size));
+        std::vector<custatevecIndex_t> permutations(
+            Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
         std::size_t index = 0;
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
@@ -1677,8 +1677,8 @@ class StateVectorCudaManaged
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
             index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
         }
-        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
-                                     cuUtil::ZERO<CFP_t>());
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
         diagonals[index + 1] = cuUtil::ONE<CFP_t>();
 
         std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
@@ -1705,11 +1705,11 @@ class StateVectorCudaManaged
         for (std::size_t i = 0; i < controlled_values.size(); ++i) {
             index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
         }
-        std::vector<CFP_t> diagonals(1 << (ctrl_size + tgt_size),
-                                     cuUtil::ZERO<CFP_t>());
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
 
         std::fill(diagonals.begin() + index,
-                  diagonals.begin() + index + (1 << tgt_size),
+                  diagonals.begin() + index + Pennylane::Util::exp2(tgt_size),
                   cuUtil::ONE<CFP_t>());
 
         std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
@@ -1722,6 +1722,38 @@ class StateVectorCudaManaged
                                     adj);
 
         return -static_cast<PrecisionT>(1.0);
+    }
+
+    inline PrecisionT applyControlledGeneratorMultiRZ(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate diagonals
+        std::size_t index = 0;
+        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
+            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
+        }
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
+
+        for (std::size_t k = 0; k < Pennylane::Util::exp2(tgt_size); ++k) {
+            diagonals[index + k] = {
+                static_cast<PrecisionT>(1 - 2 * (std::popcount(k) % 2)), 0};
+        }
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+
+        return -static_cast<PrecisionT>(0.5);
     }
     /**
      * @brief Access the CublasCaller the object is using.
@@ -2175,9 +2207,18 @@ class StateVectorCudaManaged
                  std::forward<decltype(wires)>(wires),
                  std::forward<decltype(adjoint)>(adjoint));
          }},
-        {"GlobalPhase", [&](auto &&controlled_wires, auto &&controlled_values,
-                            auto &&wires, auto &&adjoint) {
+        {"GlobalPhase",
+         [&](auto &&controlled_wires, auto &&controlled_values, auto &&wires,
+             auto &&adjoint) {
              return applyControlledGeneratorGlobalPhase(
+                 std::forward<decltype(controlled_wires)>(controlled_wires),
+                 std::forward<decltype(controlled_values)>(controlled_values),
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
+         }},
+        {"MultiRZ", [&](auto &&controlled_wires, auto &&controlled_values,
+                        auto &&wires, auto &&adjoint) {
+             return applyControlledGeneratorMultiRZ(
                  std::forward<decltype(controlled_wires)>(controlled_wires),
                  std::forward<decltype(controlled_values)>(controlled_values),
                  std::forward<decltype(wires)>(wires),

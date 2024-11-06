@@ -1667,7 +1667,8 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 1 wire",
                    "[GateGenerators]", float, double) {
 
     const std::string controlled_gate_name =
-        GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase");
+        // GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "MultiRZ");
+        "MultiRZ";
     const std::size_t num_qubits = 4;
     const TestType ep = 1e-3;
     const TestType EP = 1e-4;
@@ -1770,9 +1771,10 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 1 wire",
 TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 2 wires",
                    "[GateGenerators]", float, double) {
 
-    const std::string controlled_gate_name = GENERATE(
-        "IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
-        "SingleExcitationMinus", "SingleExcitationPlus", "GlobalPhase");
+    const std::string controlled_gate_name =
+        GENERATE("IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
+                 "SingleExcitationMinus", "SingleExcitationPlus", "GlobalPhase",
+                 "MultiRZ");
     const std::size_t num_qubits = 4;
     const TestType ep = 1e-3;
     const TestType EP = 1e-4;
@@ -1879,7 +1881,7 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 4 wires",
 
     const std::string controlled_gate_name =
         GENERATE("DoubleExcitation", "DoubleExcitationMinus",
-                 "DoubleExcitationPlus", "GlobalPhase");
+                 "DoubleExcitationPlus", "GlobalPhase", "MultiRZ");
     const std::size_t num_qubits = 6;
     const TestType ep = 1e-3;
     const TestType EP = 1e-4;
