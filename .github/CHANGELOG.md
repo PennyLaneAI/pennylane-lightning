@@ -13,7 +13,7 @@
 
 ### Bug fixes
 
-* Fix PTM stable latest. Removing FIXME patch for v0.39
+* Fix PTM stable latest. Removing FIXME patch for v0.39.
   [(#982)](https://github.com/PennyLaneAI/pennylane-lightning/pull/982)
 
 ### Contributors
