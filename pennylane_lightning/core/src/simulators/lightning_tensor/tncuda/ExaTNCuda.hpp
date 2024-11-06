@@ -50,6 +50,7 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
   private:
     using BaseType = TNCudaBase<Precision, ExaTNCuda>;
 
+    const std::vector<std::size_t> bondDims_;
     const std::vector<std::vector<std::size_t>> sitesModes_;
     const std::vector<std::vector<std::size_t>> sitesExtents_;
     const std::vector<std::vector<int64_t>> sitesExtents_int64_;
@@ -65,8 +66,8 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
     ExaTNCuda() = delete;
 
     explicit ExaTNCuda(const std::size_t numQubits)
-        : BaseType(numQubits), sitesModes_(setSitesModes_()),
-          sitesExtents_(setSitesExtents_()),
+        : BaseType(numQubits), bondDims_(setBondDims_()),
+          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
         BaseType::reset();
@@ -74,8 +75,8 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
     }
 
     explicit ExaTNCuda(const std::size_t numQubits, DevTag<int> dev_tag)
-        : BaseType(numQubits, dev_tag), sitesModes_(setSitesModes_()),
-          sitesExtents_(setSitesExtents_()),
+        : BaseType(numQubits, dev_tag), bondDims_(setBondDims_()),
+          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()) {
         initTensors_();
         BaseType::reset();
@@ -107,6 +108,16 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
 
   private:
     /**
+     * @brief Return bondDims to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::size_t>
+     */
+    std::vector<std::size_t> setBondDims_() {
+        std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1, 1);
+        return localBondDims;
+    }
+
+    /**
      * @brief Return siteModes to the member initializer
      * NOTE: This method only works for the open boundary condition
      * @return std::vector<std::vector<std::size_t>>
@@ -114,7 +125,21 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
     std::vector<std::vector<std::size_t>> setSitesModes_() {
         std::vector<std::vector<std::size_t>> localSitesModes;
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            std::vector<std::size_t> localSiteModes = {i};
+            std::vector<std::size_t> localSiteModes;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteModes =
+                    std::vector<std::size_t>({i, i + BaseType::getNumQubits()});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteModes = std::vector<std::size_t>(
+                    {i + BaseType::getNumQubits() - 1, i});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
+                localSiteModes =
+                    std::vector<std::size_t>({i + BaseType::getNumQubits() - 1,
+                                              i, i + BaseType::getNumQubits()});
+            }
             localSitesModes.push_back(std::move(localSiteModes));
         }
         return localSitesModes;
@@ -129,8 +154,21 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
         std::vector<std::vector<std::size_t>> localSitesExtents;
 
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
-            std::vector<std::size_t> localSiteExtents{
-                BaseType::getQubitDims()[i]};
+            std::vector<std::size_t> localSiteExtents;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {BaseType::getQubitDims()[i], bondDims_[i]});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i]});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i],
+                     bondDims_[i]});
+            }
             localSitesExtents.push_back(std::move(localSiteExtents));
         }
         return localSitesExtents;
