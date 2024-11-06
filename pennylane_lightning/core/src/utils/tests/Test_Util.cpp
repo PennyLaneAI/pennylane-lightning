@@ -217,3 +217,19 @@ TEMPLATE_TEST_CASE("Util::kronProd", "[Util][LinearAlgebra]", float, double) {
         CHECK(vec == expected);
     }
 }
+
+TEST_CASE("Util::areVecsDisjoint", "[Util][LinearAlgebra]") {
+    SECTION("Test for disjoint vectors") {
+        std::vector<std::size_t> vec0{0, 1, 2};
+        std::vector<std::size_t> vec1{3, 4, 5};
+
+        REQUIRE(areVecsDisjoint(vec0, vec1) == true);
+    }
+
+    SECTION("Test for joint vectors") {
+        std::vector<std::size_t> vec0{0, 1, 2};
+        std::vector<std::size_t> vec1{2, 4, 5};
+
+        REQUIRE(areVecsDisjoint(vec0, vec1) == false);
+    }
+}

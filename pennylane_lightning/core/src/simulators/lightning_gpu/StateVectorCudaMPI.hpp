@@ -386,6 +386,15 @@ class StateVectorCudaMPI final
 
         if (opName == "Identity") {
             return;
+        } else if (opName == "GlobalPhase") {
+            PrecisionT param = adjoint ? -params[0] : params[0];
+            CFP_t scale_factor{std::cos(param), -std::sin(param)};
+            scaleC_CUDA<CFP_t, CFP_t, int>(
+                scale_factor, BaseType::getDataBuffer().getData(),
+                BaseType::getDataBuffer().getLength(),
+                BaseType::getDataBuffer().getDevTag().getDeviceID(),
+                BaseType::getDataBuffer().getDevTag().getStreamID(),
+                getCublasCaller());
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate({opName}, ctrls, tgts, params.front(),
                                      adjoint);
