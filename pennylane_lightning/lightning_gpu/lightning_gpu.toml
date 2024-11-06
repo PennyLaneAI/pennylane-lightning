@@ -1,18 +1,17 @@
-# TODO: verify the contents of this file against what the device reports.
 schema = 2
 
 # The union of all gate types listed in this section must match what
 # the device considers "supported" through PennyLane's device API.
 [operators.gates.native]
 
-Identity               = { properties = [ "differentiable" ] }
-PauliX                 = { properties = [ "controllable", "differentiable" ] }
-PauliY                 = { properties = [ "controllable", "differentiable" ] }
-PauliZ                 = { properties = [ "controllable", "differentiable" ] }
-Hadamard               = { properties = [ "controllable", "differentiable" ] }
-S                      = { properties = [ "controllable", "differentiable" ] }
-T                      = { properties = [ "controllable", "differentiable" ] }
-PhaseShift             = { properties = [ "controllable", "differentiable" ] }
+Identity               = { properties = [ "invertible", "differentiable" ] }
+PauliX                 = { properties = [ "invertible", "controllable", "differentiable" ] }
+PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
+PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
+Hadamard               = { properties = [ "invertible", "controllable", "differentiable" ] }
+S                      = { properties = [ "invertible", "controllable", "differentiable" ] }
+T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
+PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
 RX                     = { properties = [ "controllable", "differentiable" ] }
 RY                     = { properties = [ "controllable", "differentiable" ] }
 RZ                     = { properties = [ "controllable", "differentiable" ] }
@@ -73,14 +72,19 @@ DiagonalQubitUnitary   = {}
 # Observables supported by the device
 [operators.observables]
 
-Identity               = {}
-PauliX                 = {}
-PauliY                 = {}
-PauliZ                 = {}
-Hadamard               = {}
-Hermitian              = {}
-Hamiltonian            = {}
-SparseHamiltonian      = {}
+Identity               = { properties = [ "differentiable" ] }
+PauliX                 = { properties = [ "differentiable" ] }
+PauliY                 = { properties = [ "differentiable" ] }
+PauliZ                 = { properties = [ "differentiable" ] }
+Hadamard               = { properties = [ "differentiable" ] }
+Hermitian              = { properties = [ "differentiable" ] }
+Hamiltonian            = { properties = [ "differentiable" ] }
+SparseHamiltonian      = { properties = [ "differentiable" ] }
+Sum                    = { properties = [ "differentiable" ] }
+SProd                  = { properties = [ "differentiable" ] }
+Prod                   = { properties = [ "differentiable" ] }
+Exp                    = { properties = [ "differentiable" ] }
+LinearCombination      = { properties = [ "differentiable" ] }
 
 [measurement_processes]
 
@@ -93,7 +97,7 @@ Counts                 = { condition = [ "finiteshots" ] }
 
 [compilation]
 # If the device is compatible with qjit
-qjit_compatible = false
+qjit_compatible = true
 # If the device requires run time generation of the quantum circuit.
 runtime_code_generation = false
 # If the device supports mid circuit measurements natively

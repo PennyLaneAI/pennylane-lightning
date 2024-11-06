@@ -102,6 +102,11 @@ def test_gate_unitary_correct(op, op_name):
     if wires == 1 and device_name == "lightning.tensor":
         pytest.skip("Skipping single wire device on lightning.tensor.")
 
+    if op_name == "QubitUnitary" and device_name == "lightning.tensor":
+        pytest.skip(
+            "Skipping QubitUnitary on lightning.tensor. as `lightning.tensor` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to use one device per circuit for `lightning.tensor`."
+        )
+
     dev = qml.device(device_name, wires=wires)
 
     @qml.qnode(dev)
@@ -145,6 +150,40 @@ def test_gate_unitary_correct(op, op_name):
         unitary[:, i] = out
 
     unitary_expected = qml.matrix(op[0](*op1, **op2)) @ qml.matrix(op[0](*op[1], **op[2]))
+    assert np.allclose(unitary, unitary_expected)
+
+
+@pytest.mark.parametrize("op_name", ld.operations)
+def test_gate_unitary_correct_lt(op, op_name):
+    """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
+    comparing to the expected version"""
+
+    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
+        pytest.skip("Skipping operation because it is a state preparation")
+    if op == None:
+        pytest.skip("Skipping operation.")
+
+    wires = len(op[2]["wires"])
+
+    if wires == 1 and device_name == "lightning.tensor":
+        pytest.skip("Skipping single wire device on lightning.tensor.")
+
+    unitary = np.zeros((2**wires, 2**wires), dtype=np.complex128)
+
+    for i, input in enumerate(itertools.product([0, 1], repeat=wires)):
+        dev = qml.device(device_name, wires=wires)
+
+        @qml.qnode(dev)
+        def output(input):
+            qml.BasisState(input, wires=range(wires))
+            op[0](*op[1], **op[2])
+            return qml.state()
+
+        out = output(np.array(input))
+        unitary[:, i] = out
+
+    unitary_expected = qml.matrix(op[0](*op[1], **op[2]))
+
     assert np.allclose(unitary, unitary_expected)
 
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-OLDVER=0.37.0
-LVER=0.38.0
+OLDVER=0.38.0
+LVER=0.39.0
 rreplace(){
    grep -rl "$1" . | xargs sed -i "s|$1|$2|g"
 }
