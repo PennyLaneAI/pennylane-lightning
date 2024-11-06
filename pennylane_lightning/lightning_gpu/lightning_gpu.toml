@@ -49,7 +49,6 @@ GlobalPhase            = { properties = [ "invertible", "differentiable" ] }
 [operators.gates.decomp]
 
 BasisState             = {}
-QubitStateVector       = {}
 StatePrep              = {}
 MultiControlledX       = {}
 

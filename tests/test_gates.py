@@ -92,7 +92,7 @@ def test_gate_unitary_correct(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
+    if op_name in ("BasisState", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
@@ -158,7 +158,7 @@ def test_gate_unitary_correct_lt(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
+    if op_name in ("BasisState", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
@@ -192,7 +192,7 @@ def test_inverse_unitary_correct(op, op_name):
     """Test if lightning device correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
+    if op_name in ("BasisState", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")

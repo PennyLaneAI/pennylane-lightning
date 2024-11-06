@@ -952,29 +952,3 @@ class TestExpOperatorArithmetic:
         expected = np.cos(phi) + np.sin(theta)
 
         assert np.allclose(result, expected, tol)
-
-
-@pytest.mark.parametrize(
-    "op,par,wires,expected",
-    [
-        (qml.QubitStateVector, [0, 1], [1], [1, -1]),
-        (qml.QubitStateVector, [0, 1], [0], [-1, 1]),
-        (qml.QubitStateVector, [1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], [1], [1, 0]),
-        (qml.QubitStateVector, [1j / 2.0, np.sqrt(3) / 2.0], [1], [1, -0.5]),
-        (qml.QubitStateVector, [(2 - 1j) / 3.0, 2j / 3.0], [0], [1 / 9.0, 1]),
-    ],
-)
-def test_state_vector_2_qubit_subset(tol, op, par, wires, expected, lightning_sv):
-    """Tests qubit state vector preparation and measure on subsets of 2 qubits"""
-
-    tape = qml.tape.QuantumScript(
-        [op(par, wires=wires)], [qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))]
-    )
-
-    statevector = lightning_sv(2)
-    statevector = get_final_state(statevector, tape)
-
-    m = LightningMeasurements(statevector)
-    result = measure_final_state(m, tape)
-
-    assert np.allclose(result, expected, tol)

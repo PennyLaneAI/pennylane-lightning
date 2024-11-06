@@ -91,11 +91,11 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
     }
 }
 
-TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=[QubitStateVector, "
+TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=["
           "StatePrep, BasisState], Obs=[Z,Z]",
           "[AdjointJacobianGPU]") {
     const std::string test_ops =
-        GENERATE("QubitStateVector", "StatePrep", "BasisState");
+        GENERATE("StatePrep", "BasisState");
     using StateVectorT = StateVectorCudaManaged<double>;
     using ComplexT = StateVectorT::ComplexT;
     AdjointJacobian<StateVectorT> adj;
@@ -124,7 +124,7 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=[QubitStateVector, "
                                         ops,           tp};
 
         // apply_operations should be set as false to cover if statement in
-        // adjointJacobian when ops is "QubitStateVector" "StatePrep" or
+        // adjointJacobian when ops is "StatePrep" or
         // "BasisState". If apply_operations is set as true, errors will be
         // thrown out since ops mentioned above is not supported in
         // apply_operation method of sv.

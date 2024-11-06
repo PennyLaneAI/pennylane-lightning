@@ -66,7 +66,6 @@ Supported operations and observables
     ~pennylane.PSWAP
     ~pennylane.QFT
     ~pennylane.QubitCarry
-    ~pennylane.QubitStateVector
     ~pennylane.QubitSum
     ~pennylane.QubitUnitary
     ~pennylane.Rot

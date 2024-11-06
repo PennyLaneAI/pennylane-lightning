@@ -816,7 +816,7 @@ class TestSerializeOps:
         assert s == s_expected
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    @pytest.mark.parametrize("stateprep", qml.StatePrep)
     def test_skips_prep_circuit(self, stateprep, wires_map):
         """Test expected serialization for a simple circuit with state preparation, such that
         the state preparation is skipped"""

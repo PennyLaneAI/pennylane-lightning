@@ -103,7 +103,6 @@ The "lightning.tensor" supports all gate operations supported by PennyLane.
     ~pennylane.PSWAP
     ~pennylane.QFT
     ~pennylane.QubitCarry
-    ~pennylane.QubitStateVector
     ~pennylane.QubitSum
     ~pennylane.QubitUnitary
     ~pennylane.Rot

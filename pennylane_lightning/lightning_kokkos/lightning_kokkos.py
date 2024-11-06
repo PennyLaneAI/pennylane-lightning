@@ -67,7 +67,6 @@ from ._state_vector import LightningKokkosStateVector
 _operations = frozenset(
     {
         "Identity",
-        "QubitStateVector",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",

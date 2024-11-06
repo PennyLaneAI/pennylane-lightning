@@ -165,7 +165,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    @pytest.mark.parametrize("stateprep", qml.StatePrep)
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_pauli_rotation_gradient(
         self, stateprep, G, theta, batch_obs, dev
@@ -192,7 +192,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    @pytest.mark.parametrize("stateprep", qml.StatePrep)
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_Rot_gradient(self, stateprep, theta, batch_obs, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
@@ -761,7 +761,6 @@ class TestAdjointJacobianQNode:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    qml.QubitStateVector(unitary_group.rvs(2**8, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.adjoint(qml.RX(params[2], wires=wires[2]))

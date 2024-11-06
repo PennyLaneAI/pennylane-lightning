@@ -279,7 +279,7 @@ class TestComparison:
     )
     @pytest.mark.parametrize("wires", range(1, 17))
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
+    @pytest.mark.parametrize("stateprep", qml.StatePrep)
     def test_n_qubit_circuit(
         self, monkeypatch, stateprep, wires, lightning_dev_version, num_threads
     ):
