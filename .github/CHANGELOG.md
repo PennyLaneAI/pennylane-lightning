@@ -1,4 +1,4 @@
-# Release 0.40.0-dev
+# Release 0.40.0-dev0
 
 ### New features since last release
 
@@ -17,7 +17,6 @@
 
 This release contains contributions from (in alphabetical order):
 
-Shuli Shu
 
 ---
 
