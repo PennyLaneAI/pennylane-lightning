@@ -28,7 +28,6 @@ from pennylane import numpy as np
 from pennylane import qnode
 from pennylane.devices import ExecutionConfig
 from pennylane.tape import QuantumScript
-from scipy.stats import unitary_group
 
 from pennylane_lightning.lightning_gpu_ops import LightningException
 
@@ -165,10 +164,9 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
-    @pytest.mark.parametrize("stateprep", qml.StatePrep)
     @pytest.mark.parametrize("batch_obs", [True, False])
     def test_pauli_rotation_gradient(
-        self, stateprep, G, theta, batch_obs, dev
+        self, G, theta, batch_obs, dev
     ):  # pylint: disable=too-many-arguments
         """Tests that the automatic gradients of Pauli rotations are correct."""
         random_state = np.array(
@@ -176,7 +174,7 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         )
 
         qs = QuantumScript(
-            [stateprep(random_state, 0), G(theta, 0)],
+            [qml.StatePrep(random_state, 0), G(theta, 0)],
             [qml.expval(qml.PauliZ(0))],
             trainable_params=[1],
         )
@@ -192,16 +190,15 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    @pytest.mark.parametrize("stateprep", qml.StatePrep)
     @pytest.mark.parametrize("batch_obs", [True, False])
-    def test_Rot_gradient(self, stateprep, theta, batch_obs, dev):
+    def test_Rot_gradient(self, theta, batch_obs, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         qs = QuantumScript(
             [
-                stateprep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0),
+                qml.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0),
                 qml.Rot(*params, wires=[0]),
             ],
             [qml.expval(qml.PauliZ(0))],

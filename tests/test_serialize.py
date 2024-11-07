@@ -816,12 +816,11 @@ class TestSerializeOps:
         assert s == s_expected
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
-    @pytest.mark.parametrize("stateprep", qml.StatePrep)
-    def test_skips_prep_circuit(self, stateprep, wires_map):
+    def test_skips_prep_circuit(self, wires_map):
         """Test expected serialization for a simple circuit with state preparation, such that
         the state preparation is skipped"""
         with qml.tape.QuantumTape() as tape:
-            stateprep([1, 0], wires=0)
+            qml.StatePrep([1, 0], wires=0)
             qml.BasisState([1], wires=1)
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)

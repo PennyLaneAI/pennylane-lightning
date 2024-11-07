@@ -279,9 +279,8 @@ class TestComparison:
     )
     @pytest.mark.parametrize("wires", range(1, 17))
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.parametrize("stateprep", qml.StatePrep)
     def test_n_qubit_circuit(
-        self, monkeypatch, stateprep, wires, lightning_dev_version, num_threads
+        self, monkeypatch, wires, lightning_dev_version, num_threads
     ):
         """Test an n-qubit circuit"""
 
@@ -294,7 +293,7 @@ class TestComparison:
         def circuit(measurement):
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers
             and concludes with a simple PauliZ measurement"""
-            stateprep(vec, wires=range(wires))
+            qml.StatePrep(vec, wires=range(wires))
             qml.StronglyEntanglingLayers(w, wires=range(wires))
             return measurement() if callable(measurement) else measurement
 

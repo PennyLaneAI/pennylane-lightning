@@ -325,6 +325,7 @@ class TestAdjointJacobian:
 def simple_circuit_ansatz(params, wires):
     """Circuit ansatz containing a large circuit"""
     return [
+        qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires),
         qml.RX(params[0], wires=wires[0]),
         qml.RY(params[1], wires=wires[1]),
         qml.RZ(params[2], wires=wires[3]),
