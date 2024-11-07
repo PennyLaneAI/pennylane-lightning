@@ -2,16 +2,22 @@
 
 ### New features since last release
 
+* Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
+  [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
+
 ### Breaking changes
 
 ### Improvements
 
-* Merge v0.39.0-rc branch to the master and bump version.
-  [(#981)](https://github.com/PennyLaneAI/pennylane-lightning/pull/981)
+* Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
+  [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
 ### Documentation
 
 ### Bug fixes
+
+* Fix Pennylane dependency branch (`v0.39_rc0` to `master`).
+  [(#984)](https://github.com/PennyLaneAI/pennylane-lightning/pull/984)
 
 * Fix PTM stable latest. Removing FIXME patch for v0.39.
   [(#982)](https://github.com/PennyLaneAI/pennylane-lightning/pull/982)
@@ -20,7 +26,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses,
+Ali Asadi, Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
