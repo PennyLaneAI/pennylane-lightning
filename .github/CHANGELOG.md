@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Removed all instances of `qml.QubitStateVector`.
+  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
+
 ### Improvements
 
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
@@ -26,7 +29,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Luis Alfredo Nuñez Meneses, Shuli Shu
+Ali Asadi, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu
 
 ---
 
