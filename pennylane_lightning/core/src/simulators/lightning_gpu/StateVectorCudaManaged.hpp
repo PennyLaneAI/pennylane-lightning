@@ -542,10 +542,9 @@ class StateVectorCudaManaged
                         "`controlled_values`.");
         if (controlled_wires.empty()) {
             return applyGenerator(opName, wires, adjoint);
-        } else {
-            return applyControlledGenerator(opName, controlled_wires,
-                                            controlled_values, wires, adjoint);
         }
+        return applyControlledGenerator(opName, controlled_wires,
+                                        controlled_values, wires, adjoint);
     }
 
     /**
@@ -1193,10 +1192,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index], permutations[index + 1]);
 
         // Generate diagonals
@@ -1229,10 +1231,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index], permutations[index + 1]);
 
         // Generate diagonals
@@ -1261,10 +1266,13 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate diagonals
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::vector<CFP_t> diagonals(
             Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
         diagonals[index] = cuUtil::ONE<CFP_t>();
@@ -1292,10 +1300,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 1], permutations[index + 2]);
         std::swap(permutations[index], permutations[index + 3]);
 
@@ -1330,10 +1341,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 1], permutations[index + 2]);
 
         // Generate diagonals
@@ -1365,10 +1379,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 0], permutations[index + 3]);
         std::swap(permutations[index + 1], permutations[index + 2]);
 
@@ -1400,10 +1417,13 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate diagonals
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::vector<CFP_t> diagonals(
             Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
         diagonals[index] = cuUtil::ONE<CFP_t>();
@@ -1434,10 +1454,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 1], permutations[index + 2]);
 
         // Generate diagonals
@@ -1469,10 +1492,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 1], permutations[index + 2]);
 
         // Generate diagonals
@@ -1506,10 +1532,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 1], permutations[index + 2]);
 
         // Generate diagonals
@@ -1543,10 +1572,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 3], permutations[index + 12]);
 
         // Generate diagonals
@@ -1578,10 +1610,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 3], permutations[index + 12]);
 
         // Generate diagonals
@@ -1627,10 +1662,13 @@ class StateVectorCudaManaged
         std::vector<custatevecIndex_t> permutations(
             Pennylane::Util::exp2(ctrl_size + tgt_size));
         std::iota(permutations.begin(), permutations.end(), 0);
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::swap(permutations[index + 3], permutations[index + 12]);
 
         // Generate diagonals
@@ -1673,10 +1711,13 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate diagonals
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::vector<CFP_t> diagonals(
             Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
         diagonals[index + 1] = cuUtil::ONE<CFP_t>();
@@ -1701,10 +1742,13 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate diagonals
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::vector<CFP_t> diagonals(
             Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
 
@@ -1732,10 +1776,13 @@ class StateVectorCudaManaged
         const std::size_t tgt_size = wires.size();
 
         // Generate diagonals
-        std::size_t index = 0;
-        for (std::size_t i = 0; i < controlled_values.size(); ++i) {
-            index |= controlled_values[i] << (ctrl_size + tgt_size - 1 - i);
-        }
+        std::size_t i = 0;
+        std::size_t index = std::accumulate(
+            controlled_values.begin(), controlled_values.end(), std::size_t{0},
+            [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                return acc | (static_cast<std::size_t>(value)
+                              << (ctrl_size + tgt_size - 1 - i++));
+            });
         std::vector<CFP_t> diagonals(
             Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
 
