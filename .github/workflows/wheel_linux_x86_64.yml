@@ -36,15 +36,8 @@ jobs:
     with:
       event_name: ${{ github.event_name }}
 
-  determine_runner:
-    if: github.event.pull_request.draft == false
-    name: Determine runner type to use
-    uses: ./.github/workflows/determine-workflow-runner.yml
-    with:
-      default_runner: ubuntu-latest
-
   build_dependencies:
-    needs: [set_wheel_build_matrix, determine_runner]
+    needs: [set_wheel_build_matrix]
     strategy:
       matrix:
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
@@ -52,7 +45,7 @@ jobs:
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Kokkos core (${{ matrix.exec_model }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
     container: ${{ matrix.container_img }}
 
     steps:
@@ -100,7 +93,7 @@ jobs:
           cd -
 
   linux-wheels-x86-64:
-    needs: [set_wheel_build_matrix, build_dependencies, determine_runner]
+    needs: [set_wheel_build_matrix, build_dependencies]
     strategy:
       fail-fast: false
       matrix:
@@ -112,7 +105,7 @@ jobs:
         container_img: ["quay.io/pypa/manylinux_2_28_x86_64"]
     timeout-minutes: 30
     name: Linux::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11","cp312-*":"3.12" }')[matrix.cibw_build] }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
     container:
       image: ${{ matrix.container_img }}
       options: --privileged

@@ -268,7 +268,7 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.gpu"),
+        device_name in ("lightning.kokkos"),
         reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
