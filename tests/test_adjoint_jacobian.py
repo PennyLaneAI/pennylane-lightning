@@ -1079,6 +1079,7 @@ class TestAdjointJacobianQNode:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
+    qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.adjoint(qml.RX(params[2], wires=wires[2]))
