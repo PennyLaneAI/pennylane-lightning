@@ -14,7 +14,7 @@ jobs:
     name: Docker release - Linux::x86_64
     uses: ./.github/workflows/docker_linux_x86_64.yml
     with:
-      lightning-version: v0.38.0_rc
-      pennylane-version: v0.38.0-rc0
+      lightning-version: v0.39.0_rc
+      pennylane-version: v0.39.0-rc0
       push-to-dockerhub: false
     secrets: inherit # pass all secrets

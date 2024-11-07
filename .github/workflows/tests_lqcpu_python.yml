@@ -194,13 +194,6 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - name: Patching tests following deprecation FIXME(remove after v0.39)
-        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
-        run: |
-          pushd tests
-          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
-          popd
-
       - name: Run PennyLane-Lightning unit tests
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
