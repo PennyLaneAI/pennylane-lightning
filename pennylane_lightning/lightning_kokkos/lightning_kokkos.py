@@ -26,6 +26,7 @@ from warnings import warn
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
+from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
@@ -63,89 +64,19 @@ from ._adjoint_jacobian import LightningKokkosAdjointJacobian
 from ._measurements import LightningKokkosMeasurements
 from ._state_vector import LightningKokkosStateVector
 
-# The set of supported operations.
-_operations = frozenset(
-    {
-        "Identity",
-        "QubitStateVector",
-        "QubitUnitary",
-        "ControlledQubitUnitary",
-        "MultiControlledX",
-        "DiagonalQubitUnitary",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "MultiRZ",
-        "GlobalPhase",
-        "C(GlobalPhase)",
-        "Hadamard",
-        "S",
-        "Adjoint(S)",
-        "T",
-        "Adjoint(T)",
-        "SX",
-        "Adjoint(SX)",
-        "CNOT",
-        "SWAP",
-        "ISWAP",
-        "PSWAP",
-        "Adjoint(ISWAP)",
-        "SISWAP",
-        "Adjoint(SISWAP)",
-        "SQISW",
-        "CSWAP",
-        "Toffoli",
-        "CY",
-        "CZ",
-        "PhaseShift",
-        "ControlledPhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "IsingXX",
-        "IsingYY",
-        "IsingZZ",
-        "IsingXY",
-        "SingleExcitation",
-        "SingleExcitationPlus",
-        "SingleExcitationMinus",
-        "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
-        "QubitCarry",
-        "QubitSum",
-        "OrbitalRotation",
-        "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
-    }
-)
-# End the set of supported operations.
-
-# The set of supported observables.
-_observables = frozenset(
-    {
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "Hermitian",
-        "Identity",
-        "Projector",
-        "SparseHamiltonian",
-        "Hamiltonian",
-        "LinearCombination",
-        "Sum",
-        "SProd",
-        "Prod",
-        "Exp",
-    }
-)
+_to_matrix_ops = {
+    "BlockEncode": OperatorProperties(),
+    "DiagonalQubitUnitary": OperatorProperties(),
+    "ECR": OperatorProperties(),
+    "ISWAP": OperatorProperties(),
+    "OrbitalRotation": OperatorProperties(),
+    "PSWAP": OperatorProperties(),
+    "QubitCarry": OperatorProperties(),
+    "QubitSum": OperatorProperties(),
+    "SISWAP": OperatorProperties(),
+    "SQISW": OperatorProperties(),
+    "SX": OperatorProperties(),
+}
 
 
 def stopping_condition(op: Operator) -> bool:
@@ -154,7 +85,7 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    return op.name in _operations
+    return LightningKokkos.capabilities.supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -165,7 +96,7 @@ def stopping_condition_shots(op: Operator) -> bool:
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.kokkos``."""
-    return obs.name in _observables
+    return LightningKokkos.capabilities.supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -185,7 +116,7 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return obs.name in _observables
+    return LightningKokkos.capabilities.supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -278,14 +209,10 @@ class LightningKokkos(LightningBase):
     kokkos_config = {}
 
     # This `config` is used in Catalyst-Frontend
-    config = Path(__file__).parent / "lightning_kokkos.toml"
+    config_filepath = Path(__file__).parent / "lightning_kokkos.toml"
 
-    # TODO: Move supported ops/obs to TOML file
-    operations = _operations
-    # The names of the supported operations.
-
-    observables = _observables
-    # The names of the supported observables.
+    # TODO: remove this when customizable multiple decomposition pathways are implemented
+    _to_matrix_ops = _to_matrix_ops
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
