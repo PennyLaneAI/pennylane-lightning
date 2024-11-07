@@ -658,6 +658,21 @@ template <typename PrecisionT, class GateImplementation> void testApplyCSWAP() {
 }
 PENNYLANE_RUN_TEST(CSWAP);
 
+template <typename PrecisionT, class GateImplementation>
+void testApplyQFT() {
+    using ComplexT = std::complex<PrecisionT>;
+    const std::size_t num_qubits = 3;
+
+    auto st = createZeroState<ComplexT>(num_qubits);
+    GateImplementation::applyQFT(st.data(), num_qubits, {0, 1, 2}, false);
+
+    std::vector<ComplexT> expected_result = {/* expected QFT state */};
+
+    CHECK(st == approx(expected_result).margin(1e-7));
+}
+
+PENNYLANE_RUN_TEST(QFT);
+
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyOperation non-param "
                    "one-qubit with controls",
                    "[StateVectorLQubitManaged]", float, double) {

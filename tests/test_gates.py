@@ -663,3 +663,21 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
             assert np.allclose(circ(), circ_def(), tol)
+
+@pytest.mark.parametrize("num_qubits", [2, 3, 4])
+def test_qft_gate_correctness(num_qubits):
+    dev = qml.device("lightning.qubit", wires=num_qubits)
+
+    @qml.qnode(dev)
+    def circuit():
+        qml.QFT(wires=range(num_qubits))
+        return qml.state()
+
+    output_state = circuit()
+    expected_matrix = qml.QFT.compute_matrix(num_qubits)
+
+    initial_state = np.zeros((2**num_qubits,), dtype=np.complex128)
+    initial_state[0] = 1
+    expected_state = expected_matrix @ initial_state
+
+    assert np.allclose(output_state, expected_state, atol=1e-6)

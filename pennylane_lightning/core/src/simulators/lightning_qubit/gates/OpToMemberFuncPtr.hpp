@@ -1061,6 +1061,13 @@ inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
     return func(data, num_qubits, matrix, wires, adj);
 }
 
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::QFT> {
+    constexpr static auto value =
+        &GateImplementation::template applyQFT<PrecisionT>;
+};
+
 /**
  * @brief Call a controlled matrix operation.
  * @tparam PrecisionT Floating point type for the state-vector.

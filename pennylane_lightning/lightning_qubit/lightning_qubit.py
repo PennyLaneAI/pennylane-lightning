@@ -142,6 +142,7 @@ _operations = frozenset(
         "ECR",
         "BlockEncode",
         "C(BlockEncode)",
+        "QFT",
     }
 )
 # End the set of supported operations.

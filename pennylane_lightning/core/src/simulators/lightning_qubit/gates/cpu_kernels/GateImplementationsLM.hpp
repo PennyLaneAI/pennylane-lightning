@@ -2626,6 +2626,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT>
+    static void applyQFT(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool inverse = false) {
+        for (std::size_t i = 0; i < wires.size(); ++i) {
+            applyHadamard(arr, num_qubits, {wires[i]}, inverse);
+            for (std::size_t j = i + 1; j < wires.size(); ++j) {
+                PrecisionT angle = M_PI / (1U << (j - i));
+                applyControlledPhaseShift(arr, num_qubits, {wires[j], wires[i]}, inverse, angle);
+            }
+        }
+        if (!inverse) {
+            std::reverse(wires.begin(), wires.end());
+        }
+    }
+
+    template <class PrecisionT>
     [[nodiscard]] static auto
     applyNCGeneratorMultiRZ(std::complex<PrecisionT> *arr,
                             std::size_t num_qubits,
