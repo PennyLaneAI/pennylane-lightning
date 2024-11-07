@@ -696,7 +696,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         // ****____ for stride 4
         const std::size_t k = branch ? 0 : 1;
 #ifdef _OPENMP
-#pragma omp parallel for collapse(2)
+#pragma omp parallel for collapse(2) default(none) shared(arr, half_section_size, stride, k)
 #endif
         for (std::size_t idx = 0; idx < half_section_size; idx++) {
             for (std::size_t ids = 0; ids < stride; ids++) {
