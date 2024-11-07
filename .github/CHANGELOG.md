@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
+  [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
+
 ### Documentation
 
 ### Bug fixes
@@ -23,7 +26,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Luis Alfredo Nuñez Meneses, Shuli Shu
+Ali Asadi, Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
