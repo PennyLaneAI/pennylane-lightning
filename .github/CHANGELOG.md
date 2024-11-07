@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add OpenMP support to `collapse` method in the `lightning.qubit` backend.
+  [(#986)](https://github.com/PennyLaneAI/pennylane-lightning/pull/986)
+
 * Add `mid-circuit measurements` support to `lightning.gpu`'s single-GPU backend.
   [(#931)](https://github.com/PennyLaneAI/pennylane-lightning/pull/931)
 
