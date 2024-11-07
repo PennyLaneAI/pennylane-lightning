@@ -701,17 +701,17 @@ static auto getSingleExcitation(const std::vector<U> &params)
 template <class CFP_t, class U = double>
 static constexpr auto getGeneratorSingleExcitation() -> std::vector<CFP_t> {
     return {
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
         -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
     };
 }
 
@@ -781,17 +781,17 @@ template <class CFP_t, class U = double>
 static constexpr auto getGeneratorSingleExcitationMinus()
     -> std::vector<CFP_t> {
     return {
-        cuUtil::ONE<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ONE<CFP_t>(),   cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
         -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ONE<CFP_t>(),
     };
 }
 
@@ -860,17 +860,17 @@ static auto getSingleExcitationPlus(const std::vector<U> &params)
 template <class CFP_t, class U = double>
 static constexpr auto getGeneratorSingleExcitationPlus() -> std::vector<CFP_t> {
     return {
-        -cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        -cuUtil::ONE<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
         -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), -cuUtil::ONE<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  -cuUtil::ONE<CFP_t>(),
     };
 }
 
