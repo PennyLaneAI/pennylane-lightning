@@ -886,6 +886,9 @@ class TestLightningDeviceIntegration:
             ("BasisState", [0, 0], [1, 1]),
             ("BasisState", [1, 0], [-1, 1]),
             ("BasisState", [0, 1], [1, -1]),
+            ("StatePrep", [1, 0, 0, 0], [1, 1]),
+            ("StatePrep", [0, 0, 1, 0], [-1, 1]),
+            ("StatePrep", [0, 1, 0, 0], [1, -1]),
         ],
     )
     def test_supported_state_preparation(self, qubit_device, tol, name, par, expected_output):
@@ -939,6 +942,67 @@ class TestLightningDeviceIntegration:
         def circuit():
             op(np.array(par), wires=wires)
             return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
+
+        assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
+
+    # This test is run with two expvals
+    @pytest.mark.parametrize(
+        "name,par,wires,expected_output",
+        [
+            ("StatePrep", [0, 1], [1], [1, -1]),
+            ("StatePrep", [0, 1], [0], [-1, 1]),
+            ("StatePrep", [1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], [1], [1, 0]),
+            ("StatePrep", [1j / 2.0, np.sqrt(3) / 2.0], [1], [1, -0.5]),
+            ("StatePrep", [(2 - 1j) / 3.0, 2j / 3.0], [0], [1 / 9.0, 1]),
+        ],
+    )
+    def test_state_vector_2_qubit_subset(
+        self, qubit_device, tol, name, par, wires, expected_output
+    ):
+        """Tests qubit state vector preparation on subsets of 2 qubits"""
+        dev = qubit_device(wires=2)
+        op = getattr(qml.ops, name)
+
+        par = np.array(par)
+
+        @qml.qnode(dev)
+        def circuit():
+            op(par, wires=wires)
+            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
+
+        assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
+
+    # This test is run with three expvals
+    @pytest.mark.parametrize(
+        "name,par,wires,expected_output",
+        [
+            (
+                "StatePrep",
+                [1j / np.sqrt(10), (1 - 2j) / np.sqrt(10), 0, 0, 0, 2 / np.sqrt(10), 0, 0],
+                [0, 1, 2],
+                [1 / 5.0, 1.0, -4 / 5.0],
+            ),
+            ("StatePrep", [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)], [0, 2], [0.0, 1.0, 0.0]),
+            ("StatePrep", [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)], [0, 1], [0.0, 0.0, 1.0]),
+            ("StatePrep", [0, 1, 0, 0, 0, 0, 0, 0], [2, 1, 0], [-1.0, 1.0, 1.0]),
+            ("StatePrep", [0, 1j, 0, 0, 0, 0, 0, 0], [0, 2, 1], [1.0, -1.0, 1.0]),
+            ("StatePrep", [0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)], [1, 0], [-1.0, 0.0, 1.0]),
+            ("StatePrep", [0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)], [0, 1], [0.0, -1.0, 1.0]),
+        ],
+    )
+    def test_state_vector_3_qubit_subset(
+        self, qubit_device, tol, name, par, wires, expected_output
+    ):
+        """Tests qubit state vector preparation on subsets of 3 qubits"""
+        dev = qubit_device(wires=3)
+        op = getattr(qml.ops, name)
+
+        par = np.array(par)
+
+        @qml.qnode(dev)
+        def circuit():
+            op(par, wires=wires)
+            return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1)), qml.expval(qml.PauliZ(2))
 
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
