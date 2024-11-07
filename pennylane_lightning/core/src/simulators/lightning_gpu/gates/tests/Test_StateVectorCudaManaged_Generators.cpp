@@ -795,8 +795,8 @@ TEST_CASE("Generators::applyGeneratorControlledPhaseShift",
 TEST_CASE("Generators::applyGeneratorSingleExcitation", "[GateGenerators]") {
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix(
         16, {0.0, 0.0});
-    matrix[6] = {0.0, 1.0};
-    matrix[9] = {0.0, -1.0};
+    matrix[6] = {0.0, -1.0};
+    matrix[9] = {0.0, 1.0};
     std::mt19937 re{1337U};
 
     for (std::size_t num_qubits = 2; num_qubits <= 5; num_qubits++) {
@@ -874,8 +874,8 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationMinus",
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix(
         16, {0.0, 0.0});
     matrix[0] = {1.0, 0.0};
-    matrix[6] = {0.0, 1.0};
-    matrix[9] = {0.0, -1.0};
+    matrix[6] = {0.0, -1.0};
+    matrix[9] = {0.0, 1.0};
     matrix[15] = {1.0, 0.0};
     std::mt19937 re{1337U};
 
@@ -954,8 +954,8 @@ TEST_CASE("Generators::applyGeneratorSingleExcitationPlus",
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix(
         16, {0.0, 0.0});
     matrix[0] = {-1.0, 0.0};
-    matrix[6] = {0.0, 1.0};
-    matrix[9] = {0.0, -1.0};
+    matrix[6] = {0.0, -1.0};
+    matrix[9] = {0.0, 1.0};
     matrix[15] = {-1.0, 0.0};
     std::mt19937 re{1337U};
 
@@ -1052,8 +1052,8 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitation_GPU",
 
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix(
         256, {0.0, 0.0});
-    matrix[60] = {0.0, 1.0};
-    matrix[195] = {0.0, -1.0};
+    matrix[60] = {0.0, -1.0};
+    matrix[195] = {0.0, 1.0};
     std::mt19937 re{1337U};
 
     for (std::size_t num_qubits = 4; num_qubits <= 8; num_qubits++) {
@@ -1145,8 +1145,8 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationMinus_GPU",
           "[GateGenerators]") {
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix(
         256, {0.0, 0.0});
-    matrix[60] = {0.0, 1.0};
-    matrix[195] = {0.0, -1.0};
+    matrix[60] = {0.0, -1.0};
+    matrix[195] = {0.0, 1.0};
     for (std::size_t i = 0; i < 16; i++) {
         if (i != 3 && i != 12) {
             const size_t idx = i * 17;
@@ -1244,8 +1244,8 @@ TEST_CASE("Generators::applyGeneratorDoubleExcitationPlus_GPU",
           "[GateGenerators]") {
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix(
         256, {0.0, 0.0});
-    matrix[60] = {0.0, 1.0};
-    matrix[195] = {0.0, -1.0};
+    matrix[60] = {0.0, -1.0};
+    matrix[195] = {0.0, 1.0};
     for (std::size_t i = 0; i < 16; i++) {
         if (i != 3 && i != 12) {
             const size_t idx = i * 17;
