@@ -28,6 +28,7 @@ from pennylane import numpy as np
 from pennylane import qnode
 from pennylane.devices import ExecutionConfig
 from pennylane.tape import QuantumScript
+from scipy.stats import unitary_group
 
 from pennylane_lightning.lightning_gpu_ops import LightningException
 
@@ -758,6 +759,7 @@ class TestAdjointJacobianQNode:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
+    qml.StatePrep(unitary_group.rvs(2**8, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.adjoint(qml.RX(params[2], wires=wires[2]))
