@@ -699,8 +699,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 #pragma omp parallel for collapse(2)
 #endif
         for (std::size_t idx = 0; idx < half_section_size; idx++) {
-            const std::size_t offset = stride * (k + 2 * idx);
             for (std::size_t ids = 0; ids < stride; ids++) {
+                const std::size_t offset = stride * (k + 2 * idx);
                 arr[offset + ids] = {0., 0.};
             }
         }
