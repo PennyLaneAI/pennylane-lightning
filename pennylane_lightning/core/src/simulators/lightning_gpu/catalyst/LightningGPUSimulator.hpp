@@ -1,4 +1,4 @@
-// Copyright 2022-2024 Xanadu Quantum Technologies Inc.
+// Copyright 2024 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file LightningKokkosSimulator.hpp
+ * @file LightningGPUSimulator.hpp
  */
 
 #pragma once
@@ -29,44 +29,44 @@
 #include <stdexcept>
 #include <unordered_map>
 
-#include "AdjointJacobianKokkos.hpp"
-#include "MeasurementsKokkos.hpp"
-#include "StateVectorKokkos.hpp"
+#include "AdjointJacobianGPU.hpp"
+#include "MeasurementsGPU.hpp"
+#include "StateVectorCudaManaged.hpp"
 
 #include "CacheManager.hpp"
 #include "Exception.hpp"
-#include "LightningKokkosObsManager.hpp"
+#include "LightningGPUObsManager.hpp"
 #include "QuantumDevice.hpp"
 #include "QubitManager.hpp"
 #include "Utils.hpp"
 
 namespace Catalyst::Runtime::Simulator {
 /**
- * @brief  Kokkos state vector class wrapper for Catalyst.
+ * @brief  LGPU state vector class wrapper for Catalyst.
  * This class inherits from the QuantumDevice class defined in Catalyst.
  * More info:
  * https://github.com/PennyLaneAI/catalyst/blob/main/runtime/include/QuantumDevice.hpp
  *
  */
-class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
+class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
-    using StateVectorT = Pennylane::LightningKokkos::StateVectorKokkos<double>;
+    using StateVectorT =
+        Pennylane::LightningGPU::StateVectorCudaManaged<double>;
 
     // static constants for RESULT values
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
     static constexpr bool GLOBAL_RESULT_FALSE_CONST = false;
 
     Catalyst::Runtime::QubitManager<QubitIdType, std::size_t> qubit_manager{};
-    Catalyst::Runtime::CacheManager<Kokkos::complex<double>> cache_manager{};
+    Catalyst::Runtime::CacheManager<std::complex<double>> cache_manager{};
     bool tape_recording{false};
 
-    // set default to avoid C++ tests segfaults in analytic mode
-    std::size_t device_shots{0};
+    std::size_t device_shots;
 
     std::mt19937 *gen{nullptr};
 
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
-    LightningKokkosObsManager<double> obs_manager{};
+    LightningGPUObsManager<double> obs_manager{};
 
     inline auto isValidQubit(QubitIdType wire) -> bool {
         return this->qubit_manager.isValidQubitId(wire);
@@ -98,20 +98,18 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 
   public:
-    explicit LightningKokkosSimulator(
-        const std::string &kwargs = "{}") noexcept {
+    explicit LightningGPUSimulator(const std::string &kwargs = "{}") {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
         device_shots = args.contains("shots")
                            ? static_cast<std::size_t>(std::stoll(args["shots"]))
                            : 0;
     }
-    ~LightningKokkosSimulator() noexcept = default;
+    ~LightningGPUSimulator() = default;
 
-    LightningKokkosSimulator(const LightningKokkosSimulator &) = delete;
-    LightningKokkosSimulator &
-    operator=(const LightningKokkosSimulator &) = delete;
-    LightningKokkosSimulator(LightningKokkosSimulator &&) = delete;
-    LightningKokkosSimulator &operator=(LightningKokkosSimulator &&) = delete;
+    LightningGPUSimulator(const LightningGPUSimulator &) = delete;
+    LightningGPUSimulator &operator=(const LightningGPUSimulator &) = delete;
+    LightningGPUSimulator(LightningGPUSimulator &&) = delete;
+    LightningGPUSimulator &operator=(LightningGPUSimulator &&) = delete;
 
     auto AllocateQubit() -> QubitIdType override;
     auto AllocateQubits(std::size_t num_qubits)

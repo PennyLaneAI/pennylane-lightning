@@ -1106,3 +1106,256 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
         CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
+                   "one-qubit with controls",
+                   "[StateVectorCudaManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire = GENERATE(0, 1, 2, 3);
+    auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv0(num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv1(num_qubits);
+
+    sv0.CopyHostDataToGpu(st0.data(), st0.size());
+    sv1.CopyHostDataToGpu(st0.data(), st0.size());
+
+    DYNAMIC_SECTION("N-controlled PauliX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            sv0.applyOperation("CNOT", {control, wire});
+            sv1.applyOperation("PauliX", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        } else {
+            PL_REQUIRE_THROWS_MATCHES(
+                sv0.applyOperation("PauliX", std::vector<std::size_t>{control},
+                                   std::vector<bool>{true},
+                                   std::vector<std::size_t>{wire}),
+                LightningException,
+                "`controlled_wires` and target wires must be disjoint.");
+        }
+
+        if (control != 0 && wire != 0 && control != wire) {
+            sv0.applyOperation("Toffoli", {0, control, wire});
+            sv1.applyOperation("PauliX", std::vector<std::size_t>{0, control},
+                               std::vector<bool>{true, true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+
+            sv0.applyOperation("Toffoli", {control, 0, wire});
+            sv1.applyOperation("PauliX", std::vector<std::size_t>{control, 0},
+                               std::vector<bool>{true, true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled PauliY - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            sv0.applyOperation("CY", {control, wire});
+            sv1.applyOperation("PauliY", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled PauliZ - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            sv0.applyOperation("CZ", {control, wire});
+            sv1.applyOperation("PauliZ", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled Hadamard - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            const auto matrix = getHadamard<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(
+                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            sv1.applyOperation("Hadamard", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+    DYNAMIC_SECTION("N-controlled S - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            const auto matrix = getS<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(
+                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            sv1.applyOperation("S", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled T - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            const std::vector<std::complex<PrecisionT>> matrix =
+                getT<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(
+                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            sv1.applyOperation("T", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
+                   "two-qubit with controls",
+                   "[StateVectorCudaManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 4;
+    const auto margin = PrecisionT{1e-5};
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire0 = GENERATE(0, 1, 2, 3);
+    const std::size_t wire1 = GENERATE(0, 1, 2, 3);
+    auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv0(num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv1(num_qubits);
+
+    sv0.CopyHostDataToGpu(st0.data(), st0.size());
+    sv1.CopyHostDataToGpu(st0.data(), st0.size());
+
+    DYNAMIC_SECTION("N-controlled SWAP - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            sv0.applyOperation("CSWAP", {control, wire0, wire1});
+            sv1.applyOperation("SWAP", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire0, wire1});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled SWAP with matrix- "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            const std::vector<std::complex<PrecisionT>> matrix =
+                getSWAP<std::complex, PrecisionT>();
+            sv0.applyControlledMatrix(matrix.data(), matrix.size(),
+                                      std::vector<std::size_t>{control},
+                                      std::vector<bool>{true},
+                                      std::vector<std::size_t>{wire0, wire1});
+            sv1.applyOperation("SWAP", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire0, wire1});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::controlled Toffoli",
+                   "[StateVectorCudaManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 6;
+    const auto margin = PrecisionT{1e-5};
+    const std::size_t control = GENERATE(0, 1, 2);
+    auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+    StateVectorCudaManaged<PrecisionT> sv0(num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv1(num_qubits);
+
+    sv0.CopyHostDataToGpu(st0.data(), st0.size());
+    sv1.CopyHostDataToGpu(st0.data(), st0.size());
+
+    const std::vector<std::complex<PrecisionT>> matrix =
+        getToffoli<std::complex, PrecisionT>();
+    sv0.applyControlledMatrix(
+        matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+        std::vector<bool>{true}, std::vector<std::size_t>{3, 4, 5});
+    sv1.applyOperation("PauliX", std::vector<std::size_t>{control, 3, 4},
+                       std::vector<bool>{true, true, true},
+                       std::vector<std::size_t>{5});
+    REQUIRE(sv0.getDataVector() == approx(sv1.getDataVector()).margin(margin));
+}
+
+TEMPLATE_TEST_CASE(
+    "StateVectorCudaManaged::controlled_gate_direct_matrix_offload",
+    "[StateVectorCudaManaged]", float, double) {
+    using PrecisionT = TestType;
+    std::mt19937 re{1337};
+    const int num_qubits = 6;
+    const auto margin = PrecisionT{1e-5};
+    const std::size_t control = GENERATE(0, 1, 2);
+    auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+    StateVectorCudaManaged<PrecisionT> sv0(num_qubits);
+    StateVectorCudaManaged<PrecisionT> sv1(num_qubits);
+
+    sv0.CopyHostDataToGpu(st0.data(), st0.size());
+    sv1.CopyHostDataToGpu(st0.data(), st0.size());
+
+    SECTION("Catch failures caused by unsupported named gates") {
+        PL_CHECK_THROWS_MATCHES(
+            sv0.applyOperation("paulix",
+                               std::vector<std::size_t>{control, 3, 4},
+                               std::vector<bool>{true, true, true},
+                               std::vector<std::size_t>{5}),
+            LightningException, "Currently unsupported gate: paulix");
+    }
+
+    SECTION("direct base matrix offload") {
+        const std::vector<std::complex<PrecisionT>> matrix = {
+            {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
+        sv0.applyControlledMatrix(matrix.data(), matrix.size(),
+                                  std::vector<std::size_t>{control, 3, 4},
+                                  std::vector<bool>{true, true, true},
+                                  std::vector<std::size_t>{5});
+        sv1.applyOperation("Paulix", std::vector<std::size_t>{control, 3, 4},
+                           std::vector<bool>{true, true, true},
+                           std::vector<std::size_t>{5}, false, {0.0}, matrix);
+        REQUIRE(sv0.getDataVector() ==
+                approx(sv1.getDataVector()).margin(margin));
+    }
+}
