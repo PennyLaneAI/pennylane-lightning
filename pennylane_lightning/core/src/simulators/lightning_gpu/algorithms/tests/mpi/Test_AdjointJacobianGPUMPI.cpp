@@ -110,8 +110,7 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
 TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=["
           "StatePrep, BasisState], Obs=[Z,Z]",
           "[AdjointJacobianGPUMPI]") {
-    const std::string test_ops =
-        GENERATE("StatePrep", "BasisState");
+    const std::string test_ops = GENERATE("StatePrep", "BasisState");
     using StateVectorT = StateVectorCudaMPI<double>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);

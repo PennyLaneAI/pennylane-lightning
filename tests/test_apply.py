@@ -837,9 +837,7 @@ class TestLightningDeviceIntegration:
             ("CZ", [-1 / 2, -1 / 2]),
         ],
     )
-    def test_supported_gate_two_wires_no_parameters(
-        self, qubit_device, tol, name, expected_output
-    ):
+    def test_supported_gate_two_wires_no_parameters(self, qubit_device, tol, name, expected_output):
         """Tests supported gates that act on two wires that are not parameterized"""
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)

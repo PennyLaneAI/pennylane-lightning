@@ -94,8 +94,7 @@ TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=RY, Obs=X",
 TEST_CASE("AdjointJacobianGPU::adjointJacobian Op=["
           "StatePrep, BasisState], Obs=[Z,Z]",
           "[AdjointJacobianGPU]") {
-    const std::string test_ops =
-        GENERATE("StatePrep", "BasisState");
+    const std::string test_ops = GENERATE("StatePrep", "BasisState");
     using StateVectorT = StateVectorCudaManaged<double>;
     using ComplexT = StateVectorT::ComplexT;
     AdjointJacobian<StateVectorT> adj;

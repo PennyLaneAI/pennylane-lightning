@@ -279,9 +279,7 @@ class TestComparison:
     )
     @pytest.mark.parametrize("wires", range(1, 17))
     @pytest.mark.parametrize("num_threads", [1, 2])
-    def test_n_qubit_circuit(
-        self, monkeypatch, wires, lightning_dev_version, num_threads
-    ):
+    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads):
         """Test an n-qubit circuit"""
 
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
