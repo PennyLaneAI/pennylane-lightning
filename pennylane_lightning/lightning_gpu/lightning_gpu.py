@@ -260,7 +260,7 @@ class LightningGPU(LightningBase):
     # Device specific options
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
-    
+
     # TODO: remove this when customizable multiple decomposition pathways are implemented
     _to_matrix_ops = _to_matrix_ops
 

@@ -61,7 +61,6 @@ from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
 
-
 _to_matrix_ops = {
     "BlockEncode": OperatorProperties(controllable=True),
     "DiagonalQubitUnitary": OperatorProperties(),
