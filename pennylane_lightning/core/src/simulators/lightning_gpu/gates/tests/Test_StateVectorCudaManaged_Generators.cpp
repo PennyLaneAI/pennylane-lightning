@@ -1666,7 +1666,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGeneratorGlobalPhase",
 TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 1 wire",
                    "[GateGenerators]", float, double) {
 
-    const std::string controlled_gate_name = GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "MultiRZ");
+    const std::string controlled_gate_name =
+        GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "MultiRZ");
     const std::size_t num_qubits = 4;
     const TestType ep_deriv = 1e-3;
     const TestType ep_margin = 1e-4;
