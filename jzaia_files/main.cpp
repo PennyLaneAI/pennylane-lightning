@@ -111,77 +111,25 @@ void groversMirror(StateVectorLQubitManaged<double> &sv) {
  * rightmost qubit if the leftmost 5 qubits are in the state |11010>
  *
  * @param sv The statevector to apply the oracle to. Must be 6 qubits
+ * @param control_vals The state the oracle should select
  */
-void oracle1(StateVectorLQubitManaged<double> &sv) {
+void oracle(StateVectorLQubitManaged<double> &sv,
+            const std::vector<bool> &control_vals) {
     // Sanity check statevector
-    assert(sv.getNumQubits() == ORACLE1_QUBITS);
+    assert(sv.getNumQubits() == control_vals.size()+1);
 
     // Define controls to be used for applying the X gate
-    std::vector<size_t> controls(ORACLE1_QUBITS-1);
+    std::vector<size_t> controls(control_vals.size());
     std::iota(controls.begin(), controls.end(), 0);
-    std::vector<bool> control_vals = ORACLE1_EXPECTED;
 
     // Apply the X gate to the ancilla, controlled on the chosen bitstring
     GateImplementationsLM::applyNCPauliX(sv.getData(),
                                          sv.getNumQubits(),
                                          controls,
                                          control_vals,
-                                         {ORACLE1_QUBITS-1},
+                                         {control_vals.size()},
                                          false);
 }
-
-/**
- * @brief The second testing oracle for Grover's
- *
- * A 10-qubit test oracle for Grover's algorithm. Applies a pauli-X to the
- * rightmost qubit if the leftmost 9 qubits are in the state |101010101>
- *
- * @param sv The statevector to apply the oracle to. Must be 10 qubits
- */
-void oracle2(StateVectorLQubitManaged<double> &sv) {
-    // Sanity check statevector
-    assert(sv.getNumQubits() == ORACLE2_QUBITS);
-
-    // Define controls to be used for applying the X gate
-    std::vector<size_t> controls(ORACLE2_QUBITS-1);
-    std::iota(controls.begin(), controls.end(), 0);
-    std::vector<bool> control_vals = ORACLE2_EXPECTED;
-
-    // Apply the X gate to the ancilla, controlled on the chosen bitstring
-    GateImplementationsLM::applyNCPauliX(sv.getData(),
-                                         sv.getNumQubits(),
-                                         controls,
-                                         control_vals,
-                                         {ORACLE2_QUBITS-1},
-                                         false);
-}
-
-/**
- * @brief The third testing oracle for Grover's
- *
- * A 17-qubit test oracle for Grover's algorithm. Applies a pauli-X to the
- * rightmost qubit if the leftmost 16 qubits are in the state |0011001100110011>
- *
- * @param sv The statevector to apply the oracle to. Must be 17 qubits
- */
-void oracle3(StateVectorLQubitManaged<double> &sv) {
-    // Sanity check statevector
-    assert(sv.getNumQubits() == ORACLE3_QUBITS);
-
-    // Define controls to be used for applying the X gate
-    std::vector<size_t> controls(ORACLE3_QUBITS-1);
-    std::iota(controls.begin(), controls.end(), 0);
-    std::vector<bool> control_vals = ORACLE3_EXPECTED;
-
-    // Apply the X gate to the ancilla, controlled on the chosen bitstring
-    GateImplementationsLM::applyNCPauliX(sv.getData(),
-                                         sv.getNumQubits(),
-                                         controls,
-                                         control_vals,
-                                         {ORACLE3_QUBITS-1},
-                                         false);
-}
-
 
 /**
  * @brief Overall function for running Grover's algorithm on a chosen oracle
@@ -191,12 +139,12 @@ void oracle3(StateVectorLQubitManaged<double> &sv) {
  * (where N = 2^(# of non-ancilla qubits)). This implementation assumes that
  * the oracle always picks precisly 1 state (rather than an arbitrary number).
  *
- * @param oracle A black-box function that acts on a created statevector
  * @param num_qubits The number of qubits in the circuit the oracle acts
  *        on (includes the ancilla)
+ * @param expected The state which the oracle should apply phase to
  */
-void run_experiment(void (*oracle) (StateVectorLQubitManaged<double> &),
-                    const size_t num_qubits) {
+void run_experiment(const size_t num_qubits,
+                    const std::vector<bool> &expected) {
     // Create the statevector for this circuit
     // NOTE: qubits are numbered left-to-right order
     StateVectorLQubitManaged<double> sv(num_qubits);
@@ -208,7 +156,7 @@ void run_experiment(void (*oracle) (StateVectorLQubitManaged<double> &),
     const size_t nreps = static_cast<size_t>(sqrt(1llu << (num_qubits-1)));
     for (size_t reps = nreps; reps > 0; --reps) {
         // Apply the oracle to apply a phase of -1 to desired state
-        oracle(sv);
+        oracle(sv, expected);
         // Perform amp-amp by reflecting over |+++...+>
         groversMirror(sv);
     }
@@ -220,28 +168,14 @@ void run_experiment(void (*oracle) (StateVectorLQubitManaged<double> &),
     std::iota(wires.begin(), wires.end(), 0);
     std::vector<bool> common_result(num_qubits - 1, false);
 
-    std::transform(wires.begin(), wires.end(), common_result.begin(), [&Measurer](size_t wire){
-        NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ", {wire});
-        return Measurer.expval(obs) < 0;
-    });
-
     // Perform a "measurement" by taking the expected value of this qubit over multiple runs
-    // for (size_t obs_wire=0; obs_wire < num_qubits - 1; ++obs_wire) {
-    //     NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ", {obs_wire});
-    //     double result = Measurer.expval(obs);
-    //     common_result[obs_wire] = (result < 0);
-    // }
-
-    // // Commented out: Print the raw statevector output (too large and messy)
-    // std::vector<std::size_t> wires(num_qubits-1);
-    // for (size_t i = 0; i < num_qubits - 1; ++i) { wires[i] = i; }
-    // std::vector<double> probabilities = Measurer.probs(wires);
-
-    // size_t qubitString = 0;
-    // for (auto prob : probabilities) {
-    //     std::cout << qubitString << ": " << prob << std::endl;
-    //     ++qubitString;
-    // }
+    std::transform(wires.begin(),
+                   wires.end(),
+                   common_result.begin(),
+                   [&Measurer](size_t wire){
+                       NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ", {wire});
+                       return Measurer.expval(obs) < 0;
+                   });
 
     std::cout << "Measured results (most common with expval): " << common_result << std::endl;
 }
@@ -254,46 +188,38 @@ int main(void) {
     using std::chrono::milliseconds;
 
 
-    // Run experiment 1: 11010
-    std::cout << "Running Oracle 1. Expected: " << ORACLE1_EXPECTED << std::endl;
-    auto start_time = high_resolution_clock::now();
+    std::vector<std::pair<size_t, std::vector<bool>>> inputs = {
+        // Experiment 1: 11010
+        {ORACLE1_QUBITS, ORACLE1_EXPECTED},
+        // Experiment 2: 101010101
+        {ORACLE2_QUBITS, ORACLE2_EXPECTED},
+        // Experiment 3: 0011001100110011
+        {ORACLE3_QUBITS, ORACLE3_EXPECTED},
+    };
 
-    run_experiment(oracle1, ORACLE1_QUBITS);
+    std::vector<milliseconds> runtimes(inputs.size());
 
-    const duration time_oracle1 = duration_cast<milliseconds>(
-        high_resolution_clock::now() - start_time);
+    for (size_t i = 0; i < inputs.size(); ++i) {
+        auto num_qubits = inputs[i].first;
+        auto expected   = inputs[i].second;
 
-    std::cout << std::endl;
+        std::cout << "Running Oracle " << i+1 << ". Expected: ";
+        std::cout << expected << std::endl;
 
+        auto start_time = high_resolution_clock::now();
 
-    // Run experiment 2: 101010101
-    std::cout << "Running Oracle 2. Expected: " << ORACLE2_EXPECTED << std::endl;
-    start_time = high_resolution_clock::now();
+        run_experiment(num_qubits, expected);
 
-    run_experiment(oracle2, ORACLE2_QUBITS);
+        runtimes[i] = duration_cast<milliseconds>(
+            high_resolution_clock::now() - start_time);
 
-    const duration time_oracle2 = duration_cast<milliseconds>(
-        high_resolution_clock::now() - start_time);
+        std::cout << std::endl;
 
-    std::cout << std::endl;
+    }
 
-
-
-    // Run experiment 3: 0011001100110011
-    std::cout << "Running Oracle 3. Expected: " << ORACLE3_EXPECTED << std::endl;
-    start_time = high_resolution_clock::now();
-
-    run_experiment(oracle3, ORACLE3_QUBITS);
-
-    const duration time_oracle3 = duration_cast<milliseconds>(
-        high_resolution_clock::now() - start_time);
-
-    std::cout << std::endl;
-
-
-    std::cout << "Time to run oracle 1: " << time_oracle1.count() << "ms\n";
-    std::cout << "Time to run oracle 2: " << time_oracle2.count() << "ms\n";
-    std::cout << "Time to run oracle 3: " << time_oracle3.count() << "ms\n";
+    for (size_t i = 0; i < runtimes.size(); ++i) {
+        std::cout << "Time to run oracle " << i+1 << ": " << runtimes[i].count() << "ms\n";
+    }
 
     return 0;
 }
