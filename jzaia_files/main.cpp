@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstddef>
@@ -215,14 +216,21 @@ void run_experiment(void (*oracle) (StateVectorLQubitManaged<double> &),
     // Set up measurements
     Measurements<StateVectorLQubitManaged<double>> Measurer(sv);
     // Vector to store the most common measurement outcome
+    std::vector<size_t> wires(num_qubits - 1);
+    std::iota(wires.begin(), wires.end(), 0);
     std::vector<bool> common_result(num_qubits - 1, false);
 
+    std::transform(wires.begin(), wires.end(), common_result.begin(), [&Measurer](size_t wire){
+        NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ", {wire});
+        return Measurer.expval(obs) < 0;
+    });
+
     // Perform a "measurement" by taking the expected value of this qubit over multiple runs
-    for (size_t obs_wire=0; obs_wire < num_qubits - 1; ++obs_wire) {
-        NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ", {obs_wire});
-        double result = Measurer.expval(obs);
-        common_result[obs_wire] = (result < 0);
-    }
+    // for (size_t obs_wire=0; obs_wire < num_qubits - 1; ++obs_wire) {
+    //     NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ", {obs_wire});
+    //     double result = Measurer.expval(obs);
+    //     common_result[obs_wire] = (result < 0);
+    // }
 
     // // Commented out: Print the raw statevector output (too large and messy)
     // std::vector<std::size_t> wires(num_qubits-1);
