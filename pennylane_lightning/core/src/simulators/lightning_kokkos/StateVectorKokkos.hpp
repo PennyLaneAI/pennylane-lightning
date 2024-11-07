@@ -472,23 +472,19 @@ class StateVectorKokkos final
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
-        if (controlled_wires.empty()) {
-            return applyOperation(opName, wires, inverse, params, gate_matrix);
-        }
-        if (opName == "Identity") {
-            return; // No op
-        } else if (array_contains(controlled_gate_names,
-                                  std::string_view{opName})) {
-            const std::size_t num_qubits = this->getNumQubits();
-            const ControlledGateOperation gateop =
-                reverse_lookup(controlled_gate_names, std::string_view{opName});
-            applyNCNamedOperation<KokkosExecSpace>(
-                gateop, *data_, num_qubits, controlled_wires, controlled_values,
-                wires, inverse, params);
-        } else {
-            PL_ABORT("Controlled matrix operation not yet supported");
-            return;
-        }
+        PL_ABORT_IF_NOT(array_contains(controlled_gate_names, std::string_view{opName}), "Controlled matrix operation not yet supported.");  
+
+        if (controlled_wires.empty()) {  
+            return applyOperation(opName, wires, inverse, params, gate_matrix);  
+        }  
+
+        const std::size_t num_qubits = this->getNumQubits();  
+        const ControlledGateOperation gateop =  
+            reverse_lookup(controlled_gate_names, std::string_view{opName});  
+        applyNCNamedOperation<KokkosExecSpace>(  
+            gateop, *data_, num_qubits, controlled_wires, controlled_values,  
+            wires, inverse, params);  
+
     }
 
     /**

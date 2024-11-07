@@ -973,7 +973,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
         auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_gate.getView());
 
-        std::vector<ComplexT> expected_result{
+        std::vector<ComplexT> expected_result{ // Generated using Pennylane
             ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
             ComplexT{0.0, -0.35355339}, ComplexT{0.35355339, 0.0},
@@ -996,7 +996,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
         auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_gate.getView());
 
-        std::vector<ComplexT> expected_result{
+        std::vector<ComplexT> expected_result{ // Generated using Pennylane
             ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
@@ -1019,7 +1019,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
         auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_gate.getView());
 
-        std::vector<ComplexT> expected_result{
+        std::vector<ComplexT> expected_result{ // Generated using Pennylane
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.5, 0.0},        ComplexT{0.35355339, 0.0},
@@ -1042,7 +1042,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
         auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_gate.getView());
 
-        std::vector<ComplexT> expected_result{
+        std::vector<ComplexT> expected_result{ // Generated using Pennylane
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
@@ -1065,7 +1065,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
         auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
             Kokkos::HostSpace{}, sv_gate.getView());
 
-        std::vector<ComplexT> expected_result{
+        std::vector<ComplexT> expected_result{ // Generated using Pennylane
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
