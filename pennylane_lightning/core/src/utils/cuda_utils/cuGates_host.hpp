@@ -705,9 +705,9 @@ static constexpr auto getGeneratorSingleExcitation() -> std::vector<CFP_t> {
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>(),
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
@@ -785,9 +785,9 @@ static constexpr auto getGeneratorSingleExcitationMinus()
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>(),
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
@@ -864,9 +864,9 @@ static constexpr auto getGeneratorSingleExcitationPlus() -> std::vector<CFP_t> {
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::IMAG<CFP_t>(),
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
         cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
@@ -939,8 +939,8 @@ static auto getDoubleExcitation(const std::vector<U> &params)
 template <class CFP_t, class U = double>
 static constexpr auto getGeneratorDoubleExcitation() -> std::vector<CFP_t> {
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
-    mat[60] = cuUtil::IMAG<CFP_t>();
-    mat[195] = -cuUtil::IMAG<CFP_t>();
+    mat[60] = -cuUtil::IMAG<CFP_t>();
+    mat[195] = cuUtil::IMAG<CFP_t>();
     return mat;
 }
 
@@ -1017,7 +1017,7 @@ static constexpr auto getGeneratorDoubleExcitationMinus()
     mat[0] = cuUtil::ONE<CFP_t>();
     mat[17] = cuUtil::ONE<CFP_t>();
     mat[34] = cuUtil::ONE<CFP_t>();
-    mat[60] = cuUtil::IMAG<CFP_t>();
+    mat[60] = -cuUtil::IMAG<CFP_t>();
     mat[68] = cuUtil::ONE<CFP_t>();
     mat[85] = cuUtil::ONE<CFP_t>();
     mat[102] = cuUtil::ONE<CFP_t>();
@@ -1026,7 +1026,7 @@ static constexpr auto getGeneratorDoubleExcitationMinus()
     mat[153] = cuUtil::ONE<CFP_t>();
     mat[170] = cuUtil::ONE<CFP_t>();
     mat[187] = cuUtil::ONE<CFP_t>();
-    mat[195] = -cuUtil::IMAG<CFP_t>();
+    mat[195] = cuUtil::IMAG<CFP_t>();
     mat[221] = cuUtil::ONE<CFP_t>();
     mat[238] = cuUtil::ONE<CFP_t>();
     mat[255] = cuUtil::ONE<CFP_t>();
@@ -1105,7 +1105,7 @@ static constexpr auto getGeneratorDoubleExcitationPlus() -> std::vector<CFP_t> {
     mat[0] = -cuUtil::ONE<CFP_t>();
     mat[17] = -cuUtil::ONE<CFP_t>();
     mat[34] = -cuUtil::ONE<CFP_t>();
-    mat[60] = cuUtil::IMAG<CFP_t>();
+    mat[60] = -cuUtil::IMAG<CFP_t>();
     mat[68] = -cuUtil::ONE<CFP_t>();
     mat[85] = -cuUtil::ONE<CFP_t>();
     mat[102] = -cuUtil::ONE<CFP_t>();
@@ -1114,7 +1114,7 @@ static constexpr auto getGeneratorDoubleExcitationPlus() -> std::vector<CFP_t> {
     mat[153] = -cuUtil::ONE<CFP_t>();
     mat[170] = -cuUtil::ONE<CFP_t>();
     mat[187] = -cuUtil::ONE<CFP_t>();
-    mat[195] = -cuUtil::IMAG<CFP_t>();
+    mat[195] = cuUtil::IMAG<CFP_t>();
     mat[221] = -cuUtil::ONE<CFP_t>();
     mat[238] = -cuUtil::ONE<CFP_t>();
     mat[255] = -cuUtil::ONE<CFP_t>();
