@@ -884,6 +884,16 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
                           const std::vector<std::size_t> &, bool);
 };
 
+/**
+* @brief Pointer to apply the Quantum Fourier Transform (QFT) operation.
+*/
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::QFT> {
+    using Type = void (GateImplementation::*)(std::complex<PrecisionT> *);
+    constexpr static Type value = &GateImplementation::template applyQFT<PrecisionT>;
+};
+
 } // namespace Internal
 /// @endcond
 
@@ -1060,13 +1070,6 @@ inline void callMatrixOp(MatrixFuncPtrT<PrecisionT> func,
                          const std::vector<std::size_t> &wires, bool adj) {
     return func(data, num_qubits, matrix, wires, adj);
 }
-
-template <class PrecisionT, class ParamT, class GateImplementation>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                             GateOperation::QFT> {
-    constexpr static auto value =
-        &GateImplementation::template applyQFT<PrecisionT>;
-};
 
 /**
  * @brief Call a controlled matrix operation.

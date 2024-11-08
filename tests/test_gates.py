@@ -665,19 +665,16 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
             assert np.allclose(circ(), circ_def(), tol)
 
 @pytest.mark.parametrize("num_qubits", [2, 3, 4])
-def test_qft_gate_correctness(num_qubits):
+def test_qft_gate(num_qubits):
     dev = qml.device("lightning.qubit", wires=num_qubits)
-
     @qml.qnode(dev)
     def circuit():
         qml.QFT(wires=range(num_qubits))
         return qml.state()
-
     output_state = circuit()
     expected_matrix = qml.QFT.compute_matrix(num_qubits)
-
     initial_state = np.zeros((2**num_qubits,), dtype=np.complex128)
     initial_state[0] = 1
     expected_state = expected_matrix @ initial_state
-
-    assert np.allclose(output_state, expected_state, atol=1e-6)
+    assert output_state.shape == expected_state.shape, "State dimensions mismatch"
+    assert np.allclose(output_state, expected_state, atol=1e-6), "QFT state does not match expected state"
