@@ -432,7 +432,6 @@ class StateVectorCudaManaged
                                       " and no matrix provided.";
                 throw LightningException(message);
             } else if (!gate_cache_.gateExists(opName, par[0])) {
-
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
             applyDeviceGeneralGate_(

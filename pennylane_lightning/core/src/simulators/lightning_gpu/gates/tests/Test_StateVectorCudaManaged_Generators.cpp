@@ -1665,7 +1665,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyGeneratorGlobalPhase",
 
 TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 1 wire",
                    "[GateGenerators]", float, double) {
-
     const std::string controlled_gate_name =
         GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "MultiRZ");
     const std::size_t num_qubits = 4;
@@ -1701,7 +1700,6 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 1 wire",
                     << PrecisionToName<TestType>::value) {
         if (control_wire_0 != wire && control_wire_1 != wire) {
             if (control_wire_0 == control_wire_1) {
-
                 scale = gntr_sv.applyGenerator(
                     controlled_gate_name, {control_wire_0}, {control_value_0},
                     {wire}, inverse);
@@ -1769,7 +1767,6 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 1 wire",
 
 TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 2 wires",
                    "[GateGenerators]", float, double) {
-
     const std::string controlled_gate_name =
         GENERATE("IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
                  "SingleExcitationMinus", "SingleExcitationPlus", "GlobalPhase",
@@ -1806,10 +1803,8 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 2 wires",
                     << ", wires = {" << wires[0] << ", " << wires[1] << "} - "
                     << ", inverse = " << inverse << " - "
                     << PrecisionToName<TestType>::value) {
-
         if (control_wire_0 != wire && control_wire_1 != wire) {
             if (control_wire_0 == control_wire_1) {
-
                 scale = gntr_sv.applyGenerator(
                     controlled_gate_name, {control_wire_0}, {control_value_0},
                     wires, inverse);
@@ -1877,7 +1872,6 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 2 wires",
 
 TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 4 wires",
                    "[GateGenerators]", float, double) {
-
     const std::string controlled_gate_name =
         GENERATE("DoubleExcitation", "DoubleExcitationMinus",
                  "DoubleExcitationPlus", "GlobalPhase", "MultiRZ");
@@ -1914,10 +1908,8 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 4 wires",
                     << wires[2] << ", " << wires[3] << "} - "
                     << ", inverse = " << inverse << " - "
                     << PrecisionToName<TestType>::value) {
-
         if (control_wire_0 != wire && control_wire_1 != wire) {
             if (control_wire_0 == control_wire_1) {
-
                 scale = gntr_sv.applyGenerator(
                     controlled_gate_name, {control_wire_0}, {control_value_0},
                     wires, inverse);
