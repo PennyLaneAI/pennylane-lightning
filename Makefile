@@ -166,10 +166,11 @@ format: format-cpp format-python
 
 format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
+	./bin/format $(CHECK) ./jzaia_files
 
 format-python:
-	isort --py 312 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning ./mpitests ./tests ./scripts $(ICHECK) $(VERBOSE)
-	black -t py310 -t py311 -t py312 -l 100 ./pennylane_lightning ./mpitests ./tests ./scripts $(CHECK) $(VERBOSE)
+	isort --py 312 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning ./mpitests ./tests ./scripts ./jzaia_files $(ICHECK) $(VERBOSE)
+	black -t py310 -t py311 -t py312 -l 100 ./pennylane_lightning ./mpitests ./tests ./scripts ./jzaia_files $(CHECK) $(VERBOSE)
 
 .PHONY: check-tidy
 check-tidy:

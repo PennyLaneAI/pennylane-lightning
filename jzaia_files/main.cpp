@@ -5,12 +5,11 @@
 #include <iostream>
 #include <vector>
 
-#include "Gates.hpp"
 #include "GateImplementationsLM.hpp"
+#include "Gates.hpp"
 #include "MeasurementsLQubit.hpp"
 #include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
-
 
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using namespace Pennylane::Gates;
@@ -25,16 +24,15 @@ using namespace Pennylane::LightningQubit::Observables;
 
 #define ORACLE2_QUBITS (10)
 /* Oracle 2 selects the string: "101010101" */
-#define ORACLE2_EXPECTED (std::vector<bool>{true, false, true, false, true, \
-                                            false, true, false, true})
+#define ORACLE2_EXPECTED                                                       \
+    (std::vector<bool>{true, false, true, false, true, false, true, false,     \
+                       true})
 
 #define ORACLE3_QUBITS (17)
 /* Oracle 2 selects the string: "0011001100110011" */
-#define ORACLE3_EXPECTED (std::vector<bool>{false, false, true, true, false, \
-                                            false, true, true, false, false, \
-                                            true, true, false, false, true, \
-                                            true})
-
+#define ORACLE3_EXPECTED                                                       \
+    (std::vector<bool>{false, false, true, true, false, false, true, true,     \
+                       false, false, true, true, false, false, true, true})
 
 /**
  * @brief Setup up a circuit for iterations of Grover's search
@@ -49,17 +47,13 @@ void groversSetup(StateVectorLQubitManaged<double> &sv) {
     const size_t num_qubits = sv.getNumQubits();
 
     // Place target qubit into |1> state so the Hadamard will take it to |->
-    GateImplementationsLM::applyPauliX(sv.getData(),
-                                       sv.getNumQubits(),
-                                       {num_qubits-1},
-                                       false);
+    GateImplementationsLM::applyPauliX(sv.getData(), sv.getNumQubits(),
+                                       {num_qubits - 1}, false);
 
     // Set up uniform superposition
     for (size_t i = 0; i < num_qubits; ++i) {
-        GateImplementationsLM::applyHadamard(sv.getData(),
-                                             sv.getNumQubits(),
-                                             {i},
-                                             false);
+        GateImplementationsLM::applyHadamard(sv.getData(), sv.getNumQubits(),
+                                             {i}, false);
     }
 }
 
@@ -76,31 +70,25 @@ void groversMirror(StateVectorLQubitManaged<double> &sv) {
     const size_t num_qubits = sv.getNumQubits();
 
     // Apply H to all non-ancilla qubits
-    for (size_t i = 0; i < num_qubits-1; ++i) {
-        GateImplementationsLM::applyHadamard(sv.getData(),
-                                             sv.getNumQubits(),
-                                             {i},
-                                             false);
+    for (size_t i = 0; i < num_qubits - 1; ++i) {
+        GateImplementationsLM::applyHadamard(sv.getData(), sv.getNumQubits(),
+                                             {i}, false);
     }
 
-    std::vector<size_t> controls(num_qubits-1);
-    std::vector<bool> control_values(num_qubits-1, false);
+    std::vector<size_t> controls(num_qubits - 1);
+    std::vector<bool> control_values(num_qubits - 1, false);
     std::iota(controls.begin(), controls.end(), 0);
 
-    // Apply an anti-controlled on all search qubits X-gate onto the ancilla qubit
-    GateImplementationsLM::applyNCPauliX(sv.getData(),
-                                         sv.getNumQubits(),
-                                         controls,
-                                         control_values,
-                                         {num_qubits-1},
-                                         false);
+    // Apply an anti-controlled on all search qubits X-gate onto the ancilla
+    // qubit
+    GateImplementationsLM::applyNCPauliX(sv.getData(), sv.getNumQubits(),
+                                         controls, control_values,
+                                         {num_qubits - 1}, false);
 
     // Apply H to all non-ancilla qubits
-    for (size_t i = 0; i < num_qubits-1; ++i) {
-        GateImplementationsLM::applyHadamard(sv.getData(),
-                                             sv.getNumQubits(),
-                                             {i},
-                                             false);
+    for (size_t i = 0; i < num_qubits - 1; ++i) {
+        GateImplementationsLM::applyHadamard(sv.getData(), sv.getNumQubits(),
+                                             {i}, false);
     }
 }
 
@@ -116,19 +104,16 @@ void groversMirror(StateVectorLQubitManaged<double> &sv) {
 void oracle(StateVectorLQubitManaged<double> &sv,
             const std::vector<bool> &control_vals) {
     // Sanity check statevector
-    assert(sv.getNumQubits() == control_vals.size()+1);
+    assert(sv.getNumQubits() == control_vals.size() + 1);
 
     // Define controls to be used for applying the X gate
     std::vector<size_t> controls(control_vals.size());
     std::iota(controls.begin(), controls.end(), 0);
 
     // Apply the X gate to the ancilla, controlled on the chosen bitstring
-    GateImplementationsLM::applyNCPauliX(sv.getData(),
-                                         sv.getNumQubits(),
-                                         controls,
-                                         control_vals,
-                                         {control_vals.size()},
-                                         false);
+    GateImplementationsLM::applyNCPauliX(sv.getData(), sv.getNumQubits(),
+                                         controls, control_vals,
+                                         {control_vals.size()}, false);
 }
 
 /**
@@ -153,7 +138,7 @@ void run_experiment(const size_t num_qubits,
     groversSetup(sv);
 
     // Apply (approx) sqrt(N) repetitions of state selection and amp-amp
-    const size_t nreps = static_cast<size_t>(sqrt(1llu << (num_qubits-1)));
+    const size_t nreps = static_cast<size_t>(sqrt(1llu << (num_qubits - 1)));
     for (size_t reps = nreps; reps > 0; --reps) {
         // Apply the oracle to apply a phase of -1 to desired state
         oracle(sv, expected);
@@ -168,25 +153,24 @@ void run_experiment(const size_t num_qubits,
     std::iota(wires.begin(), wires.end(), 0);
     std::vector<bool> common_result(num_qubits - 1, false);
 
-    // Perform a "measurement" by taking the expected value of this qubit over multiple runs
-    std::transform(wires.begin(),
-                   wires.end(),
-                   common_result.begin(),
-                   [&Measurer](size_t wire){
-                       NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ", {wire});
+    // Perform a "measurement" by taking the expected value of this qubit over
+    // multiple runs
+    std::transform(wires.begin(), wires.end(), common_result.begin(),
+                   [&Measurer](size_t wire) {
+                       NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ",
+                                                                      {wire});
                        return Measurer.expval(obs) < 0;
                    });
 
-    std::cout << "Measured results (most common with expval): " << common_result << std::endl;
+    std::cout << "Measured results (most common with expval): " << common_result
+              << std::endl;
 }
 
-
 int main(void) {
-    using std::chrono::high_resolution_clock;
-    using std::chrono::duration_cast;
     using std::chrono::duration;
+    using std::chrono::duration_cast;
+    using std::chrono::high_resolution_clock;
     using std::chrono::milliseconds;
-
 
     std::vector<std::pair<size_t, std::vector<bool>>> inputs = {
         // Experiment 1: 11010
@@ -201,24 +185,24 @@ int main(void) {
 
     for (size_t i = 0; i < inputs.size(); ++i) {
         auto num_qubits = inputs[i].first;
-        auto expected   = inputs[i].second;
+        auto expected = inputs[i].second;
 
-        std::cout << "Running Oracle " << i+1 << ". Expected: ";
+        std::cout << "Running Oracle " << i + 1 << ". Expected: ";
         std::cout << expected << std::endl;
 
         auto start_time = high_resolution_clock::now();
 
         run_experiment(num_qubits, expected);
 
-        runtimes[i] = duration_cast<milliseconds>(
-            high_resolution_clock::now() - start_time);
+        runtimes[i] = duration_cast<milliseconds>(high_resolution_clock::now() -
+                                                  start_time);
 
         std::cout << std::endl;
-
     }
 
     for (size_t i = 0; i < runtimes.size(); ++i) {
-        std::cout << "Time to run oracle " << i+1 << ": " << runtimes[i].count() << "ms\n";
+        std::cout << "Time to run oracle " << i + 1 << ": "
+                  << runtimes[i].count() << "ms\n";
     }
 
     return 0;

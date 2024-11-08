@@ -2,22 +2,24 @@ import numpy as np
 import pennylane as qml
 
 # Define oracles
-ORACLE1_QUBITS   = 6
+ORACLE1_QUBITS = 6
 ORACLE1_EXPECTED = [1, 1, 0, 1, 0]
 
-ORACLE2_QUBITS   = 10
+ORACLE2_QUBITS = 10
 ORACLE2_EXPECTED = [1, 0, 1, 0, 1, 0, 1, 0, 1]
 
-ORACLE3_QUBITS   = 17
+ORACLE3_QUBITS = 17
 ORACLE3_EXPECTED = [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]
 
-ORACLES = [(ORACLE1_QUBITS, ORACLE1_EXPECTED),
-           (ORACLE2_QUBITS, ORACLE2_EXPECTED),
-           (ORACLE3_QUBITS, ORACLE3_EXPECTED)]
+ORACLES = [
+    (ORACLE1_QUBITS, ORACLE1_EXPECTED),
+    (ORACLE2_QUBITS, ORACLE2_EXPECTED),
+    (ORACLE3_QUBITS, ORACLE3_EXPECTED),
+]
 
 
 def grovers_setup(num_qubits: int):
-    '''
+    """
     Setup up a circuit for iterations of Grover's search
 
     Places a circuit into uniform superposition. Additionally, places the
@@ -25,13 +27,14 @@ def grovers_setup(num_qubits: int):
     apply phase kickback.
 
     :param num_qubits: The number of qubits in the circuit
-    '''
-    qml.X(num_qubits-1)
+    """
+    qml.X(num_qubits - 1)
     for i in range(num_qubits):
         qml.Hadamard(wires=i)
 
+
 def grovers_mirror(num_qubits):
-    '''
+    """
     Apply the "Grover's Mirror" reflection to the active circuit
 
     Performs a reflection across the vector which represents the uniform
@@ -39,18 +42,18 @@ def grovers_mirror(num_qubits):
     algorithm.
 
     :param num_qubits: The number of qubits in the circuit
-    '''
-    for i in range(num_qubits-1):
+    """
+    for i in range(num_qubits - 1):
         qml.Hadamard(wires=i)
 
-    qml.MultiControlledX(wires=range(num_qubits),
-                         control_values=[False]*(num_qubits-1))
+    qml.MultiControlledX(wires=range(num_qubits), control_values=[False] * (num_qubits - 1))
 
-    for i in range(num_qubits-1):
+    for i in range(num_qubits - 1):
         qml.Hadamard(wires=i)
+
 
 def run_grovers(oracle, num_qubits):
-    '''
+    """
     Overall function for running Grover's algorithm on a chosen oracle
 
     Run Grover's algorithm from start to finish. Prepares a state, and
@@ -61,18 +64,19 @@ def run_grovers(oracle, num_qubits):
     :param oracle: A black-box function that acts on a created statevector
     :param num_qubits: The number of qubits in the circuit the oracle acts
            on (includes the ancilla)
-    '''
+    """
     grovers_setup(num_qubits)
 
-    reps = int(np.sqrt(2**(num_qubits-1)))
+    reps = int(np.sqrt(2 ** (num_qubits - 1)))
     for _ in range(reps):
         oracle()
         grovers_mirror(num_qubits)
 
-    return [qml.expval(qml.PauliZ(i)) for i in range(num_qubits-1)]
+    return [qml.expval(qml.PauliZ(i)) for i in range(num_qubits - 1)]
+
 
 def run_experiment(oracle, num_qubits) -> None:
-    '''
+    """
     Run Grover's algorithm and evaluates results
 
     Run Grover's algorithm from start to finish, and finds the expected
@@ -81,9 +85,8 @@ def run_experiment(oracle, num_qubits) -> None:
     :param oracle: A black-box function that acts on a created statevector
     :param num_qubits: The number of qubits in the circuit the oracle acts
            on (includes the ancilla)
-    '''
-    dev = qml.device('lightning.qubit', wires=num_qubits)
-
+    """
+    dev = qml.device("lightning.qubit", wires=num_qubits)
 
     circ = qml.QNode(run_grovers, dev)
 
@@ -92,21 +95,23 @@ def run_experiment(oracle, num_qubits) -> None:
 
     print(results)
 
+
 def gen_oracle(i):
-    '''
+    """
     Create an oracle function which selects the state given by the global const
 
     :param i: The index of the globally defined pair of constants to use
-    '''
-    num_qubits   = ORACLES[i][0]
+    """
+    num_qubits = ORACLES[i][0]
     control_vals = ORACLES[i][1]
+
     def oracle():
-        qml.MultiControlledX(wires=range(num_qubits),
-                             control_values=control_vals)
+        qml.MultiControlledX(wires=range(num_qubits), control_values=control_vals)
+
     return (oracle, num_qubits)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import cProfile
     import time
 
@@ -117,14 +122,14 @@ if __name__ == '__main__':
         times = []
         # Run all experiments
         for i in range(len(ORACLES)):
-            print('Expecting:', ORACLES[i][1])
-            print('Got:')
+            print("Expecting:", ORACLES[i][1])
+            print("Got:")
             start_time = time.time()
             run_experiment(*gen_oracle(i))
             times.append(time.time() - start_time)
             print()
 
         for i in range(len(times)):
-            print(f'Time to run oracle {i+1}: {int(1000*times[i])}ms')
+            print(f"Time to run oracle {i+1}: {int(1000*times[i])}ms")
 
-    cProfile.run('main()', sort='cumtime')
+    cProfile.run("main()", sort="cumtime")
