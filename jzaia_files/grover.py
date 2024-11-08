@@ -1,3 +1,8 @@
+r"""
+This module contains a custom implementation of Grover's algorithm. It uses lightning-qubit and is
+intended to be used for benchmarking against a C++ implementation directly against the lightning-qubit C++ API
+"""
+
 import numpy as np
 import pennylane as qml
 
@@ -119,17 +124,20 @@ if __name__ == "__main__":
     run_experiment(*gen_oracle(0))
 
     def main():
+        """
+        The main function to be run, which executes all experiments and tracks exection times.
+        """
         times = []
         # Run all experiments
-        for i in range(len(ORACLES)):
-            print("Expecting:", ORACLES[i][1])
+        for i, pair in enumerate(ORACLES):
+            print("Expecting:", pair[1])
             print("Got:")
             start_time = time.time()
             run_experiment(*gen_oracle(i))
             times.append(time.time() - start_time)
             print()
 
-        for i in range(len(times)):
-            print(f"Time to run oracle {i+1}: {int(1000*times[i])}ms")
+        for i, runtime in enumerate(times):
+            print(f"Time to run oracle {i+1}: {int(1000*runtime)}ms")
 
     cProfile.run("main()", sort="cumtime")
