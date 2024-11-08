@@ -9,6 +9,9 @@
 
 ### Improvements
 
+* Unify excitation gates memory layout to row-major for both LGPU and LT.
+  [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
+
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
