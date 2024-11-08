@@ -183,13 +183,6 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - name: Patching tests following deprecation FIXME(remove after v0.39)
-        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
-        run: |
-          pushd tests
-          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
-          popd
-
       - uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
@@ -258,7 +251,6 @@ jobs:
 
       - name: Test editable install
         run: |
-          rm -r build
           pip uninstall pennylane-lightning pennylane-lightning-kokkos -y
           python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat

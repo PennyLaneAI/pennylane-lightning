@@ -609,7 +609,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is set to 1 by default.
      */
-    void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
+    void get_accessor_(CFP_t *tensor_data,
+                       [[maybe_unused]] const std::size_t tensor_data_size,
                        const std::vector<int32_t> &projected_modes,
                        const std::vector<int64_t> &projected_mode_values,
                        const int32_t numHyperSamples = 1) const {
