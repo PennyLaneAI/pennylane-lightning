@@ -18,21 +18,14 @@ using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::LightningQubit::Observables;
 
 // Define values to be selected by each oracle
-#define ORACLE1_QUBITS (6)
-/* Oracle 1 selects the string: "11010" */
-#define ORACLE1_EXPECTED (std::vector<bool>{true, true, false, true, false})
-
-#define ORACLE2_QUBITS (10)
-/* Oracle 2 selects the string: "101010101" */
-#define ORACLE2_EXPECTED                                                       \
-    (std::vector<bool>{true, false, true, false, true, false, true, false,     \
-                       true})
-
-#define ORACLE3_QUBITS (17)
-/* Oracle 2 selects the string: "0011001100110011" */
-#define ORACLE3_EXPECTED                                                       \
-    (std::vector<bool>{false, false, true, true, false, false, true, true,     \
-                       false, false, true, true, false, false, true, true})
+const std::pair<size_t, std::vector<bool>> oracle1_data = {
+    6, std::vector<bool>{true, true, false, true, false}};
+const std::pair<size_t, std::vector<bool>> oracle2_data = {
+    10, std::vector<bool>{true, false, true, false, true, false, true, false,
+                          true}};
+const std::pair<size_t, std::vector<bool>> oracle3_data = {
+    17, std::vector<bool>{false, false, true, true, false, false, true, true,
+                          false, false, true, true, false, false, true, true}};
 
 /**
  * @brief Setup up a circuit for iterations of Grover's search
@@ -175,11 +168,11 @@ int main(void) {
 
     std::vector<std::pair<size_t, std::vector<bool>>> inputs = {
         // Experiment 1: 11010
-        {ORACLE1_QUBITS, ORACLE1_EXPECTED},
+        oracle1_data,
         // Experiment 2: 101010101
-        {ORACLE2_QUBITS, ORACLE2_EXPECTED},
+        oracle2_data,
         // Experiment 3: 0011001100110011
-        {ORACLE3_QUBITS, ORACLE3_EXPECTED},
+        oracle3_data,
     };
 
     std::vector<milliseconds> runtimes(inputs.size());
