@@ -380,9 +380,9 @@ void applyNCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
     const PrecisionT c = std::cos(angle * static_cast<PrecisionT>(0.5));
-    const PrecisionT s =
-        (inverse) ? std::sin(angle * static_cast<PrecisionT>(0.5))
-                  : std::sin(-angle * static_cast<PrecisionT>(0.5));
+    const PrecisionT s = (inverse)
+                             ? std::sin(angle * static_cast<PrecisionT>(0.5))
+                             : std::sin(-angle * static_cast<PrecisionT>(0.5));
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
@@ -422,8 +422,9 @@ void applyNCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<PrecisionT> &params = {}) {
     const PrecisionT &angle = params[0];
     const PrecisionT c = std::cos(angle * static_cast<PrecisionT>(0.5));
-    const PrecisionT s = (inverse) ? -std::sin(angle * static_cast<PrecisionT>(0.5))
-                                   : std::sin(angle * static_cast<PrecisionT>(0.5));
+    const PrecisionT s = (inverse)
+                             ? -std::sin(angle * static_cast<PrecisionT>(0.5))
+                             : std::sin(angle * static_cast<PrecisionT>(0.5));
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i0, const std::size_t i1) {
