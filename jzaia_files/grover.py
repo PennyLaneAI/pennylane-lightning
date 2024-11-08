@@ -91,7 +91,7 @@ def run_experiment(oracle, num_qubits) -> None:
     circ = qml.QNode(run_grovers, dev)
 
     expvals = circ(oracle, num_qubits)
-    results = [int(val.numpy() < 0) for val in expvals]
+    results = [int(val < 0) for val in expvals]
 
     print(results)
 
