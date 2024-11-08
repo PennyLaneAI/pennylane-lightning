@@ -143,18 +143,16 @@ void run_experiment(const size_t num_qubits,
     // Set up measurements
     Measurements<StateVectorLQubitManaged<double>> Measurer(sv);
     // Vector to store the most common measurement outcome
-    std::vector<size_t> wires(num_qubits - 1);
-    std::iota(wires.begin(), wires.end(), 0);
     std::vector<bool> common_result(num_qubits - 1, false);
 
     // Perform a "measurement" by taking the expected value of this qubit over
     // multiple runs
-    std::transform(wires.begin(), wires.end(), common_result.begin(),
-                   [&Measurer](size_t wire) {
-                       NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ",
-                                                                      {wire});
-                       return Measurer.expval(obs) < 0;
-                   });
+    std::generate(common_result.begin(), common_result.end(),
+                  [&Measurer, wire = 0llu]() mutable {
+                      NamedObs<StateVectorLQubitManaged<double>> obs("PauliZ",
+                                                                     {wire++});
+                      return Measurer.expval(obs) < 0;
+                  });
 
     std::cout << "Measured results (most common with expval): " << common_result
               << std::endl;
