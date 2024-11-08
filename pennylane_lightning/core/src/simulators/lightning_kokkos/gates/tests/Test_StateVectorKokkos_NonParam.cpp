@@ -80,6 +80,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation",
         PL_REQUIRE_THROWS_MATCHES(
             state_vector.applyOperation("XXX", {0}), LightningException,
             "Operation does not exist for XXX and no matrix provided.");
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyOperation("XXX", {0}, {true}, {1}),
+            LightningException,
+            "Operation does not exist for XXX and no matrix provided.");
     }
 }
 
@@ -661,6 +665,45 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyToffoli",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyCSWAP",
+                   "[StateVectorKokkos_Nonparam]", float, double) {
+    {
+        using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+        const std::size_t num_qubits = 3;
+
+        StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+
+        kokkos_sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
+                                  {{false}, {false}});
+
+        auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                          kokkos_sv.getView());
+
+        auto z = ComplexT{ZERO<TestType>()};
+        auto i = ComplexT{INVSQRT2<TestType>()};
+
+        SECTION("Apply using dispatcher") {
+            SECTION("CSWAP [0,1,2]|+10> -> |010> + |101>") {
+                const std::vector<ComplexT> expected_results = {z, z, i, z,
+                                                                z, i, z, z};
+
+                StateVectorKokkos<TestType> svdat012{num_qubits};
+                Kokkos::deep_copy(svdat012.getView(), ini_sv);
+
+                svdat012.applyOperation("CSWAP", {0, 1, 2}, false);
+
+                auto sv012 = Kokkos::create_mirror_view_and_copy(
+                    Kokkos::HostSpace{}, svdat012.getView());
+
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    CHECK(imag(expected_results[j]) == Approx(imag(sv012[j])));
+                    CHECK(real(expected_results[j]) == Approx(real(sv012[j])));
+                }
+            }
+        }
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
                    "[StateVectorKokkos_Nonparam][Inverse]", float, double) {
     const bool inverse = GENERATE(true, false);
@@ -758,41 +801,284 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorKokkos::applyCSWAP",
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation Controlled",
                    "[StateVectorKokkos_Nonparam]", float, double) {
-    {
-        using ComplexT = StateVectorKokkos<TestType>::ComplexT;
-        const std::size_t num_qubits = 3;
 
-        StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = StateVectorT::PrecisionT;
+    const std::size_t num_qubits = 3;
+    StateVectorKokkos<TestType> state_vector{num_qubits};
+    auto matrix = getIdentity<Kokkos::complex, PrecisionT>();
+    PL_REQUIRE_THROWS_MATCHES(
+        state_vector.applyOperation("XXX", {0}, {true}, {1}, false, {}, matrix),
+        LightningException, "Controlled matrix operation not yet supported");
+}
 
-        kokkos_sv.applyOperations({{"Hadamard"}, {"PauliX"}}, {{0}, {1}},
-                                  {{false}, {false}});
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
+                   "one-qubit with controls",
+                   "[StateVectorKokkos_NonParam]", float, double) {
+    const bool inverse = GENERATE(true, false);
+    const std::size_t num_qubits = 4;
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire = GENERATE(0, 1, 2, 3);
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
 
-        auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
-                                                          kokkos_sv.getView());
+    kokkos_sv.applyOperations(
+        {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+        {{0}, {1}, {2}, {3}}, {{false}, {false}, {false}, {false}});
 
-        auto z = ComplexT{ZERO<TestType>()};
-        auto i = ComplexT{INVSQRT2<TestType>()};
+    auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                      kokkos_sv.getView());
+    StateVectorKokkos<TestType> sv_gate{num_qubits};
+    StateVectorKokkos<TestType> sv_control{num_qubits};
 
-        SECTION("Apply using dispatcher") {
-            SECTION("CSWAP [0,1,2]|+10> -> |010> + |101>") {
-                const std::vector<ComplexT> expected_results = {z, z, i, z,
-                                                                z, i, z, z};
+    SECTION("N-controlled PauliX ") {
 
-                StateVectorKokkos<TestType> svdat012{num_qubits};
-                Kokkos::deep_copy(svdat012.getView(), ini_sv);
+        if (control == wire) {
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
 
-                svdat012.applyOperation("CSWAP", {0, 1, 2}, false);
+            REQUIRE_THROWS_AS(sv_control.applyOperation(
+                                  "PauliX", std::vector<std::size_t>{control},
+                                  std::vector<bool>{true},
+                                  std::vector<std::size_t>{wire}),
+                              LightningException);
+        }
 
-                auto sv012 = Kokkos::create_mirror_view_and_copy(
-                    Kokkos::HostSpace{}, svdat012.getView());
+        if (control != wire) {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
 
-                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
-                    CHECK(imag(expected_results[j]) == Approx(imag(sv012[j])));
-                    CHECK(real(expected_results[j]) == Approx(real(sv012[j])));
-                }
+            sv_gate.applyOperation("CNOT", {control, wire}, inverse);
+            sv_control.applyOperation(
+                "PauliX", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_control.getView());
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(sv_control_host[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(sv_control_host[j])));
             }
+        }
+
+        if (control != 0 && wire != 0 && control != wire) {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
+
+            sv_gate.applyOperation("Toffoli", {0, control, wire}, inverse);
+            sv_control.applyOperation(
+                "PauliX", std::vector<std::size_t>{0, control},
+                std::vector<bool>{true, true}, std::vector<std::size_t>{wire});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_control.getView());
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(sv_control_host[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(sv_control_host[j])));
+            }
+
+            sv_gate.applyOperation("Toffoli", {control, 0, wire});
+            sv_control.applyOperation(
+                "PauliX", std::vector<std::size_t>{control, 0},
+                std::vector<bool>{true, true}, std::vector<std::size_t>{wire});
+            Kokkos::deep_copy(sv_gate_host, sv_gate.getView());
+            Kokkos::deep_copy(sv_control_host, sv_control.getView());
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(sv_control_host[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(sv_control_host[j])));
+            }
+        }
+    }
+
+    SECTION("N-controlled PauliY ") {
+        if (control != wire) {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
+
+            sv_gate.applyOperation("CY", {control, wire}, inverse);
+            sv_control.applyOperation(
+                "PauliY", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_control.getView());
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(sv_control_host[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(sv_control_host[j])));
+            }
+        }
+    }
+
+    SECTION("N-controlled PauliZ ") {
+        if (control != wire) {
+            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+            Kokkos::deep_copy(sv_control.getView(), ini_sv);
+
+            sv_gate.applyOperation("CZ", {control, wire}, inverse);
+            sv_control.applyOperation(
+                "PauliZ", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_gate.getView());
+            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
+                Kokkos::HostSpace{}, sv_control.getView());
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(sv_gate_host[j]) ==
+                      Approx(imag(sv_control_host[j])));
+                CHECK(real(sv_gate_host[j]) ==
+                      Approx(real(sv_control_host[j])));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
+                   "one-qubit with multiple-controls",
+                   "[StateVectorKokkos_NonParam]", float, double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const bool inverse = false;
+    const std::size_t num_qubits = 3;
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+
+    kokkos_sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                              {{0}, {1}, {2}}, {{false}, {false}, {false}});
+
+    auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                      kokkos_sv.getView());
+    StateVectorKokkos<TestType> sv_gate{num_qubits};
+    StateVectorKokkos<TestType> expected_result{num_qubits};
+
+    SECTION("2-controlled PauliY") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1};
+        sv_gate.applyOperation("PauliY", control_wires, control_values,
+                               target_wire, inverse);
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{
+            // Generated using Pennylane
+            ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
+            ComplexT{0.0, -0.35355339}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.0, 0.35355339},  ComplexT{0.35355339, 0.0},
+        };
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled PauliZ") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1};
+        sv_gate.applyOperation("PauliZ", control_wires, control_values,
+                               target_wire, inverse);
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{
+            // Generated using Pennylane
+            ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0},  ComplexT{0.35355339, 0.0},
+            ComplexT{-0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+        };
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled Hadamard") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1};
+        sv_gate.applyOperation("Hadamard", control_wires, control_values,
+                               target_wire, inverse);
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{
+            // Generated using Pennylane
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.5, 0.0},        ComplexT{0.35355339, 0.0},
+            ComplexT{0.0, 0.0},        ComplexT{0.35355339, 0.0},
+        };
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled S") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1};
+        sv_gate.applyOperation("S", control_wires, control_values, target_wire,
+                               inverse);
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{
+            // Generated using Pennylane
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.0, 0.35355339}, ComplexT{0.35355339, 0.0},
+        };
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled T") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1};
+        sv_gate.applyOperation("T", control_wires, control_values, target_wire,
+                               inverse);
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{
+            // Generated using Pennylane
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.25, 0.25},      ComplexT{0.35355339, 0.0},
+        };
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
         }
     }
 }

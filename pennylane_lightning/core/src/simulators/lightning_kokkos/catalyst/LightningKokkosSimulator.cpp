@@ -190,15 +190,11 @@ void LightningKokkosSimulator::MatrixOperation(
     const std::vector<std::complex<double>> &matrix,
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
-    const std::vector<bool> &controlled_values) {
+    [[maybe_unused]] const std::vector<bool> &controlled_values) {
     using UnmanagedComplexHostView =
         Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
-    // TODO: Remove when controlled wires API is supported
-    RT_FAIL_IF(
-        !controlled_wires.empty() || !controlled_values.empty(),
-        "LightningKokkos device does not support native quantum control.");
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
     RT_FAIL_IF(!isValidQubits(controlled_wires),
                "Given controlled wires do not refer to qubits");
