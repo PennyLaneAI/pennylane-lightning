@@ -621,10 +621,10 @@ class applyNC2Functor<PrecisionT, FuncT, true> {
     }
     KOKKOS_FUNCTION void operator()(const std::size_t k) const {
         const std::size_t offset = Util::parity_2_offset(parity, k);
-        std::size_t i00 = indices(0B00);
-        std::size_t i01 = indices(0B01);
-        std::size_t i10 = indices(0B10);
-        std::size_t i11 = indices(0B11);
+        const std::size_t i00 = indices(0B00);
+        const std::size_t i01 = indices(0B01);
+        const std::size_t i10 = indices(0B10);
+        const std::size_t i11 = indices(0B11);
 
         core_function(arr, i00 + offset, i01 + offset, i10 + offset,
                       i11 + offset);
@@ -764,10 +764,10 @@ template <class ExecutionSpace, class PrecisionT>
 void applySWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::size_t num_qubits,
                const std::vector<std::size_t> &wires,
-               [[maybe_unused]] const bool inverse = false,
+               const bool inverse = false,
                [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
     applyNCSWAP<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {}, wires,
-                                            inverse, params);
+                                            inverse);
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -1364,22 +1364,22 @@ class applyNC4Functor<PrecisionT, FuncT, true> {
     }
     KOKKOS_FUNCTION void operator()(const std::size_t k) const {
         const std::size_t offset = Util::parity_2_offset(parity, k);
-        std::size_t i0000 = indices(0B0000);
-        std::size_t i0001 = indices(0B0001);
-        std::size_t i0010 = indices(0B0010);
-        std::size_t i0011 = indices(0B0011);
-        std::size_t i0100 = indices(0B0100);
-        std::size_t i0101 = indices(0B0101);
-        std::size_t i0110 = indices(0B0110);
-        std::size_t i0111 = indices(0B0111);
-        std::size_t i1000 = indices(0B1000);
-        std::size_t i1001 = indices(0B1001);
-        std::size_t i1010 = indices(0B1010);
-        std::size_t i1011 = indices(0B1011);
-        std::size_t i1100 = indices(0B1100);
-        std::size_t i1101 = indices(0B1101);
-        std::size_t i1110 = indices(0B1110);
-        std::size_t i1111 = indices(0B1111);
+        const std::size_t i0000 = indices(0B0000);
+        const std::size_t i0001 = indices(0B0001);
+        const std::size_t i0010 = indices(0B0010);
+        const std::size_t i0011 = indices(0B0011);
+        const std::size_t i0100 = indices(0B0100);
+        const std::size_t i0101 = indices(0B0101);
+        const std::size_t i0110 = indices(0B0110);
+        const std::size_t i0111 = indices(0B0111);
+        const std::size_t i1000 = indices(0B1000);
+        const std::size_t i1001 = indices(0B1001);
+        const std::size_t i1010 = indices(0B1010);
+        const std::size_t i1011 = indices(0B1011);
+        const std::size_t i1100 = indices(0B1100);
+        const std::size_t i1101 = indices(0B1101);
+        const std::size_t i1110 = indices(0B1110);
+        const std::size_t i1111 = indices(0B1111);
 
         core_function(
             arr, i0000 + offset, i0001 + offset, i0010 + offset, i0011 + offset,
