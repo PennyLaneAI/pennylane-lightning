@@ -537,7 +537,7 @@ void applyRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                            inverse, params);
 }
 
-template <class PrecisionT, class FuncT, bool has_controls = true>
+template <class PrecisionT, class FuncT, bool has_controls>
 class applyNC2Functor {};
 
 template <class PrecisionT, class FuncT>
@@ -734,16 +734,16 @@ void applyControlledPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const Kokkos::complex<PrecisionT> s =
         (inverse) ? Kokkos::exp(-Kokkos::complex<PrecisionT>(0, angle))
                   : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle));
-    applyNC2Functor(
-        ExecutionSpace{}, arr_, num_qubits, wires,
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+    auto core_function = KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       const std::size_t i00, const std::size_t i01,
                       const std::size_t i10, const std::size_t i11) {
             [[maybe_unused]] const auto i00_ = i00;
             [[maybe_unused]] const auto i01_ = i01;
             [[maybe_unused]] const auto i10_ = i10;
             arr(i11) *= s;
-        });
+        };
+    applyNC2Functor<PrecisionT, decltype(core_function), false>(
+            ExecutionSpace{}, arr_, num_qubits, wires, core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -1280,7 +1280,7 @@ void applyToffoli(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         });
 }
 
-template <class PrecisionT, class FuncT, bool has_controls = true>
+template <class PrecisionT, class FuncT, bool has_controls>
 class applyNC4Functor {};
 
 template <class PrecisionT, class FuncT>
