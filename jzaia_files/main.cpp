@@ -93,12 +93,13 @@ void groversMirror(StateVectorLQubitManaged<double> &sv) {
 }
 
 /**
- * @brief The first testing oracle for Grover's
+ * @brief A generalized oracle function for Grover's algorithm
  *
- * A 6-qubit test oracle for Grover's algorithm. Applies a pauli-X to the
- * rightmost qubit if the leftmost 5 qubits are in the state |11010>
+ * Applies an oracle for Grover's algorithm. Applies a pauli-X to the
+ * rightmost qubit if the leftmost qubits are in the state specified by
+ * `control_vals`. Only selects a single state
  *
- * @param sv The statevector to apply the oracle to. Must be 6 qubits
+ * @param sv The statevector to apply the oracle to
  * @param control_vals The state the oracle should select
  */
 void oracle(StateVectorLQubitManaged<double> &sv,
