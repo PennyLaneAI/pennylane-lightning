@@ -140,7 +140,7 @@ void run_experiment(const size_t num_qubits,
 
     // Apply (approx) sqrt(N) repetitions of state selection and amp-amp
     const size_t nreps = static_cast<size_t>(sqrt(1llu << (num_qubits - 1)));
-    for (size_t reps = nreps; reps > 0; --reps) {
+    for (size_t reps = 0; reps < nreps; ++reps) {
         // Apply the oracle to apply a phase of -1 to desired state
         oracle(sv, expected);
         // Perform amp-amp by reflecting over |+++...+>
