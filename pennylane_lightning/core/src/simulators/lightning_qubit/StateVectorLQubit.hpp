@@ -695,9 +695,12 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         // **__**__ for stride 2
         // ****____ for stride 4
         const std::size_t k = branch ? 0 : 1;
+#if defined(_OPENMP)
+#pragma omp parallel for collapse(2) default(none) shared(arr, half_section_size, stride, k)
+#endif
         for (std::size_t idx = 0; idx < half_section_size; idx++) {
-            const std::size_t offset = stride * (k + 2 * idx);
             for (std::size_t ids = 0; ids < stride; ids++) {
+                const std::size_t offset = stride * (k + 2 * idx);
                 arr[offset + ids] = {0., 0.};
             }
         }
@@ -716,6 +719,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                     "vector has norm close to zero and can't be normalized");
 
         ComplexT inv_norm = 1. / norm;
+#if defined(_OPENMP)
+#pragma omp parallel for default(none) shared(arr, inv_norm)
+#endif
         for (std::size_t k = 0; k < BaseType::getLength(); k++) {
             arr[k] *= inv_norm;
         }
