@@ -32,7 +32,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Luis Alfredo Nuñez Meneses, Shuli Shu
+Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
