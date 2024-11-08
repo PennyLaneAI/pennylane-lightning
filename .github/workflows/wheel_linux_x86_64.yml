@@ -211,9 +211,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-    # if: |
-    #   github.event_name == 'release' ||
-    #   github.ref == 'refs/heads/master'
+    if: |
+      github.event_name == 'release' ||
+      github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/download-artifact@v4
