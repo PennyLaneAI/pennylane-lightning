@@ -537,6 +537,52 @@ void applyRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                            inverse, params);
 }
 
+template <class ExecutionSpace, class PrecisionT>
+void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                        const std::size_t num_qubits,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        [[maybe_unused]] const std::vector<std::size_t> &wires,
+                        const bool inverse = false,
+                        const std::vector<PrecisionT> &params = {}) {
+    const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
+        Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
+    auto core_function =
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      const std::size_t i0, const std::size_t i1) {
+        arr(i1) *= phase;
+        arr(i0) *= phase;
+    };
+    std::size_t target{0U};
+    if (!controlled_wires.empty()) {
+        for (std::size_t i = 0; i < num_qubits; i++) {
+            if (std::find(controlled_wires.begin(), controlled_wires.end(),
+                          i) == controlled_wires.end()) {
+                target = i;
+                break;
+            }
+        }
+    }
+    if (controlled_wires.empty()) {
+        applyNC1Functor<PrecisionT, decltype(core_function), false>(
+            ExecutionSpace{}, arr_, num_qubits, {target}, core_function);
+    } else {
+        applyNC1Functor<PrecisionT, decltype(core_function), true>(
+            ExecutionSpace{}, arr_, num_qubits, controlled_wires,
+            controlled_values, {target}, core_function);
+    }
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                      const std::size_t num_qubits,
+                      [[maybe_unused]] const std::vector<std::size_t> &wires,
+                      const bool inverse = false,
+                      const std::vector<PrecisionT> &params = {}) {
+    applyNCGlobalPhase<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {},
+                                                   wires, inverse, params);
+}
+
 template <class PrecisionT, class FuncT, bool has_controls>
 class applyNC2Functor {};
 
@@ -734,16 +780,16 @@ void applyControlledPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const Kokkos::complex<PrecisionT> s =
         (inverse) ? Kokkos::exp(-Kokkos::complex<PrecisionT>(0, angle))
                   : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle));
-    auto core_function = KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i00, const std::size_t i01,
-                      const std::size_t i10, const std::size_t i11) {
-            [[maybe_unused]] const auto i00_ = i00;
-            [[maybe_unused]] const auto i01_ = i01;
-            [[maybe_unused]] const auto i10_ = i10;
-            arr(i11) *= s;
-        };
+    auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i00,
+        const std::size_t i01, const std::size_t i10, const std::size_t i11) {
+        [[maybe_unused]] const auto i00_ = i00;
+        [[maybe_unused]] const auto i01_ = i01;
+        [[maybe_unused]] const auto i10_ = i10;
+        arr(i11) *= s;
+    };
     applyNC2Functor<PrecisionT, decltype(core_function), false>(
-            ExecutionSpace{}, arr_, num_qubits, wires, core_function);
+        ExecutionSpace{}, arr_, num_qubits, wires, core_function);
 }
 
 template <class ExecutionSpace, class PrecisionT>
@@ -1719,52 +1765,6 @@ void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                 arr_(i1) = c * v1 + d_sines(sign_i1 % 4) * v0;
             }
         });
-}
-
-template <class ExecutionSpace, class PrecisionT>
-void applyNCGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                        const std::size_t num_qubits,
-                        const std::vector<std::size_t> &controlled_wires,
-                        const std::vector<bool> &controlled_values,
-                        [[maybe_unused]] const std::vector<std::size_t> &wires,
-                        const bool inverse = false,
-                        const std::vector<PrecisionT> &params = {}) {
-    const Kokkos::complex<PrecisionT> phase = Kokkos::exp(
-        Kokkos::complex<PrecisionT>{0, (inverse) ? params[0] : -params[0]});
-    auto core_function =
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i0, const std::size_t i1) {
-        arr(i1) *= phase;
-        arr(i0) *= phase;
-    };
-    std::size_t target{0U};
-    if (!controlled_wires.empty()) {
-        for (std::size_t i = 0; i < num_qubits; i++) {
-            if (std::find(controlled_wires.begin(), controlled_wires.end(),
-                          i) == controlled_wires.end()) {
-                target = i;
-                break;
-            }
-        }
-    }
-    if (controlled_wires.empty()) {
-        applyNC1Functor<PrecisionT, decltype(core_function), false>(
-            ExecutionSpace{}, arr_, num_qubits, {target}, core_function);
-    } else {
-        applyNC1Functor<PrecisionT, decltype(core_function), true>(
-            ExecutionSpace{}, arr_, num_qubits, controlled_wires,
-            controlled_values, {target}, core_function);
-    }
-}
-
-template <class ExecutionSpace, class PrecisionT>
-void applyGlobalPhase(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                      const std::size_t num_qubits,
-                      [[maybe_unused]] const std::vector<std::size_t> &wires,
-                      const bool inverse = false,
-                      const std::vector<PrecisionT> &params = {}) {
-    applyNCGlobalPhase<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {},
-                                                   wires, inverse, params);
 }
 
 template <class ExecutionSpace, class PrecisionT>
