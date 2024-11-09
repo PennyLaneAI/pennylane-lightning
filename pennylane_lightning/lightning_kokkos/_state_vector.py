@@ -194,8 +194,19 @@ class LightningKokkosStateVector(LightningBaseStateVector):
 
         basename = operation.base.name
         method = getattr(state, f"{basename}", None)
+        basename = operation.base.name
+        method = getattr(state, f"{basename}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
+        target_wires = list(operation.target_wires)
+        if method is not None:  # apply n-controlled specialized gate
+            inv = False
+            param = operation.parameters
+            method(control_wires, control_values, target_wires, inv, param)
+        else:
+            raise qml.DeviceError(
+                "No gate operation supplied and controlled matrix not yet supported"
+            )
         target_wires = list(operation.target_wires)
         if method is not None:  # apply n-controlled specialized gate
             inv = False
