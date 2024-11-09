@@ -28,10 +28,6 @@ PauliX                 = { properties = [ "invertible", "controllable", "differe
 PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
-PauliX                 = { properties = [ "invertible", "controllable", "differentiable" ] }
-PauliY                 = { properties = [ "invertible", "controllable", "differentiable" ] }
-PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
-PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
 QubitUnitary           = { properties = [ "invertible",                                  ] }
 Rot                    = { properties = [ "invertible", "controllable"                   ] }
 RX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
@@ -43,7 +39,6 @@ SingleExcitation       = { properties = [ "invertible", "controllable", "differe
 S                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 SWAP                   = { properties = [ "invertible", "controllable", "differentiable" ] }
 Toffoli                = { properties = [ "invertible",                 "differentiable" ] }
-T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 
 # Operators that should be decomposed according to the algorithm used

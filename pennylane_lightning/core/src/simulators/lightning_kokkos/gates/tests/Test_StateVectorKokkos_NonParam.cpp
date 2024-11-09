@@ -84,10 +84,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation",
             state_vector.applyOperation("XXX", {0}, {true}, {1}),
             LightningException,
             "Operation does not exist for XXX and no matrix provided.");
-        PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyOperation("XXX", {0}, {true}, {1}),
-            LightningException,
-            "Operation does not exist for XXX and no matrix provided.");
     }
 }
 
@@ -831,35 +827,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
         {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
         {{0}, {1}, {2}, {3}}, {{false}, {false}, {false}, {false}});
 
-    auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
-                                                      kokkos_sv.getView());
-    StateVectorKokkos<TestType> sv_gate{num_qubits};
-    StateVectorKokkos<TestType> sv_control{num_qubits};
-
-    SECTION("N-controlled PauliX ") {
-
-        if (control == wire) {
-            Kokkos::deep_copy(sv_control.getView(), ini_sv);
-
-            REQUIRE_THROWS_AS(sv_control.applyOperation(
-                                  "PauliX", std::vector<std::size_t>{control},
-                                  std::vector<bool>{true},
-                                  std::vector<std::size_t>{wire}),
-                              LightningException);
-        }
-
-        if (control != wire) {
-            Kokkos::deep_copy(sv_gate.getView(), ini_sv);
-            Kokkos::deep_copy(sv_control.getView(), ini_sv);
-
-            sv_gate.applyOperation("CNOT", {control, wire}, inverse);
-            sv_control.applyOperation(
-                "PauliX", std::vector<std::size_t>{control},
-                std::vector<bool>{true}, std::vector<std::size_t>{wire});
-            auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
-                Kokkos::HostSpace{}, sv_gate.getView());
-            auto sv_control_host = Kokkos::create_mirror_view_and_copy(
-                Kokkos::HostSpace{}, sv_control.getView());
     auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
                                                       kokkos_sv.getView());
     StateVectorKokkos<TestType> sv_gate{num_qubits};
