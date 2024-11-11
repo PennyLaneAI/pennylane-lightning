@@ -24,7 +24,6 @@ macro(FindCatalyst target_name)
         target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/lib/backend/common)
         target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/lib/capi)
         target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/include)
-        target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/utils)
         target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/tests)
 
     else()
