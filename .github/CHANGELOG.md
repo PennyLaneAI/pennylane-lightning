@@ -2,12 +2,18 @@
 
 ### New features since last release
 
+* Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
+  [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
+
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
 
 ### Breaking changes
 
 ### Improvements
+
+* Unify excitation gates memory layout to row-major for both LGPU and LT.
+  [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
 
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
@@ -26,7 +32,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Luis Alfredo Nuñez Meneses, Shuli Shu
+Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
