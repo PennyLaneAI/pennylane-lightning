@@ -86,21 +86,6 @@ macro(FindCatalyst target_name)
             FetchContent_MakeAvailable(${HEADER_NAME})
         endforeach()
 
-        # Fetching utils hpp headers
-        set(UTILS_HEADERS Python.hpp)
-
-        foreach(HEADER ${UTILS_HEADERS})
-            string(REGEX REPLACE "\\.[^.]*$" "" HEADER_NAME ${HEADER})
-            FetchContent_Declare(
-                ${HEADER_NAME}
-                URL                 https://raw.githubusercontent.com/PennyLaneAI/catalyst/${CATALYST_GIT_TAG}/runtime/utils/${HEADER}
-                DOWNLOAD_NO_EXTRACT True
-                SOURCE_DIR          ../../include
-            )
-
-            FetchContent_MakeAvailable(${HEADER_NAME})
-        endforeach()
-
         # Fetching tests hpp headers
         set(TESTS_HEADERS TestUtils.hpp)
 
