@@ -83,12 +83,18 @@ set_property(TARGET lightning_qubit PROPERTY POSITION_INDEPENDENT_CODE ON)
 ###############################################################################
 set(COMPONENT_SUBDIRS   algorithms
                         bindings
-                        catalyst
                         gates
                         measurements
                         observables
                         utils
                         )
+
+# Do not build the LQ plugin for Windows
+if (NOT WIN32)
+    set(COMPONENT_SUBDIRS   ${COMPONENT_SUBDIRS}
+                            catalyst
+                            )
+endif()
 
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
