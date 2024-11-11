@@ -55,7 +55,7 @@ class applyNC1Functor<PrecisionT, FuncT, true> {
     template <class ExecutionSpace>
     applyNC1Functor([[maybe_unused]] ExecutionSpace exec,
                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                    std::size_t num_qubits,
+                    const std::size_t num_qubits,
                     const std::vector<std::size_t> &controlled_wires,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
@@ -96,7 +96,7 @@ class applyNC1Functor<PrecisionT, FuncT, false> {
     template <class ExecutionSpace>
     applyNC1Functor([[maybe_unused]] ExecutionSpace exec,
                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                    std::size_t num_qubits,
+                    const std::size_t num_qubits,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_),
           rev_wire(num_qubits - wires[0] - 1),
@@ -601,7 +601,7 @@ class applyNC2Functor<PrecisionT, FuncT, true> {
     template <class ExecutionSpace>
     applyNC2Functor([[maybe_unused]] ExecutionSpace exec,
                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                    std::size_t num_qubits,
+                    const std::size_t num_qubits,
                     const std::vector<std::size_t> &controlled_wires,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
@@ -651,7 +651,7 @@ class applyNC2Functor<PrecisionT, FuncT, false> {
     template <class ExecutionSpace>
     applyNC2Functor([[maybe_unused]] ExecutionSpace exec,
                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                    std::size_t num_qubits,
+                    const std::size_t num_qubits,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_),
           rev_wire0(num_qubits - wires[1] - 1),
@@ -1231,7 +1231,7 @@ template <class PrecisionT, class FuncT> class applyNC3Functor {
     template <class ExecutionSpace>
     applyNC3Functor([[maybe_unused]] ExecutionSpace exec,
                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                    std::size_t num_qubits,
+                    const std::size_t num_qubits,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_),
           rev_wire0(num_qubits - wires[2] - 1),
@@ -1344,7 +1344,7 @@ class applyNC4Functor<PrecisionT, FuncT, true> {
     template <class ExecutionSpace>
     applyNC4Functor([[maybe_unused]] ExecutionSpace exec,
                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                    std::size_t num_qubits,
+                    const std::size_t num_qubits,
                     const std::vector<std::size_t> &controlled_wires,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
@@ -1411,7 +1411,7 @@ class applyNC4Functor<PrecisionT, FuncT, false> {
     template <class ExecutionSpace>
     applyNC4Functor([[maybe_unused]] ExecutionSpace exec,
                     Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                    std::size_t num_qubits,
+                    const std::size_t num_qubits,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_),
           rev_wire0(num_qubits - wires[3] - 1),
