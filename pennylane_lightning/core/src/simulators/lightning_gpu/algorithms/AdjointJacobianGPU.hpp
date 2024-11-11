@@ -326,11 +326,19 @@ class AdjointJacobian final
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     const PrecisionT scalingFactor =
-                        BaseType::applyGenerator(
-                            mu, ops.getOpsName()[op_idx],
-                            ops.getOpsWires()[op_idx],
-                            !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? BaseType::applyGenerator(
+                                  mu, ops.getOpsName()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : BaseType::applyGenerator(
+                                  mu, ops.getOpsName()[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     updateJacobian(H_lambda, mu, jac, scalingFactor,
                                    num_observables, trainableParamNumber,

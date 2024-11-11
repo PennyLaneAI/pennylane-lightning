@@ -161,30 +161,6 @@ _operations = frozenset(
 )
 # End the set of supported operations.
 
-# TODO: _unsupported_adjoint_ops is a temporary solution to avoid adjoint differentiation for N-controlled gates.
-# This will be removed once the  N-controlled genenerators are implemented.
-_unsupported_adjoint_ops = frozenset(
-    {
-        "C(PhaseShift)",
-        "C(RX)",
-        "C(RY)",
-        "C(RZ)",
-        "C(Rot)",
-        "C(IsingXX)",
-        "C(IsingXY)",
-        "C(IsingYY)",
-        "C(IsingZZ)",
-        "C(SingleExcitation)",
-        "C(SingleExcitationMinus)",
-        "C(SingleExcitationPlus)",
-        "C(DoubleExcitation)",
-        "C(DoubleExcitationMinus)",
-        "C(DoubleExcitationPlus)",
-        "C(MultiRZ)",
-        "C(GlobalPhase)",
-    }
-)
-
 # The set of supported observables.
 _observables = frozenset(
     {
@@ -263,14 +239,6 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    # FIXME: This is a temporary solution to avoid adjoint differentiation for N-controlled gates.
-    if op.name in _unsupported_adjoint_ops:
-        # "C(SingleExcitation)" is not supported by the lightning.gpu after decomposition.
-        if op.name == "C(SingleExcitation)":
-            raise qml.DeviceError(
-                "C(SingleExcitation) is not supported by adjoint differentiation."
-            )
-        return False
     return adjoint_ops(op) and not isinstance(op, qml.PauliRot)
 
 
