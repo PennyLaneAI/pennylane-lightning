@@ -449,7 +449,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * @param numHyperSamples Number of hyper samples to use in the calculation
      * and is set to 1 by default.
      */
-    void get_accessor_(CFP_t *tensor_data, const std::size_t tensor_data_size,
+    void get_accessor_(CFP_t *tensor_data,
+                       [[maybe_unused]] const std::size_t tensor_data_size,
                        const std::vector<int32_t> &projected_modes,
                        const std::vector<int64_t> &projected_mode_values,
                        const int32_t numHyperSamples = 1) const {
@@ -518,14 +519,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             /* cudaStream_t cudaStream */ 0x0));
 
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(getDevTag().getStreamID()));
-
-        const ComplexT scale_scalar = ComplexT{1.0, 0.0} / stateNorm2;
-
-        CFP_t scale_scalar_cu{scale_scalar.real(), scale_scalar.imag()};
-
-        scaleC_CUDA<CFP_t, CFP_t>(scale_scalar_cu, tensor_data,
-                                  tensor_data_size, getDevTag().getDeviceID(),
-                                  getDevTag().getStreamID(), getCublasCaller());
 
         PL_CUTENSORNET_IS_SUCCESS(
             cutensornetDestroyWorkspaceDescriptor(workDesc));

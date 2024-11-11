@@ -307,47 +307,58 @@ class StateVectorCudaManaged
             if (adjoint) {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
-                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, true);
+                applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, true);
             } else {
                 auto rot_matrix =
                     cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-                applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
+                applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, false);
             }
         } else if (opName == "Matrix") {
-            DataBuffer<CFP_t, int> d_matrix{
-                gate_matrix.size(), BaseType::getDataBuffer().getDevTag(),
-                true};
-            d_matrix.CopyHostDataToGpu(gate_matrix.data(), d_matrix.getLength(),
-                                       false);
-            // ensure wire indexing correctly preserved for tensor-observables
-            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
-                                                       ctrls.rend()};
-            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
-                                                      tgts.rend()};
-            applyDeviceMatrixGate(d_matrix.getData(), ctrls_local, tgts_local,
-                                  adjoint);
+            applyDeviceMatrixGate_(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             par_gates_.at(opName)(wires, adjoint, params);
         } else { // No offloadable function call; defer to matrix passing
             auto &&par =
                 (params.empty()) ? std::vector<Precision>{0.0} : params;
-            // ensure wire indexing correctly preserved for tensor-observables
-            const std::vector<std::size_t> ctrls_local{ctrls.rbegin(),
-                                                       ctrls.rend()};
-            const std::vector<std::size_t> tgts_local{tgts.rbegin(),
-                                                      tgts.rend()};
-
             if (!gate_cache_.gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
-                std::string message = "Currently unsupported gate: " + opName;
+                std::string message = "Currently unsupported gate: " + opName +
+                                      "and no matrix is provided.";
                 throw LightningException(message);
             } else if (!gate_cache_.gateExists(opName, par[0])) {
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
             }
-            applyDeviceMatrixGate(
-                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls_local,
-                tgts_local, adjoint);
+            applyDeviceMatrixGate_(
+                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrls, tgts,
+                adjoint);
         }
+    }
+
+    /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param tgt_wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param matrix Gate data (in row-major format).
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &tgt_wires, bool adjoint,
+                        const std::vector<Precision> &params,
+                        const std::vector<ComplexT> &matrix) {
+        std::vector<CFP_t> matrix_cu(matrix.size());
+        std::transform(matrix.begin(), matrix.end(), matrix_cu.begin(),
+                       [](const std::complex<Precision> &x) {
+                           return cuUtil::complexToCu<std::complex<Precision>>(
+                               x);
+                       });
+        applyOperation(opName, controlled_wires, controlled_values, tgt_wires,
+                       adjoint, params, matrix_cu);
     }
 
     /**
@@ -359,19 +370,21 @@ class StateVectorCudaManaged
      * @param tgt_wires Wires to apply gate to.
      * @param adjoint Indicates whether to use adjoint of gate.
      * @param params Optional parameter list for parametric gates.
-     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Gate data (in row-major format).
      */
-    void applyOperation(
-        const std::string &opName,
-        const std::vector<std::size_t> &controlled_wires,
-        const std::vector<bool> &controlled_values,
-        const std::vector<std::size_t> &tgt_wires, bool adjoint = false,
-        const std::vector<Precision> &params = {0.0},
-        [[maybe_unused]] const std::vector<ComplexT> &gate_matrix = {}) {
-        PL_ABORT_IF_NOT(opName == "GlobalPhase",
-                        "Only GlobalPhase gate is supported.");
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &tgt_wires,
+                        bool adjoint = false,
+                        const std::vector<Precision> &params = {0.0},
+                        const std::vector<CFP_t> &gate_matrix = {}) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, tgt_wires),
+            "`controlled_wires` and target wires must be disjoint.");
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
-                    "`ctrls` and `ctrls_values` must have the same size.");
+                    "`controlled_wires` and `controlled_values` must have the "
+                    "same size.");
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             controlled_wires, BaseType::getNumQubits());
         auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
@@ -379,11 +392,89 @@ class StateVectorCudaManaged
         auto ctrls_valuesInt =
             Pennylane::Util::cast_vector<bool, int>(controlled_values);
 
-        if (opName == "GlobalPhase") {
-            const std::vector<std::string> names(tgt_wires.size(), "I");
+        if (opName == "MultiRZ") {
+            const std::vector<std::string> names(tgtsInt.size(), {"RZ"});
+            applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
+                                             tgtsInt, params.front(), adjoint);
+        } else if (opName == "GlobalPhase") {
+            const std::vector<std::string> names(tgtsInt.size(), "I");
             applyParametricPauliGeneralGate_(names, ctrlsInt, ctrls_valuesInt,
                                              tgtsInt, 2 * params[0], adjoint);
+
+        } else if (native_gates_.find(opName) != native_gates_.end()) {
+            applyParametricPauliGeneralGate_({opName}, ctrlsInt,
+                                             ctrls_valuesInt, tgtsInt,
+                                             params.front(), adjoint);
+        } else if (opName == "Rot") {
+            auto rot_matrix =
+                adjoint
+                    ? cuGates::getRot<CFP_t>(params[2], params[1], params[0])
+                    : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+            applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
+                                    ctrls_valuesInt, adjoint);
+        } else if (par_gates_.find(opName) != par_gates_.end()) {
+            // TODO: offload to par_gates_ if available
+            auto &gateMap =
+                cuGates::DynamicGateDataAccess<PrecisionT>::getInstance();
+            auto &&matrix_cu = gateMap.getGateData(opName, params);
+
+            gate_cache_.add_gate(opName, params[0], matrix_cu);
+
+            applyDeviceGeneralGate_(
+                gate_cache_.get_gate_device_ptr(opName, params[0]), ctrlsInt,
+                tgtsInt, ctrls_valuesInt, adjoint);
+        } else { // No offloadable function call; defer to matrix passing
+            auto &&par =
+                (params.empty()) ? std::vector<Precision>{0.0} : params;
+            if (!gate_cache_.gateExists(opName, par[0]) &&
+                gate_matrix.empty()) {
+                std::string message = "Currently unsupported gate: " + opName +
+                                      " and no matrix provided.";
+                throw LightningException(message);
+            } else if (!gate_cache_.gateExists(opName, par[0])) {
+                gate_cache_.add_gate(opName, par[0], gate_matrix);
+            }
+            applyDeviceGeneralGate_(
+                gate_cache_.get_gate_device_ptr(opName, par[0]), ctrlsInt,
+                tgtsInt, ctrls_valuesInt, adjoint);
         }
+    }
+
+    /**
+     * @brief Apply a single gate to the state vector.
+     *
+     * @param gate_matrix Gate matrix data (in row-major format).
+     * @param matrix_size Size of the matrix.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param tgt_wires Target wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    void applyControlledMatrix(const ComplexT *gate_matrix,
+                               const std::size_t matrix_size,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &tgt_wires,
+                               bool inverse = false) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, tgt_wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
+                    "`controlled_wires` and `controlled_values` must have the "
+                    "same size.");
+        DataBuffer<CFP_t, int> d_matrix{
+            matrix_size, BaseType::getDataBuffer().getDevTag(), true};
+        d_matrix.CopyHostDataToGpu(gate_matrix, matrix_size, false);
+        // ensure wire indexing correctly preserved for tensor-observables
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            controlled_wires, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgt_wires, BaseType::getNumQubits());
+        auto ctrls_valuesInt =
+            Pennylane::Util::cast_vector<bool, int>(controlled_values);
+
+        applyDeviceGeneralGate_(d_matrix.getData(), ctrlsInt, tgtsInt,
+                                ctrls_valuesInt, inverse);
     }
 
     /**
@@ -400,6 +491,59 @@ class StateVectorCudaManaged
         auto it = generator_map_.find(opName);
         PL_ABORT_IF(it == generator_map_.end(), "Unsupported generator!");
         return (it->second)(wires, adjoint);
+    }
+
+    /**
+     * @brief Apply a single controlled generator to the state vector using the
+     * given kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate. (Default to
+     * false)
+     */
+    auto
+    applyControlledGenerator(const std::string &opName,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool adjoint = false) -> PrecisionT {
+        auto it = controlled_generator_map_.find(opName);
+        PL_ABORT_IF(it == controlled_generator_map_.end(),
+                    "Unsupported controlled generator!");
+        return (it->second)(controlled_wires, controlled_values, wires,
+                            adjoint);
+    }
+
+    /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param adjoint Indicates whether to use adjoint of gate. (Default to
+     * false)
+     */
+    auto applyGenerator(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires,
+                        bool adjoint = false) -> PrecisionT {
+        if (controlled_wires.empty()) {
+            return applyGenerator(opName, wires, adjoint);
+        }
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        return applyControlledGenerator(opName, controlled_wires,
+                                        controlled_values, wires, adjoint);
     }
 
     /**
@@ -508,47 +652,47 @@ class StateVectorCudaManaged
                             bool adjoint) {
         static const std::string name{"PauliX"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyPauliY(const std::vector<std::size_t> &wires,
                             bool adjoint) {
         static const std::string name{"PauliY"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyPauliZ(const std::vector<std::size_t> &wires,
                             bool adjoint) {
         static const std::string name{"PauliZ"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyHadamard(const std::vector<std::size_t> &wires,
                               bool adjoint) {
         static const std::string name{"Hadamard"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyS(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"S"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyT(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"T"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyRX(const std::vector<std::size_t> &wires, bool adjoint,
                         Precision param) {
@@ -586,38 +730,38 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getPhaseShift<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
 
     /* two-qubit gates */
     inline void applyCNOT(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"CNOT"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyCY(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"CY"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyCZ(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"CZ"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applySWAP(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"SWAP"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param), {},
+                               wires, adjoint);
     }
     inline void applyIsingXX(const std::vector<std::size_t> &wires,
                              bool adjoint, Precision param) {
@@ -641,8 +785,8 @@ class StateVectorCudaManaged
         if (!gate_cache_.gateExists(gate_key)) {
             gate_cache_.add_gate(gate_key, cuGates::getIsingXY<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
     inline void applyCRot(const std::vector<std::size_t> &wires, bool adjoint,
                           const std::vector<Precision> &params) {
@@ -680,8 +824,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getSingleExcitation<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
     inline void
     applySingleExcitationMinus(const std::vector<std::size_t> &wires,
@@ -692,8 +836,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getSingleExcitationMinus<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
     inline void applySingleExcitationPlus(const std::vector<std::size_t> &wires,
                                           bool adjoint, Precision param) {
@@ -703,8 +847,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getSingleExcitationPlus<CFP_t>(param));
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
     }
 
     /* three-qubit gates */
@@ -712,35 +856,35 @@ class StateVectorCudaManaged
                              bool adjoint) {
         static const std::string name{"Toffoli"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.begin(), wires.end() - 1}, {wires.back()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
     }
     inline void applyCSWAP(const std::vector<std::size_t> &wires,
                            bool adjoint) {
         static const std::string name{"SWAP"};
         static const Precision param = 0.0;
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                              {wires.front()}, {wires.begin() + 1, wires.end()},
-                              adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.front()},
+                               {wires.begin() + 1, wires.end()}, adjoint);
     }
 
     /* four-qubit gates */
     inline void applyDoubleExcitation(const std::vector<std::size_t> &wires,
                                       bool adjoint, Precision param) {
         auto &&mat = cuGates::getDoubleExcitation<CFP_t>(param);
-        applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
+        applyDeviceMatrixGate_(mat.data(), {}, wires, adjoint);
     }
     inline void
     applyDoubleExcitationMinus(const std::vector<std::size_t> &wires,
                                bool adjoint, Precision param) {
         auto &&mat = cuGates::getDoubleExcitationMinus<CFP_t>(param);
-        applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
+        applyDeviceMatrixGate_(mat.data(), {}, wires, adjoint);
     }
     inline void applyDoubleExcitationPlus(const std::vector<std::size_t> &wires,
                                           bool adjoint, Precision param) {
         auto &&mat = cuGates::getDoubleExcitationPlus<CFP_t>(param);
-        applyDeviceMatrixGate(mat.data(), {}, wires, adjoint);
+        applyDeviceMatrixGate_(mat.data(), {}, wires, adjoint);
     }
 
     /* Multi-qubit gates */
@@ -768,7 +912,6 @@ class StateVectorCudaManaged
     /**
      * @brief Gradient generator function associated with the RX gate.
      *
-     * @param sv Statevector
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
@@ -781,7 +924,6 @@ class StateVectorCudaManaged
     /**
      * @brief Gradient generator function associated with the RY gate.
      *
-     * @param sv Statevector
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
@@ -794,7 +936,6 @@ class StateVectorCudaManaged
     /**
      * @brief Gradient generator function associated with the RZ gate.
      *
-     * @param sv Statevector
      * @param wires Wires to apply operation.
      * @param adj Takes adjoint of operation if true. Defaults to false.
      */
@@ -813,8 +954,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingXX<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -826,8 +967,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingYY<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -839,8 +980,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingZZ<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -853,8 +994,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(gate_key,
                                  cuGates::getGeneratorIsingXY<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return static_cast<PrecisionT>(0.5);
     }
 
@@ -941,8 +1082,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorSingleExcitation<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -955,8 +1096,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorSingleExcitationMinus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -969,8 +1110,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorSingleExcitationPlus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -984,8 +1125,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorDoubleExcitation<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -998,8 +1139,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorDoubleExcitationMinus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
     inline PrecisionT
@@ -1012,8 +1153,8 @@ class StateVectorCudaManaged
             gate_cache_.add_gate(
                 gate_key, cuGates::getGeneratorDoubleExcitationPlus<CFP_t>());
         }
-        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
-                              wires, adjoint);
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(gate_key), {},
+                               wires, adjoint);
         return -static_cast<PrecisionT>(0.5);
     }
 
@@ -1022,12 +1163,553 @@ class StateVectorCudaManaged
         static const std::string name{"PauliZ"};
         static const Precision param = 0.0;
         for (const auto &w : wires) {
-            applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
-                                  {}, {w}, adjoint);
+            applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                                   {}, {w}, adjoint);
         }
         return -static_cast<PrecisionT>(0.5);
     }
 
+    /* Controlled-gate generators */
+    /**
+     * @brief Gradient generator function associated with the controlled-RX
+     * gate.
+     *
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Target wires to apply operation.
+     * @param adj Takes adjoint of operation if true. Defaults to false.
+     */
+    inline PrecisionT
+    applyControlledGeneratorRX(const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index], permutations[index + 1]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT
+    applyControlledGeneratorRY(const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index], permutations[index + 1]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 1] = cuUtil::IMAG<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT
+    applyControlledGeneratorRZ(const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate diagonals
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorIsingXX(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+        std::swap(permutations[index], permutations[index + 3]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorIsingXY(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorIsingYY(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 0], permutations[index + 3]);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = -cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorIsingZZ(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate diagonals
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorSingleExcitation(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 1] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 2] = cuUtil::IMAG<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorSingleExcitationMinus(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 2] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 3] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorSingleExcitationPlus(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 1], permutations[index + 2]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 2] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 3] = -cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorDoubleExcitation(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 3], permutations[index + 12]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index + 3] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 12] = cuUtil::IMAG<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorDoubleExcitationMinus(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 3], permutations[index + 12]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 4] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 5] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 6] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 7] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 8] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 9] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 10] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 11] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 12] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 13] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 14] = cuUtil::ONE<CFP_t>();
+        diagonals[index + 15] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorDoubleExcitationPlus(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate permutation
+        std::vector<custatevecIndex_t> permutations =
+            generateTrivialPermutation(ctrl_size, tgt_size);
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::swap(permutations[index + 3], permutations[index + 12]);
+
+        // Generate diagonals
+        std::vector<CFP_t> diagonals(permutations.size(),
+                                     cuUtil::ZERO<CFP_t>());
+        diagonals[index] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 1] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 2] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 3] = -cuUtil::IMAG<CFP_t>();
+        diagonals[index + 4] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 5] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 6] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 7] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 8] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 9] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 10] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 11] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 12] = cuUtil::IMAG<CFP_t>();
+        diagonals[index + 13] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 14] = -cuUtil::ONE<CFP_t>();
+        diagonals[index + 15] = -cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_(permutations, diagonals.data(), {},
+                                    combined_tgts, {}, adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
+
+    inline PrecisionT applyControlledGeneratorPhaseShift(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate diagonals
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
+        diagonals[index + 1] = cuUtil::ONE<CFP_t>();
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+
+        return static_cast<PrecisionT>(1.0);
+    }
+
+    inline PrecisionT applyControlledGeneratorGlobalPhase(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate diagonals
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
+
+        std::fill(diagonals.begin() + index,
+                  diagonals.begin() + index + Pennylane::Util::exp2(tgt_size),
+                  cuUtil::ONE<CFP_t>());
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+
+        return -static_cast<PrecisionT>(1.0);
+    }
+
+    inline PrecisionT applyControlledGeneratorMultiRZ(
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool adj = false) {
+        const std::size_t ctrl_size = controlled_wires.size();
+        const std::size_t tgt_size = wires.size();
+
+        // Generate diagonals
+        std::size_t index = controlPermutationMatrixIndex(ctrl_size, tgt_size,
+                                                          controlled_values);
+        std::vector<CFP_t> diagonals(
+            Pennylane::Util::exp2(ctrl_size + tgt_size), cuUtil::ZERO<CFP_t>());
+
+        for (std::size_t k = 0; k < Pennylane::Util::exp2(tgt_size); ++k) {
+            diagonals[index + k] = {
+                static_cast<PrecisionT>(1 - 2 * (std::popcount(k) % 2)), 0};
+        }
+
+        std::vector<std::size_t> combined_tgts(ctrl_size + tgt_size);
+        std::copy(controlled_wires.begin(), controlled_wires.end(),
+                  combined_tgts.begin());
+        std::copy(wires.begin(), wires.end(),
+                  combined_tgts.begin() + ctrl_size);
+
+        applyDevicePermutationGate_({}, diagonals.data(), {}, combined_tgts, {},
+                                    adj);
+
+        return -static_cast<PrecisionT>(0.5);
+    }
     /**
      * @brief Access the CublasCaller the object is using.
      *
@@ -1076,9 +1758,13 @@ class StateVectorCudaManaged
                                        const std::vector<Precision> &)>;
     using GeneratorFunc =
         std::function<Precision(const std::vector<std::size_t> &, bool)>;
+    using CGeneratorFunc = std::function<Precision(
+        const std::vector<std::size_t> &, const std::vector<bool> &,
+        const std::vector<std::size_t> &, bool)>;
 
     using FMap = std::unordered_map<std::string, ParFunc>;
     using GMap = std::unordered_map<std::string, GeneratorFunc>;
+    using CGMap = std::unordered_map<std::string, CGeneratorFunc>;
 
     const FMap par_gates_{
         // LCOV_EXCL_START
@@ -1346,6 +2032,70 @@ class StateVectorCudaManaged
                  std::forward<decltype(wires)>(wires),
                  std::forward<decltype(adjoint)>(adjoint));
          }}};
+    // Generator forwarding logic.
+    template <typename Func> auto makeControlledGenerator(Func &&func) {
+        return [this, func = std::forward<Func>(func)](
+                   auto &&controlled_wires, auto &&controlled_values,
+                   auto &&wires, auto &&adjoint) {
+            return (this->*func)(
+                std::forward<decltype(controlled_wires)>(controlled_wires),
+                std::forward<decltype(controlled_values)>(controlled_values),
+                std::forward<decltype(wires)>(wires),
+                std::forward<decltype(adjoint)>(adjoint));
+        };
+    }
+    // Holds the mapping from controlled-gate labels to associated generator
+    // functions.
+    const CGMap controlled_generator_map_{
+        {"PhaseShift",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::applyControlledGeneratorPhaseShift)},
+        {"RX", makeControlledGenerator(
+                   &StateVectorCudaManaged::applyControlledGeneratorRX)},
+        {"RY", makeControlledGenerator(
+                   &StateVectorCudaManaged::applyControlledGeneratorRY)},
+        {"RZ", makeControlledGenerator(
+                   &StateVectorCudaManaged::applyControlledGeneratorRZ)},
+        {"IsingXX",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::applyControlledGeneratorIsingXX)},
+        {"IsingXY",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::applyControlledGeneratorIsingXY)},
+        {"IsingYY",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::applyControlledGeneratorIsingYY)},
+        {"IsingZZ",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::applyControlledGeneratorIsingZZ)},
+        {"SingleExcitation",
+         makeControlledGenerator(&StateVectorCudaManaged::
+                                     applyControlledGeneratorSingleExcitation)},
+        {"SingleExcitationMinus",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::
+                 applyControlledGeneratorSingleExcitationMinus)},
+        {"SingleExcitationPlus",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::
+                 applyControlledGeneratorSingleExcitationPlus)},
+        {"DoubleExcitation",
+         makeControlledGenerator(&StateVectorCudaManaged::
+                                     applyControlledGeneratorDoubleExcitation)},
+        {"DoubleExcitationMinus",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::
+                 applyControlledGeneratorDoubleExcitationMinus)},
+        {"DoubleExcitationPlus",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::
+                 applyControlledGeneratorDoubleExcitationPlus)},
+        {"GlobalPhase",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::applyControlledGeneratorGlobalPhase)},
+        {"MultiRZ",
+         makeControlledGenerator(
+             &StateVectorCudaManaged::applyControlledGeneratorMultiRZ)}};
 
     /**
      * @brief Normalize the index ordering to match PennyLane.
@@ -1497,25 +2247,40 @@ class StateVectorCudaManaged
      * @param tgts Target qubits.
      * @param use_adjoint Use adjoint of given gate.
      */
-    void applyDeviceMatrixGate(const CFP_t *matrix,
-                               const std::vector<std::size_t> &ctrls,
-                               const std::vector<std::size_t> &tgts,
-                               bool use_adjoint = false) {
+    void applyDeviceMatrixGate_(const CFP_t *matrix,
+                                const std::vector<std::size_t> &ctrls,
+                                const std::vector<std::size_t> &tgts,
+                                bool use_adjoint = false) {
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            ctrls, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgts, BaseType::getNumQubits());
+        auto ctrls_values = std::vector<int>(ctrls.size(), 1);
+
+        applyDeviceGeneralGate_(matrix, ctrlsInt, tgtsInt, ctrls_values,
+                                use_adjoint);
+    }
+
+    /**
+     * @brief Apply a given host or device-stored array representing the gate
+     * `matrix` to the state vector at qubit indices given by `tgts` and
+     * control-lines given by `ctrls`. The adjoint can be taken by setting
+     * `use_adjoint` to true.
+     *
+     * @param matrix Device data array in row-major order representing
+     * a given gate.
+     * @param ctrls Control line qubits.
+     * @param tgts Target qubits.
+     * @param ctrls_values Control values.
+     * @param use_adjoint Use adjoint of given gate. Defaults to false.
+     */
+    void applyDeviceGeneralGate_(const CFP_t *matrix, std::vector<int> &ctrls,
+                                 std::vector<int> &tgts,
+                                 std::vector<int> &ctrls_values,
+                                 bool use_adjoint = false) {
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();
-
-        std::vector<int> ctrlsInt(ctrls.size());
-        std::vector<int> tgtsInt(tgts.size());
-
-        std::transform(
-            ctrls.begin(), ctrls.end(), ctrlsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
-        std::transform(
-            tgts.begin(), tgts.end(), tgtsInt.begin(), [&](std::size_t x) {
-                return static_cast<int>(BaseType::getNumQubits() - 1 - x);
-            });
 
         cudaDataType_t data_type;
         custatevecComputeType_t compute_type;
@@ -1528,6 +2293,10 @@ class StateVectorCudaManaged
             data_type = CUDA_C_32F;
             compute_type = CUSTATEVEC_COMPUTE_32F;
         }
+
+        std::reverse(tgts.begin(), tgts.end());
+        std::reverse(ctrls.begin(), ctrls.end());
+        std::reverse(ctrls_values.begin(), ctrls_values.end());
 
         // check the size of external workspace
         PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyMatrixGetWorkspaceSize(
@@ -1564,12 +2333,112 @@ class StateVectorCudaManaged
             /* cudaDataType_t */ data_type,
             /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
             /* const int32_t */ use_adjoint,
-            /* const int32_t* */ tgtsInt.data(),
+            /* const int32_t* */ tgts.data(),
             /* const uint32_t */ tgts.size(),
-            /* const int32_t* */ ctrlsInt.data(),
-            /* const int32_t* */ nullptr,
+            /* const int32_t* */ ctrls.data(),
+            /* const int32_t* */ ctrls_values.data(),
             /* const uint32_t */ ctrls.size(),
             /* custatevecComputeType_t */ compute_type,
+            /* void* */ extraWorkspace,
+            /* std::size_t */ extraWorkspaceSizeInBytes));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            BaseType::getDataBuffer().getDevTag().getStreamID()));
+        // LCOV_EXCL_START
+        if (extraWorkspaceSizeInBytes)
+            PL_CUDA_IS_SUCCESS(cudaFree(extraWorkspace));
+        // LCOV_EXCL_STOP
+    }
+
+    /**
+     * @brief Apply a generalized permutation matrix (diagonal x permutation) to
+     * the state vector at qubit indices given by `tgts` and control-lines given
+     * by `ctrls`. The adjoint can be taken by setting `use_adjoint` to true.
+     *
+     * @param permutation Optional vector representing permutation table.
+     * @param diagonals Diagonal matrix. (size = 2^nTargets)
+     * @param ctrls Control qubits
+     * @param tgts Target qubits.
+     * @param ctrls_values Control Values.
+     * @param use_adjoint Use adjoint of generalized permutation matrix.
+     * Defaults to false.
+     */
+    void applyDevicePermutationGate_(std::vector<custatevecIndex_t> permutation,
+                                     const CFP_t *diagonals,
+                                     const std::vector<std::size_t> &ctrls,
+                                     const std::vector<std::size_t> &tgts,
+                                     const std::vector<bool> &ctrls_values,
+                                     bool use_adjoint = false) {
+        void *extraWorkspace = nullptr;
+        std::size_t extraWorkspaceSizeInBytes = 0;
+        int nIndexBits = BaseType::getNumQubits();
+
+        cudaDataType_t data_type;
+        custatevecComputeType_t compute_type;
+
+        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                      std::is_same_v<CFP_t, double2>) {
+            data_type = CUDA_C_64F;
+            compute_type = CUSTATEVEC_COMPUTE_64F;
+        } else {
+            data_type = CUDA_C_32F;
+            compute_type = CUSTATEVEC_COMPUTE_32F;
+        }
+
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            ctrls, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgts, BaseType::getNumQubits());
+        auto ctrls_valuesInt =
+            Pennylane::Util::cast_vector<bool, int>(ctrls_values);
+
+        std::reverse(tgtsInt.begin(), tgtsInt.end());
+        std::reverse(ctrlsInt.begin(), ctrlsInt.end());
+        std::reverse(ctrls_valuesInt.begin(), ctrls_valuesInt.end());
+
+        custatevecIndex_t *permutation_data =
+            permutation.empty() ? nullptr : permutation.data();
+
+        // check the size of external workspace
+        PL_CUSTATEVEC_IS_SUCCESS(
+            custatevecApplyGeneralizedPermutationMatrixGetWorkspaceSize(
+                /* custatevecHandle_t */ handle_.get(),
+                /* cudaDataType_t */ data_type,
+                /* const uint32_t */ nIndexBits,
+                /* custatevecIndex_t*  */ permutation_data,
+                /* const void* */ diagonals,
+                /* cudaDataType_t */ data_type,
+                /* const int32_t* */ tgtsInt.data(),
+                /* const uint32_t */ tgtsInt.size(),
+                /* const uint32_t */ ctrlsInt.size(),
+                /* std::size_t* */ &extraWorkspaceSizeInBytes));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            BaseType::getDataBuffer().getDevTag().getStreamID()));
+
+        // allocate external workspace if necessary
+        // LCOV_EXCL_START
+        if (extraWorkspaceSizeInBytes > 0) {
+            PL_CUDA_IS_SUCCESS(
+                cudaMalloc(&extraWorkspace, extraWorkspaceSizeInBytes));
+        }
+        // LCOV_EXCL_STOP
+
+        // apply gate
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyGeneralizedPermutationMatrix(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void* */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t */ nIndexBits,
+            /* custatevecIndex_t*  */ permutation_data,
+            /* const void* */ diagonals,
+            /* cudaDataType_t */ data_type,
+            /* const int32_t */ use_adjoint,
+            /* const int32_t* */ tgtsInt.data(),
+            /* const uint32_t */ tgtsInt.size(),
+            /* const int32_t* */ ctrlsInt.data(),
+            /* const int32_t* */ ctrls_valuesInt.data(),
+            /* const uint32_t */ ctrlsInt.size(),
             /* void* */ extraWorkspace,
             /* std::size_t */ extraWorkspaceSizeInBytes));
 
