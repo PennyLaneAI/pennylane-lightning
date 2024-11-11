@@ -22,6 +22,9 @@
 
 ### Bug fixes
 
+* Fix the `upload-pypi` token issues for Linux and MacOS (x86_64 & AARCH64) wheels.
+  [(#989)](https://github.com/PennyLaneAI/pennylane-lightning/pull/989)
+
 * Fix Pennylane dependency branch (`v0.39_rc0` to `master`).
   [(#984)](https://github.com/PennyLaneAI/pennylane-lightning/pull/984)
 
