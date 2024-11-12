@@ -357,7 +357,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
             Kokkos::HostSpace{}, sv_gate.getView());
 
         std::vector<ComplexT> expected_result{
-            // Generated using Pennylane
+            // Generated using Pennylane (qml.ctrl)
             ComplexT{0.35355339, 0.0},        ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0},        ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0},        ComplexT{0.35355339, 0.0},
@@ -483,6 +483,720 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
             ComplexT{0.34391789, -0.08197855}, ComplexT{0.35355339, 0.0},
             ComplexT{0.34391789, -0.08197855}, ComplexT{0.35355339, 0.0},
         };
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "StateVectorKokkos::applyOperation param two-qubit with controls",
+    "[StateVectorKokkos_Operation]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = StateVectorT::PrecisionT;
+    using ComplexT = Kokkos::complex<PrecisionT>;
+
+    const std::size_t num_qubits = 4;
+    const TestType EP = 1e-4;
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    const bool inverse = GENERATE(false, true);
+    const std::size_t control = GENERATE(0, 1, 2, 3);
+    const std::size_t wire0 = GENERATE(0, 1, 2, 3);
+    const std::size_t wire1 = GENERATE(0, 1, 2, 3);
+    const PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+
+    auto getControlledGate = [](std::vector<ComplexT> matrix) {
+        std::vector<ComplexT> cmatrix(matrix.size() * 4);
+        for (std::size_t i = 0; i < 4; i++) {
+            cmatrix[i * 8 + i] = ComplexT{1.0};
+        }
+        for (std::size_t i = 0; i < 4; i++) {
+            for (std::size_t j = 0; j < 4; j++) {
+                cmatrix[(i + 4) * 8 + j + 4] = matrix[i * 4 + j];
+            }
+        }
+        return cmatrix;
+    };
+
+    SECTION("N-controlled IsingXX") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingXX<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingXX", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled IsingXY") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingXY<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingXY", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled IsingYY") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingYY<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingYY", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled IsingZZ") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix = getIsingZZ<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "IsingZZ", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled SingleExcitation") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getSingleExcitation<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "SingleExcitation", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled SingleExcitationMinus") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getSingleExcitationMinus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "SingleExcitationMinus", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled SingleExcitationPlus") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getSingleExcitationPlus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "SingleExcitationPlus", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
+                   "two-qubit with multiple-controls",
+                   "[StateVectorKokkos_Param]", float, double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const bool inverse = false;
+    const std::size_t num_qubits = 4;
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+
+    kokkos_sv.applyOperations(
+        {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+        {{0}, {1}, {2}, {3}}, {{false}, {false}, {false}, {false}});
+
+    auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                      kokkos_sv.getView());
+    StateVectorKokkos<TestType> sv_gate{num_qubits};
+    StateVectorKokkos<TestType> expected_result{num_qubits};
+
+    SECTION("2-controlled IsingXX") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("IsingXX", control_wires, control_values,
+                               target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled IsingXY") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("IsingXY", control_wires, control_values,
+                               target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled IsingYY") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("IsingYY", control_wires, control_values,
+                               target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled IsingZZ") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("IsingZZ", control_wires, control_values,
+                               target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled SingleExcitation") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("SingleExcitation", control_wires,
+                               control_values, target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{
+            // Generated using Pennylane
+            ComplexT{0.25, 0.0},       ComplexT{0.25, 0.0}, ComplexT{0.25, 0.0},
+            ComplexT{0.25, 0.0},       ComplexT{0.25, 0.0}, ComplexT{0.25, 0.0},
+            ComplexT{0.25, 0.0},       ComplexT{0.25, 0.0}, ComplexT{0.25, 0.0},
+            ComplexT{0.21910751, 0.0}, ComplexT{0.25, 0.0}, ComplexT{0.25, 0.0},
+            ComplexT{0.27747414, 0.0}, ComplexT{0.25, 0.0}, ComplexT{0.25, 0.0},
+            ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled SingleExcitationPlus") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("SingleExcitationPlus", control_wires,
+                               control_values, target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.21910751, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.27747414, 0.0},
+                                              ComplexT{0.24829083, 0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled SingleExcitationMinus") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("SingleExcitationMinus", control_wires,
+                               control_values, target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.21910751, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.27747414, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE(
+    "StateVectorKokkos::applyOperation param four-qubit with controls",
+    "[StateVectorKokkos_Operation]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    using PrecisionT = StateVectorT::PrecisionT;
+    using ComplexT = Kokkos::complex<PrecisionT>;
+
+    const std::size_t num_qubits = 5;
+    const TestType EP = 1e-4;
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    const bool inverse = GENERATE(false, true);
+    const std::size_t control = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire0 = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire1 = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire2 = GENERATE(0, 1, 2, 3, 4);
+    const std::size_t wire3 = GENERATE(0, 1, 2, 3, 4);
+    const PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+
+    auto getControlledGate = [](std::vector<ComplexT> matrix) {
+        std::vector<ComplexT> cmatrix(matrix.size() * 4);
+        for (std::size_t i = 0; i < 16; i++) {
+            cmatrix[i * 32 + i] = ComplexT{1.0};
+        }
+        for (std::size_t i = 0; i < 16; i++) {
+            for (std::size_t j = 0; j < 16; j++) {
+                cmatrix[(i + 16) * 32 + j + 16] = matrix[i * 16 + j];
+            }
+        }
+        return cmatrix;
+    };
+
+    SECTION("N-controlled DoubleExcitation") {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getDoubleExcitation<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+
+            kokkos_sv_mat.applyMatrix(
+                cmatrix, {control, wire0, wire1, wire2, wire3}, inverse);
+            kokkos_sv_op.applyOperation(
+                "DoubleExcitation", std::vector<std::size_t>{control},
+                std::vector<bool>{true},
+                std::vector<std::size_t>{wire0, wire1, wire2, wire3}, inverse,
+                {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled DoubleExcitationPlus") {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getDoubleExcitationPlus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+
+            kokkos_sv_mat.applyMatrix(
+                cmatrix, {control, wire0, wire1, wire2, wire3}, inverse);
+            kokkos_sv_op.applyOperation(
+                "DoubleExcitationPlus", std::vector<std::size_t>{control},
+                std::vector<bool>{true},
+                std::vector<std::size_t>{wire0, wire1, wire2, wire3}, inverse,
+                {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+
+    SECTION("N-controlled DoubleExcitationMinus") {
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+
+            auto matrix =
+                getDoubleExcitationMinus<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+
+            kokkos_sv_mat.applyMatrix(
+                cmatrix, {control, wire0, wire1, wire2, wire3}, inverse);
+            kokkos_sv_op.applyOperation(
+                "DoubleExcitationMinus", std::vector<std::size_t>{control},
+                std::vector<bool>{true},
+                std::vector<std::size_t>{wire0, wire1, wire2, wire3}, inverse,
+                {param});
+
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
+                   "four-qubit with multiple-controls",
+                   "[StateVectorKokkos_Param]", float, double) {
+    using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+    const bool inverse = false;
+    const std::size_t num_qubits = 6;
+    StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+
+    kokkos_sv.applyOperations(
+        {{"Hadamard"},
+         {"Hadamard"},
+         {"Hadamard"},
+         {"Hadamard"},
+         {"Hadamard"},
+         {"Hadamard"}},
+        {{0}, {1}, {2}, {3}, {4}, {5}},
+        {{false}, {false}, {false}, {false}, {false}, {false}});
+
+    auto ini_sv = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{},
+                                                      kokkos_sv.getView());
+    StateVectorKokkos<TestType> sv_gate{num_qubits};
+    StateVectorKokkos<TestType> expected_result{num_qubits};
+
+    SECTION("2-controlled DoubleExcitation") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 3};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 2, 4, 5};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("DoubleExcitation", control_wires,
+                               control_values, target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result(
+            64, ComplexT{0.125, 0.0}); // Generated using Pennylane
+        expected_result[35] = ComplexT{0.10955376, 0.0};
+        expected_result[56] = ComplexT{0.13873707, 0.0};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled DoubleExcitationPlus") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 3};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 2, 4, 5};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("DoubleExcitationPlus", control_wires,
+                               control_values, target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result(
+            64, ComplexT{0.125, 0.0}); // Generated using Pennylane
+        expected_result[32] = ComplexT{0.12414541, 0.01459166};
+        expected_result[33] = ComplexT{0.12414541, 0.01459166};
+        expected_result[34] = ComplexT{0.12414541, 0.01459166};
+        expected_result[35] = ComplexT{0.10955376, 0.0};
+        expected_result[40] = ComplexT{0.12414541, 0.01459166};
+        expected_result[41] = ComplexT{0.12414541, 0.01459166};
+        expected_result[42] = ComplexT{0.12414541, 0.01459166};
+        expected_result[43] = ComplexT{0.12414541, 0.01459166};
+        expected_result[48] = ComplexT{0.12414541, 0.01459166};
+        expected_result[49] = ComplexT{0.12414541, 0.01459166};
+        expected_result[50] = ComplexT{0.12414541, 0.01459166};
+        expected_result[51] = ComplexT{0.12414541, 0.01459166};
+        expected_result[56] = ComplexT{0.13873707, 0.0};
+        expected_result[57] = ComplexT{0.12414541, 0.01459166};
+        expected_result[58] = ComplexT{0.12414541, 0.01459166};
+        expected_result[59] = ComplexT{0.12414541, 0.01459166};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled DoubleExcitationMinus") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 3};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 2, 4, 5};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("DoubleExcitationMinus", control_wires,
+                               control_values, target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result(
+            64, ComplexT{0.125, 0.0}); // Generated using Pennylane
+        expected_result[32] = ComplexT{0.12414541, -0.01459166};
+        expected_result[33] = ComplexT{0.12414541, -0.01459166};
+        expected_result[34] = ComplexT{0.12414541, -0.01459166};
+        expected_result[35] = ComplexT{0.10955376, 0.0};
+        expected_result[40] = ComplexT{0.12414541, -0.01459166};
+        expected_result[41] = ComplexT{0.12414541, -0.01459166};
+        expected_result[42] = ComplexT{0.12414541, -0.01459166};
+        expected_result[43] = ComplexT{0.12414541, -0.01459166};
+        expected_result[48] = ComplexT{0.12414541, -0.01459166};
+        expected_result[49] = ComplexT{0.12414541, -0.01459166};
+        expected_result[50] = ComplexT{0.12414541, -0.01459166};
+        expected_result[51] = ComplexT{0.12414541, -0.01459166};
+        expected_result[56] = ComplexT{0.13873707, 0.0};
+        expected_result[57] = ComplexT{0.12414541, -0.01459166};
+        expected_result[58] = ComplexT{0.12414541, -0.01459166};
+        expected_result[59] = ComplexT{0.12414541, -0.01459166};
         for (std::size_t j = 0; j < exp2(num_qubits); j++) {
             CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
             CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
