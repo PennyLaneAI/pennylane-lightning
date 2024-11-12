@@ -1554,7 +1554,7 @@ def test_qubit_unitary(n_targets):
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 
@@ -1596,7 +1596,7 @@ def test_diff_qubit_unitary(n_targets):
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 

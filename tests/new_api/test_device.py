@@ -132,12 +132,12 @@ class TestHelpers:
     @pytest.mark.parametrize(
         "obs, expected",
         [
-            (qml.operation.Tensor(qml.Projector([0], 0), qml.PauliZ(1)), False),
+            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
             (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
             (qml.s_prod(1.5, qml.Projector([0], 0)), False),
             (qml.sum(qml.Projector([0], 0), qml.Hadamard(1)), False),
             (qml.sum(qml.prod(qml.Projector([0], 0), qml.Y(1)), qml.PauliX(1)), False),
-            (qml.operation.Tensor(qml.Y(0), qml.Z(1)), True),
+            (qml.prod(qml.Y(0), qml.Z(1)), True),
             (qml.prod(qml.Y(0), qml.PauliZ(1)), True),
             (qml.s_prod(1.5, qml.Y(1)), True),
             (qml.sum(qml.Y(1), qml.Hadamard(1)), True),
@@ -443,7 +443,7 @@ class TestExecution:
                 qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
                 qml.expval(2.5 * qml.Z(0)),
                 qml.expval(qml.Z(0) @ qml.X(1)),
-                qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
+                qml.expval(qml.prod(qml.Z(0), qml.X(1))),
                 qml.expval(
                     qml.SparseHamiltonian(
                         qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
