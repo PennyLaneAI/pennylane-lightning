@@ -1784,12 +1784,14 @@ void applyNCMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     const Kokkos::complex<PrecisionT> shift_0 = Kokkos::complex<PrecisionT>{
         std::cos(angle / 2),
         (inverse) ? std::sin(angle / 2) : -std::sin(angle / 2)};
-    const Kokkos::complex<PrecisionT> shift_1 = conj(shift_0);
+    const Kokkos::complex<PrecisionT> shift_1 = Kokkos::conj(shift_0);
     std::size_t wires_parity = 0U;
-    for (std::size_t wire : wires) {
-        wires_parity |=
-            (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
-    }
+    wires_parity =
+        std::accumulate(wires.begin(), wires.end(), std::size_t{0},
+                        [num_qubits](std::size_t acc, std::size_t wire) {
+                            return acc | (static_cast<std::size_t>(1U)
+                                          << (num_qubits - wire - 1));
+                        });
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, const std::size_t i,
         Kokkos::View<std::size_t *> indices, std::size_t offset) {
