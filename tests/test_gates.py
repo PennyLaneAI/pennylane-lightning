@@ -580,6 +580,7 @@ def test_paulirot(n_wires, n_targets, tol):
         )
         assert np.allclose(dev.execute(tape1), dev.execute(tape0), tol)
 
+
 @pytest.mark.parametrize("control_wires", range(4))
 @pytest.mark.parametrize("target_wires", range(4))
 def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):

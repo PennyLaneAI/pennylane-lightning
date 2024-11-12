@@ -476,8 +476,7 @@ class StateVectorKokkos final
         if (controlled_wires.empty()) {
             return applyOperation(opName, wires, inverse, params, gate_matrix);
         }
-        if (array_contains(controlled_gate_names,
-                                  std::string_view{opName})) {
+        if (array_contains(controlled_gate_names, std::string_view{opName})) {
             const std::size_t num_qubits = this->getNumQubits();
             const ControlledGateOperation gateop =
                 reverse_lookup(controlled_gate_names, std::string_view{opName});
@@ -494,7 +493,6 @@ class StateVectorKokkos final
         }
     }
 
-
     /**
      * @brief Apply a controlled-multi qubit operator to the state vector using
      * a matrix
@@ -503,7 +501,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (true or false).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
      */
     void applyNCMultiQubitOp(const KokkosVector matrix,
                              const std::vector<std::size_t> &controlled_wires,
@@ -522,7 +521,8 @@ class StateVectorKokkos final
             Kokkos::parallel_for(
                 policy_2d,
                 KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
-                    matrix_trans(i + j * dim) = Kokkos::conj(matrix(i * dim + j));
+                    matrix_trans(i + j * dim) =
+                        Kokkos::conj(matrix(i * dim + j));
                 });
         } else {
             matrix_trans = matrix;
@@ -560,7 +560,7 @@ class StateVectorKokkos final
             break;
         }
     }
-    
+
     /**
      * @brief Apply a given matrix directly to the statevector using a
      * raw matrix pointer vector.
