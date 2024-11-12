@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
+  [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
+
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
 
@@ -22,6 +25,9 @@
 
 ### Bug fixes
 
+* Fix the `upload-pypi` token issues for Linux and MacOS (x86_64 & AARCH64) wheels.
+  [(#989)](https://github.com/PennyLaneAI/pennylane-lightning/pull/989)
+
 * Fix Pennylane dependency branch (`v0.39_rc0` to `master`).
   [(#984)](https://github.com/PennyLaneAI/pennylane-lightning/pull/984)
 
@@ -32,7 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Luis Alfredo Nuñez Meneses, Shuli Shu
+Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Shuli Shu
 
 ---
 
