@@ -193,7 +193,6 @@ _observables = frozenset(
         "PauliZ",
         "Hadamard",
         "SparseHamiltonian",
-        "Hamiltonian",
         "LinearCombination",
         "Hermitian",
         "Identity",
