@@ -235,6 +235,17 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     ):
         apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
 
+    @pytest.mark.parametrize(
+        "operation",
+        [qml.GlobalPhase],
+    )
+    @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
+    def test_apply_global_phase(self, tol, operation, par, dev_mpi):
+        """Test applying the GlobalPhase operation."""
+        Wires = range(numQubits)
+
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
+
     # BasisState test
     @pytest.mark.parametrize("operation", [qml.BasisState])
     @pytest.mark.parametrize("index", range(numQubits))
