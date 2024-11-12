@@ -55,11 +55,11 @@ TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
 TEST_CASE("lightning Basis vector", "[Driver]") {
     std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
-    QubitIdType q = sim->AllocateQubit();
-    q = sim->AllocateQubit();
-    q = sim->AllocateQubit();
+    [[maybe_unused]] QubitIdType q1 = sim->AllocateQubit();
+    [[maybe_unused]] QubitIdType q2 = sim->AllocateQubit();
+    QubitIdType q3 = sim->AllocateQubit();
 
-    sim->ReleaseQubit(q);
+    sim->ReleaseQubit(q3);
 
     std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
     DataView<std::complex<double>, 1> view(state);
@@ -118,7 +118,7 @@ TEST_CASE("Qubit allocatation and deallocation", "[Driver]") {
 TEST_CASE("test AllocateQubits", "[Driver]") {
     std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
-    CHECK(sim->AllocateQubits(0).size() == 0);
+    CHECK(sim->AllocateQubits(0).empty());
 
     auto &&q = sim->AllocateQubits(2);
 
