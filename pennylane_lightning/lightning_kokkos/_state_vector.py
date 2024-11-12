@@ -287,6 +287,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             elif isinstance(operation, qml.ops.Controlled) and not isinstance(
                 operation.base, (qml.QubitUnitary, qml.BlockEncode)
             ):  # apply n-controlled gate
+                # Kokkos does not support controlled gates except for GlobalPhase and single-qubit
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
