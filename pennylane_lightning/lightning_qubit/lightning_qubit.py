@@ -36,7 +36,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
@@ -157,7 +157,6 @@ _observables = frozenset(
         "Identity",
         "Projector",
         "SparseHamiltonian",
-        "Hamiltonian",
         "LinearCombination",
         "Sum",
         "SProd",
@@ -197,11 +196,6 @@ def adjoint_observables(obs: Operator) -> bool:
     when using the adjoint differentiation method."""
     if isinstance(obs, qml.Projector):
         return False
-
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
 
     if isinstance(obs, SProd):
         return adjoint_observables(obs.base)
