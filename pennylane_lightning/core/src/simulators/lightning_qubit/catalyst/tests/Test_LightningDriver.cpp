@@ -15,15 +15,12 @@
 #include <numeric>
 #include <string>
 
-#include "ExecutionContext.hpp"
-#include "QuantumDevice.hpp"
-#include "RuntimeCAPI.h"
-#include "Utils.hpp"
-
-#include "TestUtils.hpp"
+#include "LightningSimulator.hpp"
+#include "catch2/catch.hpp"
 
 using namespace Catalyst::Runtime;
 using namespace Catalyst::Runtime::Simulator;
+using LQSimulator = LightningSimulator;
 
 TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
     std::string case1;
@@ -55,23 +52,8 @@ TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
            res6["s3_destination_folder"] == "('catalyst-op3-s3', 'prefix')"));
 }
 
-TEST_CASE("Test Driver", "[Driver]") {
-    std::unique_ptr<ExecutionContext> driver =
-        std::make_unique<ExecutionContext>();
-
-    // check the scope of memory-manager
-    CHECK(driver->getMemoryManager() != nullptr);
-
-    // check device default specs
-    CHECK(driver->getDeviceRecorderStatus() == false);
-
-    // check device specs update
-    driver->setDeviceRecorderStatus(true);
-    CHECK(driver->getDeviceRecorderStatus() == true);
-}
-
-TEMPLATE_LIST_TEST_CASE("lightning Basis vector", "[Driver]", SimTypes) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("lightning Basis vector", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     QubitIdType q = sim->AllocateQubit();
     q = sim->AllocateQubit();
@@ -93,9 +75,8 @@ TEMPLATE_LIST_TEST_CASE("lightning Basis vector", "[Driver]", SimTypes) {
     CHECK(view(3).imag() == Approx(0.0).epsilon(1e-5));
 }
 
-TEMPLATE_TEST_CASE("Qubit allocatation and deallocation", "[Driver]",
-                   LightningSimulator) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("Qubit allocatation and deallocation", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     constexpr size_t n = 1;
     constexpr size_t sz = (1UL << n);
@@ -134,8 +115,8 @@ TEMPLATE_TEST_CASE("Qubit allocatation and deallocation", "[Driver]",
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("test AllocateQubits", "[Driver]", SimTypes) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("test AllocateQubits", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     CHECK(sim->AllocateQubits(0).size() == 0);
 
@@ -150,8 +131,8 @@ TEMPLATE_LIST_TEST_CASE("test AllocateQubits", "[Driver]", SimTypes) {
     CHECK(state[0].real() == Approx(1.0).epsilon(1e-5));
 }
 
-TEMPLATE_LIST_TEST_CASE("test multiple AllocateQubits", "[Driver]", SimTypes) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("test multiple AllocateQubits", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     auto &&q1 = sim->AllocateQubits(2);
     CHECK(q1[0] == 0);
@@ -163,8 +144,8 @@ TEMPLATE_LIST_TEST_CASE("test multiple AllocateQubits", "[Driver]", SimTypes) {
     CHECK(q2[2] == 4);
 }
 
-TEMPLATE_LIST_TEST_CASE("test DeviceShots", "[Driver]", SimTypes) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("test DeviceShots", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     CHECK(sim->GetDeviceShots() == 0);
 
@@ -173,8 +154,8 @@ TEMPLATE_LIST_TEST_CASE("test DeviceShots", "[Driver]", SimTypes) {
     CHECK(sim->GetDeviceShots() == 500);
 }
 
-TEMPLATE_LIST_TEST_CASE("compute register tests", "[Driver]", SimTypes) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("compute register tests", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     constexpr size_t n = 10;
     std::vector<QubitIdType> Qs;
@@ -201,8 +182,7 @@ TEMPLATE_LIST_TEST_CASE("compute register tests", "[Driver]", SimTypes) {
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("Check an unsupported operation", "[Driver]",
-                        SimTypes) {
+TEST_CASE("Check an unsupported operation", "[Driver]") {
     REQUIRE_THROWS_WITH(
         Lightning::lookup_gates(Lightning::simulator_gate_info,
                                 "UnsupportedGateName"),
@@ -210,9 +190,8 @@ TEMPLATE_LIST_TEST_CASE("Check an unsupported operation", "[Driver]",
             "The given operation is not supported by the simulator"));
 }
 
-TEMPLATE_TEST_CASE("QuantumDevice object test [lightning.qubit]", "[Driver]",
-                   LightningSimulator) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("QuantumDevice object test [lightning.qubit]", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     // state-vector with #qubits = n
     constexpr size_t n = 10;
@@ -264,8 +243,8 @@ TEMPLATE_TEST_CASE("QuantumDevice object test [lightning.qubit]", "[Driver]",
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("Check re-AllocateQubit", "[Driver]", SimTypes) {
-    std::unique_ptr<TestType> sim = std::make_unique<TestType>();
+TEST_CASE("Check re-AllocateQubit", "[Driver]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
     sim->AllocateQubit();
     sim->NamedOperation("Hadamard", {}, {0}, false);

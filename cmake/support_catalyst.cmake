@@ -22,9 +22,7 @@ macro(FindCatalyst target_name)
         message(INFO " Building against local Catalyst - path: ${LIGHTNING_CATALYST_SRC_PATH} - GIT TAG: ${CATALYST_GIT_TAG}")
 
         target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/lib/backend/common)
-        target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/lib/capi)
         target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/include)
-        target_include_directories(${target_name} PUBLIC ${LIGHTNING_CATALYST_SRC_PATH}/runtime/tests)
 
     else()
         if(NOT CATALYST_GIT_TAG)
@@ -50,21 +48,6 @@ macro(FindCatalyst target_name)
             FetchContent_MakeAvailable(${HEADER_NAME})
         endforeach()
 
-        # Fetching /lib/capi hpp headers
-        set(LIB_CAPI_HEADERS  ExecutionContext.hpp)
-
-        foreach(HEADER ${LIB_CAPI_HEADERS})
-            string(REGEX REPLACE "\\.[^.]*$" "" HEADER_NAME ${HEADER})
-            FetchContent_Declare(
-                ${HEADER_NAME}
-                URL                 https://raw.githubusercontent.com/PennyLaneAI/catalyst/${CATALYST_GIT_TAG}/runtime/lib/capi/${HEADER}
-                DOWNLOAD_NO_EXTRACT True
-                SOURCE_DIR          ../../include
-            )
-
-            FetchContent_MakeAvailable(${HEADER_NAME})
-        endforeach()
-
         # Fetching include hpp headers
         set(INCLUDE_HEADERS DataView.hpp
                         Exception.hpp
@@ -78,21 +61,6 @@ macro(FindCatalyst target_name)
             FetchContent_Declare(
                 ${HEADER_NAME}
                 URL                 https://raw.githubusercontent.com/PennyLaneAI/catalyst/${CATALYST_GIT_TAG}/runtime/include/${HEADER}
-                DOWNLOAD_NO_EXTRACT True
-                SOURCE_DIR          ../../include
-            )
-
-            FetchContent_MakeAvailable(${HEADER_NAME})
-        endforeach()
-
-        # Fetching tests hpp headers
-        set(TESTS_HEADERS TestUtils.hpp)
-
-        foreach(HEADER ${TESTS_HEADERS})
-            string(REGEX REPLACE "\\.[^.]*$" "" HEADER_NAME ${HEADER})
-            FetchContent_Declare(
-                ${HEADER_NAME}
-                URL                 https://raw.githubusercontent.com/PennyLaneAI/catalyst/${CATALYST_GIT_TAG}/runtime/tests/${HEADER}
                 DOWNLOAD_NO_EXTRACT True
                 SOURCE_DIR          ../../include
             )
