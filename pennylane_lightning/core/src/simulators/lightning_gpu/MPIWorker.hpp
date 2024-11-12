@@ -175,8 +175,10 @@ make_shared_mpi_worker(custatevecHandle_t handle, MPIManager &mpi_manager,
                                             communicatorType, nullptr);
     if (err != CUSTATEVEC_STATUS_SUCCESS) {
         communicator = nullptr;
-        PL_CUSTATEVEC_IS_SUCCESS(custatevecCommunicatorCreate(
-            handle, &communicator, communicatorType, "libmpi.so"));
+        auto py_err = custatevecCommunicatorCreate(
+            handle, &communicator, communicatorType, "libmpi.so");
+        PL_ABORT_IF_NOT(py_err == CUSTATEVEC_STATUS_SUCCESS, "MPI communicator creation failed. Please add '/path/to/libmpi.so' to LD_LIBRARY_PATH.");
+    
     }
     // LCOV_EXCL_STOP
     mpi_manager.Barrier();
