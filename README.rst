@@ -245,7 +245,7 @@ Install Lightning-GPU with MPI
 Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (currently supported version: `custatevec-cu12 <https://pypi.org/project/cuquantum-cu12/>`_), ``mpi4py`` and ``CUDA-aware MPI`` (Message Passing Interface).
 ``CUDA-aware MPI`` allows data exchange between GPU memory spaces of different nodes without the need for CPU-mediated transfers.
 Both the ``MPICH`` and ``OpenMPI`` libraries are supported, provided they are compiled with CUDA support.
-The path to ``libmpi.so`` should be found in ``LD_LIBRARY_PATH``.
+**The path to ``libmpi.so`` should be found in ``LD_LIBRARY_PATH``.**
 It is recommended to install the ``NVIDIA cuQuantum SDK`` and ``mpi4py`` Python package within ``pip`` or ``conda`` inside a virtual environment.
 Please consult the `cuQuantum SDK`_ , `mpi4py <https://mpi4py.readthedocs.io/en/stable/install.html>`_,
 `MPICH <https://www.mpich.org/static/downloads/4.1.1/mpich-4.1.1-README.txt>`_, or `OpenMPI <https://www.open-mpi.org/faq/?category=buildcuda>`_ install guide for more information.
@@ -255,6 +255,7 @@ Then Lightning-GPU with MPI support can then be installed in the *editable* mode
 
 .. code-block:: bash
 
+    export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`/path/to/libmpi.so`
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
