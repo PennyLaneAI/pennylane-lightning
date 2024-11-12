@@ -124,7 +124,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja scipy
+          python -m pip install cmake build ninja scipy-openblas32
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
@@ -138,6 +138,7 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))") `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
@@ -202,7 +203,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja
+          python -m pip install cmake build ninja scipy-openblas32
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -231,6 +232,7 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))") `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF -T clangcl

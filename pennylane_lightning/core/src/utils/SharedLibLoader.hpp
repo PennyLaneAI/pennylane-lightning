@@ -21,10 +21,19 @@
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
+#define HANDLE_TYPE void *
 #define PL_DLOPEN(NAME, ARG) dlopen(NAME, ARG)
 #define PL_DLERROR() dlerror()
 #define PL_DLCLOSE(NAME) dlclose(NAME)
 #define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
+#else
+#define NOMINMAX
+#include <windows.h>
+#define HANDLE_TYPE HMODULE
+#define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
+#define PL_DLERROR() GetLastError()
+#define PL_DLCLOSE(NAME) FreeLibrary(NAME)
+#define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
 #endif
 
 #include "Error.hpp"
@@ -42,7 +51,7 @@ namespace Pennylane::Util {
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
-    void *handle_{nullptr};
+    void handle_{nullptr};
 
   public:
     SharedLibLoader();
