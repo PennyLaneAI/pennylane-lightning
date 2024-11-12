@@ -404,14 +404,19 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
 
-        std::tie(parity, rev_wires) =
+        const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(all_wires, num_qubits);
-        for (std::size_t k = 0; k < controlled_values.size(); k++) {
-            mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
-                    << k;
-        }
+
+        std::size_t k = 0;
+        mask = std::accumulate(
+            controlled_values.rbegin(), controlled_values.rend(),
+            std::size_t{0}, [&k](std::size_t acc, std::size_t value) {
+                return acc | (static_cast<std::size_t>(value) << k++);
+            });
+
         i0 = indices_[mask << one];
         i1 = indices_[(mask << one) | one];
         indices = vector2view(indices_);
