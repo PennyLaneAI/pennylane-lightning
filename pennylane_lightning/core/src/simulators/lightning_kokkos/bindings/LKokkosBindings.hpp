@@ -69,9 +69,7 @@ void applyControlledMatrix(
  */
 template <class StateVectorT, class PyClass>
 void registerControlledGate(PyClass &pyclass) {
-    using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision
-    using ParamT = PrecisionT;             // Parameter's data precision
+    using ParamT = typename StateVectorT::PrecisionT;
 
     using Pennylane::Gates::ControlledGateOperation;
     using Pennylane::Util::for_each_enum;

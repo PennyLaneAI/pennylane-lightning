@@ -220,10 +220,11 @@ To install Lightning-GPU from the package sources using the direct SDK path, Lig
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
+    pip install custatevec-cu12
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
-Then the `custatevec-cu12 <https://pypi.org/project/cuquantum-cu12/>`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
+Then a ``CUQUANTUM_SDK`` environment variable can be set:
 
 .. code-block:: bash
 
@@ -382,8 +383,20 @@ Lightning-Tensor requires CUDA 12 and the `cuQuantum SDK <https://developer.nvid
 The SDK may be installed within the Python environment ``site-packages`` directory using ``pip`` or ``conda`` or the SDK library path appended to the ``LD_LIBRARY_PATH`` environment variable.
 Please see the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ install guide for more information.
 
+Lightning-Tensor and ``cutensornet-cu12`` can be installed via:
+
+.. code-block:: bash
+    
+    pip install cutensornet-cu12
+    pip install pennylane-lightning-tensor
+
 Install Lightning-Tensor from source
 ====================================
+
+.. note::
+
+    The below contains instructions for installing Lightning-Tensor ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
+
 Lightning-Qubit should be installed before Lightning-Tensor (compilation is not necessary):
 
 .. code-block:: bash
@@ -391,10 +404,11 @@ Lightning-Qubit should be installed before Lightning-Tensor (compilation is not 
     git clone https://github.com/PennyLaneAI/pennylane-lightning.git
     cd pennylane-lightning
     pip install -r requirements.txt
+    pip install cutensornet-cu12
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
 
-Then the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`_ library can be installed and set a ``CUQUANTUM_SDK`` environment variable.
+Then a ``CUQUANTUM_SDK`` environment variable can be set:
 
 .. code-block:: bash
 

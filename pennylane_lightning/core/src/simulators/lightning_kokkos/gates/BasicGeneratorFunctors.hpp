@@ -266,12 +266,12 @@ void applyGenDoubleExcitation(
                       const std::size_t i1010, const std::size_t i1011,
                       const std::size_t i1100, const std::size_t i1101,
                       const std::size_t i1110, const std::size_t i1111) {
-        const Kokkos::complex<PrecisionT> v3 = arr(i0011);
-        const Kokkos::complex<PrecisionT> v12 = arr(i1100);
+        const Kokkos::complex<PrecisionT> v0011 = arr(i0011);
+        const Kokkos::complex<PrecisionT> v1100 = arr(i1100);
         arr(i0000) = 0.0;
         arr(i0001) = 0.0;
         arr(i0010) = 0.0;
-        arr(i0011) = v12 * Kokkos::complex<PrecisionT>{0.0, -1.0};
+        arr(i0011) = v1100 * Kokkos::complex<PrecisionT>{0.0, -1.0};
         arr(i0100) = 0.0;
         arr(i0101) = 0.0;
         arr(i0110) = 0.0;
@@ -280,7 +280,7 @@ void applyGenDoubleExcitation(
         arr(i1001) = 0.0;
         arr(i1010) = 0.0;
         arr(i1011) = 0.0;
-        arr(i1100) = v3 * Kokkos::complex<PrecisionT>{0.0, 1.0};
+        arr(i1100) = v0011 * Kokkos::complex<PrecisionT>{0.0, 1.0};
         arr(i1101) = 0.0;
         arr(i1110) = 0.0;
         arr(i1111) = 0.0;
