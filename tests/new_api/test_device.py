@@ -429,7 +429,6 @@ class TestExecution:
         )
         assert qml.equal(new_tape, expected_tape)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp",
@@ -483,7 +482,6 @@ class TestExecution:
         expected = self.calculate_reference(qs)[0]
         assert np.allclose(res, expected)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp1",
@@ -652,7 +650,6 @@ class TestDerivatives:
         """Test that supports_derivative returns the correct boolean value."""
         assert dev.supports_derivatives(config, tape) == expected
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
@@ -1038,7 +1035,6 @@ class TestVJP:
         """Test that supports_vjp returns the correct boolean value."""
         assert dev.supports_vjp(config, tape) == expected
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
