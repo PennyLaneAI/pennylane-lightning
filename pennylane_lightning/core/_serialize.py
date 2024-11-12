@@ -33,7 +33,7 @@ from pennylane import (
     matrix,
 )
 from pennylane.math import unwrap
-from pennylane.ops import LinearCombination, Prod, SProd, Sum
+from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumTape
 
 NAMED_OBS = (Identity, PauliX, PauliY, PauliZ, Hadamard)
