@@ -11,7 +11,6 @@ project(${PL_BACKEND}
     LANGUAGES CXX C CUDA
 )
 
-set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
 # Include macro and functions supporting Nvidia and cuQuantum libraries.
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
