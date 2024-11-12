@@ -613,6 +613,17 @@ class StateVectorKokkos final
                     "number of wires");
         applyMatrix(matrix.data(), wires, inverse);
     }
+
+    /**
+     * @brief Apply a given matrix for controlled operations directly to the
+     * statevector using a raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Controlled wires
+     * @param controlled_values Controlled values (true or false)
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     inline void applyControlledMatrix(
         ComplexT *matrix, const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
@@ -624,6 +635,16 @@ class StateVectorKokkos final
                             inverse);
     }
 
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Controlled wires
+     * @param controlled_values Controlled values (true or false)
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     inline void
     applyControlledMatrix(const ComplexT *matrix,
                           const std::vector<std::size_t> &controlled_wires,
