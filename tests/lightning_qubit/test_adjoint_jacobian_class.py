@@ -165,7 +165,6 @@ class TestAdjointJacobian:
         ):
             self.calculate_jacobian(lightning_sv(num_wires=1), tape)
 
-
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_phaseshift_gradient(self, n_qubits, par, tol, lightning_sv):
