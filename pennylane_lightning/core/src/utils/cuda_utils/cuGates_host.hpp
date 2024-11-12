@@ -654,15 +654,8 @@ template <class CFP_t, class U = double>
 static auto getSingleExcitation(U angle) -> std::vector<CFP_t> {
     const U p2 = angle / 2;
     const CFP_t c{std::cos(p2), 0};
-    // TODO: To remove conditional compilation here in the future, current
-    // implementation will block the simultaneous installation of LGPU and
-    // cutensornet backends
-
-#ifdef _ENABLE_PLGPU
-    const CFP_t s{-std::sin(p2), 0}; // column-major
-#else
     const CFP_t s{std::sin(p2), 0}; // row-major
-#endif
+
     return {cuUtil::ONE<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -708,17 +701,17 @@ static auto getSingleExcitation(const std::vector<U> &params)
 template <class CFP_t, class U = double>
 static constexpr auto getGeneratorSingleExcitation() -> std::vector<CFP_t> {
     return {
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
     };
 }
 
@@ -739,14 +732,7 @@ static auto getSingleExcitationMinus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, -p2)));
     const CFP_t c{std::cos(p2), 0};
-// TODO: To remove conditional compilation here in the future, current
-// implementation will block the simultaneous installation of LGPU and
-// cutensornet backends
-#ifdef _ENABLE_PLGPU
-    const CFP_t s{-std::sin(p2), 0}; // column-major
-#else
     const CFP_t s{std::sin(p2), 0}; // row-major
-#endif
 
     return {e,
             cuUtil::ZERO<CFP_t>(),
@@ -795,17 +781,17 @@ template <class CFP_t, class U = double>
 static constexpr auto getGeneratorSingleExcitationMinus()
     -> std::vector<CFP_t> {
     return {
-        cuUtil::ONE<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ONE<CFP_t>(),   cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ONE<CFP_t>(),
     };
 }
 
@@ -826,15 +812,8 @@ static auto getSingleExcitationPlus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, p2)));
     const CFP_t c{std::cos(p2), 0};
-    // TODO: To remove conditional compilation here in the future, current
-    // implementation will block the simultaneous installation of LGPU and
-    // cutensornet backends
-
-#ifdef _ENABLE_PLGPU
-    const CFP_t s{-std::sin(p2), 0}; // column-major
-#else
     const CFP_t s{std::sin(p2), 0}; // row-major
-#endif
+
     return {e,
             cuUtil::ZERO<CFP_t>(),
             cuUtil::ZERO<CFP_t>(),
@@ -881,17 +860,17 @@ static auto getSingleExcitationPlus(const std::vector<U> &params)
 template <class CFP_t, class U = double>
 static constexpr auto getGeneratorSingleExcitationPlus() -> std::vector<CFP_t> {
     return {
-        -cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        -cuUtil::ONE<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        -cuUtil::IMAG<CFP_t>(), cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), -cuUtil::IMAG<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::IMAG<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), -cuUtil::ONE<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),  -cuUtil::ONE<CFP_t>(),
     };
 }
 
@@ -909,15 +888,8 @@ template <class CFP_t, class U = double>
 static auto getDoubleExcitation(U angle) -> std::vector<CFP_t> {
     const U p2 = angle / 2;
     const CFP_t c{std::cos(p2), 0};
-    // TODO: To remove conditional compilation here in the future, current
-    // implementation will block the simultaneous installation of LGPU and
-    // cutensornet backends
-
-#ifdef _ENABLE_PLGPU
-    const CFP_t s{-std::sin(p2), 0}; // column-major
-#else
     const CFP_t s{std::sin(p2), 0}; // row-major
-#endif
+
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
     mat[0] = cuUtil::ONE<CFP_t>();
     mat[17] = cuUtil::ONE<CFP_t>();
@@ -967,8 +939,8 @@ static auto getDoubleExcitation(const std::vector<U> &params)
 template <class CFP_t, class U = double>
 static constexpr auto getGeneratorDoubleExcitation() -> std::vector<CFP_t> {
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
-    mat[60] = cuUtil::IMAG<CFP_t>();
-    mat[195] = -cuUtil::IMAG<CFP_t>();
+    mat[60] = -cuUtil::IMAG<CFP_t>();
+    mat[195] = cuUtil::IMAG<CFP_t>();
     return mat;
 }
 
@@ -989,15 +961,8 @@ static auto getDoubleExcitationMinus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, -p2)));
     const CFP_t c{std::cos(p2), 0};
-    // TODO: To remove conditional compilation here in the future, current
-    // implementation will block the simultaneous installation of LGPU and
-    // cutensornet backends
-
-#ifdef _ENABLE_PLGPU
-    const CFP_t s{-std::sin(p2), 0}; // column-major
-#else
     const CFP_t s{std::sin(p2), 0}; // row-major
-#endif
+
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
     mat[0] = e;
     mat[17] = e;
@@ -1052,7 +1017,7 @@ static constexpr auto getGeneratorDoubleExcitationMinus()
     mat[0] = cuUtil::ONE<CFP_t>();
     mat[17] = cuUtil::ONE<CFP_t>();
     mat[34] = cuUtil::ONE<CFP_t>();
-    mat[60] = cuUtil::IMAG<CFP_t>();
+    mat[60] = -cuUtil::IMAG<CFP_t>();
     mat[68] = cuUtil::ONE<CFP_t>();
     mat[85] = cuUtil::ONE<CFP_t>();
     mat[102] = cuUtil::ONE<CFP_t>();
@@ -1061,7 +1026,7 @@ static constexpr auto getGeneratorDoubleExcitationMinus()
     mat[153] = cuUtil::ONE<CFP_t>();
     mat[170] = cuUtil::ONE<CFP_t>();
     mat[187] = cuUtil::ONE<CFP_t>();
-    mat[195] = -cuUtil::IMAG<CFP_t>();
+    mat[195] = cuUtil::IMAG<CFP_t>();
     mat[221] = cuUtil::ONE<CFP_t>();
     mat[238] = cuUtil::ONE<CFP_t>();
     mat[255] = cuUtil::ONE<CFP_t>();
@@ -1085,14 +1050,8 @@ static auto getDoubleExcitationPlus(U angle) -> std::vector<CFP_t> {
     const CFP_t e =
         cuUtil::complexToCu<std::complex<U>>(std::exp(std::complex<U>(0, p2)));
     const CFP_t c{std::cos(p2), 0};
-    // TODO: To remove conditional compilation here in the future, current
-    // implementation will block the simultaneous installation of LGPU and
-    // cutensornet backends
-#ifdef _ENABLE_PLGPU
-    const CFP_t s{-std::sin(p2), 0}; // column-major
-#else
     const CFP_t s{std::sin(p2), 0}; // row-major
-#endif
+
     std::vector<CFP_t> mat(256, cuUtil::ZERO<CFP_t>());
     mat[0] = e;
     mat[17] = e;
@@ -1146,7 +1105,7 @@ static constexpr auto getGeneratorDoubleExcitationPlus() -> std::vector<CFP_t> {
     mat[0] = -cuUtil::ONE<CFP_t>();
     mat[17] = -cuUtil::ONE<CFP_t>();
     mat[34] = -cuUtil::ONE<CFP_t>();
-    mat[60] = cuUtil::IMAG<CFP_t>();
+    mat[60] = -cuUtil::IMAG<CFP_t>();
     mat[68] = -cuUtil::ONE<CFP_t>();
     mat[85] = -cuUtil::ONE<CFP_t>();
     mat[102] = -cuUtil::ONE<CFP_t>();
@@ -1155,7 +1114,7 @@ static constexpr auto getGeneratorDoubleExcitationPlus() -> std::vector<CFP_t> {
     mat[153] = -cuUtil::ONE<CFP_t>();
     mat[170] = -cuUtil::ONE<CFP_t>();
     mat[187] = -cuUtil::ONE<CFP_t>();
-    mat[195] = -cuUtil::IMAG<CFP_t>();
+    mat[195] = cuUtil::IMAG<CFP_t>();
     mat[221] = -cuUtil::ONE<CFP_t>();
     mat[238] = -cuUtil::ONE<CFP_t>();
     mat[255] = -cuUtil::ONE<CFP_t>();
