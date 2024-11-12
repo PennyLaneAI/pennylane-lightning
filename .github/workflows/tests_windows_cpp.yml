@@ -133,13 +133,12 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))"
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; path=os.path.dirname(scipy_openblas32.get_lib_dir()); print(path.replace('/', r'\\'))") `
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; path=os.path.dirname(scipy_openblas32.get_lib_dir()); print(path.replace('/', '\\\\'))") `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
@@ -226,7 +225,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))"
+            python -c "import scipy_openblas32; import os; path=os.path.dirname(scipy_openblas32.get_lib_dir()); print(path.replace('/', '\\\\'))"
             Subst Z: (pwd)
             Set-Location -Path "Z:\"
             cmake -BBuild `
@@ -234,7 +233,7 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; path=os.path.dirname(scipy_openblas32.get_lib_dir()); print(path.replace('/', r'\\'))") `
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; path=os.path.dirname(scipy_openblas32.get_lib_dir()); print(path.replace('/', '\\\\'))") `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF -T clangcl
