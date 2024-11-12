@@ -357,7 +357,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
             Kokkos::HostSpace{}, sv_gate.getView());
 
         std::vector<ComplexT> expected_result{
-            // Generated using Pennylane
+            // Generated using Pennylane (qml.ctrl)
             ComplexT{0.35355339, 0.0},        ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0},        ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0},        ComplexT{0.35355339, 0.0},
