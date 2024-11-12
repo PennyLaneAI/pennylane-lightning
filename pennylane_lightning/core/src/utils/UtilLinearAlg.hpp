@@ -67,12 +67,12 @@ inline const char *getPath() {
     return dl_info.dli_fname;
 }
 #elif defined(_MSC_VER)
- inline std::string getPath() {
-     char buffer[MAX_PATH];
-     GetModuleFileName(nullptr, buffer, MAX_PATH);
-     std::string fullPath(buffer);
-     std::size_t pos = fullPath.find_last_of("\\/");
-     return fullPath.substr(0, pos);
+inline std::string getPath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
+    std::string fullPath(buffer);
+    std::size_t pos = fullPath.find_last_of("\\/");
+    return fullPath.substr(0, pos);
 }
 #endif
 // LCOV_EXCL_STOP

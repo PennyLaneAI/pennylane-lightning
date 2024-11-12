@@ -50,9 +50,8 @@ option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 
 set(SCIPY_OPENBLAS32_LIB "")
 
-include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
-
 if(NOT ENABLE_PYTHON)
+include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
 get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
 endif()
 
