@@ -70,8 +70,9 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
         std::size_t two2N =
             std::exp2(num_qubits - wires.size() - controlled_wires.size());
         dim = std::exp2(wires.size());
-        std::tie(parity, rev_wires) =
-            Util::reverseWires(num_qubits, wires, controlled_wires);
+        const auto &[parity_, rev_wires_] =
+            reverseWires(num_qubits, wires, controlled_wires);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
         ControlBitPatterns(indices_, num_qubits, controlled_wires,
