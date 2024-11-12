@@ -7,6 +7,9 @@
 
 ### Breaking changes
 
+* Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
+  [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
+
 ### Improvements
 
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
