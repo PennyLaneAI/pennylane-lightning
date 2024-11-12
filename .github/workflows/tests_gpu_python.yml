@@ -161,7 +161,7 @@ jobs:
         if: inputs.pennylane-version == 'latest'
         run: |
           cd pennylane
-          git checkout master
+          git checkout device-api-cap
           python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane
