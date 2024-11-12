@@ -322,7 +322,7 @@ class LightningBase(QubitDevice):
                 "Adjoint differentiation method does not support the Projector observable"
             )
 
-        elif isinstance(observable, SProd):
+        if isinstance(observable, SProd):
             LightningBase._assert_adjdiff_no_projectors(observable.base)
 
         elif isinstance(observable, (Sum, Prod)):

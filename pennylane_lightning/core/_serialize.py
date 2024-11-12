@@ -210,8 +210,7 @@ class QuantumScriptSerializer:
 
     def _tensor_ob(self, observable, wires_map: dict = None):
         """Serialize a tensor observable"""
-        obs = observable.obs if isinstance(observable, Tensor) else observable.operands
-        return self.tensor_obs([self._ob(o, wires_map) for o in obs])
+        return self.tensor_obs([self._ob(o, wires_map) for o in observable.operands])
 
     def _chunk_ham_terms(self, coeffs, ops, split_num: int = 1) -> List:
         "Create split_num sub-Hamiltonians from a single high term-count Hamiltonian"
