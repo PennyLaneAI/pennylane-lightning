@@ -33,11 +33,11 @@ def _get_ld_operations():
 
     operations = set()
     for op, prop in ld.capabilities.operations.items():
-        operations.add(op.__name__)
+        operations.add(op)
         if prop.controllable:
-            operations.add(f"C({op.__name__})")
+            operations.add(f"C({op})")
         if prop.invertible:
-            operations.add(f"Adjoint({op.__name__})")
+            operations.add(f"Adjoint({op})")
     return operations
 
 
