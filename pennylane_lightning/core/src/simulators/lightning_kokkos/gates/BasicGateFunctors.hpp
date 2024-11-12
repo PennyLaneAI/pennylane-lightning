@@ -74,7 +74,7 @@ class applyNC1Functor<PrecisionT, FuncT, true> {
             *this);
     }
     KOKKOS_FUNCTION void operator()(const std::size_t k) const {
-        const std::size_t offset = parity_2_offset(parity, k);
+        const std::size_t offset = Util::parity_2_offset(parity, k);
         const std::size_t i0 = indices(0B00);
         const std::size_t i1 = indices(0B01);
 
