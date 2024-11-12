@@ -355,11 +355,12 @@ void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      const std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] const bool inverse = false) {
-    std::size_t wires_parity = static_cast<std::size_t>(0U);
-    for (std::size_t wire : wires) {
-        wires_parity |=
-            (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
-    }
+    constexpr std::size_t one{1U};
+    std::size_t wires_parity =
+        std::accumulate(wires.begin(), wires.end(), std::size_t{0},
+                        [one, num_qubits](std::size_t acc, std::size_t wire) {
+                            return acc | (one << (num_qubits - wire - 1));
+                        });
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
         KOKKOS_LAMBDA(const std::size_t k) {
@@ -574,14 +575,18 @@ template <class PrecisionT, class FuncT> class applyNCGenerator2Functor {
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
 
-        std::tie(parity, rev_wires) =
+        const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(all_wires, num_qubits);
-        for (std::size_t k = 0; k < controlled_values.size(); k++) {
-            mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
-                    << k;
-        }
+
+        std::size_t k = 0;
+        mask = std::accumulate(
+            controlled_values.rbegin(), controlled_values.rend(),
+            std::size_t{0}, [&k](std::size_t acc, std::size_t value) {
+                return acc | (static_cast<std::size_t>(value) << k++);
+            });
         i00 = indices_[mask << two];
         i01 = indices_[(mask << two) | one];
         i10 = indices_[(mask << two) | two];
@@ -784,14 +789,18 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
 
-        std::tie(parity, rev_wires) =
+        const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(all_wires, num_qubits);
-        for (std::size_t k = 0; k < controlled_values.size(); k++) {
-            mask |= static_cast<std::size_t>(controlled_values[n_contr - 1 - k])
-                    << k;
-        }
+
+        std::size_t k = 0;
+        mask = std::accumulate(
+            controlled_values.rbegin(), controlled_values.rend(),
+            std::size_t{0}, [&k](std::size_t acc, std::size_t value) {
+                return acc | (static_cast<std::size_t>(value) << k++);
+            });
         i0011 = indices_[(mask << 4U) + 3U];
         i1100 = indices_[(mask << 4U) + 12U];
         indices = vector2view(indices_);
@@ -824,13 +833,13 @@ void applyNCGenDoubleExcitation(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
         const std::size_t i0011, const std::size_t i1100,
         const KokkosIntVector &indices, const std::size_t offset) {
-        const auto v3 = arr(i0011);
-        const auto v12 = arr(i1100);
+        const auto v0011 = arr(i0011);
+        const auto v1100 = arr(i1100);
         for (std::size_t i = 0; i < indices.size(); i++) {
             arr(indices(i) + offset) = 0.0;
         }
-        arr(i0011) = v12 * Kokkos::complex<PrecisionT>{0.0, -1.0};
-        arr(i1100) = v3 * Kokkos::complex<PrecisionT>{0.0, 1.0};
+        arr(i0011) = v1100 * Kokkos::complex<PrecisionT>{0.0, -1.0};
+        arr(i1100) = v0011 * Kokkos::complex<PrecisionT>{0.0, 1.0};
     };
     applyNCGenerator4Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
@@ -895,14 +904,17 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         ctrls_mask |= (static_cast<std::size_t>(controlled_values[i])
                        << (num_qubits - controlled_wires[i] - 1));
     }
-    auto ctrls_parity = static_cast<std::size_t>(0U);
-    for (std::size_t wire : controlled_wires) {
-        ctrls_parity |= (one << (num_qubits - wire - 1));
-    }
-    auto wires_parity = static_cast<std::size_t>(0U);
-    for (std::size_t wire : wires) {
-        wires_parity |= (one << (num_qubits - wire - 1));
-    }
+    std::size_t ctrls_parity = std::accumulate(
+        controlled_wires.begin(), controlled_wires.end(), std::size_t{0},
+        [one, num_qubits](std::size_t acc, std::size_t wire) {
+            return acc | (one << (num_qubits - wire - 1));
+        });
+    std::size_t wires_parity =
+        std::accumulate(wires.begin(), wires.end(), std::size_t{0},
+                        [one, num_qubits](std::size_t acc, std::size_t wire) {
+                            return acc | (one << (num_qubits - wire - 1));
+                        });
+
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
         KOKKOS_LAMBDA(const std::size_t k) {
