@@ -455,9 +455,9 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+     * @param inverse Indicates whether to use adjoint of gate. Default to false
      * @param params Optional parameter list for parametric gates.
-     * @param gate_matrix Optional std gate matrix if opName doesn't exist.
+     * @param gate_matrix Optional unitary gate matrix if opName doesn't exist.
      */
     void applyOperation(const std::string &opName,
                         const std::vector<std::size_t> &controlled_wires,
@@ -468,17 +468,15 @@ class StateVectorKokkos final
                         const std::vector<ComplexT> &gate_matrix = {}) {
         PL_ABORT_IF_NOT(
             areVecsDisjoint<std::size_t>(controlled_wires, wires),
-            "`controlled_wires` and `target wires` must be disjoint.");
+            "`controlled_wires` and target wires must be disjoint.");
         PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
+
         if (controlled_wires.empty()) {
             return applyOperation(opName, wires, inverse, params, gate_matrix);
         }
-        if (opName == "Identity") {
-            // No op
-        } else if (array_contains(controlled_gate_names,
-                                  std::string_view{opName})) {
+        if (array_contains(controlled_gate_names, std::string_view{opName})) {
             const std::size_t num_qubits = this->getNumQubits();
             const ControlledGateOperation gateop =
                 reverse_lookup(controlled_gate_names, std::string_view{opName});
@@ -503,7 +501,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (true or false).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
      */
     void applyNCMultiQubitOp(const KokkosVector matrix,
                              const std::vector<std::size_t> &controlled_wires,
@@ -522,7 +521,8 @@ class StateVectorKokkos final
             Kokkos::parallel_for(
                 policy_2d,
                 KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
-                    matrix_trans(i + j * dim) = conj(matrix(i * dim + j));
+                    matrix_trans(i + j * dim) =
+                        Kokkos::conj(matrix(i * dim + j));
                 });
         } else {
             matrix_trans = matrix;
@@ -613,6 +613,17 @@ class StateVectorKokkos final
                     "number of wires");
         applyMatrix(matrix.data(), wires, inverse);
     }
+
+    /**
+     * @brief Apply a given matrix for controlled operations directly to the
+     * statevector using a raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Controlled wires
+     * @param controlled_values Controlled values (true or false)
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     inline void applyControlledMatrix(
         ComplexT *matrix, const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
@@ -624,6 +635,16 @@ class StateVectorKokkos final
                             inverse);
     }
 
+    /**
+     * @brief Apply a given matrix directly to the statevector using a
+     * raw matrix pointer vector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Controlled wires
+     * @param controlled_values Controlled values (true or false)
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
     inline void
     applyControlledMatrix(const ComplexT *matrix,
                           const std::vector<std::size_t> &controlled_wires,

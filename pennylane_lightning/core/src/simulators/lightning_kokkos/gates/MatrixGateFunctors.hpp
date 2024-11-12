@@ -65,7 +65,10 @@ template <class Precision> struct multiQubitOpFunctor {
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        const auto &[parity_, rev_wire_shifts_] =
+            wires2Parity(num_qubits_, wires_);
+        parity = parity_;
+        rev_wire_shifts = rev_wire_shifts_;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -139,8 +142,9 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wires) =
+        const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
@@ -232,8 +236,9 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wires) =
+        const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
@@ -336,8 +341,9 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wires) =
+        const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
@@ -393,7 +399,10 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        const auto &[parity_, rev_wire_shifts_] =
+            wires2Parity(num_qubits_, wires_);
+        parity = parity_;
+        rev_wire_shifts = rev_wire_shifts_;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -451,8 +460,9 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wires) =
+        const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
+        parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
@@ -520,7 +530,10 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        const auto &[parity_, rev_wire_shifts_] =
+            wires2Parity(num_qubits_, wires_);
+        parity = parity_;
+        rev_wire_shifts = rev_wire_shifts_;
     }
 
     KOKKOS_INLINE_FUNCTION
@@ -622,7 +635,10 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
-        std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits_, wires_);
+        const auto &[parity_, rev_wire_shifts_] =
+            wires2Parity(num_qubits_, wires_);
+        parity = parity_;
+        rev_wire_shifts = rev_wire_shifts_;
     }
 
     KOKKOS_INLINE_FUNCTION
