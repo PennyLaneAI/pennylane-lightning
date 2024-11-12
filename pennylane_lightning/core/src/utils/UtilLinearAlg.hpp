@@ -115,7 +115,7 @@ void compute_diagonalizing_gates(int n, int lda,
 
 #ifdef __APPLE__
     // LCOV_EXCL_START
-    const std::string libName(SCIPY_LIBS_PATH);
+    const std::string libName(SCIPY_OPENBLAS32_LIB);
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
     // LCOV_EXCL_STOP
@@ -123,7 +123,7 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
     // For C++ usage
-    std::string scipyPathStr(SCIPY_LIBS_PATH);
+    std::string scipyPathStr(SCIPY_OPENBLAS32_LIB);
 
     // Exclusively for python calls
     // LCOV_EXCL_START
@@ -135,7 +135,7 @@ void compute_diagonalizing_gates(int n, int lda,
         if (str_pos != std::string::npos) {
             scipyPathStr =
                 currentPathStr.substr(0, str_pos + site_packages_str.size());
-            scipyPathStr += "scipy.libs";
+            scipyPathStr += "scipy_openblas32/lib";
         }
 
         if (std::filesystem::exists(scipyPathStr)) {
@@ -144,18 +144,18 @@ void compute_diagonalizing_gates(int n, int lda,
                 scipyPathStr =
                     std::filesystem::canonical(scipyPathStr).string();
             } catch (const std::exception &err) {
-                std::cerr << "Canonical path for scipy.libs"
+                std::cerr << "Canonical path for scipy_openblas32"
                           << " threw exception:\n"
                           << err.what() << '\n';
             }
         } else {
             try {
-                scipyPathStr = currentPathStr + "../../scipy.libs/";
+                scipyPathStr = currentPathStr + "../../scipy_openblas32/lib";
                 // convert the relative path to absolute path
                 scipyPathStr =
                     std::filesystem::canonical(scipyPathStr).string();
             } catch (const std::exception &err) {
-                std::cerr << "Canonical path for scipy.libs"
+                std::cerr << "Canonical path for scipy_openblas32"
                           << " threw exception:\n"
                           << err.what() << '\n';
             }
