@@ -133,6 +133,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
+            python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))"
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
