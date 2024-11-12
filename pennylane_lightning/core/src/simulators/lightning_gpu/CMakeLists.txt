@@ -11,7 +11,6 @@ project(${PL_BACKEND}
     LANGUAGES CXX C CUDA
 )
 
-
 # Include macro and functions supporting Nvidia and cuQuantum libraries.
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
 findCUDATK(lightning_external_libs)
@@ -65,17 +64,6 @@ set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
 # To avoid DSO errors on platforms preferring static linkage, uncomment the following line:
 # string(REPLACE "libcudart_static.a" "libcudart.so" CUDA_SHARED_RT "${CUDA_LIBRARIES}")
 set_target_properties(${PL_BACKEND} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
-
-if(ENABLE_MPI)
-    if(NOT MPI_INCLUDE_PATH)
-        message(FATAL_ERROR "MPI_LIBRARY not found. Please set MPI_LIBRARY to the path of the MPI libraries.")
-    endif()
-    set(CMAKE_BUILD_RPATH_USE_ORIGIN TRUE)
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-    cmake_path(GET MPI_INCLUDE_PATH PARENT_PATH MPI_LIB_DIR)
-    message(STATUS "MPI_LIB_DIR: ${MPI_LIB_DIR}/lib")
-    set_target_properties(${PL_BACKEND} PROPERTIES BUILD_RPATH "${MPI_LIB_DIR}/lib" INSTALL_RPATH "${MPI_LIB_DIR}/lib")
-endif()
 
 if(PL_DISABLE_CUDA_SAFETY)
     target_compile_options(${PL_BACKEND} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)

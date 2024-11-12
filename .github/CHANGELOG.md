@@ -12,6 +12,9 @@
 
 ### Improvements
 
+* Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
+  [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
+
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
   [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
 
