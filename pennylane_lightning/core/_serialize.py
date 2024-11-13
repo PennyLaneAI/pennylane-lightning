@@ -33,8 +33,7 @@ from pennylane import (
     matrix,
 )
 from pennylane.math import unwrap
-from pennylane.operation import Tensor
-from pennylane.ops import Hamiltonian, LinearCombination, Prod, SProd, Sum
+from pennylane.ops import LinearCombination, Prod, SProd, Sum
 from pennylane.tape import QuantumTape
 
 NAMED_OBS = (Identity, PauliX, PauliY, PauliZ, Hadamard)
@@ -211,8 +210,7 @@ class QuantumScriptSerializer:
 
     def _tensor_ob(self, observable, wires_map: dict = None):
         """Serialize a tensor observable"""
-        obs = observable.obs if isinstance(observable, Tensor) else observable.operands
-        return self.tensor_obs([self._ob(o, wires_map) for o in obs])
+        return self.tensor_obs([self._ob(o, wires_map) for o in observable.operands])
 
     def _chunk_ham_terms(self, coeffs, ops, split_num: int = 1) -> List:
         "Create split_num sub-Hamiltonians from a single high term-count Hamiltonian"
@@ -262,7 +260,7 @@ class QuantumScriptSerializer:
         """
 
         if self._use_mpi:
-            Hmat = Hamiltonian([1.0], [Identity(0)]).sparse_matrix()
+            Hmat = Identity(0).sparse_matrix()
             H_sparse = SparseHamiltonian(Hmat, wires=range(1))
             spm = H_sparse.sparse_matrix()
             # Only root 0 needs the overall sparse matrix data
@@ -323,11 +321,9 @@ class QuantumScriptSerializer:
         """Serialize a :class:`pennylane.operation.Observable` into an Observable."""
         if isinstance(observable, NAMED_OBS):
             return self._named_obs(observable, wires_map)
-        if isinstance(observable, Hamiltonian):
-            return self._hamiltonian(observable, wires_map)
         if observable.pauli_rep is not None:
             return self._pauli_sentence(observable.pauli_rep, wires_map)
-        if isinstance(observable, (Tensor, Prod)):
+        if isinstance(observable, Prod):
             if isinstance(observable, Prod) and observable.has_overlapping_wires:
                 return self._hermitian_ob(observable, wires_map)
             return self._tensor_ob(observable, wires_map)
