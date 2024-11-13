@@ -666,7 +666,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
 
 @pytest.mark.parametrize("num_qubits", [2, 3, 4])
 def test_qft_gate(num_qubits):
-    dev = qml.device("lightning.qubit", wires=num_qubits)
+    dev = qml.device("default.qubit", wires=num_qubits)
     @qml.qnode(dev)
     def circuit():
         qml.QFT(wires=range(num_qubits))
