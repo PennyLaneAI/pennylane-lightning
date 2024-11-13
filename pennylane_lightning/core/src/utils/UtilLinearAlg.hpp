@@ -24,12 +24,13 @@
 #include <complex>
 #include <cstdlib>
 #include <filesystem>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
-
-#include <iostream>
-
+#ifndef SCIPY_OPENBLAS32_LIB
+#define SCIPY_OPENBLAS32_LIB ""
+#endif
 #include "SharedLibLoader.hpp"
 
 /// @cond DEV
@@ -114,7 +115,9 @@ void compute_diagonalizing_gates(int n, int lda,
 
 #ifdef __APPLE__
     // LCOV_EXCL_START
-    const std::string libName(SCIPY_OPENBLAS32_LIB);
+    const std::string libName(
+        "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
+        "Frameworks/vecLib.framework/libLAPACK.dylib");
     std::shared_ptr<SharedLibLoader> blasLib =
         std::make_shared<SharedLibLoader>(libName);
     // LCOV_EXCL_STOP
@@ -122,11 +125,10 @@ void compute_diagonalizing_gates(int n, int lda,
     std::shared_ptr<SharedLibLoader> blasLib;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs;
     // For C++ usage
-    std::string scipyPathStr(SCIPY_OPENBLAS32_LIB);
-
+    std::string scipyPathStr;
     // Exclusively for python calls
     // LCOV_EXCL_START
-    if (!std::filesystem::exists(scipyPathStr)) {
+    if (!std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
         std::string currentPathStr(getPath());
         std::string site_packages_str("site-packages/");
 
@@ -159,6 +161,8 @@ void compute_diagonalizing_gates(int n, int lda,
                           << err.what() << '\n';
             }
         }
+    } else {
+        scipyPathStr = SCIPY_OPENBLAS32_LIB;
     }
     // LCOV_EXCL_STOP
 
