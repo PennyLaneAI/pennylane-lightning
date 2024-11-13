@@ -140,6 +140,7 @@ jobs:
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
             -DCUQUANTUM_SDK=${CUQUANTUM_SDK} \
+            -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))") \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja
           cmake --build ./Build

@@ -124,7 +124,7 @@ jobs:
 
       - name: Install required basic packages
         run: |
-          python -m pip install ninja cmake scipy
+          python -m pip install ninja cmake scipy-openblas32
 
       - name: Install required lightning_gpu only packages
         if: matrix.pl_backend == 'lightning_gpu'
@@ -144,6 +144,7 @@ jobs:
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
+            -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))") \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON \
             -G Ninja
