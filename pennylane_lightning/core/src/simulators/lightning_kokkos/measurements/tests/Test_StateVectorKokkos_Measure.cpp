@@ -464,4 +464,3 @@ TEST_CASE("Test tensor transposition", "[Measure]") {
         }
     }
 }
-
