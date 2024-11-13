@@ -39,14 +39,6 @@ namespace Pennylane::LightningKokkos::Functors {
 template <class PrecisionT, class FuncT> class applyNCNFunctor {
     using KokkosComplexVector = Kokkos::View<Kokkos::complex<PrecisionT> *>;
     using KokkosIntVector = Kokkos::View<std::size_t *>;
-    using ScratchViewComplex =
-        Kokkos::View<Kokkos::complex<PrecisionT> *,
-                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-    using ScratchViewSizeT =
-        Kokkos::View<std::size_t *,
-                     Kokkos::DefaultExecutionSpace::scratch_memory_space,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
     using MemberType = Kokkos::TeamPolicy<>::member_type;
 
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
