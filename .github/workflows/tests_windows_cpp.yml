@@ -136,6 +136,7 @@ jobs:
           $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)"
           echo "SCIPY_OPENBLAS32=${scipy_openblas32_path}" | Out-File -Append -FilePath $env:GITHUB_ENV
           Get-Content $env:GITHUB_ENV
+          Get-ChildItem -Path $env:SCIPY_OPENBLAS32 -File -Recurse
 
       - name: Build and run unit tests for code coverage
         run: |
