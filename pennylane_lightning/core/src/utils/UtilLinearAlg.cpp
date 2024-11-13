@@ -20,12 +20,15 @@
 #include <complex>
 #include <vector>
 
+#include "SharedLibLoader.hpp"
 #include "UtilLinearAlg.hpp"
 
 template void Pennylane::Util::compute_diagonalizing_gates<float>(
     int n, int lda, const std::vector<std::complex<float>> &Ah,
-    std::vector<float> &eigenVals, std::vector<std::complex<float>> &unitary);
+    std::vector<float> &eigenVals, std::vector<std::complex<float>> &unitary,
+    SharedLibLoader *blasLibLoader, const bool scipy_prefix);
 
 template void Pennylane::Util::compute_diagonalizing_gates<double>(
     int n, int lda, const std::vector<std::complex<double>> &Ah,
-    std::vector<double> &eigenVals, std::vector<std::complex<double>> &unitary);
+    std::vector<double> &eigenVals, std::vector<std::complex<double>> &unitary,
+    SharedLibLoader *blasLibLoader, const bool scipy_prefix);
