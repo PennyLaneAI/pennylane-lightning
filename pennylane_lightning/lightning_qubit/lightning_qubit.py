@@ -27,7 +27,6 @@ import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.capabilities import OperatorProperties
-from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
@@ -40,7 +39,7 @@ from pennylane.devices.preprocess import (
 )
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
-from pennylane.ops import Prod, SProd, Sum
+from pennylane.ops import Prod, SProd, Sum, Conditional, Adjoint, PauliRot
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
@@ -76,17 +75,6 @@ _to_matrix_ops = {
     "SQISW": OperatorProperties(),
     "SX": OperatorProperties(),
 }
-
-# The set of adjoint operations that supports adjoint differentiation.
-_differentiable_adjoint_ops = frozenset(
-    {
-        "Adjoint(S)",
-        "Adjoint(T)",
-        "Adjoint(SX)",
-        "Adjoint(ISWAP)",
-        "Adjoint(SISWAP)",
-    }
-)
 
 
 def stopping_condition(op: Operator) -> bool:
@@ -150,9 +138,17 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    if isinstance(op, qml.ops.Adjoint):
-        return op.name in _differentiable_adjoint_ops
-    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
+
+    if isinstance(op, (Conditional, MidMeasureMP, PauliRot)):
+        return False
+
+    if isinstance(op, Adjoint) and qml.operation.is_trainable(op):
+        return False
+
+    if not qml.operation.is_trainable(op):
+        return True
+
+    return op.num_params == 1 and op.has_generator
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
