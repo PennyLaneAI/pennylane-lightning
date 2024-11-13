@@ -78,12 +78,8 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
         ControlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
         indices = vector2view(indices_);
-        std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
-                                   ScratchViewSizeT::shmem_size(dim);
-        Kokkos::parallel_for(
-            Kokkos::TeamPolicy(two2N, Kokkos::AUTO, dim)
-                .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
-            *this);
+        Kokkos::parallel_for(Kokkos::TeamPolicy(two2N, Kokkos::AUTO, dim),
+                             *this);
     }
     KOKKOS_FUNCTION void operator()(const MemberType &teamMember) const {
         const std::size_t k = teamMember.league_rank();
