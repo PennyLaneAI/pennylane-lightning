@@ -709,7 +709,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Controlled-Operation",
     using StateVectorT = StateVectorKokkos<TestType>;
     using PrecisionT = StateVectorT::PrecisionT;
 
-    const std::size_t num_qubits = 5;
+    const std::size_t num_qubits = 7;
     const TestType EP = 1e-4;
     auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
 
@@ -728,13 +728,73 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Controlled-Operation",
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
         GENERATE("PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "SWAP");
-    DYNAMIC_SECTION("N-controlled Matrix - Gate = "
+    DYNAMIC_SECTION("1-controlled Matrix - Gate = "
                     << gate_name << " Inverse = " << inverse) {
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
             str_to_gates_.at(gate_name), {}, false);
 
         std::vector<std::size_t> controlled_wires = {4};
         std::vector<bool> controlled_values = {true};
+
+        StateVectorT kokkos_sv_ops{ini_st.data(), ini_st.size()};
+        StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+
+        const auto wires =
+            createWires(str_to_controlled_gates_.at(gate_name), num_qubits);
+        kokkos_sv_ops.applyOperation(gate_name, controlled_wires,
+                                     controlled_values, wires, inverse, {});
+        kokkos_sv_mat.applyOperation("Matrix", controlled_wires,
+                                     controlled_values, wires, inverse, {},
+                                     gate_matrix);
+
+        auto result_ops = kokkos_sv_ops.getDataVector();
+        auto result_mat = kokkos_sv_mat.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(real(result_ops[j]) ==
+                  Approx(real(result_mat[j])).margin(EP));
+            CHECK(imag(result_ops[j]) ==
+                  Approx(imag(result_mat[j])).margin(EP));
+        }
+    }
+
+    DYNAMIC_SECTION("2-controlled Matrix (c {4, 5})- Gate = "
+                    << gate_name << " Inverse = " << inverse) {
+        auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
+            str_to_gates_.at(gate_name), {}, false);
+
+        std::vector<std::size_t> controlled_wires = {4, 5};
+        std::vector<bool> controlled_values = {true, false};
+
+        StateVectorT kokkos_sv_ops{ini_st.data(), ini_st.size()};
+        StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+
+        const auto wires =
+            createWires(str_to_controlled_gates_.at(gate_name), num_qubits);
+        kokkos_sv_ops.applyOperation(gate_name, controlled_wires,
+                                     controlled_values, wires, inverse, {});
+        kokkos_sv_mat.applyOperation("Matrix", controlled_wires,
+                                     controlled_values, wires, inverse, {},
+                                     gate_matrix);
+
+        auto result_ops = kokkos_sv_ops.getDataVector();
+        auto result_mat = kokkos_sv_mat.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(real(result_ops[j]) ==
+                  Approx(real(result_mat[j])).margin(EP));
+            CHECK(imag(result_ops[j]) ==
+                  Approx(imag(result_mat[j])).margin(EP));
+        }
+    }
+
+    DYNAMIC_SECTION("2-controlled Matrix (c {4, 6})- Gate = "
+                    << gate_name << " Inverse = " << inverse) {
+        auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
+            str_to_gates_.at(gate_name), {}, false);
+
+        std::vector<std::size_t> controlled_wires = {4, 6};
+        std::vector<bool> controlled_values = {true, false};
 
         StateVectorT kokkos_sv_ops{ini_st.data(), ini_st.size()};
         StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
