@@ -34,6 +34,7 @@ using Pennylane::Gates::GateOperation;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Gates {
+
 /**
  * @brief Return a specific member function pointer for a given gate operation.
  * See specialized classes.
@@ -264,6 +265,12 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::GlobalPhase> {
     constexpr static auto value =
         &GateImplementation::template applyGlobalPhase<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::QFT> {
+    constexpr static auto value = 
+        &GateImplementation::template applyQFT<PrecisionT>;
 };
 
 template <class PrecisionT, class ParamT, class GateImplementation,
@@ -882,16 +889,6 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
                           const std::vector<std::size_t> &,
                           const std::vector<bool> &,
                           const std::vector<std::size_t> &, bool);
-};
-
-/**
-* @brief Pointer to apply the Quantum Fourier Transform (QFT) operation.
-*/
-template <class PrecisionT, class ParamT, class GateImplementation>
-struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
-                             GateOperation::QFT> {
-    using Type = void (GateImplementation::*)(std::complex<PrecisionT> *);
-    constexpr static Type value = &GateImplementation::template applyQFT<PrecisionT>;
 };
 
 } // namespace Internal
