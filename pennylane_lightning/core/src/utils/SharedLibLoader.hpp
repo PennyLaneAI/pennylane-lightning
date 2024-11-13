@@ -57,7 +57,7 @@ class SharedLibLoader final {
     SharedLibLoader();
     explicit SharedLibLoader(const std::string &filename) {
         handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
-        PL_ABORT_IF(!handle_, PL_DLERROR());
+        //PL_ABORT_IF(!handle_, std::to_string(PL_DLERROR()).c_str());
     }
 
     ~SharedLibLoader() noexcept { PL_DLCLOSE(handle_); }
@@ -66,7 +66,7 @@ class SharedLibLoader final {
 
     HANDLE_TYPE getSymbol(const std::string &symbol) {
         HANDLE_TYPE sym = PL_DLSYS(handle_, symbol.c_str());
-        PL_ABORT_IF(!sym, PL_DLERROR());
+        //PL_ABORT_IF(!sym, std::to_string(PL_DLERROR()).c);
         return sym;
     }
 };
