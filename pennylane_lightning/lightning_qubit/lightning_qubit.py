@@ -229,6 +229,13 @@ class LightningQubit(LightningBase):
     # This `config` is used in Catalyst-Frontend
     config_filepath = Path(__file__).parent / "lightning_qubit.toml"
 
+    # Keyword arguments passed to the backend device initialization
+    device_kwargs = {
+        "mcmc": "_mcmc",
+        "num_burnin": "_num_burnin",
+        "kernel_name": "_kernel_name",
+    }
+
     # TODO: remove this when customizable multiple decomposition pathways are implemented
     _to_matrix_ops = _to_matrix_ops
 

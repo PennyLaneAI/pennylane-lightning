@@ -123,9 +123,3 @@ dynamic_qubit_management = false
 non_commuting_observables = true
 # Whether the device supports initial state preparation.
 initial_state_prep = true
-
-[options]
-
-mcmc = "_mcmc"
-num_burnin = "_num_burnin"
-kernel_name = "_kernel_name"
