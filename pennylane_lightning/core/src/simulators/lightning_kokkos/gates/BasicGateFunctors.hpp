@@ -73,6 +73,7 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
         Kokkos::parallel_for(Kokkos::TeamPolicy(two2N, Kokkos::AUTO, dim),
                              *this);
     }
+    // TODO: Runtime selection for copying indices to scratch level 0/shmem
     KOKKOS_FUNCTION void operator()(const MemberType &teamMember) const {
         const std::size_t k = teamMember.league_rank();
         const std::size_t offset = Util::parity_2_offset(parity, k);
