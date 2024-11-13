@@ -90,109 +90,14 @@ _to_matrix_ops = {
     "DiagonalQubitUnitary": OperatorProperties(),
 }
 
-# The set of supported operations.
-_operations = frozenset(
+# The set of adjoint operations that supports adjoint differentiation.
+_differentiable_adjoint_ops = frozenset(
     {
-        "Identity",
-        "QubitStateVector",
-        "QubitUnitary",
-        "ControlledQubitUnitary",
-        "MultiControlledX",
-        "DiagonalQubitUnitary",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "MultiRZ",
-        "GlobalPhase",
-        "C(PauliX)",
-        "C(PauliY)",
-        "C(PauliZ)",
-        "C(Hadamard)",
-        "C(S)",
-        "C(T)",
-        "C(PhaseShift)",
-        "C(RX)",
-        "C(RY)",
-        "C(RZ)",
-        "C(Rot)",
-        "C(SWAP)",
-        "C(IsingXX)",
-        "C(IsingXY)",
-        "C(IsingYY)",
-        "C(IsingZZ)",
-        "C(SingleExcitation)",
-        "C(SingleExcitationMinus)",
-        "C(SingleExcitationPlus)",
-        "C(DoubleExcitation)",
-        "C(DoubleExcitationMinus)",
-        "C(DoubleExcitationPlus)",
-        "C(MultiRZ)",
-        "C(GlobalPhase)",
-        "Hadamard",
-        "S",
         "Adjoint(S)",
-        "T",
         "Adjoint(T)",
-        "SX",
         "Adjoint(SX)",
-        "CNOT",
-        "SWAP",
-        "ISWAP",
-        "PSWAP",
         "Adjoint(ISWAP)",
-        "SISWAP",
         "Adjoint(SISWAP)",
-        "SQISW",
-        "CSWAP",
-        "Toffoli",
-        "CY",
-        "CZ",
-        "PhaseShift",
-        "ControlledPhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "IsingXX",
-        "IsingYY",
-        "IsingZZ",
-        "IsingXY",
-        "SingleExcitation",
-        "SingleExcitationPlus",
-        "SingleExcitationMinus",
-        "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
-        "QubitCarry",
-        "QubitSum",
-        "OrbitalRotation",
-        "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
-    }
-)
-# End the set of supported operations.
-
-# The set of supported observables.
-_observables = frozenset(
-    {
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "SparseHamiltonian",
-        "LinearCombination",
-        "Hermitian",
-        "Identity",
-        "Projector",
-        "Sum",
-        "Prod",
-        "SProd",
-        "Exp",
     }
 )
 
@@ -249,6 +154,8 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
+    if isinstance(op, qml.ops.Adjoint):
+        return op.name in _differentiable_adjoint_ops
     return adjoint_ops(op) and not isinstance(op, qml.PauliRot)
 
 
