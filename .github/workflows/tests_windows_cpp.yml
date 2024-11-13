@@ -138,7 +138,7 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path.replace('/', '\\\\'))") `
+              -DSCIPY_OPENBLAS=C:\hostedtoolcache\windows\Python\3.10.11\x64\Lib\site-packages\scipy_openblas32\lib `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
@@ -233,7 +233,7 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path.replace('/', '\\\\'))") `
+              -DSCIPY_OPENBLAS=C:\hostedtoolcache\windows\Python\3.10.11\x64\Lib\site-packages\scipy_openblas32\lib `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF -T clangcl
