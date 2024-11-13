@@ -7,7 +7,7 @@ include_guard()
 
 # Macro to aid in finding cuStateVec lib
 macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
-    set(SCIPY_OPENBLAS_ENV "$ENV{SCIPY_OPENBLAS}")
+    set(SCIPY_OPENBLAS_ENV "$ENV{SCIPY_OPENBLAS32}")
 
     set(SCIPY_OPENBLAS_LIB_NAME "libscipy_openblas.so")
 
@@ -25,6 +25,7 @@ macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
                 ${SCIPY_OPENBLAS_ENV}/lib
                 ${Python_SITELIB}/scipy_openblas32/lib
                 ${SCIPY_OPENBLAS}
+                ${SCIPY_OPENBLAS_ENV}
                 ${ACCELEARTE_FRAMEWORK}
                 ENV LD_LIBRARY_PATH
     )
