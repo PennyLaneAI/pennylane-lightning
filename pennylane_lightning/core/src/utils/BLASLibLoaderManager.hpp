@@ -149,7 +149,9 @@ class BLASLibLoaderManager {
      *
      * @return std::string The path to the scipy_openblas32/lib package.
      */
-    static std::string get_scipylibs_path_() { return get_scipylibs_path_worker_(); }
+    static std::string get_scipylibs_path_() {
+        return get_scipylibs_path_worker_();
+    }
 #endif
     /**
      * @brief BLASLibLoaderManager.
