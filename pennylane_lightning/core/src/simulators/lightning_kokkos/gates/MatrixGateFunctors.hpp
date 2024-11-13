@@ -156,16 +156,22 @@ template <class Precision> struct NCMultiQubitOpFunctor {
     void operator()(const MemberType &teamMember) const {
         const std::size_t k = teamMember.league_rank();
         ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
+        ScratchViewSizeT indices_scratch(teamMember.team_scratch(0), dim);
         const std::size_t offset = parity_2_offset(parity, k);
-        if (teamMember.team_rank() == 0) {
-            for (std::size_t i = 0; i < dim; i++) {
-                coeffs_in(i) = arr(indices(i) + offset);
-            }
-        }
 
+        if (teamMember.team_rank() == 0) {
+            Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, dim),
+                                 [&](const std::size_t inner_idx) {
+                                     coeffs_in(inner_idx) =
+                                         arr(indices(inner_idx) + offset);
+                                     indices_scratch(inner_idx) =
+                                         indices(inner_idx);
+                                 });
+        }
+        teamMember.team_barrier();
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(teamMember, dim), [&](const std::size_t i) {
-                const auto idx = indices(i) + offset;
+                const auto idx = indices_scratch(i) + offset;
                 arr(idx) = 0.0;
                 const std::size_t base_idx = i * dim;
 
