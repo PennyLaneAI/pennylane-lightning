@@ -136,7 +136,6 @@ jobs:
           $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)"
           echo "SCIPY_OPENBLAS32=${scipy_openblas32_path}" | Out-File -Append -FilePath $env:GITHUB_ENV
           Get-Content $env:GITHUB_ENV
-          Get-ChildItem -Path "C:/hostedtoolcache/windows/Python/3.10.11/x64/Lib/site-packages/scipy_openblas32/lib" -File -Recurse
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -243,7 +242,6 @@ jobs:
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
-              -DSCIPY_OPENBLAS=${$env:SCIPY_OPENBLAS32} `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
