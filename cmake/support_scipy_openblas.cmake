@@ -30,6 +30,7 @@ macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
     )
 
     if(NOT SCIPY_OPENBLAS_LIB)
+        message(FATAL_ERROR "\nUnable to find ${SCIPY_OPENBLAS}. Please ensure it is correctly installed and available on path.")
         message(FATAL_ERROR "\nUnable to find scipy_openblas64. Please ensure it is correctly installed and available on path.")
     else()
         cmake_path(GET SCIPY_OPENBLAS_LIB PARENT_PATH SCIPY_OPENBLAS_LIB_DIR)
