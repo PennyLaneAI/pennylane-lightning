@@ -959,7 +959,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
         }
     }
 
-    SECTION("2-controlled SingleExcitationMinus") {
+    SECTION("2-controlled MultiRZ") {
         Kokkos::deep_copy(sv_gate.getView(), ini_sv);
 
         const std::vector<std::size_t> control_wires = {0, 2};
