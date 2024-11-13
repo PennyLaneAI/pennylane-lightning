@@ -15,6 +15,8 @@ r"""
 This module contains the LightningQubit class, a PennyLane simulator device that
 interfaces with C++ for fast linear algebra calculations.
 """
+import os
+import sys
 from dataclasses import replace
 from functools import reduce
 from pathlib import Path
@@ -37,7 +39,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
@@ -75,6 +77,111 @@ _to_matrix_ops = {
     "SX": OperatorProperties(),
 }
 
+# The set of supported operations.
+_operations = frozenset(
+    {
+        "Identity",
+        "QubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "GlobalPhase",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "C(PauliX)",
+        "C(PauliY)",
+        "C(PauliZ)",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(Rot)",
+        "C(SWAP)",
+        "C(IsingXX)",
+        "C(IsingXY)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationMinus)",
+        "C(SingleExcitationPlus)",
+        "C(DoubleExcitation)",
+        "C(DoubleExcitationMinus)",
+        "C(DoubleExcitationPlus)",
+        "C(MultiRZ)",
+        "C(GlobalPhase)",
+        "C(QubitUnitary)",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "ECR",
+        "BlockEncode",
+        "C(BlockEncode)",
+    }
+)
+# End the set of supported operations.
+
+# The set of supported observables.
+_observables = frozenset(
+    {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "Hermitian",
+        "Identity",
+        "Projector",
+        "SparseHamiltonian",
+        "LinearCombination",
+        "Sum",
+        "SProd",
+        "Prod",
+        "Exp",
+    }
+)
+
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``."""
@@ -106,11 +213,6 @@ def adjoint_observables(obs: Operator) -> bool:
     when using the adjoint differentiation method."""
     if isinstance(obs, qml.Projector):
         return False
-
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
 
     if isinstance(obs, SProd):
         return adjoint_observables(obs.base)
@@ -465,3 +567,45 @@ class LightningQubit(LightningBase):
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+
+    @staticmethod
+    def get_c_interface():
+        """Returns a tuple consisting of the device name, and
+        the location to the shared object with the C/C++ device implementation.
+        """
+
+        # The shared object file extension varies depending on the underlying operating system
+        file_extension = ""
+        OS = sys.platform
+        if OS == "linux":
+            file_extension = ".so"
+        elif OS == "darwin":
+            file_extension = ".dylib"
+        else:
+            raise RuntimeError(
+                f"'LightningSimulator' shared library not available for '{OS}' platform"
+            )  # pragma: no cover
+
+        lib_name = "liblightning_qubit_catalyst" + file_extension
+        package_root = Path(__file__).parent
+
+        # The absolute path of the plugin shared object varies according to the installation mode.
+
+        # Wheel mode:
+        # Fixed location at the root of the project
+        wheel_mode_location = package_root.parent / lib_name
+        if wheel_mode_location.is_file():
+            return "LightningSimulator", wheel_mode_location.as_posix()
+
+        # Editable mode:
+        # The build directory contains a folder which varies according to the platform:
+        #   lib.<system>-<architecture>-<python-id>"
+        # To avoid mismatching the folder name, we search for the shared object instead.
+        # TODO: locate where the naming convention of the folder is decided and replicate it here.
+        editable_mode_path = package_root.parent.parent / "build"
+        for path, _, files in os.walk(editable_mode_path):
+            if lib_name in files:
+                lib_location = (Path(path) / lib_name).as_posix()
+                return "LightningSimulator", lib_location
+
+        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover

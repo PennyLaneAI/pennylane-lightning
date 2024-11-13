@@ -139,7 +139,6 @@ class TestVJP:
             jac = device.vjp(tape, dy, statevector)
         return results, jac
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",

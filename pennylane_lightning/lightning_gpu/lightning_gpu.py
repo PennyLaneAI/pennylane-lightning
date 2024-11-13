@@ -43,7 +43,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
@@ -90,6 +90,112 @@ _to_matrix_ops = {
     "DiagonalQubitUnitary": OperatorProperties(),
 }
 
+# The set of supported operations.
+_operations = frozenset(
+    {
+        "Identity",
+        "QubitStateVector",
+        "QubitUnitary",
+        "ControlledQubitUnitary",
+        "MultiControlledX",
+        "DiagonalQubitUnitary",
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "MultiRZ",
+        "GlobalPhase",
+        "C(PauliX)",
+        "C(PauliY)",
+        "C(PauliZ)",
+        "C(Hadamard)",
+        "C(S)",
+        "C(T)",
+        "C(PhaseShift)",
+        "C(RX)",
+        "C(RY)",
+        "C(RZ)",
+        "C(Rot)",
+        "C(SWAP)",
+        "C(IsingXX)",
+        "C(IsingXY)",
+        "C(IsingYY)",
+        "C(IsingZZ)",
+        "C(SingleExcitation)",
+        "C(SingleExcitationMinus)",
+        "C(SingleExcitationPlus)",
+        "C(DoubleExcitation)",
+        "C(DoubleExcitationMinus)",
+        "C(DoubleExcitationPlus)",
+        "C(MultiRZ)",
+        "C(GlobalPhase)",
+        "Hadamard",
+        "S",
+        "Adjoint(S)",
+        "T",
+        "Adjoint(T)",
+        "SX",
+        "Adjoint(SX)",
+        "CNOT",
+        "SWAP",
+        "ISWAP",
+        "PSWAP",
+        "Adjoint(ISWAP)",
+        "SISWAP",
+        "Adjoint(SISWAP)",
+        "SQISW",
+        "CSWAP",
+        "Toffoli",
+        "CY",
+        "CZ",
+        "PhaseShift",
+        "ControlledPhaseShift",
+        "RX",
+        "RY",
+        "RZ",
+        "Rot",
+        "CRX",
+        "CRY",
+        "CRZ",
+        "CRot",
+        "IsingXX",
+        "IsingYY",
+        "IsingZZ",
+        "IsingXY",
+        "SingleExcitation",
+        "SingleExcitationPlus",
+        "SingleExcitationMinus",
+        "DoubleExcitation",
+        "DoubleExcitationPlus",
+        "DoubleExcitationMinus",
+        "QubitCarry",
+        "QubitSum",
+        "OrbitalRotation",
+        "ECR",
+        "BlockEncode",
+        "C(BlockEncode)",
+    }
+)
+# End the set of supported operations.
+
+# The set of supported observables.
+_observables = frozenset(
+    {
+        "PauliX",
+        "PauliY",
+        "PauliZ",
+        "Hadamard",
+        "SparseHamiltonian",
+        "LinearCombination",
+        "Hermitian",
+        "Identity",
+        "Projector",
+        "Sum",
+        "Prod",
+        "SProd",
+        "Exp",
+    }
+)
+
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
@@ -112,11 +218,6 @@ def adjoint_observables(obs: Operator) -> bool:
     when using the adjoint differentiation method."""
     if isinstance(obs, qml.Projector):
         return False
-
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
 
     if isinstance(obs, SProd):
         return adjoint_observables(obs.base)

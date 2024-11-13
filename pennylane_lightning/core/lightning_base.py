@@ -24,7 +24,7 @@ import pennylane as qml
 from pennylane import BasisState, StatePrep
 from pennylane.devices import QubitDevice
 from pennylane.measurements import Expectation, MeasurementProcess, State
-from pennylane.operation import Operation, Tensor
+from pennylane.operation import Operation
 from pennylane.ops import Prod, Projector, SProd, Sum
 from pennylane.wires import Wires
 
@@ -178,9 +178,7 @@ class LightningBase(QubitDevice):
     def _get_diagonalizing_gates(self, circuit: qml.tape.QuantumTape) -> List[Operation]:
         # pylint: disable=no-member, protected-access
         def skip_diagonalizing(obs):
-            return isinstance(obs, qml.Hamiltonian) or (
-                isinstance(obs, qml.ops.Sum) and obs._pauli_rep is not None
-            )
+            return isinstance(obs, qml.ops.Sum) and obs._pauli_rep is not None
 
         meas_filtered = list(
             filter(lambda m: m.obs is None or not skip_diagonalizing(m.obs), circuit.measurements)
@@ -319,18 +317,12 @@ class LightningBase(QubitDevice):
         Raises:
             ~pennylane.QuantumFunctionError: if a ``Projector`` is found.
         """
-        if isinstance(observable, Tensor):
-            if any(isinstance(o, Projector) for o in observable.non_identity_obs):
-                raise qml.QuantumFunctionError(
-                    "Adjoint differentiation method does not support the Projector observable"
-                )
-
-        elif isinstance(observable, Projector):
+        if isinstance(observable, Projector):
             raise qml.QuantumFunctionError(
                 "Adjoint differentiation method does not support the Projector observable"
             )
 
-        elif isinstance(observable, SProd):
+        if isinstance(observable, SProd):
             LightningBase._assert_adjdiff_no_projectors(observable.base)
 
         elif isinstance(observable, (Sum, Prod)):
