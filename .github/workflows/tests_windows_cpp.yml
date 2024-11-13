@@ -133,6 +133,7 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
+            for /f "tokens=*" %i in (python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path.replace('/', '\\\\'))") do`
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
@@ -225,9 +226,9 @@ jobs:
 
       - name: Build and run unit tests for code coverage
         run: |
-            python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path.replace('/', '\\\\'))"
             Subst Z: (pwd)
             Set-Location -Path "Z:\"
+            for /f "tokens=*" %i in (python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path.replace('/', '\\\\'))") do`
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
