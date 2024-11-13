@@ -133,7 +133,7 @@ jobs:
 
       - name: Add path to scipy-openblas32 to environment variable
         run: |
-          $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)")"
+          $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)"
           echo "SCIPY_OPENBLAS32=$scipy_openblas32_path" >> $env:GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
@@ -230,7 +230,7 @@ jobs:
       
       - name: Add path to scipy-openblas32 to environment variable
         run: |
-          $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)")"
+          $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)"
           echo "SCIPY_OPENBLAS32=$scipy_openblas32_path" >> $env:GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
