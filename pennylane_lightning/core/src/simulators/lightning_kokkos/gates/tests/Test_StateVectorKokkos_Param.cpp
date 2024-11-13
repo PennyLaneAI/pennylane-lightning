@@ -958,6 +958,76 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "
             CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
         }
     }
+
+    SECTION("2-controlled MultiRZ - c{0,2}") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1, 3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("MultiRZ", control_wires, control_values,
+                               target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.24829083, +0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, +0.02918331},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("3-controlled MultiRZ - c{0,1,2}") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 1, 2};
+        const std::vector<bool> control_values = {false, true, false};
+        const std::vector<std::size_t> target_wire = {3};
+        const TestType param = 0.234;
+        sv_gate.applyOperation("MultiRZ", control_wires, control_values,
+                               target_wire, inverse, {param});
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{// Generated using Pennylane
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.24829083, -0.02918331},
+                                              ComplexT{0.24829083, +0.02918331},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0},
+                                              ComplexT{0.25, 0.0}};
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE(
