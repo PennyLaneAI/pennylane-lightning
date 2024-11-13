@@ -95,7 +95,7 @@ Prod                   = { properties = [ "differentiable" ] }
 Exp                    = { properties = [ "differentiable" ] }
 LinearCombination      = { properties = [ "differentiable" ] }
 
-[pennylane.operators.obserbales]
+[pennylane.operators.observables]
 
 Projector              = {}
 
