@@ -5,6 +5,9 @@
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
 
+* Add a Catalyst-specific wrapping class for Lightning Qubit.
+  [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
+
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
 
@@ -35,7 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Shuli Shu
+Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Shuli Shu, Raul Torres, Haochen Paul Wang
 
 ---
 
