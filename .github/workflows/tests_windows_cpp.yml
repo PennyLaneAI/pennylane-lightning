@@ -144,7 +144,7 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
-              -DSCIPY_OPENBLAS32=$env:SCIPY_OPENBLAS32 `
+              -DSCIPY_OPENBLAS=$env:SCIPY_OPENBLAS32 `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
@@ -243,7 +243,7 @@ jobs:
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
-              -DSCIPY_OPENBLAS32=$env:SCIPY_OPENBLAS32 `
+              -DSCIPY_OPENBLAS=$env:SCIPY_OPENBLAS32 `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
