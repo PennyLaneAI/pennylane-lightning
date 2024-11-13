@@ -29,6 +29,7 @@ macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
                 ${ACCELEARTE_FRAMEWORK}
                 ENV LD_LIBRARY_PATH
     )
+    message(STATUS "Found SCIPY_OPENBLAS_LIB_NAME: ${SCIPY_OPENBLAS_LIB_NAME}")
 
     if(EXISTS ${SCIPY_OPENBLAS_ENV})
         message(STATUS "Found ${SCIPY_OPENBLAS_ENV}")
