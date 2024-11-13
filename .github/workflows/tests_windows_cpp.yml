@@ -131,15 +131,19 @@ jobs:
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
 
+      - name: Add path to scipy-openblas32 to environment variable
+        run: |
+          $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)")"
+          echo "SCIPY_OPENBLAS32=$scipy_openblas32_path" >> $env:GITHUB_ENV
+
       - name: Build and run unit tests for code coverage
         run: |
-            for /f "tokens=*" %i in (python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path.replace('/', '\\\\'))") do`
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
-              -DSCIPY_OPENBLAS=%i `
+              -DSCIPY_OPENBLAS=$env:SCIPY_OPENBLAS32 `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
@@ -223,6 +227,11 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
+      
+      - name: Add path to scipy-openblas32 to environment variable
+        run: |
+          $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)")"
+          echo "SCIPY_OPENBLAS32=$scipy_openblas32_path" >> $env:GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -234,7 +243,7 @@ jobs:
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
-              -DSCIPY_OPENBLAS=%i `
+              -DSCIPY_OPENBLAS=$env:SCIPY_OPENBLAS32 `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF -T clangcl
