@@ -37,7 +37,7 @@ macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
         if(EXISTS ${SCIPY_OPENBLAS_WIN32})
             message(STATUS "Found WIN32 ${SCIPY_OPENBLAS_WIN32}")
         else()
-            message(FATAL_ERROR "\nUnable to find ${SCIPY_OPENBLAS_WIN32}. Please ensure it is correctly installed and available on path.")
+            message(FATAL_ERROR "\nUnable to find ${SCIPY_OPENBLAS}. Please ensure it is correctly installed and available on path.")
         endif()
     endif()
 
