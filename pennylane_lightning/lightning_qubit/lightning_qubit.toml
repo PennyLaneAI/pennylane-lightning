@@ -92,6 +92,10 @@ Prod                   = { properties = [ "differentiable" ] }
 Exp                    = { properties = [ "differentiable" ] }
 LinearCombination      = { properties = [ "differentiable" ] }
 
+[pennylane.operators.observables]
+
+Projector              = {}
+
 [measurement_processes]
 
 ExpectationMP          = {}
