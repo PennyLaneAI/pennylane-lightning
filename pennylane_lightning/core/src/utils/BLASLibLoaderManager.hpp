@@ -92,19 +92,27 @@ class BLASLibLoaderManager {
         "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
         "Frameworks/vecLib.framework/libLAPACK.dylib";
 #else
-    std::string get_scipylibs_path_worker_() {
+    static std::string get_scipylibs_path_worker_() {
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             return SCIPY_OPENBLAS32_LIB;
         }
         std::string scipyPathStr;
         std::string currentPathStr(getPath());
+#ifdef _MSC_VER
+        std::string site_packages_str("site-packages\\");
+#else
         std::string site_packages_str("site-packages/");
+#endif
 
         std::size_t str_pos = currentPathStr.find(site_packages_str);
         if (str_pos != std::string::npos) {
             scipyPathStr =
                 currentPathStr.substr(0, str_pos + site_packages_str.size());
+#ifdef _MSC_VER
+            scipyPathStr += "scipy_openblas32\\lib";
+#else
             scipyPathStr += "scipy_openblas32/lib";
+#endif
         }
 
         if (std::filesystem::exists(scipyPathStr)) {
@@ -119,7 +127,11 @@ class BLASLibLoaderManager {
             }
         } else {
             try {
+#ifdef _MSC_VER
+                scipyPathStr = currentPathStr + "..\\..\\scipy_openblas32\\lib";
+#else
                 scipyPathStr = currentPathStr + "../../scipy_openblas32/lib";
+#endif
                 // convert the relative path to absolute path
                 scipyPathStr =
                     std::filesystem::canonical(scipyPathStr).string();
