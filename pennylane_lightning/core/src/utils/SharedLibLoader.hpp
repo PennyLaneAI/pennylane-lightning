@@ -51,7 +51,7 @@ namespace Pennylane::Util {
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
-    void handle_{nullptr};
+    HANDLE_TYPE handle_{nullptr};
 
   public:
     SharedLibLoader();
@@ -62,10 +62,10 @@ class SharedLibLoader final {
 
     ~SharedLibLoader() noexcept { PL_DLCLOSE(handle_); }
 
-    void *getHandle() { return handle_; }
+    HANDLE_TYPE getHandle() { return handle_; }
 
-    void *getSymbol(const std::string &symbol) {
-        void *sym = PL_DLSYS(handle_, symbol.c_str());
+    HANDLE_TYPE getSymbol(const std::string &symbol) {
+        HANDLE_TYPE sym = PL_DLSYS(handle_, symbol.c_str());
         PL_ABORT_IF(!sym, PL_DLERROR());
         return sym;
     }
