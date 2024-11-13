@@ -30,6 +30,7 @@ macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
                 ${SCIPY_OPENBLAS}
                 ${SCIPY_OPENBLAS_ENV}
                 ${ACCELEARTE_FRAMEWORK}
+                NO_DEFAULT_PATH
                 ENV LD_LIBRARY_PATH
     )
 
