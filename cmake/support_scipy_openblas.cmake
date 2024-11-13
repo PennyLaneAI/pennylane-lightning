@@ -24,6 +24,7 @@ macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
         HINTS   ${SCIPY_OPENBLAS}/lib
                 ${SCIPY_OPENBLAS_ENV}/lib
                 ${Python_SITELIB}/scipy_openblas32/lib
+                ${SCIPY_OPENBLAS}
                 ${ACCELEARTE_FRAMEWORK}
                 ENV LD_LIBRARY_PATH
     )
