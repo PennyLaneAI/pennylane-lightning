@@ -144,6 +144,7 @@ jobs:
               -DENABLE_OPENMP=OFF `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
+              -DSCIPY_OPENBLAS32=$env:SCIPY_OPENBLAS32 `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
               -DENABLE_WARNINGS=OFF
             cmake --build .\Build --config RelWithDebInfo
@@ -232,16 +233,17 @@ jobs:
         run: |
           $scipy_openblas32_path = python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path)"
           echo "SCIPY_OPENBLAS32=${scipy_openblas32_path}" | Out-File -Append -FilePath $env:GITHUB_ENV
+          Get-Content $env:GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |
             Subst Z: (pwd)
             Set-Location -Path "Z:\"
-            for /f "tokens=*" %i in (python -c "import scipy_openblas32; import os; path=scipy_openblas32.get_lib_dir(); print(path.replace('/', '\\\\'))") do`
             cmake -BBuild `
               -DBUILD_TESTS=ON `
               -DENABLE_PYTHON=OFF `
               -DENABLE_GATE_DISPATCHER=OFF `
+              -DSCIPY_OPENBLAS32=$env:SCIPY_OPENBLAS32 `
               -DCMAKE_PREFIX_PATH=D:\a\pennylane-lightning\pennylane-lightning\Kokkos `
               -DENABLE_OPENMP=OFF `
               -DPL_BACKEND=${{ matrix.pl_backend }} `
