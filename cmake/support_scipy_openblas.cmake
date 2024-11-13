@@ -30,22 +30,9 @@ macro(get_scipy_openblas SCIPY_OPENBLASE_LIB_PATH)
                 ${SCIPY_OPENBLAS}
                 ${SCIPY_OPENBLAS_ENV}
                 ${ACCELEARTE_FRAMEWORK}
-                NO_DEFAULT_PATH
                 ENV LD_LIBRARY_PATH
     )
 
-    message(STATUS "Found SCIPY_OPENBLAS_LIB_NAME: ${SCIPY_OPENBLAS_LIB_NAME}")
-
-    if(EXISTS ${SCIPY_OPENBLAS_ENV})
-        message(STATUS "Found ${SCIPY_OPENBLAS_ENV}")
-    else()
-        string(REPLACE "/" "\\" SCIPY_OPENBLAS_WIN32 "${SCIPY_OPENBLAS_ENV}")
-        if(EXISTS ${SCIPY_OPENBLAS_WIN32})
-            message(STATUS "Found WIN32 ${SCIPY_OPENBLAS_WIN32}")
-        else()
-            message(FATAL_ERROR "\nUnable to find ${SCIPY_OPENBLAS_ENV}. Please ensure it is correctly installed and available on path.")
-        endif()
-    endif()
 
     if(NOT SCIPY_OPENBLAS_LIB)
         message(FATAL_ERROR "\nUnable to find ${SCIPY_OPENBLAS}. Please ensure it is correctly installed and available on path.")
