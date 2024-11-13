@@ -82,8 +82,13 @@ namespace Pennylane::Util {
  */
 class BLASLibLoaderManager {
   private:
+#ifdef _MSC_VER
+    static inline std::array<std::string, 5> priority_lib{
+        "stdc", "gcc.", "quadmath", "gfortran", "openblas.dll"};
+#else
     static inline std::array<std::string, 5> priority_lib{
         "stdc", "gcc.", "quadmath", "gfortran", "openblas"};
+#endif
     bool scipy_prefix_ = false;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs_;
     std::shared_ptr<SharedLibLoader> blasLib_;
@@ -98,21 +103,14 @@ class BLASLibLoaderManager {
         }
         std::string scipyPathStr;
         std::string currentPathStr(getPath());
-#ifdef _MSC_VER
-        std::string site_packages_str("site-packages\\");
-#else
+
         std::string site_packages_str("site-packages/");
-#endif
 
         std::size_t str_pos = currentPathStr.find(site_packages_str);
         if (str_pos != std::string::npos) {
             scipyPathStr =
                 currentPathStr.substr(0, str_pos + site_packages_str.size());
-#ifdef _MSC_VER
-            scipyPathStr += "scipy_openblas32\\lib";
-#else
             scipyPathStr += "scipy_openblas32/lib";
-#endif
         }
 
         if (std::filesystem::exists(scipyPathStr)) {
@@ -127,11 +125,7 @@ class BLASLibLoaderManager {
             }
         } else {
             try {
-#ifdef _MSC_VER
-                scipyPathStr = currentPathStr + "..\\..\\scipy_openblas32\\lib";
-#else
                 scipyPathStr = currentPathStr + "../../scipy_openblas32/lib";
-#endif
                 // convert the relative path to absolute path
                 scipyPathStr =
                     std::filesystem::canonical(scipyPathStr).string();
@@ -155,7 +149,7 @@ class BLASLibLoaderManager {
      *
      * @return std::string The path to the scipy_openblas32/lib package.
      */
-    std::string get_scipylibs_path_() { return get_scipylibs_path_worker_(); }
+    static std::string get_scipylibs_path_() { return get_scipylibs_path_worker_(); }
 #endif
     /**
      * @brief BLASLibLoaderManager.
