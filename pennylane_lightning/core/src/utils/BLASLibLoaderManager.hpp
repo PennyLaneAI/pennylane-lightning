@@ -52,7 +52,7 @@ inline const char *getPath() {
 #elif defined(_MSC_VER)
 inline std::string getPath() {
     char buffer[MAX_PATH];
-    GetModuleFileNameA(nullptr, buffer, MAX_PATH);
+    GetModuleFileName(nullptr, buffer, MAX_PATH);
     std::string fullPath(buffer);
     std::size_t pos = fullPath.find_last_of("\\/");
     return fullPath.substr(0, pos);

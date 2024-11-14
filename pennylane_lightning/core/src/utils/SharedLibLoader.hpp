@@ -27,10 +27,10 @@
 #define PL_DLCLOSE(NAME) dlclose(NAME)
 #define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
 #else
-#include <libloaderapi.h>
-#include <errhandlingapi.h>
+#define NOMINMAX
+#include <windows.h>
 #define HANDLE_TYPE HMODULE
-#define PL_DLOPEN(NAME, ARG) LoadLibraryA(NAME)
+#define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
 #define PL_DLERROR() GetLastError()
 #define PL_DLCLOSE(NAME) FreeLibrary(NAME)
 #define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
