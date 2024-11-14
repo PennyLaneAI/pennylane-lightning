@@ -146,9 +146,6 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     if isinstance(op, (Conditional, MidMeasureMP, PauliRot)):
         return False
 
-    if isinstance(op, Adjoint) and qml.operation.is_trainable(op):
-        return False
-
     if not qml.operation.is_trainable(op):
         return True
 
