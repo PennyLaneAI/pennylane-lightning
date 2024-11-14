@@ -78,7 +78,6 @@ from ._state_vector import LightningGPUStateVector
 _operations = frozenset(
     {
         "Identity",
-        "QubitStateVector",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
