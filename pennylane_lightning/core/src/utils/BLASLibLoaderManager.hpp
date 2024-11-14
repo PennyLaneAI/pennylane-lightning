@@ -52,7 +52,7 @@ inline const char *getPath() {
 #elif defined(_MSC_VER)
 inline std::string getPath() {
     char buffer[MAX_PATH];
-    GetModuleFileName(nullptr, buffer, MAX_PATH);
+    GetModuleFileNameA(nullptr, buffer, MAX_PATH);
     std::string fullPath(buffer);
     std::size_t pos = fullPath.find_last_of("\\/");
     return fullPath.substr(0, pos);
@@ -82,21 +82,14 @@ namespace Pennylane::Util {
  */
 class BLASLibLoaderManager {
   private:
-#ifdef _MSC_VER
-    static inline std::array<std::string, 5> priority_lib{
-        "stdc", "gcc.", "quadmath", "gfortran", "openblas.dll"};
-#else
-    static inline std::array<std::string, 5> priority_lib{
-        "stdc", "gcc.", "quadmath", "gfortran", "openblas"};
-#endif
+    static inline std::array<std::string, 6> priority_lib{
+        "stdc", "gcc.", "quadmath", "gfortran", "openblas.so", "openblas.dll"};
+
     bool scipy_prefix_ = false;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs_;
     std::shared_ptr<SharedLibLoader> blasLib_;
-#ifdef __APPLE__
-    const std::string scipy_lib_path_macos_str_ =
-        "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
-        "Frameworks/vecLib.framework/libLAPACK.dylib";
-#else
+
+#ifndef __APPLE__
     static std::string get_scipylibs_path_worker_() {
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             return SCIPY_OPENBLAS32_LIB;
@@ -104,13 +97,21 @@ class BLASLibLoaderManager {
         std::string scipyPathStr;
         std::string currentPathStr(getPath());
 
+#ifdef _MSC_VER
+        std::string site_packages_str("site-packages\\");
+#else
         std::string site_packages_str("site-packages/");
+#endif
 
         std::size_t str_pos = currentPathStr.find(site_packages_str);
         if (str_pos != std::string::npos) {
             scipyPathStr =
                 currentPathStr.substr(0, str_pos + site_packages_str.size());
+#ifdef _MSC_VER
+            scipyPathStr += "scipy_openblas32\\lib";
+#else
             scipyPathStr += "scipy_openblas32/lib";
+#endif
         }
 
         if (std::filesystem::exists(scipyPathStr)) {
@@ -125,7 +126,11 @@ class BLASLibLoaderManager {
             }
         } else {
             try {
+#ifdef _MSC_VER
+                scipyPathStr = currentPathStr + "..\\..\\scipy_openblas32\\lib";
+#else
                 scipyPathStr = currentPathStr + "../../scipy_openblas32/lib";
+#endif
                 // convert the relative path to absolute path
                 scipyPathStr =
                     std::filesystem::canonical(scipyPathStr).string();
@@ -204,7 +209,9 @@ class BLASLibLoaderManager {
     explicit BLASLibLoaderManager() {
 #if defined(__APPLE__)
         // On macOS, use the default BLAS library path.
-        blasLib_ = std::make_shared<SharedLibLoader>(scipy_lib_path_macos_str_);
+        blasLib_ = std::make_shared<SharedLibLoader>(
+            "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
+            "Frameworks/vecLib.framework/libLAPACK.dylib");
 #else
         std::string scipyPathStr = get_scipylibs_path_();
         init_helper_(scipyPathStr);
