@@ -230,10 +230,12 @@ class LightningGPU(LightningBase):
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
-    # TODO: remove this when customizable multiple decomposition pathways are implemented
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when customizable multiple decomposition pathways are implemented
     _to_matrix_ops = _to_matrix_ops
 
-    # This `config` is used in Catalyst-Frontend
+    # This configuration file declares capabilities of the device
     config_filepath = Path(__file__).parent / "lightning_gpu.toml"
 
     def __init__(  # pylint: disable=too-many-arguments

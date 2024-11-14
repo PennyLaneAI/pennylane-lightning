@@ -223,17 +223,19 @@ class LightningQubit(LightningBase):
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
 
-    # This `config` is used in Catalyst-Frontend
+    # This configuration file declares the device capabilities
     config_filepath = Path(__file__).parent / "lightning_qubit.toml"
 
-    # Keyword arguments passed to the backend device initialization
+    # Keyword arguments passed to backend device initialization in a qjit-compiled workflow
     device_kwargs = {
         "mcmc": "_mcmc",
         "num_burnin": "_num_burnin",
         "kernel_name": "_kernel_name",
     }
 
-    # TODO: remove this when customizable multiple decomposition pathways are implemented
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when customizable multiple decomposition pathways are implemented
     _to_matrix_ops = _to_matrix_ops
 
     def __init__(  # pylint: disable=too-many-arguments

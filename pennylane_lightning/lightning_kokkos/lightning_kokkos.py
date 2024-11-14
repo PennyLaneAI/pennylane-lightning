@@ -209,10 +209,12 @@ class LightningKokkos(LightningBase):
     _backend_info = backend_info if LK_CPP_BINARY_AVAILABLE else None
     kokkos_config = {}
 
-    # This `config` is used in Catalyst-Frontend
+    # The configuration file declares the capabilities of the device
     config_filepath = Path(__file__).parent / "lightning_kokkos.toml"
 
-    # TODO: remove this when customizable multiple decomposition pathways are implemented
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when customizable multiple decomposition pathways are implemented
     _to_matrix_ops = _to_matrix_ops
 
     def __init__(  # pylint: disable=too-many-arguments
