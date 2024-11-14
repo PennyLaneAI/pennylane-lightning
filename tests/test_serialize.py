@@ -84,7 +84,6 @@ def test_wrong_device_name():
         QuantumScriptSerializer("thunder.qubit")
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 @pytest.mark.parametrize(
     "obs,obs_type",
     [
@@ -153,7 +152,6 @@ def test_obs_returns_expected_type(obs, obs_type):
     assert isinstance(serializer._ob(obs), obs_type)
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 class TestSerializeObs:
     """Tests for the _observables function"""
 

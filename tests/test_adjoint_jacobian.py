@@ -194,7 +194,6 @@ class TestAdjointJacobian:
             ):
                 dev.adjoint_jacobian(tape)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
@@ -395,7 +394,6 @@ class TestAdjointJacobian:
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -573,7 +571,6 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -815,8 +812,8 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="N-controlled generator operations only implemented in lightning.qubit",
+        device_name == "lightning.kokkos",
+        reason="N-controlled generator operations only implemented in lightning.qubit and lightning.gpu",
     )
     @pytest.mark.parametrize(
         "operation",
@@ -1112,7 +1109,6 @@ def circuit_ansatz(params, wires):
     qml.RX(params[29], wires=wires[1])
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1136,7 +1132,6 @@ def test_tape_qchem(tol):
     assert np.allclose(res, ref, tol)
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1552,7 +1547,7 @@ def test_qubit_unitary(n_targets):
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 
@@ -1594,7 +1589,7 @@ def test_diff_qubit_unitary(n_targets):
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 

@@ -321,7 +321,6 @@ class TestExpval:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize(
         "obs, coeffs, res",
         [

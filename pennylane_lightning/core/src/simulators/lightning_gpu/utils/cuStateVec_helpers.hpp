@@ -119,4 +119,46 @@ inline std::size_t compute_local_index(const std::size_t index,
     return local_index;
 }
 
+/**
+ * @brief Fill permutation vector of size 2^(ctrl_size + tgt_size) with trivial
+ * permutation [0, 1, 2...]
+ *
+ * @param ctrl_size Number of control wires
+ * @param tgt_size Number of target wires
+ *
+ * @return permutations Vector of trivial permutations
+ */
+inline std::vector<custatevecIndex_t>
+generateTrivialPermutation(const std::size_t ctrl_size,
+                           const std::size_t tgt_size) {
+    std::vector<custatevecIndex_t> permutations(
+        Pennylane::Util::exp2(ctrl_size + tgt_size));
+    std::iota(permutations.begin(), permutations.end(), 0);
+    return permutations;
+}
+
+/**
+ * @brief Calculate the starting index for target in controlled-operations for
+ * permutation matrix
+ *
+ * @param ctrl_size Number of control wires
+ * @param tgt_size Number of target wires
+ * @param ctrl_values Control values
+ *
+ * @return index starting index for target in combined control/target wires
+ */
+inline std::size_t
+controlPermutationMatrixIndex(const std::size_t ctrl_size,
+                              const std::size_t tgt_size,
+                              const std::vector<bool> &ctrl_values) {
+    std::size_t i = 0;
+    std::size_t index =
+        std::accumulate(ctrl_values.begin(), ctrl_values.end(), std::size_t{0},
+                        [&i, ctrl_size, tgt_size](std::size_t acc, bool value) {
+                            return acc | (static_cast<std::size_t>(value)
+                                          << (ctrl_size + tgt_size - 1 - i++));
+                        });
+    return index;
+}
+
 } // namespace Pennylane::LightningGPU::Util
