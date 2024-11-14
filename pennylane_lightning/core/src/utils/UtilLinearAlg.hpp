@@ -63,7 +63,7 @@ void compute_diagonalizing_gates(int n, int lda,
                                  std::vector<std::complex<T>> &unitary) {
     auto &blasLoader = BLASLibLoaderManager::getInstance();
     auto scipy_prefix = blasLoader.getScipyPrefix();
-    auto blasLibLoader = blasLoader.getBLASLib();
+    auto *blasLibLoader = blasLoader.getBLASLib();
 
     eigenVals.clear();
     eigenVals.resize(n);
