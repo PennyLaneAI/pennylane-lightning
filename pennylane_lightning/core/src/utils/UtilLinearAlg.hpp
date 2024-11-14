@@ -15,14 +15,12 @@
 
 /**
  * @file
- * LAPACK wrapper functions declarations.
+ * LAPACK/BLAS wrapper functions declarations.
  */
 #pragma once
 
 #include <algorithm>
 #include <complex>
-#include <cstdlib>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -52,8 +50,6 @@ namespace Pennylane::Util {
  * @param Ah Hermitian matrix to be decomposed.
  * @param eigenVals eigenvalue results.
  * @param unitaries unitary result.
- * @param blasLibLoader Pointer to a SharedLibLoader loader.
- * @param scipy_prefix Flag to indicate if the library is scipy_openblas.
  */
 
 template <typename T>

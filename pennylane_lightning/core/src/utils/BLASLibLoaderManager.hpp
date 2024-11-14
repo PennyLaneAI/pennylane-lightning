@@ -14,11 +14,10 @@
 
 /**
  * @file
- * BLAS Lib dynamic loader manager.
+ * LAPACK/BLAS Lib dynamic loader manager.
  */
 #pragma once
 
-#include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <filesystem>
@@ -68,7 +67,7 @@ namespace Pennylane::Util {
  * This class is a singleton that manages the dynamic loading of BLAS libraries.
  * It will search for the BLAS libraries in the given path, or in the default
  * locations if no path is provided. The default locations are:
- * - The path provided by the SCIPY_LIBS_PATH macro.
+ * - The path provided by the SCIPY_OPENBLAS32_LIB macro.
  * - The path provided by the get_scipylibs_path() function.
  *
  * The class will search for the libraries in the following order:
