@@ -156,6 +156,7 @@ _operations = frozenset(
         "Adjoint(DoubleExcitationPlus)",
         "Adjoint(MultiRZ)",
         "Adjoint(GlobalPhase)",
+        "Adjoint(PhaseShift)",
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
