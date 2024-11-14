@@ -19,13 +19,14 @@
  */
 #pragma once
 
-#include "SharedLibLoader.hpp"
 #include <algorithm>
 #include <complex>
 #include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "BLASLibLoaderManager.hpp"
 
 /// @cond DEV
 namespace {
@@ -59,9 +60,11 @@ template <typename T>
 void compute_diagonalizing_gates(int n, int lda,
                                  const std::vector<std::complex<T>> &Ah,
                                  std::vector<T> &eigenVals,
-                                 std::vector<std::complex<T>> &unitary,
-                                 SharedLibLoader *blasLibLoader,
-                                 bool scipy_prefix) {
+                                 std::vector<std::complex<T>> &unitary) {
+    auto &blasLoader = BLASLibLoaderManager::getInstance();
+    auto scipy_prefix = blasLoader.getScipyPrefix();
+    auto blasLibLoader = blasLoader.getBLASLib();
+
     eigenVals.clear();
     eigenVals.resize(n);
     unitary = std::vector<std::complex<T>>(n * n, {0, 0});

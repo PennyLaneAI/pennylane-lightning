@@ -17,7 +17,6 @@
 #include <complex>
 #include <vector>
 
-#include "BLASLibLoaderManager.hpp"
 #include "TestHelpers.hpp"
 #include "UtilLinearAlg.hpp"
 #include <catch2/catch.hpp>
@@ -32,7 +31,6 @@ using namespace Pennylane::Util;
 TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
                    float, double) {
     SECTION("For complex type") {
-        auto &blasLoader = Util::BLASLibLoaderManager::getInstance();
         std::vector<std::complex<TestType>> A{
             {-6.0, 0.0}, {2.0, 1.0}, {2.0, -1.0}, {0.0, 0.0}};
         std::vector<TestType> expectedEigenVals = {-6.741657, 0.741657};
@@ -45,9 +43,7 @@ TEMPLATE_TEST_CASE("Util::compute_diagonalizing_gates", "[Util][LinearAlgebra]",
         std::size_t LDA = 2;
         std::vector<TestType> eigenVals;
         std::vector<std::complex<TestType>> Unitaries;
-        compute_diagonalizing_gates(N, LDA, A, eigenVals, Unitaries,
-                                    blasLoader.getBLASLib(),
-                                    blasLoader.getScipyPrefix());
+        compute_diagonalizing_gates(N, LDA, A, eigenVals, Unitaries);
 
         for (std::size_t i = 0; i < expectedEigenVals.size(); i++) {
             CHECK(eigenVals[i] == Approx(expectedEigenVals[i]).margin(1e-6));

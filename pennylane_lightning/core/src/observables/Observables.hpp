@@ -23,7 +23,6 @@
 #include "Error.hpp"
 #include "Util.hpp"
 
-#include "BLASLibLoaderManager.hpp"
 #include "UtilLinearAlg.hpp"
 
 namespace Pennylane::Observables {
@@ -232,7 +231,6 @@ class HermitianObsBase : public Observable<StateVectorT> {
     }
 
     void decompose_() const {
-        auto &blasLoader = Util::BLASLibLoaderManager::getInstance();
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
         std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
@@ -251,8 +249,7 @@ class HermitianObsBase : public Observable<StateVectorT> {
 
         Pennylane::Util::compute_diagonalizing_gates<PrecisionT>(
             Util::exp2(wires_.size()), Util::exp2(wires_.size()), mat,
-            eigenVals, unitary, blasLoader.getBLASLib(),
-            blasLoader.getScipyPrefix());
+            eigenVals, unitary);
 
         unitary_.resize(unitary.size());
         std::transform(
