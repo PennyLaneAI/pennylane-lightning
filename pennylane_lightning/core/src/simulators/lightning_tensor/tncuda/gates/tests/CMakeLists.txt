@@ -15,10 +15,10 @@ FetchAndIncludeCatch()
 ################################################################################
 
 add_library(${PL_BACKEND}_gates_tests INTERFACE)
-target_link_libraries(${PL_BACKEND}_gates_tests INTERFACE     Catch2::Catch2
-                                                                ${PL_BACKEND}_gates
-                                                                ${PL_BACKEND}
-                                                                )
+target_link_libraries(${PL_BACKEND}_gates_tests INTERFACE Catch2::Catch2 
+                      ${PL_BACKEND}_gates
+                      ${PL_BACKEND}
+                        )
 
 ProcessTestOptions(${PL_BACKEND}_gates_tests)
 
@@ -27,9 +27,12 @@ target_sources(${PL_BACKEND}_gates_tests INTERFACE runner_${PL_BACKEND}_gates.cp
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_MPSTNCuda_NonParam.cpp
+set(TEST_SOURCES    
+                    Test_MPSTNCuda_NonParam.cpp
                     Test_ExaTNCuda_NonParam.cpp
-                    Test_MPSTNCuda_Param.cpp)
+                    Test_MPSTNCuda_Param.cpp
+                    Test_ExaTNCuda_Param.cpp
+                    )
 
 add_executable(${PL_BACKEND}_gates_test_runner ${TEST_SOURCES})
 target_link_libraries(${PL_BACKEND}_gates_test_runner PRIVATE ${PL_BACKEND}_gates_tests)
