@@ -204,6 +204,66 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
     }
 }
 
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyControlledMatrix with a std::vector",
+                           "[applyControlledMatrix]", (StateVectorKokkos),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
+
+    SECTION("Test wrong matrix size") {
+        std::vector<ComplexT> m(7, 0.0);
+        const std::size_t num_qubits = 4;
+        VectorT st_data =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+        StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
+                                  st_data.size());
+        REQUIRE_THROWS_WITH(
+            state_vector.applyControlledMatrix(m, {2}, {true}, {0, 1}),
+            Catch::Contains(
+                "The size of matrix does not match with the given"));
+    }
+
+    SECTION("Test wrong number of wires") {
+        std::vector<ComplexT> m(8, 0.0);
+        const std::size_t num_qubits = 4;
+        VectorT st_data =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
+                                  st_data.size());
+        REQUIRE_THROWS_WITH(
+            state_vector.applyControlledMatrix(m, {2}, {true}, {0}),
+            Catch::Contains(
+                "The size of matrix does not match with the given"));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyControlledMatrix with a pointer",
+                           "[applyControlledMatrix]", (StateVectorKokkos),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    using ComplexT = typename StateVectorT::ComplexT;
+    using VectorT = TestVector<std::complex<PrecisionT>>;
+    std::mt19937_64 re{1337};
+
+    SECTION("Test wrong matrix") {
+        std::vector<ComplexT> m(8, 0.0);
+        const std::size_t num_qubits = 4;
+        VectorT st_data =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+        StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
+                                  st_data.size());
+        REQUIRE_THROWS_WITH(state_vector.applyControlledMatrix(m.data(), {0}, {true}, {}),
+                            Catch::Contains("must be larger than 0"));
+    }
+}
+
+
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
                            "[applyOperations invalid arguments]",
                            (StateVectorKokkos), (float, double)) {
@@ -277,6 +337,11 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
 
         PL_REQUIRE_THROWS_MATCHES(
             state_vector.applyOperation("GlobalPhaseShift", {0}, false, {0.0}),
+            LightningException,
+            "Operation does not exist for GlobalPhaseShift");
+
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyOperation("GlobalPhaseShift", {0}, {false}, {1}, false, {0.0}),
             LightningException,
             "Operation does not exist for GlobalPhaseShift");
     }
