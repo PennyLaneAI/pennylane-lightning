@@ -23,7 +23,7 @@ env:
   ARCHS: 'arm64'
   PYTHON3_MIN_VERSION: "10"
   PYTHON3_MAX_VERSION: "12"
-  MACOSX_DEPLOYMENT_TARGET: 12.0
+  MACOSX_DEPLOYMENT_TARGET: 13.0
 
 concurrency:
   group: wheel_macos_arm64-${{ github.ref }}
@@ -63,7 +63,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-12]
+        os: [macos-13]
         arch: [arm64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{fromJson(needs.mac-set-matrix-arm.outputs.python_version)}}
@@ -143,6 +143,8 @@ jobs:
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
         cibw_build: ${{ fromJson(needs.mac-set-matrix-arm.outputs.python_version) }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
@@ -153,9 +155,8 @@ jobs:
           name: macOS-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
-      - name: Upload wheels to PyPI
+      - name: Upload wheels to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ ( matrix.pl_backend == 'lightning_qubit' ) && secrets.TEST_PYPI_API_TOKEN || secrets.TEST_PYPI_LKOKKOS_TOKEN }}
+          verbose: true
           repository-url: https://test.pypi.org/legacy/

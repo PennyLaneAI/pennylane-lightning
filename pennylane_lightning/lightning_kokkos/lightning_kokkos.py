@@ -38,7 +38,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
@@ -67,7 +67,6 @@ from ._state_vector import LightningKokkosStateVector
 _operations = frozenset(
     {
         "Identity",
-        "QubitStateVector",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -138,7 +137,6 @@ _observables = frozenset(
         "Identity",
         "Projector",
         "SparseHamiltonian",
-        "Hamiltonian",
         "LinearCombination",
         "Sum",
         "SProd",
@@ -173,11 +171,6 @@ def adjoint_observables(obs: Operator) -> bool:
     when using the adjoint differentiation method."""
     if isinstance(obs, qml.Projector):
         return False
-
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
 
     if isinstance(obs, SProd):
         return adjoint_observables(obs.base)
@@ -534,7 +527,7 @@ class LightningKokkos(LightningBase):
         #   lib.<system>-<architecture>-<python-id>"
         # To avoid mismatching the folder name, we search for the shared object instead.
         # TODO: locate where the naming convention of the folder is decided and replicate it here.
-        editable_mode_path = package_root.parent.parent / "build"
+        editable_mode_path = package_root.parent.parent / "build_lightning_kokkos"
         for path, _, files in os.walk(editable_mode_path):
             if lib_name in files:
                 lib_location = (Path(path) / lib_name).as_posix()

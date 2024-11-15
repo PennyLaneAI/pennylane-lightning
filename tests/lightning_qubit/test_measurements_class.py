@@ -799,8 +799,8 @@ class TestControlledOps:
                     assert np.allclose(result, expected, tol * 10)
 
     @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.tensor"),
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        device_name in ("lightning.kokkos"),
+        reason="N-controlled operations are not implemented in lightning.kokkos.",
     )
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
         n_qubits = 10
@@ -957,11 +957,11 @@ class TestExpOperatorArithmetic:
 @pytest.mark.parametrize(
     "op,par,wires,expected",
     [
-        (qml.QubitStateVector, [0, 1], [1], [1, -1]),
-        (qml.QubitStateVector, [0, 1], [0], [-1, 1]),
-        (qml.QubitStateVector, [1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], [1], [1, 0]),
-        (qml.QubitStateVector, [1j / 2.0, np.sqrt(3) / 2.0], [1], [1, -0.5]),
-        (qml.QubitStateVector, [(2 - 1j) / 3.0, 2j / 3.0], [0], [1 / 9.0, 1]),
+        (qml.StatePrep, [0, 1], [1], [1, -1]),
+        (qml.StatePrep, [0, 1], [0], [-1, 1]),
+        (qml.StatePrep, [1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], [1], [1, 0]),
+        (qml.StatePrep, [1j / 2.0, np.sqrt(3) / 2.0], [1], [1, -0.5]),
+        (qml.StatePrep, [(2 - 1j) / 3.0, 2j / 3.0], [0], [1 / 9.0, 1]),
     ],
 )
 def test_state_vector_2_qubit_subset(tol, op, par, wires, expected, lightning_sv):

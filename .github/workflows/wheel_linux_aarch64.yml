@@ -37,7 +37,7 @@ jobs:
     needs: [set_wheel_build_matrix]
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [pl-4-core-large-runner]
         arch: [aarch64]
         exec_model: ${{ fromJson(needs.set_wheel_build_matrix.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.set_wheel_build_matrix.outputs.kokkos_version) }}
@@ -94,7 +94,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [pl-4-core-large-runner]
         arch: [aarch64]
         pl_backend: ["lightning_kokkos", "lightning_qubit"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
@@ -201,6 +201,8 @@ jobs:
         pl_backend: ["lightning_qubit", "lightning_kokkos"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     if: |
       github.event_name == 'release' ||
       github.ref == 'refs/heads/master'
@@ -211,9 +213,8 @@ jobs:
           name: ${{ runner.os }}-wheels-${{ matrix.pl_backend }}-${{ fromJson('{ "cp310-*":"py310","cp311-*":"py311","cp312-*":"py312" }')[matrix.cibw_build] }}-${{ matrix.arch }}.zip
           path: dist
 
-      - name: Upload wheels to PyPI
+      - name: Upload wheels to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          user: __token__
-          password: ${{ ( matrix.pl_backend == 'lightning_qubit' ) && secrets.TEST_PYPI_API_TOKEN || secrets.TEST_PYPI_LKOKKOS_TOKEN }}
+          verbose: true
           repository-url: https://test.pypi.org/legacy/
