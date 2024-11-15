@@ -441,7 +441,7 @@ class StateVectorKokkos final
             Kokkos::parallel_for(
                 "multiQubitOpFunctor",
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
-                    .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
+                    .set_scratch_size(1, Kokkos::PerTeam(scratch_size)),
                 multiQubitOpFunctor<PrecisionT>(*data_, num_qubits,
                                                 matrix_trans, wires));
             break;
@@ -552,7 +552,7 @@ class StateVectorKokkos final
             Kokkos::parallel_for(
                 "multiNCQubitOpFunctor",
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
-                    .set_scratch_size(0, Kokkos::PerTeam(scratch_size)),
+                    .set_scratch_size(1, Kokkos::PerTeam(scratch_size)),
                 NCMultiQubitOpFunctor<PrecisionT>(
                     *data_, num_qubits, matrix_trans, controlled_wires,
                     controlled_values, wires));

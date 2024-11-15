@@ -73,8 +73,8 @@ template <class Precision> struct multiQubitOpFunctor {
     KOKKOS_INLINE_FUNCTION
     void operator()(const MemberType &teamMember) const {
         const std::size_t k = teamMember.league_rank();
-        ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
-        ScratchViewSizeT indices(teamMember.team_scratch(0), dim);
+        ScratchViewComplex coeffs_in(teamMember.team_scratch(1), dim);
+        ScratchViewSizeT indices(teamMember.team_scratch(1), dim);
         if (!teamMember.team_rank()) {
             std::size_t idx = (k & parity(0));
             for (std::size_t i = 1; i < parity.size(); i++) {
@@ -154,8 +154,8 @@ template <class Precision> struct NCMultiQubitOpFunctor {
     KOKKOS_INLINE_FUNCTION
     void operator()(const MemberType &teamMember) const {
         const std::size_t k = teamMember.league_rank();
-        ScratchViewComplex coeffs_in(teamMember.team_scratch(0), dim);
-        ScratchViewSizeT indices_scratch(teamMember.team_scratch(0), dim);
+        ScratchViewComplex coeffs_in(teamMember.team_scratch(1), dim);
+        ScratchViewSizeT indices_scratch(teamMember.team_scratch(1), dim);
         const std::size_t offset = parity_2_offset(parity, k);
 
         if (!teamMember.team_rank()) {
