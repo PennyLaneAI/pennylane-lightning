@@ -451,15 +451,13 @@ class QuantumScriptSerializer:
                 if isinstance(single_op, qml.QubitUnitary):
                     params.append([0.0])
                     mats.append(matrix(single_op))
-                elif inverse and not hasattr(self.sv_type, single_op.base.name):
-                    params.append([])
-                    mats.append(matrix(single_op))
-                elif not inverse and not hasattr(self.sv_type, name):
-                    params.append([])
-                    mats.append(matrix(single_op))
                 else:
-                    params.append(single_op.parameters)
-                    mats.append([])
+                    if hasattr(self.sv_type, single_op.base.name if inverse else name):
+                        params.append(single_op.parameters)
+                        mats.append([])
+                    else:
+                        params.append([])
+                        mats.append(matrix(single_op))
 
                 controlled_values.append(controlled_values_list)
                 controlled_wires.append(
