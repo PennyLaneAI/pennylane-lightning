@@ -134,11 +134,11 @@ class StateVectorKokkos final
      *
      * @param index Index of the target element.
      */
-    void setBasisState(const std::size_t index) {
+    void setBasisState(std::size_t index) {
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            sv_view.size(), KOKKOS_LAMBDA(const std::size_t i) {
+            sv_view.size(), KOKKOS_LAMBDA(std::size_t i) {
                 sv_view(i) =
                     (i == index) ? ComplexT{1.0, 0.0} : ComplexT{0.0, 0.0};
             });
@@ -197,7 +197,7 @@ class StateVectorKokkos final
         KokkosVector sv_view =
             getView(); // circumvent error capturing this with KOKKOS_LAMBDA
         Kokkos::parallel_for(
-            indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
+            indices.size(), KOKKOS_LAMBDA(std::size_t i) {
                 sv_view(d_indices[i]) = d_values[i];
             });
     }
@@ -237,7 +237,7 @@ class StateVectorKokkos final
         auto d_wires = vector2view(wires);
         initZeros();
         Kokkos::parallel_for(
-            num_state, KOKKOS_LAMBDA(const std::size_t i) {
+            num_state, KOKKOS_LAMBDA(std::size_t i) {
                 std::size_t index{0U};
                 for (std::size_t w = 0; w < d_wires.size(); w++) {
                     const std::size_t bit = (i & (one << w)) >> w;
@@ -368,7 +368,7 @@ class StateVectorKokkos final
      * @param word A Pauli word (e.g. "XYYX").
      */
     void applyPauliRot(const std::vector<std::size_t> &wires,
-                       const bool inverse,
+                     bool inverse,
                        const std::vector<PrecisionT> &params,
                        const std::string &word) {
         PL_ABORT_IF_NOT(wires.size() == word.size(),
@@ -384,7 +384,7 @@ class StateVectorKokkos final
         auto two2N = BaseType::getLength();
         auto dataview = getView();
         Kokkos::parallel_for(
-            two2N, KOKKOS_LAMBDA(const std::size_t i) {
+            two2N, KOKKOS_LAMBDA(std::size_t i) {
                 dataview(i) *= (inverse) ? conj(diagonal_(i)) : diagonal_(i);
             });
     }
@@ -399,16 +399,16 @@ class StateVectorKokkos final
     void applyMultiQubitOp(const KokkosVector matrix,
                            const std::vector<std::size_t> &wires,
                            bool inverse = false) {
-        auto &&num_qubits = this->getNumQubits();
-        std::size_t two2N = std::exp2(num_qubits - wires.size());
-        std::size_t dim = std::exp2(wires.size());
+        const std::size_t num_qubits = this->getNumQubits();
+        const std::size_t two2N = exp2(num_qubits - wires.size());
+        const std::size_t dim = exp2(wires.size());
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 
         if (inverse) {
             Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d({0, 0}, {dim, dim});
             Kokkos::parallel_for(
                 policy_2d,
-                KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
+                KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                     matrix_trans(i + j * dim) = conj(matrix(i * dim + j));
                 });
         } else {
@@ -510,17 +510,16 @@ class StateVectorKokkos final
                              const std::vector<std::size_t> &wires,
                              bool inverse = false) {
 
-        auto &&num_qubits = this->getNumQubits();
-        std::size_t two2N =
-            std::exp2(num_qubits - wires.size() - controlled_wires.size());
-        std::size_t dim = std::exp2(wires.size());
+        const std::size_t num_qubits = this->getNumQubits();
+        const std::size_t two2N = exp2(num_qubits - wires.size() - controlled_wires.size());
+        const std::size_t dim = exp2(wires.size());
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 
         if (inverse) {
             Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d({0, 0}, {dim, dim});
             Kokkos::parallel_for(
                 policy_2d,
-                KOKKOS_LAMBDA(const std::size_t i, const std::size_t j) {
+                KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                     matrix_trans(i + j * dim) =
                         Kokkos::conj(matrix(i * dim + j));
                 });

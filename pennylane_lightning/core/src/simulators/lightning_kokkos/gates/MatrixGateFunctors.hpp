@@ -85,7 +85,7 @@ template <class Precision> struct multiQubitOpFunctor {
             coeffs_in(0) = arr(idx);
 
             Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, 1, dim),
-                                 [&](const std::size_t inner_idx) {
+                                 [&](std::size_t inner_idx) {
                                      std::size_t index = indices(0);
                                      for (std::size_t i = 0; i < wires.size();
                                           i++) {
@@ -99,7 +99,7 @@ template <class Precision> struct multiQubitOpFunctor {
         }
         teamMember.team_barrier();
         Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(teamMember, dim), [&](const std::size_t i) {
+            Kokkos::TeamThreadRange(teamMember, dim), [&](std::size_t i) {
                 const auto idx = indices(i);
                 arr(idx) = 0.0;
                 const std::size_t base_idx = i * dim;
@@ -161,7 +161,7 @@ template <class Precision> struct NCMultiQubitOpFunctor {
 
         if (teamMember.team_rank() == 0) {
             Kokkos::parallel_for(Kokkos::ThreadVectorRange(teamMember, dim),
-                                 [&](const std::size_t inner_idx) {
+                                 [&](std::size_t inner_idx) {
                                      coeffs_in(inner_idx) =
                                          arr(indices(inner_idx) + offset);
                                      indices_scratch(inner_idx) =
@@ -170,7 +170,7 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         }
         teamMember.team_barrier();
         Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(teamMember, dim), [&](const std::size_t i) {
+            Kokkos::TeamThreadRange(teamMember, dim), [&](std::size_t i) {
                 const auto idx = indices_scratch(i) + offset;
                 arr(idx) = 0.0;
                 const std::size_t base_idx = i * dim;
@@ -209,7 +209,7 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
@@ -253,7 +253,7 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         const std::size_t offset = parity_2_offset(parity, k);
         std::size_t i0 = indices(0B00);
         std::size_t i1 = indices(0B01);
@@ -303,7 +303,7 @@ template <class PrecisionT> struct apply2QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         const std::size_t i00 = ((k << 2U) & parity_high) |
                                 ((k << 1U) & parity_middle) | (k & parity_low);
         const std::size_t i10 = i00 | rev_wire1_shift;
@@ -358,7 +358,7 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         const std::size_t offset = parity_2_offset(parity, k);
         std::size_t i00 = indices(0B00);
         std::size_t i01 = indices(0B01);
@@ -412,7 +412,7 @@ template <class PrecisionT> struct apply3QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         std::size_t i000 = (k & parity(0));
         for (std::size_t i = 1; i < parity.size(); i++) {
             i000 |= ((k << i) & parity(i));
@@ -477,7 +477,7 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         const std::size_t offset = parity_2_offset(parity, k);
         std::size_t i000 = indices(0B000);
         std::size_t i001 = indices(0B001);
@@ -543,7 +543,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         std::size_t i0000 = (k & parity(0));
         for (std::size_t i = 1; i < parity.size(); i++) {
             i0000 |= ((k << i) & parity(i));
@@ -648,7 +648,7 @@ template <class PrecisionT> struct apply5QubitOpFunctor {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k) const {
+    void operator()(std::size_t k) const {
         std::size_t i00000 = (k & parity(0));
         for (std::size_t i = 1; i < parity.size(); i++) {
             i00000 |= ((k << i) & parity(i));
