@@ -50,7 +50,6 @@ T                      = { properties = [ "invertible", "controllable", "differe
 
 BasisState             = {}
 MultiControlledX       = {}
-QubitStateVector       = {}
 StatePrep              = {}
 ControlledQubitUnitary = {}
 
