@@ -42,7 +42,7 @@ macro(FindCatalyst target_name)
                 ${HEADER_NAME}
                 URL                 https://raw.githubusercontent.com/PennyLaneAI/catalyst/${CATALYST_GIT_TAG}/runtime/lib/backend/common/${HEADER}
                 DOWNLOAD_NO_EXTRACT True
-                SOURCE_DIR          include
+                SOURCE_DIR          ../../include
             )
 
             FetchContent_MakeAvailable(${HEADER_NAME})
@@ -62,13 +62,13 @@ macro(FindCatalyst target_name)
                 ${HEADER_NAME}
                 URL                 https://raw.githubusercontent.com/PennyLaneAI/catalyst/${CATALYST_GIT_TAG}/runtime/include/${HEADER}
                 DOWNLOAD_NO_EXTRACT True
-                SOURCE_DIR          include
+                SOURCE_DIR          ../../include
             )
 
             FetchContent_MakeAvailable(${HEADER_NAME})
         endforeach()
 
-        target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/include)
+        target_include_directories(${target_name} PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../../include)
 
     endif()
 endmacro()
