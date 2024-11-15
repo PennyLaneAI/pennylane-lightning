@@ -130,7 +130,6 @@ class applyNC1Functor<PrecisionT, FuncT, true> {
 
 template <class PrecisionT, class FuncT>
 class applyNC1Functor<PrecisionT, FuncT, false> {
-
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
     const FuncT core_function;
     const std::size_t rev_wire;
