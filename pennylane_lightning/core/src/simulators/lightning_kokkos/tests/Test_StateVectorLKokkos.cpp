@@ -204,9 +204,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyControlledMatrix with a std::vector",
-                           "[applyControlledMatrix]", (StateVectorKokkos),
-                           (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE(
+    "StateVectorKokkos::applyControlledMatrix with a std::vector",
+    "[applyControlledMatrix]", (StateVectorKokkos), (float, double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -241,9 +241,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyControlledMatrix with a std:
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyControlledMatrix with a pointer",
-                           "[applyControlledMatrix]", (StateVectorKokkos),
-                           (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE(
+    "StateVectorKokkos::applyControlledMatrix with a pointer",
+    "[applyControlledMatrix]", (StateVectorKokkos), (float, double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -258,11 +258,11 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyControlledMatrix with a poin
 
         StateVectorT state_vector(reinterpret_cast<ComplexT *>(st_data.data()),
                                   st_data.size());
-        REQUIRE_THROWS_WITH(state_vector.applyControlledMatrix(m.data(), {0}, {true}, {}),
-                            Catch::Contains("must be larger than 0"));
+        REQUIRE_THROWS_WITH(
+            state_vector.applyControlledMatrix(m.data(), {0}, {true}, {}),
+            Catch::Contains("must be larger than 0"));
     }
 }
-
 
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
                            "[applyOperations invalid arguments]",
@@ -341,7 +341,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyOperations",
             "Operation does not exist for GlobalPhaseShift");
 
         PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyOperation("GlobalPhaseShift", {0}, {false}, {1}, false, {0.0}),
+            state_vector.applyOperation("GlobalPhaseShift", {0}, {false}, {1},
+                                        false, {0.0}),
             LightningException,
             "Operation does not exist for GlobalPhaseShift");
     }

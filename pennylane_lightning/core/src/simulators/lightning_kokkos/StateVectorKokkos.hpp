@@ -367,8 +367,7 @@ class StateVectorKokkos final
      * @param params Rotation angle.
      * @param word A Pauli word (e.g. "XYYX").
      */
-    void applyPauliRot(const std::vector<std::size_t> &wires,
-                     bool inverse,
+    void applyPauliRot(const std::vector<std::size_t> &wires, bool inverse,
                        const std::vector<PrecisionT> &params,
                        const std::string &word) {
         PL_ABORT_IF_NOT(wires.size() == word.size(),
@@ -385,7 +384,8 @@ class StateVectorKokkos final
         auto dataview = getView();
         Kokkos::parallel_for(
             two2N, KOKKOS_LAMBDA(std::size_t i) {
-                dataview(i) *= (inverse) ? conj(diagonal_(i)) : diagonal_(i);
+                dataview(i) *=
+                    (inverse) ? Kokkos::conj(diagonal_(i)) : diagonal_(i);
             });
     }
 
@@ -407,9 +407,9 @@ class StateVectorKokkos final
         if (inverse) {
             Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d({0, 0}, {dim, dim});
             Kokkos::parallel_for(
-                policy_2d,
-                KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
-                    matrix_trans(i + j * dim) = conj(matrix(i * dim + j));
+                policy_2d, KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
+                    matrix_trans(i + j * dim) =
+                        Kokkos::conj(matrix(i * dim + j));
                 });
         } else {
             matrix_trans = matrix;
@@ -511,15 +511,15 @@ class StateVectorKokkos final
                              bool inverse = false) {
 
         const std::size_t num_qubits = this->getNumQubits();
-        const std::size_t two2N = exp2(num_qubits - wires.size() - controlled_wires.size());
+        const std::size_t two2N =
+            exp2(num_qubits - wires.size() - controlled_wires.size());
         const std::size_t dim = exp2(wires.size());
         KokkosVector matrix_trans("matrix_trans", matrix.size());
 
         if (inverse) {
             Kokkos::MDRangePolicy<DoubleLoopRank> policy_2d({0, 0}, {dim, dim});
             Kokkos::parallel_for(
-                policy_2d,
-                KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
+                policy_2d, KOKKOS_LAMBDA(std::size_t i, std::size_t j) {
                     matrix_trans(i + j * dim) =
                         Kokkos::conj(matrix(i * dim + j));
                 });
