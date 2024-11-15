@@ -27,6 +27,9 @@
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
+* The TOML files for the devices are updated to use the new schema for declaring device capabilities.
+  [(#988)](https://github.com/PennyLaneAI/pennylane-lightning/pull/988)
+
 ### Documentation
 
 ### Bug fixes
