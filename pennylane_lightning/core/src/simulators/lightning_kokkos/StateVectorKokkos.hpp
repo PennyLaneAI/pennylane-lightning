@@ -572,8 +572,8 @@ class StateVectorKokkos final
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        std::size_t n = static_cast<std::size_t>(1U) << wires.size();
-        KokkosVector matrix_(matrix, n * n);
+        const std::size_t n2 = exp2(wires.size() * 2);
+        KokkosVector matrix_(matrix, n2);
         applyMultiQubitOp(matrix_, wires, inverse);
     }
 
@@ -589,8 +589,7 @@ class StateVectorKokkos final
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        std::size_t n = static_cast<std::size_t>(1U) << wires.size();
-        std::size_t n2 = n * n;
+        const std::size_t n2 = exp2(wires.size() * 2);
         KokkosVector matrix_("matrix_", n2);
         Kokkos::deep_copy(matrix_, UnmanagedConstComplexHostView(matrix, n2));
         applyMultiQubitOp(matrix_, wires, inverse);
@@ -628,8 +627,8 @@ class StateVectorKokkos final
         const std::vector<bool> &controlled_values,
         const std::vector<std::size_t> &wires, bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        std::size_t n = static_cast<std::size_t>(1U) << wires.size();
-        KokkosVector matrix_(matrix, n * n);
+        const std::size_t n2 = exp2(wires.size() * 2);
+        KokkosVector matrix_(matrix, n2);
         applyNCMultiQubitOp(matrix_, controlled_wires, controlled_values, wires,
                             inverse);
     }
@@ -651,8 +650,7 @@ class StateVectorKokkos final
                           const std::vector<std::size_t> &wires,
                           bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        std::size_t n = static_cast<std::size_t>(1U) << wires.size();
-        std::size_t n2 = n * n;
+        const std::size_t n2 = exp2(wires.size() * 2);
         KokkosVector matrix_("matrix_", n2);
         Kokkos::deep_copy(matrix_, UnmanagedConstComplexHostView(matrix, n2));
         applyNCMultiQubitOp(matrix_, controlled_wires, controlled_values, wires,

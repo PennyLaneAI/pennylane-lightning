@@ -30,7 +30,6 @@ using Pennylane::LightningKokkos::Util::parity_2_offset;
 using Pennylane::LightningKokkos::Util::reverseWires;
 using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::wires2Parity;
-using std::size_t;
 } // namespace
 /// @endcond
 
@@ -61,7 +60,7 @@ template <class Precision> struct multiQubitOpFunctor {
                         const KokkosComplexVector &matrix_,
                         const std::vector<std::size_t> &wires_) {
         wires = vector2view(wires_);
-        dim = one << wires_.size();
+        dim = exp2(wires_.size());
         num_qubits = num_qubits_;
         arr = arr_;
         matrix = matrix_;
@@ -138,7 +137,7 @@ template <class Precision> struct NCMultiQubitOpFunctor {
                           const std::vector<std::size_t> &controlled_wires_,
                           const std::vector<bool> &controlled_values_,
                           const std::vector<std::size_t> &wires_) {
-        dim = one << wires_.size();
+        dim = exp2(wires_.size());
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -203,7 +202,7 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
         num_qubits = num_qubits_;
 
         rev_wire = num_qubits - wires_[0] - 1;
-        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
+        rev_wire_shift = (exp2(rev_wire));
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }

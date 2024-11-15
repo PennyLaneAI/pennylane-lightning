@@ -373,8 +373,7 @@ void applyGenMultiRZ(
     [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
     std::size_t wires_parity = static_cast<std::size_t>(0U);
     for (std::size_t wire : wires) {
-        wires_parity |=
-            (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
+        wires_parity |= exp2(num_qubits - wire - 1);
     }
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
