@@ -76,7 +76,6 @@ _operations = frozenset(
         "PauliZ",
         "MultiRZ",
         "GlobalPhase",
-        "C(GlobalPhase)",
         "Hadamard",
         "S",
         "Adjoint(S)",

@@ -803,7 +803,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMultiQubitOp",
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation Controlled",
                    "[StateVectorKokkos_Nonparam]", float, double) {
-
     using StateVectorT = StateVectorKokkos<TestType>;
     using PrecisionT = StateVectorT::PrecisionT;
     const std::size_t num_qubits = 3;
@@ -833,7 +832,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
     StateVectorKokkos<TestType> sv_control{num_qubits};
 
     SECTION("N-controlled PauliX ") {
-
         if (control == wire) {
             Kokkos::deep_copy(sv_control.getView(), ini_sv);
 
@@ -1099,7 +1097,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
 
     SECTION("N-controlled SWAP") {
         if (control != wire0 && control != wire1 && wire0 != wire1) {
-
             StateVectorT kokkos_sv0{ini_st.data(), ini_st.size()};
             StateVectorT kokkos_sv1{ini_st.data(), ini_st.size()};
             kokkos_sv0.applyOperation("CSWAP", {control, wire0, wire1},
