@@ -136,7 +136,7 @@ def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
 
     return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
-        qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+        not qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
     )
 
 
