@@ -443,7 +443,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationPlus",
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
                    "[StateVectorKokkos_Generator]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
-    const std::size_t num_qubits = 6;
+    const std::size_t num_qubits = 7;
     const TestType ep = 1e-3;
     const TestType EP = 1e-4;
 
@@ -462,7 +462,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         "IsingYY", "IsingZZ", "SingleExcitation", "SingleExcitationMinus",
         "SingleExcitationPlus", "DoubleExcitation", "DoubleExcitationMinus",
         "DoubleExcitationPlus", "MultiRZ");
-    {
+
+    SECTION("1-control: c{5}") {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
@@ -470,8 +471,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
                                                     ini_st.size()};
 
-        const auto wires = createWires(
-            str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
         const std::vector<std::size_t> control_wires = {5};
         const std::vector<bool> control_values = {true};
         auto scale =
@@ -502,16 +508,19 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
     }
 
     SECTION("2-control: c{4,5}") {
-
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
                                                     ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
                                                     ini_st.size()};
-
-        const auto wires = createWires(
-            str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
         const std::vector<std::size_t> control_wires = {4, 5};
         const std::vector<bool> control_values = {true, false};
         auto scale =
@@ -541,18 +550,21 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         }
     }
 
-    SECTION("2-control: c{3,5}") {
-
+    SECTION("2-control: c{4,6}") {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
                                                     ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
                                                     ini_st.size()};
-
-        const auto wires = createWires(
-            str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
-        const std::vector<std::size_t> control_wires = {3, 5};
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
+        const std::vector<std::size_t> control_wires = {4, 6};
         const std::vector<bool> control_values = {true, false};
         auto scale =
             kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
@@ -581,18 +593,21 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         }
     }
 
-    SECTION("3-control: c{3,4,5}") {
-
+    SECTION("3-control: c{4,5,6}") {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
                                                     ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
                                                     ini_st.size()};
-
-        const auto wires = createWires(
-            str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
-        const std::vector<std::size_t> control_wires = {3, 4, 5};
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
+        const std::vector<std::size_t> control_wires = {4, 5, 6};
         const std::vector<bool> control_values = {true, false, true};
         auto scale =
             kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
