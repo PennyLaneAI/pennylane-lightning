@@ -120,8 +120,7 @@ class VectorJacobianProduct final
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops_name[op_idx] == "QubitStateVector") ||
-                (ops_name[op_idx] == "StatePrep") ||
+            if ((ops_name[op_idx] == "StatePrep") ||
                 (ops_name[op_idx] == "BasisState")) {
                 continue; // ignore them
             }

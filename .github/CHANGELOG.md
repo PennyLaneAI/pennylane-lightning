@@ -13,8 +13,12 @@
 
 ### Breaking changes
 
+* Removed all instances of `qml.QubitStateVector`.
+  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
+
 * Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
   [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
+  [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
 
 ### Improvements
 
@@ -27,6 +31,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix issue with adjoint-jacobian of adjoint ops.
+  [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
 
 * Fix the `upload-pypi` token issues for Linux and MacOS (x86_64 & AARCH64) wheels.
   [(#989)](https://github.com/PennyLaneAI/pennylane-lightning/pull/989)
@@ -41,7 +48,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Shuli Shu, Raul Torres, Haochen Paul Wang
+Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
 
 ---
 

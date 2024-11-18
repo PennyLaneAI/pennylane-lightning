@@ -116,6 +116,64 @@ TEST_CASE("Test Gradient with Op=RX, Obs=Z", "[Gradient]") {
     sim->StopTapeRecording();
 }
 
+TEST_CASE("Test Gradient with Op=+RX, Obs=Z", "[Gradient]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+
+    std::vector<double> buffer(1);
+    std::vector<DataView<double, 1>> gradients;
+    gradients.emplace_back(buffer);
+
+    const std::vector<std::size_t> trainParams{0};
+
+    const auto q = sim->AllocateQubit();
+
+    sim->StartTapeRecording();
+
+    sim->NamedOperation("RX", {0.123}, {q}, false);
+    auto obs = sim->Observable(ObsId::PauliZ, {}, {q});
+    sim->Expval(obs);
+
+    sim->Gradient(gradients, trainParams);
+    CHECK(-0.1227 == Approx(buffer[0]).margin(1e-5));
+
+    // Update buffer
+    buffer[0] = 0.0;
+
+    sim->Gradient(gradients, {});
+    CHECK(-0.1227 == Approx(buffer[0]).margin(1e-5));
+
+    sim->StopTapeRecording();
+}
+
+TEST_CASE("Test Gradient with Op=-RX, Obs=Z", "[Gradient]") {
+    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
+
+    std::vector<double> buffer(1);
+    std::vector<DataView<double, 1>> gradients;
+    gradients.emplace_back(buffer);
+
+    const std::vector<std::size_t> trainParams{0};
+
+    const auto q = sim->AllocateQubit();
+
+    sim->StartTapeRecording();
+
+    sim->NamedOperation("RX", {0.123}, {q}, true);
+    auto obs = sim->Observable(ObsId::PauliZ, {}, {q});
+    sim->Expval(obs);
+
+    sim->Gradient(gradients, trainParams);
+    CHECK(-0.1227 == Approx(buffer[0]).margin(1e-5));
+
+    // Update buffer
+    buffer[0] = 0.0;
+
+    sim->Gradient(gradients, {});
+    CHECK(-0.1227 == Approx(buffer[0]).margin(1e-5));
+
+    sim->StopTapeRecording();
+}
+
 TEST_CASE("Test Gradient with Op=RX, Obs=Hermitian", "[Gradient]") {
     std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
