@@ -31,6 +31,9 @@
 
 ### Bug fixes
 
+* Fix issue with adjoint-jacobian of adjoint ops.
+  [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
+
 * Fix the `upload-pypi` token issues for Linux and MacOS (x86_64 & AARCH64) wheels.
   [(#989)](https://github.com/PennyLaneAI/pennylane-lightning/pull/989)
 
