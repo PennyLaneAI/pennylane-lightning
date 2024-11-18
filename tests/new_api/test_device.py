@@ -132,12 +132,12 @@ class TestHelpers:
     @pytest.mark.parametrize(
         "obs, expected",
         [
-            (qml.operation.Tensor(qml.Projector([0], 0), qml.PauliZ(1)), False),
+            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
             (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
             (qml.s_prod(1.5, qml.Projector([0], 0)), False),
             (qml.sum(qml.Projector([0], 0), qml.Hadamard(1)), False),
             (qml.sum(qml.prod(qml.Projector([0], 0), qml.Y(1)), qml.PauliX(1)), False),
-            (qml.operation.Tensor(qml.Y(0), qml.Z(1)), True),
+            (qml.prod(qml.Y(0), qml.Z(1)), True),
             (qml.prod(qml.Y(0), qml.PauliZ(1)), True),
             (qml.s_prod(1.5, qml.Y(1)), True),
             (qml.sum(qml.Y(1), qml.Hadamard(1)), True),
@@ -429,7 +429,6 @@ class TestExecution:
         )
         assert qml.equal(new_tape, expected_tape)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp",
@@ -443,7 +442,7 @@ class TestExecution:
                 qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
                 qml.expval(2.5 * qml.Z(0)),
                 qml.expval(qml.Z(0) @ qml.X(1)),
-                qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
+                qml.expval(qml.prod(qml.Z(0), qml.X(1))),
                 qml.expval(
                     qml.SparseHamiltonian(
                         qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
@@ -483,7 +482,6 @@ class TestExecution:
         expected = self.calculate_reference(qs)[0]
         assert np.allclose(res, expected)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp1",
@@ -652,7 +650,6 @@ class TestDerivatives:
         """Test that supports_derivative returns the correct boolean value."""
         assert dev.supports_derivatives(config, tape) == expected
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
@@ -1038,7 +1035,6 @@ class TestVJP:
         """Test that supports_vjp returns the correct boolean value."""
         assert dev.supports_vjp(config, tape) == expected
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
