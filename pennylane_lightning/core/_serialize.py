@@ -392,6 +392,7 @@ class QuantumScriptSerializer:
         controlled_values = []
         wires = []
         mats = []
+        inverses = []
 
         uses_stateprep = False
 
@@ -433,6 +434,8 @@ class QuantumScriptSerializer:
             else:
                 op_list = [operation]
 
+            inverse = isinstance(operation, qml.ops.op_math.Adjoint)
+
             for single_op in op_list:
                 (
                     single_op,
@@ -441,18 +444,20 @@ class QuantumScriptSerializer:
                     controlled_wires_list,
                     controlled_values_list,
                 ) = get_wires(operation, single_op)
-                names.append(name)
+                inverses.append(inverse)
+                names.append(single_op.base.name if inverse else name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
                 if isinstance(single_op, qml.QubitUnitary):
                     params.append([0.0])
                     mats.append(matrix(single_op))
-                elif not hasattr(self.sv_type, name):
-                    params.append([])
-                    mats.append(matrix(single_op))
                 else:
-                    params.append(single_op.parameters)
-                    mats.append([])
+                    if hasattr(self.sv_type, single_op.base.name if inverse else name):
+                        params.append(single_op.parameters)
+                        mats.append([])
+                    else:
+                        params.append([])
+                        mats.append(matrix(single_op))
 
                 controlled_values.append(controlled_values_list)
                 controlled_wires.append(
@@ -462,7 +467,6 @@ class QuantumScriptSerializer:
                 )
                 wires.append([wires_map[w] for w in wires_list] if wires_map else wires_list)
 
-        inverses = [False] * len(names)
         return (
             names,
             params,
