@@ -312,8 +312,7 @@ class AdjointJacobian final
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops_name[op_idx] == "QubitStateVector") ||
-                (ops_name[op_idx] == "StatePrep") ||
+            if ((ops_name[op_idx] == "StatePrep") ||
                 (ops_name[op_idx] == "BasisState")) {
                 continue;
             }
@@ -326,11 +325,19 @@ class AdjointJacobian final
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     const PrecisionT scalingFactor =
-                        BaseType::applyGenerator(
-                            mu, ops.getOpsName()[op_idx],
-                            ops.getOpsWires()[op_idx],
-                            !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? BaseType::applyGenerator(
+                                  mu, ops.getOpsName()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : BaseType::applyGenerator(
+                                  mu, ops.getOpsName()[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     updateJacobian(H_lambda, mu, jac, scalingFactor,
                                    num_observables, trainableParamNumber,

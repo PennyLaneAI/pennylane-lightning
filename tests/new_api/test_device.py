@@ -132,12 +132,12 @@ class TestHelpers:
     @pytest.mark.parametrize(
         "obs, expected",
         [
-            (qml.operation.Tensor(qml.Projector([0], 0), qml.PauliZ(1)), False),
+            (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
             (qml.prod(qml.Projector([0], 0), qml.PauliZ(1)), False),
             (qml.s_prod(1.5, qml.Projector([0], 0)), False),
             (qml.sum(qml.Projector([0], 0), qml.Hadamard(1)), False),
             (qml.sum(qml.prod(qml.Projector([0], 0), qml.Y(1)), qml.PauliX(1)), False),
-            (qml.operation.Tensor(qml.Y(0), qml.Z(1)), True),
+            (qml.prod(qml.Y(0), qml.Z(1)), True),
             (qml.prod(qml.Y(0), qml.PauliZ(1)), True),
             (qml.s_prod(1.5, qml.Y(1)), True),
             (qml.sum(qml.Y(1), qml.Hadamard(1)), True),
@@ -429,7 +429,6 @@ class TestExecution:
         )
         assert qml.equal(new_tape, expected_tape)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp",
@@ -443,7 +442,7 @@ class TestExecution:
                 qml.expval(qml.Hamiltonian([-0.5, 1.5], [qml.Y(1), qml.X(1)])),
                 qml.expval(2.5 * qml.Z(0)),
                 qml.expval(qml.Z(0) @ qml.X(1)),
-                qml.expval(qml.operation.Tensor(qml.Z(0), qml.X(1))),
+                qml.expval(qml.prod(qml.Z(0), qml.X(1))),
                 qml.expval(
                     qml.SparseHamiltonian(
                         qml.Hamiltonian([-1.0, 1.5], [qml.Z(1), qml.X(1)]).sparse_matrix(
@@ -461,9 +460,6 @@ class TestExecution:
         if device_name == "lightning.tensor":
             if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
                 pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
-
-        if isinstance(mp.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            mp.obs = qml.operation.convert_to_legacy_H(mp.obs)
 
         if isinstance(mp.obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
             pytest.skip(
@@ -483,7 +479,6 @@ class TestExecution:
         expected = self.calculate_reference(qs)[0]
         assert np.allclose(res, expected)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "mp1",
@@ -509,8 +504,6 @@ class TestExecution:
     )
     def test_execute_multi_measurement(self, theta, phi, dev, mp1, mp2):
         """Test that execute returns the correct results with multiple measurements."""
-        if isinstance(mp2.obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            mp2.obs = qml.operation.convert_to_legacy_H(mp2.obs)
 
         qs = QuantumScript(
             [
@@ -652,7 +645,6 @@ class TestDerivatives:
         """Test that supports_derivative returns the correct boolean value."""
         assert dev.supports_derivatives(config, tape) == expected
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
@@ -681,9 +673,6 @@ class TestDerivatives:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
-
-        if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs = qml.operation.convert_to_legacy_H(obs)
 
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
@@ -742,11 +731,6 @@ class TestDerivatives:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
-
-        if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs1 = qml.operation.convert_to_legacy_H(obs1)
-        if isinstance(obs2, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs2 = qml.operation.convert_to_legacy_H(obs2)
 
         qs = QuantumScript(
             [
@@ -1038,7 +1022,6 @@ class TestVJP:
         """Test that supports_vjp returns the correct boolean value."""
         assert dev.supports_vjp(config, tape) == expected
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize("theta, phi", list(zip(THETA, PHI)))
     @pytest.mark.parametrize(
         "obs",
@@ -1055,8 +1038,6 @@ class TestVJP:
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     def test_vjp_single_expval(self, theta, phi, dev, obs, execute_and_derivatives, batch_obs):
         """Test that the VJP is correct when a tape has a single expectation value"""
-        if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs = qml.operation.convert_to_legacy_H(obs)
 
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
@@ -1116,11 +1097,6 @@ class TestVJP:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
-
-        if isinstance(obs1, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs1 = qml.operation.convert_to_legacy_H(obs1)
-        if isinstance(obs2, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs2 = qml.operation.convert_to_legacy_H(obs2)
 
         qs = QuantumScript(
             [
