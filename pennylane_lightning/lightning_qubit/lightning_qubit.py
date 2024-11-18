@@ -222,13 +222,6 @@ class LightningQubit(LightningBase):
     # This configuration file declares the device capabilities
     config_filepath = Path(__file__).parent / "lightning_qubit.toml"
 
-    # Keyword arguments passed to backend device initialization in a qjit-compiled workflow
-    device_kwargs = {
-        "mcmc": "_mcmc",
-        "num_burnin": "_num_burnin",
-        "kernel_name": "_kernel_name",
-    }
-
     # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
     #       should be converted to QubitUnitary instead of their original decompositions. Remove
     #       this when customizable multiple decomposition pathways are implemented
@@ -287,6 +280,12 @@ class LightningQubit(LightningBase):
         else:
             self._kernel_name = None
             self._num_burnin = 0
+
+        self.device_kwargs = {
+            "mcmc": self._mcmc,
+            "num_burnin": self._num_burnin,
+            "kernel_name": self._kernel_name,
+        }
 
         # Creating the state vector
         self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
