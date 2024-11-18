@@ -639,7 +639,7 @@ PrecisionT applyNCNamedGenerator(
         return static_cast<PrecisionT>(-1.0);
     /// LCOV_EXCL_START
     default:
-        PL_ABORT("Controlled Generator operation does not exist.");
+        PL_ABORT("Controlled generator operation does not exist.");
         /// LCOV_EXCL_STOP
     }
 }
