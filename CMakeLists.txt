@@ -48,11 +48,13 @@ option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 
 
-set(SCIPY_OPENBLAS32_LIB "")
-#if(NOT ENABLE_PYTHON)
-include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
-get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
-#endif()
+set(SCIPY_OPENBLAS32_LIB "${Python_SITELIB}/scipy_openblas32/lib" CACHE STRING "Path to the scipy_openblas32 library")
+
+if(NOT EXISTS SCIPY_OPENBLAS32_LIB)
+  include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
+  get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
+endif()
+
 add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB}")
 
 message(STATUS "SCIPY_OPENBLAS32_LIB: ${SCIPY_OPENBLAS32_LIB}")
