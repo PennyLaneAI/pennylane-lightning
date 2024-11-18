@@ -194,7 +194,6 @@ class TestAdjointJacobian:
             ):
                 dev.adjoint_jacobian(tape)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
@@ -220,15 +219,14 @@ class TestAdjointJacobian:
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_pauli_rotation_gradient(self, stateprep, G, theta, dev):
+    def test_pauli_rotation_gradient(self, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
         random_state = np.array(
             [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
         )
 
         tape = qml.tape.QuantumScript(
-            [stateprep(random_state, 0), G(theta, 0)], [qml.expval(qml.PauliZ(0))]
+            [qml.StatePrep(random_state, 0), G(theta, 0)], [qml.expval(qml.PauliZ(0))]
         )
 
         tape.trainable_params = {1}
@@ -244,14 +242,13 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_Rot_gradient(self, stateprep, theta, dev):
+    def test_Rot_gradient(self, theta, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         with qml.tape.QuantumTape() as tape:
-            stateprep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
+            qml.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
             qml.Rot(*params, wires=[0])
             qml.expval(qml.PauliZ(0))
 
@@ -397,7 +394,6 @@ class TestAdjointJacobian:
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -575,7 +571,6 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -817,8 +812,8 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="N-controlled generator operations only implemented in lightning.qubit",
+        device_name == "lightning.kokkos",
+        reason="N-controlled generator operations only implemented in lightning.qubit and lightning.gpu",
     )
     @pytest.mark.parametrize(
         "operation",
@@ -1081,7 +1076,7 @@ class TestAdjointJacobianQNode:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
+    qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.adjoint(qml.RX(params[2], wires=wires[2]))
@@ -1114,7 +1109,6 @@ def circuit_ansatz(params, wires):
     qml.RX(params[29], wires=wires[1])
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1138,7 +1132,6 @@ def test_tape_qchem(tol):
     assert np.allclose(res, ref, tol)
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1554,7 +1547,7 @@ def test_qubit_unitary(n_targets):
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 
@@ -1596,7 +1589,7 @@ def test_diff_qubit_unitary(n_targets):
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 
