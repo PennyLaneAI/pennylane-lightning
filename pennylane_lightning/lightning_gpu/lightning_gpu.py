@@ -143,13 +143,9 @@ def _supports_adjoint(circuit):
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
 
-    if isinstance(op, (Conditional, MidMeasureMP, PauliRot)):
-        return False
-
-    if not qml.operation.is_trainable(op):
-        return True
-
-    return op.num_params == 1 and op.has_generator
+    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
+        qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+    )
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
