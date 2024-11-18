@@ -60,12 +60,11 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         PL_REQUIRE_THROWS_MATCHES(
             state_vector.applyGenerator("XXX", {1}, {true}, {0}),
             LightningException, "The given value does not exist.");
-        PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyOperation("PauliX", {}, std::vector<bool>{false},
-                                        std::vector<std::size_t>{1}, false,
-                                        {0.0}, std::vector<ComplexT>{}),
-            LightningException,
-            "`controlled_wires` must have the same size as"); // invalid controlled_wires
+        PL_REQUIRE_THROWS_MATCHES(state_vector.applyOperation(
+                                      "PauliX", {}, {false}, {1}, false, {0.0}),
+                                  LightningException,
+                                  "`controlled_wires` must have the same size "
+                                  "as"); // invalid controlled_wires
     }
 
     SECTION("namedGeneratorFactor") {
@@ -84,12 +83,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         using StateVectorT = StateVectorKokkos<TestType>;
         using KokkosVector = StateVectorT::KokkosVector;
         using ExecutionSpace = StateVectorT::KokkosExecSpace;
-        [[maybe_unused]] StateVectorT sv{1};
-        KokkosVector arr_("arr_", 2);
-        PL_REQUIRE_THROWS_MATCHES(applyNCNamedGenerator<ExecutionSpace>(
-                                      GeneratorOperation::END, arr_, 1, {1}, {true}, {0}),
-                                  LightningException,
-                                  "Controlled generator operation does not exist.");
+        [[maybe_unused]] StateVectorT sv{2};
+        KokkosVector arr_("arr_", 4);
+        PL_REQUIRE_THROWS_MATCHES(
+            applyNCNamedGenerator<ExecutionSpace>(
+                ControlledGeneratorOperation::END, arr_, 2, {1}, {true}, {0}),
+            LightningException,
+            "Controlled generator operation does not exist.");
     }
 }
 
