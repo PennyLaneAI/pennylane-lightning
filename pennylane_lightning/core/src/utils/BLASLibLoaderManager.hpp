@@ -27,10 +27,6 @@
 
 #include <iostream>
 
-#ifndef SCIPY_OPENBLAS32_LIB
-#define SCIPY_OPENBLAS32_LIB ""
-#endif
-
 #include "SharedLibLoader.hpp"
 
 namespace {

@@ -460,7 +460,8 @@ class StateVectorCudaManaged
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`controlled_wires` and `controlled_values` must have the "
                     "same size.");
-        const std::size_t matrix_size =  Pennylane::Util::exp2(2*tgt_wires.size());
+        const std::size_t matrix_size =
+            Pennylane::Util::exp2(2 * tgt_wires.size());
         DataBuffer<CFP_t, int> d_matrix{
             matrix_size, BaseType::getDataBuffer().getDevTag(), true};
         d_matrix.CopyHostDataToGpu(gate_matrix, matrix_size, false);

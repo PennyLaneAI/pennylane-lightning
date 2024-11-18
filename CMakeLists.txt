@@ -47,18 +47,6 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 
-
-set(SCIPY_OPENBLAS32_LIB "${Python_SITELIB}/scipy_openblas32/lib" CACHE STRING "Path to the scipy_openblas32 library")
-
-if(NOT EXISTS SCIPY_OPENBLAS32_LIB)
-  include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
-  get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
-endif()
-
-add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB}")
-
-message(STATUS "SCIPY_OPENBLAS32_LIB: ${SCIPY_OPENBLAS32_LIB}")
-
 # OpenMP
 find_package(OpenMP)
 if (OpenMP_CXX_FOUND)
@@ -105,7 +93,17 @@ if(ENABLE_PYTHON)
                         GIT_TAG        v2.13.5
     )
     FetchContent_MakeAvailable(pybind11)
+    set(SCIPY_OPENBLAS32_LIB "${Python_SITELIB}/scipy_openblas32/lib" CACHE STRING "Path to the scipy_openblas32 library")
+else()
+    set(SCIPY_OPENBLAS32_LIB "" CACHE STRING "Path to the scipy_openblas32 library")
+    include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
+    get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
 endif()
+
+add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB}")
+
+message(STATUS "Python_SITELIB: {Python_SITELIB}")
+message(STATUS "SCIPY_OPENBLAS32_LIB: ${SCIPY_OPENBLAS32_LIB}")
 
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")
