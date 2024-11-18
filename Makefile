@@ -3,6 +3,7 @@ COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=htm
 TESTRUNNER := -m pytest tests --tb=short
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
+SCIPY_OPENBLAS :=$(shell python -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))")
 
 ifdef check
     CHECK := --check --diff
@@ -117,6 +118,7 @@ test-cpp:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
+		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -133,6 +135,7 @@ test-cpp-mpi:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=lightning_gpu \
+		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  -DENABLE_MPI=ON \
 		  $(OPTIONS)
 ifdef target
