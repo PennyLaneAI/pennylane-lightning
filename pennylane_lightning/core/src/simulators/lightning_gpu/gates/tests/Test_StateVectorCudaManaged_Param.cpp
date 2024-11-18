@@ -1942,7 +1942,7 @@ TEMPLATE_TEST_CASE(
         matrix[15] = e;
         if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
             sv0.applyControlledMatrix(
-                matrix.data(), matrix.size(), {control, wire0, wire1},
+                matrix.data(), {control, wire0, wire1},
                 std::vector<bool>{true, false, true}, {wire2, wire3}, inverse);
             sv1.applyOperation(
                 "MultiRZ", std::vector<std::size_t>{control, wire0, wire1},
