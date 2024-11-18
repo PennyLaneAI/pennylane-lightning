@@ -154,7 +154,6 @@ _observables = frozenset(
         "Hadamard",
         "Hermitian",
         "Identity",
-        "Hamiltonian",
         "LinearCombination",
         "Sum",
         "SProd",

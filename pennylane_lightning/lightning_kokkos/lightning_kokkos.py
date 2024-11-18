@@ -38,7 +38,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
@@ -67,7 +67,6 @@ from ._state_vector import LightningKokkosStateVector
 _operations = frozenset(
     {
         "Identity",
-        "QubitStateVector",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -117,6 +116,26 @@ _operations = frozenset(
         "DoubleExcitation",
         "DoubleExcitationPlus",
         "DoubleExcitationMinus",
+        "Adjoint(MultiRZ)",
+        "Adjoint(GlobalPhase)",
+        "Adjoint(PhaseShift)",
+        "Adjoint(ControlledPhaseShift)",
+        "Adjoint(RX)",
+        "Adjoint(RY)",
+        "Adjoint(RZ)",
+        "Adjoint(CRX)",
+        "Adjoint(CRY)",
+        "Adjoint(CRZ)",
+        "Adjoint(IsingXX)",
+        "Adjoint(IsingYY)",
+        "Adjoint(IsingZZ)",
+        "Adjoint(IsingXY)",
+        "Adjoint(SingleExcitation)",
+        "Adjoint(SingleExcitationPlus)",
+        "Adjoint(SingleExcitationMinus)",
+        "Adjoint(DoubleExcitation)",
+        "Adjoint(DoubleExcitationPlus)",
+        "Adjoint(DoubleExcitationMinus)",
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
@@ -138,7 +157,6 @@ _observables = frozenset(
         "Identity",
         "Projector",
         "SparseHamiltonian",
-        "Hamiltonian",
         "LinearCombination",
         "Sum",
         "SProd",
@@ -173,11 +191,6 @@ def adjoint_observables(obs: Operator) -> bool:
     when using the adjoint differentiation method."""
     if isinstance(obs, qml.Projector):
         return False
-
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
 
     if isinstance(obs, SProd):
         return adjoint_observables(obs.base)
