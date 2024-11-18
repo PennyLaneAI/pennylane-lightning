@@ -72,13 +72,12 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::Hadamard", "[ExaTNCuda_Nonparam]", float,
             const std::size_t index = GENERATE(0, 1, 2);
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
-
             exatn_state.applyOperation("Hadamard", {index}, inverse);
-            
+
             exatn_state.applyOperation("Identity", {index}, inverse);
 
             // Test for multiple final states appendings
-            
+
             cp_t expected(1.0 / std::sqrt(2), 0);
 
             auto results = exatn_state.getDataVector();
@@ -137,7 +136,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::PauliY", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("PauliY", {index}, inverse);
 
@@ -170,7 +169,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::PauliZ", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("PauliZ", {index}, inverse);
 
@@ -207,7 +206,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::S", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("S", {index}, inverse);
 
@@ -243,7 +242,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::T", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("T", {index}, inverse);
 
@@ -265,8 +264,8 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CNOT", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "CNOT", "CNOT"},
-                                      {{0}, {0, 1}, {1, 2}},
-                                      {false, inverse, inverse});
+                                        {{0}, {0, 1}, {1, 2}},
+                                        {false, inverse, inverse});
 
             auto results = exatn_state.getDataVector();
 
@@ -310,7 +309,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SWAP", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
+                                        {false, false});
 
             exatn_state.applyOperation("SWAP", {0, 1}, inverse);
 
@@ -332,7 +331,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SWAP", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
+                                        {false, false});
 
             exatn_state.applyOperation("SWAP", {0, 2}, inverse);
 
@@ -365,7 +364,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CY", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
+                                        {false, false});
 
             exatn_state.applyOperation("CY", {0, 1}, inverse);
 
@@ -388,7 +387,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CY", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
+                                        {false, false});
 
             exatn_state.applyOperation("CY", {0, 2}, inverse);
 
@@ -400,8 +399,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CY", "[ExaTNCuda_Nonparam]", float,
 }
 
 TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CZ", "[ExaTNCuda_Nonparam]", float,
-                   double)
-{
+                   double) {
     const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
@@ -422,7 +420,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CZ", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
+                                        {false, false});
 
             exatn_state.applyOperation("CZ", {0, 1}, inverse);
 
@@ -445,7 +443,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CZ", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "PauliX"}, {{0}, {1}},
-                                      {false, false});
+                                        {false, false});
 
             exatn_state.applyOperation("CZ", {0, 2}, inverse);
 
@@ -457,16 +455,14 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CZ", "[ExaTNCuda_Nonparam]", float,
 }
 
 TEMPLATE_TEST_CASE("ExaTNCuda::Gates::Toffoli", "[ExaTNCuda_Nonparam]", float,
-                   double)
-{
+                   double) {
     const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices")
-        {
+        SECTION("Apply adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -489,8 +485,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::Toffoli", "[ExaTNCuda_Nonparam]", float,
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
 
-        SECTION("Apply non-adjacent wire indices")
-        {
+        SECTION("Apply non-adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -516,16 +511,14 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::Toffoli", "[ExaTNCuda_Nonparam]", float,
 }
 
 TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CSWAP", "[ExaTNCuda_Nonparam]", float,
-                   double)
-{
+                   double) {
     const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
         DevTag<int> dev_tag{0, 0};
 
-        SECTION("Apply adjacent wire indices")
-        {
+        SECTION("Apply adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -548,8 +541,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CSWAP", "[ExaTNCuda_Nonparam]", float,
             CHECK(results == Pennylane::Util::approx(expected_results));
         }
 
-        SECTION("Apply non-adjacent wire indices")
-        {
+        SECTION("Apply non-adjacent wire indices") {
             std::vector<cp_t> expected_results{
                 cuUtil::ZERO<std::complex<TestType>>(),
                 cuUtil::ZERO<std::complex<TestType>>(),
@@ -575,13 +567,11 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CSWAP", "[ExaTNCuda_Nonparam]", float,
 }
 
 TEMPLATE_TEST_CASE("ExaTNCuda::Gates::applyOperation-gatematrix",
-                   "[ExaTNCuda_Nonparam]", float, double)
-{
+                   "[ExaTNCuda_Nonparam]", float, double) {
     std::size_t num_qubits = 3;
     DevTag<int> dev_tag{0, 0};
 
-    SECTION("Apply different wire indices")
-    {
+    SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
         ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
@@ -661,4 +651,3 @@ TEMPLATE_TEST_CASE("ExaTNCuda::applyControlledOperation non-param "
                           LightningException);
     }
 }
-

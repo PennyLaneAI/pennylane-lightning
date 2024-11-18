@@ -35,13 +35,12 @@ using namespace Pennylane::LightningTensor::TNCuda::Observables;
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs", "[ExaTNCuda_Var]", float,
-                   double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs",
+                   "[ExaTNCuda_Var]", float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
 
     std::size_t num_qubits = 2;
-    
 
     TensorNetT exatn_state{num_qubits};
 
@@ -51,7 +50,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs", "[ExaTN
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        
+
         auto ob = NamedObsT("Identity", {0});
         auto res = measure.var(ob);
         auto expected = TestType(0);
@@ -62,7 +61,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs", "[ExaTN
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        
+
         auto ob = NamedObsT("PauliX", {0});
         auto res = measure.var(ob);
         auto expected = TestType(0.75722220);
@@ -73,7 +72,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs", "[ExaTN
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        
+
         auto ob = NamedObsT("PauliY", {0});
         auto res = measure.var(ob);
         auto expected = TestType(0.58498357);
@@ -84,7 +83,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs", "[ExaTN
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        
+
         auto ob = NamedObsT("PauliZ", {1});
         auto res = measure.var(ob);
         auto expected = TestType(0.40686720);
@@ -95,7 +94,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs", "[ExaTN
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        
+
         auto ob = NamedObsT("Hadamard", {1});
         auto res = measure.var(ob);
         auto expected = TestType(0.29089449);
@@ -103,16 +102,15 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of NamedObs", "[ExaTN
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of HermitianObs", "[ExaTNCuda_Var]", float,
-                   double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of HermitianObs",
+                   "[ExaTNCuda_Var]", float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
     using ComplexT = typename TensorNetT::ComplexT;
     using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
 
     std::size_t num_qubits = 3;
-    
 
-     TensorNetT exatn_state{num_qubits};
+    TensorNetT exatn_state{num_qubits};
 
     auto measure = MeasurementsTNCuda<TensorNetT>(exatn_state);
 
@@ -121,7 +119,6 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of HermitianObs", "[E
         {{0}, {0}, {1}, {1}, {2}, {2}},
         {{false}, {false}, {false}, {false}, {false}, {false}},
         {{0.7}, {0.7}, {0.5}, {0.5}, {0.3}, {0.3}});
-    
 
     SECTION("Target at 1 wire") {
         std::vector<ComplexT> matrix = {
@@ -134,16 +131,15 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of HermitianObs", "[E
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of TensorProdObs", "[ExaTNCuda_Var]", float,
-                   double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of TensorProdObs",
+                   "[ExaTNCuda_Var]", float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
     using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
 
     std::size_t num_qubits = 3;
-    
 
-     TensorNetT exatn_state{num_qubits};
+    TensorNetT exatn_state{num_qubits};
 
     auto measure = MeasurementsTNCuda<TensorNetT>(exatn_state);
 
@@ -151,8 +147,6 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of TensorProdObs", "[
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
-
-        
 
         auto X0 =
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
@@ -166,8 +160,8 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test variance of TensorProdObs", "[
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test var value of HamiltonianObs", "[ExaTNCuda_Var]", float,
-                   double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test var value of HamiltonianObs",
+                   "[ExaTNCuda_Var]", float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
     using ComplexT = typename TensorNetT::ComplexT;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
@@ -179,9 +173,8 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test var value of HamiltonianObs", 
         constexpr std::size_t num_qubits = 5;
         constexpr std::size_t num_paulis = 5;
         constexpr std::size_t num_obs_terms = 6;
-        
 
-         TensorNetT exatn_state{num_qubits};
+        TensorNetT exatn_state{num_qubits};
 
         exatn_state.applyOperations(
             {{"RX"},
@@ -215,7 +208,6 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test var value of HamiltonianObs", 
              {0.2},
              {0.5},
              {0.5}});
-        
 
         auto m = MeasurementsTNCuda<TensorNetT>(exatn_state);
 
@@ -263,15 +255,12 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test var value of HamiltonianObs", 
 
     SECTION("Using 1 Hermitian") {
         std::size_t num_qubits = 3;
-        
 
-         TensorNetT exatn_state{num_qubits};
+        TensorNetT exatn_state{num_qubits};
 
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
-
-        
 
         auto m = MeasurementsTNCuda<TensorNetT>(exatn_state);
 
@@ -301,15 +290,12 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test var value of HamiltonianObs", 
 
     SECTION("Using 2 Hermitians") {
         std::size_t num_qubits = 3;
-        
 
-         TensorNetT exatn_state{num_qubits};
+        TensorNetT exatn_state{num_qubits};
 
         exatn_state.applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
-
-        
 
         auto m = MeasurementsTNCuda<TensorNetT>(exatn_state);
 

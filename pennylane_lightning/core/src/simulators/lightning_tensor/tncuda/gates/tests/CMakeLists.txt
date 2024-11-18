@@ -16,8 +16,8 @@ FetchAndIncludeCatch()
 
 add_library(${PL_BACKEND}_gates_tests INTERFACE)
 target_link_libraries(${PL_BACKEND}_gates_tests INTERFACE Catch2::Catch2 
-                      ${PL_BACKEND}_gates
-                      ${PL_BACKEND}
+                ${PL_BACKEND}_gates
+                ${PL_BACKEND}
                         )
 
 ProcessTestOptions(${PL_BACKEND}_gates_tests)

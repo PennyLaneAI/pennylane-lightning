@@ -34,13 +34,13 @@ using namespace Pennylane::LightningTensor::TNCuda::Observables;
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Identity]", "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Identity]", "[ExaTNCuda_Expval]",
+                   float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
     auto ONE = TestType(1);
 
     std::size_t num_qubits = 3;
-    
 
     TensorNetT exatn_state{num_qubits};
 
@@ -48,22 +48,22 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Identity]", "[ExaTNCuda_Expval]", 
 
     SECTION("Using expval") {
         exatn_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                                  {{0}, {0, 1}, {1, 2}},
-                                  {{false}, {false}, {false}});
-        
+                                    {{0}, {0, 1}, {1, 2}},
+                                    {{false}, {false}, {false}});
+
         auto ob = NamedObsT("Identity", {0});
         auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliX]", "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliX]", "[ExaTNCuda_Expval]",
+                   float, double) {
     {
         using TensorNetT = ExaTNCuda<TestType>;
         using NamedObsT = NamedObsTNCuda<TensorNetT>;
 
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
@@ -74,9 +74,9 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliX]", "[ExaTNCuda_Expval]", fl
 
         SECTION("Using expval") {
             exatn_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                                      {{0}, {0, 1}, {1, 2}},
-                                      {{false}, {false}, {false}});
-            
+                                        {{0}, {0, 1}, {1, 2}},
+                                        {{false}, {false}, {false}});
+
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
@@ -86,7 +86,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliX]", "[ExaTNCuda_Expval]", fl
             exatn_state.applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            
+
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
@@ -102,7 +102,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliX]", "[ExaTNCuda_Expval]", fl
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            
+
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -110,13 +110,13 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliX]", "[ExaTNCuda_Expval]", fl
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliY]", "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliY]", "[ExaTNCuda_Expval]",
+                   float, double) {
     {
         using TensorNetT = ExaTNCuda<TestType>;
         using NamedObsT = NamedObsTNCuda<TensorNetT>;
 
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
@@ -128,26 +128,26 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliY]", "[ExaTNCuda_Expval]", fl
 
         SECTION("Using expval") {
             exatn_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                                      {{0}, {0, 1}, {1, 2}},
-                                      {{false}, {false}, {false}});
+                                        {{0}, {0, 1}, {1, 2}},
+                                        {{false}, {false}, {false}});
             auto ob = NamedObsT("PauliY", {0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
 
         SECTION("Using expval: Plus i states") {
-            exatn_state.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
-                                      {{false}, {false}, {false}},
-                                      {{-PI / 2}, {-PI / 2}, {-PI / 2}});
+            exatn_state.applyOperations(
+                {{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                {{false}, {false}, {false}}, {{-PI / 2}, {-PI / 2}, {-PI / 2}});
             auto ob = NamedObsT("PauliY", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
 
         SECTION("Using expval: Minus i states") {
-            exatn_state.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
-                                      {{false}, {false}, {false}},
-                                      {{PI / 2}, {PI / 2}, {PI / 2}});
+            exatn_state.applyOperations(
+                {{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+                {{false}, {false}, {false}}, {{PI / 2}, {PI / 2}, {PI / 2}});
             auto ob = NamedObsT("PauliY", {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -155,7 +155,8 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliY]", "[ExaTNCuda_Expval]", fl
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliZ]", "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliZ]", "[ExaTNCuda_Expval]",
+                   float, double) {
     {
         using TensorNetT = ExaTNCuda<TestType>;
         using PrecisionT = TensorNetT::PrecisionT;
@@ -163,7 +164,6 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliZ]", "[ExaTNCuda_Expval]", fl
         using NamedObsT = NamedObsTNCuda<TensorNetT>;
 
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
@@ -201,13 +201,13 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[PauliZ]", "[ExaTNCuda_Expval]", fl
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hadamard]", "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hadamard]", "[ExaTNCuda_Expval]",
+                   float, double) {
     {
         using TensorNetT = ExaTNCuda<TestType>;
         using NamedObsT = NamedObsTNCuda<TensorNetT>;
 
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
@@ -221,7 +221,6 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hadamard]", "[ExaTNCuda_Expval]", 
         // multiple times with different observables
         SECTION("Using expval") {
             exatn_state.applyOperation("PauliX", {0});
-            
 
             auto ob = NamedObsT("Hadamard", {0});
             auto res = measure.expval(ob);
@@ -234,13 +233,13 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hadamard]", "[ExaTNCuda_Expval]", 
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Parametric_obs]", "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Parametric_obs]",
+                   "[ExaTNCuda_Expval]", float, double) {
     {
         using TensorNetT = ExaTNCuda<TestType>;
         using NamedObsT = NamedObsTNCuda<TensorNetT>;
 
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
@@ -249,7 +248,6 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Parametric_obs]", "[ExaTNCuda_Expv
 
         SECTION("Using expval") {
             exatn_state.applyOperation("PauliX", {0});
-            
 
             auto ob = NamedObsT("RX", {0}, {0});
             auto res = measure.expval(ob);
@@ -258,14 +256,14 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Parametric_obs]", "[ExaTNCuda_Expv
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hermitian]", "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hermitian]", "[ExaTNCuda_Expval]",
+                   float, double) {
     {
         using TensorNetT = ExaTNCuda<TestType>;
         using ComplexT = typename TensorNetT::ComplexT;
         using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
 
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
@@ -279,9 +277,9 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hermitian]", "[ExaTNCuda_Expval]",
 
         SECTION("Using expval") {
             exatn_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
-                                      {{0}, {0, 1}, {1, 2}},
-                                      {{false}, {false}, {false}});
-            
+                                        {{0}, {0, 1}, {1, 2}},
+                                        {{false}, {false}, {false}});
+
             auto ob = HermitianObsT(mat, std::vector<std::size_t>{0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
@@ -291,7 +289,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hermitian]", "[ExaTNCuda_Expval]",
             exatn_state.applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            
+
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
@@ -307,7 +305,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hermitian]", "[ExaTNCuda_Expval]",
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            
+
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -315,8 +313,9 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::[Hermitian]", "[ExaTNCuda_Expval]",
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test expectation value of TensorProdObs",
-                   "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE(
+    "ExaTNCuda::Measurements::Test expectation value of TensorProdObs",
+    "[ExaTNCuda_Expval]", float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
     using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
@@ -324,12 +323,12 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test expectation value of TensorPro
     auto INVSQRT2 = TestType(0.707106781186547524401);
     SECTION("Using XZ") {
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
         exatn_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                  {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                                    {{0}, {1}, {2}},
+                                    {{false}, {false}, {false}});
 
         auto m = MeasurementsTNCuda<TensorNetT>(exatn_state);
 
@@ -345,12 +344,12 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test expectation value of TensorPro
 
     SECTION("Using HHH") {
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
         exatn_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                  {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                                    {{0}, {1}, {2}},
+                                    {{false}, {false}, {false}});
 
         auto m = MeasurementsTNCuda<TensorNetT>(exatn_state);
 
@@ -367,20 +366,21 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test expectation value of TensorPro
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Test expectation value of HamiltonianObs",
-                   "[ExaTNCuda_Expval]", float, double) {
+TEMPLATE_TEST_CASE(
+    "ExaTNCuda::Measurements::Test expectation value of HamiltonianObs",
+    "[ExaTNCuda_Expval]", float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
     using NamedObsT = NamedObsTNCuda<TensorNetT>;
     using HamiltonianObsT = HamiltonianTNCuda<TensorNetT>;
     auto ONE = TestType(1);
     SECTION("Using XZ") {
         std::size_t num_qubits = 3;
-        
 
         TensorNetT exatn_state{num_qubits};
 
         exatn_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                                  {{0}, {1}, {2}}, {{false}, {false}, {false}});
+                                    {{0}, {1}, {2}},
+                                    {{false}, {false}, {false}});
 
         auto m = MeasurementsTNCuda<TensorNetT>(exatn_state);
 

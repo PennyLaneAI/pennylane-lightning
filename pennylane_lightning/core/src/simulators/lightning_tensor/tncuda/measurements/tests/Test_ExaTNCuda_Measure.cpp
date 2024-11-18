@@ -38,7 +38,8 @@ using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Probabilities", "[Measures]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Probabilities", "[Measures]",
+                   float, double) {
     using TensorNetT = ExaTNCuda<TestType>;
 
     SECTION("Looping over different wire configurations:") {
@@ -82,7 +83,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Probabilities", "[Measures]", float
         TensorNetT exatn_state{num_qubits};
 
         exatn_state.applyOperations({{"RX"}, {"RY"}}, {{0}, {0}},
-                                  {{false}, {false}}, {{0.5}, {0.5}});
+                                    {{false}, {false}}, {{0.5}, {0.5}});
 
         auto measure = MeasurementsTNCuda<TensorNetT>(exatn_state);
         REQUIRE_THROWS_AS(measure.probs({2, 1}), LightningException);
@@ -99,7 +100,8 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Probabilities", "[Measures]", float
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Samples", "[Measures]", float, double) {
+TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Samples", "[Measures]", float,
+                   double) {
     using TensorNetT = ExaTNCuda<TestType>;
 
     SECTION("Looping over different wire configurations:") {
@@ -109,7 +111,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Samples", "[Measures]", float, doub
             0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
         // Defining the State Vector that will be measured.
-        
+
         std::size_t num_qubits = 3;
 
         TensorNetT exatn_state{num_qubits};

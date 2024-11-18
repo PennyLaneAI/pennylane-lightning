@@ -18,8 +18,8 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "Gates.hpp"
 #include "ExaTNCuda.hpp"
+#include "Gates.hpp"
 #include "TNCudaGateCache.hpp"
 #include "TestHelpers.hpp"
 
@@ -40,7 +40,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::PhaseShift", "[ExaTNCuda_Param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
@@ -79,10 +79,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::PhaseShift", "[ExaTNCuda_Param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("PhaseShift", {index}, inverse,
-                                     {sign * angles[index]});
+                                       {sign * angles[index]});
 
             auto results = exatn_state.getDataVector();
 
@@ -96,7 +96,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::RX", "[ExaTNCuda_Param]", float, double) {
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
@@ -121,7 +121,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::RX", "[ExaTNCuda_Param]", float, double) {
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("RX", {index}, inverse, {angles[index]});
 
@@ -138,7 +138,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::RY", "[ExaTNCuda_Nonparam]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
@@ -191,7 +191,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::RY", "[ExaTNCuda_Nonparam]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("RY", {index}, inverse, {angles[index]});
 
@@ -207,7 +207,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::RZ", "[ExaTNCuda_Param]", float, double) {
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles{0.3, 0.8, 2.4};
@@ -252,7 +252,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::RZ", "[ExaTNCuda_Param]", float, double) {
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("RZ", {index}, inverse, {angles[index]});
 
@@ -269,7 +269,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::ControlledPhaseShift",
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles{0.3, 2.4};
@@ -297,10 +297,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::ControlledPhaseShift",
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("ControlledPhaseShift", {0, 1}, inverse,
-                                     {sign * angles[0]});
+                                       {sign * angles[0]});
 
             auto results = exatn_state.getDataVector();
 
@@ -311,10 +311,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::ControlledPhaseShift",
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("ControlledPhaseShift", {0, 2}, inverse,
-                                     {sign * angles[1]});
+                                       {sign * angles[1]});
             auto results = exatn_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
@@ -328,7 +328,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::Rot", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<std::vector<TestType>> angles{
@@ -370,7 +370,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRot", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles =
@@ -411,7 +411,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingXX", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles{0.3, 0.8};
@@ -446,7 +446,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingXX", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperation("IsingXX", {0, 1}, inverse,
-                                     {angles[index]});
+                                       {angles[index]});
 
             auto results = exatn_state.getDataVector();
 
@@ -458,7 +458,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingXX", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperation("IsingXX", {0, 2}, inverse,
-                                     {angles[index]});
+                                       {angles[index]});
 
             auto results = exatn_state.getDataVector();
 
@@ -474,7 +474,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingXY", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -506,7 +506,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingXY", "[ExaTNCuda_param]", float,
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("IsingXY", {0, 1}, inverse, angles);
 
@@ -519,7 +519,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingXY", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
             exatn_state.applyOperation("IsingXY", {0, 2}, inverse, angles);
 
             auto results = exatn_state.getDataVector();
@@ -535,7 +535,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingYY", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -567,7 +567,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingYY", "[ExaTNCuda_param]", float,
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("IsingYY", {0, 1}, inverse, angles);
 
@@ -580,7 +580,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingYY", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("IsingYY", {0, 2}, inverse, angles);
 
@@ -597,7 +597,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingZZ", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -629,7 +629,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingZZ", "[ExaTNCuda_param]", float,
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("IsingZZ", {0, 1}, inverse, angles);
 
@@ -642,7 +642,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::IsingZZ", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("IsingZZ", {0, 2}, inverse, angles);
 
@@ -659,7 +659,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRX", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -691,7 +691,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRX", "[ExaTNCuda_param]", float,
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("CRX", {0, 1}, inverse, angles);
 
@@ -704,7 +704,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRX", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("CRX", {0, 2}, inverse, angles);
 
@@ -721,7 +721,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRY", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -757,7 +757,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRY", "[ExaTNCuda_param]", float,
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("CRY", {0, 1}, inverse, angles);
 
@@ -770,7 +770,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRY", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("CRY", {0, 2}, inverse, angles);
 
@@ -787,7 +787,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRZ", "[ExaTNCuda_param]", float,
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -819,7 +819,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRZ", "[ExaTNCuda_param]", float,
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("CRZ", {0, 1}, inverse, angles);
 
@@ -832,7 +832,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::CRZ", "[ExaTNCuda_param]", float,
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
             exatn_state.applyOperation("CRZ", {0, 2}, inverse, angles);
 
             auto results = exatn_state.getDataVector();
@@ -848,7 +848,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitation", "[ExaTNCuda_param]",
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -881,10 +881,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitation", "[ExaTNCuda_param]",
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("SingleExcitation", {0, 1}, inverse,
-                                     angles);
+                                       angles);
 
             auto results = exatn_state.getDataVector();
 
@@ -895,10 +895,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitation", "[ExaTNCuda_param]",
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("SingleExcitation", {0, 2}, inverse,
-                                     angles);
+                                       angles);
 
             auto results = exatn_state.getDataVector();
 
@@ -913,7 +913,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitationMinus",
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -952,10 +952,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitationMinus",
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("SingleExcitationMinus", {0, 1}, inverse,
-                                     angles);
+                                       angles);
 
             auto results = exatn_state.getDataVector();
 
@@ -966,10 +966,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitationMinus",
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("SingleExcitationMinus", {0, 2}, inverse,
-                                     angles);
+                                       angles);
 
             auto results = exatn_state.getDataVector();
 
@@ -984,7 +984,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitationPlus",
     {
         using cp_t = std::complex<TestType>;
         std::size_t num_qubits = 3;
-        
+
         DevTag<int> dev_tag{0, 0};
 
         const std::vector<TestType> angles = {0.3};
@@ -1023,10 +1023,10 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitationPlus",
             exatn_state.reset();
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
 
             exatn_state.applyOperation("SingleExcitationPlus", {0, 1}, inverse,
-                                     angles);
+                                       angles);
 
             auto results = exatn_state.getDataVector();
 
@@ -1037,9 +1037,9 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitationPlus",
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
             exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                      {{0}, {1}, {2}}, {false, false, false});
+                                        {{0}, {1}, {2}}, {false, false, false});
             exatn_state.applyOperation("SingleExcitationPlus", {0, 2}, inverse,
-                                     angles);
+                                       angles);
 
             auto results = exatn_state.getDataVector();
 
@@ -1049,8 +1049,7 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::SingleExcitationPlus",
 }
 
 TEMPLATE_TEST_CASE("ExaTNCuda::Gates::DoubleExcitation", "[ExaTNCuda_param]",
-                   float, double)
-{
+                   float, double) {
     const bool inverse = GENERATE(false, true);
     {
         using cp_t = std::complex<TestType>;
@@ -1076,37 +1075,38 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Gates::DoubleExcitation", "[ExaTNCuda_param]",
         expected_results[1][24] = {0.20120886, 0.0};
         expected_results[1][28] = {0.20120886, 0.0};
 
-        if (inverse)
-        {
+        if (inverse) {
             std::swap(expected_results[0][6], expected_results[0][24]);
             std::swap(expected_results[0][7], expected_results[0][25]);
             std::swap(expected_results[1][3], expected_results[1][24]);
             std::swap(expected_results[1][7], expected_results[1][28]);
         }
 
-        SECTION("Apply adjacent wires")
-        {
+        SECTION("Apply adjacent wires") {
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
             exatn_state.reset();
 
-            exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                                        {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
+            exatn_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            exatn_state.applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse, angles);
+            exatn_state.applyOperation("DoubleExcitation", {0, 1, 2, 3},
+                                       inverse, angles);
 
             auto results = exatn_state.getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
 
-        SECTION("Apply non-adjacent wires")
-        {
+        SECTION("Apply non-adjacent wires") {
             ExaTNCuda<TestType> exatn_state{num_qubits, dev_tag};
 
-            exatn_state.applyOperations({"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
-                                        {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
+            exatn_state.applyOperations(
+                {"Hadamard", "Hadamard", "Hadamard", "Hadamard", "Hadamard"},
+                {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
 
-            exatn_state.applyOperation("DoubleExcitation", {0, 1, 3, 4}, inverse, angles);
+            exatn_state.applyOperation("DoubleExcitation", {0, 1, 3, 4},
+                                       inverse, angles);
 
             auto results = exatn_state.getDataVector();
 
