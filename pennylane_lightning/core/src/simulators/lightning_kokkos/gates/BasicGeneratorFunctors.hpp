@@ -727,8 +727,6 @@ void applyNCGenSingleExcitationPlus(
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
-        [[maybe_unused]] const auto i00_ = i00;
-        [[maybe_unused]] const auto i11_ = i11;
         arr(i00) *= -1;
         arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
         arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
