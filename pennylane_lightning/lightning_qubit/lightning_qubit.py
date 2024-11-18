@@ -88,7 +88,7 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    return LightningQubit.capabilities.supports_operation(op.name)
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -99,7 +99,7 @@ def stopping_condition_shots(op: Operator) -> bool:
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
-    return LightningQubit.capabilities.supports_observable(obs.name)
+    return _supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -114,7 +114,7 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return LightningQubit.capabilities.supports_observable(obs.name)
+    return _supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -515,3 +515,7 @@ class LightningQubit(LightningBase):
                 return "LightningSimulator", lib_location
 
         raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
+
+
+_supports_operation = LightningQubit.capabilities.supports_operation
+_supports_observable = LightningQubit.capabilities.supports_observable

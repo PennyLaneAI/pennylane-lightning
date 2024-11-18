@@ -92,7 +92,7 @@ _to_matrix_ops = {
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
-    return LightningGPU.capabilities.supports_operation(op.name)
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -103,7 +103,7 @@ def stopping_condition_shots(op: Operator) -> bool:
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
-    return LightningGPU.capabilities.supports_observable(obs.name)
+    return _supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -118,7 +118,7 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return LightningGPU.capabilities.supports_observable(obs.name)
+    return _supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -498,3 +498,7 @@ class LightningGPU(LightningBase):
                 return "LightningGPUSimulator", lib_location
 
         raise RuntimeError("'LightningGPUSimulator' shared library not found")  # pragma: no cover
+
+
+_supports_operation = LightningGPU.capabilities.supports_operation
+_supports_observable = LightningGPU.capabilities.supports_observable

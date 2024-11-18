@@ -84,7 +84,7 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    return LightningKokkos.capabilities.supports_operation(op.name)
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -95,7 +95,7 @@ def stopping_condition_shots(op: Operator) -> bool:
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.kokkos``."""
-    return LightningKokkos.capabilities.supports_observable(obs.name)
+    return _supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -110,7 +110,7 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return LightningKokkos.capabilities.supports_observable(obs.name)
+    return _supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -467,3 +467,7 @@ class LightningKokkos(LightningBase):
                 return "LightningKokkosSimulator", lib_location
 
         raise RuntimeError("'LightningKokkosSimulator' shared library not found")
+
+
+_supports_operation = LightningKokkos.capabilities.supports_operation
+_supports_observable = LightningKokkos.capabilities.supports_observable
