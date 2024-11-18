@@ -269,7 +269,7 @@ class LightningTensorMeasurements:
                     "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
                 )
             if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, Sum):
-                raise TypeError("VarianceMP(Hamiltonian/Sum) cannot be computed with samples.")
+                raise TypeError("VarianceMP(Sum) cannot be computed with samples.")
             if isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
