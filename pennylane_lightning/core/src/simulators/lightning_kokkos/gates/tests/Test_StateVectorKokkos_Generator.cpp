@@ -60,6 +60,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         PL_REQUIRE_THROWS_MATCHES(
             state_vector.applyGenerator("XXX", {1}, {true}, {0}),
             LightningException, "The given value does not exist.");
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyOperation("PauliX", {}, std::vector<bool>{false},
+                                        std::vector<std::size_t>{1}, false,
+                                        {0.0}, std::vector<ComplexT>{}),
+            LightningException,
+            "`controlled_wires` must have the same size as"); // invalid controlled_wires
     }
 
     SECTION("namedGeneratorFactor") {
