@@ -77,8 +77,10 @@ namespace Pennylane::Util {
  */
 class BLASLibLoaderManager {
   private:
-    static inline std::array<std::string, 6> priority_lib{
-        "stdc", "gcc.", "quadmath", "gfortran", "openblas.so", "openblas.dll"};
+    //static inline std::array<std::string, 6> priority_lib{
+    //    "stdc", "gcc.", "quadmath", "gfortran", "openblas.so", "openblas.dll"};
+
+    static inline std::array<std::string, 2> priority_lib{"openblas.so", "openblas.dll"};
 
     bool scipy_prefix_ = false;
     std::vector<std::shared_ptr<SharedLibLoader>> blasLibs_;
