@@ -24,7 +24,7 @@ namespace Catalyst::Runtime::Simulator {
 auto LightningSimulator::AllocateQubit() -> QubitIdType {
     const std::size_t num_qubits = this->device_sv->getNumQubits();
 
-    if (!num_qubits) {
+    if (num_qubits == 0U) {
         this->device_sv = std::make_unique<StateVectorT>(1);
         return this->qubit_manager.Allocate(num_qubits);
     }
@@ -39,7 +39,7 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
 
     for (auto dst = data.end() - 2; src != data.begin();
          std::advance(src, -1), std::advance(dst, -2)) {
-        *dst = std::move(*src);
+        *dst = *src;
         *src = std::complex<double>(.0, .0);
     }
 
