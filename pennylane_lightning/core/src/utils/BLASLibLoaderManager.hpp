@@ -14,7 +14,7 @@
 
 /**
  * @file
- * LAPACK/BLAS Lib dynamic loader manager.
+ * BLAS Lib dynamic loader manager.
  */
 #pragma once
 
@@ -22,7 +22,6 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <vector>
 
 #include <iostream>
 
@@ -31,25 +30,26 @@
 namespace {
 // Exclusively for python calls and tested in the python layer
 // LCOV_EXCL_START
-#ifndef _MSC_VER
+#ifdef _MSC_VER
 /**
  * @brief Get the path to the current shared library object.
  *
- * @return const char*
+ * @return std::string The path to the shared library object.
  */
-inline const char *getPath() {
-    Dl_info dl_info;
-    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
-                "Can't get the path to the shared library.");
-    return dl_info.dli_fname;
-}
-#elif defined(_MSC_VER)
 inline std::string getPath() {
     char buffer[MAX_PATH];
     GetModuleFileName(nullptr, buffer, MAX_PATH);
     std::string fullPath(buffer);
     std::size_t pos = fullPath.find_last_of("\\/");
     return fullPath.substr(0, pos);
+}
+#else
+// MacOS and Linux
+inline const char *getPath() {
+    Dl_info dl_info;
+    PL_ABORT_IF(dladdr((const void *)getPath, &dl_info) == 0,
+                "Can't get the path to the shared library.");
+    return dl_info.dli_fname;
 }
 #endif
 // LCOV_EXCL_STOP
@@ -64,11 +64,6 @@ namespace Pennylane::Util {
  * locations if no path is provided. The default locations are:
  * - The path provided by the SCIPY_OPENBLAS32_LIB macro.
  * - The path provided by the get_scipylibs_path() function.
- *
- * The class will search for the libraries in the following order:
- * - openblas
- *
- * The class will load the first library found in the order above.
  */
 class BLASLibLoaderManager {
   private:
@@ -86,7 +81,7 @@ class BLASLibLoaderManager {
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             return SCIPY_OPENBLAS32_LIB;
         }
-
+        // LCOV_EXCL_START
         std::string scipyPathStr;
         std::string currentPathStr(getPath());
 
@@ -135,6 +130,7 @@ class BLASLibLoaderManager {
         }
 
         return scipyPathStr;
+        // LCOV_EXCL_STOP
     }
     /**
      * @brief Get the path to the scipy_openblas32/lib package.
@@ -151,11 +147,6 @@ class BLASLibLoaderManager {
     }
     /**
      * @brief BLASLibLoaderManager.
-     *
-     * This function will initialize the BLASLibLoaderManager by searching
-     * for the BLAS libraries in the given path.
-     *
-     * @param blaslib_path The path to the BLAS libraries.
      */
     explicit BLASLibLoaderManager() {
         std::string scipyPathStr = get_scipylibs_path_();
