@@ -61,9 +61,7 @@ T                      = { properties = [ "invertible",                 "differe
 # Operations supported by the execution in Python but not directly supported by the backend
 [pennylane.operators.gates]
 
-BasisState             = {}
 MultiControlledX       = {}
-StatePrep              = {}
 ControlledQubitUnitary = {}
 GlobalPhase            = { properties = [ "invertible", "controllable", "differentiable" ] }
 BlockEncode            = { properties = [ "controllable" ] }
