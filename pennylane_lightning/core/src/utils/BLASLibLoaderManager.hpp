@@ -31,7 +31,7 @@
 namespace {
 // Exclusively for python calls and tested in the python layer
 // LCOV_EXCL_START
-#ifdef __linux__
+#ifndef _MSC_VER
 /**
  * @brief Get the path to the current shared library object.
  *
@@ -72,24 +72,18 @@ namespace Pennylane::Util {
  */
 class BLASLibLoaderManager {
   private:
+  bool scipy_prefix_ = true;
 #ifdef __APPLE__
-    const std::string blas_lib_name_ = "libLAPACK.dylib";
-    bool scipy_prefix_ = false;
+    const std::string blas_lib_name_ = "libscipy_openblas.dylib";
 #elif defined(_MSC_VER)
     const std::string blas_lib_name_ = "libscipy_openblas.dll";
-    bool scipy_prefix_ = true;
 #else
     const std::string blas_lib_name_ = "libscipy_openblas.so";
-    bool scipy_prefix_ = true;
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
 
     static std::string get_scipylibs_path_worker_() {
-#ifdef __APPLE__
-        return "/System/Library/Frameworks/Accelerate.framework/Versions/"
-               "Current/Frameworks/vecLib.framework";
-#else
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             return SCIPY_OPENBLAS32_LIB;
         }
@@ -143,7 +137,6 @@ class BLASLibLoaderManager {
 
         return scipyPathStr;
     }
-#endif
         /**
          * @brief Get the path to the scipy_openblas32/lib package.
          *
