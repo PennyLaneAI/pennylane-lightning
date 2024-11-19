@@ -93,7 +93,7 @@ if __name__ == "__main__":
         "ninja; platform_system!='Windows'",
         "setuptools>=42",
         "tomli",
-        "scipy-openblas32"
+        "scipy-openblas32",
     ]
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")
