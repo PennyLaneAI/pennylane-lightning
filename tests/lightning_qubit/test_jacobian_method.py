@@ -78,8 +78,6 @@ class TestJacobian:
         self, theta, phi, obs, execute_and_derivatives, lightning_sv
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
-        if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs = qml.operation.convert_to_legacy_H(obs)
 
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],
@@ -155,8 +153,6 @@ class TestVJP:
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
     def test_vjp_single_expval(self, theta, phi, obs, execute_and_derivatives, lightning_sv):
         """Test that the VJP is correct when a tape has a single expectation value"""
-        if isinstance(obs, qml.ops.LinearCombination) and not qml.operation.active_new_opmath():
-            obs = qml.operation.convert_to_legacy_H(obs)
 
         qs = QuantumScript(
             [qml.RX(theta, 0), qml.CNOT([0, 1]), qml.RY(phi, 1)],

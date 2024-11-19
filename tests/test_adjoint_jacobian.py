@@ -811,6 +811,70 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad.shape, jac_bp.shape)
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            qml.PhaseShift,
+            qml.RX,
+            qml.RY,
+            qml.RZ,
+            qml.IsingXX,
+            qml.IsingXY,
+            qml.IsingYY,
+            qml.IsingZZ,
+            qml.CRX,
+            qml.CRY,
+            qml.CRZ,
+            qml.ControlledPhaseShift,
+            qml.SingleExcitation,
+            qml.SingleExcitationMinus,
+            qml.SingleExcitationPlus,
+            qml.DoubleExcitation,
+            qml.DoubleExcitationMinus,
+            qml.DoubleExcitationPlus,
+            qml.MultiRZ,
+            qml.GlobalPhase,
+        ],
+    )
+    @pytest.mark.parametrize("n_qubits", range(2, 6))
+    @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
+    def test_inverse_jacobian(self, par, n_qubits, operation, tol):
+        """Test that the jacobian of the controlled gate matches backprop."""
+        par = np.array([0.1234, par, 0.5678])
+        dev = qml.device(device_name, wires=n_qubits)
+        dqu = qml.device("default.qubit", wires=n_qubits)
+        np.random.seed(1337)
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.linalg.norm(init_state)
+        init_state = np.array(init_state, requires_grad=False)
+
+        num_wires = max(operation.num_wires, 1)
+        if num_wires > n_qubits:
+            return
+
+        for w in range(0, n_qubits - num_wires):
+
+            def circuit(p):
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.RX(p[0], 0)
+                if operation is qml.GlobalPhase:
+                    qml.adjoint(operation(p[1], wires=range(n_qubits)))
+                else:
+                    qml.adjoint(operation(p[1], wires=range(w, w + num_wires)))
+                qml.RY(p[2], 0)
+                return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
+
+            circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
+            circ_bp = qml.QNode(circuit, dqu, diff_method="backprop")
+            jac_ad = np.array(qml.jacobian(circ_ad)(par))
+            jac_bp = np.array(qml.jacobian(circ_bp)(par))
+
+            # different methods must agree
+            assert jac_ad.size == n_qubits * 3
+            assert np.allclose(jac_ad.shape, [n_qubits, 3])
+            assert np.allclose(jac_ad.shape, jac_bp.shape)
+            assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
+
     @pytest.mark.skipif(
         device_name == "lightning.kokkos",
         reason="N-controlled generator operations only implemented in lightning.qubit and lightning.gpu",
