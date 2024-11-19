@@ -93,16 +93,11 @@ if(ENABLE_PYTHON)
                         GIT_TAG        v2.13.5
     )
     FetchContent_MakeAvailable(pybind11)
-    if(CMAKE_SYSTEM_NAME MATCHES "Windows")
-        set(SCIPY_OPENBLAS32_LIB "${Python_SITELIB}\\scipy_openblas32\\lib" CACHE STRING "Path to the scipy_openblas32 library")
-    else()
-        set(SCIPY_OPENBLAS32_LIB "${Python_SITELIB}/scipy_openblas32/lib" CACHE STRING "Path to the scipy_openblas32 library")
-    endif()
-else()
-    set(SCIPY_OPENBLAS32_LIB "" CACHE STRING "Path to the scipy_openblas32 library")
-    include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
-    get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
 endif()
+
+set(SCIPY_OPENBLAS32_LIB "" CACHE STRING "Path to the scipy_openblas32 library")
+include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
+get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
 
 add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB}")
 
