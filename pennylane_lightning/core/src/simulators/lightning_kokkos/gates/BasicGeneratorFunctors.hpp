@@ -53,6 +53,8 @@ void applyGenControlledPhaseShift(
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         [[maybe_unused]] const auto i11_ = i11;
 
         arr(i00) = 0.0;
@@ -70,6 +72,8 @@ void applyGenCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         arr(i00) = 0.0;
         arr(i01) = 0.0;
         kokkos_swap(arr(i10), arr(i11));
@@ -83,6 +87,8 @@ void applyGenCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                  std::size_t num_qubits, const std::vector<std::size_t> &wires,
                  [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         arr(i00) = 0.0;
@@ -102,6 +108,8 @@ void applyGenCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         [[maybe_unused]] const auto i10_ = i10;
         arr(i00) = 0.0;
         arr(i01) = 0.0;
@@ -119,6 +127,8 @@ void applyGenIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         kokkos_swap(arr(i00), arr(i11));
         kokkos_swap(arr(i10), arr(i01));
     };
@@ -132,6 +142,8 @@ void applyGenIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         kokkos_swap(arr(i10), arr(i01));
@@ -150,6 +162,8 @@ void applyGenIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         const auto v00 = arr(i00);
         arr(i00) = -arr(i11);
         arr(i11) = -v00;
@@ -165,6 +179,8 @@ void applyGenIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         [[maybe_unused]] const auto i00_ = i00;
@@ -203,6 +219,8 @@ void applyGenSingleExcitationMinus(
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         [[maybe_unused]] const auto i00_ = i00;
         [[maybe_unused]] const auto i11_ = i11;
 
@@ -220,6 +238,8 @@ void applyGenSingleExcitationPlus(
     const std::vector<std::size_t> &wires,
     [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         [[maybe_unused]] const auto i00_ = i00;
@@ -346,9 +366,11 @@ void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     std::size_t wires_parity = static_cast<std::size_t>(0U);
     for (std::size_t wire : wires) {
         wires_parity |= exp2(num_qubits - wire - 1);
+        wires_parity |= exp2(num_qubits - wire - 1);
     }
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        KOKKOS_LAMBDA(std::size_t k) {
         KOKKOS_LAMBDA(std::size_t k) {
             arr_(k) *= static_cast<PrecisionT>(
                 1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
