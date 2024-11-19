@@ -277,7 +277,6 @@ class TestAdjointJacobian:
 
         assert np.allclose(expected, result, atol=tol, rtol=0)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, lightning_sv):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -321,7 +320,7 @@ class TestAdjointJacobian:
 def simple_circuit_ansatz(params, wires):
     """Circuit ansatz containing a large circuit"""
     return [
-        qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires),
+        qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires),
         qml.RX(params[0], wires=wires[0]),
         qml.RY(params[1], wires=wires[1]),
         qml.RZ(params[2], wires=wires[3]),
@@ -388,7 +387,6 @@ class TestVectorJacobianProduct:
 
         return LightningAdjointJacobian(statevector).calculate_vjp(tape, vector)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_multiple_measurements(self, tol, lightning_sv):
         """Tests provides correct answer when provided multiple measurements."""
         x, y, z = [0.5, 0.3, -0.7]

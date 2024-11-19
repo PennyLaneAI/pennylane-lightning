@@ -228,7 +228,6 @@ class TestVectorJacobianProduct:
                 dev.vjp(tape.measurements, dy)(tape)
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
 

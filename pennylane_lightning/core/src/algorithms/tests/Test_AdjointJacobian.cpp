@@ -57,7 +57,7 @@ using namespace Pennylane::LightningKokkos::Observables;
 
 #elif _ENABLE_PLGPU == 1
 constexpr bool BACKEND_FOUND = true;
-constexpr bool SUPPORTS_CTRL = false;
+constexpr bool SUPPORTS_CTRL = true;
 #include "AdjointJacobianGPU.hpp"
 #include "ObservablesGPU.hpp"
 #include "TestHelpersStateVectors.hpp"

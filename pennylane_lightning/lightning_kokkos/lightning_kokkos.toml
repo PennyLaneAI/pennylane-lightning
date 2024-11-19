@@ -50,7 +50,6 @@ T                      = { properties = [ "invertible", "controllable", "differe
 
 BasisState             = {}
 MultiControlledX       = {}
-QubitStateVector       = {}
 StatePrep              = {}
 ControlledQubitUnitary = {}
 
@@ -78,7 +77,6 @@ PauliY                 = { properties = [ "differentiable" ] }
 PauliZ                 = { properties = [ "differentiable" ] }
 Hadamard               = { properties = [ "differentiable" ] }
 Hermitian              = { properties = [ "differentiable" ] }
-Hamiltonian            = { properties = [ "differentiable" ] }
 SparseHamiltonian      = { properties = [ "differentiable" ] }
 Sum                    = { properties = [ "differentiable" ] }
 SProd                  = { properties = [ "differentiable" ] }
