@@ -58,7 +58,6 @@ void compute_diagonalizing_gates(int n, int lda,
                                  std::vector<T> &eigenVals,
                                  std::vector<std::complex<T>> &unitary) {
     auto &blasLoader = BLASLibLoaderManager::getInstance();
-    auto scipy_prefix = blasLoader.getScipyPrefix();
     auto *blasLibLoader = blasLoader.getBLASLib();
 
     eigenVals.clear();
@@ -82,8 +81,7 @@ void compute_diagonalizing_gates(int n, int lda,
     int info;
 
     if constexpr (std::is_same<T, float>::value) {
-        auto cheev = blasLibLoader->getSymbol<cheevPtr>(
-            scipy_prefix ? "scipy_cheev_" : "cheev_");
+        auto cheev = blasLibLoader->getSymbol<cheevPtr>("scipy_cheev_");
         // Query optimal workspace size
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);
@@ -94,8 +92,7 @@ void compute_diagonalizing_gates(int n, int lda,
         cheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_optimal.data(), &lwork, rwork.data(), &info);
     } else {
-        auto zheev = blasLibLoader->getSymbol<zheevPtr>(
-            scipy_prefix ? "scipy_zheev_" : "zheev_");
+        auto zheev = blasLibLoader->getSymbol<zheevPtr>("scipy_zheev_");
         // Query optimal workspace size
         zheev(&jobz, &uplo, &n, ah.data(), &lda, eigenVals.data(),
               work_query.data(), &lwork, rwork.data(), &info);

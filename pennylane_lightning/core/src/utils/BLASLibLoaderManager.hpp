@@ -72,7 +72,6 @@ namespace Pennylane::Util {
  */
 class BLASLibLoaderManager {
   private:
-  bool scipy_prefix_ = true;
 #ifdef __APPLE__
     const std::string blas_lib_name_ = "libscipy_openblas.dylib";
 #elif defined(_MSC_VER)
@@ -137,65 +136,54 @@ class BLASLibLoaderManager {
 
         return scipyPathStr;
     }
-        /**
-         * @brief Get the path to the scipy_openblas32/lib package.
-         *
-         * This function will return the path to the scipy_openblas32/lib
-         * package. It will first try to get the path from the current Python
-         * environment. This method only works for Python layer calls, which
-         * means a Python interpreter is running.
-         *
-         * @return std::string The path to the scipy_openblas32/lib package.
-         */
-        static std::string get_scipylibs_path_() {
-            return get_scipylibs_path_worker_();
-        }
-        /**
-         * @brief BLASLibLoaderManager.
-         *
-         * This function will initialize the BLASLibLoaderManager by searching
-         * for the BLAS libraries in the given path.
-         *
-         * @param blaslib_path The path to the BLAS libraries.
-         */
-        explicit BLASLibLoaderManager() {
-            std::string scipyPathStr = get_scipylibs_path_();
-            std::filesystem::path scipyLibsPath(scipyPathStr);
-            auto libPath = scipyLibsPath / blas_lib_name_.c_str();
-            blasLib_ = std::make_shared<SharedLibLoader>(libPath.string());
-        }
+    /**
+     * @brief Get the path to the scipy_openblas32/lib package.
+     *
+     * This function will return the path to the scipy_openblas32/lib
+     * package. It will first try to get the path from the current Python
+     * environment. This method only works for Python layer calls, which
+     * means a Python interpreter is running.
+     *
+     * @return std::string The path to the scipy_openblas32/lib package.
+     */
+    static std::string get_scipylibs_path_() {
+        return get_scipylibs_path_worker_();
+    }
+    /**
+     * @brief BLASLibLoaderManager.
+     *
+     * This function will initialize the BLASLibLoaderManager by searching
+     * for the BLAS libraries in the given path.
+     *
+     * @param blaslib_path The path to the BLAS libraries.
+     */
+    explicit BLASLibLoaderManager() {
+        std::string scipyPathStr = get_scipylibs_path_();
+        std::filesystem::path scipyLibsPath(scipyPathStr);
+        auto libPath = scipyLibsPath / blas_lib_name_.c_str();
+        blasLib_ = std::make_shared<SharedLibLoader>(libPath.string());
+    }
 
-      public:
-        BLASLibLoaderManager(BLASLibLoaderManager &&) = delete;
-        BLASLibLoaderManager(const BLASLibLoaderManager &) = delete;
-        BLASLibLoaderManager &operator=(const BLASLibLoaderManager &) = delete;
-        BLASLibLoaderManager operator=(const BLASLibLoaderManager &&) = delete;
+  public:
+    BLASLibLoaderManager(BLASLibLoaderManager &&) = delete;
+    BLASLibLoaderManager(const BLASLibLoaderManager &) = delete;
+    BLASLibLoaderManager &operator=(const BLASLibLoaderManager &) = delete;
+    BLASLibLoaderManager operator=(const BLASLibLoaderManager &&) = delete;
 
-        static BLASLibLoaderManager &getInstance() {
-            static BLASLibLoaderManager instance;
-            return instance;
-        }
+    static BLASLibLoaderManager &getInstance() {
+        static BLASLibLoaderManager instance;
+        return instance;
+    }
 
-        ~BLASLibLoaderManager() = default;
+    ~BLASLibLoaderManager() = default;
 
-        /**
-         * @brief Get the BLAS library.
-         *
-         * This function will return the BLAS library.
-         *
-         * @return SharedLibLoader* The BLAS library.
-         */
-        auto getBLASLib()->SharedLibLoader * { return blasLib_.get(); }
-
-        /**
-         * @brief Get the BLAS libraries.
-         *
-         * This function will return the BLAS libraries.
-         *
-         * @return std::vector<SharedLibLoader*> The BLAS libraries.
-         */
-        [[nodiscard]] auto getScipyPrefix() const->bool {
-            return scipy_prefix_;
-        }
-    };
+    /**
+     * @brief Get the BLAS library.
+     *
+     * This function will return the BLAS library.
+     *
+     * @return SharedLibLoader* The BLAS library.
+     */
+    auto getBLASLib() -> SharedLibLoader * { return blasLib_.get(); }
+};
 } // namespace Pennylane::Util
