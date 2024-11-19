@@ -197,9 +197,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
             state_vector_2.applyMultiQubitOp(mkview, wires);
 
             PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10E3;
-            REQUIRE(isApproxEqual(
-                state_vector_1.getData(), state_vector_1.getLength(),
-                state_vector_2.getData(), state_vector_2.getLength(), eps));
+            REQUIRE(isApproxEqual(state_vector_1.getDataVector(),
+                                  state_vector_2.getDataVector(), eps));
         }
     }
 }
@@ -384,9 +383,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::collapse", "[StateVectorKokkos]", float,
         sv.collapse(wire, branch);
 
         PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10e3;
-        REQUIRE(isApproxEqual(sv.getData(), sv.getDataVector().size(),
-                              expected_state[branch][wire].data(),
-                              expected_state[branch][wire].size(), eps));
+        REQUIRE(isApproxEqual(sv.getDataVector(), expected_state[branch][wire],
+                              eps));
     }
 }
 
@@ -413,8 +411,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::normalize", "[StateVectorKokkos]", float,
         sv.normalize();
 
         PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 1e3;
-        REQUIRE(isApproxEqual(sv.getData(), sv.getDataVector().size(),
-                              expected_state.data(), expected_state.size(),
-                              eps));
+        REQUIRE(isApproxEqual(sv.getDataVector(), expected_state, eps));
     }
 }

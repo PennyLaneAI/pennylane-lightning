@@ -648,6 +648,11 @@ class StateVectorKokkos final
         updateData(other.data(), other.size());
     }
 
+    /**
+     * @brief Get underlying Kokkos view data on the device
+     *
+     * @return ComplexT *
+     */
     [[nodiscard]] auto getData() -> ComplexT * { return getView().data(); }
 
     [[nodiscard]] auto getData() const -> const ComplexT * {
@@ -669,7 +674,9 @@ class StateVectorKokkos final
     [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
 
     /**
-     * @brief Get underlying data vector
+     * @brief Get the vector converted underlying Kokkos view
+     *
+     * @return std::vector<ComplexT>
      */
     [[nodiscard]] auto getDataVector() -> std::vector<ComplexT> {
         return view2vector(getView());
