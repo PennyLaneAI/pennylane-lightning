@@ -18,7 +18,6 @@
  */
 #pragma once
 
-#include <array>
 #include <cstdlib>
 #include <filesystem>
 #include <memory>
@@ -67,30 +66,33 @@ namespace Pennylane::Util {
  * - The path provided by the get_scipylibs_path() function.
  *
  * The class will search for the libraries in the following order:
- * - stdc
- * - gcc.
- * - quadmath
- * - gfortran
  * - openblas
  *
  * The class will load the first library found in the order above.
  */
 class BLASLibLoaderManager {
   private:
-    //static inline std::array<std::string, 6> priority_lib{
-    //    "stdc", "gcc.", "quadmath", "gfortran", "openblas.so", "openblas.dll"};
+    bool scipy_prefix_ = true;
+#ifdef __APPLE__
+    const std::string blas_lib_name_ = "libLAPACK.dylib";
+    scipy_prefix_ = false;
+#elif defined(_MSC_VER)
+    const std::string blas_lib_name_ = "libscipy_openblas.dll";
+#else
+    const std::string blas_lib_name_ = "libscipy_openblas.so";
+#endif
 
-    static inline std::array<std::string, 2> priority_lib{"openblas.so", "openblas.dll"};
-
-    bool scipy_prefix_ = false;
-    std::vector<std::shared_ptr<SharedLibLoader>> blasLibs_;
     std::shared_ptr<SharedLibLoader> blasLib_;
 
-#ifndef __APPLE__
     static std::string get_scipylibs_path_worker_() {
+#ifdef __APPLE__
+        return "/System/Library/Frameworks/Accelerate.framework/Versions/"
+               "Current/Frameworks/vecLib.framework";
+#else
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             return SCIPY_OPENBLAS32_LIB;
         }
+
         std::string scipyPathStr;
         std::string currentPathStr(getPath());
 
@@ -140,110 +142,66 @@ class BLASLibLoaderManager {
 
         return scipyPathStr;
     }
-
-    /**
-     * @brief Get the path to the scipy_openblas32/lib package.
-     *
-     * This function will return the path to the scipy_openblas32/lib package.
-     * It will first try to get the path from the current Python environment.
-     * This method only works for Python layer calls, which means a Python
-     * interpreter is running.
-     *
-     * @return std::string The path to the scipy_openblas32/lib package.
-     */
-    static std::string get_scipylibs_path_() {
-        return get_scipylibs_path_worker_();
-    }
 #endif
-    /**
-     * @brief BLASLibLoaderManager.
-     *
-     * This function will initialize the BLASLibLoaderManager by searching for
-     * the BLAS libraries in the given path.
-     *
-     * @param blas_lib_path_str The path to the BLAS libraries.
-     */
-    void init_helper_(const std::string &blas_lib_path_str) {
-        std::filesystem::path scipyLibsPath(blas_lib_path_str);
-
-        std::vector<std::string> availableLibs;
-        availableLibs.reserve(priority_lib.size());
-
-        for (const auto &iter : priority_lib) {
-            for (const auto &lib :
-                 std::filesystem::directory_iterator(scipyLibsPath)) {
-                if (lib.is_regular_file()) {
-                    std::string libname_str = lib.path().filename().string();
-                    if (libname_str.find(iter) != std::string::npos) {
-                        availableLibs.push_back(libname_str);
-                    }
-                }
-            }
+        /**
+         * @brief Get the path to the scipy_openblas32/lib package.
+         *
+         * This function will return the path to the scipy_openblas32/lib
+         * package. It will first try to get the path from the current Python
+         * environment. This method only works for Python layer calls, which
+         * means a Python interpreter is running.
+         *
+         * @return std::string The path to the scipy_openblas32/lib package.
+         */
+        static std::string get_scipylibs_path_() {
+            return get_scipylibs_path_worker_();
+        }
+        /**
+         * @brief BLASLibLoaderManager.
+         *
+         * This function will initialize the BLASLibLoaderManager by searching
+         * for the BLAS libraries in the given path.
+         *
+         * @param blaslib_path The path to the BLAS libraries.
+         */
+        explicit BLASLibLoaderManager() {
+            std::string scipyPathStr = get_scipylibs_path_();
+            std::filesystem::path scipyLibsPath(scipyPathStr);
+            auto libPath = scipyLibsPath / blas_lib_name_.c_str();
+            blasLib_ = std::make_shared<SharedLibLoader>(libPath.string());
         }
 
-        for (const auto &lib : availableLibs) {
-            auto libPath = scipyLibsPath / lib.c_str();
-            blasLibs_.emplace_back(
-                std::make_shared<SharedLibLoader>(libPath.string()));
+      public:
+        BLASLibLoaderManager(BLASLibLoaderManager &&) = delete;
+        BLASLibLoaderManager(const BLASLibLoaderManager &) = delete;
+        BLASLibLoaderManager &operator=(const BLASLibLoaderManager &) = delete;
+        BLASLibLoaderManager operator=(const BLASLibLoaderManager &&) = delete;
+
+        static BLASLibLoaderManager &getInstance() {
+            static BLASLibLoaderManager instance;
+            return instance;
         }
 
-        scipy_prefix_ = std::find_if(availableLibs.begin(), availableLibs.end(),
-                                     [](const auto &lib) {
-                                         return lib.find("scipy_openblas") !=
-                                                std::string::npos;
-                                     }) != availableLibs.end();
+        ~BLASLibLoaderManager() = default;
 
-        blasLib_ = blasLibs_.back();
-    }
-    /**
-     * @brief BLASLibLoaderManager.
-     *
-     * This function will initialize the BLASLibLoaderManager by searching for
-     * the BLAS libraries in the given path.
-     *
-     * @param blaslib_path The path to the BLAS libraries.
-     */
-    explicit BLASLibLoaderManager() {
-#if defined(__APPLE__)
-        // On macOS, use the default BLAS library path.
-        blasLib_ = std::make_shared<SharedLibLoader>(
-            "/System/Library/Frameworks/Accelerate.framework/Versions/Current/"
-            "Frameworks/vecLib.framework/libLAPACK.dylib");
-#else
-        std::string scipyPathStr = get_scipylibs_path_();
-        init_helper_(scipyPathStr);
-#endif
-    }
+        /**
+         * @brief Get the BLAS library.
+         *
+         * This function will return the BLAS library.
+         *
+         * @return SharedLibLoader* The BLAS library.
+         */
+        auto getBLASLib()->SharedLibLoader * { return blasLib_.get(); }
 
-  public:
-    BLASLibLoaderManager(BLASLibLoaderManager &&) = delete;
-    BLASLibLoaderManager(const BLASLibLoaderManager &) = delete;
-    BLASLibLoaderManager &operator=(const BLASLibLoaderManager &) = delete;
-    BLASLibLoaderManager operator=(const BLASLibLoaderManager &&) = delete;
-
-    static BLASLibLoaderManager &getInstance() {
-        static BLASLibLoaderManager instance;
-        return instance;
-    }
-
-    ~BLASLibLoaderManager() = default;
-
-    /**
-     * @brief Get the BLAS library.
-     *
-     * This function will return the BLAS library.
-     *
-     * @return SharedLibLoader* The BLAS library.
-     */
-    auto getBLASLib() -> SharedLibLoader * { return blasLib_.get(); }
-
-    /**
-     * @brief Get the BLAS libraries.
-     *
-     * This function will return the BLAS libraries.
-     *
-     * @return std::vector<SharedLibLoader*> The BLAS libraries.
-     */
-    [[nodiscard]] auto getScipyPrefix() const -> bool { return scipy_prefix_; }
-};
+        /**
+         * @brief Get the BLAS libraries.
+         *
+         * This function will return the BLAS libraries.
+         *
+         * @return std::vector<SharedLibLoader*> The BLAS libraries.
+         */
+        [[nodiscard]] auto getScipyPrefix() const->bool {
+            return scipy_prefix_;
+        }
+    };
 } // namespace Pennylane::Util
