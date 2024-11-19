@@ -144,6 +144,8 @@ class CMakeBuild(build_ext):
 
         if "CMAKE_ARGS" in os.environ:
             configure_args += os.environ["CMAKE_ARGS"].split(" ")
+        
+        configure_args += ["-DSETUP_PY_BUILD=ON"]
 
         subprocess.check_call(
             ["cmake", str(ext.sourcedir)] + configure_args,

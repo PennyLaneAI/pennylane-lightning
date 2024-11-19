@@ -46,6 +46,7 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
+option(SETUP_PY_BUILD "setup.py build" OFF)
 set(SCIPY_OPENBLAS32_LIB "" CACHE STRING "Path to the scipy_openblas32 library")
 
 # OpenMP
@@ -96,7 +97,8 @@ if(ENABLE_PYTHON)
     FetchContent_MakeAvailable(pybind11)
 endif()
 
-if (NOT ENABLE_PYTHON OR BUILD_TESTS)
+
+if(NOT SETUP_PY_BUILD)
     include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
     get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
 endif()
