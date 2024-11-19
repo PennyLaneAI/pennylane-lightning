@@ -18,6 +18,7 @@
 
 * Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
   [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
+  [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
 
 ### Improvements
 
@@ -30,6 +31,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix issue with adjoint-jacobian of adjoint ops.
+  [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
 
 * Fix the `upload-pypi` token issues for Linux and MacOS (x86_64 & AARCH64) wheels.
   [(#989)](https://github.com/PennyLaneAI/pennylane-lightning/pull/989)
