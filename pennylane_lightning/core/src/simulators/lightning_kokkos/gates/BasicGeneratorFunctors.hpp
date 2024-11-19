@@ -340,12 +340,10 @@ void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
                      [[maybe_unused]] const bool inverse = false) {
-    constexpr std::size_t one{1U};
-    std::size_t wires_parity =
-        std::accumulate(wires.begin(), wires.end(), std::size_t{0},
-                        [num_qubits](std::size_t acc, std::size_t wire) {
-                            return acc | (one << (num_qubits - wire - 1));
-                        });
+    std::size_t wires_parity = static_cast<std::size_t>(0U);
+    for (std::size_t wire : wires) {
+        wires_parity |= exp2(num_qubits - wire - 1);
+    }
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t k) {
@@ -884,7 +882,6 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
                        [[maybe_unused]] const bool inverse = false) {
-    constexpr std::size_t one{1U};
     auto ctrls_mask = static_cast<std::size_t>(0U);
     for (std::size_t i = 0; i < controlled_wires.size(); i++) {
         ctrls_mask |= (static_cast<std::size_t>(controlled_values[i])
@@ -893,12 +890,12 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
     std::size_t ctrls_parity = std::accumulate(
         controlled_wires.begin(), controlled_wires.end(), std::size_t{0},
         [num_qubits](std::size_t acc, std::size_t wire) {
-            return acc | (one << (num_qubits - wire - 1));
+            return acc | exp2(num_qubits - wire - 1);
         });
     std::size_t wires_parity =
         std::accumulate(wires.begin(), wires.end(), std::size_t{0},
                         [num_qubits](std::size_t acc, std::size_t wire) {
-                            return acc | (one << (num_qubits - wire - 1));
+                            return acc | exp2(num_qubits - wire - 1);
                         });
 
     Kokkos::parallel_for(
