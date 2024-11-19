@@ -127,6 +127,7 @@ _operations = frozenset(
         "C(DoubleExcitationMinus)",
         "C(DoubleExcitationPlus)",
         "C(MultiRZ)",
+        "C(QubitUnitary)",
         "C(GlobalPhase)",
         "CRot",
         "IsingXX",

@@ -135,9 +135,9 @@ class Measurements final
      */
     auto getExpValMatrix(const KokkosVector matrix,
                          const std::vector<std::size_t> &wires) -> PrecisionT {
-        std::size_t num_qubits = this->_statevector.getNumQubits();
-        std::size_t two2N = std::exp2(num_qubits - wires.size());
-        std::size_t dim = std::exp2(wires.size());
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t two2N = exp2(num_qubits - wires.size());
+        const std::size_t dim = exp2(wires.size());
         const KokkosVector arr_data = this->_statevector.getView();
 
         PrecisionT expval = 0.0;

@@ -197,13 +197,18 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
+        inv = False  # TODO: update to use adjoint in C++ instead of in Python
         if method is not None:  # apply n-controlled specialized gate
-            inv = False
             param = operation.parameters
             method(control_wires, control_values, target_wires, inv, param)
-        else:
-            raise qml.DeviceError(
-                "No gate operation supplied and controlled matrix not yet supported"
+        else:  # apply gate as an n-controlled matrix
+            method = getattr(state, "applyControlledMatrix")
+            method(
+                qml.matrix(operation.base),
+                control_wires,
+                control_values,
+                target_wires,
+                inv,
             )
 
     def _apply_lightning_midmeasure(
@@ -284,10 +289,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(operation, qml.ops.Controlled) and not isinstance(
-                operation.base, (qml.QubitUnitary, qml.BlockEncode)
-            ):  # apply n-controlled gate
-                # Kokkos does not support controlled gates except for GlobalPhase and single-qubit
+            elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(operation)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
