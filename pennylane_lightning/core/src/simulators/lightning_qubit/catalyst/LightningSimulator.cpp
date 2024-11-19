@@ -29,7 +29,8 @@ auto LightningSimulator::AllocateQubit() -> QubitIdType {
         return this->qubit_manager.Allocate(num_qubits);
     }
 
-    std::vector<std::complex<double>> data = this->device_sv->getDataVector();
+    std::vector<std::complex<double>, AlignedAllocator<std::complex<double>>>
+        data = this->device_sv->getDataVector();
     const std::size_t dsize = data.size();
     data.resize(dsize << 1UL);
 
