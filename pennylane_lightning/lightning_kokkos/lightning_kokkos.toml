@@ -62,7 +62,7 @@ T                      = { properties = [ "invertible",                 "differe
 [pennylane.operators.gates]
 
 MultiControlledX       = {}
-QubitStateVector       = {}
+StatePrep              = {}
 ControlledQubitUnitary = {}
 GlobalPhase            = { properties = [ "invertible", "controllable", "differentiable" ] }
 BlockEncode            = { properties = [ "controllable" ] }
