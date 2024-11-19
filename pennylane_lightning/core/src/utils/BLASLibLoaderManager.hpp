@@ -72,14 +72,15 @@ namespace Pennylane::Util {
  */
 class BLASLibLoaderManager {
   private:
-    bool scipy_prefix_ = true;
 #ifdef __APPLE__
     const std::string blas_lib_name_ = "libLAPACK.dylib";
-    scipy_prefix_ = false;
+    bool scipy_prefix_ = false;
 #elif defined(_MSC_VER)
     const std::string blas_lib_name_ = "libscipy_openblas.dll";
+    bool scipy_prefix_ = true;
 #else
     const std::string blas_lib_name_ = "libscipy_openblas.so";
+    bool scipy_prefix_ = true;
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
