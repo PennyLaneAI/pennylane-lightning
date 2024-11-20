@@ -251,11 +251,8 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
                          Catch::Approx(probabilities).margin(1e-6));
         }
     }
-    SECTION("14 qubits") {
-        // Reduce the number of qubits to 14 (from 21) will enable us to
-        // test the device on GPU boxes with a relatively small L0 scratch
-        // memory.
-        constexpr std::size_t num_qubits = 14;
+    SECTION("21 qubits") {
+        constexpr std::size_t num_qubits = 21;
         auto statevector_data =
             std::vector<ComplexT>((1UL << num_qubits), {0.0, 0.0});
         std::vector<std::size_t> device_wires(num_qubits);
