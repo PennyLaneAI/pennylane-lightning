@@ -22,7 +22,7 @@
 #include <numeric>
 #include <span>
 
-#include "StateVectorLQubitDynamic.hpp"
+#include "StateVectorLQubitManaged.hpp"
 
 #include "CacheManager.hpp"
 #include "Exception.hpp"
@@ -35,7 +35,7 @@ namespace Catalyst::Runtime::Simulator {
 class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
     using StateVectorT =
-        Pennylane::LightningQubit::StateVectorLQubitDynamic<double>;
+        Pennylane::LightningQubit::StateVectorLQubitManaged<double>;
 
     // static constants for RESULT values
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
