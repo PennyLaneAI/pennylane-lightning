@@ -16,6 +16,7 @@ import platform
 import subprocess
 import shutil
 import sys
+import scipy_openblas32
 
 from importlib import import_module
 from importlib.util import find_spec
@@ -27,6 +28,8 @@ from setuptools.command.build_ext import build_ext
 
 has_toml = False
 toml_libs = ["tomli", "tomllib", "tomlkit", "toml"]
+scipy_openblas32_lib_path = scipy_openblas32.get_lib_dir()
+
 for pkg in toml_libs:
     spec = find_spec(pkg)
     if spec:
@@ -145,8 +148,6 @@ class CMakeBuild(build_ext):
         if "CMAKE_ARGS" in os.environ:
             configure_args += os.environ["CMAKE_ARGS"].split(" ")
         
-        configure_args += ["-DSETUP_PY_BUILD=ON"]
-
         subprocess.check_call(
             ["cmake", str(ext.sourcedir)] + configure_args,
             cwd=self.build_temp,
@@ -189,6 +190,16 @@ info = {
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
 }
+
+info.update(
+    {
+        "package_data": {
+            "pennylane_lightning.libs": [
+                os.path.join(scipy_openblas32_lib_path, "*"),
+            ]
+        },
+    }
+)
 
 if backend == "lightning_qubit":
     info.update(
