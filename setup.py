@@ -147,7 +147,18 @@ class CMakeBuild(build_ext):
 
         if "CMAKE_ARGS" in os.environ:
             configure_args += os.environ["CMAKE_ARGS"].split(" ")
+                
+        scipy_libs_src = Path(scipy_openblas32_lib_path)
+        scipy_libs_dst = os.path.join(self.build_lib, "pennylane_lightning", "scipy_openblas32.libs")
+        if not os.path.exists(scipy_libs_dst):
+            os.makedirs(scipy_libs_dst)
         
+        for lib_file in os.listdir(scipy_libs_src):
+            src_path = os.path.join(scipy_libs_src, lib_file)
+            dest_path = os.path.join(scipy_libs_dst, lib_file)
+            if os.path.isfile(src_path):
+                shutil.copy2(src_path, dest_path)
+
         subprocess.check_call(
             ["cmake", str(ext.sourcedir)] + configure_args,
             cwd=self.build_temp,
@@ -191,15 +202,6 @@ info = {
     "ext_package": "pennylane_lightning",
 }
 
-info.update(
-    {
-        "package_data": {
-            "pennylane_lightning.libs": [
-                os.path.join(scipy_openblas32_lib_path, "*"),
-            ]
-        },
-    }
-)
 
 if backend == "lightning_qubit":
     info.update(
