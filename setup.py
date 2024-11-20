@@ -161,7 +161,8 @@ class CMakeBuild(build_ext):
         
         if platform.system() == "Darwin":
             dylibs_path = (scipy_libs_src.parent / '.dylibs').resolve()
-            shutil.copytree(dylibs_path, scipy_libs_dst.parent)
+            scipy_libs_path = Path(scipy_libs_dst)
+            shutil.copytree(dylibs_path, scipy_libs_path.parent)
 
         subprocess.check_call(
             ["cmake", str(ext.sourcedir)] + configure_args,
