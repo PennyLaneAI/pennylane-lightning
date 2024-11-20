@@ -47,7 +47,6 @@ option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
 option(SETUP_PY_BUILD "setup.py build" OFF)
-set(SCIPY_OPENBLAS32_LIB "" CACHE STRING "Path to the scipy_openblas32 library")
 
 # OpenMP
 find_package(OpenMP)
@@ -97,16 +96,6 @@ if(ENABLE_PYTHON)
     FetchContent_MakeAvailable(pybind11)
 endif()
 
-
-if(NOT SETUP_PY_BUILD)
-    include("${pennylane_lightning_SOURCE_DIR}/cmake/support_scipy_openblas.cmake")
-    get_scipy_openblas(SCIPY_OPENBLAS32_LIB)
-endif()
-
-add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB}")
-
-message(STATUS "Python_SITELIB: ${Python_SITELIB}")
-message(STATUS "SCIPY_OPENBLAS32_LIB: ${SCIPY_OPENBLAS32_LIB}")
 
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")

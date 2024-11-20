@@ -22,8 +22,11 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-
 #include <iostream>
+
+#ifndef SCIPY_OPENBLAS32_LIB
+#define SCIPY_OPENBLAS32_LIB "../scipy_openblas32/lib"
+#endif
 
 #include "SharedLibLoader.hpp"
 

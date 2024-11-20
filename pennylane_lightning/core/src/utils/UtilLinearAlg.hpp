@@ -15,7 +15,7 @@
 
 /**
  * @file
- * LAPACK/BLAS wrapper functions declarations.
+ * BLAS wrapper functions declarations.
  */
 #pragma once
 
@@ -29,7 +29,7 @@
 /// @cond DEV
 namespace {
 // Declare heev function pointers to access corresponding functions in
-// LAPACK/OpenBLAS
+// OpenBLAS
 using zheevPtr = void (*)(const char *, const char *, const int *,
                           std::complex<double> *, const int *, double *,
                           std::complex<double> *, const int *, double *, int *);
