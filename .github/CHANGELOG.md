@@ -23,7 +23,7 @@
 
 ### Improvements
 
-* Update Kokkos version and support to 4.4.1 and enable LK+CUDA C++ tests on CI.
+* Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
 
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
