@@ -683,7 +683,7 @@ class StateVectorKokkos final
     [[nodiscard]] auto getView() -> KokkosVector & { return *data_; }
 
     /**
-     * @brief Get the vector converted underlying Kokkos view
+     * @brief Get the vector-converted Kokkos view
      *
      * @return std::vector<ComplexT>
      */

@@ -23,6 +23,9 @@
 
 ### Improvements
 
+* Update Kokkos version and support to 4.4.1 and enable LK+CUDA C++ tests on CI.
+  [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
+
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
   [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
 
@@ -32,6 +35,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix the Lightning-Kokkos[CUDA] C++ API `cudaFree` segfaults in `applyMatrix`.
+  [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
 
 * Fix issue with adjoint-jacobian of adjoint ops.
   [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
