@@ -31,14 +31,11 @@ using namespace Pennylane::LightningTensor;
 using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
 namespace cuUtil = Pennylane::LightningGPU::Util;
-} // namespace
-/// @endcond
-
 using TestTNBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
                               ExaTNCuda<float>, ExaTNCuda<double>>;
-// using TestTNBackends = Pennylane::Util::TypeList<MPSTNCuda<float>,
-// MPSTNCuda<double>>;
+} // namespace
+/// @endcond
 
 TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Identity", "[TNCuda_Nonparam]",
                         TestTNBackends) {
@@ -136,7 +133,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliX", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    // using Precision_T = typename TNDevice_T::PrecisionT;
 
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
