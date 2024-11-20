@@ -486,8 +486,17 @@ class StateVectorKokkos final
                             const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
-        std::size_t n = static_cast<std::size_t>(1U) << wires.size();
-        KokkosVector matrix_(matrix, n * n);
+        const std::size_t n = static_cast<std::size_t>(1U) << wires.size();
+        const std::size_t n2 = n * n;
+        KokkosVector matrix_("matrix_", n2);
+
+        // Note that when copying data between different memory spaces (host !=
+        // device), Kokkos::View<Kokkos::complex*> cannot perform a deep copy of
+        // unmanaged complex numbers during initialization via its constructor.
+        // Thus, we need to explicitly deep-copy the matrix data using
+        // Kokkos::deep_copy().
+        Kokkos::deep_copy(matrix_, UnmanagedComplexHostView(matrix, n2));
+
         applyMultiQubitOp(matrix_, wires, inverse);
     }
 
