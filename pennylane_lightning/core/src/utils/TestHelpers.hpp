@@ -249,11 +249,13 @@ isApproxEqual(const Data_t *data1, const std::size_t length1,
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
-template <class Data_t>
-inline bool isApproxEqual(
-    const std::vector<Data_t> &data1, const std::vector<Data_t> &data2,
-    typename Data_t::value_type eps =
-        std::numeric_limits<typename Data_t::value_type>::epsilon() * 100) {
+template <class Data_t, class Alloc>
+inline bool
+isApproxEqual(const std::vector<Data_t, Alloc> &data1,
+              const std::vector<Data_t, Alloc> &data2,
+              typename Data_t::value_type eps =
+                  std::numeric_limits<typename Data_t::value_type>::epsilon() *
+                  100) {
     if (data1.size() != data2.size()) {
         return false;
     }
