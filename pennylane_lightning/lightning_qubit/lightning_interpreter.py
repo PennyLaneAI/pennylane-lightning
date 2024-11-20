@@ -45,7 +45,7 @@ class LightningInterpreter(PlxprInterpreter):
         self.shots = Shots(shots)
 
         self.reset = True
-        self.stateref : dict = {"state": LightningStateVector(num_wires=self.num_wires, dtype=self.c_dtype)}
+        self.stateref : dict = {"state": LightningStateVector(num_wires=num_wires, dtype=c_dtype)}
         super().__init__()
 
     @property
