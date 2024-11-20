@@ -46,7 +46,6 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-option(SETUP_PY_BUILD "setup.py build" OFF)
 
 # OpenMP
 find_package(OpenMP)
@@ -99,6 +98,16 @@ endif()
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")
 
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
+if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
+    set(SCIPY_OPENBLAS32_LIB_PATH "")
+    find_path_to_openblas(SCIPY_OPENBLAS32_LIB_PATH)
+    add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+    message(STATUS "SCIPY_OPENBLAS32_LIB_PATH: ${SCIPY_OPENBLAS32_LIB_PATH}")
+else()
+    add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+endif()
+
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
@@ -134,6 +143,13 @@ if(ENABLE_PYTHON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN")
+    endif()
+
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+    set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:$ORIGIN/pennylane_lightning.libs:$ORIGIN")
+
+    if(DEFINED SCIPY_OPENBLAS32_LIB_PATH)
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_LIB_PATH}:$ORIGIN")
     endif()
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
