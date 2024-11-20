@@ -618,3 +618,11 @@ class LightningQubit(LightningBase):
                 return "LightningSimulator", lib_location
 
         raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
+
+    # pylint: disable=import-outside-toplevel
+    def eval_jaxpr(self, jaxpr, consts, *args):
+        from .lightning_interpreter import LightningInterpreter
+        if self.shots.has_partitioned_shots:
+            raise NotImplementedError("LightningInterpreter does not support partitioned shots.")
+        interpreter = LightningInterpreter(num_wires=len(self.wires), shots=self.shots.total_shots, c_dtype=self.c_dtype)
+        return interpreter.eval(jaxpr, consts, *args)

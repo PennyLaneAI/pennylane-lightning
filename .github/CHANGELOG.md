@@ -28,6 +28,9 @@
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
+* `lightning.qubit` now defines the `eval_jaxpr` method for integration with the experimental
+  capture project.
+
 ### Documentation
 
 ### Bug fixes
@@ -48,7 +51,14 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
+Ali Asadi,
+Christina Lee,
+Joseph Lee,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+Shuli Shu,
+Raul Torres,
+Haochen Paul Wang
 
 ---
 
