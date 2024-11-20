@@ -34,6 +34,9 @@
 
 ### Documentation
 
+* Update Lightning-Tensor installation docs and usage suggestions.
+  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
+
 ### Bug fixes
 
 * Fix the Lightning-Kokkos[CUDA] C++ API `cudaFree` segfaults in `applyMatrix`.
@@ -55,7 +58,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
+Ali Asadi, Joseph Lee, Anton Naim Ibrahim, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
 
 ---
 
