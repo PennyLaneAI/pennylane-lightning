@@ -140,16 +140,13 @@ if(ENABLE_PYTHON)
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
     # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
+    # BUILD_RPATH only works for the last call
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN")
-    endif()
-
-    set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-    set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:$ORIGIN/pennylane_lightning.libs:$ORIGIN")
-
-    if(DEFINED SCIPY_OPENBLAS32_LIB_PATH)
-        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_LIB_PATH}:$ORIGIN")
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN/../scipy_openblas32/lib:$ORIGIN/scipy_openblas32.libs:${SCIPY_OPENBLAS32_LIB_PATH}:$ORIGIN")
+    else()
+        set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:$ORIGIN/scipy_openblas32.libs:${SCIPY_OPENBLAS32_LIB_PATH}")
     endif()
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
