@@ -96,7 +96,6 @@ if(ENABLE_PYTHON)
     FetchContent_MakeAvailable(pybind11)
 endif()
 
-
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")
 
