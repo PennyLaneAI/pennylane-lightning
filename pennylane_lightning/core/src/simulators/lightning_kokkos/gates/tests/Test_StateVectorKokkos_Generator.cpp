@@ -52,19 +52,14 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         PL_REQUIRE_THROWS_MATCHES(state_vector.applyGenerator("XXX", {0}),
                                   LightningException,
                                   "The given value does not exist.");
-    }
-
-    SECTION("applyControlledGenerator") {
-        const std::size_t num_qubits = 3;
-        StateVectorKokkos<TestType> state_vector{num_qubits};
         PL_REQUIRE_THROWS_MATCHES(
             state_vector.applyGenerator("XXX", {1}, {true}, {0}),
             LightningException, "The given value does not exist.");
-        PL_REQUIRE_THROWS_MATCHES(state_vector.applyOperation(
-                                      "PauliX", {}, {false}, {1}, false, {0.0}),
-                                  LightningException,
-                                  "`controlled_wires` must have the same size "
-                                  "as"); // invalid controlled_wires
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyGenerator("PauliX", {}, {false}, {1}, false),
+            LightningException,
+            "`controlled_wires` must have the same size "
+            "as"); // invalid controlled_wires
     }
 
     SECTION("namedGeneratorFactor") {
@@ -444,8 +439,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
                    "[StateVectorKokkos_Generator]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
     const std::size_t num_qubits = 7;
-    const TestType ep = 1e-3;
-    const TestType EP = 1e-4;
+    const TestType ep_deriv = 1e-3;
+    const TestType ep_margin = 1e-4;
 
     auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
 
@@ -483,7 +478,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         auto scale =
             kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
                                           control_values, wires, inverse);
-        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
         kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
                                        control_values, wires, inverse, {h});
         kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
@@ -497,13 +492,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
             CHECK(-scale * imag(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
             CHECK(scale * real(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
         }
     }
 
@@ -526,7 +521,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         auto scale =
             kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
                                           control_values, wires, inverse);
-        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
         kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
                                        control_values, wires, inverse, {h});
         kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
@@ -540,13 +535,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
             CHECK(-scale * imag(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
             CHECK(scale * real(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
         }
     }
 
@@ -569,7 +564,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         auto scale =
             kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
                                           control_values, wires, inverse);
-        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
         kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
                                        control_values, wires, inverse, {h});
         kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
@@ -583,13 +578,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
             CHECK(-scale * imag(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
             CHECK(scale * real(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
         }
     }
 
@@ -612,7 +607,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         auto scale =
             kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
                                           control_values, wires, inverse);
-        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
         kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
                                        control_values, wires, inverse, {h});
         kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
@@ -626,13 +621,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
             CHECK(-scale * imag(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
             CHECK(scale * real(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
         }
     }
 }
@@ -641,8 +636,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator empty control",
                    "[StateVectorKokkos_Generator]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
     const std::size_t num_qubits = 5;
-    const TestType ep = 1e-3;
-    const TestType EP = 1e-4;
+    const TestType ep_deriv = 1e-3;
+    const TestType ep_margin = 1e-4;
 
     auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
 
@@ -671,7 +666,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator empty control",
         auto scale =
             kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
                                           control_values, wires, inverse);
-        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
         kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
                                        control_values, wires, inverse, {h});
         kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
@@ -685,13 +680,13 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator empty control",
             CHECK(-scale * imag(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
             CHECK(scale * real(result_gntr_sv[j]) ==
                   Approx(0.5 *
                          (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
-                         ep)
-                      .margin(EP));
+                         ep_deriv)
+                      .margin(ep_margin));
         }
     }
 }
@@ -700,7 +695,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator CRX/Y/Z",
                    "[StateVectorKokkos_Generator]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
     const std::size_t num_qubits = 3;
-    const TestType EP = 1e-4;
+    const TestType ep_margin = 1e-4;
 
     auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
     const bool inverse = GENERATE(true, false);
@@ -729,9 +724,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator CRX/Y/Z",
 
             for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(imag(result_gntr_sv_cr[j]) ==
-                      Approx(imag(result_gntr_sv_r[j])).margin(EP));
+                      Approx(imag(result_gntr_sv_r[j])).margin(ep_margin));
                 CHECK(real(result_gntr_sv_cr[j]) ==
-                      Approx(real(result_gntr_sv_r[j])).margin(EP));
+                      Approx(real(result_gntr_sv_r[j])).margin(ep_margin));
             }
         }
     }
@@ -759,9 +754,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator CRX/Y/Z",
 
             for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(imag(result_gntr_sv_cr[j]) ==
-                      Approx(imag(result_gntr_sv_r[j])).margin(EP));
+                      Approx(imag(result_gntr_sv_r[j])).margin(ep_margin));
                 CHECK(real(result_gntr_sv_cr[j]) ==
-                      Approx(real(result_gntr_sv_r[j])).margin(EP));
+                      Approx(real(result_gntr_sv_r[j])).margin(ep_margin));
             }
         }
     }
@@ -789,9 +784,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator CRX/Y/Z",
 
             for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                 CHECK(imag(result_gntr_sv_cr[j]) ==
-                      Approx(imag(result_gntr_sv_r[j])).margin(EP));
+                      Approx(imag(result_gntr_sv_r[j])).margin(ep_margin));
                 CHECK(real(result_gntr_sv_cr[j]) ==
-                      Approx(real(result_gntr_sv_r[j])).margin(EP));
+                      Approx(real(result_gntr_sv_r[j])).margin(ep_margin));
             }
         }
     }
