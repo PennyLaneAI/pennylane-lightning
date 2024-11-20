@@ -30,6 +30,7 @@
 
 * `lightning.qubit` now defines the `eval_jaxpr` method for integration with the experimental
   capture project.
+  [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
 
 ### Documentation
 
