@@ -18,6 +18,9 @@ target_link_libraries(lightning_qubit_catalyst PUBLIC  lightning_compile_options
                                                        lightning_qubit_observables
 )
 
+set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+set_target_properties(lightning_qubit_catalyst PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:$ORIGIN/scipy_openblas32.libs:${SCIPY_OPENBLAS32_LIB_PATH}")
+
 if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
