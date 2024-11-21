@@ -17,7 +17,7 @@ target_link_libraries(lightning_gpu_catalyst PUBLIC  lightning_compile_options
 )
 
 set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-set_target_properties(lightning_kokkos_catalyst PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:$ORIGIN/scipy_openblas32.libs:${SCIPY_OPENBLAS32_LIB_PATH}")
+set_target_properties(lightning_gpu_catalyst PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:$ORIGIN/scipy_openblas32.libs:${SCIPY_OPENBLAS32_LIB_PATH}")
 
 if (BUILD_TESTS)
     enable_testing()
