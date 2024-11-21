@@ -253,6 +253,7 @@ Install Lightning-GPU with MPI
     
     **Please add the path to ``libmpi.so`` to ``LD_LIBRARY_PATH``** by
     .. code-block:: bash
+    
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`/path/to/libmpi.so`
     
     It is recommended to install the ``NVIDIA cuQuantum SDK`` and ``mpi4py`` Python package within ``pip`` or ``conda`` inside a virtual environment.
