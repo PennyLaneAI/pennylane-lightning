@@ -5,8 +5,9 @@
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
 
-* Add a Catalyst-specific wrapping class for Lightning Qubit.
+* Add a Catalyst-specific wrapping class for Lightning-Qubit.
   [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
+  [(#999)](https://github.com/PennyLaneAI/pennylane-lightning/pull/999)
 
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
@@ -33,6 +34,9 @@
 
 ### Documentation
 
+* Update Lightning-Tensor installation docs and usage suggestions.
+  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
+
 ### Bug fixes
 
 * Fix issue with adjoint-jacobian of adjoint ops.
@@ -51,7 +55,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Joseph Lee, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
+Ali Asadi, Astral Cai, Joseph Lee, Anton Naim Ibrahim, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
 
 ---
 
