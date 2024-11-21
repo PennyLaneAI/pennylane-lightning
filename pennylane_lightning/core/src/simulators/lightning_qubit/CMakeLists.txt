@@ -89,6 +89,13 @@ set(COMPONENT_SUBDIRS   algorithms
                         utils
                         )
 
+# Do not build the LQ plugin for Windows
+if (NOT WIN32)
+    set(COMPONENT_SUBDIRS   ${COMPONENT_SUBDIRS}
+                            catalyst
+                            )
+endif()
+
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})
 endforeach()

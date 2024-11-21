@@ -5,10 +5,21 @@
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
 
+* Add a Catalyst-specific wrapping class for Lightning-Qubit.
+  [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
+  [(#999)](https://github.com/PennyLaneAI/pennylane-lightning/pull/999)
+
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
 
 ### Breaking changes
+
+* Removed all instances of `qml.QubitStateVector`.
+  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
+
+* Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
+  [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
+  [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
 
 ### Improvements
 
@@ -23,7 +34,13 @@
 
 ### Documentation
 
+* Update Lightning-Tensor installation docs and usage suggestions.
+  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
+
 ### Bug fixes
+
+* Fix issue with adjoint-jacobian of adjoint ops.
+  [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
 
 * Fix the `upload-pypi` token issues for Linux and MacOS (x86_64 & AARCH64) wheels.
   [(#989)](https://github.com/PennyLaneAI/pennylane-lightning/pull/989)
@@ -38,7 +55,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Shuli Shu
+Ali Asadi, Joseph Lee, Anton Naim Ibrahim, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
 
 ---
 

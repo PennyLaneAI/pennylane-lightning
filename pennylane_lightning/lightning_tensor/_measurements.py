@@ -39,7 +39,7 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
-from pennylane.ops import Hamiltonian, SparseHamiltonian, Sum
+from pennylane.ops import SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
 from pennylane.wires import Wires
@@ -268,8 +268,8 @@ class LightningTensorMeasurements:
                 raise TypeError(
                     "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
                 )
-            if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, (Hamiltonian, Sum)):
-                raise TypeError("VarianceMP(Hamiltonian/Sum) cannot be computed with samples.")
+            if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, Sum):
+                raise TypeError("VarianceMP(Sum) cannot be computed with samples.")
             if isinstance(group[0], (ClassicalShadowMP, ShadowExpvalMP)):
                 raise TypeError(
                     "ExpectationMP(ClassicalShadowMP, ShadowExpvalMP) cannot be computed with samples."
