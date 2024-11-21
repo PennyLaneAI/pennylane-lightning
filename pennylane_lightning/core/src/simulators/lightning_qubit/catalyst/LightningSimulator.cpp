@@ -22,8 +22,29 @@
 namespace Catalyst::Runtime::Simulator {
 
 auto LightningSimulator::AllocateQubit() -> QubitIdType {
-    size_t sv_id = this->device_sv->allocateWire();
-    return this->qubit_manager.Allocate(sv_id);
+    const std::size_t num_qubits = this->device_sv->getNumQubits();
+
+    if (num_qubits == 0U) {
+        this->device_sv = std::make_unique<StateVectorT>(1);
+        return this->qubit_manager.Allocate(num_qubits);
+    }
+
+    std::vector<std::complex<double>, AlignedAllocator<std::complex<double>>>
+        data = this->device_sv->getDataVector();
+    const std::size_t dsize = data.size();
+    data.resize(dsize << 1UL);
+
+    auto src = data.begin();
+    std::advance(src, dsize - 1);
+
+    for (auto dst = data.end() - 2; src != data.begin();
+         std::advance(src, -1), std::advance(dst, -2)) {
+        *dst = *src;
+        *src = std::complex<double>(.0, .0);
+    }
+
+    this->device_sv = std::make_unique<StateVectorT>(data);
+    return this->qubit_manager.Allocate(num_qubits);
 }
 
 auto LightningSimulator::AllocateQubits(size_t num_qubits)
@@ -45,14 +66,11 @@ auto LightningSimulator::AllocateQubits(size_t num_qubits)
 }
 
 void LightningSimulator::ReleaseAllQubits() {
-    this->device_sv->clearData();
     this->qubit_manager.ReleaseAll();
+    this->device_sv = std::make_unique<StateVectorT>(0); // reset the device
 }
 
 void LightningSimulator::ReleaseQubit(QubitIdType q) {
-    if (this->qubit_manager.isValidQubitId(q)) {
-        this->device_sv->releaseWire(this->qubit_manager.getDeviceId(q));
-    }
     this->qubit_manager.Release(q);
 }
 
