@@ -19,7 +19,6 @@ from functools import partial
 from typing import Optional
 
 import jax
-
 from pennylane.capture import disable, enable
 from pennylane.capture.base_interpreter import PlxprInterpreter
 from pennylane.capture.primitives import (
@@ -77,7 +76,7 @@ class LightningInterpreter(PlxprInterpreter):
         """Reset the state if necessary."""
         if self.reset:
             self.state.reset_state()
-            self.reset = False # copies will have reset=False and wont reset state
+            self.reset = False  # copies will have reset=False and wont reset state
 
     def cleanup(self) -> None:
         """Indicate that the state will need to be reset if this instance is reused."""
@@ -101,7 +100,9 @@ class LightningInterpreter(PlxprInterpreter):
         disable()
         try:
             if self.shots:
-                return LightningMeasurements(self.state).measure_with_samples([measurement], self.shots)
+                return LightningMeasurements(self.state).measure_with_samples(
+                    [measurement], self.shots
+                )
             return LightningMeasurements(self.state).measurement(measurement)
         finally:
             enable()

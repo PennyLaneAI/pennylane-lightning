@@ -657,5 +657,6 @@ class LightningQubit(LightningBase):
         """
         # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
+
         interpreter = LightningInterpreter(self._statevector)
         return interpreter.eval(jaxpr, consts, *args)
