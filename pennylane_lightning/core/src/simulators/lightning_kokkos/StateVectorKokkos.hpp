@@ -631,6 +631,7 @@ class StateVectorKokkos final
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::size_t n2 = exp2(wires.size() * 2);
         KokkosVector matrix_(matrix, n2);
+        Kokkos::deep_copy(matrix_, UnmanagedComplexHostView(matrix, n2));
         applyNCMultiQubitOp(matrix_, controlled_wires, controlled_values, wires,
                             inverse);
     }
