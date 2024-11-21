@@ -15,10 +15,10 @@
 This module contains a class for executing plxpr using default qubit tools.
 """
 from copy import copy
-from typing import Union
+from functools import partial
+from typing import Optional
 
 import jax
-import numpy as np
 
 from pennylane.capture import disable, enable
 from pennylane.capture.base_interpreter import PlxprInterpreter
@@ -35,36 +35,60 @@ from pennylane.measurements import MidMeasureMP, Shots
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
 
+
 class LightningInterpreter(PlxprInterpreter):
+    """
 
 
-    def __init__(
-        self, num_wires: int, shots: int | None = None, c_dtype: Union[np.complex128, np.complex64] = np.complex128,
-    ):
-        self.num_wires = num_wires
-        self.shots = Shots(shots)
 
+    .. code-block:: python
+
+        import pennylane as qml
+        import jax
+        qml.capture.enable()
+
+        statevector = LightningStateVector(num_wires=3, dtype=np.complex128)
+
+        @LightningInterpreter(statevector, shots=Shots(None))
+        def f(x):
+            @qml.for_loop(3)
+            def loop(i, y):
+                qml.RX(y, i)
+                return y + 0.5
+            loop(x)
+            return [qml.expval(qml.Z(i)) for i in range(3)]
+
+        f(0.0)
+
+    .. code-block::
+
+        [1.0, 0.8775825618903728, 0.5403023058681395]
+    """
+
+    def __init__(self, state: LightningStateVector, shots: Shots = Shots(None)):
+        self.state = state
+        self.shots = shots
+        if self.shots.has_partitioned_shots:
+            raise NotImplementedError("LightningInterpreter does not support partitioned shots.")
         self.reset = True
-        self.stateref : dict = {"state": LightningStateVector(num_wires=num_wires, dtype=c_dtype)}
         super().__init__()
 
-    @property
-    def state(self) -> LightningStateVector:
-        """The current state of the system. None if not initialized."""
-        return self.stateref["state"]
-
     def setup(self) -> None:
+        """Reset the state if necessary."""
         if self.reset:
             self.state.reset_state()
             self.reset = False # copies will have reset=False and wont reset state
 
     def cleanup(self) -> None:
+        """Indicate that the state will need to be reset if this instance is reused."""
         self.reset = True
 
     def interpret_operation(self, op):
+        """Apply an operation to the state."""
         self.state.apply_operations([op])
 
     def interpret_measurement_eqn(self, eqn: "jax.core.JaxprEqn"):
+        """Interpret a given measurement equation."""
         if "mcm" in eqn.primitive.name:
             raise NotImplementedError(
                 "DefaultQubitInterpreter does not yet support postprocessing mcms"
@@ -72,6 +96,7 @@ class LightningInterpreter(PlxprInterpreter):
         return super().interpret_measurement_eqn(eqn)
 
     def interpret_measurement(self, measurement):
+        """Apply a measurement to the state and return numerical results."""
         # measurements can sometimes create intermediary mps, but those intermediaries will not work with capture enabled
         disable()
         try:

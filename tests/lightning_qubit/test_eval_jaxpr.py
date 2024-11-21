@@ -229,11 +229,11 @@ class TestClassicalComponents:
 
         def f(y):
             @qml.for_loop(4)
-            def f(i, x):
+            def g(i, x):
                 qml.RX(x, i)
                 return x + 0.1
 
-            f(y)
+            g(y)
             return [qml.expval(qml.Z(i)) for i in range(4)]
 
         x = 1.0

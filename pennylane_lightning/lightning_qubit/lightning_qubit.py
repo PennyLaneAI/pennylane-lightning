@@ -621,8 +621,41 @@ class LightningQubit(LightningBase):
 
     # pylint: disable=import-outside-toplevel
     def eval_jaxpr(self, jaxpr, consts, *args):
+        """Execute pennylane variant jaxpr using C++ simulation tools.
+
+        Args:
+            jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
+            consts (list[TensorLike]): List of constants for the jaxpr closure variables
+            *args (TensorLike): The arguments to the jaxpr.
+
+        Returns:
+            list(TensorLike): the results of the execution
+
+        .. code-block:: python
+
+            import pennylane as qml
+            import jax
+            qml.capture.enable()
+
+            def f(x):
+                @qml.for_loop(3)
+                def loop(i, y):
+                    qml.RX(y, i)
+                    return y + 0.5
+                loop(x)
+                return [qml.expval(qml.Z(i)) for i in range(3)]
+
+            jaxpr = jax.make_jaxpr(f)(0.5)
+
+            dev = qml.device('lightning.qubit', wires=3)
+            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.0)
+
+        .. code-block::
+
+            [1.0, 0.8775825618903728, 0.5403023058681395]
+
+        """
+        # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
-        if self.shots.has_partitioned_shots:
-            raise NotImplementedError("LightningInterpreter does not support partitioned shots.")
-        interpreter = LightningInterpreter(num_wires=len(self.wires), shots=self.shots.total_shots, c_dtype=self.c_dtype)
+        interpreter = LightningInterpreter(self._statevector)
         return interpreter.eval(jaxpr, consts, *args)
