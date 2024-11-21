@@ -64,7 +64,7 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
         ControlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
@@ -108,7 +108,7 @@ class applyNC1Functor<PrecisionT, FuncT, true> {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
         ControlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
@@ -637,7 +637,7 @@ class applyNC2Functor<PrecisionT, FuncT, true> {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
         ControlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
@@ -1357,7 +1357,7 @@ class applyNC4Functor<PrecisionT, FuncT, true> {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
         ControlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);

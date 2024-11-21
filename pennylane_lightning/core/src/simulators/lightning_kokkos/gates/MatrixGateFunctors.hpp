@@ -144,7 +144,7 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
@@ -244,7 +244,7 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
@@ -349,7 +349,7 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
@@ -468,7 +468,7 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits_, wires_, controlled_wires_);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
         ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
