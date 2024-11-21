@@ -601,10 +601,8 @@ PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::GlobalPhase:
         return static_cast<PrecisionT>(-1.0);
-    /// LCOV_EXCL_START
     default:
         PL_ABORT("Generator operation does not exist.");
-        /// LCOV_EXCL_STOP
     }
 }
 
@@ -637,10 +635,8 @@ PrecisionT applyNCNamedGenerator(
             arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return static_cast<PrecisionT>(-1.0);
-    /// LCOV_EXCL_START
     default:
         PL_ABORT("Controlled generator operation does not exist.");
-        /// LCOV_EXCL_STOP
     }
 }
 
