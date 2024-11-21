@@ -259,9 +259,11 @@ Install Lightning-GPU with MPI
     
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:`/path/to/libmpi.so`
 
-Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed and the environment variable ``CUQUANTUM_SDK`` is set properly. Then Lightning-GPU with MPI support can then be installed in the *editable* mode:
+Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed and the environment variable ``CUQUANTUM_SDK`` is set properly. 
+Then Lightning-GPU with MPI support can then be installed in the *editable* mode:
 
 .. code-block:: bash
+
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DENABLE_MPI=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
