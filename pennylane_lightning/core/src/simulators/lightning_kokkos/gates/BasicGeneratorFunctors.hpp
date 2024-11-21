@@ -379,9 +379,9 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
                              const std::vector<std::size_t> &wires,
                              FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
-        const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
-        const std::size_t nw_tot = n_contr + n_wires;
+        const std::size_t nw_tot =
+            controlled_wires.size() + n_wires; // n_contr + n_wires
         PL_ASSERT(n_wires == 1);
         PL_ASSERT(num_qubits >= nw_tot);
 
@@ -394,7 +394,7 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(all_wires, num_qubits);
 
         std::size_t k = 0;
