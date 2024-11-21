@@ -380,16 +380,16 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
                              FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
         const std::size_t n_wires = wires.size();
-        const std::size_t nw_tot =
-            controlled_wires.size() + n_wires; // n_contr + n_wires
+        const std::size_t n_contr = controlled_wires.size();
+        const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(n_wires == 1);
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires;
         all_wires.reserve(nw_tot);
-        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
+        all_wires.insert(all_wires.begin() + n_contr, wires.begin(), wires.end());
 
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
