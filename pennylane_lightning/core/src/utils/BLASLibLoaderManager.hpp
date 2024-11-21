@@ -49,16 +49,16 @@ class BLASLibLoaderManager {
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
-    const std::string get_scipylibs_path_worker_(){
-        //Pure C++ lib support only, static libs solution
+    const std::string get_scipylibs_path_worker_() {
+        // Pure C++ lib support only, static libs solution
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             std::filesystem::path scipyLibsPath(SCIPY_OPENBLAS32_LIB);
             auto libPath = scipyLibsPath / blas_lib_name_.c_str();
             return libPath.string();
         }
 
-        // The following code is only for Python layer calls, shared libs solution
-        // LCOV_EXCL_START
+        // The following code is only for Python layer calls, shared libs
+        // solution LCOV_EXCL_START
         return blas_lib_name_;
         // LCOV_EXCL_STOP
     };
@@ -66,7 +66,8 @@ class BLASLibLoaderManager {
      * @brief BLASLibLoaderManager.
      */
     explicit BLASLibLoaderManager() {
-        blasLib_ = std::make_shared<SharedLibLoader>(get_scipylibs_path_worker_());
+        blasLib_ =
+            std::make_shared<SharedLibLoader>(get_scipylibs_path_worker_());
     }
 
   public:
