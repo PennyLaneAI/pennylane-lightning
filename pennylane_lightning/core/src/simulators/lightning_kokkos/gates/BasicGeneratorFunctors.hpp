@@ -339,7 +339,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
-                     [[maybe_unused]] const bool inverse = false) {
+                     [[maybe_unused]] bool inverse = false) {
     std::size_t wires_parity = static_cast<std::size_t>(0U);
     for (std::size_t wire : wires) {
         wires_parity |= exp2(num_qubits - wire - 1);
@@ -602,7 +602,7 @@ void applyNCGenIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -620,7 +620,7 @@ void applyNCGenIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -639,7 +639,7 @@ void applyNCGenIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -659,7 +659,7 @@ void applyNCGenIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -679,7 +679,7 @@ void applyNCGenSingleExcitation(
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -700,7 +700,7 @@ void applyNCGenSingleExcitationMinus(
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -721,7 +721,7 @@ void applyNCGenSingleExcitationPlus(
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -793,7 +793,7 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
                 0, exp2(num_qubits - controlled_wires.size() - wires.size())),
             *this);
     }
-    KOKKOS_FUNCTION void operator()(const std::size_t k) const {
+    KOKKOS_FUNCTION void operator()(std::size_t k) const {
         const std::size_t offset = parity_2_offset(parity, k);
         for (std::size_t i = 0; i < indices.size(); i++) {
             if ((i >> 4U) == mask) {
@@ -807,16 +807,14 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenDoubleExcitation(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-    const std::size_t num_qubits,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
-        Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-        const std::size_t i0011, const std::size_t i1100,
-        const KokkosIntVector &indices, const std::size_t offset) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0011,
+        std::size_t i1100, const KokkosIntVector &indices, std::size_t offset) {
         const auto v0011 = arr(i0011);
         const auto v1100 = arr(i1100);
         for (std::size_t i = 0; i < indices.size(); i++) {
@@ -832,17 +830,15 @@ void applyNCGenDoubleExcitation(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenDoubleExcitationMinus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-    const std::size_t num_qubits,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
-    auto core_function =
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i0011, const std::size_t i1100,
-                      [[maybe_unused]] const KokkosIntVector &indices,
-                      [[maybe_unused]] const std::size_t offset) {
+    [[maybe_unused]] bool inverse = false) {
+    auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0011,
+        std::size_t i1100, [[maybe_unused]] const KokkosIntVector &indices,
+        [[maybe_unused]] std::size_t offset) {
         arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
         arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
         kokkos_swap(arr(i0011), arr(i1100));
@@ -854,17 +850,15 @@ void applyNCGenDoubleExcitationMinus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenDoubleExcitationPlus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-    const std::size_t num_qubits,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
-    auto core_function =
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i0011, const std::size_t i1100,
-                      [[maybe_unused]] const KokkosIntVector &indices,
-                      [[maybe_unused]] const std::size_t offset) {
+    [[maybe_unused]] bool inverse = false) {
+    auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0011,
+        std::size_t i1100, [[maybe_unused]] const KokkosIntVector &indices,
+        [[maybe_unused]] std::size_t offset) {
 
         arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
         arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
@@ -877,11 +871,11 @@ void applyNCGenDoubleExcitationPlus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                       const std::size_t num_qubits,
+                       std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto ctrls_mask = static_cast<std::size_t>(0U);
     for (std::size_t i = 0; i < controlled_wires.size(); i++) {
         ctrls_mask |= (static_cast<std::size_t>(controlled_values[i])
@@ -900,7 +894,7 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
-        KOKKOS_LAMBDA(const std::size_t k) {
+        KOKKOS_LAMBDA(std::size_t k) {
             if (ctrls_mask == (ctrls_parity & k)) {
                 arr_(k) *= static_cast<PrecisionT>(
                     1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
