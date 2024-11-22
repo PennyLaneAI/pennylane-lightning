@@ -80,7 +80,6 @@ jobs:
                           -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                           -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
                           -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
-                          -DCMAKE_CXX_STANDARD=20 \
                           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                           -G Ninja
           cmake --build ./Build --verbose
@@ -102,7 +101,7 @@ jobs:
         id: kokkos-cache
         uses: actions/cache/save@v4
         with:
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-CUDA-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
           retention-days: 1
 
@@ -137,8 +136,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-CUDA-${{ matrix.exec_model }}
-          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-CUDA-${{ matrix.exec_model }}
+          key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
+          restore-keys: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
 
       - name: Copy cached libraries
         run: |
