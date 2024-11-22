@@ -31,6 +31,9 @@ if not ld._CPP_BINARY_AVAILABLE:
 def _get_ld_operations():
     """Gets a set of supported operations by LightningDevice."""
 
+    if ld.capabilities is None and hasattr(ld, "operations"):
+        return ld.operations
+
     operations = set()
     for op, prop in ld.capabilities.operations.items():
         operations.add(op)
