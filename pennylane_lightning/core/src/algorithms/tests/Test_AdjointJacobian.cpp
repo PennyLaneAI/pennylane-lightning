@@ -41,7 +41,7 @@ using namespace Pennylane::LightningQubit::Observables;
 
 #elif _ENABLE_PLKOKKOS == 1
 constexpr bool BACKEND_FOUND = true;
-constexpr bool SUPPORTS_CTRL = false;
+constexpr bool SUPPORTS_CTRL = true;
 
 #include "AdjointJacobianKokkos.hpp"
 #include "ObservablesKokkos.hpp"
