@@ -73,6 +73,8 @@ class Measurements final
 
     GateCache<PrecisionT> gate_cache_;
 
+    std::mt19937 *gen = nullptr;
+
   public:
     explicit Measurements(StateVectorT &statevector)
         : BaseType{statevector},
@@ -215,9 +217,7 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples,
-                          const std::optional<std::size_t> &seed = std::nullopt)
-        -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -237,8 +237,9 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        if (seed.has_value()) {
-            this->setSeed(seed.value());
+        if (gen != nullptr) {
+            std::size_t seed = (*(this->gen))();
+            this->setSeed(seed);
         } else {
             this->setRandomSeed();
         }
@@ -712,6 +713,8 @@ class Measurements final
         -> PrecisionT {
         return BaseType::var(obs, num_shots);
     }
+
+    void set_PRNG(std::mt19937 *gen) { this->gen = gen; }
 
   private:
     /**
