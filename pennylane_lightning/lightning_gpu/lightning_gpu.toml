@@ -32,7 +32,7 @@ PhaseShift             = { properties = [ "invertible", "controllable", "differe
 RX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
 RY                     = { properties = [ "invertible", "controllable", "differentiable" ] }
 RZ                     = { properties = [ "invertible", "controllable", "differentiable" ] }
-Rot                    = { properties = [ "invertible", "controllable", "differentiable" ] }
+Rot                    = { properties = [               "controllable", "differentiable" ] }
 CNOT                   = { properties = [ "invertible",                 "differentiable" ] }
 CY                     = { properties = [ "invertible",                 "differentiable" ] }
 CZ                     = { properties = [ "invertible",                 "differentiable" ] }
@@ -47,7 +47,7 @@ ControlledPhaseShift   = { properties = [ "invertible",                 "differe
 CRX                    = { properties = [ "invertible",                 "differentiable" ] }
 CRY                    = { properties = [ "invertible",                 "differentiable" ] }
 CRZ                    = { properties = [ "invertible",                 "differentiable" ] }
-CRot                   = { properties = [ "invertible"                                   ] }
+CRot                   = { }
 SingleExcitation       = { properties = [ "invertible", "controllable", "differentiable" ] }
 SingleExcitationPlus   = { properties = [ "invertible", "controllable", "differentiable" ] }
 SingleExcitationMinus  = { properties = [ "invertible", "controllable", "differentiable" ] }
