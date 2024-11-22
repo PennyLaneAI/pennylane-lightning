@@ -631,6 +631,7 @@ class StateVectorKokkos final
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
         const std::size_t n2 = exp2(wires.size() * 2);
         KokkosVector matrix_(matrix, n2);
+        Kokkos::deep_copy(matrix_, UnmanagedComplexHostView(matrix, n2));
         applyNCMultiQubitOp(matrix_, controlled_wires, controlled_values, wires,
                             inverse);
     }
@@ -690,17 +691,68 @@ class StateVectorKokkos final
      * @param opName Name of gate to apply.
      * @param wires Wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
-     * @param params Optional parameter list for parametric gates.
      */
     auto applyGenerator(const std::string &opName,
                         const std::vector<std::size_t> &wires,
-                        bool inverse = false,
-                        const std::vector<fp_t> &params = {}) -> fp_t {
+                        bool inverse = false) -> PrecisionT {
         const std::size_t num_qubits = this->getNumQubits();
         const GeneratorOperation generator_op =
             reverse_lookup(generator_names, std::string_view{opName});
-        return applyNamedGenerator<KokkosExecSpace>(
-            generator_op, *data_, num_qubits, wires, inverse, params);
+        return applyNamedGenerator<KokkosExecSpace>(generator_op, *data_,
+                                                    num_qubits, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a single controlled generator to the state vector using the
+     * given kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    auto
+    applyControlledGenerator(const std::string &opName,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse = false) -> PrecisionT {
+        const std::size_t num_qubits = this->getNumQubits();
+        const ControlledGeneratorOperation generator_op = reverse_lookup(
+            controlled_generator_names, std::string_view{opName});
+        return applyNCNamedGenerator<KokkosExecSpace>(
+            generator_op, *data_, num_qubits, controlled_wires,
+            controlled_values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a single generator to the state vector using the given
+     * kernel.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (true or false).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use adjoint of gate.
+     */
+    auto applyGenerator(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false) -> PrecisionT {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        if (controlled_wires.empty()) {
+            return applyGenerator(opName, wires, inverse);
+        } else {
+            return applyControlledGenerator(opName, controlled_wires,
+                                            controlled_values, wires, inverse);
+        }
     }
 
     /**
