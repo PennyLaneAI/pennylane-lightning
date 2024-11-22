@@ -186,10 +186,11 @@ void applyGenSingleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         arr(i00) = 0.0;
-        arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
         arr(i11) = 0.0;
-        kokkos_swap(arr(i10), arr(i01));
+        const auto v01 = arr(i01);
+        const auto v10 = arr(i10);
+        arr(i10) = Kokkos::complex<PrecisionT>{-imag(v01), real(v01)};
+        arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNC2Functor<PrecisionT, decltype(core_function), false>(
         ExecutionSpace{}, arr_, num_qubits, wires, core_function);
@@ -205,10 +206,10 @@ void applyGenSingleExcitationMinus(
         std::size_t i01, std::size_t i10, std::size_t i11) {
         [[maybe_unused]] const auto i00_ = i00;
         [[maybe_unused]] const auto i11_ = i11;
-
-        arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
-        kokkos_swap(arr(i10), arr(i01));
+        const auto v01 = arr(i01);
+        const auto v10 = arr(i10);
+        arr(i10) = Kokkos::complex<PrecisionT>{-imag(v01), real(v01)};
+        arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNC2Functor<PrecisionT, decltype(core_function), false>(
         ExecutionSpace{}, arr_, num_qubits, wires, core_function);
@@ -223,10 +224,11 @@ void applyGenSingleExcitationPlus(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         arr(i00) *= -1;
-        arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
         arr(i11) *= -1;
-        kokkos_swap(arr(i10), arr(i01));
+        const auto v01 = arr(i01);
+        const auto v10 = arr(i10);
+        arr(i10) = Kokkos::complex<PrecisionT>{-imag(v01), real(v01)};
+        arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNC2Functor<PrecisionT, decltype(core_function), false>(
         ExecutionSpace{}, arr_, num_qubits, wires, core_function);
@@ -249,7 +251,7 @@ void applyGenDoubleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         arr(i0000) = 0.0;
         arr(i0001) = 0.0;
         arr(i0010) = 0.0;
-        arr(i0011) = v1100 * Kokkos::complex<PrecisionT>{0.0, -1.0};
+        arr(i0011) = Kokkos::complex<PrecisionT>{imag(v1100), -real(v1100)};
         arr(i0100) = 0.0;
         arr(i0101) = 0.0;
         arr(i0110) = 0.0;
@@ -258,7 +260,7 @@ void applyGenDoubleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         arr(i1001) = 0.0;
         arr(i1010) = 0.0;
         arr(i1011) = 0.0;
-        arr(i1100) = v0011 * Kokkos::complex<PrecisionT>{0.0, 1.0};
+        arr(i1100) = Kokkos::complex<PrecisionT>{-imag(v0011), real(v0011)};
         arr(i1101) = 0.0;
         arr(i1110) = 0.0;
         arr(i1111) = 0.0;
@@ -293,9 +295,10 @@ void applyGenDoubleExcitationMinus(
         [[maybe_unused]] const auto i1101_ = i1101;
         [[maybe_unused]] const auto i1110_ = i1110;
         [[maybe_unused]] const auto i1111_ = i1111;
-        arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
-        kokkos_swap(arr(i1100), arr(i0011));
+        const auto v0011 = arr(i0011);
+        const auto v1100 = arr(i1100);
+        arr(i0011) = Kokkos::complex<PrecisionT>{imag(v1100), -real(v1100)};
+        arr(i1100) = Kokkos::complex<PrecisionT>{-imag(v0011), real(v0011)};
     };
     applyNC4Functor<PrecisionT, decltype(core_function), false>(
         ExecutionSpace{}, arr_, num_qubits, wires, core_function);
@@ -327,9 +330,10 @@ void applyGenDoubleExcitationPlus(
         [[maybe_unused]] const auto i1101_ = i1101;
         [[maybe_unused]] const auto i1110_ = i1110;
         [[maybe_unused]] const auto i1111_ = i1111;
-        arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
-        arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        kokkos_swap(arr(i1100), arr(i0011));
+        const auto v0011 = arr(i0011);
+        const auto v1100 = arr(i1100);
+        arr(i0011) = Kokkos::complex<PrecisionT>{-imag(v1100), real(v1100)};
+        arr(i1100) = Kokkos::complex<PrecisionT>{imag(v0011), -real(v0011)};
     };
     applyNC4Functor<PrecisionT, decltype(core_function), false>(
         ExecutionSpace{}, arr_, num_qubits, wires, core_function);
@@ -339,7 +343,7 @@ template <class ExecutionSpace, class PrecisionT>
 void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
-                     [[maybe_unused]] const bool inverse = false) {
+                     [[maybe_unused]] bool inverse = false) {
     std::size_t wires_parity = static_cast<std::size_t>(0U);
     for (std::size_t wire : wires) {
         wires_parity |= exp2(num_qubits - wire - 1);
@@ -376,22 +380,23 @@ template <class PrecisionT, class FuncT> class applyNCGenerator1Functor {
                              const std::vector<std::size_t> &wires,
                              FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
-        const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
+        const std::size_t n_contr = controlled_wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(n_wires == 1);
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires;
         all_wires.reserve(nw_tot);
-        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
+        all_wires.insert(all_wires.begin() + n_contr, wires.begin(),
+                         wires.end());
 
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(all_wires, num_qubits);
 
         std::size_t k = 0;
@@ -549,22 +554,23 @@ template <class PrecisionT, class FuncT> class applyNCGenerator2Functor {
                              const std::vector<std::size_t> &wires,
                              FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
-        const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
+        const std::size_t n_contr = controlled_wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(n_wires == 2);
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires;
         all_wires.reserve(nw_tot);
-        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
+        all_wires.insert(all_wires.begin() + n_contr, wires.begin(),
+                         wires.end());
 
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(all_wires, num_qubits);
 
         std::size_t k = 0;
@@ -602,7 +608,7 @@ void applyNCGenIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -620,7 +626,7 @@ void applyNCGenIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -639,7 +645,7 @@ void applyNCGenIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -659,7 +665,7 @@ void applyNCGenIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -679,15 +685,16 @@ void applyNCGenSingleExcitation(
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         arr(i00) = 0.0;
-        arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
         arr(i11) = 0.0;
-        kokkos_swap(arr(i01), arr(i10));
+        const auto v01 = arr(i01);
+        const auto v10 = arr(i10);
+        arr(i10) = Kokkos::complex<PrecisionT>{-imag(v01), real(v01)};
+        arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
@@ -700,15 +707,16 @@ void applyNCGenSingleExcitationMinus(
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         [[maybe_unused]] const auto i00_ = i00;
         [[maybe_unused]] const auto i11_ = i11;
-        arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
-        kokkos_swap(arr(i01), arr(i10));
+        const auto v01 = arr(i01);
+        const auto v10 = arr(i10);
+        arr(i10) = Kokkos::complex<PrecisionT>{-imag(v01), real(v01)};
+        arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
@@ -721,15 +729,16 @@ void applyNCGenSingleExcitationPlus(
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
         arr(i00) *= -1;
-        arr(i01) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i10) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
         arr(i11) *= -1;
-        kokkos_swap(arr(i01), arr(i10));
+        const auto v01 = arr(i01);
+        const auto v10 = arr(i10);
+        arr(i10) = Kokkos::complex<PrecisionT>{-imag(v01), real(v01)};
+        arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
@@ -761,22 +770,23 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
                              const std::vector<std::size_t> &wires,
                              FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
-        const std::size_t n_contr = controlled_wires.size();
         const std::size_t n_wires = wires.size();
+        const std::size_t n_contr = controlled_wires.size();
         const std::size_t nw_tot = n_contr + n_wires;
         PL_ASSERT(n_wires == 4);
         PL_ASSERT(num_qubits >= nw_tot);
 
         std::vector<std::size_t> all_wires;
         all_wires.reserve(nw_tot);
-        all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
+        all_wires.insert(all_wires.begin() + n_contr, wires.begin(),
+                         wires.end());
 
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
-        std::vector<std::size_t> indices_ =
+        const std::vector<std::size_t> indices_ =
             generateBitPatterns(all_wires, num_qubits);
 
         std::size_t k = 0;
@@ -793,7 +803,7 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
                 0, exp2(num_qubits - controlled_wires.size() - wires.size())),
             *this);
     }
-    KOKKOS_FUNCTION void operator()(const std::size_t k) const {
+    KOKKOS_FUNCTION void operator()(std::size_t k) const {
         const std::size_t offset = parity_2_offset(parity, k);
         for (std::size_t i = 0; i < indices.size(); i++) {
             if ((i >> 4U) == mask) {
@@ -807,23 +817,21 @@ template <class PrecisionT, class FuncT> class applyNCGenerator4Functor {
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenDoubleExcitation(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-    const std::size_t num_qubits,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
+    [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
-        Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-        const std::size_t i0011, const std::size_t i1100,
-        const KokkosIntVector &indices, const std::size_t offset) {
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0011,
+        std::size_t i1100, const KokkosIntVector &indices, std::size_t offset) {
         const auto v0011 = arr(i0011);
         const auto v1100 = arr(i1100);
         for (std::size_t i = 0; i < indices.size(); i++) {
             arr(indices(i) + offset) = 0.0;
         }
-        arr(i0011) = v1100 * Kokkos::complex<PrecisionT>{0.0, -1.0};
-        arr(i1100) = v0011 * Kokkos::complex<PrecisionT>{0.0, 1.0};
+        arr(i0011) = Kokkos::complex<PrecisionT>{imag(v1100), -real(v1100)};
+        arr(i1100) = Kokkos::complex<PrecisionT>{-imag(v0011), real(v0011)};
     };
     applyNCGenerator4Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
@@ -832,20 +840,19 @@ void applyNCGenDoubleExcitation(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenDoubleExcitationMinus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-    const std::size_t num_qubits,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
-    auto core_function =
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i0011, const std::size_t i1100,
-                      [[maybe_unused]] const KokkosIntVector &indices,
-                      [[maybe_unused]] const std::size_t offset) {
-        arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
-        kokkos_swap(arr(i0011), arr(i1100));
+    [[maybe_unused]] bool inverse = false) {
+    auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0011,
+        std::size_t i1100, [[maybe_unused]] const KokkosIntVector &indices,
+        [[maybe_unused]] std::size_t offset) {
+        const auto v0011 = arr(i0011);
+        const auto v1100 = arr(i1100);
+        arr(i0011) = Kokkos::complex<PrecisionT>{imag(v1100), -real(v1100)};
+        arr(i1100) = Kokkos::complex<PrecisionT>{-imag(v0011), real(v0011)};
     };
     applyNCGenerator4Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
@@ -854,21 +861,19 @@ void applyNCGenDoubleExcitationMinus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenDoubleExcitationPlus(
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-    const std::size_t num_qubits,
+    Kokkos::View<Kokkos::complex<PrecisionT> *> arr_, std::size_t num_qubits,
     const std::vector<std::size_t> &controlled_wires,
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires,
-    [[maybe_unused]] const bool inverse = false) {
-    auto core_function =
-        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
-                      const std::size_t i0011, const std::size_t i1100,
-                      [[maybe_unused]] const KokkosIntVector &indices,
-                      [[maybe_unused]] const std::size_t offset) {
-
-        arr(i0011) *= Kokkos::complex<PrecisionT>{0.0, -1.0};
-        arr(i1100) *= Kokkos::complex<PrecisionT>{0.0, 1.0};
-        kokkos_swap(arr(i0011), arr(i1100));
+    [[maybe_unused]] bool inverse = false) {
+    auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0011,
+        std::size_t i1100, [[maybe_unused]] const KokkosIntVector &indices,
+        [[maybe_unused]] std::size_t offset) {
+        const auto v0011 = arr(i0011);
+        const auto v1100 = arr(i1100);
+        arr(i0011) = Kokkos::complex<PrecisionT>{-imag(v1100), real(v1100)};
+        arr(i1100) = Kokkos::complex<PrecisionT>{imag(v0011), -real(v0011)};
     };
     applyNCGenerator4Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
@@ -877,11 +882,11 @@ void applyNCGenDoubleExcitationPlus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                       const std::size_t num_qubits,
+                       std::size_t num_qubits,
                        const std::vector<std::size_t> &controlled_wires,
                        const std::vector<bool> &controlled_values,
                        const std::vector<std::size_t> &wires,
-                       [[maybe_unused]] const bool inverse = false) {
+                       [[maybe_unused]] bool inverse = false) {
     auto ctrls_mask = static_cast<std::size_t>(0U);
     for (std::size_t i = 0; i < controlled_wires.size(); i++) {
         ctrls_mask |= (static_cast<std::size_t>(controlled_values[i])
@@ -900,7 +905,7 @@ void applyNCGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
-        KOKKOS_LAMBDA(const std::size_t k) {
+        KOKKOS_LAMBDA(std::size_t k) {
             if (ctrls_mask == (ctrls_parity & k)) {
                 arr_(k) *= static_cast<PrecisionT>(
                     1 - 2 * int(Kokkos::Impl::bit_count(k & wires_parity) % 2));
@@ -986,10 +991,8 @@ PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::GlobalPhase:
         return static_cast<PrecisionT>(-1.0);
-    /// LCOV_EXCL_START
     default:
         PL_ABORT("Generator operation does not exist.");
-        /// LCOV_EXCL_STOP
     }
 }
 
@@ -1072,10 +1075,8 @@ PrecisionT applyNCNamedGenerator(
             arr_, num_qubits, controlled_wires, controlled_values, wires,
             inverse);
         return static_cast<PrecisionT>(-1.0);
-    /// LCOV_EXCL_START
     default:
         PL_ABORT("Controlled generator operation does not exist.");
-        /// LCOV_EXCL_STOP
     }
 }
 

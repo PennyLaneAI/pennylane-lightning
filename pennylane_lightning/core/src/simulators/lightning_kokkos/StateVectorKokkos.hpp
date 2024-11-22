@@ -694,7 +694,7 @@ class StateVectorKokkos final
      */
     auto applyGenerator(const std::string &opName,
                         const std::vector<std::size_t> &wires,
-                        bool inverse = false) -> fp_t {
+                        bool inverse = false) -> PrecisionT {
         const std::size_t num_qubits = this->getNumQubits();
         const GeneratorOperation generator_op =
             reverse_lookup(generator_names, std::string_view{opName});
@@ -717,7 +717,7 @@ class StateVectorKokkos final
                              const std::vector<std::size_t> &controlled_wires,
                              const std::vector<bool> &controlled_values,
                              const std::vector<std::size_t> &wires,
-                             bool inverse = false) -> fp_t {
+                             bool inverse = false) -> PrecisionT {
         const std::size_t num_qubits = this->getNumQubits();
         const ControlledGeneratorOperation generator_op = reverse_lookup(
             controlled_generator_names, std::string_view{opName});
@@ -740,7 +740,7 @@ class StateVectorKokkos final
                         const std::vector<std::size_t> &controlled_wires,
                         const std::vector<bool> &controlled_values,
                         const std::vector<std::size_t> &wires,
-                        bool inverse = false) -> fp_t {
+                        bool inverse = false) -> PrecisionT {
         PL_ABORT_IF_NOT(
             areVecsDisjoint<std::size_t>(controlled_wires, wires),
             "`controlled_wires` and `target wires` must be disjoint.");
