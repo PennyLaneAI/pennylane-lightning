@@ -19,13 +19,14 @@
 
 #pragma once
 #include <complex>
-#include <vector>
 #include <thread>
+#include <vector>
 
 namespace Pennylane::LightningQubit::Util {
 
 /**
- * @brief Worker function to compute a segment of the matrix-vector multiplication for a sparse matrix.
+ * @brief Worker function to compute a segment of the matrix-vector
+ * multiplication for a sparse matrix.
  *
  * @tparam fp_precision data float point precision.
  * @tparam index_type integer type used as indices of the sparse matrix.
@@ -40,8 +41,7 @@ namespace Pennylane::LightningQubit::Util {
  */
 template <class fp_precision, class index_type>
 void sparse_worker(const std::complex<fp_precision> *vector_ptr,
-                   const index_type *row_map_ptr, 
-                   const index_type *entries_ptr,
+                   const index_type *row_map_ptr, const index_type *entries_ptr,
                    const std::complex<fp_precision> *values_ptr,
                    std::vector<std::complex<fp_precision>> &result,
                    index_type start, index_type end) {
@@ -71,25 +71,24 @@ void sparse_worker(const std::complex<fp_precision> *vector_ptr,
  * @return result       result of the matrix vector multiplication.
  */
 template <class fp_precision, class index_type>
-std::vector<std::complex<fp_precision>>
-apply_Sparse_Matrix(const std::complex<fp_precision> *vector_ptr,
-                            const index_type vector_size, 
-                            const index_type *row_map_ptr,
-                            [[maybe_unused]] const index_type row_map_size,
-                            const index_type *entries_ptr,
-                            const std::complex<fp_precision> *values_ptr,
-                            [[maybe_unused]] const index_type numNNZ,
-                            index_type num_threads = 0) {
+std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
+    const std::complex<fp_precision> *vector_ptr, const index_type vector_size,
+    const index_type *row_map_ptr,
+    [[maybe_unused]] const index_type row_map_size,
+    const index_type *entries_ptr, const std::complex<fp_precision> *values_ptr,
+    [[maybe_unused]] const index_type numNNZ, index_type num_threads = 0) {
     // Output vector initialized to zero
-    std::vector<std::complex<fp_precision>> result(vector_size, std::complex<fp_precision>(0.0));
+    std::vector<std::complex<fp_precision>> result(
+        vector_size, std::complex<fp_precision>(0.0));
 
     // Determine the number of threads to use
     if (num_threads <= 0) {
         const int max_threads = std::thread::hardware_concurrency();
-        num_threads = std::min(vector_size, static_cast<index_type>(max_threads));
+        num_threads =
+            std::min(vector_size, static_cast<index_type>(max_threads));
     }
-    
-    // Divide the rows approximately evenly among the threads    
+
+    // Divide the rows approximately evenly among the threads
     index_type chunk_size = (vector_size + num_threads - 1) / num_threads;
     std::vector<std::thread> threads;
 
@@ -101,8 +100,8 @@ apply_Sparse_Matrix(const std::complex<fp_precision> *vector_ptr,
         // Only launch threads if there are rows to process
         if (start < vector_size) {
             threads.emplace_back(sparse_worker<fp_precision, index_type>,
-                                 vector_ptr, row_map_ptr, entries_ptr, values_ptr,
-                                 std::ref(result), start, end);
+                                 vector_ptr, row_map_ptr, entries_ptr,
+                                 values_ptr, std::ref(result), start, end);
         }
     }
 

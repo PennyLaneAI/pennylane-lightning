@@ -83,12 +83,12 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix", "[Sparse]", float, double) {
     }
 
     SECTION("Testing with different number of threads") {
-        for (size_t num_threads : { 1, 2, 4, 8, 16, 32}) {
+        for (size_t num_threads : {1, 2, 4, 8, 16, 32}) {
             for (size_t vec = 0; vec < vectors.size(); vec++) {
                 auto result = apply_Sparse_Matrix(
                     vectors[vec].data(), vectors[vec].size(), row_map.data(),
-                    row_map.size(), entries.data(), values.data(), values.size(),
-                    num_threads);
+                    row_map.size(), entries.data(), values.data(),
+                    values.size(), num_threads);
 
                 REQUIRE(result_refs[vec] == approx(result).margin(1e-6));
             }
