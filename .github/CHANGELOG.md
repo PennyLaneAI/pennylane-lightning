@@ -39,6 +39,9 @@
 
 ### Bug fixes
 
+* Fix issue with `lightning.gpu` Rot operation with adjoint.
+  [(#1004)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1004)
+
 * Fix issue with adjoint-jacobian of adjoint ops.
   [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
 
