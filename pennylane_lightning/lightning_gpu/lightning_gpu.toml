@@ -73,8 +73,6 @@ OrbitalRotation        = {}
 QubitCarry             = {}
 QubitSum               = {}
 DiagonalQubitUnitary   = {}
-BasisState             = {}
-StatePrep              = {}
 MultiControlledX       = {}
 
 # Observables supported by the device
