@@ -1235,7 +1235,7 @@ TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
 }
 
 template <typename TypeList>
-void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
+void testSamples(const std::optional<std::mt19937 *> &gen = std::nullopt) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -1257,6 +1257,9 @@ void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
         // This object attaches to the statevector allowing several
         // measurements.
         Measurements<StateVectorT> Measurer(statevector);
+        if (gen.has_value()) {
+            Measurer.set_PRNG(gen.value());
+        }
 
         std::vector<PrecisionT> expected_probabilities = {
             0.67078706, 0.03062806, 0.0870997,  0.00397696,
@@ -1265,10 +1268,7 @@ void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
         std::size_t num_qubits = 3;
         std::size_t N = std::pow(2, num_qubits);
         std::size_t num_samples = 100000;
-        auto &&samples =
-            seed.has_value()
-                ? Measurer.generate_samples(num_samples, seed.value())
-                : Measurer.generate_samples(num_samples);
+        auto &&samples = Measurer.generate_samples(num_samples);
 
         std::vector<std::size_t> counts(N, 0);
         std::vector<std::size_t> samples_decimal(num_samples, 0);
@@ -1294,7 +1294,7 @@ void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
             REQUIRE_THAT(probabilities,
                          Catch::Approx(expected_probabilities).margin(.05));
         }
-        testSamples<typename TypeList::Next>(seed);
+        testSamples<typename TypeList::Next>(gen);
     }
 }
 
@@ -1306,7 +1306,8 @@ TEST_CASE("Samples", "[MeasurementsBase]") {
 
 TEST_CASE("Seeded samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
-        testSamples<TestStateVectorBackends>(37);
+        std::mt19937 gen(37);
+        testSamples<TestStateVectorBackends>(&gen);
     }
 }
 

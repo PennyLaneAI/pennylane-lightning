@@ -68,6 +68,8 @@ class Measurements final
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
+    std::mt19937 *gen = nullptr;
+
   public:
     explicit Measurements(const StateVectorT &statevector)
         : BaseType{statevector} {};
@@ -578,13 +580,11 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t>
-    generate_samples(const std::size_t num_samples,
-                     const std::optional<std::size_t> &seed = std::nullopt) {
+    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
-        return generate_samples(wires, num_samples, seed);
+        return generate_samples(wires, num_samples);
     }
 
     /**
@@ -598,12 +598,12 @@ class Measurements final
      */
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
-                     const std::size_t num_samples,
-                     const std::optional<std::size_t> &seed = std::nullopt) {
+                     const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        if (seed.has_value()) {
-            this->setSeed(seed.value());
+        if (gen != nullptr) {
+            std::size_t seed = (*(this->gen))();
+            this->setSeed(seed);
         } else {
             this->setRandomSeed();
         }
@@ -620,6 +620,8 @@ class Measurements final
         }
         return samples;
     }
+
+    void set_PRNG(std::mt19937 *gen) { this->gen = gen; }
 
   private:
     /**

@@ -251,6 +251,8 @@ auto LightningSimulator::Expval(ObsIdType obsKey) -> double {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
+    m.set_PRNG(this->gen);
+
     return (device_shots != 0U) ? m.expval(*obs, device_shots, {})
                                 : m.expval(*obs);
 }
@@ -268,6 +270,8 @@ auto LightningSimulator::Var(ObsIdType obsKey) -> double {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
+    m.set_PRNG(this->gen);
+
     return (device_shots != 0U) ? m.var(*obs, device_shots) : m.var(*obs);
 }
 
@@ -282,6 +286,9 @@ void LightningSimulator::State(DataView<std::complex<double>, 1> &state) {
 void LightningSimulator::Probs(DataView<double, 1> &probs) {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.set_PRNG(this->gen);
+
     auto &&dv_probs = (device_shots != 0U) ? m.probs(device_shots) : m.probs();
 
     RT_FAIL_IF(probs.size() != dv_probs.size(),
@@ -301,6 +308,9 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     auto dev_wires = getDeviceWires(wires);
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.set_PRNG(this->gen);
+
     auto &&dv_probs = (device_shots != 0U) ? m.probs(dev_wires, device_shots)
                                            : m.probs(dev_wires);
 
@@ -315,6 +325,8 @@ LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
     // generate_samples_metropolis is a member function of the Measures class.
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.set_PRNG(this->gen);
 
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method
@@ -335,6 +347,8 @@ std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
+    m.set_PRNG(this->gen);
+
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method
     // Given the number of samples, returns 1-D vector of samples
@@ -342,9 +356,6 @@ std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
     // the number of qubits.
     //
     // Return Value Optimization (RVO)
-    if (this->gen != nullptr) {
-        return m.generate_samples(shots, (*(this->gen))());
-    }
     return m.generate_samples(shots);
 }
 
