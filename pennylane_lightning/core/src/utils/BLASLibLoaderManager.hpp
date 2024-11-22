@@ -49,7 +49,7 @@ class BLASLibLoaderManager {
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
-    const std::string get_scipylibs_path_worker_() {
+    std::string get_scipylibs_path_worker_() {
         // Pure C++ lib support only, static libs solution
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             std::filesystem::path scipyLibsPath(SCIPY_OPENBLAS32_LIB);
@@ -62,6 +62,7 @@ class BLASLibLoaderManager {
         return blas_lib_name_;
         // LCOV_EXCL_STOP
     };
+
     /**
      * @brief BLASLibLoaderManager.
      */
@@ -85,8 +86,6 @@ class BLASLibLoaderManager {
 
     /**
      * @brief Get the BLAS library.
-     *
-     * This function will return the BLAS library.
      *
      * @return SharedLibLoader* The BLAS library.
      */
