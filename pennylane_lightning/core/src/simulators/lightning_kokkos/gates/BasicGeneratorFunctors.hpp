@@ -35,6 +35,10 @@ void applyGenPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                         std::size_t num_qubits,
                         const std::vector<std::size_t> &wires,
                         [[maybe_unused]] bool inverse = false) {
+void applyGenPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                        std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires,
+                        [[maybe_unused]] bool inverse = false) {
     auto core_function =
         KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
                       std::size_t i0, std::size_t i1) {
@@ -336,6 +340,10 @@ void applyGenDoubleExcitationPlus(
 }
 
 template <class ExecutionSpace, class PrecisionT>
+void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                     std::size_t num_qubits,
+                     const std::vector<std::size_t> &wires,
+                     [[maybe_unused]] bool inverse = false) {
 void applyGenMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
                      const std::vector<std::size_t> &wires,
@@ -953,6 +961,7 @@ PrecisionT applyNamedGenerator(const GeneratorOperation generator_op,
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::SingleExcitation:
         applyGenSingleExcitation<ExecutionSpace>(arr_, num_qubits, wires,
+                                                 inverse);
                                                  inverse);
         return -static_cast<PrecisionT>(0.5);
     case GeneratorOperation::SingleExcitationMinus:
