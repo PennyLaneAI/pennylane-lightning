@@ -23,6 +23,9 @@
 
 ### Improvements
 
+* The TOML files for the devices are updated to use the new schema for declaring device capabilities.
+  [(#988)](https://github.com/PennyLaneAI/pennylane-lightning/pull/988)
+
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
   [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
 
@@ -52,7 +55,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Joseph Lee, Anton Naim Ibrahim, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
+Ali Asadi, Astral Cai, Joseph Lee, Anton Naim Ibrahim, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
 
 ---
 
