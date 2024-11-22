@@ -60,16 +60,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
             LightningException,
             "`controlled_wires` must have the same size "
             "as"); // invalid controlled_wires
-        PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyGenerator("XXX", {1}, {true}, {0}),
-            LightningException, "The given value does not exist.");
-        PL_REQUIRE_THROWS_MATCHES(
-            state_vector.applyGenerator("PauliX", {}, {false}, {1}, false),
-            LightningException,
-            "`controlled_wires` must have the same size "
-            "as"); // invalid controlled_wires
     }
-
 
     SECTION("namedGeneratorFactor") {
         using StateVectorT = StateVectorKokkos<TestType>;
@@ -81,19 +72,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
                                       GeneratorOperation::END, arr_, 1, {0}),
                                   LightningException,
                                   "Generator operation does not exist.");
-    }
-
-    SECTION("NCnamedGeneratorFactor") {
-        using StateVectorT = StateVectorKokkos<TestType>;
-        using KokkosVector = StateVectorT::KokkosVector;
-        using ExecutionSpace = StateVectorT::KokkosExecSpace;
-        [[maybe_unused]] StateVectorT sv{2};
-        KokkosVector arr_("arr_", 4);
-        PL_REQUIRE_THROWS_MATCHES(
-            applyNCNamedGenerator<ExecutionSpace>(
-                ControlledGeneratorOperation::END, arr_, 2, {1}, {true}, {0}),
-            LightningException,
-            "Controlled generator operation does not exist.");
     }
 
     SECTION("NCnamedGeneratorFactor") {
