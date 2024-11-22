@@ -401,9 +401,9 @@ class StateVectorCudaMPI final
         } else if (opName == "Rot" || opName == "CRot") {
             auto rot_matrix =
                 adjoint
-                    ? cuGates::getRot<CFP_t>(params[2], params[1], params[0])
+                    ? cuGates::getRot<CFP_t>(-params[2], -params[1], -params[0])
                     : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-            applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, adjoint);
+            applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, false);
         } else if (opName == "Matrix") {
             applyDeviceMatrixGate(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
