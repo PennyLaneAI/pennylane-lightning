@@ -58,7 +58,8 @@ class BLASLibLoaderManager {
         }
 
         // The following code is only for Python layer calls, shared libs
-        // solution LCOV_EXCL_START
+        // solution
+        // LCOV_EXCL_START
         return blas_lib_name_;
         // LCOV_EXCL_STOP
     };
