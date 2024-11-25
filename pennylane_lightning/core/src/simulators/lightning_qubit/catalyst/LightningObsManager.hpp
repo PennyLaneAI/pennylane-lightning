@@ -24,10 +24,10 @@
 #include "Utils.hpp"
 
 #include "ObservablesLQubit.hpp"
-#include "StateVectorLQubitDynamic.hpp"
+#include "StateVectorLQubitManaged.hpp"
 
 namespace {
-using Pennylane::LightningQubit::StateVectorLQubitDynamic;
+using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Observables::HermitianObs;
 using Pennylane::LightningQubit::Observables::NamedObs;
 using Pennylane::LightningQubit::Observables::TensorProdObs;
@@ -43,7 +43,7 @@ namespace Catalyst::Runtime::Simulator {
  */
 template <typename PrecisionT> class LightningObsManager {
   private:
-    using VectorStateT = StateVectorLQubitDynamic<PrecisionT>;
+    using VectorStateT = StateVectorLQubitManaged<PrecisionT>;
     using ComplexT = typename VectorStateT::ComplexT;
     using ObservablePairType =
         std::pair<std::shared_ptr<Observable<VectorStateT>>, ObsType>;
