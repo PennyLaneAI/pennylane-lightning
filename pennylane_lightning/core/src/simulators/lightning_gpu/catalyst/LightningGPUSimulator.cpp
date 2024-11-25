@@ -165,7 +165,7 @@ void LightningGPUSimulator::NamedOperation(
                "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
-    auto &&dev_wires = getDeviceWires(wires);    
+    auto &&dev_wires = getDeviceWires(wires);
     auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
     // Update the state-vector
@@ -173,7 +173,8 @@ void LightningGPUSimulator::NamedOperation(
         this->device_sv->applyOperation(name, dev_wires, inverse, params);
     } else {
         this->device_sv->applyOperation(name, dev_controlled_wires,
-                                        controlled_values, dev_wires, inverse, params);
+                                        controlled_values, dev_wires, inverse,
+                                        params);
     }
 
     // Update tape caching if required
@@ -196,13 +197,15 @@ void LightningGPUSimulator::MatrixOperation(
                "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
-    auto &&dev_wires = getDeviceWires(wires);    
+    auto &&dev_wires = getDeviceWires(wires);
     auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
     if (controlled_wires.empty()) {
-    this->device_sv->applyMatrix(matrix, dev_wires, inverse);
+        this->device_sv->applyMatrix(matrix, dev_wires, inverse);
     } else {
-        this->device_sv->applyOperation("matrix", dev_controlled_wires, controlled_values, dev_wires, inverse, {}, matrix);
+        this->device_sv->applyOperation("matrix", dev_controlled_wires,
+                                        controlled_values, dev_wires, inverse,
+                                        {}, matrix);
     }
 
     // Update tape caching if required

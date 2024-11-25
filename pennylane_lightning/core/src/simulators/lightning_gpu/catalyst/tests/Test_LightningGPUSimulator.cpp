@@ -681,7 +681,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     // ============= Controlled operations =============
 
     SECTION("Controlled Pauli-X and RX") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs;
@@ -693,7 +694,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
 
         LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
         LGPUsim->NamedOperation("PauliX", {}, {Qs[1]}, false, {Qs[0]}, {true});
-        LGPUsim->NamedOperation("RX", {M_PI_2}, {Qs[1]}, false, {Qs[0]}, {true});
+        LGPUsim->NamedOperation("RX", {M_PI_2}, {Qs[1]}, false, {Qs[0]},
+                                {true});
 
         std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
@@ -711,7 +713,8 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Hadamard, CNOT and Matrix") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
 
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
@@ -729,7 +732,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
             {-0.8818365947322423, -0.26456390390903695},
         };
         LGPUsim->MatrixOperation(matrix, wires, false, controlled_wires,
-                               controlled_values);
+                                 controlled_values);
 
         std::vector<std::complex<double>> state(1U << LGPUsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
@@ -748,12 +751,14 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
     }
 
     SECTION("Mismatch controlled wires") {
-        std::unique_ptr<LGPUSimulator> LGPUsim = std::make_unique<LGPUSimulator>();
+        std::unique_ptr<LGPUSimulator> LGPUsim =
+            std::make_unique<LGPUSimulator>();
         constexpr std::size_t n_qubits = 2;
         std::vector<intptr_t> Qs = LGPUsim->AllocateQubits(n_qubits);
 
         REQUIRE_THROWS_WITH(
-            LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]}, {}),
+            LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]},
+                                    {}),
             Catch::Contains("Controlled wires/values size mismatch"));
         std::vector<std::complex<double>> matrix{
             {-0.6709485262524046, -0.6304426335363695},
