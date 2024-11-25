@@ -606,7 +606,7 @@ class Measurements final
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        if (gen != nullptr) {
+        if (this->gen != nullptr) {
             std::size_t seed = (*(this->gen))();
             this->setSeed(seed);
         } else {
