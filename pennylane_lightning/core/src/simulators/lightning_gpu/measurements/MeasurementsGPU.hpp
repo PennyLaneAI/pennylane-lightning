@@ -217,7 +217,12 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples,
+                          const std::optional<Measurements *> &m = std::nullopt)
+        -> std::vector<std::size_t> {
+        if (m.has_value() && m.value() != nullptr) {
+            this->set_PRNG(m.value()->get_PRNG());
+        }
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -237,7 +242,7 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        if (gen != nullptr) {
+        if (this->gen != nullptr) {
             std::size_t seed = (*(this->gen))();
             this->setSeed(seed);
         } else {
@@ -715,6 +720,8 @@ class Measurements final
     }
 
     void set_PRNG(std::mt19937 *gen) { this->gen = gen; }
+
+    std::mt19937 *get_PRNG() { return this->gen; }
 
   private:
     /**
