@@ -580,7 +580,12 @@ class Measurements final
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
+    std::vector<std::size_t>
+    generate_samples(const std::size_t num_samples,
+                     const std::optional<Measurements *> &m = std::nullopt) {
+        if (m.has_value() && m.value() != nullptr) {
+            this->set_PRNG(m.value()->get_PRNG());
+        }
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
@@ -622,6 +627,8 @@ class Measurements final
     }
 
     void set_PRNG(std::mt19937 *gen) { this->gen = gen; }
+
+    std::mt19937 *get_PRNG() { return this->gen; }
 
   private:
     /**

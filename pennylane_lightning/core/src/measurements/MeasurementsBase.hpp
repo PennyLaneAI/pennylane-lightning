@@ -388,7 +388,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto sample(const std::size_t &num_shots) -> std::vector<std::size_t> {
         Derived measure(_statevector);
-        return measure.generate_samples(num_shots);
+        return measure.generate_samples(num_shots,
+                                        static_cast<Derived *>(this));
     }
 
     /**
@@ -479,12 +480,14 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             StateVectorT sv(data_storage.data(), data_storage.size());
             obs.applyInPlaceShots(sv, eigenValues, obs_wires);
             Derived measure(sv);
-            samples = measure.generate_samples(num_shots);
+            samples = measure.generate_samples(num_shots,
+                                               static_cast<Derived *>(this));
         } else {
             StateVectorT sv(_statevector);
             obs.applyInPlaceShots(sv, eigenValues, obs_wires);
             Derived measure(sv);
-            samples = measure.generate_samples(num_shots);
+            samples = measure.generate_samples(num_shots,
+                                               static_cast<Derived *>(this));
         }
 
         if (!shot_range.empty()) {
