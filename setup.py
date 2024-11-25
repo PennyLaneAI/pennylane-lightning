@@ -188,7 +188,6 @@ info = {
     "ext_package": "pennylane_lightning",
 }
 
-
 if backend == "lightning_qubit":
     info.update(
         {
