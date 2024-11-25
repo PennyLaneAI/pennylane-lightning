@@ -26,6 +26,9 @@
 
 ### Improvements
 
+* Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
+  [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
+
 * The TOML files for the devices are updated to use the new schema for declaring device capabilities.
   [(#988)](https://github.com/PennyLaneAI/pennylane-lightning/pull/988)
 
