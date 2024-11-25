@@ -308,7 +308,9 @@ class StateVectorCudaManaged
                 adjoint
                     ? cuGates::getRot<CFP_t>(-params[2], -params[1], -params[0])
                     : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-            applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, false);
+            // Use default adjoint=false for applyDeviceGeneralGate_() as
+            // reversed rot_matrix explicitly used
+            applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts);
         } else if (opName == "Matrix") {
             applyDeviceMatrixGate_(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
@@ -406,8 +408,10 @@ class StateVectorCudaManaged
                 adjoint
                     ? cuGates::getRot<CFP_t>(-params[2], -params[1], -params[0])
                     : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+            // Use default adjoint=false for applyDeviceGeneralGate_() as
+            // reversed rot_matrix explicitly used
             applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
-                                    ctrls_valuesInt, false);
+                                    ctrls_valuesInt);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
             // TODO: offload to par_gates_ if available
             auto &gateMap =
