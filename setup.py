@@ -16,7 +16,6 @@ import platform
 import subprocess
 import shutil
 import sys
-import scipy_openblas32
 
 from importlib import import_module
 from importlib.util import find_spec
@@ -28,8 +27,6 @@ from setuptools.command.build_ext import build_ext
 
 has_toml = False
 toml_libs = ["tomli", "tomllib", "tomlkit", "toml"]
-scipy_openblas32_lib_path = scipy_openblas32.get_lib_dir()
-
 for pkg in toml_libs:
     spec = find_spec(pkg)
     if spec:
@@ -147,28 +144,6 @@ class CMakeBuild(build_ext):
 
         if "CMAKE_ARGS" in os.environ:
             configure_args += os.environ["CMAKE_ARGS"].split(" ")
-                
-        scipy_libs_src = Path(scipy_openblas32_lib_path)
-        scipy_libs_dst = os.path.join(self.build_lib, "pennylane_lightning", "scipy_openblas32.libs")
-        if not os.path.exists(scipy_libs_dst):
-            os.makedirs(scipy_libs_dst)
-        
-        for lib_file in os.listdir(scipy_libs_src):
-            src_path = os.path.join(scipy_libs_src, lib_file)
-            dest_path = os.path.join(scipy_libs_dst, lib_file)
-            if os.path.isfile(src_path):
-                shutil.copy2(src_path, dest_path)
-        
-        if platform.system() == "Darwin":
-            dylibs_path = (scipy_libs_src.parent / '.dylibs').resolve()
-            scipy_libs_path = os.path.join(Path(scipy_libs_dst).parent, ".dylibs")
-            if not os.path.exists(scipy_libs_path):
-                os.makedirs(scipy_libs_path)
-            for lib_file in os.listdir(dylibs_path):
-                src_path = os.path.join(dylibs_path, lib_file)
-                dest_path = os.path.join(scipy_libs_path, lib_file)
-                if os.path.isfile(src_path):
-                    shutil.copy2(src_path, dest_path)
 
         subprocess.check_call(
             ["cmake", str(ext.sourcedir)] + configure_args,

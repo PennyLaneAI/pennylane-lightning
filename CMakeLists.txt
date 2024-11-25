@@ -143,10 +143,10 @@ if(ENABLE_PYTHON)
     # BUILD_RPATH only works for the last call
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
         set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN/../scipy_openblas32/lib:$ORIGIN/scipy_openblas32.libs:${SCIPY_OPENBLAS32_LIB_PATH}:$ORIGIN")
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN/../scipy_openblas32/lib:${SCIPY_OPENBLAS32_LIB_PATH}:$ORIGIN")
     else()
         set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:$ORIGIN/scipy_openblas32.libs:${SCIPY_OPENBLAS32_LIB_PATH}")
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../scipy_openblas32/lib:${SCIPY_OPENBLAS32_LIB_PATH}")
     endif()
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options
