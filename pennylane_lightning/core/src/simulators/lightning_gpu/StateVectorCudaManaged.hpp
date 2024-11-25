@@ -402,8 +402,6 @@ class StateVectorCudaManaged
         } else if (opName == "Rot") {
             auto rot_matrix =
                 cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-            // Use default adjoint=false for applyDeviceGeneralGate_() as
-            // reversed rot_matrix explicitly used
             applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
                                     ctrls_valuesInt, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
