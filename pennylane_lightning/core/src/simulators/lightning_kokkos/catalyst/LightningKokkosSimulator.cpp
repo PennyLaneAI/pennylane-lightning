@@ -180,7 +180,8 @@ void LightningKokkosSimulator::NamedOperation(
         this->device_sv->applyOperation(name, dev_wires, inverse, params);
     } else {
         this->device_sv->applyOperation(name, dev_controlled_wires,
-                                        controlled_values, dev_wires, inverse, params);
+                                        controlled_values, dev_wires, inverse,
+                                        params);
     }
 
     // Update tape caching if required
@@ -223,9 +224,11 @@ void LightningKokkosSimulator::MatrixOperation(
 
     // Update the state-vector
     if (controlled_wires.empty()) {
-       this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+        this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
     } else {
-        this->device_sv->applNCyMultiQubitOp(gate_matrix, dev_controlled_wires, controlled_values, dev_wires, inverse);
+        this->device_sv->applyNCMultiQubitOp(gate_matrix, dev_controlled_wires,
+                                             controlled_values, dev_wires,
+                                             inverse);
     }
 
     // Update tape caching if required
