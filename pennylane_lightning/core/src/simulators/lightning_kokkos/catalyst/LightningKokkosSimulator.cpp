@@ -164,25 +164,30 @@ void LightningKokkosSimulator::NamedOperation(
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
     const std::vector<bool> &controlled_values) {
-    RT_FAIL_IF(!controlled_wires.empty() || !controlled_values.empty(),
-               "LightningKokkos does not support native quantum control.");
-
     // Check the validity of number of qubits and parameters
+    RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
+               "Controlled wires/values size mismatch");
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
     RT_FAIL_IF(!isValidQubits(controlled_wires),
                "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
+    auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
     // Update the state-vector
-    this->device_sv->applyOperation(name, dev_wires, inverse, params);
+    if (controlled_wires.empty()) {
+        this->device_sv->applyOperation(name, dev_wires, inverse, params);
+    } else {
+        this->device_sv->applyOperation(name, dev_controlled_wires,
+                                        controlled_values, dev_wires, inverse, params);
+    }
 
     // Update tape caching if required
     if (this->tape_recording) {
         this->cache_manager.addOperation(name, params, dev_wires, inverse, {},
-                                         {/*controlled_wires*/},
-                                         {/*controlled_values*/});
+                                         dev_controlled_wires,
+                                         controlled_values);
     }
 }
 
@@ -190,17 +195,20 @@ void LightningKokkosSimulator::MatrixOperation(
     const std::vector<std::complex<double>> &matrix,
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
-    [[maybe_unused]] const std::vector<bool> &controlled_values) {
+    const std::vector<bool> &controlled_values) {
     using UnmanagedComplexHostView =
         Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
+    RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
+               "Controlled wires/values size mismatch");
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
     RT_FAIL_IF(!isValidQubits(controlled_wires),
                "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
+    auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
     std::vector<Kokkos::complex<double>> matrix_kok;
     matrix_kok.resize(matrix.size());
@@ -214,13 +222,17 @@ void LightningKokkosSimulator::MatrixOperation(
                                                             matrix_kok.size()));
 
     // Update the state-vector
-    this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+    if (controlled_wires.empty()) {
+       this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+    } else {
+        this->device_sv->applNCyMultiQubitOp(gate_matrix, dev_controlled_wires, controlled_values, dev_wires, inverse);
+    }
 
     // Update tape caching if required
     if (this->tape_recording) {
         this->cache_manager.addOperation("QubitUnitary", {}, dev_wires, inverse,
-                                         matrix_kok, {/*controlled_wires*/},
-                                         {/*controlled_values*/});
+                                         matrix_kok, dev_controlled_wires,
+                                         controlled_values);
     }
 }
 
