@@ -510,7 +510,6 @@ class StateVectorKokkos final
                              const std::vector<bool> &controlled_values,
                              const std::vector<std::size_t> &wires,
                              bool inverse = false) {
-
         const std::size_t num_qubits = this->getNumQubits();
         const std::size_t two2N =
             exp2(num_qubits - wires.size() - controlled_wires.size());
