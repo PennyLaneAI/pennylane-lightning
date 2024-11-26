@@ -43,7 +43,8 @@ target_link_libraries(${PL_BACKEND} PUBLIC  lightning_compile_options
                                             ${PL_BACKEND}_gates
                                             ${PL_BACKEND}_tensor
                                             ${PL_BACKEND}_tensornetBase
-                                            ${PL_BACKEND}_utils)
+                                            ${PL_BACKEND}_utils
+                                            )
     
 target_include_directories(${PL_BACKEND} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
