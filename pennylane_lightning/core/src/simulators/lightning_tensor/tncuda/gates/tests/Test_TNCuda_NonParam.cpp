@@ -64,10 +64,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Identity", "[TNCuda_Nonparam]",
 
         auto results = tn_state->getDataVector();
 
-        CHECK(expected.real() ==
-              Approx(results[0b1 << ((num_qubits - 1 - index))].real()));
-        CHECK(expected.imag() ==
-              Approx(results[0b1 << ((num_qubits - index - 1))].imag()));
+        CHECK(expected ==
+              Pennylane::Util::approx(results[0b1 << ((num_qubits - 1 - index))]));
     }
 }
 
@@ -116,10 +114,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Hadamard", "[TNCuda_Nonparam]",
 
         auto results = tn_state->getDataVector();
 
-        CHECK(expected.real() ==
-              Approx(results[0b1 << ((num_qubits - 1 - index))].real()));
-        CHECK(expected.imag() ==
-              Approx(results[0b1 << ((num_qubits - index - 1))].imag()));
+        CHECK(expected ==
+              Pennylane::Util::approx(results[0b1 << ((num_qubits - 1 - index))]));
     }
 }
 
