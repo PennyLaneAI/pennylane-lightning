@@ -75,8 +75,9 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "git config --global --add safe.directory /io && \
             cd /io && \
-            pip install ninja && \
-            ln -s /opt/python/cp310-cp10/bin/ninja /usr/bin/ninja && \
+            yum install -y ninja-build && \
+            echo $(which ninja) && \
+            echo $(ninja --version) && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                             -DKokkos_ENABLE_SERIAL=ON \
