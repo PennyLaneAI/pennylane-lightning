@@ -23,6 +23,9 @@
 
 ### Improvements
 
+* Update Kokkos version support to 4.5.
+  [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
+
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
 
@@ -44,6 +47,9 @@
   [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 ### Bug fixes
+
+* Fix the missing `ninja` in Linux AARCH64 wheels recipe.
+  [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
 
 * Fix issue with `lightning.gpu` Rot operation with adjoint.
   [(#1004)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1004)
