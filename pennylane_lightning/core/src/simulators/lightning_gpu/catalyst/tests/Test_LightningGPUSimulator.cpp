@@ -738,6 +738,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         DataView<std::complex<double>, 1> view(state);
         LGPUsim->State(view);
 
+        // calculated by pennylane.
         CHECK(state[0] == PLApproxComplex(std::complex<double>{0.70710678, 0.0})
                               .epsilon(1e-5));
         CHECK(state[1] ==
@@ -760,12 +761,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
             LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]},
                                     {}),
             Catch::Contains("Controlled wires/values size mismatch"));
-        std::vector<std::complex<double>> matrix{
-            {-0.6709485262524046, -0.6304426335363695},
-            {-0.14885403153998722, 0.3608498832392019},
-            {-0.2376311670004963, 0.3096798175687841},
-            {-0.8818365947322423, -0.26456390390903695},
-        };
+        std::vector<std::complex<double>> matrix (4, {0.0, 0.0});
         REQUIRE_THROWS_WITH(
             LGPUsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
             Catch::Contains("Controlled wires/values size mismatch"));
