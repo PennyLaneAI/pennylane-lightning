@@ -126,7 +126,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
         "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
         "DoubleExcitationMinus", "DoubleExcitationPlus", "MultiRZ",
         "GlobalPhase");
-    {
+    DYNAMIC_SECTION("Generator - Gate = " << gate_name
+                                          << " Inverse = " << inverse) {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
@@ -458,7 +459,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         "SingleExcitationPlus", "DoubleExcitation", "DoubleExcitationMinus",
         "DoubleExcitationPlus", "MultiRZ");
 
-    SECTION("1-control: c{5}") {
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 1-control: c{5}") {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
@@ -502,7 +504,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         }
     }
 
-    SECTION("2-control: c{4,5}") {
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 2-control: c{4,5}") {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
@@ -545,7 +548,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         }
     }
 
-    SECTION("2-control: c{4,6}") {
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 2-control: c{4,6}") {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
@@ -588,7 +592,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         }
     }
 
-    SECTION("3-control: c{4,5,6}") {
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 3-control: c{4,5,6}") {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),

@@ -89,7 +89,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Operation",
         "CRZ", "IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
         "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
         "DoubleExcitationMinus", "DoubleExcitationPlus", "Rot", "CRot");
-    {
+    DYNAMIC_SECTION("Matrix - Gate = " << gate_name
+                                       << " Inverse = " << inverse) {
         auto gate_op =
             reverse_lookup(Constant::gate_names, std::string_view{gate_name});
         auto num_params = lookup(Constant::gate_num_params, gate_op);

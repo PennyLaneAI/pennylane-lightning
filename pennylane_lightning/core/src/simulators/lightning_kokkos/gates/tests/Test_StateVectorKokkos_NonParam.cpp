@@ -105,7 +105,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Param-Operation",
     const std::string gate_name =
         GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T",
                  "CNOT", "SWAP", "CY", "CZ", "CSWAP", "Toffoli");
-    {
+    DYNAMIC_SECTION("Matrix - Gate = " << gate_name
+                                       << " Inverse = " << inverse) {
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
             str_to_gates_.at(gate_name), {}, inverse);
 
@@ -1441,8 +1442,9 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation controlled matrix (PauliX/Toffoli)",
-                   "[StateVectorKokkos_NonParam]", float, double) {
+TEMPLATE_TEST_CASE(
+    "StateVectorKokkos::applyOperation controlled matrix (PauliX/Toffoli)",
+    "[StateVectorKokkos_NonParam]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
 
     const TestType EP = 1e-4;
