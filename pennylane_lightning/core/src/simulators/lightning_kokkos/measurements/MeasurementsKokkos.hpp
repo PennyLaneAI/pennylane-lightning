@@ -73,7 +73,7 @@ class Measurements final
     using ScratchViewComplex = typename StateVectorT::ScratchViewComplex;
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
-    std::mt19937 *gen = nullptr;
+    std::optional<std::size_t> DeviceSeed = std::nullopt;
 
   public:
     explicit Measurements(const StateVectorT &statevector)
@@ -659,12 +659,7 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples,
-                          const std::optional<Measurements *> &m = std::nullopt)
-        -> std::vector<std::size_t> {
-        if (m.has_value() && m.value() != nullptr) {
-            this->set_PRNG(m.value()->get_PRNG());
-        }
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const std::size_t N = this->_statevector.getLength();
         Kokkos::View<std::size_t *> samples("num_samples",
@@ -684,8 +679,8 @@ class Measurements final
 
         // Sampling using Random_XorShift64_Pool
         auto rand_pool =
-            this->gen != nullptr
-                ? Kokkos::Random_XorShift64_Pool<>((*(this->gen))())
+            this->DeviceSeed.has_value()
+                ? Kokkos::Random_XorShift64_Pool<>(this->DeviceSeed.value())
                 : Kokkos::Random_XorShift64_Pool<>(
                       std::chrono::high_resolution_clock::now()
                           .time_since_epoch()
@@ -699,9 +694,17 @@ class Measurements final
         return view2vector(samples);
     }
 
-    void set_PRNG(std::mt19937 *gen) { this->gen = gen; }
+    void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
+        if (gen != nullptr) {
+            this->DeviceSeed = (*gen)();
+        }
+    }
 
-    std::mt19937 *get_PRNG() { return this->gen; }
+    void set_DeviceSeed(std::optional<std::size_t> deviceSeed) {
+        this->DeviceSeed = deviceSeed;
+    }
+
+    std::optional<std::size_t> get_DeviceSeed() { return this->DeviceSeed; }
 
   private:
     std::unordered_map<std::string, ExpValFunc> expval_funcs_;

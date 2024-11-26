@@ -73,7 +73,7 @@ class Measurements final
 
     GateCache<PrecisionT> gate_cache_;
 
-    std::mt19937 *gen = nullptr;
+    std::optional<std::size_t> DeviceSeed = std::nullopt;
 
   public:
     explicit Measurements(StateVectorT &statevector)
@@ -217,12 +217,7 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples,
-                          const std::optional<Measurements *> &m = std::nullopt)
-        -> std::vector<std::size_t> {
-        if (m.has_value() && m.value() != nullptr) {
-            this->set_PRNG(m.value()->get_PRNG());
-        }
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -242,9 +237,8 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        if (this->gen != nullptr) {
-            std::size_t seed = (*(this->gen))();
-            this->setSeed(seed);
+        if (this->DeviceSeed.has_value()) {
+            this->setSeed(this->DeviceSeed.value());
         } else {
             this->setRandomSeed();
         }
@@ -719,9 +713,17 @@ class Measurements final
         return BaseType::var(obs, num_shots);
     }
 
-    void set_PRNG(std::mt19937 *gen) { this->gen = gen; }
+    void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
+        if (gen != nullptr) {
+            this->DeviceSeed = (*gen)();
+        }
+    }
 
-    std::mt19937 *get_PRNG() { return this->gen; }
+    void set_DeviceSeed(std::optional<std::size_t> deviceSeed) {
+        this->DeviceSeed = deviceSeed;
+    }
+
+    std::optional<std::size_t> get_DeviceSeed() { return this->DeviceSeed; }
 
   private:
     /**
