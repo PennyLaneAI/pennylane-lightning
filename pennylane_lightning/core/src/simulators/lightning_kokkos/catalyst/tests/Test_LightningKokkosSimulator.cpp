@@ -471,17 +471,16 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
 
         LKsim->NamedOperation("RX", {M_PI}, {Qs[1]}, false);
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
-        LKsim->NamedOperation("MultiRZ", {M_PI}, {Qs[0], Qs[1]}, false);
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
+        LKsim->NamedOperation("MultiRZ", {M_PI / 2}, {Qs[0], Qs[1]}, false);
 
         std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
         LKsim->State(view);
 
-        CHECK(state[2] ==
-              PLApproxComplex(std::complex<double>{-1, 0}).epsilon(1e-5));
+        CHECK(state[1] ==
+              PLApproxComplex(std::complex<double>{0.707107, -0.707107})
+                  .epsilon(1e-5));
     }
 
     SECTION("Hadamard, CNOT and Matrix") {

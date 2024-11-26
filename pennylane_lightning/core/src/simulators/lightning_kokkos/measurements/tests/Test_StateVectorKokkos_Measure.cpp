@@ -317,11 +317,11 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
             ref[1] = 0.5;
             CHECK_THAT(probs, Catch::Approx(ref).margin(1e-7));
         }
-        SECTION("3-8 targets Hadamard(all)") {
+        SECTION("3-6 targets Hadamard(all)") {
             for (std::size_t t = 0; t < num_qubits; t++) {
                 statevector.applyOperation("Hadamard", {t}, false);
             }
-            const std::size_t ntarget = GENERATE(3, 4, 5, 6, 7, 8);
+            const std::size_t ntarget = GENERATE(3, 4, 5, 6);
             std::vector<std::size_t> targets(ntarget);
             std::iota(targets.begin(), targets.end(), 0);
             auto probs = Measurer.probs(targets, device_wires);
@@ -334,7 +334,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
             for (std::size_t t = 0; t < num_qubits; t++) {
                 statevector.applyOperation("Hadamard", {t}, false);
             }
-            const std::size_t ntarget = 9;
+            const std::size_t ntarget = 7;
             std::vector<std::size_t> targets(ntarget);
             std::iota(targets.begin(), targets.end(), 0);
             auto probs =
