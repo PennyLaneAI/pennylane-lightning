@@ -156,6 +156,10 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using VectorT = TestVector<std::complex<PrecisionT>>;
+    using UnmanagedComplexHostView =
+        Kokkos::View<ComplexT *, Kokkos::HostSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+
     std::mt19937_64 re{1337};
 
     SECTION("Test wrong matrix") {
@@ -191,15 +195,17 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
             std::vector<ComplexT> mkvec(reinterpret_cast<ComplexT *>(m.data()),
                                         reinterpret_cast<ComplexT *>(m.data()) +
                                             m.size());
-            KokkosVector mkview(reinterpret_cast<ComplexT *>(m.data()),
-                                m.size());
             state_vector_1.applyMatrix(mkvec, wires);
+
+            KokkosVector mkview("mkview", m.size());
+            Kokkos::deep_copy(
+                mkview, UnmanagedComplexHostView(
+                            reinterpret_cast<ComplexT *>(m.data()), m.size()));
             state_vector_2.applyMultiQubitOp(mkview, wires);
 
             PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10E3;
-            REQUIRE(isApproxEqual(
-                state_vector_1.getData(), state_vector_1.getLength(),
-                state_vector_2.getData(), state_vector_2.getLength(), eps));
+            REQUIRE(isApproxEqual(state_vector_1.getDataVector(),
+                                  state_vector_2.getDataVector(), eps));
         }
     }
 }
@@ -384,9 +390,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::collapse", "[StateVectorKokkos]", float,
         sv.collapse(wire, branch);
 
         PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10e3;
-        REQUIRE(isApproxEqual(sv.getData(), sv.getDataVector().size(),
-                              expected_state[branch][wire].data(),
-                              expected_state[branch][wire].size(), eps));
+        REQUIRE(isApproxEqual(sv.getDataVector(), expected_state[branch][wire],
+                              eps));
     }
 }
 
@@ -413,8 +418,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::normalize", "[StateVectorKokkos]", float,
         sv.normalize();
 
         PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 1e3;
-        REQUIRE(isApproxEqual(sv.getData(), sv.getDataVector().size(),
-                              expected_state.data(), expected_state.size(),
-                              eps));
+        REQUIRE(isApproxEqual(sv.getDataVector(), expected_state, eps));
     }
 }
