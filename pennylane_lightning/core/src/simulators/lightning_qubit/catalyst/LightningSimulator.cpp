@@ -251,7 +251,7 @@ auto LightningSimulator::Expval(ObsIdType obsKey) -> double {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.set_PRNG(this->gen);
+    m.set_DeviceSeedFromPRNG(this->gen);
 
     return (device_shots != 0U) ? m.expval(*obs, device_shots, {})
                                 : m.expval(*obs);
@@ -270,7 +270,7 @@ auto LightningSimulator::Var(ObsIdType obsKey) -> double {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.set_PRNG(this->gen);
+    m.set_DeviceSeedFromPRNG(this->gen);
 
     return (device_shots != 0U) ? m.var(*obs, device_shots) : m.var(*obs);
 }
@@ -287,7 +287,7 @@ void LightningSimulator::Probs(DataView<double, 1> &probs) {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.set_PRNG(this->gen);
+    m.set_DeviceSeedFromPRNG(this->gen);
 
     auto &&dv_probs = (device_shots != 0U) ? m.probs(device_shots) : m.probs();
 
@@ -309,7 +309,7 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.set_PRNG(this->gen);
+    m.set_DeviceSeedFromPRNG(this->gen);
 
     auto &&dv_probs = (device_shots != 0U) ? m.probs(dev_wires, device_shots)
                                            : m.probs(dev_wires);
@@ -326,7 +326,7 @@ LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.set_PRNG(this->gen);
+    m.set_DeviceSeedFromPRNG(this->gen);
 
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method
@@ -347,7 +347,7 @@ std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.set_PRNG(this->gen);
+    m.set_DeviceSeedFromPRNG(this->gen);
 
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method

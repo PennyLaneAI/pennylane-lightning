@@ -13,6 +13,7 @@
 // limitations under the License.
 #include "TestHelpers.hpp"
 #include <catch2/catch.hpp>
+#include <cstddef>
 
 /// @cond DEV
 namespace {
@@ -1235,7 +1236,7 @@ TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
 }
 
 template <typename TypeList>
-void testSamples(const std::optional<std::mt19937 *> &gen = std::nullopt) {
+void testSamples(std::optional<size_t> seed = std::nullopt) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -1257,9 +1258,7 @@ void testSamples(const std::optional<std::mt19937 *> &gen = std::nullopt) {
         // This object attaches to the statevector allowing several
         // measurements.
         Measurements<StateVectorT> Measurer(statevector);
-        if (gen.has_value()) {
-            Measurer.set_PRNG(gen.value());
-        }
+        Measurer.set_DeviceSeed(seed);
 
         std::vector<PrecisionT> expected_probabilities = {
             0.67078706, 0.03062806, 0.0870997,  0.00397696,
@@ -1294,7 +1293,7 @@ void testSamples(const std::optional<std::mt19937 *> &gen = std::nullopt) {
             REQUIRE_THAT(probabilities,
                          Catch::Approx(expected_probabilities).margin(.05));
         }
-        testSamples<typename TypeList::Next>(gen);
+        testSamples<typename TypeList::Next>(seed);
     }
 }
 
@@ -1307,7 +1306,7 @@ TEST_CASE("Samples", "[MeasurementsBase]") {
 TEST_CASE("Seeded samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         std::mt19937 gen(37);
-        testSamples<TestStateVectorBackends>(&gen);
+        testSamples<TestStateVectorBackends>(gen());
     }
 }
 

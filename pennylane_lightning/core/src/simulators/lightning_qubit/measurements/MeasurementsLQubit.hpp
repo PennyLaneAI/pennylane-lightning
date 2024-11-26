@@ -68,7 +68,7 @@ class Measurements final
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
 
-    std::mt19937 *gen = nullptr;
+    std::optional<std::size_t> DeviceSeed = std::nullopt;
 
   public:
     explicit Measurements(const StateVectorT &statevector)
@@ -576,16 +576,10 @@ class Measurements final
      * Reference: https://en.wikipedia.org/wiki/Alias_method
      *
      * @param num_samples The number of samples to generate.
-     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t>
-    generate_samples(const std::size_t num_samples,
-                     const std::optional<Measurements *> &m = std::nullopt) {
-        if (m.has_value() && m.value() != nullptr) {
-            this->set_PRNG(m.value()->get_PRNG());
-        }
+    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
@@ -597,7 +591,6 @@ class Measurements final
      *
      * @param wires Sample are generated for the specified wires.
      * @param num_samples The number of samples to generate.
-     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
@@ -606,9 +599,8 @@ class Measurements final
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        if (this->gen != nullptr) {
-            std::size_t seed = (*(this->gen))();
-            this->setSeed(seed);
+        if (this->DeviceSeed.has_value()) {
+            this->setSeed(this->DeviceSeed.value());
         } else {
             this->setRandomSeed();
         }
@@ -626,9 +618,17 @@ class Measurements final
         return samples;
     }
 
-    void set_PRNG(std::mt19937 *gen) { this->gen = gen; }
+    void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
+        if (gen != nullptr) {
+            this->DeviceSeed = (*gen)();
+        }
+    }
 
-    std::mt19937 *get_PRNG() { return this->gen; }
+    void set_DeviceSeed(std::optional<std::size_t> deviceSeed) {
+        this->DeviceSeed = deviceSeed;
+    }
+
+    std::optional<std::size_t> get_DeviceSeed() { return this->DeviceSeed; }
 
   private:
     /**
