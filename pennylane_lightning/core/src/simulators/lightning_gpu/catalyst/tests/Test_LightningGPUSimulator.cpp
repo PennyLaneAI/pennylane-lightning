@@ -761,7 +761,7 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
             LGPUsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]},
                                     {}),
             Catch::Contains("Controlled wires/values size mismatch"));
-        std::vector<std::complex<double>> matrix (4, {0.0, 0.0});
+        std::vector<std::complex<double>> matrix(4, {0.0, 0.0});
         REQUIRE_THROWS_WITH(
             LGPUsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
             Catch::Contains("Controlled wires/values size mismatch"));
