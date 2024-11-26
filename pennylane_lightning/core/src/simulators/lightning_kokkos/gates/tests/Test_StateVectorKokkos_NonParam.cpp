@@ -40,7 +40,6 @@ namespace {
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::Gates;
 using namespace Pennylane::Util;
-using std::size_t;
 } // namespace
 /// @endcond
 

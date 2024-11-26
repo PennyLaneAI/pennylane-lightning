@@ -49,7 +49,6 @@ using namespace Pennylane::LightningKokkos::Measures;
 using namespace Pennylane::LightningKokkos::Observables;
 using namespace Pennylane::Util;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
-using std::size_t;
 } // namespace
 /// @endcond
 
