@@ -242,6 +242,9 @@ isApproxEqual(const Data_t *data1, const std::size_t length1,
 /**
  * @brief Utility function to compare `std::vector` of complex statevector data.
  *
+ * @note This utility function is mainly used in Lightning-Kokkos C++ unit tests
+ * when the `data1` and `data2` allocators are identical.
+ *
  * @tparam Data_t Floating point data-type.
  * @param data1 StateVector data array pointer 1.
  * @param data2 StateVector data array pointer 2.

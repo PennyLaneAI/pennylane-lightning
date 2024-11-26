@@ -108,7 +108,6 @@ jobs:
         with:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          retention-days: 1
 
   pythontestswithKokkos:
     needs: [builddeps]
