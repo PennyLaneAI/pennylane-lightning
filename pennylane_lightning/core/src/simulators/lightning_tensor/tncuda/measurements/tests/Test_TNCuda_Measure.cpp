@@ -23,11 +23,15 @@
 
 #include <catch2/catch.hpp>
 
+#include "DevTag.hpp"
 #include "ExaTNCuda.hpp"
+#include "MPSTNCuda.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
 #include "TestHelpers.hpp"
 #include "cuda_helpers.hpp"
+
+#include "TestHelpersTNCuda.hpp"
 
 /// @cond DEV
 namespace {
@@ -38,13 +42,14 @@ using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Probabilities", "[Measures]",
-                   float, double) {
-    using TensorNetT = ExaTNCuda<TestType>;
+TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
+    using TNDevice_T = TestType;
+    using PrecisionT = typename TNDevice_T::PrecisionT;
 
     SECTION("Looping over different wire configurations:") {
         // Probabilities calculated with Pennylane default.qubit:
-        std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
+        std::vector<
+            std::pair<std::vector<std::size_t>, std::vector<PrecisionT>>>
             input = {
                 {{0, 1, 2},
                  {0.65473791, 0.08501576, 0.02690407, 0.00349341, 0.19540418,
@@ -57,17 +62,25 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Probabilities", "[Measures]",
                 {{2}, {0.88507558, 0.11492442}}}; // data from default.qubit
 
         // Defining the State Vector that will be measured.
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT exatn_state{num_qubits};
+        std::unique_ptr<TNDevice_T> tn_state =
+            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
 
-        exatn_state.applyOperations(
+        tn_state->applyOperations(
             {{"RX"}, {"RX"}, {"RY"}, {"RY"}, {"RX"}, {"RY"}},
             {{0}, {0}, {1}, {1}, {2}, {2}},
             {{false}, {false}, {false}, {false}, {false}, {false}},
             {{0.5}, {0.5}, {0.2}, {0.2}, {0.5}, {0.5}});
+        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+            tn_state->append_mps_final_state();
+        }
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(exatn_state);
+        auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
 
         for (const auto &term : input) {
             auto probabilities = measure.probs(term.first);
@@ -78,51 +91,70 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Probabilities", "[Measures]",
 
     SECTION("Test TNCudaOperator ctor failures") {
         // Defining the State Vector that will be measured.
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT exatn_state{num_qubits};
+        std::unique_ptr<TNDevice_T> tn_state =
+            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
 
-        exatn_state.applyOperations({{"RX"}, {"RY"}}, {{0}, {0}},
-                                    {{false}, {false}}, {{0.5}, {0.5}});
+        tn_state->applyOperations({{"RX"}, {"RY"}}, {{0}, {0}},
+                                  {{false}, {false}}, {{0.5}, {0.5}});
+        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+            tn_state->append_mps_final_state();
+        }
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(exatn_state);
+        auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
         REQUIRE_THROWS_AS(measure.probs({2, 1}), LightningException);
     }
 
     SECTION("Test excessive projected wires failure") {
         // Defining the State Vector that will be measured.
+        std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 100;
+        std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT exatn_state{num_qubits};
+        std::unique_ptr<TNDevice_T> tn_state =
+            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(exatn_state);
+        auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
         REQUIRE_THROWS_AS(measure.probs({0, 1, 2, 3}), LightningException);
     }
 }
 
-TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Samples", "[Measures]", float,
-                   double) {
-    using TensorNetT = ExaTNCuda<TestType>;
+TEMPLATE_LIST_TEST_CASE("Samples", "[TNCUDA_Measures]", TestTNBackends) {
+    using TNDevice_T = TestType;
+    using PrecisionT = typename TNDevice_T::PrecisionT;
 
     SECTION("Looping over different wire configurations:") {
         // Probabilities calculated with Pennylane default.qubit:
-        std::vector<TestType> expected_probabilities = {
+        std::vector<PrecisionT> expected_probabilities = {
             0.67078706, 0.03062806, 0.0870997,  0.00397696,
             0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
         // Defining the State Vector that will be measured.
-
+        std::size_t bondDim = GENERATE(4, 5);
         std::size_t num_qubits = 3;
+        std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT exatn_state{num_qubits};
+        std::unique_ptr<TNDevice_T> tn_state =
+            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
 
-        exatn_state.applyOperations(
+        tn_state->applyOperations(
             {{"RX"}, {"RX"}, {"RY"}, {"RY"}, {"RX"}, {"RY"}},
             {{0}, {0}, {1}, {1}, {2}, {2}},
             {{false}, {false}, {false}, {false}, {false}, {false}},
             {{0.5}, {0.5}, {0.2}, {0.2}, {0.5}, {0.5}});
+        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+            tn_state->append_mps_final_state();
+        }
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(exatn_state);
+        auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
 
         std::size_t num_samples = 100000;
         const std::vector<std::size_t> wires = {0, 1, 2};
@@ -130,9 +162,9 @@ TEMPLATE_TEST_CASE("ExaTNCuda::Measurements::Samples", "[Measures]", float,
         auto counts = samples_to_decimal(samples, num_qubits, num_samples);
 
         // compute estimated probabilities from histogram
-        std::vector<TestType> probabilities(counts.size());
+        std::vector<PrecisionT> probabilities(counts.size());
         for (std::size_t i = 0; i < counts.size(); i++) {
-            probabilities[i] = counts[i] / static_cast<TestType>(num_samples);
+            probabilities[i] = counts[i] / static_cast<PrecisionT>(num_samples);
         }
 
         // compare estimated probabilities to real probabilities

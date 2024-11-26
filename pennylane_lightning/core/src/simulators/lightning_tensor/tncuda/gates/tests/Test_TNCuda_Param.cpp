@@ -24,6 +24,7 @@
 #include "TNCudaGateCache.hpp"
 
 #include "TestHelpers.hpp"
+#include "TestHelpersTNCuda.hpp"
 
 /// @cond DEV
 namespace {
@@ -33,10 +34,7 @@ using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
 // using namespace Pennylane;
 namespace cuUtil = Pennylane::LightningGPU::Util;
-using TestTNBackends =
-    Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
-                              ExaTNCuda<float>, ExaTNCuda<double>>;
-
+using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
 
@@ -51,16 +49,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PhaseShift", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
     const Precision_T sign = (inverse) ? -1.0 : 1.0;
@@ -109,16 +99,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RX", "[TNCuda_Param]", TestTNBackends) {
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
 
@@ -183,16 +165,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RY", "[MPSTNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
 
@@ -262,16 +236,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RZ", "[TNCuda_Param]", TestTNBackends) {
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
 
@@ -333,16 +299,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles{0.3, 2.4};
     const Precision_T sign = (inverse) ? -1.0 : 1.0;
@@ -401,16 +359,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Rot", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<std::vector<Precision_T>> angles{
         std::vector<Precision_T>{0.3, 0.8, 2.4},
@@ -452,16 +402,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles =
         std::vector<Precision_T>{0.3, 0.8, 2.4};
@@ -524,16 +466,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles{0.3, 0.8};
 
@@ -592,16 +526,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -663,16 +589,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -735,16 +653,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -807,16 +717,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -879,16 +781,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -955,16 +849,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -1026,16 +912,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -1099,16 +977,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -1180,16 +1050,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -1542,16 +1404,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     std::size_t max_mpo_bond = 4;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     std::vector<std::vector<cp_t>> mpo_single_excitation(
         2, std::vector<cp_t>(16, {0.0, 0.0}));

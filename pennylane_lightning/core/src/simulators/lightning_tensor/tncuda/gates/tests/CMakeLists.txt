@@ -18,6 +18,7 @@ add_library(${PL_BACKEND}_gates_tests INTERFACE)
 target_link_libraries(${PL_BACKEND}_gates_tests INTERFACE Catch2::Catch2 
                 ${PL_BACKEND}_gates
                 ${PL_BACKEND}
+                ${PL_BACKEND}_tncuda_utils
                         )
 
 ProcessTestOptions(${PL_BACKEND}_gates_tests)
@@ -27,10 +28,8 @@ target_sources(${PL_BACKEND}_gates_tests INTERFACE runner_${PL_BACKEND}_gates.cp
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    
-                Test_TNCuda_NonParam.cpp
-                Test_TNCuda_Param.cpp
-                )
+set(TEST_SOURCES Test_TNCuda_NonParam.cpp
+                 Test_TNCuda_Param.cpp)
 
 add_executable(${PL_BACKEND}_gates_test_runner ${TEST_SOURCES})
 target_link_libraries(${PL_BACKEND}_gates_test_runner PRIVATE ${PL_BACKEND}_gates_tests)

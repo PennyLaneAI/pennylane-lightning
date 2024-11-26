@@ -22,80 +22,101 @@
 
 #include <catch2/catch.hpp>
 
+#include "DevTag.hpp"
+#include "ExaTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
 #include "cuda_helpers.hpp"
 
+#include "TestHelpersTNCuda.hpp"
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningTensor::TNCuda::Measures;
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
+
 } // namespace
 /// @endcond
 
-TEMPLATE_TEST_CASE("[Identity]", "[MPSTNCuda_Expval]", float, double) {
-    using TensorNetT = MPSTNCuda<TestType>;
-    using NamedObsT = NamedObsTNCuda<TensorNetT>;
-    auto ONE = TestType(1);
+TEMPLATE_LIST_TEST_CASE("[Identity]", "[TNCuda_Expval]", TestTNBackends) {
+    using TNDeviceT = TestType;
+    using PrecisionT = typename TNDeviceT::PrecisionT;
+    using NamedObsT = NamedObsTNCuda<TNDeviceT>;
+    auto ONE = PrecisionT(1);
 
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
     std::size_t maxBondDim = bondDim;
+    DevTag<int> dev_tag{0, 0};
 
-    TensorNetT mps_state{num_qubits, maxBondDim};
+    std::unique_ptr<TNDeviceT> tn_state =
+        createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-    auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
+    auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
     SECTION("Using expval") {
-        mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+        tn_state->applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                   {{0}, {0, 1}, {1, 2}},
                                   {{false}, {false}, {false}});
-        mps_state.append_mps_final_state();
+        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+            tn_state->append_mps_final_state();
+        }
         auto ob = NamedObsT("Identity", {0});
         auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));
     }
 }
 
-TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
+TEMPLATE_LIST_TEST_CASE("[PauliX]", "[TNCuda_Expval]", TestTNBackends) {
     {
-        using TensorNetT = MPSTNCuda<TestType>;
-        using NamedObsT = NamedObsTNCuda<TensorNetT>;
+        using TNDeviceT = TestType;
+        using PrecisionT = typename TNDeviceT::PrecisionT;
+        using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
+        auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
-        auto ZERO = TestType(0);
-        auto ONE = TestType(1);
+        auto ZERO = PrecisionT(0);
+        auto ONE = PrecisionT(1);
 
         SECTION("Using expval") {
-            mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+            tn_state->applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
-            mps_state.append_mps_final_state();
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
 
         SECTION("Using expval: Plus states") {
-            mps_state.applyOperations(
+            tn_state->applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            mps_state.append_mps_final_state();
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
 
         SECTION("Using expval: Minus states") {
-            mps_state.applyOperations(
+            tn_state->applyOperations(
                 {{"PauliX"},
                  {"Hadamard"},
                  {"PauliX"},
@@ -104,7 +125,10 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            mps_state.append_mps_final_state();
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -112,25 +136,28 @@ TEMPLATE_TEST_CASE("[PauliX]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
+TEMPLATE_LIST_TEST_CASE("[PauliY]", "[TNCuda_Expval]", TestTNBackends) {
     {
-        using TensorNetT = MPSTNCuda<TestType>;
-        using NamedObsT = NamedObsTNCuda<TensorNetT>;
+        using TNDeviceT = TestType;
+        using PrecisionT = typename TNDeviceT::PrecisionT;
+        using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
+        auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
-        auto ZERO = TestType(0);
-        auto ONE = TestType(1);
-        auto PI = TestType(M_PI);
+        auto ZERO = PrecisionT(0);
+        auto ONE = PrecisionT(1);
+        auto PI = PrecisionT(M_PI);
 
         SECTION("Using expval") {
-            mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+            tn_state->applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
             auto ob = NamedObsT("PauliY", {0});
@@ -139,7 +166,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
         }
 
         SECTION("Using expval: Plus i states") {
-            mps_state.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+            tn_state->applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                       {{false}, {false}, {false}},
                                       {{-PI / 2}, {-PI / 2}, {-PI / 2}});
             auto ob = NamedObsT("PauliY", {0});
@@ -148,7 +175,7 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
         }
 
         SECTION("Using expval: Minus i states") {
-            mps_state.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
+            tn_state->applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                       {{false}, {false}, {false}},
                                       {{PI / 2}, {PI / 2}, {PI / 2}});
             auto ob = NamedObsT("PauliY", {0});
@@ -158,24 +185,26 @@ TEMPLATE_TEST_CASE("[PauliY]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
+TEMPLATE_LIST_TEST_CASE("[PauliZ]", "[TNCuda_Expval]", TestTNBackends) {
     {
-        using TensorNetT = MPSTNCuda<TestType>;
-        using PrecisionT = TensorNetT::PrecisionT;
-        using TensorNetT = MPSTNCuda<TestType>;
-        using NamedObsT = NamedObsTNCuda<TensorNetT>;
+        using TNDeviceT = TestType;
+        using PrecisionT = typename TNDeviceT::PrecisionT;
+
+        using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
         SECTION("Using expval") {
-            mps_state.applyOperations(
+            tn_state->applyOperations(
                 {{"RX"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}}, {{0.5}, {}, {}});
-            auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+            auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
             auto ob = NamedObsT("PauliZ", {0});
             auto res = m.expval(ob);
             PrecisionT ref = 0.8775825618903724;
@@ -185,7 +214,7 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
         SECTION("Using expval mps with cutoff") {
             double cutoff = GENERATE(1e-1, 1e-2);
             std::string cutoff_mode = GENERATE("rel", "abs");
-            mps_state.applyOperations(
+            tn_state->applyOperations(
                 {{"Hadamard"},
                  {"Hadamard"},
                  {"Hadamard"},
@@ -195,8 +224,11 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
                 {{0}, {1}, {2}, {0, 1}, {1, 2}, {0, 2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}},
                 {{}, {}, {}, {0.5}, {0.6}, {0.7}});
-            mps_state.append_mps_final_state(cutoff, cutoff_mode);
-            auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state(cutoff, cutoff_mode);
+            }
+            auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
             auto ob = NamedObsT("PauliZ", {0});
             auto res = m.expval(ob);
             // ref is from default.qubit
@@ -208,32 +240,40 @@ TEMPLATE_TEST_CASE("[PauliZ]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
+TEMPLATE_LIST_TEST_CASE("[Hadamard]", "[TNCuda_Expval]", TestTNBackends) {
     {
-        using TensorNetT = MPSTNCuda<TestType>;
-        using NamedObsT = NamedObsTNCuda<TensorNetT>;
+        using TNDeviceT = TestType;
+        using PrecisionT = typename TNDeviceT::PrecisionT;
+        using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
+        auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
-        auto INVSQRT2 = TestType(0.707106781186547524401);
+        // auto INVSQRT2 = TestType(0.707106781186547524401);
 
-        auto ONE = TestType(1);
+        auto ONE = PrecisionT(1);
 
         // NOTE: Following tests show that the current design can be measured
         // multiple times with different observables
         SECTION("Using expval") {
-            mps_state.applyOperation("PauliX", {0});
-            mps_state.append_mps_final_state();
+            tn_state->applyOperation("PauliX", {0});
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
             auto ob = NamedObsT("Hadamard", {0});
             auto res = measure.expval(ob);
-            CHECK(res == Approx(-INVSQRT2).epsilon(1e-7));
+            CHECK(
+                res ==
+                Approx(-Pennylane::Util::INVSQRT2<PrecisionT>()).epsilon(1e-7));
 
             auto ob1 = NamedObsT("Identity", {0});
             auto res1 = measure.expval(ob1);
@@ -242,23 +282,30 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("[Parametric_obs]", "[MPSTNCuda_Expval]", float, double) {
+TEMPLATE_LIST_TEST_CASE("[Parametric_obs]", "[TNCuda_Expval]", TestTNBackends) {
     {
-        using TensorNetT = MPSTNCuda<TestType>;
-        using NamedObsT = NamedObsTNCuda<TensorNetT>;
+        using TNDeviceT = TestType;
+        using PrecisionT = typename TNDeviceT::PrecisionT;
+        using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
-        auto ONE = TestType(1);
+        auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
+
+        auto ONE = PrecisionT(1);
 
         SECTION("Using expval") {
-            mps_state.applyOperation("PauliX", {0});
-            mps_state.append_mps_final_state();
+            tn_state->applyOperation("PauliX", {0});
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
             auto ob = NamedObsT("RX", {0}, {0});
             auto res = measure.expval(ob);
@@ -267,48 +314,57 @@ TEMPLATE_TEST_CASE("[Parametric_obs]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
+TEMPLATE_LIST_TEST_CASE("[Hermitian]", "[TNCuda_Expval]", TestTNBackends) {
     {
-        using TensorNetT = MPSTNCuda<TestType>;
-        using ComplexT = typename TensorNetT::ComplexT;
-        using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
+        using TNDeviceT = TestType;
+        using PrecisionT = typename TNDeviceT::PrecisionT;
+        using ComplexT = typename TNDeviceT::ComplexT;
+        using HermitianObsT = HermitianObsTNCuda<TNDeviceT>;
 
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        auto measure = MeasurementsTNCuda<TensorNetT>(mps_state);
+        auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
-        auto ZERO = TestType(0);
-        auto ONE = TestType(1);
+        auto ZERO = PrecisionT(0);
+        auto ONE = PrecisionT(1);
 
         std::vector<ComplexT> mat = {
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
 
         SECTION("Using expval") {
-            mps_state.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
+            tn_state->applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
-            mps_state.append_mps_final_state();
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
             auto ob = HermitianObsT(mat, std::vector<std::size_t>{0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
         }
 
         SECTION("Using expval: Plus states") {
-            mps_state.applyOperations(
+            tn_state->applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            mps_state.append_mps_final_state();
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
         }
 
         SECTION("Using expval: Minus states") {
-            mps_state.applyOperations(
+            tn_state->applyOperations(
                 {{"PauliX"},
                  {"Hadamard"},
                  {"PauliX"},
@@ -317,7 +373,10 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            mps_state.append_mps_final_state();
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -325,24 +384,27 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[MPSTNCuda_Expval]", float, double) {
     }
 }
 
-TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
-                   "[MPSTNCuda_Expval]", float, double) {
-    using TensorNetT = MPSTNCuda<TestType>;
-    using NamedObsT = NamedObsTNCuda<TensorNetT>;
-    using TensorProdObsT = TensorProdObsTNCuda<TensorNetT>;
-    auto ZERO = TestType(0);
-    auto INVSQRT2 = TestType(0.707106781186547524401);
+TEMPLATE_LIST_TEST_CASE("Test expectation value of TensorProdObs",
+                        "[TNCuda_Expval]", TestTNBackends) {
+    using TNDeviceT = TestType;
+    using PrecisionT = typename TNDeviceT::PrecisionT;
+    using NamedObsT = NamedObsTNCuda<TNDeviceT>;
+    using TensorProdObsT = TensorProdObsTNCuda<TNDeviceT>;
+    auto ZERO = PrecisionT(0);
+    // auto INVSQRT2 = TestType(0.707106781186547524401);
     SECTION("Using XZ") {
         std::size_t bondDim = GENERATE(2);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+        tn_state->applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
-        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+        auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
         auto X0 =
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
@@ -358,13 +420,15 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
         std::size_t bondDim = GENERATE(2);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+        tn_state->applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
-        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+        auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
         auto H0 = std::make_shared<NamedObsT>("Hadamard",
                                               std::vector<std::size_t>{0});
@@ -375,34 +439,37 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs",
 
         auto ob = TensorProdObsT::create({H0, H1, H2});
         auto res = m.expval(*ob);
-        CHECK(res == Approx(INVSQRT2 / 2));
+        CHECK(res == Approx(Pennylane::Util::INVSQRT2<PrecisionT>() / 2));
     }
 }
 
-TEMPLATE_TEST_CASE("Test expectation value of HamiltonianObs",
-                   "[MPSTNCuda_Expval]", float, double) {
-    using TensorNetT = MPSTNCuda<TestType>;
-    using NamedObsT = NamedObsTNCuda<TensorNetT>;
-    using HamiltonianObsT = HamiltonianTNCuda<TensorNetT>;
-    auto ONE = TestType(1);
+TEMPLATE_LIST_TEST_CASE("Test expectation value of HamiltonianObs",
+                        "[TNCuda_Expval]", TestTNBackends) {
+    using TNDeviceT = TestType;
+    using PrecisionT = typename TNDeviceT::PrecisionT;
+    using NamedObsT = NamedObsTNCuda<TNDeviceT>;
+    using HamiltonianObsT = HamiltonianTNCuda<TNDeviceT>;
+    auto ONE = PrecisionT(1);
     SECTION("Using XZ") {
         std::size_t bondDim = GENERATE(2);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
+        DevTag<int> dev_tag{0, 0};
 
-        TensorNetT mps_state{num_qubits, maxBondDim};
+        std::unique_ptr<TNDeviceT> tn_state =
+            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
 
-        mps_state.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+        tn_state->applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
 
-        auto m = MeasurementsTNCuda<TensorNetT>(mps_state);
+        auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
         auto X0 =
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
         auto Z1 =
             std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1});
 
-        auto ob = HamiltonianObsT::create({TestType{1}, TestType{1}}, {X0, Z1});
+        auto ob = HamiltonianObsT::create({ONE, ONE}, {X0, Z1});
         auto res = m.expval(*ob);
         CHECK(res == Approx(ONE));
     }

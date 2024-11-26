@@ -23,6 +23,7 @@
 #include "TNCudaGateCache.hpp"
 
 #include "TestHelpers.hpp"
+#include "TestHelpersTNCuda.hpp"
 
 /// @cond DEV
 namespace {
@@ -31,9 +32,7 @@ using namespace Pennylane::LightningTensor;
 using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
 namespace cuUtil = Pennylane::LightningGPU::Util;
-using TestTNBackends =
-    Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
-                              ExaTNCuda<float>, ExaTNCuda<double>>;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
 
@@ -46,16 +45,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Identity", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
@@ -83,16 +74,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Hadamard", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
@@ -138,16 +121,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliX", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
@@ -172,16 +147,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::applyOperation-gatematrix",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
@@ -209,16 +176,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliY", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const cp_t p = cuUtil::ConstMult(
         cp_t(0.5, 0.0),
@@ -253,16 +212,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliZ", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     const cp_t p(cp_t(0.5, 0.0) * cuUtil::INVSQRT2<cp_t>());
     const cp_t m(cuUtil::ConstMult(cp_t{-1.0, 0.0}, p));
@@ -295,16 +246,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::S", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     cp_t r(cp_t(0.5, 0.0) * cuUtil::INVSQRT2<cp_t>());
     cp_t i(cuUtil::ConstMult(r, cuUtil::IMAG<cp_t>()));
@@ -341,16 +284,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::T", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     cp_t r(1.0 / (2.0 * std::sqrt(2)), 0);
     cp_t i(1.0 / 4, 1.0 / 4);
@@ -388,16 +323,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CNOT", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply adjacent wire indices") {
 
@@ -433,16 +360,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SWAP", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply adjacent wire indices") {
         std::vector<cp_t> expected{
@@ -488,16 +407,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CY", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply adjacent wire indices") {
         std::vector<cp_t> expected_results{
@@ -542,16 +453,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CZ", "[TNCuda_Nonparam]",
     std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     SECTION("Apply adjacent wire indices") {
         std::vector<cp_t> expected_results{
@@ -806,16 +709,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     std::size_t max_mpo_bond = 16;
     DevTag<int> dev_tag{0, 0};
 
-    std::unique_ptr<TNDevice_T> tn_state;
-
-    if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
-                  std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-    } else {
-        // Create the object for ExaTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-    }
+    std::unique_ptr<TNDevice_T> tn_state =
+        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
 
     std::vector<std::vector<cp_t>> mpo_cnot(2,
                                             std::vector<cp_t>(16, {0.0, 0.0}));
