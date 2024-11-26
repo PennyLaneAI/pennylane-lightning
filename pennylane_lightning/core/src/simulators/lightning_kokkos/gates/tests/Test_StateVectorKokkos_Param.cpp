@@ -1747,7 +1747,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
     }
 
     SECTION("Controlled GlobalPhase") {
-        const TestType pi2 = 1.5707963267948966;
+        const TestType pi2 = TestType(M_PI_2);
         auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
         StateVectorKokkos<TestType> kokkos_sv(
             reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
