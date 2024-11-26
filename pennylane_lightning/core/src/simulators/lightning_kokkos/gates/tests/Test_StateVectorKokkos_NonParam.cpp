@@ -1441,7 +1441,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
     }
 }
 
-TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation controlled Toffoli",
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation controlled matrix (PauliX/Toffoli)",
                    "[StateVectorKokkos_NonParam]", float, double) {
     using StateVectorT = StateVectorKokkos<TestType>;
 
