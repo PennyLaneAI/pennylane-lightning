@@ -1948,7 +1948,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         all_wires.reserve(nw_tot);
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
-        all_wires.insert(all_wires.begin() + n_contr, wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + n_contr, wires.begin(),
+                         wires.end());
         const auto revs = reverseWires(num_qubits, all_wires, {});
         const auto &rev_wires = revs.first;
         const std::vector<std::size_t> parity =
@@ -2168,7 +2169,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         all_wires.reserve(nw_tot);
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
-        all_wires.insert(all_wires.begin() + n_contr, wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + n_contr, wires.begin(),
+                         wires.end());
         const auto revs = reverseWires(num_qubits, all_wires, {});
         const auto &rev_wires = revs.first;
         const std::vector<std::size_t> parity =
@@ -2450,7 +2452,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         all_wires.reserve(nw_tot);
         all_wires.insert(all_wires.begin(), controlled_wires.begin(),
                          controlled_wires.end());
-        all_wires.insert(all_wires.begin() + n_contr, wires.begin(), wires.end());
+        all_wires.insert(all_wires.begin() + n_contr, wires.begin(),
+                         wires.end());
         const auto revs = reverseWires(num_qubits, all_wires, {});
         const auto &rev_wires = revs.first;
         const std::vector<std::size_t> parity =
