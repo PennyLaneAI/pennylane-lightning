@@ -114,10 +114,8 @@ class CMakeBuild(build_ext):
         configure_args += [f"-DPL_BACKEND={backend}"]
         configure_args += self.cmake_defines
 
-        if self.editable_mode:
-            configure_args += ["-DPY_EDITABLE_INSTALL=ON"]
-        else:
-            configure_args += ["-DPY_EDITABLE_INSTALL=OFF"]
+        if not self.editable_mode:
+            configure_args += ["-DPY_INSTALL=ON"]
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
