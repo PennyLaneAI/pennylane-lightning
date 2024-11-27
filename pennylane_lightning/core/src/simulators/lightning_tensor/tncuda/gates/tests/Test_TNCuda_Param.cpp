@@ -1452,10 +1452,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
             tn_state->applyOperation("DoubleExcitationPlus", {0, 1, 2, 3},
                                      inverse, angles);
 
-            if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
 
             auto results = tn_state->getDataVector();
 
@@ -1471,10 +1468,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
             tn_state->applyOperation("DoubleExcitationPlus", {0, 1, 3, 4},
                                      inverse, angles);
 
-            if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
 
             auto results = tn_state->getDataVector();
 

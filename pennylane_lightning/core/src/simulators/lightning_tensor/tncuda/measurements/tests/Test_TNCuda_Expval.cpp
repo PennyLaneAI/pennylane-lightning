@@ -59,10 +59,9 @@ TEMPLATE_LIST_TEST_CASE("[Identity]", "[TNCuda_Expval]", TestTNBackends) {
         tn_state->applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                   {{0}, {0, 1}, {1, 2}},
                                   {{false}, {false}, {false}});
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+
+        tn_state_append_mps_final_state(tn_state);
+
         auto ob = NamedObsT("Identity", {0});
         auto res = measure.expval(ob);
         CHECK(res == Approx(ONE));
@@ -211,10 +210,9 @@ TEMPLATE_LIST_TEST_CASE("[PauliZ]", "[TNCuda_Expval]", TestTNBackends) {
                 {{0}, {1}, {2}, {0, 1}, {1, 2}, {0, 2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}},
                 {{}, {}, {}, {0.5}, {0.6}, {0.7}});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state(cutoff, cutoff_mode);
-            }
+
+            tn_state_append_mps_final_state(tn_state);
+
             auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
             auto ob = NamedObsT("PauliZ", {0});
             auto res = m.expval(ob);

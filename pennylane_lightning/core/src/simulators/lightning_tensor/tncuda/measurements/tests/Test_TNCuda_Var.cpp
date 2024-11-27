@@ -131,10 +131,8 @@ TEMPLATE_LIST_TEST_CASE("Test variance of HermitianObs", "[TNCuda_Var]",
         {{0}, {0}, {1}, {1}, {2}, {2}},
         {{false}, {false}, {false}, {false}, {false}, {false}},
         {{0.7}, {0.7}, {0.5}, {0.5}, {0.3}, {0.3}});
-    if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                  std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-        tn_state->append_mps_final_state();
-    }
+
+    tn_state_append_mps_final_state(tn_state);
 
     SECTION("Target at 1 wire") {
         std::vector<ComplexT> matrix = {
