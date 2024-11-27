@@ -14,7 +14,6 @@
 #pragma once
 #include <chrono>
 #include <cstdint>
-#include <random>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
