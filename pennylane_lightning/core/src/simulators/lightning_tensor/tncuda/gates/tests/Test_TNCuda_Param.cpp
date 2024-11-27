@@ -1277,11 +1277,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
             tn_state->applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse,
                                      angles);
 
-            if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
-
             auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
@@ -1295,11 +1290,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
                 {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
             tn_state->applyOperation("DoubleExcitation", {0, 1, 3, 4}, inverse,
                                      angles);
-
-            if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
 
             auto results = tn_state->getDataVector();
 
@@ -1374,11 +1364,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
             tn_state->applyOperation("DoubleExcitationMinus", {0, 1, 2, 3},
                                      inverse, angles);
 
-            if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
-
             auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
@@ -1392,11 +1377,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
                 {{0}, {1}, {2}, {3}, {4}}, {false, false, false, false, false});
             tn_state->applyOperation("DoubleExcitationMinus", {0, 1, 3, 4},
                                      inverse, angles);
-
-            if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
 
             auto results = tn_state->getDataVector();
 
