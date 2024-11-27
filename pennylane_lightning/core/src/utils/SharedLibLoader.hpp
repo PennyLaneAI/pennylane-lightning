@@ -31,7 +31,7 @@
 #include <windows.h>
 #define HANDLE_TYPE HMODULE
 #define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
-#define PL_DLERROR() GetLastError()
+#define PL_DLERROR() std::to_string(GetLastError())
 #define PL_DLCLOSE(NAME) FreeLibrary(NAME)
 #define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
 #endif
@@ -57,7 +57,7 @@ class SharedLibLoader final {
     SharedLibLoader();
     explicit SharedLibLoader(const std::string &filename) {
         handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
-        PL_ABORT_IF(!handle_, std::to_string(PL_DLERROR()));
+        PL_ABORT_IF(!handle_, PL_DLERROR());
     }
 
     ~SharedLibLoader() noexcept { PL_DLCLOSE(handle_); }
@@ -65,7 +65,11 @@ class SharedLibLoader final {
     HANDLE_TYPE getHandle() { return handle_; }
 
     template <typename FunPtr> FunPtr getSymbol(const std::string &symbol) {
-        return reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
+        FunPtr func_ptr =
+            reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
+        PL_ABORT_IF(!func_ptr, PL_DLERROR());
+        return func_ptr;
+        // return reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
     }
 };
 // NOLINTEND
