@@ -25,7 +25,6 @@
 #include <cuda.h>
 #include <cusparse.h>
 #include <custatevec.h> // custatevecApplyMatrix
-#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -72,8 +71,6 @@ class Measurements final
     cudaDataType_t data_type_;
 
     GateCache<PrecisionT> gate_cache_;
-
-    std::optional<std::size_t> DeviceSeed = std::nullopt;
 
   public:
     explicit Measurements(StateVectorT &statevector)
@@ -237,11 +234,7 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        if (this->DeviceSeed.has_value()) {
-            this->setSeed(this->DeviceSeed.value());
-        } else {
-            this->setRandomSeed();
-        }
+        this->activate_DeviceSeed();
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
             rand_nums[n] = dis(this->rng);
@@ -712,18 +705,6 @@ class Measurements final
         -> PrecisionT {
         return BaseType::var(obs, num_shots);
     }
-
-    void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
-        if (gen != nullptr) {
-            this->DeviceSeed = (*gen)();
-        }
-    }
-
-    void set_DeviceSeed(std::optional<std::size_t> deviceSeed) {
-        this->DeviceSeed = deviceSeed;
-    }
-
-    std::optional<std::size_t> get_DeviceSeed() { return this->DeviceSeed; }
 
   private:
     /**

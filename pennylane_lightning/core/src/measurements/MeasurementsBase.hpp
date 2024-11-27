@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <optional>
 #include <random>
 #include <string>
 #include <vector>
@@ -56,6 +57,8 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 #else
     const StateVectorT &_statevector;
 #endif
+    std::optional<std::size_t> DeviceSeed = std::nullopt;
+
     std::mt19937 rng;
 
   public:
@@ -66,22 +69,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     explicit MeasurementsBase(const StateVectorT &statevector)
         : _statevector{statevector} {};
 #endif
-
-    /**
-     * @brief Set the seed of the internal random generator
-     *
-     * @param seed Seed
-     */
-    void setSeed(const std::size_t seed) { rng.seed(seed); }
-
-    /**
-     * @brief Randomly set the seed of the internal random generator
-     *
-     */
-    void setRandomSeed() {
-        std::random_device rd;
-        setSeed(rd());
-    }
 
     /**
      * @brief Calculate the expectation value for a general Observable.
@@ -454,7 +441,46 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         return outcome_map;
     }
 
+    void set_DeviceSeed(
+        const std::optional<std::size_t> &deviceSeed = std::nullopt) {
+        this->DeviceSeed = deviceSeed;
+    }
+
+    const std::optional<std::size_t> &get_DeviceSeed() {
+        return this->DeviceSeed;
+    }
+
+    void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
+        if (gen != nullptr) {
+            this->set_DeviceSeed((*gen)());
+        }
+    }
+
+    void activate_DeviceSeed() {
+        if (this->DeviceSeed.has_value()) {
+            setSeed(this->DeviceSeed.value());
+        } else {
+            setRandomSeed();
+        }
+    }
+
   private:
+    /**
+     * @brief Set the seed of the internal random generator
+     *
+     * @param seed Seed
+     */
+    void setSeed(const std::size_t seed) { rng.seed(seed); }
+
+    /**
+     * @brief Randomly set the seed of the internal random generator
+     *
+     */
+    void setRandomSeed() {
+        std::random_device rd;
+        setSeed(rd());
+    }
+
     /**
      * @brief Return samples of a observable
      *

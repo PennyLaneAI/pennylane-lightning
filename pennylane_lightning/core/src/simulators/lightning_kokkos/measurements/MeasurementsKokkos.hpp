@@ -14,7 +14,6 @@
 #pragma once
 #include <chrono>
 #include <cstdint>
-#include <optional>
 #include <random>
 
 #include <Kokkos_Core.hpp>
@@ -72,8 +71,6 @@ class Measurements final
         typename StateVectorT::UnmanagedConstSizeTHostView;
     using ScratchViewComplex = typename StateVectorT::ScratchViewComplex;
     using TeamPolicy = typename StateVectorT::TeamPolicy;
-
-    std::optional<std::size_t> DeviceSeed = std::nullopt;
 
   public:
     explicit Measurements(const StateVectorT &statevector)
@@ -693,18 +690,6 @@ class Measurements final
 
         return view2vector(samples);
     }
-
-    void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
-        if (gen != nullptr) {
-            this->DeviceSeed = (*gen)();
-        }
-    }
-
-    void set_DeviceSeed(std::optional<std::size_t> deviceSeed) {
-        this->DeviceSeed = deviceSeed;
-    }
-
-    std::optional<std::size_t> get_DeviceSeed() { return this->DeviceSeed; }
 
   private:
     std::unordered_map<std::string, ExpValFunc> expval_funcs_;

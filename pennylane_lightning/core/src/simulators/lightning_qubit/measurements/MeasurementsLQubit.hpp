@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
-#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -67,8 +66,6 @@ class Measurements final
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-
-    std::optional<std::size_t> DeviceSeed = std::nullopt;
 
   public:
     explicit Measurements(const StateVectorT &statevector)
@@ -491,7 +488,7 @@ class Measurements final
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;
-        this->setRandomSeed();
+        this->activate_DeviceSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
         if (kernelname == "NonZeroRandom") {
@@ -599,11 +596,7 @@ class Measurements final
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        if (this->DeviceSeed.has_value()) {
-            this->setSeed(this->DeviceSeed.value());
-        } else {
-            this->setRandomSeed();
-        }
+        this->activate_DeviceSeed();
         DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -
@@ -617,18 +610,6 @@ class Measurements final
         }
         return samples;
     }
-
-    void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
-        if (gen != nullptr) {
-            this->DeviceSeed = (*gen)();
-        }
-    }
-
-    void set_DeviceSeed(std::optional<std::size_t> deviceSeed) {
-        this->DeviceSeed = deviceSeed;
-    }
-
-    std::optional<std::size_t> get_DeviceSeed() { return this->DeviceSeed; }
 
   private:
     /**
