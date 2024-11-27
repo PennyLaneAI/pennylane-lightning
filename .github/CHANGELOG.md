@@ -25,6 +25,9 @@
 
 * Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
   [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
+  
+* Reverse Lightning Qubit generators vector insertion order.
+  [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
 
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
