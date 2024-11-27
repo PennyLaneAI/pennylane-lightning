@@ -22,7 +22,7 @@ import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
-from flaky import flaky
+#from flaky import flaky
 from pennylane.measurements import Expectation, Shots, Variance
 
 if not ld._CPP_BINARY_AVAILABLE:
@@ -734,7 +734,7 @@ class TestWiresInVar:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@flaky(max_runs=5)
+#@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [None, 10000, [10000, 11111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(

@@ -19,7 +19,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name, validate_measurements
-from flaky import flaky
+#from flaky import flaky
 
 if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
@@ -172,7 +172,7 @@ def obs_tape(x, y, z, reset=False, postselect=None):
     return m0, m1
 
 
-@flaky(max_runs=5)
+#@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [5000, [5000, 5001]])
 @pytest.mark.parametrize("postselect", [None, 0, 1])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
