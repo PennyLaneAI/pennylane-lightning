@@ -240,7 +240,6 @@ TEMPLATE_LIST_TEST_CASE("[Hadamard]", "[TNCuda_Expval]", TestTNBackends) {
 
         auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
-        // auto INVSQRT2 = TestType(0.707106781186547524401);
 
         auto ONE = PrecisionT(1);
 
@@ -358,7 +357,6 @@ TEMPLATE_LIST_TEST_CASE("Test expectation value of TensorProdObs",
     using NamedObsT = NamedObsTNCuda<TNDeviceT>;
     using TensorProdObsT = TensorProdObsTNCuda<TNDeviceT>;
     auto ZERO = PrecisionT(0);
-    // auto INVSQRT2 = TestType(0.707106781186547524401);
     SECTION("Using XZ") {
         std::size_t bondDim = GENERATE(2);
         std::size_t num_qubits = 3;
