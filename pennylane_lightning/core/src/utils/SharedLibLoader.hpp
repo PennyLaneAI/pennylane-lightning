@@ -26,7 +26,7 @@
 #define PL_DLERROR() dlerror()
 #define PL_DLCLOSE(NAME) dlclose(NAME)
 #define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
-#else
+#elif defined(_MSC_VER)
 #define NOMINMAX
 #include <windows.h>
 #define HANDLE_TYPE HMODULE
