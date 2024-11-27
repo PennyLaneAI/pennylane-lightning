@@ -124,11 +124,6 @@ jobs:
           mkdir Kokkos
           cp -rf ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* Kokkos/
 
-      - name: Install Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
       - name: Install dependencies
         run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
 
@@ -168,14 +163,15 @@ jobs:
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+            python -c "import pennylane as qml; print(qml.about())"
             pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
-        run: python3 -m cibuildwheel --output-dir wheelhouse
+        run: python3.10 -m cibuildwheel --output-dir wheelhouse
 
       - name: Validate wheels
         run: |
-         python3 -m pip install twine
-         python3 -m twine check ./wheelhouse/*.whl
+         python3.10 -m pip install twine
+         python3.10 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
