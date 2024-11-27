@@ -14,8 +14,10 @@
 #pragma once
 /**
  * @file
- * This file defines the necessary functionality to test over LTensor MPS.
+ * This file defines the necessary functionality to test over LTensor.
  */
+#include "DevTag.hpp"
+#include "ExaTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "TypeList.hpp"
 
@@ -37,8 +39,9 @@ template <> struct MPSToName<MPSTNCuda<double>> {
 
 template <typename TNDevice_T>
 std::unique_ptr<TNDevice_T> createTNState(std::size_t num_qubits,
-                                          std::size_t maxExtent,
-                                          DevTag<int> dev_tag) {
+                                          std::size_t maxExtent) {
+
+    DevTag<int> dev_tag{0, 0};
     if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
                   std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
         // Create the object for MPSTNCuda
@@ -46,6 +49,16 @@ std::unique_ptr<TNDevice_T> createTNState(std::size_t num_qubits,
     } else {
         // Create the object for ExaTNCuda
         return std::make_unique<TNDevice_T>(num_qubits, dev_tag);
+    }
+}
+
+template <typename TNDevice_T>
+inline void
+tn_state_append_mps_final_state(std::unique_ptr<TNDevice_T> const &tn_state) {
+
+    if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
+                  std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+        tn_state->append_mps_final_state();
     }
 }
 

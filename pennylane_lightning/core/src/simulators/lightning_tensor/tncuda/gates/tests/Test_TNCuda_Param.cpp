@@ -47,10 +47,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PhaseShift", "[TNCuda_Param]",
 
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
     const Precision_T sign = (inverse) ? -1.0 : 1.0;
@@ -84,10 +83,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PhaseShift", "[TNCuda_Param]",
         tn_state->applyOperation("PhaseShift", {index}, inverse,
                                  {sign * angles[index]});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -103,10 +99,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RX", "[TNCuda_Param]", TestTNBackends) {
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
 
@@ -133,10 +128,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RX", "[TNCuda_Param]", TestTNBackends) {
 
         tn_state->applyOperation("RX", {index}, inverse, {angles[index]});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -174,10 +166,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RY", "[MPSTNCuda_Nonparam]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
 
@@ -232,10 +223,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RY", "[MPSTNCuda_Nonparam]",
 
         tn_state->applyOperation("RY", {index}, inverse, {angles[index]});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -250,10 +238,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RZ", "[TNCuda_Param]", TestTNBackends) {
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles{0.3, 0.8, 2.4};
 
@@ -299,10 +286,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RZ", "[TNCuda_Param]", TestTNBackends) {
 
         tn_state->applyOperation("RZ", {index}, inverse, {angles[index]});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -318,10 +302,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles{0.3, 2.4};
     const Precision_T sign = (inverse) ? -1.0 : 1.0;
@@ -352,10 +335,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
         tn_state->applyOperation("ControlledPhaseShift", {0, 1}, inverse,
                                  {sign * angles[0]});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -370,10 +350,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
 
         tn_state->applyOperation("ControlledPhaseShift", {0, 2}, inverse,
                                  {sign * angles[1]});
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -390,10 +367,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Rot", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<std::vector<Precision_T>> angles{
         std::vector<Precision_T>{0.3, 0.8, 2.4},
@@ -419,10 +395,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Rot", "[TNCuda_Param]",
 
         tn_state->applyOperation("Rot", {index}, inverse, angles[index]);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -438,10 +411,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles =
         std::vector<Precision_T>{0.3, 0.8, 2.4};
@@ -454,10 +426,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
 
         expected_results[0] = cp_t{1, 0};
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -470,10 +439,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
 
         expected_results[0] = cp_t{1, 0};
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -512,10 +478,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles{0.3, 0.8};
 
@@ -547,10 +512,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
 
         tn_state->applyOperation("IsingXX", {0, 1}, inverse, {angles[index]});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -562,10 +524,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
 
         tn_state->applyOperation("IsingXX", {0, 2}, inverse, {angles[index]});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -582,10 +541,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -620,10 +578,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
 
         tn_state->applyOperation("IsingXY", {0, 1}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -637,10 +592,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("IsingXY", {0, 2}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -657,10 +609,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -695,10 +646,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
 
         tn_state->applyOperation("IsingYY", {0, 1}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -712,10 +660,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
 
         tn_state->applyOperation("IsingYY", {0, 2}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -731,10 +676,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -769,10 +713,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
 
         tn_state->applyOperation("IsingZZ", {0, 1}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -786,10 +727,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
 
         tn_state->applyOperation("IsingZZ", {0, 2}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -805,10 +743,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -843,10 +780,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
 
         tn_state->applyOperation("CRX", {0, 1}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -861,10 +795,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
 
         tn_state->applyOperation("CRX", {0, 2}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -881,10 +812,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -923,10 +853,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
 
         tn_state->applyOperation("CRY", {0, 1}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -940,10 +867,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
 
         tn_state->applyOperation("CRY", {0, 2}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -959,10 +883,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -997,10 +920,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
 
         tn_state->applyOperation("CRZ", {0, 1}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1014,10 +934,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("CRZ", {0, 2}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1034,10 +951,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -1073,10 +989,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
 
         tn_state->applyOperation("SingleExcitation", {0, 1}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1090,10 +1003,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
 
         tn_state->applyOperation("SingleExcitation", {0, 2}, inverse, angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1109,10 +1019,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -1155,10 +1064,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
         tn_state->applyOperation("SingleExcitationMinus", {0, 1}, inverse,
                                  angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1174,10 +1080,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
         tn_state->applyOperation("SingleExcitationMinus", {0, 2}, inverse,
                                  angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1194,10 +1097,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
     using Precision_T = typename TNDevice_T::PrecisionT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const std::vector<Precision_T> angles = {0.3};
 
@@ -1240,10 +1142,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
         tn_state->applyOperation("SingleExcitationPlus", {0, 1}, inverse,
                                  angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1258,10 +1157,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
         tn_state->applyOperation("SingleExcitationPlus", {0, 2}, inverse,
                                  angles);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -1593,7 +1489,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     std::vector<std::vector<cp_t>> mpo_single_excitation(
         2, std::vector<cp_t>(16, {0.0, 0.0}));

@@ -43,10 +43,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Identity", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
@@ -56,10 +55,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Identity", "[TNCuda_Nonparam]",
         tn_state->applyOperation("Identity", {index}, inverse);
         cp_t expected(1.0 / std::sqrt(2), 0);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -75,10 +71,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Hadamard", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
@@ -105,10 +100,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Hadamard", "[TNCuda_Nonparam]",
 
         cp_t expected(1.0 / std::sqrt(2), 0);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -125,20 +117,16 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliX", "[TNCuda_Nonparam]",
 
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
 
         tn_state->applyOperation("PauliX", {index}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -156,10 +144,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::applyOperation-gatematrix",
 
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
@@ -171,10 +158,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::applyOperation-gatematrix",
         tn_state->applyOperation("applyMatrix", {index}, false, {},
                                  gate_matrix);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -190,10 +174,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliY", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const cp_t p = cuUtil::ConstMult(
         cp_t(0.5, 0.0),
@@ -213,10 +196,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliY", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("PauliY", {index}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -231,10 +211,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliZ", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     const cp_t p(cp_t(0.5, 0.0) * cuUtil::INVSQRT2<cp_t>());
     const cp_t m(cuUtil::ConstMult(cp_t{-1.0, 0.0}, p));
@@ -252,10 +231,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliZ", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("PauliZ", {index}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -270,10 +246,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::S", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     cp_t r(cp_t(0.5, 0.0) * cuUtil::INVSQRT2<cp_t>());
     cp_t i(cuUtil::ConstMult(r, cuUtil::IMAG<cp_t>()));
@@ -295,10 +270,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::S", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("S", {index}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -313,10 +285,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::T", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     cp_t r(1.0 / (2.0 * std::sqrt(2)), 0);
     cp_t i(1.0 / 4, 1.0 / 4);
@@ -338,10 +309,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::T", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("T", {index}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -358,10 +326,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CNOT", "[TNCuda_Nonparam]",
 
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply adjacent wire indices") {
 
@@ -369,10 +336,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CNOT", "[TNCuda_Nonparam]",
                                   {{0}, {0, 1}, {1, 2}},
                                   {false, inverse, inverse});
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -387,10 +351,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CNOT", "[TNCuda_Nonparam]",
         tn_state->applyOperation("Hadamard", {0}, false);
         tn_state->applyOperation("CNOT", {0, 2}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -409,10 +370,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SWAP", "[TNCuda_Nonparam]",
 
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply adjacent wire indices") {
         std::vector<cp_t> expected{
@@ -426,10 +386,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SWAP", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("SWAP", {0, 1}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -448,10 +405,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SWAP", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("SWAP", {0, 2}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -466,10 +420,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CY", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply adjacent wire indices") {
         std::vector<cp_t> expected_results{
@@ -483,10 +436,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CY", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("CY", {0, 1}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -506,10 +456,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CY", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("CY", {0, 2}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -524,10 +471,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CZ", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply adjacent wire indices") {
         std::vector<cp_t> expected_results{
@@ -541,10 +487,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CZ", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("CZ", {0, 1}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -569,10 +512,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CZ", "[TNCuda_Nonparam]",
 
         tn_state->applyOperation("CZ", {0, 2}, inverse);
 
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto results = tn_state->getDataVector();
 
@@ -594,8 +534,6 @@ TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::CSWAP", "[ExaTNCuda_Nonparam]",
 
     if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
                   std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
         SECTION("CSWAP gate") {
             // Create the object for MPSTNCuda
             tn_state =
@@ -668,13 +606,10 @@ TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::Toffoli", "[ExaTNCuda_Nonparam]",
 
     if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
                   std::is_same_v<TestType, MPSTNCuda<float>>) {
-        // Create the object for MPSTNCuda
-        tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
         SECTION("Toffoli gate") {
             std::size_t num_qubits = 3;
             // Create the object for MPSTNCuda
-            tn_state =
-                std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+            tn_state = std::make_unique<TNDevice_T>(num_qubits, maxExtent);
 
             REQUIRE_THROWS_AS(
                 tn_state->applyOperation("Toffoli", {0, 1, 2}, inverse),
@@ -740,7 +675,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyControlledOperation non-param "
 
     const int num_qubits = 4;
     std::size_t maxExtent = 2;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state0;
     std::unique_ptr<TNDevice_T> tn_state1;
@@ -748,14 +682,12 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyControlledOperation non-param "
     if constexpr (std::is_same_v<TestType, MPSTNCuda<double>> ||
                   std::is_same_v<TestType, MPSTNCuda<float>>) {
         // Create the object for MPSTNCuda
-        tn_state0 =
-            std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
-        tn_state1 =
-            std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        tn_state0 = std::make_unique<TNDevice_T>(num_qubits, maxExtent);
+        tn_state1 = std::make_unique<TNDevice_T>(num_qubits, maxExtent);
     } else {
         // Create the object for ExaTNCuda
-        tn_state0 = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
-        tn_state1 = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
+        tn_state0 = std::make_unique<TNDevice_T>(num_qubits);
+        tn_state1 = std::make_unique<TNDevice_T>(num_qubits);
     }
 
     const auto margin = PrecisionT{1e-5};
@@ -799,12 +731,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyControlledOperation non-param "
                     approx(tn_state1->getDataVector()).margin(margin));
         }
     }
-
-    // SECTION("Throw exception for 1+ target wires gates") {
-    //     REQUIRE_THROWS_AS(tn_state0->applyControlledOperation(
-    //                           "CSWAP", {0}, {true, true}, {1, 2}),
-    //                       LightningException);
-    // }
 }
 
 TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
@@ -820,7 +746,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
-        createTNState<TNDevice_T>(num_qubits, maxExtent, dev_tag);
+        createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     std::vector<std::vector<cp_t>> mpo_cnot(2,
                                             std::vector<cp_t>(16, {0.0, 0.0}));

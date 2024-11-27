@@ -65,20 +65,16 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDevice_T> tn_state =
-            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDevice_T>(num_qubits, maxBondDim);
 
         tn_state->applyOperations(
             {{"RX"}, {"RX"}, {"RY"}, {"RY"}, {"RX"}, {"RY"}},
             {{0}, {0}, {1}, {1}, {2}, {2}},
             {{false}, {false}, {false}, {false}, {false}, {false}},
             {{0.5}, {0.5}, {0.2}, {0.2}, {0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
 
@@ -94,17 +90,13 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDevice_T> tn_state =
-            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDevice_T>(num_qubits, maxBondDim);
 
         tn_state->applyOperations({{"RX"}, {"RY"}}, {{0}, {0}},
                                   {{false}, {false}}, {{0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
         REQUIRE_THROWS_AS(measure.probs({2, 1}), LightningException);
@@ -115,10 +107,9 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 100;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDevice_T> tn_state =
-            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDevice_T>(num_qubits, maxBondDim);
 
         auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
         REQUIRE_THROWS_AS(measure.probs({0, 1, 2, 3}), LightningException);
@@ -139,20 +130,16 @@ TEMPLATE_LIST_TEST_CASE("Samples", "[TNCUDA_Measures]", TestTNBackends) {
         std::size_t bondDim = GENERATE(4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDevice_T> tn_state =
-            createTNState<TNDevice_T>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDevice_T>(num_qubits, maxBondDim);
 
         tn_state->applyOperations(
             {{"RX"}, {"RX"}, {"RY"}, {"RY"}, {"RX"}, {"RY"}},
             {{0}, {0}, {1}, {1}, {2}, {2}},
             {{false}, {false}, {false}, {false}, {false}, {false}},
             {{0.5}, {0.5}, {0.2}, {0.2}, {0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
 

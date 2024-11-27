@@ -48,10 +48,9 @@ TEMPLATE_LIST_TEST_CASE("Test variance of NamedObs", "[TNCuda_Var]",
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 2;
     std::size_t maxBondDim = bondDim;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDeviceT> tn_state =
-        createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+        createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
     auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -59,10 +58,7 @@ TEMPLATE_LIST_TEST_CASE("Test variance of NamedObs", "[TNCuda_Var]",
         tn_state->applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
         auto ob = NamedObsT("Identity", {0});
         auto res = measure.var(ob);
         auto expected = PrecisionT(0);
@@ -73,10 +69,7 @@ TEMPLATE_LIST_TEST_CASE("Test variance of NamedObs", "[TNCuda_Var]",
         tn_state->applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
         auto ob = NamedObsT("PauliX", {0});
         auto res = measure.var(ob);
         auto expected = PrecisionT(0.75722220);
@@ -87,10 +80,7 @@ TEMPLATE_LIST_TEST_CASE("Test variance of NamedObs", "[TNCuda_Var]",
         tn_state->applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
         auto ob = NamedObsT("PauliY", {0});
         auto res = measure.var(ob);
         auto expected = PrecisionT(0.58498357);
@@ -101,10 +91,7 @@ TEMPLATE_LIST_TEST_CASE("Test variance of NamedObs", "[TNCuda_Var]",
         tn_state->applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
         auto ob = NamedObsT("PauliZ", {1});
         auto res = measure.var(ob);
         auto expected = PrecisionT(0.40686720);
@@ -115,10 +102,7 @@ TEMPLATE_LIST_TEST_CASE("Test variance of NamedObs", "[TNCuda_Var]",
         tn_state->applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.7}, {0.7}, {0.5}, {0.5}});
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
         auto ob = NamedObsT("Hadamard", {1});
         auto res = measure.var(ob);
         auto expected = PrecisionT(0.29089449);
@@ -136,10 +120,9 @@ TEMPLATE_LIST_TEST_CASE("Test variance of HermitianObs", "[TNCuda_Var]",
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
     std::size_t maxBondDim = bondDim;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDeviceT> tn_state =
-        createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+        createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
     auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -174,10 +157,9 @@ TEMPLATE_LIST_TEST_CASE("Test variance of TensorProdObs", "[TNCuda_Var]",
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
     std::size_t maxBondDim = bondDim;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDeviceT> tn_state =
-        createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+        createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
     auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -186,10 +168,7 @@ TEMPLATE_LIST_TEST_CASE("Test variance of TensorProdObs", "[TNCuda_Var]",
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto X0 =
             std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
@@ -219,10 +198,9 @@ TEMPLATE_LIST_TEST_CASE("Test var value of HamiltonianObs", "[TNCuda_Var]",
         constexpr std::size_t num_paulis = 5;
         constexpr std::size_t num_obs_terms = 6;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         tn_state->applyOperations(
             {{"RX"},
@@ -256,10 +234,7 @@ TEMPLATE_LIST_TEST_CASE("Test var value of HamiltonianObs", "[TNCuda_Var]",
              {0.2},
              {0.5},
              {0.5}});
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -309,19 +284,15 @@ TEMPLATE_LIST_TEST_CASE("Test var value of HamiltonianObs", "[TNCuda_Var]",
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         tn_state->applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -353,19 +324,15 @@ TEMPLATE_LIST_TEST_CASE("Test var value of HamiltonianObs", "[TNCuda_Var]",
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         tn_state->applyOperations(
             {{"RX"}, {"RY"}, {"RX"}, {"RY"}}, {{0}, {0}, {1}, {1}},
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 
-        if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-            tn_state->append_mps_final_state();
-        }
+        tn_state_append_mps_final_state(tn_state);
 
         auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 

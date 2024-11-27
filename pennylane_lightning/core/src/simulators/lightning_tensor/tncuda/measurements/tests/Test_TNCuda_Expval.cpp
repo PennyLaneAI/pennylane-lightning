@@ -49,10 +49,9 @@ TEMPLATE_LIST_TEST_CASE("[Identity]", "[TNCuda_Expval]", TestTNBackends) {
     std::size_t bondDim = GENERATE(2, 3, 4, 5);
     std::size_t num_qubits = 3;
     std::size_t maxBondDim = bondDim;
-    DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDeviceT> tn_state =
-        createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+        createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
     auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -79,10 +78,9 @@ TEMPLATE_LIST_TEST_CASE("[PauliX]", "[TNCuda_Expval]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -93,10 +91,7 @@ TEMPLATE_LIST_TEST_CASE("[PauliX]", "[TNCuda_Expval]", TestTNBackends) {
             tn_state->applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
@@ -106,10 +101,7 @@ TEMPLATE_LIST_TEST_CASE("[PauliX]", "[TNCuda_Expval]", TestTNBackends) {
             tn_state->applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
@@ -125,10 +117,7 @@ TEMPLATE_LIST_TEST_CASE("[PauliX]", "[TNCuda_Expval]", TestTNBackends) {
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
             auto ob = NamedObsT("PauliX", {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -145,10 +134,9 @@ TEMPLATE_LIST_TEST_CASE("[PauliY]", "[TNCuda_Expval]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -195,10 +183,9 @@ TEMPLATE_LIST_TEST_CASE("[PauliZ]", "[TNCuda_Expval]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         SECTION("Using expval") {
             tn_state->applyOperations(
@@ -249,10 +236,9 @@ TEMPLATE_LIST_TEST_CASE("[Hadamard]", "[TNCuda_Expval]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -264,10 +250,7 @@ TEMPLATE_LIST_TEST_CASE("[Hadamard]", "[TNCuda_Expval]", TestTNBackends) {
         // multiple times with different observables
         SECTION("Using expval") {
             tn_state->applyOperation("PauliX", {0});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
 
             auto ob = NamedObsT("Hadamard", {0});
             auto res = measure.expval(ob);
@@ -291,10 +274,9 @@ TEMPLATE_LIST_TEST_CASE("[Parametric_obs]", "[TNCuda_Expval]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -302,10 +284,7 @@ TEMPLATE_LIST_TEST_CASE("[Parametric_obs]", "[TNCuda_Expval]", TestTNBackends) {
 
         SECTION("Using expval") {
             tn_state->applyOperation("PauliX", {0});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
 
             auto ob = NamedObsT("RX", {0}, {0});
             auto res = measure.expval(ob);
@@ -324,10 +303,9 @@ TEMPLATE_LIST_TEST_CASE("[Hermitian]", "[TNCuda_Expval]", TestTNBackends) {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
@@ -341,10 +319,7 @@ TEMPLATE_LIST_TEST_CASE("[Hermitian]", "[TNCuda_Expval]", TestTNBackends) {
             tn_state->applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                       {{0}, {0, 1}, {1, 2}},
                                       {{false}, {false}, {false}});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
             auto ob = HermitianObsT(mat, std::vector<std::size_t>{0});
             auto res = measure.expval(ob);
             CHECK(res == ZERO);
@@ -354,10 +329,7 @@ TEMPLATE_LIST_TEST_CASE("[Hermitian]", "[TNCuda_Expval]", TestTNBackends) {
             tn_state->applyOperations(
                 {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                 {{false}, {false}, {false}});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == Approx(ONE));
@@ -373,10 +345,7 @@ TEMPLATE_LIST_TEST_CASE("[Hermitian]", "[TNCuda_Expval]", TestTNBackends) {
                  {"Hadamard"}},
                 {{0}, {0}, {1}, {1}, {2}, {2}},
                 {{false}, {false}, {false}, {false}, {false}, {false}});
-            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
-                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
-                tn_state->append_mps_final_state();
-            }
+            tn_state_append_mps_final_state(tn_state);
             auto ob = HermitianObsT(mat, {0});
             auto res = measure.expval(ob);
             CHECK(res == -Approx(ONE));
@@ -396,10 +365,9 @@ TEMPLATE_LIST_TEST_CASE("Test expectation value of TensorProdObs",
         std::size_t bondDim = GENERATE(2);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         tn_state->applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -420,10 +388,9 @@ TEMPLATE_LIST_TEST_CASE("Test expectation value of TensorProdObs",
         std::size_t bondDim = GENERATE(2);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         tn_state->applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -454,10 +421,9 @@ TEMPLATE_LIST_TEST_CASE("Test expectation value of HamiltonianObs",
         std::size_t bondDim = GENERATE(2);
         std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
-        DevTag<int> dev_tag{0, 0};
 
         std::unique_ptr<TNDeviceT> tn_state =
-            createTNState<TNDeviceT>(num_qubits, maxBondDim, dev_tag);
+            createTNState<TNDeviceT>(num_qubits, maxBondDim);
 
         tn_state->applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                   {{0}, {1}, {2}}, {{false}, {false}, {false}});
