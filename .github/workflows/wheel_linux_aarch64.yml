@@ -128,7 +128,7 @@ jobs:
         run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
 
       - name: Configure pyproject.toml file
-        run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
+        run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
 
       - uses: docker/setup-qemu-action@v3
         name: Set up QEMU
@@ -157,13 +157,18 @@ jobs:
             python -m pip install -r requirements-tests.txt
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
+              pip uninstall pennylane pennylane-lightning -y
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
               SKIP_COMPILATION=True python -m pip install . -vv
+              which python
+              which python3.10
             fi
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             python -c "import pennylane as qml; print(qml.about())"
+            which python
+            which python3.10
             pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
         run: python3.10 -m cibuildwheel --output-dir wheelhouse
