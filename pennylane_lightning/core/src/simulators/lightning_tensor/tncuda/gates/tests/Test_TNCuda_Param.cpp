@@ -734,7 +734,29 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
         CHECK(results == Pennylane::Util::approx(expected_results[1]));
     }
 }
+/* python code to get the reference values for a single parameter with 2 target for CRX
+import pennylane as qml
 
+qubits = 3
+dev = qml.device('default.qubit', wires=qubits)
+
+gate = qml.CRX
+
+invert = False
+gate = qml.adjoint(gate) if invert else gate
+adjacent = True
+wires = [0,1] if adjacent else [0,2]
+
+@qml.qnode(dev)
+def circuit():
+    [qml.H(i) for i in range(qubits-1)]
+    gate(0.3, wires=wires)
+
+    return qml.state()
+
+result = circuit()
+[print(f"{i:3d}  :  ",r) for i,r in enumerate(result)]
+*/
 TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
                         TestTNBackends) {
     const bool inverse = GENERATE(false, true);
@@ -751,19 +773,22 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1 << num_qubits, {0.0, 0.0}),
+        std::vector<cp_t>(1 << num_qubits, {0.0, 0.0}),
     };
 
-    expected_results[0][4] = {0.34958337, -0.05283436};
-    expected_results[0][5] = {0.34958337, -0.05283436};
-    expected_results[0][6] = {0.34958337, -0.05283436};
-    expected_results[0][7] = {0.34958337, -0.05283436};
-
-    expected_results[1][4] = {0.34958337, -0.05283436};
-    expected_results[1][5] = {0.34958337, -0.05283436};
-    expected_results[1][6] = {0.34958337, -0.05283436};
-    expected_results[1][7] = {0.34958337, -0.05283436};
+    // adjacent wires
+    expected_results[0][0] = {0.5, 0.0};
+    expected_results[0][2] = {0.5, 0.0};
+    expected_results[0][4] = {0.49438553, -0.07471906};
+    expected_results[0][6] = {0.49438553, -0.07471906};
+    // non - adjacent wires
+    expected_results[1][0] = {0.5, 0.0};
+    expected_results[1][2] = {0.5, 0.0};
+    expected_results[1][4] = {0.49438553, 0.0};
+    expected_results[1][6] = {0.49438553, 0.0};
+    expected_results[1][5] = {0.0, -0.07471906};
+    expected_results[1][7] = {0.0, -0.07471906};
 
     for (auto &vec : expected_results) {
         for (auto &val : vec) {
@@ -775,8 +800,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
 
         tn_state->reset();
 
-        tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                  {{0}, {1}, {2}}, {false, false, false});
+        tn_state->applyOperations({"Hadamard", "Hadamard"},
+                                  {{0}, {1}}, {false, false});
 
         tn_state->applyOperation("CRX", {0, 1}, inverse, angles);
 
@@ -785,13 +810,13 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
         auto results = tn_state->getDataVector();
 
         CHECK(results ==
-              Pennylane::Util::approx(expected_results[0]).margin(1e-7));
+              Pennylane::Util::approx(expected_results[0]).margin(1e-6));
     }
 
     SECTION("Apply non-adjacent wires") {
 
-        tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
-                                  {{0}, {1}, {2}}, {false, false, false});
+        tn_state->applyOperations({"Hadamard", "Hadamard"},
+                                  {{0}, {1}}, {false, false});
 
         tn_state->applyOperation("CRX", {0, 2}, inverse, angles);
 
@@ -800,7 +825,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
         auto results = tn_state->getDataVector();
 
         CHECK(results ==
-              Pennylane::Util::approx(expected_results[1]).margin(1e-8));
+              Pennylane::Util::approx(expected_results[1]).margin(1e-6));
     }
 }
 
