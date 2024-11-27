@@ -1,5 +1,5 @@
 ###############################################################################################
-# This file provides macros to process CUDA, CUDAToolkit, cuQuantum and MPI external libraries.
+# This file provides macros to process scipy-openblas32 external libraries.
 ###############################################################################################
 
 # Include this only once
