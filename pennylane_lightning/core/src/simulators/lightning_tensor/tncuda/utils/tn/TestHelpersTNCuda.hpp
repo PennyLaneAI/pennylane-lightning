@@ -58,6 +58,9 @@ tn_state_append_mps_final_state(std::unique_ptr<TNDevice_T> const &tn_state) {
 
     if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
                   std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+        PL_ABORT_IF(
+            tn_state->getMethod() != "mps",
+            "The method append_mps_final_state is exclusive of MPS TensorNet");
         tn_state->append_mps_final_state();
     }
 }
