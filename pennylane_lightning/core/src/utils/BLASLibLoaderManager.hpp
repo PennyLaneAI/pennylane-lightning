@@ -40,7 +40,7 @@ namespace Pennylane::Util {
 class BLASLibLoaderManager final {
   private:
 #ifdef __APPLE__
-    const std::string std::string blas_lib_name_ = "libscipy_openblas.dylib";
+    const std::string blas_lib_name_ = "libscipy_openblas.dylib";
 #elif defined(_MSC_VER)
     const std::string blas_lib_name_ = "libscipy_openblas.dll";
 #else
