@@ -23,6 +23,21 @@
 
 ### Improvements
 
+* Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
+  [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
+  
+* Reverse Lightning Qubit generators vector insertion order.
+  [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
+
+* Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
+  [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
+
+* Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
+  [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
+
+* The TOML files for the devices are updated to use the new schema for declaring device capabilities.
+  [(#988)](https://github.com/PennyLaneAI/pennylane-lightning/pull/988)
+
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
   [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
 
@@ -41,6 +56,15 @@
 
 ### Bug fixes
 
+* Fix version switch condition the GPU workflow tests for LGPU and LKokkos.
+  [(#1006)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1006)
+
+* Fix issue with `lightning.gpu` Rot operation with adjoint.
+  [(#1004)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1004)
+
+* Fix the Lightning-Kokkos[CUDA] C++ API `cudaFree` segfaults in `applyMatrix`.
+  [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
+
 * Fix issue with adjoint-jacobian of adjoint ops.
   [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
 
@@ -58,6 +82,8 @@
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
+Astral Cai,
+Amintor Dusko,
 Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
@@ -66,7 +92,6 @@ Andrija Paurevic,
 Shuli Shu,
 Raul Torres,
 Haochen Paul Wang
-
 
 ---
 

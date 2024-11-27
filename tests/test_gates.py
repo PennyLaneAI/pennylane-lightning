@@ -28,6 +28,25 @@ if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
+def _get_ld_operations():
+    """Gets a set of supported operations by LightningDevice."""
+
+    if ld.capabilities is None and hasattr(ld, "operations"):
+        return ld.operations
+
+    operations = set()
+    for op, prop in ld.capabilities.operations.items():
+        operations.add(op)
+        if prop.controllable:
+            operations.add(f"C({op})")
+        if prop.invertible:
+            operations.add(f"Adjoint({op})")
+    return operations
+
+
+ld_operations = _get_ld_operations()
+
+
 @pytest.fixture
 def op(op_name):
     ops_list = {
@@ -87,7 +106,7 @@ def op(op_name):
     return ops_list.get(op_name)
 
 
-@pytest.mark.parametrize("op_name", ld.operations)
+@pytest.mark.parametrize("op_name", ld_operations)
 def test_gate_unitary_correct(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
@@ -153,7 +172,7 @@ def test_gate_unitary_correct(op, op_name):
     assert np.allclose(unitary, unitary_expected)
 
 
-@pytest.mark.parametrize("op_name", ld.operations)
+@pytest.mark.parametrize("op_name", ld_operations)
 def test_gate_unitary_correct_lt(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
@@ -187,7 +206,7 @@ def test_gate_unitary_correct_lt(op, op_name):
     assert np.allclose(unitary, unitary_expected)
 
 
-@pytest.mark.parametrize("op_name", ld.operations)
+@pytest.mark.parametrize("op_name", ld_operations)
 def test_inverse_unitary_correct(op, op_name):
     """Test if lightning device correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""

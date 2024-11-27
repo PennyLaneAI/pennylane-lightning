@@ -205,9 +205,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian::ApplyInPlace", "[Observables]",
                 -0.5,
             };
 
-            REQUIRE(isApproxEqual(state_vector.getData(),
-                                  state_vector.getLength(), expected.data(),
-                                  expected.size()));
+            REQUIRE(isApproxEqual(state_vector.getDataVector(), expected));
         }
 
         SECTION("Hamiltonian applies correctly to |01>") {
@@ -225,9 +223,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian::ApplyInPlace", "[Observables]",
                 h,
             };
 
-            REQUIRE(isApproxEqual(state_vector.getData(),
-                                  state_vector.getLength(), expected.data(),
-                                  expected.size()));
+            REQUIRE(isApproxEqual(state_vector.getDataVector(), expected));
         }
     }
 }
