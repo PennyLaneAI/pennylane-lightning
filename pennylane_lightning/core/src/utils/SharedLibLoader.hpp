@@ -69,7 +69,6 @@ class SharedLibLoader final {
             reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
         PL_ABORT_IF(!func_ptr, PL_DLERROR());
         return func_ptr;
-        // return reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
     }
 };
 // NOLINTEND
