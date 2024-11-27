@@ -68,4 +68,7 @@ tn_state_append_mps_final_state(std::unique_ptr<TNDevice_T> const &tn_state) {
 using TestTNBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
                               ExaTNCuda<float>, ExaTNCuda<double>>;
+using TestMPSBackends =
+    Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>>;
+
 } // namespace Pennylane::LightningTensor::TNCuda::Util
