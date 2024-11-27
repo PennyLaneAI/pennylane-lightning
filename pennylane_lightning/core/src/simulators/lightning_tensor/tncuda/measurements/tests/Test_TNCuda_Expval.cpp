@@ -211,7 +211,10 @@ TEMPLATE_LIST_TEST_CASE("[PauliZ]", "[TNCuda_Expval]", TestTNBackends) {
                 {{false}, {false}, {false}, {false}, {false}, {false}},
                 {{}, {}, {}, {0.5}, {0.6}, {0.7}});
 
-            tn_state_append_mps_final_state(tn_state);
+            if constexpr (std::is_same_v<TNDeviceT, MPSTNCuda<double>> ||
+                          std::is_same_v<TNDeviceT, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state(cutoff, cutoff_mode);
+            }
 
             auto m = MeasurementsTNCuda<TNDeviceT>(*tn_state);
             auto ob = NamedObsT("PauliZ", {0});
