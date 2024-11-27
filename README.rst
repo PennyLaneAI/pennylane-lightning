@@ -246,15 +246,23 @@ To simplify the build, we recommend using the containerized build process descri
 Install Lightning-GPU with MPI
 ==============================
 
-Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (currently supported version: `custatevec-cu12 <https://pypi.org/project/cuquantum-cu12/>`_), ``mpi4py`` and ``CUDA-aware MPI`` (Message Passing Interface).
-``CUDA-aware MPI`` allows data exchange between GPU memory spaces of different nodes without the need for CPU-mediated transfers.
-Both the ``MPICH`` and ``OpenMPI`` libraries are supported, provided they are compiled with CUDA support.
-The path to ``libmpi.so`` should be found in ``LD_LIBRARY_PATH``.
-It is recommended to install the ``NVIDIA cuQuantum SDK`` and ``mpi4py`` Python package within ``pip`` or ``conda`` inside a virtual environment.
-Please consult the `cuQuantum SDK`_ , `mpi4py <https://mpi4py.readthedocs.io/en/stable/install.html>`_,
-`MPICH <https://www.mpich.org/static/downloads/4.1.1/mpich-4.1.1-README.txt>`_, or `OpenMPI <https://www.open-mpi.org/faq/?category=buildcuda>`_ install guide for more information.
+.. note::
 
-Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed and the environment variable ``CUQUANTUM_SDK`` is set properly.
+    Building Lightning-GPU with MPI also requires the ``NVIDIA cuQuantum SDK`` (currently supported version: `custatevec-cu12 <https://pypi.org/project/cuquantum-cu12/>`_), ``mpi4py`` and ``CUDA-aware MPI`` (Message Passing Interface).
+    ``CUDA-aware MPI`` allows data exchange between GPU memory spaces of different nodes without the need for CPU-mediated transfers.
+    Both the ``MPICH`` and ``OpenMPI`` libraries are supported, provided they are compiled with CUDA support.
+    It is recommended to install the ``NVIDIA cuQuantum SDK`` and ``mpi4py`` Python package within ``pip`` or ``conda`` inside a virtual environment.
+    Please consult the `cuQuantum SDK`_ , `mpi4py <https://mpi4py.readthedocs.io/en/stable/install.html>`_,
+    `MPICH <https://www.mpich.org/static/downloads/4.1.1/mpich-4.1.1-README.txt>`_, or `OpenMPI <https://www.open-mpi.org/faq/?category=buildcuda>`_ install guide for more information.
+
+**Before installing Lightning-GPU with MPI support using the direct SDK path, please ensure that:**
+
+.. note::
+
+    - **Lightning-Qubit**, ``CUDA-aware MPI`` **and** ``custatevec`` **are installed**.
+    - **The environment variable** ``CUQUANTUM_SDK`` **is set properly**.
+    - **Add the** ``path/to/libmpi.so`` **to** ``LD_LIBRARY_PATH``.
+
 Then Lightning-GPU with MPI support can then be installed in the *editable* mode:
 
 .. code-block:: bash
@@ -309,7 +317,7 @@ Install Kokkos (Optional)
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards
 
-Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning Kokkos was tested with Kokkos version <= 4.3.01  
+Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning Kokkos was tested with Kokkos version <= 4.4.1
 
 .. code-block:: bash
 
