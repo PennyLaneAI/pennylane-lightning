@@ -20,7 +20,6 @@
 
 #include <cstdlib>
 #include <filesystem>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -38,22 +37,22 @@ namespace Pennylane::Util {
  * It will search for the BLAS libraries in the given path, or in the RPATH
  * - The path provided by the SCIPY_OPENBLAS32_LIB macro.
  */
-class BLASLibLoaderManager {
+class BLASLibLoaderManager final{
   private:
 #ifdef __APPLE__
-    const std::string blas_lib_name_ = "libscipy_openblas.dylib";
+    static constexpr std::string_view blas_lib_name_ = "libscipy_openblas.dylib";
 #elif defined(_MSC_VER)
-    const std::string blas_lib_name_ = "libscipy_openblas.dll";
+    static constexpr std::string_view blas_lib_name_ = "libscipy_openblas.dll";
 #else
-    const std::string blas_lib_name_ = "libscipy_openblas.so";
+    static constexpr std::string_view blas_lib_name_ = "libscipy_openblas.so";
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
-    std::string get_scipylibs_path_worker_() {
+    std::string_view get_scipylibs_path_worker_() {
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             std::filesystem::path scipyLibsPath(SCIPY_OPENBLAS32_LIB);
-            auto libPath = scipyLibsPath / blas_lib_name_.c_str();
-            return libPath.string(); // For static lib search
+            static std::string libPath = scipyLibsPath / blas_lib_name_;
+            return std::string_view(libPath); // For static lib search
         }
 
         // LCOV_EXCL_START
@@ -75,7 +74,7 @@ class BLASLibLoaderManager {
     BLASLibLoaderManager &operator=(const BLASLibLoaderManager &) = delete;
     BLASLibLoaderManager operator=(const BLASLibLoaderManager &&) = delete;
 
-    static BLASLibLoaderManager &getInstance() {
+    static auto getInstance() -> BLASLibLoaderManager & {
         static BLASLibLoaderManager instance;
         return instance;
     }

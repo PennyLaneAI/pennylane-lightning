@@ -73,8 +73,8 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 
-    char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
-    char uplo = 'L'; // Upper triangle of matrix is stored
+    constexpr char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
+    constexpr char uplo = 'L'; // Upper triangle of matrix is stored
     std::vector<std::complex<T>> work_query(1); // Vector for optimal size query
     int lwork = -1;                             // Optimal workspace size query
     std::vector<T> rwork(3 * n - 2);            // Real workspace array
