@@ -28,15 +28,12 @@ import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.devices.preprocess import (
-    decompose,
-    mid_circuit_measurements,
-    no_sampling,
-    validate_adjoint_trainable_params,
-    validate_device_wires,
-    validate_measurements,
-    validate_observables,
-)
+from pennylane.devices.preprocess import (decompose, mid_circuit_measurements,
+                                          no_sampling,
+                                          validate_adjoint_trainable_params,
+                                          validate_device_wires,
+                                          validate_measurements,
+                                          validate_observables)
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
@@ -45,10 +42,7 @@ from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
 from pennylane_lightning.core.lightning_newAPI_base import (
-    LightningBase,
-    QuantumTape_or_Batch,
-    Result_or_ResultBatch,
-)
+    LightningBase, QuantumTape_or_Batch, Result_or_ResultBatch)
 
 try:
     from pennylane_lightning.lightning_qubit_ops import backend_info
@@ -619,44 +613,3 @@ class LightningQubit(LightningBase):
 
         raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
 
-    # pylint: disable=import-outside-toplevel
-    def eval_jaxpr(self, jaxpr, consts, *args):
-        """Execute pennylane variant jaxpr using C++ simulation tools.
-
-        Args:
-            jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
-            consts (list[TensorLike]): List of constants for the jaxpr closure variables
-            *args (TensorLike): The arguments to the jaxpr.
-
-        Returns:
-            list(TensorLike): the results of the execution
-
-        .. code-block:: python
-
-            import pennylane as qml
-            import jax
-            qml.capture.enable()
-
-            def f(x):
-                @qml.for_loop(3)
-                def loop(i, y):
-                    qml.RX(y, i)
-                    return y + 0.5
-                loop(x)
-                return [qml.expval(qml.Z(i)) for i in range(3)]
-
-            jaxpr = jax.make_jaxpr(f)(0.5)
-
-            dev = qml.device('lightning.qubit', wires=3)
-            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.0)
-
-        .. code-block::
-
-            [1.0, 0.8775825618903728, 0.5403023058681395]
-
-        """
-        # has jax dependency, so can't import up top
-        from .lightning_interpreter import LightningInterpreter
-
-        interpreter = LightningInterpreter(self._statevector)
-        return interpreter.eval(jaxpr, consts, *args)

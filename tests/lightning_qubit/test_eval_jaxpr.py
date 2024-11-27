@@ -12,21 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module tests the default qubit interpreter.
+This module tests the eval_jaxpr method.
 """
 from this import d
 import pytest
 
 import pennylane as qml
 
+from conftest import device_name, LightningDevice
+
 jax = pytest.importorskip("jax")
 
-from jax import numpy as jnp  # pylint: disable=wrong-import-position
 
+if device_name == "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
-
-# must be below the importorskip
-# pylint: disable=wrong-import-position
+if not LightningDevice._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 @pytest.fixture(autouse=True)
@@ -36,15 +38,14 @@ def enable_disable_plxpr():
     qml.capture.disable()
 
 
-
 def test_no_partitioned_shots():
     """Test that an error is raised if partitioned shots is requested."""
 
-    dev = qml.device('lightning.qubit', wires=1, shots=(100, 100, 100))
+    dev = qml.device(device_name, wires=1, shots=(100, 100, 100))
     jaxpr = jax.make_jaxpr(lambda x: x+1)(0.1)
 
     with pytest.raises(NotImplementedError, match="does not support partitioned shots"):
-        dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+        dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.0)
 
 
 def test_simple_execution():
@@ -54,7 +55,7 @@ def test_simple_execution():
         qml.RX(x, 0)
         return qml.expval(qml.Z(0))
 
-    dev = qml.device('lightning.qubit', wires=1)
+    dev = qml.device(device_name, wires=1)
     jaxpr = jax.make_jaxpr(f)(0.5)
 
     res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
@@ -64,7 +65,7 @@ def test_simple_execution():
 def test_capture_remains_enabled_if_measurement_error():
     """Test that capture remains enabled if there is a measurement error."""
 
-    dev = qml.device('lightning.qubit', wires=1)
+    dev = qml.device(device_name, wires=1)
 
     def g():
         return qml.sample(wires=0)  # sampling with analytic execution.
@@ -83,15 +84,15 @@ def test_mcm_reset():
         qml.X(0)
         qml.measure(0, reset=True)
         return qml.state()
-    dev = qml.device('lightning.qubit', wires=1)
+    dev = qml.device(device_name, wires=1)
     jaxpr = jax.make_jaxpr(f)()
 
     out = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
-    assert qml.math.allclose(out, jnp.array([1.0, 0.0]))  # reset into zero state.
+    assert qml.math.allclose(out, jax.numpy.array([1.0, 0.0]))  # reset into zero state.
 
 
 def test_operator_arithmetic():
-    """Test that dq can execute operator arithmetic."""
+    """Test that lightning devices can execute operator arithmetic."""
 
     def f(x):
         qml.RY(1.0, 0)
@@ -99,10 +100,10 @@ def test_operator_arithmetic():
         _ = qml.SX(1) ** 2
         return qml.expval(qml.Z(0) + 2 * qml.Z(1))
 
-    dev = qml.device('lightning.qubit', wires=2)
+    dev = qml.device(device_name, wires=2)
     jaxpr = jax.make_jaxpr(f)(0.5)
     output = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
-    expected = jnp.cos(1 - 0.5) - 2 * 1
+    expected = jax.numpy.cos(1 - 0.5) - 2 * 1
     assert qml.math.allclose(output, expected)
 
 
@@ -116,7 +117,7 @@ class TestSampling:
             qml.X(0)
             return qml.sample(wires=(0, 1))
 
-        dev = qml.device('lightning.qubit', wires=2, shots=10)
+        dev = qml.device(device_name, wires=2, shots=10)
         jaxpr = jax.make_jaxpr(sampler)()
         results = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
@@ -135,7 +136,7 @@ class TestSampling:
                 qml.X(0)
             return qml.measure(0)
 
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
         jaxpr = jax.make_jaxpr(f)()
         output = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
         assert qml.math.allclose(output, mcm_value)
@@ -150,7 +151,7 @@ class TestSampling:
             qml.RX(2 * m0, wires=0)
             return qml.expval(qml.Z(0))
 
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
         jaxpr = jax.make_jaxpr(f)()
         res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
@@ -167,7 +168,7 @@ class TestSampling:
                 return mp_type(op=m0)
             return mp_type(m0)
 
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
         jaxpr = jax.make_jaxpr(f)()
 
         with pytest.raises(NotImplementedError):
@@ -184,7 +185,7 @@ class TestQuantumHOP:
             qml.adjoint(qml.RX)(x, 0)
             return 1
 
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
         jaxpr = jax.make_jaxpr(circuit)(0.5)
 
         with pytest.raises(NotImplementedError):
@@ -196,7 +197,7 @@ class TestQuantumHOP:
         def circuit():
             qml.ctrl(qml.X, control=1)(0)
 
-        dev = qml.device('lightning.qubit', wires=2)
+        dev = qml.device(device_name, wires=2)
         jaxpr = jax.make_jaxpr(circuit)()
 
         with pytest.raises(NotImplementedError):
@@ -213,7 +214,7 @@ class TestClassicalComponents:
             qml.RX(2 * x + y, wires=w - 1)
             return qml.expval(qml.Z(0))
 
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
 
         x = jax.numpy.array(0.5)
         y = jax.numpy.array(1.2)
@@ -238,7 +239,7 @@ class TestClassicalComponents:
 
         x = 1.0
         jaxpr = jax.make_jaxpr(f)(x)
-        dev = qml.device('lightning.qubit', wires=4)
+        dev = qml.device(device_name, wires=4)
 
         output = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x)
         assert len(output) == 4
@@ -258,12 +259,12 @@ class TestClassicalComponents:
             f()
             return qml.expval(qml.Z(0)), qml.expval(qml.Z(1))
 
-        dev = qml.device('lightning.qubit', wires=2)
+        dev = qml.device(device_name, wires=2)
         x = jax.numpy.array(-0.654)
         jaxpr = jax.make_jaxpr(g)(x)
 
         res1, res2 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x)
-        expected = jnp.cos(x)
+        expected = jax.numpy.cos(x)
         assert qml.math.allclose(res1, expected)
         assert qml.math.allclose(res2, expected)
 
@@ -282,7 +283,7 @@ class TestClassicalComponents:
             g(0)
             return [qml.expval(qml.Z(i)) for i in range(4)]
 
-        dev = qml.device('lightning.qubit', wires=4)
+        dev = qml.device(device_name, wires=4)
         jaxpr = jax.make_jaxpr(f)()
         output = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
         assert qml.math.allclose(output, [-1, -1, -1, -1])
@@ -302,13 +303,13 @@ class TestClassicalComponents:
             f(0)
             return qml.expval(qml.Z(0))
 
-        x, y = jnp.array(1.2), jnp.array(2)
+        x, y = jax.numpy.array(1.2), jax.numpy.array(2)
         jaxpr = jax.make_jaxpr(g)(x, y)
-        dev = qml.device('lightning.qubit', wires=2)
+        dev = qml.device(device_name, wires=2)
 
         output = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, y)
 
-        assert qml.math.allclose(output, jnp.cos(y * x))
+        assert qml.math.allclose(output, jax.numpy.cos(y * x))
 
     def test_cond_boolean(self):
         """Test that cond can be used with normal classical values."""
@@ -326,7 +327,7 @@ class TestClassicalComponents:
 
         x = 0.5
         jaxpr = jax.make_jaxpr(f)(x, True)
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
         output_true = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, True)
 
         expected0 = [jax.numpy.cos(0.5 / 2) ** 2, jax.numpy.sin(0.5 / 2) ** 2]
@@ -356,10 +357,10 @@ class TestClassicalComponents:
 
         x = 0.5
         jaxpr = jax.make_jaxpr(g)(x)
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
 
         output = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x)
-        expected = [jnp.cos(x / 2) ** 2, jnp.sin(x / 2) ** 2]
+        expected = [jax.numpy.cos(x / 2) ** 2, jax.numpy.sin(x / 2) ** 2]
         assert qml.math.allclose(output, expected)
 
     def test_cond_false_no_false_fn(self):
@@ -372,7 +373,7 @@ class TestClassicalComponents:
             qml.cond(condition, true_fn)(0)
             return qml.expval(qml.Z(0))
 
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
         jaxpr = jax.make_jaxpr(g)(True)
 
         out = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, False)
@@ -401,13 +402,13 @@ class TestClassicalComponents:
         z = jax.numpy.array(1.2)
 
         jaxpr = jax.make_jaxpr(circuit)(x, y, z, True, True)
-        dev = qml.device('lightning.qubit', wires=1)
+        dev = qml.device(device_name, wires=1)
 
         res0 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, y, z, True, False)
-        assert qml.math.allclose(res0, jnp.cos(x))
+        assert qml.math.allclose(res0, jax.numpy.cos(x))
 
         res1 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, y, z, False, True)
-        assert qml.math.allclose(res1, jnp.cos(z))  # elif branch = z
+        assert qml.math.allclose(res1, jax.numpy.cos(z))  # elif branch = z
 
         res2 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, y, z, False, False)
-        assert qml.math.allclose(res2, jnp.cos(y))  # false fn = y
+        assert qml.math.allclose(res2, jax.numpy.cos(y))  # false fn = y

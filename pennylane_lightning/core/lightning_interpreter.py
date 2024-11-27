@@ -21,24 +21,23 @@ from typing import Optional
 import jax
 from pennylane.capture import disable, enable
 from pennylane.capture.base_interpreter import PlxprInterpreter
-from pennylane.capture.primitives import (
-    adjoint_transform_prim,
-    cond_prim,
-    ctrl_transform_prim,
-    for_loop_prim,
-    measure_prim,
-    while_loop_prim,
-)
+from pennylane.capture.primitives import (adjoint_transform_prim, cond_prim,
+                                          ctrl_transform_prim, for_loop_prim,
+                                          measure_prim, while_loop_prim)
 from pennylane.measurements import MidMeasureMP, Shots
 
-from ._measurements import LightningMeasurements
-from ._state_vector import LightningStateVector
+from ._measurements_base import LightningBaseMeasurements
+from ._state_vector_base import LightningBaseStateVector
 
 
 class LightningInterpreter(PlxprInterpreter):
-    """
+    """A class that can interpret pennylane variant JAXPR.
 
-
+    Args:
+        state (LightningBaseStateVector): the class containing the statevector
+        measurement_class (type[LightningBaseMeasurement]): The type to use to perform
+            measurements on the statevector
+        shots (Shots): the number of shots to use. Shot vectors are not yet supported.
 
     .. code-block:: python
 
@@ -47,8 +46,10 @@ class LightningInterpreter(PlxprInterpreter):
         qml.capture.enable()
 
         statevector = LightningStateVector(num_wires=3, dtype=np.complex128)
+        measurement_class = LightningMeasurements
 
-        @LightningInterpreter(statevector, shots=Shots(None))
+        interpreter = LightningInterpreter(statevector, measurement_class, shots=Shots(None))
+
         def f(x):
             @qml.for_loop(3)
             def loop(i, y):
@@ -57,15 +58,18 @@ class LightningInterpreter(PlxprInterpreter):
             loop(x)
             return [qml.expval(qml.Z(i)) for i in range(3)]
 
-        f(0.0)
+        jaxpr = jax.make_jaxpr(f)(1.2)
+
+        interpreter(f)(0.0), interpreter.eval(jaxpr.jaxpr, jaxpr.consts, 0.0)
 
     .. code-block::
 
-        [1.0, 0.8775825618903728, 0.5403023058681395]
+        ([1.0, 0.8775825618903728, 0.5403023058681395], [1.0, 0.8775825618903728, 0.5403023058681395])
     """
 
-    def __init__(self, state: LightningStateVector, shots: Shots = Shots(None)):
+    def __init__(self, state: LightningBaseStateVector, measurement_class: type[LightningBaseMeasurements], shots: Shots = Shots(None)):
         self.state = state
+        self.measurement_class = measurement_class
         self.shots = shots
         if self.shots.has_partitioned_shots:
             raise NotImplementedError("LightningInterpreter does not support partitioned shots.")
@@ -88,9 +92,9 @@ class LightningInterpreter(PlxprInterpreter):
 
     def interpret_measurement_eqn(self, eqn: "jax.core.JaxprEqn"):
         """Interpret a given measurement equation."""
-        if "mcm" in eqn.primitive.name:
+        if "mcm" == eqn.primitive.name[-3:]:
             raise NotImplementedError(
-                "DefaultQubitInterpreter does not yet support postprocessing mcms"
+                "LightningInterpreter does not yet support postprocessing mcms"
             )
         return super().interpret_measurement_eqn(eqn)
 
@@ -100,10 +104,10 @@ class LightningInterpreter(PlxprInterpreter):
         disable()
         try:
             if self.shots:
-                return LightningMeasurements(self.state).measure_with_samples(
+                return self.measurement_class(self.state).measure_with_samples(
                     [measurement], self.shots
                 )
-            return LightningMeasurements(self.state).measurement(measurement)
+            return self.measurement_class(self.state).measurement(measurement)
         finally:
             enable()
 
