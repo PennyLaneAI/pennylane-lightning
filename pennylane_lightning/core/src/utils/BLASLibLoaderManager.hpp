@@ -37,10 +37,11 @@ namespace Pennylane::Util {
  * It will search for the BLAS libraries in the given path, or in the RPATH
  * - The path provided by the SCIPY_OPENBLAS32_LIB macro.
  */
-class BLASLibLoaderManager final{
+class BLASLibLoaderManager final {
   private:
 #ifdef __APPLE__
-    static constexpr std::string_view blas_lib_name_ = "libscipy_openblas.dylib";
+    static constexpr std::string_view blas_lib_name_ =
+        "libscipy_openblas.dylib";
 #elif defined(_MSC_VER)
     static constexpr std::string_view blas_lib_name_ = "libscipy_openblas.dll";
 #else
@@ -48,7 +49,7 @@ class BLASLibLoaderManager final{
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
-    std::string_view get_scipylibs_path_worker_() {
+    static std::string_view get_scipylibs_path_worker_() {
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             std::filesystem::path scipyLibsPath(SCIPY_OPENBLAS32_LIB);
             static std::string libPath = scipyLibsPath / blas_lib_name_;

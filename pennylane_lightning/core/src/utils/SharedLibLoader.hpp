@@ -51,11 +51,11 @@ namespace Pennylane::Util {
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
-    HANDLE_TYPE handle_;
+    HANDLE_TYPE handle_{nullptr};
 
   public:
     SharedLibLoader();
-    explicit SharedLibLoader(const std::string_view& filename) {
+    explicit SharedLibLoader(const std::string_view &filename) {
         handle_ = PL_DLOPEN(filename.data(), RTLD_LAZY);
     }
 

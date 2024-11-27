@@ -57,7 +57,7 @@ void compute_diagonalizing_gates(int n, int lda,
                                  const std::vector<std::complex<T>> &Ah,
                                  std::vector<T> &eigenVals,
                                  std::vector<std::complex<T>> &unitary) {
-    auto &blasLoader = BLASLibLoaderManager::getInstance();
+    auto &&blasLoader = BLASLibLoaderManager::getInstance();
     auto *blasLibLoader = blasLoader.getBLASLib();
 
     eigenVals.clear();
@@ -73,7 +73,8 @@ void compute_diagonalizing_gates(int n, int lda,
         }
     }
 
-    constexpr char jobz = 'V'; // Enable both eigenvalues and eigenvectors computation
+    constexpr char jobz =
+        'V'; // Enable both eigenvalues and eigenvectors computation
     constexpr char uplo = 'L'; // Upper triangle of matrix is stored
     std::vector<std::complex<T>> work_query(1); // Vector for optimal size query
     int lwork = -1;                             // Optimal workspace size query

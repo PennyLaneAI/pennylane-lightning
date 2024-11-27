@@ -230,9 +230,9 @@ class HermitianObsBase : public Observable<StateVectorT> {
         return (matrix_ == other_cast.matrix_) && (wires_ == other_cast.wires_);
     }
 
-    /** 
+    /**
      * @brief Decompose the Hermitian matrix into diagonalizing gates.
-    */
+     */
     void decompose_() const {
         std::vector<std::complex<PrecisionT>> mat(matrix_.size());
 
