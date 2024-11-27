@@ -678,8 +678,6 @@ TEST_CASE("LightningGPUSimulator::GateSet", "[GateSet]") {
         REQUIRE(LGPUsim->CacheManagerInfo() == expected);
     }
 
-    // ============= Controlled operations =============
-
     SECTION("Controlled Pauli-X and RX") {
         std::unique_ptr<LGPUSimulator> LGPUsim =
             std::make_unique<LGPUSimulator>();
