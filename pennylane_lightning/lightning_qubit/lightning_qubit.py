@@ -28,12 +28,15 @@ import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
-from pennylane.devices.preprocess import (decompose, mid_circuit_measurements,
-                                          no_sampling,
-                                          validate_adjoint_trainable_params,
-                                          validate_device_wires,
-                                          validate_measurements,
-                                          validate_observables)
+from pennylane.devices.preprocess import (
+    decompose,
+    mid_circuit_measurements,
+    no_sampling,
+    validate_adjoint_trainable_params,
+    validate_device_wires,
+    validate_measurements,
+    validate_observables,
+)
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
@@ -42,7 +45,10 @@ from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
 from pennylane_lightning.core.lightning_newAPI_base import (
-    LightningBase, QuantumTape_or_Batch, Result_or_ResultBatch)
+    LightningBase,
+    QuantumTape_or_Batch,
+    Result_or_ResultBatch,
+)
 
 try:
     from pennylane_lightning.lightning_qubit_ops import backend_info
@@ -612,4 +618,3 @@ class LightningQubit(LightningBase):
                 return "LightningSimulator", lib_location
 
         raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
-
