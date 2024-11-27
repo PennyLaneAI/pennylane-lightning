@@ -488,7 +488,7 @@ class Measurements final
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;
-        this->activate_DeviceSeed();
+        this->activateDeviceSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
         if (kernelname == "NonZeroRandom") {
@@ -596,7 +596,7 @@ class Measurements final
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        this->activate_DeviceSeed();
+        this->activateDeviceSeed();
         DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -

@@ -234,7 +234,7 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        this->activate_DeviceSeed();
+        this->activateDeviceSeed();
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
             rand_nums[n] = dis(this->rng);
