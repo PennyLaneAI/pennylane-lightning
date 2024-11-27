@@ -21,8 +21,7 @@ target_link_libraries(${PL_BACKEND}_measurements_tests INTERFACE  Catch2::Catch2
                                                                   ${PL_BACKEND}_measurements
                                                                   ${PL_BACKEND}_observables
                                                                   ${PL_BACKEND}
-                                                                  ${PL_BACKEND}_tncuda_utils
-                                                                  )
+                                                                  ${PL_BACKEND}_tncuda_utils)
 
 ProcessTestOptions(${PL_BACKEND}_measurements_tests)
 
