@@ -57,7 +57,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 #else
     const StateVectorT &_statevector;
 #endif
-    const std::optional<std::size_t> &DeviceSeed = std::nullopt;
+    std::optional<std::size_t> DeviceSeed = std::nullopt;
 
     std::mt19937 rng;
 
