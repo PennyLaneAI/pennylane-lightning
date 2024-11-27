@@ -155,20 +155,17 @@ jobs:
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
+            # FIXME: install PennyLane/latest to fix pennylane.devices.capabilities requirements
+            python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
-              pip uninstall pennylane pennylane-lightning -y
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
               SKIP_COMPILATION=True python -m pip install . -vv
-              which python
-              which python3.10
             fi
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             python -c "import pennylane as qml; print(qml.about())"
-            which python
-            which python3.10
             pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
         run: python3.10 -m cibuildwheel --output-dir wheelhouse
