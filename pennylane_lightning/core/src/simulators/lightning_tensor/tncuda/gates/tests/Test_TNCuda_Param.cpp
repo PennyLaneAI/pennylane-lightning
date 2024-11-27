@@ -85,14 +85,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PhaseShift", "[TNCuda_Param]",
                                  {sign * angles[index]});
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[index]).margin(1e-5));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[index]).margin(1e-5));
     }
 }
 
@@ -134,8 +134,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RX", "[TNCuda_Param]", TestTNBackends) {
         tn_state->applyOperation("RX", {index}, inverse, {angles[index]});
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -234,8 +233,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RY", "[MPSTNCuda_Nonparam]",
         tn_state->applyOperation("RY", {index}, inverse, {angles[index]});
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -302,8 +300,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RZ", "[TNCuda_Param]", TestTNBackends) {
         tn_state->applyOperation("RZ", {index}, inverse, {angles[index]});
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -356,14 +353,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
                                  {sign * angles[0]});
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[0]).margin(1e-6));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[0]).margin(1e-6));
     }
 
     SECTION("Apply non-adjacent wire indices") {
@@ -374,14 +371,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
         tn_state->applyOperation("ControlledPhaseShift", {0, 2}, inverse,
                                  {sign * angles[1]});
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[1]).margin(1e-6));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[1]).margin(1e-6));
     }
 }
 
@@ -423,8 +420,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Rot", "[TNCuda_Param]",
         tn_state->applyOperation("Rot", {index}, inverse, angles[index]);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -459,8 +455,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
         expected_results[0] = cp_t{1, 0};
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -476,8 +471,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
         expected_results[0] = cp_t{1, 0};
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -554,8 +548,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
         tn_state->applyOperation("IsingXX", {0, 1}, inverse, {angles[index]});
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -570,8 +563,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
         tn_state->applyOperation("IsingXX", {0, 2}, inverse, {angles[index]});
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -629,14 +621,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
         tn_state->applyOperation("IsingXY", {0, 1}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[0]).margin(1e-6));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[0]).margin(1e-6));
     }
 
     SECTION("Apply non-adjacent wires") {
@@ -646,14 +638,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
         tn_state->applyOperation("IsingXY", {0, 2}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[1]).margin(1e-6));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[1]).margin(1e-6));
     }
 }
 
@@ -704,8 +696,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
         tn_state->applyOperation("IsingYY", {0, 1}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -722,8 +713,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
         tn_state->applyOperation("IsingYY", {0, 2}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -780,8 +770,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
         tn_state->applyOperation("IsingZZ", {0, 1}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -798,8 +787,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
         tn_state->applyOperation("IsingZZ", {0, 2}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -856,14 +844,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
         tn_state->applyOperation("CRX", {0, 1}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[0]).margin(1e-7));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[0]).margin(1e-7));
     }
 
     SECTION("Apply non-adjacent wires") {
@@ -874,14 +862,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
         tn_state->applyOperation("CRX", {0, 2}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[1]).margin(1e-8));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[1]).margin(1e-8));
     }
 }
 
@@ -936,8 +924,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
         tn_state->applyOperation("CRY", {0, 1}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -954,8 +941,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
         tn_state->applyOperation("CRY", {0, 2}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -1012,14 +998,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
         tn_state->applyOperation("CRZ", {0, 1}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[0]).margin(1e-6));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[0]).margin(1e-6));
     }
 
     SECTION("Apply non-adjacent wires") {
@@ -1029,14 +1015,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
         tn_state->applyOperation("CRZ", {0, 2}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[1]).margin(1e-6));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[1]).margin(1e-6));
     }
 }
 
@@ -1088,8 +1074,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
         tn_state->applyOperation("SingleExcitation", {0, 1}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -1106,8 +1091,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
         tn_state->applyOperation("SingleExcitation", {0, 2}, inverse, angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
@@ -1172,14 +1156,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
                                  angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[0]).margin(1e-7));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[0]).margin(1e-7));
     }
 
     SECTION("Apply non-adjacent wires") {
@@ -1191,14 +1175,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
                                  angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[1]).margin(1e-7));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[1]).margin(1e-7));
     }
 }
 
@@ -1257,14 +1241,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
                                  angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[0]).margin(1e-5));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[0]).margin(1e-5));
     }
 
     SECTION("Apply non-adjacent wires") {
@@ -1275,14 +1259,14 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
                                  angles);
 
         if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
+                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
             tn_state->append_mps_final_state();
         }
 
         auto results = tn_state->getDataVector();
 
-        CHECK(results == Pennylane::Util::approx(expected_results[1]).margin(1e-5));
+        CHECK(results ==
+              Pennylane::Util::approx(expected_results[1]).margin(1e-5));
     }
 }
 
@@ -1373,12 +1357,11 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
                                      angles);
 
             if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
-            tn_state->append_mps_final_state();
-        }
+                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
-        auto results = tn_state->getDataVector();
+            auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -1393,12 +1376,11 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
                                      angles);
 
             if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
-            tn_state->append_mps_final_state();
-        }
+                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
-        auto results = tn_state->getDataVector();
+            auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1472,12 +1454,11 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
                                      inverse, angles);
 
             if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
-            tn_state->append_mps_final_state();
-        }
+                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
-        auto results = tn_state->getDataVector();
+            auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -1492,12 +1473,11 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
                                      inverse, angles);
 
             if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
-            tn_state->append_mps_final_state();
-        }
+                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
-        auto results = tn_state->getDataVector();
+            auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
@@ -1572,12 +1552,11 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
                                      inverse, angles);
 
             if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
-            tn_state->append_mps_final_state();
-        }
+                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
-        auto results = tn_state->getDataVector();
+            auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[0]));
         }
@@ -1592,12 +1571,11 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
                                      inverse, angles);
 
             if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
-                      std::is_same_v<TNDevice_T, MPSTNCuda<float>>)
-        {
-            tn_state->append_mps_final_state();
-        }
+                          std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
+                tn_state->append_mps_final_state();
+            }
 
-        auto results = tn_state->getDataVector();
+            auto results = tn_state->getDataVector();
 
             CHECK(results == Pennylane::Util::approx(expected_results[1]));
         }
