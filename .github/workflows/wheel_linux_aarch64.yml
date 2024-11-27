@@ -75,15 +75,14 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "git config --global --add safe.directory /io && \
             cd /io && \
-            yum install -y ninja-build && \
-            echo $(which ninja) && \
-            echo $(ninja --version) && \
+            echo $(which python3.10) && \
+            python3.10 -m pip install ninja --verbose && \
+            ln -s /opt/python/cp310-cp310/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
                             -DKokkos_ENABLE_SERIAL=ON \
                             -DKokkos_ENABLE_${{ matrix.exec_model }}=ON \
                             -DKokkos_ENABLE_DEPRECATION_WARNINGS=OFF \
-                            -DCMAKE_CXX_COMPILER=g++ \
                             -DCMAKE_CXX_STANDARD=20 \
                             -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
                             -G Ninja && \
