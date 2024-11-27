@@ -23,6 +23,9 @@
 
 ### Improvements
 
+* Reverse Lightning Qubit generators vector insertion order.
+  [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
+
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
 
