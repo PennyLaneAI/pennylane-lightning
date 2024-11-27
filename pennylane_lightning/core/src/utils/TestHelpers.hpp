@@ -168,6 +168,7 @@ std::ostream &operator<<(std::ostream &os, const PLApproxComplex<T> &approx) {
  * @tparam Data_t Floating point data-type.
  * @param data1 StateVector data 1.
  * @param data2 StateVector data 2.
+ * @param eps The absolute tolerance parameter.
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
@@ -187,6 +188,7 @@ isApproxEqual(const std::vector<Data_t, AllocA> &data1,
  * @tparam Data_t Floating point data-type.
  * @param data1 StateVector data 1.
  * @param data2 StateVector data 2.
+ * @param eps The absolute tolerance parameter.
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
@@ -208,6 +210,7 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
  * @param length1 StateVector data array pointer 1.
  * @param data2 StateVector data array pointer 2.
  * @param length2 StateVector data array pointer 1.
+ * @param eps The absolute tolerance parameter.
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
@@ -218,6 +221,7 @@ isApproxEqual(const Data_t *data1, const std::size_t length1,
               typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
+
     if (data1 == data2) {
         return true;
     }
@@ -231,6 +235,40 @@ isApproxEqual(const Data_t *data1, const std::size_t length1,
             return false;
         }
     }
+
+    return true;
+}
+
+/**
+ * @brief Utility function to compare `std::vector` of complex statevector data.
+ *
+ * @note This utility function is mainly used in Lightning-Kokkos C++ unit tests
+ * when the `data1` and `data2` allocators are identical.
+ *
+ * @tparam Data_t Floating point data-type.
+ * @param data1 StateVector data array pointer 1.
+ * @param data2 StateVector data array pointer 2.
+ * @param eps The absolute tolerance parameter.
+ * @return true Data are approximately equal.
+ * @return false Data are not approximately equal.
+ */
+template <class Data_t, class Alloc>
+inline bool
+isApproxEqual(const std::vector<Data_t, Alloc> &data1,
+              const std::vector<Data_t, Alloc> &data2,
+              typename Data_t::value_type eps =
+                  std::numeric_limits<typename Data_t::value_type>::epsilon() *
+                  100) {
+    if (data1.size() != data2.size()) {
+        return false;
+    }
+
+    for (std::size_t idx = 0; idx < data1.size(); idx++) {
+        if (!isApproxEqual(data1[idx], data2[idx], eps)) {
+            return false;
+        }
+    }
+
     return true;
 }
 

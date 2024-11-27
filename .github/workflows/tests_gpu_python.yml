@@ -83,13 +83,13 @@ jobs:
           fetch-tags: true
 
       - name: Switch to release build of Lightning
-        if: inputs.lightning-version == 'release' && matrix.pl_backend == 'lightning.qubit'
+        if: inputs.lightning-version == 'release'
         run: |
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
-        if: inputs.lightning-version == 'stable' && matrix.pl_backend == 'lightning.qubit'
+        if: inputs.lightning-version == 'stable'
         run: |
           git fetch --tags --force
           git checkout latest_release
@@ -120,7 +120,7 @@ jobs:
           echo "Python_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
           echo "Python3_ROOT_DIR=${{ env.VENV_NAME }}" >> $GITHUB_ENV
 
-          # Adding venv site-packages to output for subsequent step to referecen if needed
+          # Adding venv site-packages to output for subsequent step to reference if needed
           echo "site_packages_dir=$(${{ env.VENV_NAME }}/bin/python -c 'import sysconfig; print(sysconfig.get_path("platlib"))')" >> $GITHUB_OUTPUT
 
 
@@ -206,7 +206,7 @@ jobs:
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
-      
+
       - name: Test wheels for Lightning-GPU
         if : matrix.pl_backend == 'lightning_gpu'
         run: |
