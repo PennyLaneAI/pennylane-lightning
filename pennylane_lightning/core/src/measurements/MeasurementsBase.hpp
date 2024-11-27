@@ -17,6 +17,7 @@
  */
 #pragma once
 
+#include <cstddef>
 #include <optional>
 #include <random>
 #include <string>
@@ -451,30 +452,21 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     void activateDeviceSeed() {
-        if (this->DeviceSeed.has_value()) {
-            setSeed(this->DeviceSeed.value());
-        } else {
-            setRandomSeed();
-        }
+        std::size_t seed = this->DeviceSeed.has_value()
+                               ? this->DeviceSeed.value()
+                               : this->generateRandomSeed();
+        rng.seed(seed);
     }
 
   private:
     /**
-     * @brief Set the seed of the internal random generator
-     *
-     * @param seed Seed
-     */
-    void setSeed(const std::size_t seed) { rng.seed(seed); }
-
-    /**
-     * @brief Randomly set the seed of the internal random generator
+     * @brief Generate a random seed
      *
      */
-    void setRandomSeed() {
+    std::size_t generateRandomSeed() {
         std::random_device rd;
-        setSeed(rd());
+        return rd();
     }
-
     /**
      * @brief Return samples of a observable
      *
