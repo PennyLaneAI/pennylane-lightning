@@ -48,24 +48,23 @@ class BLASLibLoaderManager final {
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
-    const std::string get_scipylibs_path_worker_() {
-        if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
-            std::filesystem::path scipyLibsPath(SCIPY_OPENBLAS32_LIB);
-            auto libPath = scipyLibsPath / blas_lib_name_.c_str();
-            return libPath.string(); // For static lib search
-        }
-
-        // LCOV_EXCL_START
-        return blas_lib_name_; // For RPATH search from shared lib
-        // LCOV_EXCL_STOP
-    };
 
     /**
      * @brief BLASLibLoaderManager.
      */
     explicit BLASLibLoaderManager() {
-        blasLib_ =
-            std::make_shared<SharedLibLoader>(get_scipylibs_path_worker_());
+        std::string libPathStr;
+        if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
+            std::filesystem::path scipyLibsPath(SCIPY_OPENBLAS32_LIB);
+            auto libPath = scipyLibsPath / blas_lib_name_.c_str();
+            libPathStr = libPath.string(); // For static lib search
+        } else {
+            // LCOV_EXCL_START
+            libPathStr = blas_lib_name_; // For RPATH search from shared lib
+            // LCOV_EXCL_STOP
+        }
+
+        blasLib_ = std::make_shared<SharedLibLoader>(libPathStr);
     }
 
   public:
