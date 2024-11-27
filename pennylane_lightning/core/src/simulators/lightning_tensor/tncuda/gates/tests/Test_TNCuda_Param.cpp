@@ -1482,4 +1482,3 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
         }
     }
 }
-

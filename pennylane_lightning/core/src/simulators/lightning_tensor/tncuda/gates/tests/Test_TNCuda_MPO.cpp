@@ -18,7 +18,6 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
 
@@ -37,8 +36,7 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 /// @endcond
 
 TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
-                        TestMPSBackends)
-{
+                        TestMPSBackends) {
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
@@ -158,8 +156,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
 }
 
 TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
-                        TestMPSBackends)
-{
+                        TestMPSBackends) {
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
@@ -190,8 +187,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     mpo_single_excitation[1][12] = {-0.707106781, 0.0};
     mpo_single_excitation[1][15] = {-0.707106781, 0.0};
 
-    SECTION("Target at wire indices")
-    {
+    SECTION("Target at wire indices") {
 
         MPSTNCuda<Precision_T> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
@@ -212,8 +208,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
         CHECK(res == Pennylane::Util::approx(ref));
     }
 
-    SECTION("Target at non-adjacent wire indices")
-    {
+    SECTION("Target at non-adjacent wire indices") {
 
         MPSTNCuda<Precision_T> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
