@@ -160,8 +160,6 @@ void LightningGPUSimulator::NamedOperation(
     // Check the validity of number of qubits and parameters
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");
-
-    // Check the validity of number of qubits and parameters
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
     RT_FAIL_IF(!isValidQubits(controlled_wires),
                "Given controlled wires do not refer to qubits");
@@ -194,7 +192,6 @@ void LightningGPUSimulator::MatrixOperation(
     const std::vector<bool> &controlled_values) {
     RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
                "Controlled wires/values size mismatch");
-
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
     RT_FAIL_IF(!isValidQubits(controlled_wires),
                "Given controlled wires do not refer to qubits");
@@ -204,13 +201,12 @@ void LightningGPUSimulator::MatrixOperation(
     auto &&dev_wires = getDeviceWires(wires);
     auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
-    // Update the state-vector
     if (controlled_wires.empty()) {
-        this->device_sv->applyMatrix(matrix.data(), dev_wires, inverse);
+        this->device_sv->applyMatrix(matrix, dev_wires, inverse);
     } else {
-        this->device_sv->applyControlledMatrix(
-            matrix.data(), dev_controlled_wires, controlled_values, dev_wires,
-            inverse);
+        this->device_sv->applyOperation("matrix", dev_controlled_wires,
+                                        controlled_values, dev_wires, inverse,
+                                        {}, matrix);
     }
 
     // Update tape caching if required
