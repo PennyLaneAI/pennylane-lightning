@@ -13,7 +13,6 @@
 // limitations under the License.
 #include "TestHelpers.hpp"
 #include <catch2/catch.hpp>
-#include <cstddef>
 
 /// @cond DEV
 namespace {
@@ -1236,7 +1235,7 @@ TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
 }
 
 template <typename TypeList>
-void testSamples(std::optional<size_t> seed = std::nullopt) {
+void testSamples(std::optional<std::size_t> seed = std::nullopt) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
