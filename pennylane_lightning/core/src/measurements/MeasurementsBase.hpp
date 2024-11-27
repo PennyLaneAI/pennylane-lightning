@@ -57,7 +57,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
 #else
     const StateVectorT &_statevector;
 #endif
-    std::optional<std::size_t> DeviceSeed = std::nullopt;
+    const std::optional<std::size_t> &DeviceSeed = std::nullopt;
 
     std::mt19937 rng;
 
@@ -275,8 +275,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             sv.updateData(data_storage.data(), data_storage.size());
             obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
             Derived measure(sv);
-            measure.set_DeviceSeed(
-                static_cast<Derived *>(this)->get_DeviceSeed());
+            measure.set_DeviceSeed(this->DeviceSeed);
             if (num_shots > std::size_t{0}) {
                 return measure.probs(obs_wires, num_shots);
             }
@@ -285,8 +284,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             StateVectorT sv(_statevector);
             obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
             Derived measure(sv);
-            measure.set_DeviceSeed(
-                static_cast<Derived *>(this)->get_DeviceSeed());
+            measure.set_DeviceSeed(this->DeviceSeed);
             if (num_shots > std::size_t{0}) {
                 return measure.probs(obs_wires, num_shots);
             }
@@ -379,7 +377,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto sample(const std::size_t &num_shots) -> std::vector<std::size_t> {
         Derived measure(_statevector);
-        measure.set_DeviceSeed(static_cast<Derived *>(this)->get_DeviceSeed());
+        measure.set_DeviceSeed(this->DeviceSeed);
         return measure.generate_samples(num_shots);
     }
 
@@ -446,10 +444,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
         this->DeviceSeed = deviceSeed;
     }
 
-    const std::optional<std::size_t> &get_DeviceSeed() {
-        return this->DeviceSeed;
-    }
-
     void set_DeviceSeedFromPRNG(std::mt19937 *gen) {
         if (gen != nullptr) {
             this->set_DeviceSeed((*gen)());
@@ -510,15 +504,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             StateVectorT sv(data_storage.data(), data_storage.size());
             obs.applyInPlaceShots(sv, eigenValues, obs_wires);
             Derived measure(sv);
-            measure.set_DeviceSeed(
-                static_cast<Derived *>(this)->get_DeviceSeed());
+            measure.set_DeviceSeed(this->DeviceSeed);
             samples = measure.generate_samples(num_shots);
         } else {
             StateVectorT sv(_statevector);
             obs.applyInPlaceShots(sv, eigenValues, obs_wires);
             Derived measure(sv);
-            measure.set_DeviceSeed(
-                static_cast<Derived *>(this)->get_DeviceSeed());
+            measure.set_DeviceSeed(this->DeviceSeed);
             samples = measure.generate_samples(num_shots);
         }
 
