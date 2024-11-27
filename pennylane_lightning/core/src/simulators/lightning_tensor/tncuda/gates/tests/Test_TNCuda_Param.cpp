@@ -734,8 +734,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
         CHECK(results == Pennylane::Util::approx(expected_results[1]));
     }
 }
-/* python code to get the reference values for a single parameter with 2 target for CRX
-import pennylane as qml
+/* python code to get the reference values for a single parameter with 2 target
+for CRX import pennylane as qml
 
 qubits = 3
 dev = qml.device('default.qubit', wires=qubits)
@@ -800,8 +800,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
 
         tn_state->reset();
 
-        tn_state->applyOperations({"Hadamard", "Hadamard"},
-                                  {{0}, {1}}, {false, false});
+        tn_state->applyOperations({"Hadamard", "Hadamard"}, {{0}, {1}},
+                                  {false, false});
 
         tn_state->applyOperation("CRX", {0, 1}, inverse, angles);
 
@@ -815,8 +815,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
 
     SECTION("Apply non-adjacent wires") {
 
-        tn_state->applyOperations({"Hadamard", "Hadamard"},
-                                  {{0}, {1}}, {false, false});
+        tn_state->applyOperations({"Hadamard", "Hadamard"}, {{0}, {1}},
+                                  {false, false});
 
         tn_state->applyOperation("CRX", {0, 2}, inverse, angles);
 
