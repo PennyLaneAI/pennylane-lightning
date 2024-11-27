@@ -240,7 +240,6 @@ TEMPLATE_LIST_TEST_CASE("[Hadamard]", "[TNCuda_Expval]", TestTNBackends) {
 
         auto measure = MeasurementsTNCuda<TNDeviceT>(*tn_state);
 
-
         auto ONE = PrecisionT(1);
 
         // NOTE: Following tests show that the current design can be measured
