@@ -40,20 +40,20 @@ namespace Pennylane::Util {
 class BLASLibLoaderManager final {
   private:
 #ifdef __APPLE__
-    static constexpr std::string_view blas_lib_name_ =
+    const std::string std::string blas_lib_name_ =
         "libscipy_openblas.dylib";
 #elif defined(_MSC_VER)
-    static constexpr std::string_view blas_lib_name_ = "libscipy_openblas.dll";
+    const std::string blas_lib_name_ = "libscipy_openblas.dll";
 #else
-    static constexpr std::string_view blas_lib_name_ = "libscipy_openblas.so";
+    const std::string blas_lib_name_ = "libscipy_openblas.so";
 #endif
 
     std::shared_ptr<SharedLibLoader> blasLib_;
-    static std::string_view get_scipylibs_path_worker_() {
+    const std::string get_scipylibs_path_worker_() {
         if (std::filesystem::exists(SCIPY_OPENBLAS32_LIB)) {
             std::filesystem::path scipyLibsPath(SCIPY_OPENBLAS32_LIB);
-            static std::string libPath = scipyLibsPath / blas_lib_name_;
-            return std::string_view(libPath); // For static lib search
+            auto libPath = scipyLibsPath / blas_lib_name_.c_str();
+            return libPath.string(); // For static lib search
         }
 
         // LCOV_EXCL_START

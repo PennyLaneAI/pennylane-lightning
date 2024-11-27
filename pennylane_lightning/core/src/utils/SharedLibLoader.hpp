@@ -55,8 +55,8 @@ class SharedLibLoader final {
 
   public:
     SharedLibLoader();
-    explicit SharedLibLoader(const std::string_view &filename) {
-        handle_ = PL_DLOPEN(filename.data(), RTLD_LAZY);
+    explicit SharedLibLoader(const std::string &filename) {
+        handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
     }
 
     ~SharedLibLoader() noexcept { PL_DLCLOSE(handle_); }
