@@ -87,8 +87,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
   public:
     TNCudaBase() = delete;
 
-    explicit TNCudaBase(const std::size_t numQubits,
-                        const std::size_t maxBondDim = 1)
+    explicit TNCudaBase(std::size_t numQubits,
+                        std::size_t maxBondDim = 1)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
           bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
           sitesExtents_(setSitesExtents_()),
