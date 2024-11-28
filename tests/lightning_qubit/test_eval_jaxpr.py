@@ -17,7 +17,6 @@ This module tests the eval_jaxpr method.
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
-from this import d
 
 jax = pytest.importorskip("jax")
 
