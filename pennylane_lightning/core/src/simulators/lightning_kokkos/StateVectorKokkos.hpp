@@ -511,6 +511,7 @@ class StateVectorKokkos final
                              const std::vector<std::size_t> &wires,
                              bool inverse = false) {
         const std::size_t num_qubits = this->getNumQubits();
+        PL_ASSERT(num_qubits >= wires.size() + controlled_wires.size());
         const std::size_t two2N =
             exp2(num_qubits - wires.size() - controlled_wires.size());
         const std::size_t dim = exp2(wires.size());
@@ -548,8 +549,9 @@ class StateVectorKokkos final
             break;
         default:
             // TODO: explore runtime determine scratch space level (L0 vs L1)
-            std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
-                                       ScratchViewSizeT::shmem_size(dim);
+            const std::size_t scratch_size =
+                ScratchViewComplex::shmem_size(dim) +
+                ScratchViewSizeT::shmem_size(dim);
             Kokkos::parallel_for(
                 "multiNCQubitOpFunctor",
                 TeamPolicy(two2N, Kokkos::AUTO, dim)
@@ -756,10 +758,9 @@ class StateVectorKokkos final
                         "`controlled_values`.");
         if (controlled_wires.empty()) {
             return applyGenerator(opName, wires, inverse);
-        } else {
-            return applyControlledGenerator(opName, controlled_wires,
-                                            controlled_values, wires, inverse);
         }
+        return applyControlledGenerator(opName, controlled_wires,
+                                        controlled_values, wires, inverse);
     }
 
     /**

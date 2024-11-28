@@ -188,8 +188,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "Apply operation via the gate matrix")
         .def("collapse", &StateVectorT::collapse,
              "Collapse the statevector onto the 0 or 1 branch of a given wire.")
-        .def("normalize", &StateVectorT::normalize,
-             "Normalize the statevector to norm 1.")
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
              "Apply controlled operation");
 }

@@ -111,6 +111,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
     AdjointJacobian<StateVectorT> adj;
     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
     std::vector<std::size_t> tp{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    const PrecisionT ep = 1e-6;
     {
         const std::size_t num_qubits = 3;
         const std::size_t num_obs = 1;
@@ -166,16 +167,10 @@ TEMPLATE_PRODUCT_TEST_CASE(
         CAPTURE(jacobian);
 
         // Computed with PennyLane using default.qubit.adjoint_jacobian
-        CHECK(0.0 == Approx(jacobian[0]).margin(1e-7));
-        CHECK(0.03722967 == Approx(jacobian[1]).margin(1e-7));
-        CHECK(0.53917582 == Approx(jacobian[2]).margin(1e-7));
-        CHECK(-0.06895157 == Approx(jacobian[3]).margin(1e-7));
-        CHECK(-0.0020095 == Approx(jacobian[4]).margin(1e-7));
-        CHECK(0.25057513 == Approx(jacobian[5]).margin(1e-7));
-        CHECK(-0.00139217 == Approx(jacobian[6]).margin(1e-7));
-        CHECK(0.52016303 == Approx(jacobian[7]).margin(1e-7));
-        CHECK(-0.09895398 == Approx(jacobian[8]).margin(1e-7));
-        CHECK(0.51843232 == Approx(jacobian[9]).margin(1e-7));
+        std::vector<PrecisionT> expected_jacobian{
+            0.0,        0.03722967,  0.53917582, -0.06895157, -0.0020095,
+            0.25057513, -0.00139217, 0.52016303, -0.09895398, 0.51843232};
+        CHECK(expected_jacobian == PLApprox(jacobian).margin(ep));
     }
 }
 

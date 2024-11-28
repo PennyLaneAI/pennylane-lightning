@@ -58,7 +58,7 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
-        std::size_t two2N =
+        const std::size_t two2N =
             exp2(num_qubits - wires.size() - controlled_wires.size());
         dim = exp2(wires.size());
         const auto &[parity_, rev_wires_] =
@@ -375,7 +375,7 @@ void applyNCPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                        const std::vector<std::size_t> &wires,
                        bool inverse = false,
                        const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const Kokkos::complex<PrecisionT> shift =
         (inverse) ? Kokkos::exp(-Kokkos::complex<PrecisionT>(0, angle))
                   : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle));
@@ -412,7 +412,7 @@ void applyNCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<bool> &controlled_values,
                const std::vector<std::size_t> &wires, bool inverse = false,
                const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT c = std::cos(angle * static_cast<PrecisionT>(0.5));
     const PrecisionT s = (inverse)
                              ? std::sin(angle * static_cast<PrecisionT>(0.5))
@@ -452,7 +452,7 @@ void applyNCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<bool> &controlled_values,
                const std::vector<std::size_t> &wires, bool inverse = false,
                const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT c = std::cos(angle * static_cast<PrecisionT>(0.5));
     const PrecisionT s = (inverse)
                              ? -std::sin(angle * static_cast<PrecisionT>(0.5))
@@ -492,7 +492,7 @@ void applyNCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<bool> &controlled_values,
                const std::vector<std::size_t> &wires, bool inverse = false,
                const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cos_angle = std::cos(angle * static_cast<PrecisionT>(0.5));
     const PrecisionT sin_angle = std::sin(angle * static_cast<PrecisionT>(0.5));
     const Kokkos::complex<PrecisionT> shift_0{
@@ -800,7 +800,7 @@ void applyControlledPhaseShift(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                                const std::vector<std::size_t> &wires,
                                bool inverse = false,
                                const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const Kokkos::complex<PrecisionT> s =
         (inverse) ? Kokkos::exp(-Kokkos::complex<PrecisionT>(0, angle))
                   : Kokkos::exp(Kokkos::complex<PrecisionT>(0, angle));
@@ -821,7 +821,7 @@ void applyCRX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               std::size_t num_qubits, const std::vector<std::size_t> &wires,
               bool inverse = false,
               const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT c = std::cos(angle / 2);
     const PrecisionT js =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -846,7 +846,7 @@ void applyCRY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               std::size_t num_qubits, const std::vector<std::size_t> &wires,
               bool inverse = false,
               const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT c = std::cos(angle / 2);
     const PrecisionT s = (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
     auto core_function = KOKKOS_LAMBDA(
@@ -868,7 +868,7 @@ void applyCRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               std::size_t num_qubits, const std::vector<std::size_t> &wires,
               bool inverse = false,
               const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cos_angle = std::cos(angle * static_cast<PrecisionT>(0.5));
     const PrecisionT sin_angle = std::sin(angle * static_cast<PrecisionT>(0.5));
     const Kokkos::complex<PrecisionT> shift_0{
@@ -921,7 +921,7 @@ void applyNCIsingXX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, bool inverse = false,
                     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -967,7 +967,7 @@ void applyNCIsingXY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     const std::vector<std::size_t> &wires, bool inverse = false,
                     const std::vector<PrecisionT> &params = {}) {
 
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1011,7 +1011,7 @@ void applyNCIsingYY(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, bool inverse = false,
                     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1057,7 +1057,7 @@ void applyNCIsingZZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, bool inverse = false,
                     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const Kokkos::complex<PrecisionT> shift_0 = Kokkos::complex<PrecisionT>{
         std::cos(angle / 2),
         (inverse) ? std::sin(angle / 2) : -std::sin(angle / 2)};
@@ -1097,7 +1097,7 @@ void applyNCSingleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                              const std::vector<std::size_t> &wires,
                              bool inverse = false,
                              const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1139,7 +1139,7 @@ void applyNCSingleExcitationMinus(
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false,
     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1182,7 +1182,7 @@ void applyNCSingleExcitationPlus(
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false,
     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1516,7 +1516,7 @@ void applyNCDoubleExcitation(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                              const std::vector<std::size_t> &wires,
                              bool inverse = false,
                              const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj =
         (inverse) ? -std::sin(angle / 2) : std::sin(angle / 2);
@@ -1573,7 +1573,7 @@ void applyNCDoubleExcitationMinus(
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false,
     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
     const Kokkos::complex<PrecisionT> e =
@@ -1631,7 +1631,7 @@ void applyNCDoubleExcitationPlus(
     const std::vector<bool> &controlled_values,
     const std::vector<std::size_t> &wires, bool inverse = false,
     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const PrecisionT cr = std::cos(angle / 2);
     const PrecisionT sj = inverse ? -std::sin(angle / 2) : std::sin(angle / 2);
     const Kokkos::complex<PrecisionT> e =
@@ -1688,7 +1688,7 @@ void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                   std::size_t num_qubits, const std::vector<std::size_t> &wires,
                   bool inverse = false,
                   const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const Kokkos::complex<PrecisionT> shift_0 = Kokkos::complex<PrecisionT>{
         std::cos(angle / 2),
         (inverse) ? std::sin(angle / 2) : -std::sin(angle / 2)};
@@ -1714,7 +1714,7 @@ void applyNCMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, bool inverse = false,
                     const std::vector<PrecisionT> &params = {}) {
-    const PrecisionT &angle = params[0];
+    const PrecisionT angle = params[0];
     const Kokkos::complex<PrecisionT> shift_0 = Kokkos::complex<PrecisionT>{
         std::cos(angle / 2),
         (inverse) ? std::sin(angle / 2) : -std::sin(angle / 2)};
