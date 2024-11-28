@@ -1717,7 +1717,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
     std::mt19937_64 re{1337};
     const std::size_t num_qubits = 3;
     const bool inverse = GENERATE(false, true);
-    const std::size_t index = GENERATE(0, 1, 2);
     /* The `phase` array contains the diagonal entries of the controlled-phase
        operator. It can be created in Python using the following command
 
@@ -1731,21 +1730,6 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyControlledGlobalPhase",
     const std::vector<ComplexT> phase = {{1.0, 0.}, {1.0, 0.}, {0.0, 1.},
                                          {0.0, 1.}, {1.0, 0.}, {1.0, 0.},
                                          {1.0, 0.}, {1.0, 0.}};
-
-    SECTION("C(GlobalPhase)") {
-        auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);
-        StateVectorKokkos<TestType> kokkos_sv(
-            reinterpret_cast<ComplexT *>(sv_data.data()), sv_data.size());
-        kokkos_sv.applyOperation("C(GlobalPhase)", {index}, inverse, {}, phase);
-        auto result_sv = kokkos_sv.getDataVector();
-        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
-            ComplexT tmp = (inverse) ? conj(phase[j]) : phase[j];
-            tmp *= ComplexT(sv_data[j]);
-            CHECK((real(result_sv[j])) == Approx(real(tmp)));
-            CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
-        }
-    }
-
     SECTION("Controlled GlobalPhase") {
         const TestType pi2 = TestType(M_PI_2);
         auto sv_data = createRandomStateVectorData<TestType>(re, num_qubits);

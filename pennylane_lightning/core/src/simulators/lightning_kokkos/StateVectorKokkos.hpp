@@ -339,12 +339,6 @@ class StateVectorKokkos final
                         const std::vector<ComplexT> &gate_matrix = {}) {
         if (opName == "Identity") {
             // No op
-        } else if (opName == "C(GlobalPhase)") {
-            if (inverse) {
-                applyControlledGlobalPhase<true>(gate_matrix);
-            } else {
-                applyControlledGlobalPhase<false>(gate_matrix);
-            }
         } else if (array_contains(gate_names, std::string_view{opName})) {
             const std::size_t num_qubits = this->getNumQubits();
             const GateOperation gateop =
@@ -375,18 +369,6 @@ class StateVectorKokkos final
         Pennylane::LightningKokkos::Functors::applyPauliRot<KokkosExecSpace,
                                                             PrecisionT>(
             getView(), this->getNumQubits(), wires, inverse, params[0], word);
-    }
-
-    template <bool inverse = false>
-    void applyControlledGlobalPhase(const std::vector<ComplexT> &diagonal) {
-        auto diagonal_ = vector2view(diagonal);
-        auto two2N = BaseType::getLength();
-        auto dataview = getView();
-        Kokkos::parallel_for(
-            two2N, KOKKOS_LAMBDA(std::size_t i) {
-                dataview(i) *=
-                    (inverse) ? Kokkos::conj(diagonal_(i)) : diagonal_(i);
-            });
     }
 
     /**
