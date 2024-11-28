@@ -659,8 +659,6 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
 
-    // ============= Controlled operations =============
-
     SECTION("Controlled Pauli-X and RX") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
 
