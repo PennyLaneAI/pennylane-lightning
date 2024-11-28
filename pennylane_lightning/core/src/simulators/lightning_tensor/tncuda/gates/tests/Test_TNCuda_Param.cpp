@@ -328,7 +328,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wire indices") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -344,7 +343,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wire indices") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -421,7 +419,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
     std::vector<cp_t> expected_results = std::vector<cp_t>(0b1 << num_qubits);
 
     SECTION("Apply adjacent wires") {
-
         tn_state->applyOperation("CRot", {0, 1}, inverse, angles);
 
         expected_results[0] = cp_t{1, 0};
@@ -434,7 +431,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperation("CRot", {0, 2}, inverse, angles);
 
         expected_results[0] = cp_t{1, 0};
@@ -570,7 +566,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -587,7 +582,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("IsingXY", {0, 2}, inverse, angles);
@@ -638,7 +632,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -654,7 +647,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -705,7 +697,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -721,7 +712,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -797,7 +787,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard"}, {{0}, {1}},
@@ -814,7 +803,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard"}, {{0}, {1}},
                                   {false, false});
 
@@ -870,7 +858,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -886,7 +873,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -937,7 +923,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -954,7 +939,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("CRZ", {0, 2}, inverse, angles);
@@ -1006,7 +990,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -1022,7 +1005,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -1080,7 +1062,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -1098,7 +1079,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -1158,7 +1138,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -1176,7 +1155,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("SingleExcitationPlus", {0, 2}, inverse,
@@ -1267,7 +1245,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
         }
 
         SECTION("Apply adjacent wires") {
-
             tn_state->reset();
 
             tn_state->applyOperations(
@@ -1354,7 +1331,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
         }
 
         SECTION("Apply adjacent wires") {
-
             tn_state->reset();
 
             tn_state->applyOperations(
@@ -1442,7 +1418,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
         }
 
         SECTION("Apply adjacent wires") {
-
             tn_state->reset();
 
             tn_state->applyOperations(

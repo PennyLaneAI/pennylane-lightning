@@ -126,7 +126,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliX", "[TNCuda_Nonparam]",
 
 TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::applyOperation-gatematrix",
                         "[TNCuda_Nonparam]", TestTNBackends) {
-
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
 
@@ -319,7 +318,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CNOT", "[TNCuda_Nonparam]",
         createTNState<TNDevice_T>(num_qubits, maxExtent);
 
     SECTION("Apply adjacent wire indices") {
-
         tn_state->applyOperations({"Hadamard", "CNOT", "CNOT"},
                                   {{0}, {0, 1}, {1, 2}},
                                   {false, inverse, inverse});
@@ -335,7 +333,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CNOT", "[TNCuda_Nonparam]",
     }
 
     SECTION("Apply non-adjacent wire indices") {
-
         tn_state->applyOperation("Hadamard", {0}, false);
         tn_state->applyOperation("CNOT", {0, 2}, inverse);
 
@@ -636,7 +633,6 @@ TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::Toffoli", "[TNCuda_Nonparam]",
 TEMPLATE_LIST_TEST_CASE("TNCuda::applyControlledOperation non-param "
                         "one-qubit with controls",
                         "[TNCuda]", TestTNBackends) {
-
     using TNDevice_T = TestType;
     using ComplexT = typename TNDevice_T::ComplexT;
     using PrecisionT = typename TNDevice_T::PrecisionT;

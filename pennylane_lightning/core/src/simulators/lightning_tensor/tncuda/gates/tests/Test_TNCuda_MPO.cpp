@@ -98,7 +98,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     mpo_cswap[2][13] = mpo_cswap[2][0];
 
     SECTION("Target at wire indices") {
-
         MPSTNCuda<PrecisionT> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -118,7 +117,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     }
 
     SECTION("Target at non-adjacent wire indices") {
-
         MPSTNCuda<PrecisionT> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -138,7 +136,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     }
 
     SECTION("Tests for 3-wire MPOs") {
-
         MPSTNCuda<PrecisionT> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         mps_state_mpo.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -188,7 +185,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     mpo_single_excitation[1][15] = {-0.707106781, 0.0};
 
     SECTION("Target at wire indices") {
-
         MPSTNCuda<Precision_T> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -209,7 +205,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     }
 
     SECTION("Target at non-adjacent wire indices") {
-
         MPSTNCuda<Precision_T> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
