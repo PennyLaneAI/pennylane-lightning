@@ -1836,6 +1836,7 @@ TEST_CASE("Probs with a seeded device", "[Measures]") {
     auto circuit = [](LGPUSimulator &sim, DataView<double, 1> &view,
                       std::mt19937 &gen) {
         sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(1000);
         // state-vector with #qubits = n
         constexpr std::size_t n = 4;
         std::vector<intptr_t> Qs;
@@ -1859,11 +1860,6 @@ TEST_CASE("Probs with a seeded device", "[Measures]") {
         }
 
         for (std::size_t i = 0; i < probs[0].size(); i++) {
-            if (i == 4 || i == 6 || i == 12 || i == 14) {
-                CHECK(probs[0][i] == Approx(0.25).margin(1e-5));
-            } else {
-                CHECK(probs[0][i] == Approx(0.).margin(1e-5));
-            }
             CHECK((probs[0][i] == probs[1][i]));
         }
     }
