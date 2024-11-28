@@ -98,8 +98,8 @@ Projector              = {}
 
 [measurement_processes]
 
-ExpectationMP          = { conditions = [ "analytic", "finiteshots" ] }
-VarianceMP             = { conditions = [ "analytic", "finiteshots" ] }
+ExpectationMP          = { conditions = [ "finiteshots" ] }
+VarianceMP             = { conditions = [ "finiteshots" ] }
 ProbabilityMP          = { conditions = [ "finiteshots" ] }
 StateMP                = { conditions = [ "analytic" ] }
 SampleMP               = { conditions = [ "finiteshots" ] }
