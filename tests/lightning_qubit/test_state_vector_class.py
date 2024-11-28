@@ -109,8 +109,6 @@ def test_apply_state_vector_with_lightning_handle(tol):
     [
         (qml.BasisState, [0, 0, 1, 0], [1, 0]),
         (qml.BasisState, [0, 0, 0, 1], [1, 1]),
-        (qml.QubitStateVector, [0, 0, 1, 0], [0, 0, 1, 0]),
-        (qml.QubitStateVector, [0, 0, 0, 1], [0, 0, 0, 1]),
         (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
         (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
         (
@@ -140,7 +138,6 @@ def test_apply_operation_state_preparation(tol, operation, expected_output, par)
     "operation,par",
     [
         (qml.BasisState, [1, 0]),
-        (qml.QubitStateVector, [0, 0, 1, 0]),
         (
             qml.StatePrep,
             [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],

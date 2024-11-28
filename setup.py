@@ -162,7 +162,7 @@ class CMakeBuild(build_ext):
             destination = os.path.join(os.getcwd(), f"build_{backend}")
             shutil.copy(source, destination)
     
-        if backend in ("lightning_kokkos"):
+        if backend in ("lightning_kokkos", "lightning_qubit"):
             if platform.system() in ["Linux", "Darwin"]:
                 shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
                 source = os.path.join(f"{extdir}", f"lib{backend}_catalyst{shared_lib_ext}")

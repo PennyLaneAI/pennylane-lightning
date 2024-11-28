@@ -42,7 +42,7 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
+from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
@@ -78,7 +78,6 @@ from ._state_vector import LightningGPUStateVector
 _operations = frozenset(
     {
         "Identity",
-        "QubitStateVector",
         "QubitUnitary",
         "ControlledQubitUnitary",
         "MultiControlledX",
@@ -151,6 +150,26 @@ _operations = frozenset(
         "DoubleExcitation",
         "DoubleExcitationPlus",
         "DoubleExcitationMinus",
+        "Adjoint(MultiRZ)",
+        "Adjoint(GlobalPhase)",
+        "Adjoint(PhaseShift)",
+        "Adjoint(ControlledPhaseShift)",
+        "Adjoint(RX)",
+        "Adjoint(RY)",
+        "Adjoint(RZ)",
+        "Adjoint(CRX)",
+        "Adjoint(CRY)",
+        "Adjoint(CRZ)",
+        "Adjoint(IsingXX)",
+        "Adjoint(IsingYY)",
+        "Adjoint(IsingZZ)",
+        "Adjoint(IsingXY)",
+        "Adjoint(SingleExcitation)",
+        "Adjoint(SingleExcitationPlus)",
+        "Adjoint(SingleExcitationMinus)",
+        "Adjoint(DoubleExcitation)",
+        "Adjoint(DoubleExcitationPlus)",
+        "Adjoint(DoubleExcitationMinus)",
         "QubitCarry",
         "QubitSum",
         "OrbitalRotation",
@@ -161,30 +180,6 @@ _operations = frozenset(
 )
 # End the set of supported operations.
 
-# TODO: _unsupported_adjoint_ops is a temporary solution to avoid adjoint differentiation for N-controlled gates.
-# This will be removed once the  N-controlled genenerators are implemented.
-_unsupported_adjoint_ops = frozenset(
-    {
-        "C(PhaseShift)",
-        "C(RX)",
-        "C(RY)",
-        "C(RZ)",
-        "C(Rot)",
-        "C(IsingXX)",
-        "C(IsingXY)",
-        "C(IsingYY)",
-        "C(IsingZZ)",
-        "C(SingleExcitation)",
-        "C(SingleExcitationMinus)",
-        "C(SingleExcitationPlus)",
-        "C(DoubleExcitation)",
-        "C(DoubleExcitationMinus)",
-        "C(DoubleExcitationPlus)",
-        "C(MultiRZ)",
-        "C(GlobalPhase)",
-    }
-)
-
 # The set of supported observables.
 _observables = frozenset(
     {
@@ -193,7 +188,6 @@ _observables = frozenset(
         "PauliZ",
         "Hadamard",
         "SparseHamiltonian",
-        "Hamiltonian",
         "LinearCombination",
         "Hermitian",
         "Identity",
@@ -228,11 +222,6 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, qml.Projector):
         return False
 
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
-
     if isinstance(obs, SProd):
         return adjoint_observables(obs.base)
 
@@ -263,14 +252,6 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    # FIXME: This is a temporary solution to avoid adjoint differentiation for N-controlled gates.
-    if op.name in _unsupported_adjoint_ops:
-        # "C(SingleExcitation)" is not supported by the lightning.gpu after decomposition.
-        if op.name == "C(SingleExcitation)":
-            raise qml.DeviceError(
-                "C(SingleExcitation) is not supported by adjoint differentiation."
-            )
-        return False
     return adjoint_ops(op) and not isinstance(op, qml.PauliRot)
 
 
