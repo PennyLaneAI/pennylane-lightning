@@ -75,7 +75,6 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "git config --global --add safe.directory /io && \
             cd /io && \
-            echo $(which python3.10) && \
             python3.10 -m pip install ninja --verbose && \
             ln -s /opt/python/cp310-cp310/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
@@ -160,7 +159,7 @@ jobs:
 
           CIBW_BEFORE_TEST: |
             python -m pip install -r requirements-tests.txt
-            # FIXME: install PennyLane/latest to fix pennylane.devices.capabilities requirements
+            # FIXME(v0.40.0): install PennyLane/latest to fix pennylane.devices.capabilities requirements
             python -m pip install git+https://github.com/PennyLaneAI/pennylane.git@master
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
@@ -171,7 +170,10 @@ jobs:
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
             python -c "import pennylane as qml; print(qml.about())"
-            # pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+            python -c "import pennylane as qml; dev = qml.device(\"lightning.qubit\", wires=3); print(dev); dev2 = qml.device(\"lightning.kokkos\", wires=5); print(dev2)"
+            which pl-device-test
+            ls
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
 
         run: python3.10 -m cibuildwheel --output-dir wheelhouse
 
