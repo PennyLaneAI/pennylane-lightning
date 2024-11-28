@@ -76,7 +76,7 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "git config --global --add safe.directory /io && \
             cd /io && \
-            python3.10 -m pip install ninja --verbose && \
+            python3.10 -m pip install ninja==1.11.1.1 --verbose && \
             ln -s /opt/python/cp310-cp310/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
@@ -149,7 +149,7 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            python -m pip install ninja cmake~=3.27.0
+            python -m pip install ninja==1.11.1.1 cmake~=3.27.0
 
           CIBW_ENVIRONMENT: |
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
