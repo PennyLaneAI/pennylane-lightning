@@ -27,7 +27,7 @@ from pennylane.wires import Wires
 if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the tensornet class.", allow_module_level=True)
 else:
-    from pennylane_lightning.lightning_tensor._tensornet import (
+    from pennylane_lightning.lightning_tensor._tensornet_base import (
         LightningTensorNet,
         decompose_dense,
         gate_matrix_decompose,
@@ -37,36 +37,39 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
+@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
 @pytest.mark.parametrize("num_wires", range(1, 4))
 @pytest.mark.parametrize("bondDims", [1, 2, 3, 4])
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
 @pytest.mark.parametrize("device_name", ["lightning.tensor"])
-def test_device_name_and_init(num_wires, bondDims, dtype, device_name):
+def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backend):
     """Test the class initialization and returned properties."""
     if num_wires < 2:
         with pytest.raises(ValueError, match="Number of wires must be greater than 1."):
-            LightningTensorNet(num_wires, bondDims, c_dtype=dtype, device_name=device_name)
+            LightningTensorNet(num_wires, max_bond_dim=bondDims, c_dtype=dtype, device_name=device_name, method=tn_backend)
         return
     else:
-        tensornet = LightningTensorNet(num_wires, bondDims, c_dtype=dtype, device_name=device_name)
+        tensornet = LightningTensorNet(num_wires, max_bond_dim=bondDims, c_dtype=dtype, device_name=device_name, method=tn_backend)
         assert tensornet.dtype == dtype
         assert tensornet.device_name == device_name
         assert tensornet.num_wires == num_wires
+        assert tensornet._method == tn_backend
 
 
 def test_wrong_device_name():
     """Test an invalid device name"""
     with pytest.raises(qml.DeviceError, match="The device name"):
-        LightningTensorNet(3, 5, device_name="thunder.tensor")
+        LightningTensorNet(3, max_bond_dim=5, device_name="thunder.tensor")
 
 
-def test_errors_basis_state():
+@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+def test_errors_basis_state(tn_backend):
     """Test that errors are raised when applying a BasisState operation."""
     with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
-        tensornet = LightningTensorNet(3, 5)
+        tensornet = LightningTensorNet(3,max_bond_dim=5, method=tn_backend)
         tensornet.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
     with pytest.raises(ValueError, match="State must be of length 1;"):
-        tensornet = LightningTensorNet(3, 5)
+        tensornet = LightningTensorNet(3, max_bond_dim=5, method=tn_backend)
         tensornet.apply_operations([qml.BasisState(np.array([0, 1]), wires=[0])])
 
 

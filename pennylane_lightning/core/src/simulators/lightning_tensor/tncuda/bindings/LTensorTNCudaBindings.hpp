@@ -29,6 +29,7 @@
 #include "DevicePool.hpp"
 #include "Error.hpp"
 #include "MPSTNCuda.hpp"
+#include "ExaTNCuda.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
@@ -47,6 +48,8 @@ namespace py = pybind11;
 namespace Pennylane::LightningTensor::TNCuda {
 using TensorNetBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
+using AllTensorNetBackends =
+    Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, ExaTNCuda<float>, ExaTNCuda<double>, void>;
 
 /**
  * @brief Register controlled matrix kernel.
@@ -114,75 +117,116 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
 
-    pyclass
-        .def(py::init<const std::size_t,
-                      const std::size_t>()) // num_qubits, max_bond_dim
-        .def(py::init<const std::size_t, const std::size_t,
-                      DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
-        .def(
-            "getState",
-            [](TensorNet &tensor_network, np_arr_c &state) {
-                py::buffer_info numpyArrayInfo = state.request();
-                auto *data_ptr =
-                    static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+    if constexpr (std::is_same_v<TensorNet, MPSTNCuda<double>> ||
+                  std::is_same_v<TensorNet, MPSTNCuda<float>>)
+    {
+        pyclass
+            .def(py::init<const std::size_t,
+                          const std::size_t>()) // num_qubits, max_bond_dim
+            .def(py::init<const std::size_t, const std::size_t,
+                          DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
+            .def(
+                "getState",
+                [](TensorNet &tensor_network, np_arr_c &state)
+                {
+                    py::buffer_info numpyArrayInfo = state.request();
+                    auto *data_ptr =
+                        static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
 
-                tensor_network.getData(data_ptr, state.size());
-            },
-            "Copy StateVector data into a Numpy array.")
-        .def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
-             "Apply controlled operation")
-        .def(
-            "updateMPSSitesData",
-            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
-                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
-                    py::buffer_info numpyArrayInfo = tensors[idx].request();
-                    auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
-                        numpyArrayInfo.ptr);
-                    tensor_network.updateSiteData(idx, data_ptr,
-                                                  tensors[idx].size());
-                }
-            },
-            "Pass MPS site data to the C++ backend.")
-        .def(
-            "setBasisState",
-            [](TensorNet &tensor_network,
-               std::vector<std::size_t> &basisState) {
-                tensor_network.setBasisState(basisState);
-            },
-            "Create Basis State on GPU.")
-        .def(
-            "applyMPOOperation",
-            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
-               std::vector<std::size_t> &wires, const std::size_t MPOBondDims) {
-                using ComplexT = typename TensorNet::ComplexT;
-                std::vector<std::vector<ComplexT>> conv_tensors;
-                for (const auto &tensor : tensors) {
-                    py::buffer_info numpyArrayInfo = tensor.request();
-                    auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-                    conv_tensors.push_back(
-                        std::vector<ComplexT>{m_ptr, m_ptr + tensor.size()});
-                }
-                tensor_network.applyMPOOperation(conv_tensors, wires,
-                                                 MPOBondDims);
-            },
-            "Apply MPO to the tensor network graph.")
-        .def(
-            "appendMPSFinalState",
-            [](TensorNet &tensor_network, double cutoff,
-               std::string cutoff_mode) {
-                tensor_network.append_mps_final_state(cutoff, cutoff_mode);
-            },
-            "Get the final state.")
-        .def("reset", &TensorNet::reset, "Reset the statevector.");
+                    tensor_network.getData(data_ptr, state.size());
+                },
+                "Copy StateVector data into a Numpy array.")
+            .def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
+                 "Apply controlled operation")
+            .def(
+                "updateMPSSitesData",
+                [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors)
+                {
+                    for (std::size_t idx = 0; idx < tensors.size(); idx++)
+                    {
+                        py::buffer_info numpyArrayInfo = tensors[idx].request();
+                        auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
+                            numpyArrayInfo.ptr);
+                        tensor_network.updateSiteData(idx, data_ptr,
+                                                      tensors[idx].size());
+                    }
+                },
+                "Pass MPS site data to the C++ backend.")
+            .def(
+                "setBasisState",
+                [](TensorNet &tensor_network,
+                   std::vector<std::size_t> &basisState)
+                {
+                    tensor_network.setBasisState(basisState);
+                },
+                "Create Basis State on GPU.")
+            .def(
+                "applyMPOOperation",
+                [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
+                   std::vector<std::size_t> &wires, const std::size_t MPOBondDims)
+                {
+                    using ComplexT = typename TensorNet::ComplexT;
+                    std::vector<std::vector<ComplexT>> conv_tensors;
+                    for (const auto &tensor : tensors)
+                    {
+                        py::buffer_info numpyArrayInfo = tensor.request();
+                        auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+                        conv_tensors.push_back(
+                            std::vector<ComplexT>{m_ptr, m_ptr + tensor.size()});
+                    }
+                    tensor_network.applyMPOOperation(conv_tensors, wires,
+                                                     MPOBondDims);
+                },
+                "Apply MPO to the tensor network graph.")
+            .def(
+                "appendMPSFinalState",
+                [](TensorNet &tensor_network, double cutoff,
+                   std::string cutoff_mode)
+                {
+                    tensor_network.append_mps_final_state(cutoff, cutoff_mode);
+                },
+                "Get the final state.")
+            .def("reset", &TensorNet::reset, "Reset the statevector.");
+    }
+    if constexpr (std::is_same_v<TensorNet, ExaTNCuda<double>> ||
+                  std::is_same_v<TensorNet, ExaTNCuda<float>>)
+    {
+        pyclass
+            .def(py::init<const std::size_t>()) // num_qubits
+            .def(py::init<const std::size_t,
+                          DevTag<int>>()) // num_qubits, dev-tag
+            .def(
+                "getState",
+                [](TensorNet &tensor_network, np_arr_c &state)
+                {
+                    py::buffer_info numpyArrayInfo = state.request();
+                    auto *data_ptr =
+                        static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+
+                    tensor_network.getData(data_ptr, state.size());
+                },
+                "Copy StateVector data into a Numpy array.")
+            .def("applyControlledMatrix", &applyControlledMatrix<TensorNet>,
+                 "Apply controlled operation")
+            .def(
+                "setBasisState",
+                [](TensorNet &tensor_network,
+                   std::vector<std::size_t> &basisState)
+                {
+                    tensor_network.setBasisState(basisState);
+                },
+                "Create Basis State on GPU.")
+            .def("reset", &TensorNet::reset, "Reset the statevector.");
+    }
 }
+    /**
+     * @brief Provide backend information.
+     */
+    auto getBackendInfo() -> py::dict
+    {
+        using namespace py::literals;
 
-/**
- * @brief Provide backend information.
- */
-auto getBackendInfo() -> py::dict {
-    using namespace py::literals;
-
-    return py::dict("NAME"_a = "lightning.tensor");
+        return py::dict("NAME"_a = "lightning.tensor");
 }
 
 /**

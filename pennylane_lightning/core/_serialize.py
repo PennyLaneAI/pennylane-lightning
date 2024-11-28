@@ -85,7 +85,7 @@ class QuantumScriptSerializer:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
-        elif device_name == "lightning.tensor":
+        elif device_name in ["lightning.tensor_mps","lightning.tensor_exatn"]:
             try:
                 import pennylane_lightning.lightning_tensor_ops as lightning_ops
             except ImportError as exception:
@@ -95,23 +95,43 @@ class QuantumScriptSerializer:
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
-        if device_name == "lightning.tensor":
-            self.tensornetwork_c64 = lightning_ops.TensorNetC64
-            self.tensornetwork_c128 = lightning_ops.TensorNetC128
+        if device_name == "lightning.tensor_mps":
+            self.tensornetwork_c64    = lightning_ops.mpsTensorNetC64
+            self.tensornetwork_c128   = lightning_ops.mpsTensorNetC128
+            self.named_obs_c64        = lightning_ops.observables.mpsNamedObsC64
+            self.named_obs_c128       = lightning_ops.observables.mpsNamedObsC128
+            self.hermitian_obs_c64    = lightning_ops.observables.mpsHermitianObsC64
+            self.hermitian_obs_c128   = lightning_ops.observables.mpsHermitianObsC128
+            self.tensor_prod_obs_c64  = lightning_ops.observables.mpsTensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.mpsTensorProdObsC128
+            self.hamiltonian_c64      = lightning_ops.observables.mpsHamiltonianC64
+            self.hamiltonian_c128     = lightning_ops.observables.mpsHamiltonianC128
+        elif device_name == "lightning.tensor_exatn":
+            self.tensornetwork_c64    = lightning_ops.exatnTensorNetC64
+            self.tensornetwork_c128   = lightning_ops.exatnTensorNetC128
+            self.named_obs_c64        = lightning_ops.observables.exatnNamedObsC64
+            self.named_obs_c128       = lightning_ops.observables.exatnNamedObsC128
+            self.hermitian_obs_c64    = lightning_ops.observables.exatnHermitianObsC64
+            self.hermitian_obs_c128   = lightning_ops.observables.exatnHermitianObsC128
+            self.tensor_prod_obs_c64  = lightning_ops.observables.exatnTensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.exatnTensorProdObsC128
+            self.hamiltonian_c64      = lightning_ops.observables.exatnHamiltonianC64
+            self.hamiltonian_c128     = lightning_ops.observables.exatnHamiltonianC128
+
         else:
             self.statevector_c64 = lightning_ops.StateVectorC64
             self.statevector_c128 = lightning_ops.StateVectorC128
 
-        self.named_obs_c64 = lightning_ops.observables.NamedObsC64
-        self.named_obs_c128 = lightning_ops.observables.NamedObsC128
-        self.hermitian_obs_c64 = lightning_ops.observables.HermitianObsC64
-        self.hermitian_obs_c128 = lightning_ops.observables.HermitianObsC128
-        self.tensor_prod_obs_c64 = lightning_ops.observables.TensorProdObsC64
-        self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
-        self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
-        self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
+            self.named_obs_c64 = lightning_ops.observables.NamedObsC64
+            self.named_obs_c128 = lightning_ops.observables.NamedObsC128
+            self.hermitian_obs_c64 = lightning_ops.observables.HermitianObsC64
+            self.hermitian_obs_c128 = lightning_ops.observables.HermitianObsC128
+            self.tensor_prod_obs_c64 = lightning_ops.observables.TensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
+            self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
+            self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
-        if device_name != "lightning.tensor":
+        if device_name not in ["lightning.tensor_mps","lightning.tensor_exatn"] :
             self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
             self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 

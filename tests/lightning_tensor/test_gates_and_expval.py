@@ -25,8 +25,8 @@ if device_name != "lightning.tensor":
     pytest.skip("Exclusive tests for Lightning Tensor device. Skipping.", allow_module_level=True)
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
-    from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
-    from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
+    from pennylane_lightning.lightning_tensor._measurements_base import LightningTensorMeasurements
+    from pennylane_lightning.lightning_tensor._tensornet_base import LightningTensorNet
 
 if not LightningDevice._new_API:  # pylint: disable=protected-access
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
@@ -137,7 +137,7 @@ def circuit_ansatz(params, wires):
     qml.QFT(wires=[wires[0]])
     qml.ECR(wires=[wires[1], wires[3]])
 
-
+@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
 @pytest.mark.parametrize(
     "returns",
     [
@@ -175,12 +175,12 @@ def circuit_ansatz(params, wires):
         (qml.ops.prod(qml.X(0), qml.Y(1))),
     ],
 )
-def test_integration_for_all_supported_gates(returns):
+def test_integration_for_all_supported_gates(returns, tn_backend):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
     num_wires = 8
     dev_default = qml.device("default.qubit", wires=range(num_wires))
-    dev_ltensor = LightningTensor(wires=range(num_wires), max_bond_dim=128, c_dtype=np.complex128)
+    dev_ltensor = LightningTensor(wires=range(num_wires), max_bond_dim=128, c_dtype=np.complex128, method=tn_backend)
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
@@ -202,6 +202,7 @@ def test_integration_for_all_supported_gates(returns):
     assert np.allclose(j_ltensor, j_default, rtol=1e-6)
 
 
+@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
 class TestSparseHExpval:
     """Test sparseH expectation values"""
 
@@ -216,9 +217,9 @@ class TestSparseHExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170, 0.039469480514526367],
         ],
     )
-    def test_sparse_Pauli_words(self, cases, qubit_device):
+    def test_sparse_Pauli_words(self, cases, qubit_device, tn_backend):
         """Test expval of some simple sparse Hamiltonian"""
-        dev = qubit_device(wires=4)
+        dev = qml.device(device_name, wires=4,  method=tn_backend)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit_expval():
@@ -233,23 +234,23 @@ class TestSparseHExpval:
         with pytest.raises(DeviceError):
             circuit_expval()
 
-    def test_expval_sparseH_not_supported(self):
+    def test_expval_sparseH_not_supported(self, tn_backend):
         """Test that expval of SparseH is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, max_bond_dim=10,  method=tn_backend)
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
             m.expval(q.queue[0])
 
-    def test_var_sparseH_not_supported(self):
+    def test_var_sparseH_not_supported(self, tn_backend):
         """Test that var of SparseH is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.var(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, max_bond_dim=10,  method=tn_backend)
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
@@ -258,12 +259,12 @@ class TestSparseHExpval:
         ):
             m.var(q.queue[0])
 
-    def test_expval_hermitian_not_supported(self):
+    def test_expval_hermitian_not_supported(self,tn_backend):
         """Test that expval of Hermitian with 1+ wires is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, max_bond_dim=10,  method=tn_backend)
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
@@ -271,12 +272,12 @@ class TestSparseHExpval:
         ):
             m.expval(q.queue[0])
 
-    def test_var_hermitian_not_supported(self):
+    def test_var_hermitian_not_supported(self , tn_backend):
         """Test that var of Hermitian with 1+ wires is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.var(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, max_bond_dim=10,  method=tn_backend)
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
@@ -285,11 +286,12 @@ class TestSparseHExpval:
             m.var(q.queue[0])
 
 
-class QChem:
+@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+class TestQChem:
     """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
 
     @pytest.mark.parametrize("diff_approach", ["parameter-shift", "finite-diff"])
-    def test_integration_H2_Hamiltonian(self, diff_approach):
+    def test_integration_H2_Hamiltonian(self, diff_approach, tn_backend):
         symbols = ["H", "H"]
 
         geometry = np.array(
@@ -314,7 +316,7 @@ class QChem:
         hf_state = qml.qchem.hf_state(mol.n_electrons, qubits)
 
         # Choose different batching supports here
-        dev = qml.device(device_name, wires=qubits)
+        dev = qml.device(device_name, wires=qubits,  method=tn_backend)
         dev_comp = qml.device("default.qubit", wires=qubits)
 
         @qml.qnode(dev, diff_method=diff_approach)
