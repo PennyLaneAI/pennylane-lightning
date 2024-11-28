@@ -54,6 +54,9 @@
 
 ### Bug fixes
 
+* Fix Lightning Kokkos editable mode path.
+  [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
+
 * Fix the missing `ninja` in Linux AARCH64 wheels recipe.
   [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
 
