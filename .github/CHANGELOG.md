@@ -25,7 +25,7 @@
 
 * Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
   [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
-  
+
 * Reverse Lightning Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
 
@@ -55,6 +55,9 @@
   [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 ### Bug fixes
+
+* Fix Lightning Kokkos editable mode path.
+  [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
 
 * Fix version switch condition the GPU workflow tests for LGPU and LKokkos.
   [(#1006)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1006)
