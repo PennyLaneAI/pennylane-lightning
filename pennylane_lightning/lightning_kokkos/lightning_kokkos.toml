@@ -100,7 +100,7 @@ Projector              = {}
 
 ExpectationMP          = { conditions = [ "analytic", "finiteshots" ] }
 VarianceMP             = { conditions = [ "analytic", "finiteshots" ] }
-ProbabilityMP          = { conditions = [ "analytic", "finiteshots" ] }
+ProbabilityMP          = { conditions = [ "finiteshots" ] }
 StateMP                = { conditions = [ "analytic" ] }
 SampleMP               = { conditions = [ "finiteshots" ] }
 CountsMP               = { conditions = [ "finiteshots" ] }
