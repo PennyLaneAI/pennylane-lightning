@@ -1825,7 +1825,6 @@ TEST_CASE("Sample with a seeded device", "[Measures]") {
 }
 
 TEST_CASE("Probs with a seeded device", "[Measures]") {
-    std::size_t shots = 100;
     std::array<std::unique_ptr<LGPUSimulator>, 2> sims;
     std::vector<std::vector<double>> probs(2, std::vector<double>(16));
 
@@ -1834,8 +1833,8 @@ TEST_CASE("Probs with a seeded device", "[Measures]") {
 
     std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
 
-    auto circuit = [shots](LGPUSimulator &sim, DataView<double, 1> &view,
-                           std::mt19937 &gen) {
+    auto circuit = [](LGPUSimulator &sim, DataView<double, 1> &view,
+                      std::mt19937 &gen) {
         sim.SetDevicePRNG(&gen);
         // state-vector with #qubits = n
         constexpr std::size_t n = 4;
