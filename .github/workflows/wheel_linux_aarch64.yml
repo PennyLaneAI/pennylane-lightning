@@ -138,7 +138,7 @@ jobs:
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python3.10 scripts/configure_pyproject_toml.py
 
-      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-qemu-action@v3.2.0
         name: Set up QEMU
 
       - name: Build wheels
@@ -152,15 +152,9 @@ jobs:
           # Python build settings
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
-            dnf clean all -y
-            dnf install gcc-toolset-13 dnf-utils -y
-            source /opt/rh/gcc-toolset-13/enable -y
             python -m pip install ninja==1.11.1.1 cmake~=3.27.0
 
           CIBW_ENVIRONMENT: |
-            PATH=/opt/rh/gcc-toolset-13/root/usr/bin:$PATH \
-            LD_LIBRARY_PATH=/opt/rh/gcc-toolset-13/root/usr/lib64:/opt/rh/gcc-toolset-13/root/usr/lib:/opt/rh/gcc-toolset-13/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-13/root/usr/lib/dyninst:$LD_LIBRARY_PATH \
-            PKG_CONFIG_PATH=/opt/rh/gcc-toolset-13/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH \
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
