@@ -137,7 +137,8 @@ inline auto reverseWires(const std::size_t num_qubits,
     std::vector<std::size_t> all_wires;
     all_wires.reserve(nw_tot);
     all_wires.insert(all_wires.begin(), wires.begin(), wires.end());
-    all_wires.insert(all_wires.begin() + n_wires, controlled_wires.begin(), controlled_wires.end());
+    all_wires.insert(all_wires.begin() + n_wires, controlled_wires.begin(),
+                     controlled_wires.end());
 
     std::vector<std::size_t> rev_wires_(nw_tot, (num_qubits - 1));
     std::transform(rev_wires_.begin(), rev_wires_.end(), all_wires.rbegin(),
