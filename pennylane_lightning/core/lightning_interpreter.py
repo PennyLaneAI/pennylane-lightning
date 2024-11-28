@@ -15,15 +15,18 @@
 This module contains a class for executing plxpr using default qubit tools.
 """
 from copy import copy
-from functools import partial
-from typing import Optional
 
 import jax
 from pennylane.capture import disable, enable
 from pennylane.capture.base_interpreter import PlxprInterpreter
-from pennylane.capture.primitives import (adjoint_transform_prim, cond_prim,
-                                          ctrl_transform_prim, for_loop_prim,
-                                          measure_prim, while_loop_prim)
+from pennylane.capture.primitives import (
+    adjoint_transform_prim,
+    cond_prim,
+    ctrl_transform_prim,
+    for_loop_prim,
+    measure_prim,
+    while_loop_prim,
+)
 from pennylane.measurements import MidMeasureMP, Shots
 
 from ._measurements_base import LightningBaseMeasurements
@@ -67,7 +70,12 @@ class LightningInterpreter(PlxprInterpreter):
         ([1.0, 0.8775825618903728, 0.5403023058681395], [1.0, 0.8775825618903728, 0.5403023058681395])
     """
 
-    def __init__(self, state: LightningBaseStateVector, measurement_class: type[LightningBaseMeasurements], shots: Shots = Shots(None)):
+    def __init__(
+        self,
+        state: LightningBaseStateVector,
+        measurement_class: type[LightningBaseMeasurements],
+        shots: Shots = Shots(None),
+    ):
         self.state = state
         self.measurement_class = measurement_class
         self.shots = shots

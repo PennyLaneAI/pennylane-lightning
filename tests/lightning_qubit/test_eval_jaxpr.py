@@ -42,7 +42,7 @@ def test_no_partitioned_shots():
     """Test that an error is raised if partitioned shots is requested."""
 
     dev = qml.device(device_name, wires=1, shots=(100, 100, 100))
-    jaxpr = jax.make_jaxpr(lambda x: x+1)(0.1)
+    jaxpr = jax.make_jaxpr(lambda x: x + 1)(0.1)
 
     with pytest.raises(NotImplementedError, match="does not support partitioned shots"):
         dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.0)
@@ -69,6 +69,7 @@ def test_capture_remains_enabled_if_measurement_error():
 
     def g():
         return qml.sample(wires=0)  # sampling with analytic execution.
+
     jaxpr = jax.make_jaxpr(g)()
 
     with pytest.raises(NotImplementedError):
@@ -84,6 +85,7 @@ def test_mcm_reset():
         qml.X(0)
         qml.measure(0, reset=True)
         return qml.state()
+
     dev = qml.device(device_name, wires=1)
     jaxpr = jax.make_jaxpr(f)()
 

@@ -232,7 +232,7 @@ class LightningBase(Device):
         jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
         return res, jac
 
-    def vjp(  # pylint: disable=too-many-arguments
+    def vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
@@ -264,7 +264,7 @@ class LightningBase(Device):
             circuit, cotangents
         )
 
-    def simulate_and_vjp(  # pylint: disable=too-many-arguments
+    def simulate_and_vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
@@ -458,5 +458,7 @@ class LightningBase(Device):
         # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
 
-        interpreter = LightningInterpreter(self._statevector, self.LightningMeasurements, shots=self.shots)
+        interpreter = LightningInterpreter(
+            self._statevector, self.LightningMeasurements, shots=self.shots
+        )
         return interpreter.eval(jaxpr, consts, *args)
