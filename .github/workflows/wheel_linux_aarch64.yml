@@ -23,6 +23,9 @@ concurrency:
   group: wheel_linux_aarch64-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  GCC_VERSION: 13
+
 jobs:
   set_wheel_build_matrix:
     if: |
@@ -149,9 +152,13 @@ jobs:
           CIBW_BEFORE_BUILD: |
             cat /etc/yum.conf | sed "s/\[main\]/\[main\]\ntimeout=5/g" > /etc/yum.conf
             python -m pip install ninja cmake~=3.27.0
+            dnf clean all -y
+            dnf install gcc-toolset-13 -y
+            source /opt/rh/gcc-toolset-13/enable -y
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH"
 
           CIBW_ENVIRONMENT: |
-            CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
+            PATH="/opt/rh/gcc-toolset-13/root/usr/bin:$PATH" CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
 
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
 
