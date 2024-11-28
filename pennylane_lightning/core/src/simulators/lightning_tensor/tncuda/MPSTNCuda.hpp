@@ -100,7 +100,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      *
      * @return std::vector<std::size_t>
      */
-    [[nodiscard]] auto getBondDims(const size_t idx) const -> std::size_t {
+    [[nodiscard]] auto getBondDims(std::size_t idx) const -> std::size_t {
         return BaseType::bondDims_[idx];
     }
 
