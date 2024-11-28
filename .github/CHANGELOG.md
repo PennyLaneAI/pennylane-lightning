@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add Exact Tensor Network C++ backend to `lightning.tensor`.
+  [(#977)](https://github.com/PennyLaneAI/pennylane-lightning/pull/977)
+
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
 
