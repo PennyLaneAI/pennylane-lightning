@@ -14,7 +14,8 @@ on:
   #    - ready_for_review
   push:
     branches:
-      - master
+      #- master
+      - aarch64_wheel_LK_check
   release:
     types: [published]
   workflow_dispatch:
