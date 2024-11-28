@@ -7,11 +7,11 @@ name: Wheel::Linux::ARM
 
 on:
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
-      - ready_for_review
+  #  types:
+  #    - opened
+  #    - reopened
+  #    - synchronize
+  #    - ready_for_review
   push:
     branches:
       - master
