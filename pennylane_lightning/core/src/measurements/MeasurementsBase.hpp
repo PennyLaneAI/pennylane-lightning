@@ -17,7 +17,6 @@
  */
 #pragma once
 
-#include <cstddef>
 #include <optional>
 #include <random>
 #include <string>
