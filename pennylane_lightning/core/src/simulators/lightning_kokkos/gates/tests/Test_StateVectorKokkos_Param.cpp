@@ -1417,4 +1417,30 @@ TEMPLATE_TEST_CASE("Test NQubit gate versus expectation value",
 
         CHECK(expected == Approx(res));
     }
+
+    SECTION("4Qubit - const matrix") {
+        auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create(
+            {X0, Y1, Z2, X3});
+        auto expected = m.expval(*ob);
+
+        const std::vector<ComplexT> matrix{
+            z, z, z,  z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, -j, z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  -j, z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, j,  z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, j,  z, z, z, z, z,  z,  z, z, z, z, j,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, z,  j,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, z,  z, z, z, z, -j, z,  z, z, z, z, z,  z, z, z, z, z, z,
+            z, z, -j, z, z, z, z, z,  z,  z, z, z, z, z,  z, z};
+        kokkos_sv.applyMatrix(matrix, {0, 1, 2, 3});
+        auto res = getRealOfComplexInnerProduct(copy_sv.getView(),
+                                                kokkos_sv.getView());
+
+        CHECK(expected == Approx(res));
+    }
 }

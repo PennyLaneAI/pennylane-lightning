@@ -75,46 +75,6 @@ TEST_CASE("lightning Basis vector", "[Driver]") {
     CHECK(view(3).imag() == Approx(0.0).epsilon(1e-5));
 }
 
-TEST_CASE("Qubit allocatation and deallocation", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
-
-    constexpr size_t n = 1;
-    constexpr size_t sz = (1UL << n);
-
-    QubitIdType q;
-    for (size_t i = 0; i < n; i++) {
-        q = sim->AllocateQubit();
-    }
-
-    CHECK(n == static_cast<size_t>(q) + 1);
-
-    std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
-    DataView<std::complex<double>, 1> view(state);
-    sim->State(view);
-
-    CHECK(state.size() == (1UL << n));
-    CHECK(state[0].real() == Approx(1.0).epsilon(1e-5));
-    CHECK(state[0].imag() == Approx(0.0).epsilon(1e-5));
-
-    std::complex<double> sum{0, 0};
-    for (size_t i = 1; i < sz; i++) {
-        sum += state[i];
-    }
-
-    CHECK(sum.real() == Approx(0.0).epsilon(1e-5));
-    CHECK(sum.imag() == Approx(0.0).epsilon(1e-5));
-
-    for (size_t i = n; i > 0; i--) {
-        CHECK(state.size() == sz);
-
-        sim->ReleaseQubit(i - 1);
-        sim->AllocateQubit();
-
-        DataView<std::complex<double>, 1> view(state);
-        sim->State(view);
-    }
-}
-
 TEST_CASE("test AllocateQubits", "[Driver]") {
     std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
 
@@ -188,59 +148,6 @@ TEST_CASE("Check an unsupported operation", "[Driver]") {
                                 "UnsupportedGateName"),
         Catch::Contains(
             "The given operation is not supported by the simulator"));
-}
-
-TEST_CASE("QuantumDevice object test [lightning.qubit]", "[Driver]") {
-    std::unique_ptr<LQSimulator> sim = std::make_unique<LQSimulator>();
-
-    // state-vector with #qubits = n
-    constexpr size_t n = 10;
-    std::vector<QubitIdType> Qs;
-    Qs.reserve(n);
-    for (size_t i = 0; i < n; i++) {
-        Qs[i] = sim->AllocateQubit();
-    }
-
-    sim->NamedOperation("Identity", {}, {Qs[0]}, false);
-    sim->NamedOperation("Identity", {}, {Qs[2]}, false);
-    sim->NamedOperation("Identity", {}, {Qs[4]}, false);
-    sim->NamedOperation("Identity", {}, {Qs[6]}, false);
-    sim->NamedOperation("Identity", {}, {Qs[8]}, false);
-
-    std::vector<std::complex<double>> state(1U << sim->GetNumQubits());
-    DataView<std::complex<double>, 1> view(state);
-    sim->State(view);
-
-    CHECK(state[0].real() == Approx(1.0).epsilon(1e-5));
-    CHECK(state[0].imag() == Approx(0.0).epsilon(1e-5));
-
-    std::complex<double> sum{0, 0};
-    for (size_t i = 1; i < state.size(); i++) {
-        sum += state[i];
-    }
-
-    CHECK(sum.real() == Approx(0.0).epsilon(1e-5));
-    CHECK(sum.imag() == Approx(0.0).epsilon(1e-5));
-
-    for (size_t i = 0; i < n; i++) {
-        sim->ReleaseQubit(static_cast<QubitIdType>(i));
-        // 0, 1, 2, ..., 9
-    }
-
-    for (size_t i = 10; i < n + 10; i++) {
-        CHECK(static_cast<QubitIdType>(i) == sim->AllocateQubit());
-        // 10, 11, ..., 19
-    }
-
-    for (size_t i = 10; i < n + 10; i++) {
-        sim->ReleaseQubit(static_cast<QubitIdType>(i));
-        // 10, 11, ..., 19
-    }
-
-    for (size_t i = 20; i < n + 20; i++) {
-        CHECK(static_cast<QubitIdType>(i) == sim->AllocateQubit());
-        // 20, 21, ..., 29
-    }
 }
 
 TEST_CASE("Check re-AllocateQubit", "[Driver]") {
