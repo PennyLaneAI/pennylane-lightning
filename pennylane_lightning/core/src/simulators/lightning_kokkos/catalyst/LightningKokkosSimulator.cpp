@@ -268,8 +268,7 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    // LK does not use the measure's internal PRNG, so we only copy the seed
-    m.copySeed(this->generateSeed());
+    m.setSeed(this->generateSeed());
 
     return device_shots ? m.expval(*obs, device_shots, {}) : m.expval(*obs);
 }
@@ -288,8 +287,7 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    // LK does not use the measure's internal PRNG, so we only copy the seed
-    m.copySeed(this->generateSeed());
+    m.setSeed(this->generateSeed());
 
     return device_shots ? m.var(*obs, device_shots) : m.var(*obs);
 }
@@ -321,8 +319,7 @@ void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    // LK does not use the measure's internal PRNG, so we only copy the seed
-    m.copySeed(this->generateSeed());
+    m.setSeed(this->generateSeed());
 
     auto &&dv_probs = device_shots ? m.probs(device_shots) : m.probs();
 
@@ -344,8 +341,7 @@ void LightningKokkosSimulator::PartialProbs(
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    // LK does not use the measure's internal PRNG, so we only copy the seed
-    m.copySeed(this->generateSeed());
+    m.setSeed(this->generateSeed());
 
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
@@ -361,8 +357,7 @@ std::vector<size_t> LightningKokkosSimulator::GenerateSamples(size_t shots) {
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    // LK does not use the measure's internal PRNG, so we only copy the seed
-    m.copySeed(this->generateSeed());
+    m.setSeed(this->generateSeed());
 
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling

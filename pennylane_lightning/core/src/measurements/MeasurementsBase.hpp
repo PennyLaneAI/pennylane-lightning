@@ -94,14 +94,6 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
     }
 
     /**
-     * @brief Copy a seed for the internal random generator
-     *
-     */
-    void copySeed(const std::optional<std::size_t> &deviceSeed = std::nullopt) {
-        this->_deviceseed = deviceSeed;
-    }
-
-    /**
      * @brief Calculate the expectation value for a general Observable.
      *
      * @param obs Observable.
@@ -306,7 +298,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             sv.updateData(data_storage.data(), data_storage.size());
             obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
             Derived measure(sv);
-            measure.copySeed(this->_deviceseed);
+            measure.setSeed(this->_deviceseed);
             if (num_shots > std::size_t{0}) {
                 return measure.probs(obs_wires, num_shots);
             }
@@ -315,7 +307,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             StateVectorT sv(_statevector);
             obs.applyInPlaceShots(sv, eigenvalues, obs_wires);
             Derived measure(sv);
-            measure.copySeed(this->_deviceseed);
+            measure.setSeed(this->_deviceseed);
             if (num_shots > std::size_t{0}) {
                 return measure.probs(obs_wires, num_shots);
             }
@@ -408,7 +400,7 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
      */
     auto sample(const std::size_t &num_shots) -> std::vector<std::size_t> {
         Derived measure(_statevector);
-        measure.copySeed(this->_deviceseed);
+        measure.setSeed(this->_deviceseed);
         return measure.generate_samples(num_shots);
     }
 
@@ -500,13 +492,13 @@ template <class StateVectorT, class Derived> class MeasurementsBase {
             StateVectorT sv(data_storage.data(), data_storage.size());
             obs.applyInPlaceShots(sv, eigenValues, obs_wires);
             Derived measure(sv);
-            measure.copySeed(this->_deviceseed);
+            measure.setSeed(this->_deviceseed);
             samples = measure.generate_samples(num_shots);
         } else {
             StateVectorT sv(_statevector);
             obs.applyInPlaceShots(sv, eigenValues, obs_wires);
             Derived measure(sv);
-            measure.copySeed(this->_deviceseed);
+            measure.setSeed(this->_deviceseed);
             samples = measure.generate_samples(num_shots);
         }
 
