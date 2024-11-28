@@ -14,12 +14,10 @@
 """
 This module tests the eval_jaxpr method.
 """
-from this import d
-import pytest
-
 import pennylane as qml
-
-from conftest import device_name, LightningDevice
+import pytest
+from conftest import LightningDevice, device_name
+from this import d
 
 jax = pytest.importorskip("jax")
 
@@ -385,7 +383,6 @@ class TestClassicalComponents:
         """Test that each branch in a condition can contain consts."""
 
         def circuit(x, y, z, condition0, condition1):
-
             def true_fn():
                 qml.RX(x, 0)
 
