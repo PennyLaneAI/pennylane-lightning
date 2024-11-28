@@ -46,10 +46,22 @@ def test_device_name_and_init(num_wires, bondDims, dtype, device_name, tn_backen
     """Test the class initialization and returned properties."""
     if num_wires < 2:
         with pytest.raises(ValueError, match="Number of wires must be greater than 1."):
-            LightningTensorNet(num_wires, max_bond_dim=bondDims, c_dtype=dtype, device_name=device_name, method=tn_backend)
+            LightningTensorNet(
+                num_wires,
+                max_bond_dim=bondDims,
+                c_dtype=dtype,
+                device_name=device_name,
+                method=tn_backend,
+            )
         return
     else:
-        tensornet = LightningTensorNet(num_wires, max_bond_dim=bondDims, c_dtype=dtype, device_name=device_name, method=tn_backend)
+        tensornet = LightningTensorNet(
+            num_wires,
+            max_bond_dim=bondDims,
+            c_dtype=dtype,
+            device_name=device_name,
+            method=tn_backend,
+        )
         assert tensornet.dtype == dtype
         assert tensornet.device_name == device_name
         assert tensornet.num_wires == num_wires
@@ -66,7 +78,7 @@ def test_wrong_device_name():
 def test_errors_basis_state(tn_backend):
     """Test that errors are raised when applying a BasisState operation."""
     with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
-        tensornet = LightningTensorNet(3,max_bond_dim=5, method=tn_backend)
+        tensornet = LightningTensorNet(3, max_bond_dim=5, method=tn_backend)
         tensornet.apply_operations([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
     with pytest.raises(ValueError, match="State must be of length 1;"):
         tensornet = LightningTensorNet(3, max_bond_dim=5, method=tn_backend)

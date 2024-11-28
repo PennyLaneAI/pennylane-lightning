@@ -76,11 +76,10 @@ class LightningTensorMeasurementsMPS:
         Returns: the Measurements class
         """
         # return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
-        if self._method == 'mps':
+        if self._method == "mps":
             return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
-        if self._method == 'exatn':
+        if self._method == "exatn":
             return exatnMeasurementsC64 if self.dtype == np.complex64 else exatnMeasurementsC128
-
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
@@ -120,7 +119,7 @@ class LightningTensorMeasurementsMPS:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name+'_'+self._method, self.dtype == np.complex64
+            self._tensornet.device_name + "_" + self._method, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
 
@@ -166,7 +165,7 @@ class LightningTensorMeasurementsMPS:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name+'_'+self._method, self.dtype == np.complex64
+            self._tensornet.device_name + "_" + self._method, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.var(ob_serialized)
 

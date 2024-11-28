@@ -42,8 +42,8 @@ from pennylane.wires import Wires
 
 from pennylane_lightning.core._serialize import QuantumScriptSerializer
 
-from ._measurements_MPS import LightningTensorMeasurementsMPS
 from ._measurements_ExactTN import LightningTensorMeasurementsExactTN
+from ._measurements_MPS import LightningTensorMeasurementsMPS
 
 
 class LightningTensorMeasurements:
@@ -62,17 +62,14 @@ class LightningTensorMeasurements:
         self._tensornet = tensor_network
         self._method = tensor_network._method
         self._dtype = tensor_network.dtype
-        
-        
+
         # self._measurement_lightning = self._measurement_dtype()(tensor_network.tensornet)
         if self._method == "mps":
             LTensorMeasurement = LightningTensorMeasurementsMPS(self._tensornet)
         if self._method == "exatn":
             LTensorMeasurement = LightningTensorMeasurementsExactTN(self._tensornet)
-            
+
         self._LTensorMeasurement = LTensorMeasurement
 
     def __getattr__(self, name):
         return getattr(self._LTensorMeasurement, name)
-
-  

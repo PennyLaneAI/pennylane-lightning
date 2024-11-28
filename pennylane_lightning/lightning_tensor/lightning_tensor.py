@@ -35,8 +35,8 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._tensornet_base import LightningTensorNet
 from ._measurements_base import LightningTensorMeasurements
+from ._tensornet_base import LightningTensorNet
 
 try:
     # pylint: disable=import-error, unused-import
@@ -64,7 +64,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 _backends = frozenset({"cutensornet"})
 # The set of supported backends.
 
-_methods = frozenset({"mps","exatn"})
+_methods = frozenset({"mps", "exatn"})
 # The set of supported methods.
 
 _operations = frozenset(
@@ -352,7 +352,7 @@ class LightningTensor(Device):
         return self._c_dtype
 
     def _tensornet(self):
-        """Return the tensornet object."""        
+        """Return the tensornet object."""
         return LightningTensorNet(
             self._num_wires,
             self._method,
@@ -360,7 +360,7 @@ class LightningTensor(Device):
             self._max_bond_dim,
             self._cutoff,
             self._cutoff_mode,
-        )            
+        )
 
     dtype = c_dtype
 

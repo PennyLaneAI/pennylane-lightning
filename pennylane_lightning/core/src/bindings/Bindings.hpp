@@ -775,9 +775,7 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
  * @tparam TensorNetT Tensor network type.
  * @param m Pybind11 module.
  */
-template <class TensorNetT>
-void lightningTensorClassBindings(py::module_ &m)
-{
+template <class TensorNetT> void lightningTensorClassBindings(py::module_ &m) {
     using PrecisionT =
         typename TensorNetT::PrecisionT; // TensorNet's precision.
     // Enable module name to be based on size of complex datatype
@@ -815,10 +813,8 @@ void lightningTensorClassBindings(py::module_ &m)
 }
 
 template <typename TypeList>
-void registerLightningTensorClassBindings(py::module_ &m)
-{
-    if constexpr (!std::is_same_v<TypeList, void>)
-    {
+void registerLightningTensorClassBindings(py::module_ &m) {
+    if constexpr (!std::is_same_v<TypeList, void>) {
         using TensorNetT = typename TypeList::Type;
         lightningTensorClassBindings<TensorNetT>(m);
         registerLightningTensorClassBindings<typename TypeList::Next>(m);
@@ -834,7 +830,8 @@ void registerLightningTensorClassBindings(py::module_ &m)
  * @param m Pybind module
  */
 template <class LightningBackendT>
-void registerBackendAgnosticObservablesTensor(py::module_ &m, std::string name) {
+void registerBackendAgnosticObservablesTensor(py::module_ &m,
+                                              std::string name) {
     using PrecisionT =
         typename LightningBackendT::PrecisionT; // LightningBackendT's's
                                                 // precision.
@@ -857,11 +854,11 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m, std::string name) 
 
     std::string class_name;
 
-    class_name = std::string(name) + "Observable"  + "C" + bitsize;
+    class_name = std::string(name) + "Observable" + "C" + bitsize;
     py::class_<ObservableT, std::shared_ptr<ObservableT>>(m, class_name.c_str(),
                                                           py::module_local());
 
-    class_name = std::string(name) +"NamedObs" +  "C" + bitsize;
+    class_name = std::string(name) + "NamedObs" + "C" + bitsize;
     py::class_<NamedObsT, std::shared_ptr<NamedObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init(
@@ -906,7 +903,7 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m, std::string name) 
             },
             "Compare two observables");
 
-    class_name = std::string(name) + "TensorProdObs"  + "C" + bitsize;
+    class_name = std::string(name) + "TensorProdObs" + "C" + bitsize;
     py::class_<TensorProdObsT, std::shared_ptr<TensorProdObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init([](const std::vector<std::shared_ptr<ObservableT>> &obs) {

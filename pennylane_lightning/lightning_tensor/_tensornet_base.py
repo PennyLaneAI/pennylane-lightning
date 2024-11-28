@@ -15,16 +15,17 @@
 Class implementation for tensornet manipulation.
 """
 
-# pylint: disable=import-error, no-name-in-module, ungrouped-imports
-from ._tensornet_MPS import LightningTensorNetMPS
-from ._tensornet_ExactTN import LightningTensorNetExactTN
-
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
+
+
+# pylint: disable=import-error, no-name-in-module, ungrouped-imports
+from ._tensornet_MPS import LightningTensorNetMPS
+from ._tensornet_ExactTN import LightningTensorNetExactTN
 
 
 def svd_split(Mat, site_shape, max_bond_dim):
@@ -161,25 +162,27 @@ class LightningTensorNet:
         self._wires = Wires(range(num_wires))
 
         self._device_name = device_name
-        
+
         print("FDX == ", self._method)
-        
+
         if self._method == "mps":
             LTensor = LightningTensorNetMPS(
-            self._num_wires,
-            self._method,
-            self._c_dtype,
-            self._max_bond_dim,
-            self._cutoff,
-            self._cutoff_mode,)
+                self._num_wires,
+                self._method,
+                self._c_dtype,
+                self._max_bond_dim,
+                self._cutoff,
+                self._cutoff_mode,
+            )
         if self._method == "exatn":
             LTensor = LightningTensorNetExactTN(
-            self._num_wires,
-            self._method,
-            self._c_dtype,
-            self._cutoff,
-            self._cutoff_mode,)
-            
+                self._num_wires,
+                self._method,
+                self._c_dtype,
+                self._cutoff,
+                self._cutoff_mode,
+            )
+
         self._LTensor = LTensor
 
     def __getattr__(self, name):

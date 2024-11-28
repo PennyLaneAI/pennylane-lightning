@@ -29,13 +29,15 @@ else:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
 
+
 @pytest.mark.parametrize("backend", ["fake_backend"])
 def test_invalid_backend(backend):
     """Test an invalid backend."""
     with pytest.raises(ValueError, match=f"Unsupported backend: {backend}"):
         LightningTensor(wires=1, backend=backend)
 
-@pytest.mark.parametrize( "method", ["fake_method"])
+
+@pytest.mark.parametrize("method", ["fake_method"])
 def test_invalid_method(method):
     """Test an invalid method."""
     with pytest.raises(ValueError, match=f"Unsupported method: {method}"):
@@ -44,7 +46,7 @@ def test_invalid_method(method):
 
 @pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
 class TestTensorNet:
-    
+
     @pytest.mark.parametrize("num_wires", [3, 4, 5])
     @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
     def test_device_name_and_init(self, num_wires, c_dtype, tn_backend):
@@ -56,45 +58,37 @@ class TestTensorNet:
         assert dev.wires == wires
         assert dev.num_wires == num_wires
 
-
-    def test_device_available_as_plugin(self,  tn_backend):
+    def test_device_available_as_plugin(self, tn_backend):
         """Test that the device can be instantiated using ``qml.device``."""
         dev = qml.device("lightning.tensor", wires=2, method=tn_backend)
         assert isinstance(dev, LightningTensor)
         assert dev.backend == "cutensornet"
-        assert dev.method in ["mps","exatn"]
-
+        assert dev.method in ["mps", "exatn"]
 
     def test_invalid_arg(self, tn_backend):
         """Test that an error is raised if an invalid argument is provided."""
         with pytest.raises(TypeError):
             LightningTensor(wires=2, kwargs="invalid_arg", method=tn_backend)
 
-
-
     def test_invalid_bonddims(self, tn_backend):
         """Test that an error is raised if bond dimensions are less than 1."""
         with pytest.raises(ValueError):
             LightningTensor(wires=5, max_bond_dim=0, method=tn_backend)
 
-
     def test_invalid_wires_none(self, tn_backend):
         """Test that an error is raised if wires are none."""
         with pytest.raises(ValueError):
-            LightningTensor(wires=None,  method=tn_backend)
-
+            LightningTensor(wires=None, method=tn_backend)
 
     def test_invalid_cutoff_mode(self, tn_backend):
         """Test that an error is raised if an invalid cutoff mode is provided."""
         with pytest.raises(ValueError):
             LightningTensor(wires=2, cutoff_mode="invalid_mode", method=tn_backend)
 
-
     def test_support_derivatives(self, tn_backend):
         """Test that the device does not support derivatives yet."""
         dev = LightningTensor(wires=2, method=tn_backend)
         assert not dev.supports_derivatives()
-
 
     def test_compute_derivatives(self, tn_backend):
         """Test that an error is raised if the `compute_derivatives` method is called."""
@@ -105,7 +99,6 @@ class TestTensorNet:
         ):
             dev.compute_derivatives(circuits=None)
 
-
     def test_execute_and_compute_derivatives(self, tn_backend):
         """Test that an error is raised if `execute_and_compute_derivative` method is called."""
         dev = LightningTensor(wires=2, method=tn_backend)
@@ -115,12 +108,10 @@ class TestTensorNet:
         ):
             dev.execute_and_compute_derivatives(circuits=None)
 
-
     def test_supports_vjp(self, tn_backend):
         """Test that the device does not support VJP yet."""
         dev = LightningTensor(wires=2, method=tn_backend)
         assert not dev.supports_vjp()
-
 
     def test_compute_vjp(self, tn_backend):
         """Test that an error is raised if `compute_vjp` method is called."""
@@ -130,7 +121,6 @@ class TestTensorNet:
             match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",
         ):
             dev.compute_vjp(circuits=None, cotangents=None)
-
 
     def test_execute_and_compute_vjp(self, tn_backend):
         """Test that an error is raised if `execute_and_compute_vjp` method is called."""
