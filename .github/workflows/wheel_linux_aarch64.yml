@@ -78,7 +78,7 @@ jobs:
             -i ${{ matrix.container_img }} \
             bash -c "git config --global --add safe.directory /io && \
             cd /io && \
-            python3.10 -m pip install ninja --verbose && \
+            python3.10 -m pip install ninja && \
             ln -s /opt/python/cp310-cp310/bin/ninja /usr/bin/ninja && \
             cmake -BBuild . -DCMAKE_INSTALL_PREFIX=/install \
                             -DKokkos_ENABLE_COMPLEX_ALIGN=OFF \
@@ -171,7 +171,7 @@ jobs:
             if ${{ matrix.pl_backend == 'lightning_kokkos'}}
             then
               PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-              python -m pip install . -vv
+              SKIP_COMPILATION=True python -m pip install . -vv
             fi
 
           CIBW_TEST_COMMAND: |
