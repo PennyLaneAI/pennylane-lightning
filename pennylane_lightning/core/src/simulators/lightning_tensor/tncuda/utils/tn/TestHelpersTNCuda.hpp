@@ -40,7 +40,6 @@ template <> struct MPSToName<MPSTNCuda<double>> {
 template <typename TNDevice_T>
 std::unique_ptr<TNDevice_T> createTNState(std::size_t num_qubits,
                                           std::size_t maxExtent) {
-
     DevTag<int> dev_tag{0, 0};
     if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
                   std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
@@ -55,7 +54,6 @@ std::unique_ptr<TNDevice_T> createTNState(std::size_t num_qubits,
 template <typename TNDevice_T>
 inline void
 tn_state_append_mps_final_state(std::unique_ptr<TNDevice_T> const &tn_state) {
-
     if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
                   std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
         PL_ABORT_IF(
