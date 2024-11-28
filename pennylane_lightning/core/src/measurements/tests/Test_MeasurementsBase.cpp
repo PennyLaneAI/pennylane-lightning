@@ -1257,7 +1257,7 @@ void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
         // This object attaches to the statevector allowing several
         // measurements.
         Measurements<StateVectorT> Measurer(statevector);
-        Measurer.setDeviceSeed(seed);
+        Measurer.setSeed(seed);
 
         std::vector<PrecisionT> expected_probabilities = {
             0.67078706, 0.03062806, 0.0870997,  0.00397696,

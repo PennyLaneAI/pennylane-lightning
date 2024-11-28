@@ -234,10 +234,9 @@ class Measurements final
             data_type = CUDA_C_32F;
         }
 
-        this->activateDeviceSeed();
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
-            rand_nums[n] = dis(this->rng);
+            rand_nums[n] = dis(this->_rng);
         }
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;

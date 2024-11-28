@@ -488,7 +488,7 @@ class Measurements final
         std::uniform_real_distribution<PrecisionT> distrib(0.0, 1.0);
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;
-        this->activateDeviceSeed();
+        this->setRandomSeed();
 
         TransitionKernelType transition_kernel = TransitionKernelType::Local;
         if (kernelname == "NonZeroRandom") {
@@ -502,13 +502,13 @@ class Measurements final
 
         // Burn In
         for (std::size_t i = 0; i < num_burnin; i++) {
-            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
+            idx = metropolis_step(this->_statevector, tk, this->_rng, distrib,
                                   idx); // Burn-in.
         }
 
         // Sample
         for (std::size_t i = 0; i < num_samples; i++) {
-            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
+            idx = metropolis_step(this->_statevector, tk, this->_rng, distrib,
                                   idx);
 
             if (cache.contains(idx)) {
@@ -596,8 +596,7 @@ class Measurements final
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        this->activateDeviceSeed();
-        DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
+        DiscreteRandomVariable<PrecisionT> drv{this->_rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -
         // j)` `s` being the "slow" row index and `j` being the "fast" column

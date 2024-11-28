@@ -675,8 +675,8 @@ class Measurements final
 
         // Sampling using Random_XorShift64_Pool
         auto rand_pool =
-            this->DeviceSeed.has_value()
-                ? Kokkos::Random_XorShift64_Pool<>(this->DeviceSeed.value())
+            this->_deviceseed.has_value()
+                ? Kokkos::Random_XorShift64_Pool<>(this->_deviceseed.value())
                 : Kokkos::Random_XorShift64_Pool<>(
                       std::chrono::high_resolution_clock::now()
                           .time_since_epoch()

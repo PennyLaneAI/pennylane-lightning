@@ -256,7 +256,7 @@ auto LightningGPUSimulator::Expval(ObsIdType obsKey) -> double {
     Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.setDeviceSeedFromPRNG(this->gen);
+    m.setSeed(this->generateSeed());
 
     return device_shots ? m.expval(*obs, device_shots, {}) : m.expval(*obs);
 }
@@ -275,7 +275,7 @@ auto LightningGPUSimulator::Var(ObsIdType obsKey) -> double {
     Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.setDeviceSeedFromPRNG(this->gen);
+    m.setSeed(this->generateSeed());
 
     return device_shots ? m.var(*obs, device_shots) : m.var(*obs);
 }
@@ -299,7 +299,7 @@ void LightningGPUSimulator::Probs(DataView<double, 1> &probs) {
     Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.setDeviceSeedFromPRNG(this->gen);
+    m.setSeed(this->generateSeed());
 
     auto &&dv_probs = device_shots ? m.probs(device_shots) : m.probs();
 
@@ -321,7 +321,7 @@ void LightningGPUSimulator::PartialProbs(
     Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.setDeviceSeedFromPRNG(this->gen);
+    m.setSeed(this->generateSeed());
 
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
@@ -337,7 +337,7 @@ std::vector<size_t> LightningGPUSimulator::GenerateSamples(size_t shots) {
     Pennylane::LightningGPU::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
-    m.setDeviceSeedFromPRNG(this->gen);
+    m.setSeed(this->generateSeed());
 
     return m.generate_samples(shots);
 }
