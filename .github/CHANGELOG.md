@@ -15,6 +15,9 @@
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
+* Add C++ unit tests for Exact Tensor Network backends.
+  [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
+
 ### Documentation
 
 ### Bug fixes
