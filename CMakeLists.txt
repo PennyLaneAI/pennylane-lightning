@@ -144,13 +144,12 @@ if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
-    # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
-    # BUILD_RPATH only works for the last call
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
-        set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+        # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
+        # BUILD_RPATH only works for the last call
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}:$ORIGIN")
     else()
-        set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
         set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
     endif()
 
