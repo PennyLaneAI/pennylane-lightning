@@ -1,7 +1,7 @@
 name: Build and Cache Kokkos
 
 env:
-  GCC_VERSION: 11
+  GCC_VERSION: 13
 
 on:
   workflow_call:
@@ -20,7 +20,7 @@ on:
       kokkos_version:
         required: false
         type: string
-        default: 4.4.01
+        default: 4.5.00
     outputs:
       exec_model:
         description: "The execution model for Kokkos."
