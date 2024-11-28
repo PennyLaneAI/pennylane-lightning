@@ -129,7 +129,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::applyOperation-gatematrix",
 
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    // using Precision_T = typename TNDevice_T::PrecisionT;
 
     std::size_t num_qubits = 3;
     std::size_t maxExtent = 2;
