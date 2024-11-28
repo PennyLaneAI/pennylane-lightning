@@ -197,7 +197,6 @@ void LightningGPUSimulator::MatrixOperation(
                "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
-    // with checking validity of wires
     auto &&dev_wires = getDeviceWires(wires);
     auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
