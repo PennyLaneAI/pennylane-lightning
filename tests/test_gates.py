@@ -28,6 +28,25 @@ if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
+def _get_ld_operations():
+    """Gets a set of supported operations by LightningDevice."""
+
+    if ld.capabilities is None and hasattr(ld, "operations"):
+        return ld.operations
+
+    operations = set()
+    for op, prop in ld.capabilities.operations.items():
+        operations.add(op)
+        if prop.controllable:
+            operations.add(f"C({op})")
+        if prop.invertible:
+            operations.add(f"Adjoint({op})")
+    return operations
+
+
+ld_operations = _get_ld_operations()
+
+
 @pytest.fixture
 def op(op_name):
     ops_list = {
@@ -87,12 +106,12 @@ def op(op_name):
     return ops_list.get(op_name)
 
 
-@pytest.mark.parametrize("op_name", ld.operations)
+@pytest.mark.parametrize("op_name", ld_operations)
 def test_gate_unitary_correct(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
+    if op_name in ("BasisState", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
@@ -153,12 +172,12 @@ def test_gate_unitary_correct(op, op_name):
     assert np.allclose(unitary, unitary_expected)
 
 
-@pytest.mark.parametrize("op_name", ld.operations)
+@pytest.mark.parametrize("op_name", ld_operations)
 def test_gate_unitary_correct_lt(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
+    if op_name in ("BasisState", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
@@ -187,12 +206,12 @@ def test_gate_unitary_correct_lt(op, op_name):
     assert np.allclose(unitary, unitary_expected)
 
 
-@pytest.mark.parametrize("op_name", ld.operations)
+@pytest.mark.parametrize("op_name", ld_operations)
 def test_inverse_unitary_correct(op, op_name):
     """Test if lightning device correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
 
-    if op_name in ("BasisState", "QubitStateVector", "StatePrep"):
+    if op_name in ("BasisState", "StatePrep"):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
@@ -406,8 +425,8 @@ def test_state_prep(n_targets, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="N-controlled operations only implemented in lightning.qubit.",
+    device_name in ("lightning.kokkos"),
+    reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
 )
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
@@ -437,9 +456,11 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                         U,
                         control_wires=control_wires,
                         wires=target_wires,
-                        control_values=[
-                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                        ],
+                        control_values=(
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                            if device_name != "lightning.tensor"
+                            else [control_value for _ in control_wires]
+                        ),
                     )
                     return qml.state()
 
@@ -449,7 +470,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
 
 
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.tensor"),
+    device_name in ("lightning.kokkos"),
     reason="N-controlled operations only implemented in lightning.qubit and lightning.tensor.",
 )
 @pytest.mark.parametrize(
@@ -531,8 +552,8 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.qubit",
-    reason="N-controlled operations only implemented in lightning.qubit.",
+    device_name in ("lightning.kokkos"),
+    reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
 )
 def test_controlled_qubit_unitary_from_op(tol):
     n_qubits = 10
@@ -592,8 +613,8 @@ def test_paulirot(n_wires, n_targets, tol):
 
 
 @pytest.mark.skipif(
-    device_name not in ("lightning.qubit", "lightning.tensor"),
-    reason="N-controlled operations only implemented in lightning.qubit.",
+    device_name in ("lightning.kokkos"),
+    reason="N-controlled operations are not implemented in lightning.kokkos.",
 )
 @pytest.mark.parametrize("control_wires", range(4))
 @pytest.mark.parametrize("target_wires", range(4))

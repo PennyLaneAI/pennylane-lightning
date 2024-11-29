@@ -21,7 +21,6 @@ on:
       - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
       - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
       - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
-
   push:
     branches:
       - master
@@ -50,7 +49,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         exec_model: ["CUDA"]
-        kokkos_version: ["4.3.01"]
+        kokkos_version: ["4.5.00"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -106,18 +105,15 @@ jobs:
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
 
   cpptestswithKokkos:
-    # TODO: The issue related to Kokkos with CUDA-12 running out of memory needs to be fixed.
-    if: ${{ github.sha == 'xxxxxxxx' }}
     needs: [builddeps]
     strategy:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
         exec_model: ["CUDA"]
-        kokkos_version: ["4.3.01"]
-        enable_lapack: ["OFF", "ON"]
+        kokkos_version: ["4.5.00"]
 
-    name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }}), enable_lapack-${{ matrix.enable_lapack }}
+    name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on:
       - ${{ matrix.os }}
       - self-hosted
@@ -192,15 +188,13 @@ jobs:
         run: |
           cd main
           cmake . -BBuild -G Ninja \
-            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
-            -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON
-          cmake --build ./Build
+          cmake --build ./Build --verbose
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
           for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
@@ -226,3 +220,10 @@ jobs:
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
+          pip cache purge

@@ -54,7 +54,7 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         exec_model: ["CUDA"]
-        kokkos_version: ["4.3.01"]
+        kokkos_version: ["4.5.00"]
 
     steps:
       - name: Validate GPU version and installed compiler
@@ -108,7 +108,6 @@ jobs:
         with:
           key: ${{ matrix.os }}-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}
-          retention-days: 1
 
   pythontestswithKokkos:
     needs: [builddeps]
@@ -117,7 +116,7 @@ jobs:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos", "all"]
         exec_model: ["CUDA"]
-        kokkos_version: ["4.3.01"]
+        kokkos_version: ["4.5.00"]
 
     name: Python Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on:
@@ -259,14 +258,6 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py || true
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
           python -m pip install . -vv
-
-      - name: Patching tests following deprecation FIXME(remove after v0.39)
-        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
-        run: |
-          cd main/
-          pushd tests
-          grep -rl "default.qubit.legacy" . | xargs sed -i "s|default.qubit.legacy|default.qubit|g";
-          popd
   
       - name: Run PennyLane-Lightning unit tests
         if: ${{ matrix.pl_backend != 'all'}}
