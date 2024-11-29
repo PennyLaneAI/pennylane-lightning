@@ -230,7 +230,8 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a pointer",
             std::iota(wires.begin(), wires.end(), 0);
 
             auto m = randomUnitary<PrecisionT>(re, num_wires);
-            state_vector_1.applyMatrix(reinterpret_cast<ComplexT *>(m.data()), wires);
+            state_vector_1.applyMatrix(reinterpret_cast<ComplexT *>(m.data()),
+                                       wires);
 
             KokkosVector mkview("mkview", m.size());
             Kokkos::deep_copy(
@@ -374,8 +375,9 @@ TEMPLATE_PRODUCT_TEST_CASE(
             std::vector<bool> controlled_values(num_qubits - num_wires, true);
 
             auto m = randomUnitary<PrecisionT>(re, num_wires);
-            state_vector_1.applyControlledMatrix(reinterpret_cast<ComplexT *>(m.data()), controlled_wires,
-                                                 controlled_values, wires);
+            state_vector_1.applyControlledMatrix(
+                reinterpret_cast<ComplexT *>(m.data()), controlled_wires,
+                controlled_values, wires);
             KokkosVector mkview("mkview", m.size());
             Kokkos::deep_copy(
                 mkview, UnmanagedComplexHostView(

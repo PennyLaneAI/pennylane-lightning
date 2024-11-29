@@ -248,7 +248,7 @@ class StateVectorKokkos final
 
     /**
      * @brief Create a new state vector from data on the host.
-     * 
+     *
      * @param hostdata_ Host array for state vector
      * @param length Length of host array (must be power of 2)
      * @param kokkos_args Arguments for Kokkos initialization
@@ -263,7 +263,7 @@ class StateVectorKokkos final
 
     /**
      * @brief Create a new state vector from data on the host.
-     * 
+     *
      * @param hostdata_ Host vector for state vector
      * @param length Length of host array (must be power of 2)
      * @param kokkos_args Arguments for Kokkos initialization
@@ -278,7 +278,7 @@ class StateVectorKokkos final
 
     /**
      * @brief Create a new state vector from data on the host.
-     * 
+     *
      * @param hostdata_ Host array for state vector
      * @param length Length of host array (must be power of 2)
      * @param kokkos_args Arguments for Kokkos initialization
@@ -294,7 +294,7 @@ class StateVectorKokkos final
 
     /**
      * @brief Create a new state vector from data on the host.
-     * 
+     *
      * @param hostdata_ Host vector for state vector
      * @param kokkos_args Arguments for Kokkos initialization
      */
@@ -447,7 +447,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Optional unitary gate matrix if opName doesn't exist.
      */
@@ -560,7 +561,8 @@ class StateVectorKokkos final
      *
      * @param matrix Pointer to the array data (in row-major format).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken. (Default to false)
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
      */
     inline void applyMatrix(ComplexT *matrix,
                             const std::vector<std::size_t> &wires,
@@ -585,7 +587,8 @@ class StateVectorKokkos final
      *
      * @param matrix Pointer to the array data (in row-major format).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken. (Default to false)
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
      */
     inline void applyMatrix(const ComplexT *matrix,
                             const std::vector<std::size_t> &wires,
@@ -602,7 +605,8 @@ class StateVectorKokkos final
      *
      * @param matrix Matrix data (in row-major format).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken. (Default to false)
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
      */
     inline void applyMatrix(const std::vector<ComplexT> &matrix,
                             const std::vector<std::size_t> &wires,
@@ -622,7 +626,8 @@ class StateVectorKokkos final
      * @param controlled_wires Controlled wires
      * @param controlled_values Controlled values (true or false)
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken. (Default to false)
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
      */
     inline void applyControlledMatrix(
         ComplexT *matrix, const std::vector<std::size_t> &controlled_wires,
@@ -644,7 +649,8 @@ class StateVectorKokkos final
      * @param controlled_wires Controlled wires
      * @param controlled_values Controlled values (true or false)
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken. (Default to false)
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
      */
     inline void
     applyControlledMatrix(const ComplexT *matrix,
@@ -668,7 +674,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken. (Default to false)
+     * @param inverse Indicate whether inverse should be taken. (Default to
+     * false)
      */
     inline void
     applyControlledMatrix(const std::vector<ComplexT> &matrix,
@@ -690,7 +697,8 @@ class StateVectorKokkos final
      *
      * @param opName Name of gate to apply.
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
      * @return PrecisionT Generator scale prefactor
      */
     auto applyGenerator(const std::string &opName,
@@ -711,7 +719,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (true or false).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
      * @return PrecisionT Generator scale prefactor
      */
     auto
@@ -736,7 +745,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (true or false).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @param inverse Indicates whether to use adjoint of gate. (Default to
+     * false)
      * @return PrecisionT Generator scale prefactor
      */
     auto applyGenerator(const std::string &opName,
