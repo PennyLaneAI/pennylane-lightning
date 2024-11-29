@@ -137,7 +137,7 @@ You can also pass ``cmake`` options with ``CMAKE_ARGS`` as follows:
 .. code-block:: bash
 
     CMAKE_ARGS="-DENABLE_OPENMP=OFF -DENABLE_BLAS=OFF" pip install -e . --config-settings editable_mode=compat -vv
-    
+
 
 Supported options are ``-DENABLE_WARNINGS``, ``-DENABLE_NATIVE`` (for ``-march=native``) ``-DENABLE_BLAS``, ``-DENABLE_OPENMP``,  and ``-DENABLE_CLANG_TIDY``.
 
@@ -162,7 +162,7 @@ Then a common command will work.
 .. code-block:: bash
 
     pip install -r requirements.txt
-    pip install -e . 
+    pip install -e .
 
 Note that OpenMP and BLAS are disabled on this platform.
 
@@ -173,7 +173,7 @@ Testing
 To test that a plugin is working correctly, one can check both Python and C++ unit tests for each device.
 
 Python Test
-^^^^^^^^^^^ 
+^^^^^^^^^^^
 
 Test the Python code with:
 
@@ -181,16 +181,16 @@ Test the Python code with:
 
     make test-python device=${PL.DEVICE}
 
-where ``${PL.DEVICE}`` differ from ``${PL_BACKEND}`` by replacing the underscore by a dot. And can be 
+where ``${PL.DEVICE}`` differ from ``${PL_BACKEND}`` by replacing the underscore by a dot. And can be
 
-- ``lightning.qubit`` (default) 
-- ``lightning.gpu``  
+- ``lightning.qubit`` (default)
+- ``lightning.gpu``
 - ``lightning.kokkos``
 - ``lightning.tensor``
 
 C++ Test
 ^^^^^^^^
- 
+
 The C++ code can be tested with
 
 .. code-block:: bash
@@ -317,12 +317,12 @@ Install Kokkos (Optional)
 We suggest first installing Kokkos with the wanted configuration following the instructions found in the `Kokkos documentation <https://kokkos.github.io/kokkos-core-wiki/building.html>`_.
 For example, the following will build Kokkos for NVIDIA A100 cards
 
-Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning Kokkos was tested with Kokkos version <= 4.4.1
+Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightning Kokkos was tested with Kokkos version <= 4.5.0
 
 .. code-block:: bash
 
     # Replace x, y, and z by the correct version
-    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz 
+    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz
     tar -xvf 4.x.y.z.tar.gz
     cd kokkos-4.x.y.z
 
@@ -365,9 +365,9 @@ The simplest way to install Lightning-Kokkos (OpenMP backend) through ``pip``.
     PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py
     CMAKE_ARGS="-DKokkos_ENABLE_OPENMP=ON" python -m pip install -e . --config-settings editable_mode=compat -vv
 
-The supported backend options are 
+The supported backend options are
 
-.. list-table:: 
+.. list-table::
     :align: center
     :width: 100 %
     :widths: 20 20 20 20 20
@@ -377,7 +377,7 @@ The supported backend options are
       - ``OPENMP``
       - ``THREADS``
       - ``HIP``
-      - ``CUDA`` 
+      - ``CUDA``
 
 and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
 
