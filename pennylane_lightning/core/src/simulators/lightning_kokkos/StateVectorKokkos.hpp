@@ -427,7 +427,8 @@ class StateVectorKokkos final
                                                   matrix_trans, wires));
             break;
         default:
-            // TODO: explore runtime determine scratch space level (L0 vs L1)
+            // TODO: explore runtime determine L0 or L1 scratch level (for GPU
+            // shared memory), or SIMD
             std::size_t scratch_size = ScratchViewComplex::shmem_size(dim) +
                                        ScratchViewSizeT::shmem_size(dim);
             Kokkos::parallel_for(
@@ -540,7 +541,8 @@ class StateVectorKokkos final
                                             wires));
             break;
         default:
-            // TODO: explore runtime determine scratch space level (L0 vs L1)
+            // TODO: explore runtime determine L0 or L1 scratch level (for GPU
+            // shared memory), or SIMD
             const std::size_t scratch_size =
                 ScratchViewComplex::shmem_size(dim) +
                 ScratchViewSizeT::shmem_size(dim);
