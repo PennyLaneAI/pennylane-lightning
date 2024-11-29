@@ -596,6 +596,7 @@ class Measurements final
                      const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
+        this->setSeed(this->_deviceseed);
         DiscreteRandomVariable<PrecisionT> drv{this->_rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -

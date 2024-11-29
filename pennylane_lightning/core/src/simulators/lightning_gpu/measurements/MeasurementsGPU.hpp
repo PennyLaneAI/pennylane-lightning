@@ -233,6 +233,7 @@ class Measurements final
         } else {
             data_type = CUDA_C_32F;
         }
+        this->setSeed(this->_deviceseed);
 
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
