@@ -172,8 +172,6 @@ class StateVectorKokkos final
 
     /**
      * @brief Reset the data back to the \f$\ket{0}\f$ state.
-     *
-     * @param num_qubits Number of qubits
      */
     void resetStateVector() {
         if (this->getLength() > 0) {
@@ -184,8 +182,8 @@ class StateVectorKokkos final
     /**
      * @brief Set values for a batch of elements of the state-vector.
      *
-     * @param values Values to be set for the target elements.
      * @param indices Indices of the target elements.
+     * @param values Values to be set for the target elements.
      */
     void setStateVector(const std::vector<std::size_t> &indices,
                         const std::vector<ComplexT> &values) {
@@ -250,8 +248,10 @@ class StateVectorKokkos final
 
     /**
      * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
+     * 
+     * @param hostdata_ Host array for state vector
+     * @param length Length of host array (must be power of 2)
+     * @param kokkos_args Arguments for Kokkos initialization
      */
     StateVectorKokkos(ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
@@ -261,6 +261,13 @@ class StateVectorKokkos final
         HostToDevice(hostdata_, length);
     }
 
+    /**
+     * @brief Create a new state vector from data on the host.
+     * 
+     * @param hostdata_ Host vector for state vector
+     * @param length Length of host array (must be power of 2)
+     * @param kokkos_args Arguments for Kokkos initialization
+     */
     StateVectorKokkos(std::complex<PrecisionT> *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
         : StateVectorKokkos(log2(length), kokkos_args) {
@@ -271,8 +278,10 @@ class StateVectorKokkos final
 
     /**
      * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
+     * 
+     * @param hostdata_ Host array for state vector
+     * @param length Length of host array (must be power of 2)
+     * @param kokkos_args Arguments for Kokkos initialization
      */
     StateVectorKokkos(const ComplexT *hostdata_, std::size_t length,
                       const Kokkos::InitializationSettings &kokkos_args = {})
@@ -285,8 +294,9 @@ class StateVectorKokkos final
 
     /**
      * @brief Create a new state vector from data on the host.
-     *
-     * @param num_qubits Number of qubits
+     * 
+     * @param hostdata_ Host vector for state vector
+     * @param kokkos_args Arguments for Kokkos initialization
      */
     StateVectorKokkos(std::vector<ComplexT> hostdata_,
                       const Kokkos::InitializationSettings &kokkos_args = {})
@@ -296,6 +306,7 @@ class StateVectorKokkos final
      * @brief Copy constructor
      *
      * @param other Another state vector
+     * @param kokkos_args Arguments for Kokkos initialization
      */
     StateVectorKokkos(const StateVectorKokkos &other,
                       const Kokkos::InitializationSettings &kokkos_args = {})
@@ -305,8 +316,6 @@ class StateVectorKokkos final
 
     /**
      * @brief Destructor for StateVectorKokkos class
-     *
-     * @param other Another state vector
      */
     ~StateVectorKokkos() {
         data_.reset();
@@ -438,7 +447,7 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate. Default to false
+     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
      * @param params Optional parameter list for parametric gates.
      * @param gate_matrix Optional unitary gate matrix if opName doesn't exist.
      */
@@ -551,7 +560,7 @@ class StateVectorKokkos final
      *
      * @param matrix Pointer to the array data (in row-major format).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
+     * @param inverse Indicate whether inverse should be taken. (Default to false)
      */
     inline void applyMatrix(ComplexT *matrix,
                             const std::vector<std::size_t> &wires,
@@ -576,7 +585,7 @@ class StateVectorKokkos final
      *
      * @param matrix Pointer to the array data (in row-major format).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
+     * @param inverse Indicate whether inverse should be taken. (Default to false)
      */
     inline void applyMatrix(const ComplexT *matrix,
                             const std::vector<std::size_t> &wires,
@@ -593,7 +602,7 @@ class StateVectorKokkos final
      *
      * @param matrix Matrix data (in row-major format).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
+     * @param inverse Indicate whether inverse should be taken. (Default to false)
      */
     inline void applyMatrix(const std::vector<ComplexT> &matrix,
                             const std::vector<std::size_t> &wires,
@@ -613,7 +622,7 @@ class StateVectorKokkos final
      * @param controlled_wires Controlled wires
      * @param controlled_values Controlled values (true or false)
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
+     * @param inverse Indicate whether inverse should be taken. (Default to false)
      */
     inline void applyControlledMatrix(
         ComplexT *matrix, const std::vector<std::size_t> &controlled_wires,
@@ -635,7 +644,7 @@ class StateVectorKokkos final
      * @param controlled_wires Controlled wires
      * @param controlled_values Controlled values (true or false)
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
+     * @param inverse Indicate whether inverse should be taken. (Default to false)
      */
     inline void
     applyControlledMatrix(const ComplexT *matrix,
@@ -659,7 +668,7 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicate whether inverse should be taken.
+     * @param inverse Indicate whether inverse should be taken. (Default to false)
      */
     inline void
     applyControlledMatrix(const std::vector<ComplexT> &matrix,
@@ -681,7 +690,8 @@ class StateVectorKokkos final
      *
      * @param opName Name of gate to apply.
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @return PrecisionT Generator scale prefactor
      */
     auto applyGenerator(const std::string &opName,
                         const std::vector<std::size_t> &wires,
@@ -701,7 +711,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (true or false).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @return PrecisionT Generator scale prefactor
      */
     auto
     applyControlledGenerator(const std::string &opName,
@@ -725,7 +736,8 @@ class StateVectorKokkos final
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (true or false).
      * @param wires Wires to apply gate to.
-     * @param inverse Indicates whether to use adjoint of gate.
+     * @param inverse Indicates whether to use adjoint of gate. (Default to false)
+     * @return PrecisionT Generator scale prefactor
      */
     auto applyGenerator(const std::string &opName,
                         const std::vector<std::size_t> &controlled_wires,
