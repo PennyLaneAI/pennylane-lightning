@@ -173,7 +173,7 @@ def stopping_condition(op: Operator) -> bool:
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
 
-    if isinstance(op, qml.labs.MPSPrep):
+    if isinstance(op, qml.MPSPrep):
         return True
 
     return op.has_matrix and op.name in _operations
@@ -452,11 +452,11 @@ class LightningTensor(Device):
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             # Tmp function to print the number of gates
-            gates = {}
-            for i, ops in enumerate(circuit.__dict__['_ops']):
-                gates[ops._name] = gates.get(ops._name, 0) + 1
-            total_gates = sum([gates[i] for i in gates])
-            print('Execute Gates:', gates, "Total:",total_gates)
+            # gates = {}
+            # for i, ops in enumerate(circuit.__dict__['_ops']):
+            #     gates[ops._name] = gates.get(ops._name, 0) + 1
+            # total_gates = sum([gates[i] for i in gates])
+            # print('Execute Gates:', gates, "Total:",total_gates)
             results.append(simulate(circuit, self._tensornet()))
 
         return tuple(results)

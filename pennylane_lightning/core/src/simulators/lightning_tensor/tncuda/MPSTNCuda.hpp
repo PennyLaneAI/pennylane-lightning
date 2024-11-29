@@ -38,6 +38,8 @@
 #include "tncudaError.hpp"
 #include "tncuda_helpers.hpp"
 
+#include <iostream>
+
 /// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
@@ -190,6 +192,10 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
         PL_ABORT_IF_NOT(
             host_data_size == tensors_[idx].getDataBuffer().getLength(),
             "The length of the host data should match its copy on the device.");
+
+        std::cout << "C++ Debug: MPS site: " << idx;  
+        std::cout << " values (dimL * dimC * dimR) PL source = " << tensors_[idx].getDataBuffer().getLength();
+        std::cout << "cuQuantum dest = " << host_data_size << std::endl;
 
         tensors_[idx].getDataBuffer().zeroInit();
 

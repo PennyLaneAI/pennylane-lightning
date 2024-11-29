@@ -26,7 +26,7 @@ from typing import List
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, StatePrep
-from pennylane.labs import MPSPrep
+from pennylane import MPSPrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
@@ -123,7 +123,8 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
 def setBondDims(num_qubits, max_bond_dim):
     
     log_max_bond_dim = np.log2(max_bond_dim)
-    localBondDims = [0 for _ in range(num_qubits-1)]
+    limit_dimension = 2 ** int(log_max_bond_dim)
+    localBondDims = [limit_dimension for _ in range(num_qubits-1)]
     
     for i in range(len(localBondDims)):
         bondDim = min(i+1, num_qubits - i - 1)
@@ -161,7 +162,7 @@ def custom_MPS_checks(MPS: List, num_wires: int, max_bond_dim: int):
     same_shape = [s == d for s, d in zip(MPS_shape_source, MPS_shape_dest)]
     
     if not all(same_shape):
-        raise ValueError(f"The custom MPS does not have the correct layout for lightning.tensor.\n MPS source  shape {MPS_shape_source}\n MPS destiny shape {MPS_shape_dest}")
+        raise ValueError(f"The custom MPS does not have the correct layout for lightning.tensor.\n MPS source  shape {MPS_shape_source}\n MPS destination shape {MPS_shape_dest}")
     
 
 # pylint: disable=too-many-instance-attributes
@@ -357,7 +358,7 @@ class LightningTensorNet:
                 
             Note: The correct MPS sites format and layout are user responsible. 
         """
-        mps = state.data
+        mps = state.mps
         custom_MPS_checks(mps, self._num_wires, self._max_bond_dim)
         self._tensornet.updateMPSSitesData(mps)
 
@@ -474,7 +475,7 @@ class LightningTensorNet:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], MPSPrep):
-                self._load_mps_state(operations[0].parameters[0], operations[0].wires)
+                self._load_mps_state(operations[0], operations[0].wires)
                 operations = operations[1:]
 
 

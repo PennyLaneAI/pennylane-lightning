@@ -7,7 +7,8 @@ import pennylane as qml
 def setBondDims(numQubits, maxBondDim):
     
     log_maxBondDim = np.log2(maxBondDim)
-    localBondDims = np.ones(numQubits -1) * maxBondDim
+    limit_dimension = 2 ** int(log_maxBondDim)
+    localBondDims = np.ones(numQubits -1) * limit_dimension
     
     for i, val in enumerate(localBondDims):
         bondDim = min(i+1, numQubits - i - 1)
@@ -84,9 +85,7 @@ def build_MPS(numQubits, maxBondDim):
 # -----------------------------------------------------------------------------------------
 # -----------------------------------------------------------------------------------------
 # Create a random MPS with the correct dimensions 
-def create_custom_MPS(numQubits):
-    
-    maxBondDim = 128
+def create_custom_MPS(numQubits,maxBondDim):
     
     bondDims = setBondDims(numQubits, maxBondDim)
     sitesExtents = setSitesExtents(numQubits, bondDims)
@@ -128,16 +127,16 @@ def LTensor_circuit(wires, custom_MPS):
     # print(f"Circuit result: \n{result}")
 
 # Dummy circuit
-def LTensor_circuit_MPS(wires, custom_MPS):
+def LTensor_circuit_MPS(wires, custom_MPS, max_bond_dim):
     
-    dev = qml.device("lightning.tensor", wires=wires, cutoff=1e-7, max_bond_dim=128)
+    dev = qml.device("lightning.tensor", wires=wires, cutoff=1e-7, max_bond_dim=max_bond_dim)
 
     dev_wires = dev.wires.tolist()
     
     @qml.qnode(dev)
     def circuit(custom_MPS=custom_MPS):
         
-        qml.MPSPrep(custom_MPS, wires=dev_wires[1:])
+        qml.MPSPrep(mps=custom_MPS, wires=dev_wires[1:])
         
         return qml.state()
         
@@ -148,26 +147,26 @@ def LTensor_circuit_MPS(wires, custom_MPS):
 
 if __name__ == '__main__':
     
-    wires = 9
-    maxBondDim = 128
+    wires = 13
+    maxBondDim = 16
     
     build_MPS(wires, maxBondDim)
 
     # ----------------------------------------------------------------------
-    print('-'*100)
-    print("Lightning Tensor Base")
+    # print('-'*100)
+    # print("Lightning Tensor Base")
 
-    LTensor_circuit(wires,[]) # Empty custom_MPS
+    # LTensor_circuit(wires,[]) # Empty custom_MPS
     
     # ----------------------------------------------------------------------
     print('-'*100)
     print("Lightning Tensor Custom MPS")
     
     print('Custom MPS shape')
-    MPS_example = create_custom_MPS(wires)
+    MPS_example = create_custom_MPS(wires, maxBondDim)
     [print(f'{site.shape}') for site in MPS_example]
 
-    LTensor_circuit_MPS(wires, MPS_example) # Passing a custom_MPS
+    LTensor_circuit_MPS(wires, MPS_example, maxBondDim) # Passing a custom_MPS
     
     
     
