@@ -189,13 +189,14 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
             "The site index should be less than the number of qubits.");
 
         const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
+
+        std::cout << "C++ Debug: MPS site: " << idx;
+        std::cout << " values (dimL * dimC * dimR) PL source = " << tensors_[idx].getDataBuffer().getLength();
+        std::cout << "cuQuantum dest = " << host_data_size << std::endl;
+
         PL_ABORT_IF_NOT(
             host_data_size == tensors_[idx].getDataBuffer().getLength(),
             "The length of the host data should match its copy on the device.");
-
-        std::cout << "C++ Debug: MPS site: " << idx;  
-        std::cout << " values (dimL * dimC * dimR) PL source = " << tensors_[idx].getDataBuffer().getLength();
-        std::cout << "cuQuantum dest = " << host_data_size << std::endl;
 
         tensors_[idx].getDataBuffer().zeroInit();
 
