@@ -559,9 +559,10 @@ class StateVectorKokkos final
 
     /**
      * @brief Apply a given matrix directly to the statevector using a
-     * raw matrix pointer vector.
+     * raw matrix pointer on host memory.
      *
-     * @param matrix Pointer to the array data (in row-major format).
+     * @param matrix Pointer to the array data on host memory (in row-major
+     * format).
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken. (Default to
      * false)
@@ -585,9 +586,10 @@ class StateVectorKokkos final
 
     /**
      * @brief Apply a given matrix directly to the statevector using a
-     * raw matrix pointer vector.
+     * raw matrix pointer vector on host memory.
      *
-     * @param matrix Pointer to host matrix to apply to wires (in row-major format).
+     * @param matrix Pointer to host matrix to apply to wires (in row-major
+     * format).
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken. (Default to
      * false)
@@ -603,9 +605,9 @@ class StateVectorKokkos final
     }
 
     /**
-     * @brief Apply a given matrix directly to the statevector.
+     * @brief Apply a given matrix as a vector directly to the statevector.
      *
-     * @param matrix Matrix data (in row-major format).
+     * @param matrix Matrix data as a vector (in row-major format).
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken. (Default to
      * false)
@@ -622,9 +624,10 @@ class StateVectorKokkos final
 
     /**
      * @brief Apply a given matrix for controlled operations directly to the
-     * statevector using a raw matrix pointer on host.
+     * statevector using a raw matrix pointer on host memory.
      *
-     * @param matrix  Pointer to host matrix to apply to wires (in row-major format).
+     * @param matrix  Pointer to host matrix to apply to wires (in row-major
+     * format).
      * @param controlled_wires Controlled wires
      * @param controlled_values Controlled values (true or false)
      * @param wires Wires to apply gate to.
@@ -645,7 +648,7 @@ class StateVectorKokkos final
 
     /**
      * @brief Apply a given matrix directly to the statevector using a
-     * raw matrix pointer vector.
+     * raw matrix pointer on host memory.
      *
      * @param matrix Pointer to the array data (in row-major format).
      * @param controlled_wires Controlled wires
@@ -669,9 +672,11 @@ class StateVectorKokkos final
     }
 
     /**
-     * @brief Apply a given controlled-matrix directly to the statevector.
+     * @brief Apply a given controlled-matrix as a vector directly to the
+     * statevector.
      *
-     * @param matrix  Pointer to host matrix to apply to target wires (in row-major format).
+     * @param matrix  Matrix data as a vector to apply to target wires (in
+     * row-major format).
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires to apply gate to.

@@ -162,6 +162,7 @@ inline auto reverseWires(const std::size_t num_qubits,
 
 /**
  * @brief Generate bit patterns for multi-qubit operations
+ * TODO: parallelize with LK
  *
  * @param wires List of target wires.
  * @param num_qubits
