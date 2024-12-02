@@ -17,9 +17,15 @@ Class implementation for tensornet measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_tensor_ops import mpsMeasurementsC64, mpsMeasurementsC128
 except ImportError:
     pass
+
+try:
+    from pennylane_lightning.lightning_tensor_ops import exatnMeasurementsC64, exatnMeasurementsC128
+except ImportError:
+    pass
+
 
 from functools import reduce
 from typing import Callable, List, Union
@@ -62,6 +68,7 @@ class LightningTensorMeasurements:
     ) -> None:
         self._tensornet = tensor_network
         self._dtype = tensor_network.dtype
+        self._method = tensor_network._method
         self._measurement_lightning = self._measurement_dtype()(tensor_network.tensornet)
 
     @property
@@ -69,12 +76,22 @@ class LightningTensorMeasurements:
         """Returns the simulation data type."""
         return self._dtype
 
+    @property
+    def method(self):
+        """Returns the method for evaluating the tensor network."""
+        return self._method
+
+
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
 
         Returns: the Measurements class
         """
-        return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+        # return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+        if self.method == "mps":
+            return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
+        if self.method == "exatn":
+            return exatnMeasurementsC64 if self.dtype == np.complex64 else exatnMeasurementsC128
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
@@ -114,7 +131,7 @@ class LightningTensorMeasurements:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
+            self._tensornet.device_name + "_" + self.method, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
 
@@ -160,7 +177,7 @@ class LightningTensorMeasurements:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
+            self._tensornet.device_name + "_" + self.method, self.dtype == np.complex64
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.var(ob_serialized)
 

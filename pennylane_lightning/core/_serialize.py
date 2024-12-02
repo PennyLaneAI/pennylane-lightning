@@ -168,7 +168,7 @@ class QuantumScriptSerializer:
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self._use_mpi:
             return self.statevector_mpi_c64 if self.use_csingle else self.statevector_mpi_c128
-        if self.device_name == "lightning.tensor":
+        if self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"]:
             return self.tensornetwork_c64 if self.use_csingle else self.tensornetwork_c128
         return self.statevector_c64 if self.use_csingle else self.statevector_c128
 
@@ -224,7 +224,7 @@ class QuantumScriptSerializer:
         """Serializes a Hermitian observable"""
 
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
-        if self.device_name == "lightning.tensor" and len(wires) > 1:
+        if self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"] and len(wires) > 1:
             raise ValueError("The number of Hermitian observables target wires should be 1.")
         return self.hermitian_obs(matrix(observable).ravel().astype(self.ctype), wires)
 
@@ -350,7 +350,7 @@ class QuantumScriptSerializer:
         if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
         if isinstance(observable, SparseHamiltonian):
-            if self.device_name == "lightning.tensor":
+            if self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"]:
                 raise NotImplementedError(
                     "SparseHamiltonian is not supported on the lightning.tensor device."
                 )

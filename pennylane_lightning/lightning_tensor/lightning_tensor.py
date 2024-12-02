@@ -35,8 +35,8 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._measurements_2 import LightningTensorMeasurements
-from ._tensornet_2 import LightningTensorNet
+from ._measurements import LightningTensorMeasurements
+from ._tensornet import LightningTensorNet
 
 try:
     # pylint: disable=import-error, unused-import
@@ -165,7 +165,7 @@ _observables = frozenset(
 
 
 def stopping_condition(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
+    """A function that determines whether or not an operation is supported by ``lightning.tensor``."""
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
 

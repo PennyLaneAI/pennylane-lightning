@@ -157,10 +157,10 @@ elif device_name == "lightning.gpu":
         from pennylane_lightning.lightning_gpu_ops import LightningException
 elif device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor import LightningTensor as LightningDevice
-    from pennylane_lightning.lightning_tensor._measurements_2 import (
+    from pennylane_lightning.lightning_tensor._measurements import (
         LightningTensorMeasurements as LightningMeasurements,
     )
-    from pennylane_lightning.lightning_tensor._tensornet_2 import (
+    from pennylane_lightning.lightning_tensor._tensornet import (
         LightningTensorNet as LightningStateVector,
     )
 

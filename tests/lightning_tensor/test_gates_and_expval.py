@@ -25,8 +25,8 @@ if device_name != "lightning.tensor":
     pytest.skip("Exclusive tests for Lightning Tensor device. Skipping.", allow_module_level=True)
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
-    from pennylane_lightning.lightning_tensor._measurements_2 import LightningTensorMeasurements
-    from pennylane_lightning.lightning_tensor._tensornet_2 import LightningTensorNet
+    from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
+    from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
 if not LightningDevice._new_API:  # pylint: disable=protected-access
     pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)

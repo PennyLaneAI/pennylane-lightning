@@ -23,7 +23,7 @@ from conftest import LightningDevice, device_name  # tested device
 if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the tensornet class.", allow_module_level=True)
 else:
-    from pennylane_lightning.lightning_tensor._tensornet_2 import (
+    from pennylane_lightning.lightning_tensor._tensornet import (
         LightningTensorNet,
         decompose_dense,
         gate_matrix_decompose,

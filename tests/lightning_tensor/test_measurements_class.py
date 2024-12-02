@@ -26,8 +26,8 @@ if device_name != "lightning.tensor":
         "Skipping tests for the LightningTensorMeasurements class.", allow_module_level=True
     )
 
-from pennylane_lightning.lightning_tensor._measurements_2 import LightningTensorMeasurements
-from pennylane_lightning.lightning_tensor._tensornet_2 import LightningTensorNet
+from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
+from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -143,10 +143,14 @@ class TestMeasurementFunction:
         mp = qml.probs(wires=range(n_targets))
 
         tape = qml.tape.QuantumScript(ops, [mp])
-        res = dev.execute(tape)
         ref = dq.execute(tape)
 
-        assert np.allclose(res, ref, atol=tol, rtol=0)
+        if tn_backend == 'exatn':
+            with pytest.raises(qml.DeviceError):        
+                res = dev.execute(tape)
+        else: 
+            res = dev.execute(tape)
+            assert np.allclose(res, ref, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
@@ -167,9 +171,10 @@ class TestMeasurementFunction:
         mp = qml.state()
 
         tape = qml.tape.QuantumScript(ops, [mp])
-        res = dev.execute(tape)
         ref = dq.execute(tape)
-        
-        [print(res_i,'|',ref_i) for res_i, ref_i in zip(res, ref)]
-
-        assert np.allclose(res, ref, atol=tol, rtol=0)
+        if tn_backend == 'exatn':
+            with pytest.raises(qml.DeviceError):        
+                res = dev.execute(tape)
+        else: 
+            res = dev.execute(tape)
+            assert np.allclose(res, ref, atol=tol, rtol=0)

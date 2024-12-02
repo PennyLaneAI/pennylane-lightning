@@ -17,9 +17,15 @@ Class implementation for tensornet manipulation.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import TensorNetC64, TensorNetC128
+    from pennylane_lightning.lightning_tensor_ops import mpsTensorNetC64, mpsTensorNetC128
 except ImportError:
     pass
+
+try:
+    from pennylane_lightning.lightning_tensor_ops import exatnTensorNetC64, exatnTensorNetC128
+except ImportError:
+    pass
+
 
 import numpy as np
 import pennylane as qml
@@ -146,23 +152,30 @@ class LightningTensorNet:
         cutoff_mode: str = "abs",
         device_name="lightning.tensor",
     ):
-        self._num_wires = num_wires
-        self._max_bond_dim = max_bond_dim
-        self._method = method
-        self._cutoff = cutoff
-        self._cutoff_mode = cutoff_mode
-        self._c_dtype = c_dtype
-
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         if num_wires < 2:
             raise ValueError("Number of wires must be greater than 1.")
 
+        self._num_wires = num_wires
+        self._method = method
+        self._c_dtype = c_dtype
+        self._max_bond_dim = max_bond_dim
+        self._cutoff = cutoff
+        self._cutoff_mode = cutoff_mode
+        self._device_name = device_name
+
         self._wires = Wires(range(num_wires))
 
-        self._device_name = device_name
-        self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+        print("FDX == ", self._method)
+
+        if self._method == 'mps':
+            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+        elif self._method == 'exatn':
+            self._tensornet = self._tensornet_dtype()(self._num_wires)
+        else:
+            raise NotImplementedError  # pragma: no cover
 
     @property
     def dtype(self):
@@ -178,6 +191,11 @@ class LightningTensorNet:
     def num_wires(self):
         """Number of wires addressed on this device"""
         return self._num_wires
+
+    @property
+    def method(self):
+        """Returns the method for evaluating the tensor network."""
+        return self._method
 
     @property
     def tensornet(self):
@@ -196,7 +214,10 @@ class LightningTensorNet:
 
         Returns: the tensor network class
         """
-        return TensorNetC128 if self.dtype == np.complex128 else TensorNetC64
+        if self.method == "mps":
+            return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
+        if self.method == "exatn":
+            return exatnTensorNetC128 if self.dtype == np.complex128 else exatnTensorNetC64
 
     def reset_state(self):
         """Reset the device's initial quantum state"""
@@ -271,11 +292,14 @@ class LightningTensorNet:
             device_wires (Wires): wires that get initialized in the state
         """
 
-        state = self._preprocess_state_vector(state, device_wires)
-        mps_site_shape = [2]
-        M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
-
-        self._tensornet.updateMPSSitesData(M)
+        if self.method == 'mps':
+            state = self._preprocess_state_vector(state, device_wires)        
+            mps_site_shape = [2]
+            M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
+            self._tensornet.updateMPSSitesData(M)
+        
+        if self.method == 'exatn':
+            raise DeviceError("Exact Tensor Network does not support StatePrep")
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
@@ -397,15 +421,23 @@ class LightningTensorNet:
                     # To support older versions of PL
                     gate_ops_matrix = operation.matrix()
 
-                self._apply_MPO(gate_ops_matrix, wires)
+                if self.method == 'mps':
+                    self._apply_MPO(gate_ops_matrix, wires)
+                if self.method == 'exatn':
+                    method = getattr(tensornet, "applyMatrix")
+                    method(gate_ops_matrix, wires, False)
+                    
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
-                operations = operations[1:]
+                if self.method == 'mps':
+                    self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
+                    operations = operations[1:]
+                if self.method == 'exatn':
+                    raise DeviceError("Exact Tensor Network does not support StatePrep")
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
@@ -423,6 +455,7 @@ class LightningTensorNet:
         """
         self.apply_operations(circuit.operations)
         self.appendMPSFinalState()
+
         return self
 
     def appendMPSFinalState(self):
@@ -430,5 +463,5 @@ class LightningTensorNet:
         Append the final state to the tensor network for the MPS backend. This is an function to be called
         by once apply_operations is called.
         """
-        if self._method == "mps":
+        if self.method == "mps":
             self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)
