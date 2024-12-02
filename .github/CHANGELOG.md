@@ -23,11 +23,14 @@
 
 ### Improvements
 
-* Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
-  [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
-
 * Reverse Lightning Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
+
+* Update Kokkos version support to 4.5.
+  [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
+
+* Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
+  [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
 
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
@@ -58,6 +61,9 @@
 
 * Fix Lightning Kokkos editable mode path.
   [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
+
+* Fix the missing `ninja` in Linux AARCH64 wheels recipe.
+  [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
 
 * Fix version switch condition the GPU workflow tests for LGPU and LKokkos.
   [(#1006)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1006)
