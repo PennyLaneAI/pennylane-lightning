@@ -122,7 +122,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
-    ~TNCudaBase() {}
+    ~TNCudaBase() = default;
 
     /**
      * @brief Get the method of a derived class object.
@@ -207,16 +207,17 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
         CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
         tensors_[0].getDataBuffer().zeroInit();
-        PL_CUDA_IS_SUCCESS(cudaMemcpy(
-            &tensors_[0].getDataBuffer().getData()[BaseType::getNumQubits() -
-                                                   std::size_t{1}],
-            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+        std::size_t idx = BaseType::getNumQubits() - std::size_t{1};
+        std::size_t target = basisState[idx];
+        PL_CUDA_IS_SUCCESS(
+            cudaMemcpy(&tensors_[0].getDataBuffer().getData()[target],
+                       &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
 
         for (std::size_t i = 1; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
-            std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
 
-            std::size_t target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
+            idx = BaseType::getNumQubits() - std::size_t{1} - i;
+            target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
 
             PL_CUDA_IS_SUCCESS(
                 cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
