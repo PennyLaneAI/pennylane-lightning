@@ -5,20 +5,8 @@
 # Include this only once
 include_guard()
 
-macro(get_scipy_openblas_libname SCIPY_OPENBLAS_LIB_NAME)
-    set(LIB_SUFFIX ".so")
-    if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-        set(LIB_SUFFIX ".dylib")
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-        set(LIB_SUFFIX ".dll")
-    endif()
-
-    set(${SCIPY_OPENBLAS_LIB_NAME} "libscipy_openblas${LIB_SUFFIX}")
-endmacro()
-
 macro(find_path_to_openblas SCIPY_OPENBLASE_LIB_PATH)
-    set(SCIPY_OPENBLAS_LIB_NAME "")
-    get_scipy_openblas_libname(SCIPY_OPENBLAS_LIB_NAME)
+    set(SCIPY_OPENBLAS_LIB_NAME "libscipy_openblas${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
     find_file(SCIPY_OPENBLAS_LIB_FILE
         NAMES   ${SCIPY_OPENBLAS_LIB_NAME}
