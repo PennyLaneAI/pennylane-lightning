@@ -14,24 +14,20 @@
 """
 Unit tests for measurements class.
 """
-from typing import Sequence
-
 import numpy as np
+np.set_printoptions(precision=6)
+
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device
-from flaky import flaky
-from pennylane.devices import DefaultQubit
-from pennylane.measurements import VarianceMP
-from scipy.sparse import csr_matrix, random_array
 
 if device_name != "lightning.tensor":
     pytest.skip(
         "Skipping tests for the LightningTensorMeasurements class.", allow_module_level=True
     )
 
-from pennylane_lightning.lightning_tensor._measurements_base import LightningTensorMeasurements
-from pennylane_lightning.lightning_tensor._tensornet_base import LightningTensorNet
+from pennylane_lightning.lightning_tensor._measurements_2 import LightningTensorMeasurements
+from pennylane_lightning.lightning_tensor._tensornet_2 import LightningTensorNet
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -42,13 +38,13 @@ PHI = np.linspace(0.32, 1, 3)
 
 # General LightningTensorNet fixture, for any number of wires.
 @pytest.fixture(
-    params=[np.complex64, np.complex128],
+    params=[[i,j] for i in [np.complex64, np.complex128] for j in ['mps','exatn']],
 )
 def lightning_tn(request):
     """Fixture for creating a LightningTensorNet object."""
 
     def _lightning_tn(n_wires):
-        return LightningTensorNet(num_wires=n_wires, max_bond_dim=128, c_dtype=request.param)
+        return LightningTensorNet(num_wires=n_wires, max_bond_dim=128, c_dtype=request.param[0], method=request.param[1])
 
     return _lightning_tn
 
@@ -73,10 +69,10 @@ class TestMeasurementFunction:
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
-    def test_not_supported_sparseH_shot_measurements(self):
+    def test_not_supported_sparseH_shot_measurements(self,lightning_tn):
         """Test than a TypeError is raised if the measurement is not supported."""
 
-        tensornetwork = LightningTensorNet(num_wires=3, max_bond_dim=128)
+        tensornetwork = lightning_tn(3)
 
         m = LightningTensorMeasurements(tensornetwork)
 
@@ -93,10 +89,10 @@ class TestMeasurementFunction:
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
 
-    def test_not_supported_ham_sum_shot_measurements(self):
+    def test_not_supported_ham_sum_shot_measurements(self, lightning_tn):
         """Test than a TypeError is raised if the measurement is not supported."""
 
-        tensornetwork = LightningTensorNet(num_wires=3, max_bond_dim=128)
+        tensornetwork = lightning_tn(3)
 
         m = LightningTensorMeasurements(tensornetwork)
 
@@ -112,10 +108,10 @@ class TestMeasurementFunction:
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
 
-    def test_not_supported_shadowmp_shot_measurements(self):
+    def test_not_supported_shadowmp_shot_measurements(self,lightning_tn):
         """Test than a TypeError is raised if the measurement is not supported."""
 
-        tensornetwork = LightningTensorNet(num_wires=3, max_bond_dim=128)
+        tensornetwork = lightning_tn(3)
 
         m = LightningTensorMeasurements(tensornetwork)
 
@@ -127,14 +123,16 @@ class TestMeasurementFunction:
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
 
+
+    @pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
     @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
-    def test_probs_many_wires(self, n_qubits, n_targets, tol):
+    def test_probs_many_wires(self, tn_backend, n_qubits, n_targets, tol):
         """Test probs measuring many wires of a random quantum state."""
         if n_targets >= n_qubits:
             pytest.skip("Number of targets cannot exceed the number of wires.")
 
-        dev = qml.device(device_name, wires=n_qubits)
+        dev = qml.device(device_name, wires=n_qubits, method=tn_backend)
         dq = qml.device("default.qubit", wires=n_qubits)
 
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
@@ -147,5 +145,31 @@ class TestMeasurementFunction:
         tape = qml.tape.QuantumScript(ops, [mp])
         res = dev.execute(tape)
         ref = dq.execute(tape)
+
+        assert np.allclose(res, ref, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+    @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
+    @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
+    def test_state_many_wires(self, tn_backend, n_qubits, n_targets, tol):
+        """Test probs measuring many wires of a random quantum state."""
+        if n_targets >= n_qubits:
+            pytest.skip("Number of targets cannot exceed the number of wires.")
+
+        dev = qml.device(device_name, wires=n_qubits, method=tn_backend)
+        dq = qml.device("default.qubit", wires=n_qubits)
+
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.linalg.norm(init_state)
+
+        ops = [qml.StatePrep(init_state, wires=range(n_qubits))]
+
+        mp = qml.state()
+
+        tape = qml.tape.QuantumScript(ops, [mp])
+        res = dev.execute(tape)
+        ref = dq.execute(tape)
+        
+        [print(res_i,'|',ref_i) for res_i, ref_i in zip(res, ref)]
 
         assert np.allclose(res, ref, atol=tol, rtol=0)

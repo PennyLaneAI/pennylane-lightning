@@ -14,20 +14,16 @@
 """
 Unit tests for the tensornet functions.
 """
-
-import math
-
 import numpy as np
 import pennylane as qml
 import pytest
 import scipy
 from conftest import LightningDevice, device_name  # tested device
-from pennylane.wires import Wires
 
 if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the tensornet class.", allow_module_level=True)
 else:
-    from pennylane_lightning.lightning_tensor._tensornet_base import (
+    from pennylane_lightning.lightning_tensor._tensornet_2 import (
         LightningTensorNet,
         decompose_dense,
         gate_matrix_decompose,

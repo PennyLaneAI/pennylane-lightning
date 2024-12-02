@@ -35,8 +35,8 @@ from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result, ResultBatch
 
-from ._measurements_base import LightningTensorMeasurements
-from ._tensornet_base import LightningTensorNet
+from ._measurements_2 import LightningTensorMeasurements
+from ._tensornet_2 import LightningTensorNet
 
 try:
     # pylint: disable=import-error, unused-import
