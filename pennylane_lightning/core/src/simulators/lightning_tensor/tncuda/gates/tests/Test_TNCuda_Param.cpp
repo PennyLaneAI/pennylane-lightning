@@ -330,7 +330,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     SECTION("Apply adjacent wire indices") {
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
-
         tn_state->applyOperation("ControlledPhaseShift", {0, 1}, inverse,
                                  {sign * angles[0]});
 
@@ -724,6 +723,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
         CHECK(results == Pennylane::Util::approx(expected_results[1]));
     }
 }
+
 /* python code to get the reference values for a single parameter with 2 target
 for CRX import pennylane as qml
 
