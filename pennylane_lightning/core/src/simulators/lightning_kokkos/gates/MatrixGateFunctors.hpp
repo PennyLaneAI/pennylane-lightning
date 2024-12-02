@@ -202,7 +202,7 @@ template <class PrecisionT> struct apply1QubitOpFunctor {
         num_qubits = num_qubits_;
 
         rev_wire = num_qubits - wires_[0] - 1;
-        rev_wire_shift = (exp2(rev_wire));
+        rev_wire_shift = exp2(rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
