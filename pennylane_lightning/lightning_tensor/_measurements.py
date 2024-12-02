@@ -81,7 +81,6 @@ class LightningTensorMeasurements:
         """Returns the method for evaluating the tensor network."""
         return self._method
 
-
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
 

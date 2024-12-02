@@ -15,6 +15,7 @@
 Unit tests for measurements class.
 """
 import numpy as np
+
 np.set_printoptions(precision=6)
 
 import pennylane as qml
@@ -38,13 +39,15 @@ PHI = np.linspace(0.32, 1, 3)
 
 # General LightningTensorNet fixture, for any number of wires.
 @pytest.fixture(
-    params=[[i,j] for i in [np.complex64, np.complex128] for j in ['mps','exatn']],
+    params=[[i, j] for i in [np.complex64, np.complex128] for j in ["mps", "exatn"]],
 )
 def lightning_tn(request):
     """Fixture for creating a LightningTensorNet object."""
 
     def _lightning_tn(n_wires):
-        return LightningTensorNet(num_wires=n_wires, max_bond_dim=128, c_dtype=request.param[0], method=request.param[1])
+        return LightningTensorNet(
+            num_wires=n_wires, max_bond_dim=128, c_dtype=request.param[0], method=request.param[1]
+        )
 
     return _lightning_tn
 
@@ -69,7 +72,7 @@ class TestMeasurementFunction:
         with pytest.raises(NotImplementedError):
             m.get_measurement_function(mp)
 
-    def test_not_supported_sparseH_shot_measurements(self,lightning_tn):
+    def test_not_supported_sparseH_shot_measurements(self, lightning_tn):
         """Test than a TypeError is raised if the measurement is not supported."""
 
         tensornetwork = lightning_tn(3)
@@ -108,7 +111,7 @@ class TestMeasurementFunction:
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
 
-    def test_not_supported_shadowmp_shot_measurements(self,lightning_tn):
+    def test_not_supported_shadowmp_shot_measurements(self, lightning_tn):
         """Test than a TypeError is raised if the measurement is not supported."""
 
         tensornetwork = lightning_tn(3)
@@ -122,7 +125,6 @@ class TestMeasurementFunction:
 
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
-
 
     @pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
@@ -145,10 +147,10 @@ class TestMeasurementFunction:
         tape = qml.tape.QuantumScript(ops, [mp])
         ref = dq.execute(tape)
 
-        if tn_backend == 'exatn':
-            with pytest.raises(qml.DeviceError):        
+        if tn_backend == "exatn":
+            with pytest.raises(qml.DeviceError):
                 res = dev.execute(tape)
-        else: 
+        else:
             res = dev.execute(tape)
             assert np.allclose(res, ref, atol=tol, rtol=0)
 
@@ -172,9 +174,9 @@ class TestMeasurementFunction:
 
         tape = qml.tape.QuantumScript(ops, [mp])
         ref = dq.execute(tape)
-        if tn_backend == 'exatn':
-            with pytest.raises(qml.DeviceError):        
+        if tn_backend == "exatn":
+            with pytest.raises(qml.DeviceError):
                 res = dev.execute(tape)
-        else: 
+        else:
             res = dev.execute(tape)
             assert np.allclose(res, ref, atol=tol, rtol=0)

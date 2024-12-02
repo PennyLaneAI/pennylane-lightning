@@ -25,7 +25,6 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops.observables import (
         HamiltonianC64,
@@ -84,10 +83,7 @@ def test_wrong_device_name():
         (qml.Hadamard(0), NamedObsC128),
         (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
         (
-            (
-                qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3)))
-                
-            ),
+            (qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3)))),
             TensorProdObsC128,
         ),
         (
@@ -111,7 +107,6 @@ def test_wrong_device_name():
                 qml.Hermitian(np.eye(2), wires=0)
                 @ qml.Hermitian(np.eye(2), wires=1)
                 @ qml.Projector([0], wires=1)
-                
             ),
             HermitianObsC128,
         ),
@@ -127,7 +122,6 @@ def test_wrong_device_name():
                 qml.SparseHamiltonian(
                     qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]
                 )
-                
             ),
             SparseHamiltonianC128,
         ),
@@ -181,8 +175,7 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         c_dtype = np.complex64 if use_csingle else np.complex128
         mat = obs.matrix().ravel().astype(c_dtype)
-        
-        
+
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, wires_map
         )
@@ -199,7 +192,6 @@ class TestSerializeObs:
         hermitian_obs = HermitianObsC64 if use_csingle else HermitianObsC128
         c_dtype = np.complex64 if use_csingle else np.complex128
 
-        
         s, _ = QuantumScriptSerializer(device_name, use_csingle).serialize_observables(
             tape, wires_map
         )
@@ -237,7 +229,7 @@ class TestSerializeObs:
             qml.expval(
                 qml.Hermitian(
                     np.eye(4),
-                    wires= [0, 1],
+                    wires=[0, 1],
                 )
                 @ qml.Hermitian(np.eye(2), wires=[2])
             )
@@ -252,8 +244,8 @@ class TestSerializeObs:
         s_expected = tensor_prod_obs(
             [
                 hermitian_obs(
-                    np.eye( 4, dtype=c_dtype).ravel(),
-                     [0, 1],
+                    np.eye(4, dtype=c_dtype).ravel(),
+                    [0, 1],
                 ),
                 hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [2]),
             ]
@@ -268,8 +260,8 @@ class TestSerializeObs:
         with qml.tape.QuantumTape() as tape:
             qml.expval(
                 qml.Hermitian(
-                    np.eye( 4),
-                    wires= [0, 1],
+                    np.eye(4),
+                    wires=[0, 1],
                 )
                 @ qml.PauliY(2)
             )
@@ -286,7 +278,7 @@ class TestSerializeObs:
         s_expected = tensor_prod_obs(
             [
                 hermitian_obs(
-                    np.eye( 4, dtype=c_dtype).ravel(),
+                    np.eye(4, dtype=c_dtype).ravel(),
                     [0, 1],
                 ),
                 named_obs("PauliY", [2]),
@@ -297,21 +289,11 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize(
         "test_hermobs0",
-        [
-            (
-                qml.Hermitian(np.eye(4), wires=[0, 1])
-                
-            )
-        ],
+        [(qml.Hermitian(np.eye(4), wires=[0, 1]))],
     )
     @pytest.mark.parametrize(
         "test_hermobs1",
-        [
-            (
-                qml.Hermitian(np.ones((8, 8)), wires=range(3))
-                
-            )
-        ],
+        [(qml.Hermitian(np.ones((8, 8)), wires=range(3)))],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -346,18 +328,12 @@ class TestSerializeObs:
             [
                 tensor_prod_obs(
                     [
-                        (
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])
-                            
-                        ),
+                        (hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])),
                         named_obs("PauliY", [2]),
                     ]
                 ),
                 tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
-                (
-                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])
-                    
-                ),
+                (hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])),
             ],
         )
 
@@ -365,21 +341,11 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize(
         "test_hermobs0",
-        [
-            (
-                qml.Hermitian(np.eye(4), wires=[0, 1])
-               
-            )
-        ],
+        [(qml.Hermitian(np.eye(4), wires=[0, 1]))],
     )
     @pytest.mark.parametrize(
         "test_hermobs1",
-        [
-            (
-                qml.Hermitian(np.ones((8, 8)), wires=range(3))
-               
-            )
-        ],
+        [(qml.Hermitian(np.ones((8, 8)), wires=range(3)))],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -416,10 +382,7 @@ class TestSerializeObs:
             [
                 tensor_prod_obs(
                     [
-                        (
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])
-                           
-                        ),
+                        (hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])),
                         named_obs("PauliY", [2]),
                         named_obs("PauliZ", [3]),
                     ]
@@ -433,10 +396,7 @@ class TestSerializeObs:
                 ),
                 tensor_prod_obs(
                     [
-                        (
-                            hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])
-                           
-                        ),
+                        (hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])),
                         named_obs("PauliZ", [3]),
                     ]
                 ),
@@ -447,21 +407,11 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize(
         "test_hermobs0",
-        [
-            (
-                qml.Hermitian(np.eye(4), wires=[0, 1])
-               
-            )
-        ],
+        [(qml.Hermitian(np.eye(4), wires=[0, 1]))],
     )
     @pytest.mark.parametrize(
         "test_hermobs1",
-        [
-            (
-                qml.Hermitian(np.ones((8, 8)), wires=range(3))
-               
-            )
-        ],
+        [(qml.Hermitian(np.ones((8, 8)), wires=range(3)))],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -479,10 +429,7 @@ class TestSerializeObs:
         ham2 = qml.Hamiltonian(
             [0.7, 0.3],
             [
-                (
-                    qml.PauliX(0) @ qml.Hermitian(np.eye(4), wires=[1, 2])
-                    
-                ),
+                (qml.PauliX(0) @ qml.Hermitian(np.eye(4), wires=[1, 2])),
                 qml.PauliY(0) @ qml.PauliX(2),
             ],
         )
@@ -506,18 +453,12 @@ class TestSerializeObs:
             [
                 tensor_prod_obs(
                     [
-                        (
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])
-                           
-                        ),
+                        (hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1])),
                         named_obs("PauliY", [2]),
                     ]
                 ),
                 tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliY", [2])]),
-                (
-                    hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])
-                   
-                ),
+                (hermitian_obs(np.ones(64, dtype=c_dtype), [0, 1, 2])),
             ],
         )
         s_expected2 = hamiltonian_obs(
@@ -526,10 +467,7 @@ class TestSerializeObs:
                 tensor_prod_obs(
                     [
                         named_obs("PauliX", [0]),
-                        (
-                            hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2])
-                           
-                        ),
+                        (hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [1, 2])),
                     ]
                 ),
                 tensor_prod_obs([named_obs("PauliY", [0]), named_obs("PauliX", [2])]),

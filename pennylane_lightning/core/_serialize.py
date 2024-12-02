@@ -224,7 +224,10 @@ class QuantumScriptSerializer:
         """Serializes a Hermitian observable"""
 
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
-        if self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"] and len(wires) > 1:
+        if (
+            self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"]
+            and len(wires) > 1
+        ):
             raise ValueError("The number of Hermitian observables target wires should be 1.")
         return self.hermitian_obs(matrix(observable).ravel().astype(self.ctype), wires)
 

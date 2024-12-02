@@ -192,8 +192,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                           DevTag<int>>()) // num_qubits, dev-tag
             .def(
                 "getState",
-                [](TensorNet &tensor_network, np_arr_c &state)
-                {
+                [](TensorNet &tensor_network, np_arr_c &state) {
                     py::buffer_info numpyArrayInfo = state.request();
                     auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
                         numpyArrayInfo.ptr);
@@ -206,17 +205,14 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             .def(
                 "setBasisState",
                 [](TensorNet &tensor_network,
-                   std::vector<std::size_t> &basisState)
-                {
+                   std::vector<std::size_t> &basisState) {
                     tensor_network.setBasisState(basisState);
                 },
                 "Create Basis State on GPU.")
             .def(
                 "updateMPSSitesData",
-                [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors)
-                {
-                    for (std::size_t idx = 0; idx < tensors.size(); idx++)
-                    {
+                [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
+                    for (std::size_t idx = 0; idx < tensors.size(); idx++) {
                         py::buffer_info numpyArrayInfo = tensors[idx].request();
                         auto *data_ptr =
                             static_cast<std::complex<PrecisionT> *>(
