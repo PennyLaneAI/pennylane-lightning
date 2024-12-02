@@ -96,7 +96,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
               BaseType::getDevTag())) {
         initTensors_();
-        reset();
         appendInitialMPSState_(
             getSitesExtentsPtr()
                 .data()); // This API works for Exact Tensor Network as well,
@@ -114,7 +113,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
               BaseType::getDevTag())) {
         initTensors_();
-        reset();
         appendInitialMPSState_(
             getSitesExtentsPtr()
                 .data()); // This API works for Exact Tensor Network as well,
@@ -831,6 +829,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             tensors_out_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
                                       sitesExtents_[i], BaseType::getDevTag());
         }
+        reset();
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda
