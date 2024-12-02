@@ -206,17 +206,17 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+        tensors_[0].getDataBuffer().zeroInit();
+        PL_CUDA_IS_SUCCESS(cudaMemcpy(
+            &tensors_[0].getDataBuffer().getData()[BaseType::getNumQubits() -
+                                                   std::size_t{1}],
+            &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+
+        for (std::size_t i = 1; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
-            std::size_t target = 0;
             std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
 
-            // Rightmost site
-            if (i == 0) {
-                target = basisState[idx];
-            } else {
-                target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
-            }
+            std::size_t target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
 
             PL_CUDA_IS_SUCCESS(
                 cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
