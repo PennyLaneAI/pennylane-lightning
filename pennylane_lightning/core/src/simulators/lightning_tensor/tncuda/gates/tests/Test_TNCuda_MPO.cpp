@@ -55,6 +55,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
 
     // in-order decomposition of the cnot operator
     // data from scipy decompose in the lightning.tensor python layer
+    // TODO: this is a temporary solution, it will be removed once SVD
+    // decomposition is implemented in the C++ layer
     mpo_cnot[0][0] = {1.0, 0.0};
     mpo_cnot[0][3] = {-1.0, 0.0};
     mpo_cnot[0][9] = {1.0, 0.0};
@@ -170,6 +172,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
 
     // in-order decomposition of the cnot operator
     // data from scipy decompose in the lightning.tensor python layer
+    // TODO: this is a temporary solution, it will be removed once SVD
+    // decomposition is implemented in the C++ layer
+
     mpo_single_excitation[0][0] = {-1.40627352, 0.0};
     mpo_single_excitation[0][3] = {-0.14943813, 0.0};
     mpo_single_excitation[0][6] = {0.00794005, 0.0};
