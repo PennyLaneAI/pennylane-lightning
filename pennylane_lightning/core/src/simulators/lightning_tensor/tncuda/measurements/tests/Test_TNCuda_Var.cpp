@@ -45,9 +45,9 @@ TEMPLATE_LIST_TEST_CASE("Test variance of NamedObs", "[TNCuda_Var]",
     using PrecisionT = typename TNDeviceT::PrecisionT;
     using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
-    std::size_t bondDim = GENERATE(2, 3, 4, 5);
-    std::size_t num_qubits = 2;
-    std::size_t maxBondDim = bondDim;
+    const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+    constexpr std::size_t num_qubits = 2;
+    const std::size_t maxBondDim = bondDim;
 
     std::unique_ptr<TNDeviceT> tn_state =
         createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -117,9 +117,9 @@ TEMPLATE_LIST_TEST_CASE("Test variance of HermitianObs", "[TNCuda_Var]",
     using ComplexT = typename TNDeviceT::ComplexT;
     using HermitianObsT = HermitianObsTNCuda<TNDeviceT>;
 
-    std::size_t bondDim = GENERATE(2, 3, 4, 5);
-    std::size_t num_qubits = 3;
-    std::size_t maxBondDim = bondDim;
+    const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+    constexpr std::size_t num_qubits = 3;
+    const std::size_t maxBondDim = bondDim;
 
     std::unique_ptr<TNDeviceT> tn_state =
         createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -152,9 +152,9 @@ TEMPLATE_LIST_TEST_CASE("Test variance of TensorProdObs", "[TNCuda_Var]",
     using NamedObsT = NamedObsTNCuda<TNDeviceT>;
     using TensorProdObsT = TensorProdObsTNCuda<TNDeviceT>;
 
-    std::size_t bondDim = GENERATE(2, 3, 4, 5);
-    std::size_t num_qubits = 3;
-    std::size_t maxBondDim = bondDim;
+    const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+    constexpr std::size_t num_qubits = 3;
+    const std::size_t maxBondDim = bondDim;
 
     std::unique_ptr<TNDeviceT> tn_state =
         createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -191,11 +191,11 @@ TEMPLATE_LIST_TEST_CASE("Test var value of HamiltonianObs", "[TNCuda_Var]",
     using HamiltonianObsT = HamiltonianTNCuda<TNDeviceT>;
 
     SECTION("Using TensorProd") {
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
         constexpr std::size_t num_qubits = 5;
         constexpr std::size_t num_paulis = 5;
         constexpr std::size_t num_obs_terms = 6;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -279,9 +279,9 @@ TEMPLATE_LIST_TEST_CASE("Test var value of HamiltonianObs", "[TNCuda_Var]",
     }
 
     SECTION("Using 1 Hermitian") {
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -319,9 +319,9 @@ TEMPLATE_LIST_TEST_CASE("Test var value of HamiltonianObs", "[TNCuda_Var]",
     }
 
     SECTION("Using 2 Hermitians") {
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);

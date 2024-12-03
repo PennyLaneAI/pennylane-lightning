@@ -42,9 +42,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     using PrecisionT = typename TNDevice_T::PrecisionT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
-    std::size_t max_mpo_bond = 16;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
+    constexpr std::size_t max_mpo_bond = 16;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
@@ -159,9 +159,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
-    std::size_t max_mpo_bond = 4;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
+    constexpr std::size_t max_mpo_bond = 4;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =

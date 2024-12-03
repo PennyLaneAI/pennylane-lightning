@@ -69,8 +69,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Hadamard", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -104,8 +104,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliX", "[TNCuda_Nonparam]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -129,8 +129,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::applyOperation-gatematrix",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -159,8 +159,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliY", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -196,8 +196,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PauliZ", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -231,8 +231,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::S", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -353,8 +353,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SWAP", "[TNCuda_Nonparam]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -403,8 +403,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CY", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -454,8 +454,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CZ", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -511,8 +511,8 @@ TEMPLATE_LIST_TEST_CASE("ExactTNCuda::Gates::CSWAP", "[TNCuda_Nonparam]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state;
@@ -573,8 +573,8 @@ TEMPLATE_LIST_TEST_CASE("ExactTNCuda::Gates::Toffoli", "[TNCuda_Nonparam]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state;
@@ -637,8 +637,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyControlledOperation non-param "
     using ComplexT = typename TNDevice_T::ComplexT;
     using PrecisionT = typename TNDevice_T::PrecisionT;
 
-    const int num_qubits = 4;
-    std::size_t maxExtent = 2;
+    constexpr int num_qubits = 4;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state0 =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
