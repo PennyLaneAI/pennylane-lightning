@@ -41,8 +41,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Identity", "[TNCuda_Nonparam]",
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -53,7 +53,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Identity", "[TNCuda_Nonparam]",
         tn_state->applyOperation("Hadamard", {index}, inverse);
 
         tn_state->applyOperation("Identity", {index}, inverse);
-        cp_t expected(1.0 / std::sqrt(2), 0);
+        auto expected = cuUtil::INVSQRT2<cp_t>();
 
         tn_state_append_mps_final_state(tn_state);
 
@@ -241,7 +241,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::S", "[TNCuda_Nonparam]",
     cp_t i(cuUtil::ConstMult(r, cuUtil::IMAG<cp_t>()));
 
     if (inverse) {
-        i = conj(i);
+        i = std::conj(i);
     }
 
     const std::vector<std::vector<cp_t>> expected_results = {

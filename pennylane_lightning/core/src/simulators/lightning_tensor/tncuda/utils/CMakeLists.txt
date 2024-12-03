@@ -6,7 +6,7 @@ add_library(${PL_BACKEND}_tncuda_utils INTERFACE)
 set(TNCUDA_UTILS_ADDED FALSE CACHE BOOL "Add tncuda_utils header files")
 
 foreach(BACKEND ${PL_BACKEND})
-    if("${PL_TENSOR_METHOD}" STREQUAL "mps" AND NOT TNCUDA_UTILS_ADDED)
+    if("${PL_TENSOR_BACKEND}" STREQUAL "cutensornet" AND NOT TNCUDA_UTILS_ADDED)
         add_subdirectory(mps)
         target_include_directories(${PL_BACKEND}_tncuda_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/mps)
         target_link_libraries(${PL_BACKEND}_tncuda_utils INTERFACE mps_tncuda_utils)

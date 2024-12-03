@@ -32,8 +32,6 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor;
 using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
-// using namespace Pennylane;
-namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
@@ -45,8 +43,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PhaseShift", "[TNCuda_Param]",
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);

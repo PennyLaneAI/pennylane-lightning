@@ -40,7 +40,7 @@ namespace Pennylane::LightningTensor::TNCuda {
 
 /**
  * @brief Managed memory Exact Tensor Network class using cutensornet high-level
- * APIs backed.
+ * APIs.
  *
  * @tparam Precision Floating-point precision type.
  */
