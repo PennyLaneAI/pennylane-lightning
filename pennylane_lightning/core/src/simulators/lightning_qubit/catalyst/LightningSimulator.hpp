@@ -101,9 +101,6 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
         const std::string &kwargs = "{}") // NOLINT(hicpp-member-init)
     {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots")
-                           ? static_cast<size_t>(std::stoll(args["shots"]))
-                           : 0;
         mcmc = args.contains("mcmc") ? args["mcmc"] == "True" : false;
         num_burnin = args.contains("num_burnin")
                          ? static_cast<size_t>(std::stoll(args["num_burnin"]))

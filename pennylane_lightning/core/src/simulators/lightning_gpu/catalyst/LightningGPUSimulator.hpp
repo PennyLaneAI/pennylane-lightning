@@ -108,9 +108,6 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
   public:
     explicit LightningGPUSimulator(const std::string &kwargs = "{}") {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots")
-                           ? static_cast<std::size_t>(std::stoll(args["shots"]))
-                           : 0;
     }
     ~LightningGPUSimulator() = default;
 
