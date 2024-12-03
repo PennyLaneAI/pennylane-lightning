@@ -554,6 +554,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     /**
      * @brief Save quantumState information to data provided by a user
      *
+     * @param extentsPtr Pointer to extents provided by a user
      * @param tensorPtr Pointer to tensors provided by a user
      */
     void computeState(int64_t **extentsPtr, void **tensorPtr) {
