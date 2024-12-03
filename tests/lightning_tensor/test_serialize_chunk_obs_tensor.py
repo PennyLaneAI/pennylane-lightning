@@ -29,7 +29,7 @@ if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
 class TestSerializeObs:
     """Tests for the _serialize_observables function"""
 

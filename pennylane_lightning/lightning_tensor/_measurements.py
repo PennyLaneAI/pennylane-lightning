@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 try:
-    from pennylane_lightning.lightning_tensor_ops import exatnMeasurementsC64, exatnMeasurementsC128
+    from pennylane_lightning.lightning_tensor_ops import exactMeasurementsC64, exactMeasurementsC128
 except ImportError:
     pass
 
@@ -89,8 +89,8 @@ class LightningTensorMeasurements:
         # return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
         if self.method == "mps":
             return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
-        if self.method == "exatn":
-            return exatnMeasurementsC64 if self.dtype == np.complex64 else exatnMeasurementsC128
+        if self.method == "exact":
+            return exactMeasurementsC64 if self.dtype == np.complex64 else exactMeasurementsC128
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.

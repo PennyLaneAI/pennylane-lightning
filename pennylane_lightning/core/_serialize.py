@@ -127,18 +127,18 @@ class QuantumScriptSerializer:
             self.hamiltonian_c64 = lightning_ops.observables.mpsHamiltonianC64
             self.hamiltonian_c128 = lightning_ops.observables.mpsHamiltonianC128
 
-        elif device_name == "lightning.tensor" and self.tensor_backend == "exatn":
-            self.tensornetwork_c64 = lightning_ops.exatnTensorNetC64
-            self.tensornetwork_c128 = lightning_ops.exatnTensorNetC128
+        elif device_name == "lightning.tensor" and self.tensor_backend == "exact":
+            self.tensornetwork_c64 = lightning_ops.exactTensorNetC64
+            self.tensornetwork_c128 = lightning_ops.exactTensorNetC128
 
-            self.named_obs_c64 = lightning_ops.observables.exatnNamedObsC64
-            self.named_obs_c128 = lightning_ops.observables.exatnNamedObsC128
-            self.hermitian_obs_c64 = lightning_ops.observables.exatnHermitianObsC64
-            self.hermitian_obs_c128 = lightning_ops.observables.exatnHermitianObsC128
-            self.tensor_prod_obs_c64 = lightning_ops.observables.exatnTensorProdObsC64
-            self.tensor_prod_obs_c128 = lightning_ops.observables.exatnTensorProdObsC128
-            self.hamiltonian_c64 = lightning_ops.observables.exatnHamiltonianC64
-            self.hamiltonian_c128 = lightning_ops.observables.exatnHamiltonianC128
+            self.named_obs_c64 = lightning_ops.observables.exactNamedObsC64
+            self.named_obs_c128 = lightning_ops.observables.exactNamedObsC128
+            self.hermitian_obs_c64 = lightning_ops.observables.exactHermitianObsC64
+            self.hermitian_obs_c128 = lightning_ops.observables.exactHermitianObsC128
+            self.tensor_prod_obs_c64 = lightning_ops.observables.exactTensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.exactTensorProdObsC128
+            self.hamiltonian_c64 = lightning_ops.observables.exactHamiltonianC64
+            self.hamiltonian_c128 = lightning_ops.observables.exactHamiltonianC128
 
         elif self._use_mpi:
             self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64

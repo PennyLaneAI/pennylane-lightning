@@ -138,7 +138,7 @@ def circuit_ansatz(params, wires):
     qml.ECR(wires=[wires[1], wires[3]])
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
 @pytest.mark.parametrize(
     "returns",
     [
@@ -205,7 +205,7 @@ def test_integration_for_all_supported_gates(returns, tn_backend):
     assert np.allclose(j_ltensor, j_default, rtol=1e-6)
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
 class TestSparseHExpval:
     """Test sparseH expectation values"""
 
@@ -289,7 +289,7 @@ class TestSparseHExpval:
             m.var(q.queue[0])
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
 class TestQChem:
     """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
 

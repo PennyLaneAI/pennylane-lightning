@@ -51,7 +51,7 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
     using BaseType = TNCudaBase<Precision, ExaTNCuda>;
 
   public:
-    constexpr static auto method = "exatn";
+    constexpr static auto method = "exact";
 
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;

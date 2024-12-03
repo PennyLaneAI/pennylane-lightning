@@ -64,7 +64,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 _backends = frozenset({"cutensornet"})
 # The set of supported backends.
 
-_methods = frozenset({"mps", "exatn"})
+_methods = frozenset({"mps", "exact"})
 # The set of supported methods.
 
 _operations = frozenset(

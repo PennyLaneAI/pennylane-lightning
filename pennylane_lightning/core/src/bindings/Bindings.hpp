@@ -907,7 +907,7 @@ template <class TensorNetT> void lightningTensorClassBindings(py::module_ &m) {
     using PrecisionT =
         typename TensorNetT::PrecisionT; // TensorNet's precision.
     // Enable module name to be based on size of complex datatype
-    auto name = TensorNetT::method; // TensorNet's backend name [mps, exatn].
+    auto name = TensorNetT::method; // TensorNet's backend name [mps, exact].
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
 

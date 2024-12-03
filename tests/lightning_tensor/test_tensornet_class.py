@@ -33,7 +33,7 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
 @pytest.mark.parametrize("num_wires", range(1, 4))
 @pytest.mark.parametrize("bondDims", [1, 2, 3, 4])
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
@@ -70,7 +70,7 @@ def test_wrong_device_name():
         LightningTensorNet(3, max_bond_dim=5, device_name="thunder.tensor")
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
 def test_errors_basis_state(tn_backend):
     """Test that errors are raised when applying a BasisState operation."""
     with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):

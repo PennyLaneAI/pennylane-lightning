@@ -29,20 +29,20 @@ if device_name != "lightning.tensor":
 
 if device_name == "lightning.tensor":
     from pennylane_lightning.lightning_tensor_ops import (
-        exatnTensorNetC64,
-        exatnTensorNetC128,
+        exactTensorNetC64,
+        exactTensorNetC128,
         mpsTensorNetC64,
         mpsTensorNetC128,
     )
     from pennylane_lightning.lightning_tensor_ops.observables import (
-        exatnHamiltonianC64,
-        exatnHamiltonianC128,
-        exatnHermitianObsC64,
-        exatnHermitianObsC128,
-        exatnNamedObsC64,
-        exatnNamedObsC128,
-        exatnTensorProdObsC64,
-        exatnTensorProdObsC128,
+        exactHamiltonianC64,
+        exactHamiltonianC128,
+        exactHermitianObsC64,
+        exactHermitianObsC128,
+        exactNamedObsC64,
+        exactNamedObsC128,
+        exactTensorProdObsC64,
+        exactTensorProdObsC128,
         mpsHamiltonianC64,
         mpsHamiltonianC128,
         mpsHermitianObsC64,
@@ -54,7 +54,7 @@ if device_name == "lightning.tensor":
     )
 
 
-@pytest.fixture(params=["mps", "exatn"])
+@pytest.fixture(params=["mps", "exact"])
 def tn_backend(request):
     return request.param
 
@@ -72,7 +72,7 @@ def test_wrong_device_name():
         QuantumScriptSerializer("thunder.qubit")
 
 
-# @pytest.mark.parametrize("tn_backend",["mps","exatn"])
+# @pytest.mark.parametrize("tn_backend",["mps","exact"])
 @pytest.mark.parametrize("dtype", ["64", "128"])
 @pytest.mark.parametrize(
     "obs,obs_type",
@@ -855,7 +855,7 @@ def test_unsupported_obs_returns_expected_type(obs):
 
 
 @pytest.mark.parametrize("use_csingle", [True, False])
-@pytest.mark.parametrize("backend,init", [("mps", (3, 3)), ("exatn", (3,))])
+@pytest.mark.parametrize("backend,init", [("mps", (3, 3)), ("exact", (3,))])
 def test_tensornet_dtype(use_csingle, backend, init):
     """Tests that the correct TensorNet type is used for the device"""
 

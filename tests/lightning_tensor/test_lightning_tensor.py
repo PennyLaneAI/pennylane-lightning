@@ -44,7 +44,7 @@ def test_invalid_method(method):
         LightningTensor(method=method)
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
+@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
 class TestTensorNet:
 
     @pytest.mark.parametrize("num_wires", [3, 4, 5])
@@ -63,7 +63,7 @@ class TestTensorNet:
         dev = qml.device("lightning.tensor", wires=2, method=tn_backend)
         assert isinstance(dev, LightningTensor)
         assert dev.backend == "cutensornet"
-        assert dev.method in ["mps", "exatn"]
+        assert dev.method in ["mps", "exact"]
 
     def test_invalid_arg(self, tn_backend):
         """Test that an error is raised if an invalid argument is provided."""

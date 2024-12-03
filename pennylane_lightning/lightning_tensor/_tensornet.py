@@ -22,7 +22,7 @@ except ImportError:
     pass
 
 try:
-    from pennylane_lightning.lightning_tensor_ops import exatnTensorNetC64, exatnTensorNetC128
+    from pennylane_lightning.lightning_tensor_ops import exactTensorNetC64, exactTensorNetC128
 except ImportError:
     pass
 
@@ -172,7 +172,7 @@ class LightningTensorNet:
 
         if self._method == "mps":
             self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
-        elif self._method == "exatn":
+        elif self._method == "exact":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
             raise NotImplementedError  # pragma: no cover
@@ -216,8 +216,8 @@ class LightningTensorNet:
         """
         if self.method == "mps":
             return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
-        if self.method == "exatn":
-            return exatnTensorNetC128 if self.dtype == np.complex128 else exatnTensorNetC64
+        if self.method == "exact":
+            return exactTensorNetC128 if self.dtype == np.complex128 else exactTensorNetC64
 
     def reset_state(self):
         """Reset the device's initial quantum state"""
@@ -298,7 +298,7 @@ class LightningTensorNet:
             M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
             self._tensornet.updateMPSSitesData(M)
 
-        if self.method == "exatn":
+        if self.method == "exact":
             raise DeviceError("Exact Tensor Network does not support StatePrep")
 
     def _apply_basis_state(self, state, wires):
@@ -423,7 +423,7 @@ class LightningTensorNet:
 
                 if self.method == "mps":
                     self._apply_MPO(gate_ops_matrix, wires)
-                if self.method == "exatn":
+                if self.method == "exact":
                     method = getattr(tensornet, "applyMatrix")
                     method(gate_ops_matrix, wires, False)
 
@@ -437,7 +437,7 @@ class LightningTensorNet:
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
                     operations = operations[1:]
-                if self.method == "exatn":
+                if self.method == "exact":
                     raise DeviceError("Exact Tensor Network does not support StatePrep")
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
