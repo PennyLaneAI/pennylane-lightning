@@ -896,7 +896,6 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
             },
             "Compare two observables");
 }
-#endif
 
 /**
  * @brief Templated class to build lightning.tensor class bindings.
@@ -951,6 +950,6 @@ void registerLightningTensorClassBindings(py::module_ &m) {
             m, "LightningException");
     }
 }
-
+#endif
 
 } // namespace Pennylane
