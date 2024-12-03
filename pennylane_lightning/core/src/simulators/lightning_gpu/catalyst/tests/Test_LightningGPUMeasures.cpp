@@ -1825,7 +1825,7 @@ TEST_CASE("Sample with a seeded device", "[Measures]") {
 }
 
 TEST_CASE("Probs with a seeded device", "[Measures]") {
-    std::size_t shots = 1000;
+    constexpr std::size_t shots = 1000;
     std::array<std::unique_ptr<LGPUSimulator>, 2> sims;
     std::vector<std::vector<double>> probs(2, std::vector<double>(16));
 
@@ -1867,7 +1867,7 @@ TEST_CASE("Probs with a seeded device", "[Measures]") {
 }
 
 TEST_CASE("Var with a seeded device", "[Measures]") {
-    std::size_t shots = 1000;
+    constexpr std::size_t shots = 1000;
     std::array<std::unique_ptr<LGPUSimulator>, 2> sims;
     std::array<std::vector<double>, 2> vars;
 
@@ -1913,7 +1913,7 @@ TEST_CASE("Var with a seeded device", "[Measures]") {
 }
 
 TEST_CASE("Expval with a seeded device", "[Measures]") {
-    std::size_t shots = 1000;
+    constexpr std::size_t shots = 1000;
     std::array<std::unique_ptr<LGPUSimulator>, 2> sims;
     std::array<std::vector<double>, 2> expvals;
 
