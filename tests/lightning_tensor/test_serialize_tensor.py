@@ -72,7 +72,6 @@ def test_wrong_device_name():
         QuantumScriptSerializer("thunder.qubit")
 
 
-# @pytest.mark.parametrize("tn_backend",["mps","exact"])
 @pytest.mark.parametrize("dtype", ["64", "128"])
 @pytest.mark.parametrize(
     "obs,obs_type",

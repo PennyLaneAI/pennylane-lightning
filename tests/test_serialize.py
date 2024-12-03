@@ -75,24 +75,25 @@ def test_wrong_device_name():
         QuantumScriptSerializer("thunder.qubit")
 
 
+@pytest.mark.parametrize("dtype", ["64", "128"])
 @pytest.mark.parametrize(
     "obs,obs_type",
     [
-        (qml.PauliZ(0), NamedObsC128),
-        (qml.PauliZ(0) @ qml.PauliZ(1), TensorProdObsC128),
-        (qml.Hadamard(0), NamedObsC128),
-        (qml.Hermitian(np.eye(2), wires=0), HermitianObsC128),
+        (qml.PauliZ(0), "NamedObsC"),
+        (qml.PauliZ(0) @ qml.PauliZ(1), "TensorProdObsC"),
+        (qml.Hadamard(0), "NamedObsC"),
+        (qml.Hermitian(np.eye(2), wires=0), "HermitianObsC"),
         (
             (qml.PauliZ(0) @ qml.Hadamard(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3)))),
-            TensorProdObsC128,
+            "TensorProdObsC",
         ),
         (
             qml.PauliZ(0) @ qml.PauliY(1) @ qml.PauliX(2),
-            TensorProdObsC128,
+            "TensorProdObsC",
         ),
         (
             qml.PauliZ(0) @ qml.PauliY(1) @ (0.1 * (qml.PauliZ(2) + qml.PauliX(3))),
-            HamiltonianC128,
+            "HamiltonianC",
         ),
         (
             (
@@ -100,7 +101,7 @@ def test_wrong_device_name():
                 @ qml.Hermitian(np.eye(2), wires=1)
                 @ qml.Projector([0], wires=2)
             ),
-            TensorProdObsC128,
+            "TensorProdObsC",
         ),
         (
             (
@@ -108,31 +109,33 @@ def test_wrong_device_name():
                 @ qml.Hermitian(np.eye(2), wires=1)
                 @ qml.Projector([0], wires=1)
             ),
-            HermitianObsC128,
+            "HermitianObsC",
         ),
         (
             qml.PauliZ(0) @ qml.Hermitian(np.eye(2), wires=1) @ qml.Projector([0], wires=2),
-            TensorProdObsC128,
+            "TensorProdObsC",
         ),
-        (qml.Projector([0], wires=0), HermitianObsC128),
-        (qml.Hamiltonian([1], [qml.PauliZ(0)]), NamedObsC128),
-        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), HamiltonianC128),
+        (qml.Projector([0], wires=0), "HermitianObsC"),
+        (qml.Hamiltonian([1], [qml.PauliZ(0)]), "NamedObsC"),
+        (qml.sum(qml.Hadamard(0), qml.PauliX(1)), "HamiltonianC"),
         (
             (
                 qml.SparseHamiltonian(
                     qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]
                 )
             ),
-            SparseHamiltonianC128,
+            "SparseHamiltonianC",
         ),
-        (2.5 * qml.PauliZ(0), HamiltonianC128),
+        (2.5 * qml.PauliZ(0), "HamiltonianC"),
     ],
 )
-def test_obs_returns_expected_type(obs, obs_type):
+def test_obs_returns_expected_type(dtype, obs, obs_type):
     """Tests that observables get serialized to the expected type, with and without wires map"""
-    serializer = QuantumScriptSerializer(device_name)
-    assert isinstance(serializer._ob(obs, dict(enumerate(obs.wires))), obs_type)
-    assert isinstance(serializer._ob(obs), obs_type)
+    obs_type_mod = globals().get(obs_type + dtype)
+    
+    serializer = QuantumScriptSerializer(device_name, True if dtype == "64" else False)
+    assert isinstance(serializer._ob(obs, dict(enumerate(obs.wires))), obs_type_mod)
+    assert isinstance(serializer._ob(obs), obs_type_mod)
 
 
 class TestSerializeObs:
