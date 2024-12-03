@@ -770,60 +770,6 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
- * @brief Templated class to build lightning.tensor class bindings.
- *
- * @tparam TensorNetT Tensor network type.
- * @param m Pybind11 module.
- */
-template <class TensorNetT> void lightningTensorClassBindings(py::module_ &m) {
-    using PrecisionT =
-        typename TensorNetT::PrecisionT; // TensorNet's precision.
-    // Enable module name to be based on size of complex datatype
-    auto name = TensorNetT::method; // TensorNet's backend name [mps, exatn].
-    const std::string bitsize =
-        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
-
-    //***********************************************************************//
-    //                              TensorNet
-    //***********************************************************************//
-    std::string class_name = std::string(name) + "TensorNetC" + bitsize;
-    auto pyclass =
-        py::class_<TensorNetT>(m, class_name.c_str(), py::module_local());
-
-    registerBackendClassSpecificBindings<TensorNetT>(pyclass);
-
-    //***********************************************************************//
-    //                              Observables
-    //***********************************************************************//
-    /* Observables submodule */
-    py::module_ obs_submodule =
-        m.def_submodule("observables", "Submodule for observables classes.");
-    registerBackendAgnosticObservablesTensor<TensorNetT>(obs_submodule, name);
-
-    //***********************************************************************//
-    //                             Measurements
-    //***********************************************************************//
-    class_name = std::string(name) + "MeasurementsC" + bitsize;
-    auto pyclass_measurements = py::class_<MeasurementsTNCuda<TensorNetT>>(
-        m, class_name.c_str(), py::module_local());
-
-    pyclass_measurements.def(py::init<const TensorNetT &>());
-    registerLightningTensorBackendAgnosticMeasurements<TensorNetT>(
-        pyclass_measurements);
-}
-
-template <typename TypeList>
-void registerLightningTensorClassBindings(py::module_ &m) {
-    if constexpr (!std::is_same_v<TypeList, void>) {
-        using TensorNetT = typename TypeList::Type;
-        lightningTensorClassBindings<TensorNetT>(m);
-        registerLightningTensorClassBindings<typename TypeList::Next>(m);
-        py::register_local_exception<Pennylane::Util::LightningException>(
-            m, "LightningException");
-    }
-}
-
-/**
  * @brief Register observable classes.
  *
  * @tparam LightningBackendT
@@ -951,5 +897,60 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
             "Compare two observables");
 }
 #endif
+
+/**
+ * @brief Templated class to build lightning.tensor class bindings.
+ *
+ * @tparam TensorNetT Tensor network type.
+ * @param m Pybind11 module.
+ */
+template <class TensorNetT> void lightningTensorClassBindings(py::module_ &m) {
+    using PrecisionT =
+        typename TensorNetT::PrecisionT; // TensorNet's precision.
+    // Enable module name to be based on size of complex datatype
+    auto name = TensorNetT::method; // TensorNet's backend name [mps, exatn].
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    //***********************************************************************//
+    //                              TensorNet
+    //***********************************************************************//
+    std::string class_name = std::string(name) + "TensorNetC" + bitsize;
+    auto pyclass =
+        py::class_<TensorNetT>(m, class_name.c_str(), py::module_local());
+
+    registerBackendClassSpecificBindings<TensorNetT>(pyclass);
+
+    //***********************************************************************//
+    //                              Observables
+    //***********************************************************************//
+    /* Observables submodule */
+    py::module_ obs_submodule =
+        m.def_submodule("observables", "Submodule for observables classes.");
+    registerBackendAgnosticObservablesTensor<TensorNetT>(obs_submodule, name);
+
+    //***********************************************************************//
+    //                             Measurements
+    //***********************************************************************//
+    class_name = std::string(name) + "MeasurementsC" + bitsize;
+    auto pyclass_measurements = py::class_<MeasurementsTNCuda<TensorNetT>>(
+        m, class_name.c_str(), py::module_local());
+
+    pyclass_measurements.def(py::init<const TensorNetT &>());
+    registerLightningTensorBackendAgnosticMeasurements<TensorNetT>(
+        pyclass_measurements);
+}
+
+template <typename TypeList>
+void registerLightningTensorClassBindings(py::module_ &m) {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using TensorNetT = typename TypeList::Type;
+        lightningTensorClassBindings<TensorNetT>(m);
+        registerLightningTensorClassBindings<typename TypeList::Next>(m);
+        py::register_local_exception<Pennylane::Util::LightningException>(
+            m, "LightningException");
+    }
+}
+
 
 } // namespace Pennylane
