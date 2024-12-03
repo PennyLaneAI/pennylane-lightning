@@ -32,11 +32,11 @@
 * Update Kokkos version support to 4.5.
   [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
 
-* Generalize seeding mechanism for all measurements.
-  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
-
 * Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
   [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
+
+* Generalize seeding mechanism for all measurements.
+  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
 
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
