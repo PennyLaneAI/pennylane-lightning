@@ -14,8 +14,8 @@
 
 /**
  * @file TNCudaBase.hpp
- * Base class for cuTensorNet-backed tensor networks, specially for common APIs
- * of MPS and ExaTN.
+ * Base class for cuTensorNet-backed tensor networks (for common APIs
+ * of MPS and ExactTN).
  */
 
 #pragma once

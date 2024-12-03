@@ -18,7 +18,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
 
@@ -505,7 +505,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CZ", "[TNCuda_Nonparam]",
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::CSWAP", "[TNCuda_Nonparam]",
+TEMPLATE_LIST_TEST_CASE("ExactTNCuda::Gates::CSWAP", "[TNCuda_Nonparam]",
                         TestTNBackends) {
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
@@ -528,7 +528,7 @@ TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::CSWAP", "[TNCuda_Nonparam]",
                 LightningException);
         }
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         SECTION("Apply adjacent wire indices") {
@@ -567,7 +567,7 @@ TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::CSWAP", "[TNCuda_Nonparam]",
     }
 }
 
-TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::Toffoli", "[TNCuda_Nonparam]",
+TEMPLATE_LIST_TEST_CASE("ExactTNCuda::Gates::Toffoli", "[TNCuda_Nonparam]",
                         TestTNBackends) {
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
@@ -591,7 +591,7 @@ TEMPLATE_LIST_TEST_CASE("ExaTNCuda::Gates::Toffoli", "[TNCuda_Nonparam]",
                 LightningException);
         }
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         SECTION("Apply adjacent wire indices") {

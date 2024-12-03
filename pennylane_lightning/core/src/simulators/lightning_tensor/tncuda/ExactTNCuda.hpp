@@ -46,9 +46,9 @@ namespace Pennylane::LightningTensor::TNCuda {
  */
 
 template <class Precision>
-class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
+class ExactTNCuda final : public TNCudaBase<Precision, ExactTNCuda<Precision>> {
   private:
-    using BaseType = TNCudaBase<Precision, ExaTNCuda>;
+    using BaseType = TNCudaBase<Precision, ExactTNCuda>;
 
   public:
     constexpr static auto method = "exatn";
@@ -58,13 +58,13 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
     using PrecisionT = Precision;
 
   public:
-    ExaTNCuda() = delete;
+    ExactTNCuda() = delete;
 
-    explicit ExaTNCuda(std::size_t numQubits) : BaseType(numQubits) {}
+    explicit ExactTNCuda(std::size_t numQubits) : BaseType(numQubits) {}
 
-    explicit ExaTNCuda(std::size_t numQubits, DevTag<int> dev_tag)
+    explicit ExactTNCuda(std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag) {}
 
-    ~ExaTNCuda() = default;
+    ~ExactTNCuda() = default;
 };
 } // namespace Pennylane::LightningTensor::TNCuda

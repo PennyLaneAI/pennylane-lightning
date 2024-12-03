@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 
 // explicit instantiation
-template class Pennylane::LightningTensor::TNCuda::ExaTNCuda<float>;
-template class Pennylane::LightningTensor::TNCuda::ExaTNCuda<double>;
+template class Pennylane::LightningTensor::TNCuda::ExactTNCuda<float>;
+template class Pennylane::LightningTensor::TNCuda::ExactTNCuda<double>;

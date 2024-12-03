@@ -18,7 +18,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "Gates.hpp"
 #include "MPSTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
@@ -1214,7 +1214,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
             tn_state->applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse),
             LightningException);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         const std::vector<Precision_T> angles = {0.3};
@@ -1294,7 +1294,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
                                                    {0, 1, 2, 3}, inverse),
                           LightningException);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         const std::vector<Precision_T> angles = {0.3};
@@ -1380,7 +1380,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
                                                    {0, 1, 2, 3}, inverse),
                           LightningException);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         const std::vector<Precision_T> angles = {0.3};

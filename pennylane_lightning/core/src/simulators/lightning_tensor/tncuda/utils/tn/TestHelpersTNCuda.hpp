@@ -17,7 +17,7 @@
  * This file defines the necessary functionality to test over LTensor.
  */
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "TypeList.hpp"
 
@@ -46,7 +46,7 @@ std::unique_ptr<TNDevice_T> createTNState(std::size_t num_qubits,
         // Create the object for MPSTNCuda
         return std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         return std::make_unique<TNDevice_T>(num_qubits, dev_tag);
     }
 }
@@ -65,7 +65,7 @@ tn_state_append_mps_final_state(std::unique_ptr<TNDevice_T> const &tn_state) {
 
 using TestTNBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
-                              ExaTNCuda<float>, ExaTNCuda<double>>;
+                              ExactTNCuda<float>, ExactTNCuda<double>>;
 using TestMPSBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>>;
 

@@ -23,7 +23,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
