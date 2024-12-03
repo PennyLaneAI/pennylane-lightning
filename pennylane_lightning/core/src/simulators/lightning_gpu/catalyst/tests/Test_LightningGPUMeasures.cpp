@@ -1834,8 +1834,8 @@ TEST_CASE("Probs with a seeded device", "[Measures]") {
 
     std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
 
-    auto circuit = [shots](LGPUSimulator &sim, DataView<double, 1> &view,
-                           std::mt19937 &gen) {
+    auto circuit = [](LGPUSimulator &sim, DataView<double, 1> &view,
+                      std::mt19937 &gen) {
         sim.SetDevicePRNG(&gen);
         sim.SetDeviceShots(shots);
         // state-vector with #qubits = n
@@ -1873,8 +1873,8 @@ TEST_CASE("Var with a seeded device", "[Measures]") {
 
     std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
 
-    auto circuit = [shots](LGPUSimulator &sim, std::vector<double> &var,
-                           std::mt19937 &gen) {
+    auto circuit = [](LGPUSimulator &sim, std::vector<double> &var,
+                      std::mt19937 &gen) {
         sim.SetDevicePRNG(&gen);
         sim.SetDeviceShots(shots);
         // state-vector with #qubits = n
@@ -1919,8 +1919,8 @@ TEST_CASE("Expval with a seeded device", "[Measures]") {
 
     std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
 
-    auto circuit = [shots](LGPUSimulator &sim, std::vector<double> &expval,
-                           std::mt19937 &gen) {
+    auto circuit = [](LGPUSimulator &sim, std::vector<double> &expval,
+                      std::mt19937 &gen) {
         sim.SetDevicePRNG(&gen);
         sim.SetDeviceShots(shots);
         // state-vector with #qubits = n
