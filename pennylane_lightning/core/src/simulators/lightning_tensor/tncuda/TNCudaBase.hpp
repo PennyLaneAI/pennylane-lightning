@@ -33,6 +33,8 @@
 #include "TensorCuda.hpp"
 #include "TensornetBase.hpp"
 
+#include "Util.hpp"
+
 /// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
@@ -155,7 +157,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::size_t avail_gpu_memory = getFreeMemorySize();
 
-        PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
+        PL_ABORT_IF(avail_gpu_memory <
+                        Pennylane::Util::exp2(BaseType::getNumQubits()) *
+                            sizeof(ComplexT),
                     "State tensor size exceeds the available GPU memory!");
         get_state_tensor(res);
     }
@@ -167,7 +171,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * quantum state on host
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        std::size_t length = std::size_t{1} << BaseType::getNumQubits();
+        std::size_t length = Pennylane::Util::exp2(BaseType::getNumQubits());
         std::vector<ComplexT> results(length);
 
         getData(results.data(), results.size());
