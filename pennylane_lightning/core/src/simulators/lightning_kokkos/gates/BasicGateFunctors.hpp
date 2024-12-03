@@ -27,7 +27,7 @@ namespace {
 using namespace Pennylane::Util;
 using Kokkos::kokkos_swap;
 using Pennylane::Gates::GateOperation;
-using Pennylane::LightningKokkos::Util::ControlBitPatterns;
+using Pennylane::LightningKokkos::Util::controlBitPatterns;
 using Pennylane::LightningKokkos::Util::generateBitPatterns;
 using Pennylane::LightningKokkos::Util::parity_2_offset;
 using Pennylane::LightningKokkos::Util::reverseWires;
@@ -66,7 +66,7 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
-        ControlBitPatterns(indices_, num_qubits, controlled_wires,
+        controlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
         indices = vector2view(indices_);
         Kokkos::parallel_for(Kokkos::TeamPolicy(two2N, Kokkos::AUTO, dim),
@@ -110,7 +110,7 @@ class applyNC1Functor<PrecisionT, FuncT, true> {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
-        ControlBitPatterns(indices_, num_qubits, controlled_wires,
+        controlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
         indices = vector2view(indices_);
         Kokkos::parallel_for(
@@ -639,7 +639,7 @@ class applyNC2Functor<PrecisionT, FuncT, true> {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
-        ControlBitPatterns(indices_, num_qubits, controlled_wires,
+        controlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
         indices = vector2view(indices_);
         Kokkos::parallel_for(
@@ -1359,7 +1359,7 @@ class applyNC4Functor<PrecisionT, FuncT, true> {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires, num_qubits);
-        ControlBitPatterns(indices_, num_qubits, controlled_wires,
+        controlBitPatterns(indices_, num_qubits, controlled_wires,
                            controlled_values);
         indices = vector2view(indices_);
         Kokkos::parallel_for(

@@ -23,7 +23,7 @@
 namespace {
 using namespace Pennylane::Util;
 using Kokkos::Experimental::swap;
-using Pennylane::LightningKokkos::Util::ControlBitPatterns;
+using Pennylane::LightningKokkos::Util::controlBitPatterns;
 using Pennylane::LightningKokkos::Util::generateBitPatterns;
 using Pennylane::LightningKokkos::Util::one;
 using Pennylane::LightningKokkos::Util::parity_2_offset;
@@ -146,7 +146,7 @@ template <class Precision> struct NCMultiQubitOpFunctor {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
-        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+        controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
         indices = vector2view(indices_);
     }
@@ -246,7 +246,7 @@ template <class PrecisionT> struct applyNC1QubitOpFunctor {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
-        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+        controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
         indices = vector2view(indices_);
     }
@@ -351,7 +351,7 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
-        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+        controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
         indices = vector2view(indices_);
     }
@@ -470,7 +470,7 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
         parity = parity_;
         std::vector<std::size_t> indices_ =
             generateBitPatterns(wires_, num_qubits_);
-        ControlBitPatterns(indices_, num_qubits_, controlled_wires_,
+        controlBitPatterns(indices_, num_qubits_, controlled_wires_,
                            controlled_values_);
         indices = vector2view(indices_);
     }
