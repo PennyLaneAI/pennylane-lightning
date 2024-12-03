@@ -195,7 +195,7 @@ inline auto generateBitPatterns(const std::vector<std::size_t> &wires,
  * @param controlled_wires Control wires.
  * @param controlled_values Control values (false or true).
  */
-inline void ControlBitPatterns(std::vector<std::size_t> &indices,
+inline void controlBitPatterns(std::vector<std::size_t> &indices,
                                const std::size_t num_qubits,
                                const std::vector<std::size_t> &controlled_wires,
                                const std::vector<bool> &controlled_values) {
