@@ -85,7 +85,7 @@ class QuantumScriptSerializer:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
-        elif device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"]:
+        elif device_name in ["lightning.tensor_mps", "lightning.tensor_exatn", "lightning.tensor"]:
             try:
                 import pennylane_lightning.lightning_tensor_ops as lightning_ops
             except ImportError as exception:
