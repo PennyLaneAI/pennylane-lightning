@@ -3,7 +3,7 @@ COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=htm
 TESTRUNNER := -m pytest tests --tb=short
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
-SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; import os; print(os.path.dirname(scipy_openblas32.get_lib_dir()))")
+SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
 
 ifdef check
     CHECK := --check --diff

@@ -98,7 +98,11 @@ endif()
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")
 
-if(NOT DEFINED PY_INSTALL)
+if(DEFINED PY_INSTALL)
+    # Note the following setting is only for pyenv and not for conda
+    # TODO: Add support for conda
+    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+else()
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
     if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
         set(SCIPY_OPENBLAS32_LIB_PATH "")
@@ -109,8 +113,6 @@ if(NOT DEFINED PY_INSTALL)
         add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
     endif()
     set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "${SCIPY_OPENBLAS32_LIB_PATH}")
-else()
-    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
 endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
