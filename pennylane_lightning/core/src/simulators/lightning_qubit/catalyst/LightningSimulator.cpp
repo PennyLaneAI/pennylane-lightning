@@ -22,8 +22,29 @@
 namespace Catalyst::Runtime::Simulator {
 
 auto LightningSimulator::AllocateQubit() -> QubitIdType {
-    size_t sv_id = this->device_sv->allocateWire();
-    return this->qubit_manager.Allocate(sv_id);
+    const std::size_t num_qubits = this->device_sv->getNumQubits();
+
+    if (num_qubits == 0U) {
+        this->device_sv = std::make_unique<StateVectorT>(1);
+        return this->qubit_manager.Allocate(num_qubits);
+    }
+
+    std::vector<std::complex<double>, AlignedAllocator<std::complex<double>>>
+        data = this->device_sv->getDataVector();
+    const std::size_t dsize = data.size();
+    data.resize(dsize << 1UL);
+
+    auto src = data.begin();
+    std::advance(src, dsize - 1);
+
+    for (auto dst = data.end() - 2; src != data.begin();
+         std::advance(src, -1), std::advance(dst, -2)) {
+        *dst = *src;
+        *src = std::complex<double>(.0, .0);
+    }
+
+    this->device_sv = std::make_unique<StateVectorT>(data);
+    return this->qubit_manager.Allocate(num_qubits);
 }
 
 auto LightningSimulator::AllocateQubits(size_t num_qubits)
@@ -45,14 +66,11 @@ auto LightningSimulator::AllocateQubits(size_t num_qubits)
 }
 
 void LightningSimulator::ReleaseAllQubits() {
-    this->device_sv->clearData();
     this->qubit_manager.ReleaseAll();
+    this->device_sv = std::make_unique<StateVectorT>(0); // reset the device
 }
 
 void LightningSimulator::ReleaseQubit(QubitIdType q) {
-    if (this->qubit_manager.isValidQubitId(q)) {
-        this->device_sv->releaseWire(this->qubit_manager.getDeviceId(q));
-    }
     this->qubit_manager.Release(q);
 }
 
@@ -233,6 +251,8 @@ auto LightningSimulator::Expval(ObsIdType obsKey) -> double {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
+    m.setSeed(this->generateSeed());
+
     return (device_shots != 0U) ? m.expval(*obs, device_shots, {})
                                 : m.expval(*obs);
 }
@@ -250,6 +270,8 @@ auto LightningSimulator::Var(ObsIdType obsKey) -> double {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
+    m.setSeed(this->generateSeed());
+
     return (device_shots != 0U) ? m.var(*obs, device_shots) : m.var(*obs);
 }
 
@@ -264,6 +286,9 @@ void LightningSimulator::State(DataView<std::complex<double>, 1> &state) {
 void LightningSimulator::Probs(DataView<double, 1> &probs) {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.setSeed(this->generateSeed());
+
     auto &&dv_probs = (device_shots != 0U) ? m.probs(device_shots) : m.probs();
 
     RT_FAIL_IF(probs.size() != dv_probs.size(),
@@ -283,6 +308,9 @@ void LightningSimulator::PartialProbs(DataView<double, 1> &probs,
     auto dev_wires = getDeviceWires(wires);
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.setSeed(this->generateSeed());
+
     auto &&dv_probs = (device_shots != 0U) ? m.probs(dev_wires, device_shots)
                                            : m.probs(dev_wires);
 
@@ -297,6 +325,8 @@ LightningSimulator::GenerateSamplesMetropolis(size_t shots) {
     // generate_samples_metropolis is a member function of the Measures class.
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.setSeed(this->generateSeed());
 
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method
@@ -317,6 +347,8 @@ std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
     Pennylane::LightningQubit::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
+    m.setSeed(this->generateSeed());
+
     // PL-Lightning generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Alias_method
     // Given the number of samples, returns 1-D vector of samples
@@ -324,9 +356,6 @@ std::vector<size_t> LightningSimulator::GenerateSamples(size_t shots) {
     // the number of qubits.
     //
     // Return Value Optimization (RVO)
-    if (this->gen != nullptr) {
-        return m.generate_samples(shots, (*(this->gen))());
-    }
     return m.generate_samples(shots);
 }
 

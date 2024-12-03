@@ -100,8 +100,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
     HamiltonianApplyInPlace<StateVectorT, true>::run(coeffs, terms, sv2);
 
     PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 1e4;
-    REQUIRE(isApproxEqual(sv1.getData(), sv1.getLength(), sv2.getData(),
-                          sv2.getLength(), eps));
+    REQUIRE(isApproxEqual(sv1.getDataVector(), sv2.getDataVector(), eps));
 }
 
 /**

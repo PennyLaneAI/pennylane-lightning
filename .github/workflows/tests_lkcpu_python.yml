@@ -49,7 +49,7 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       os: ubuntu-22.04
-      kokkos_version: "4.3.01"
+      kokkos_version: "4.5.00"
 
   build_lightning_kokkos_wheels:
     needs: [build_and_cache_Kokkos]

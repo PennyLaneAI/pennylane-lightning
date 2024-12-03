@@ -26,7 +26,7 @@ from warnings import warn
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
@@ -39,7 +39,7 @@ from pennylane.devices.preprocess import (
 )
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
-from pennylane.ops import Prod, SProd, Sum
+from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
@@ -62,130 +62,19 @@ from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
 
-# The set of supported operations.
-_operations = frozenset(
-    {
-        "Identity",
-        "QubitUnitary",
-        "MultiControlledX",
-        "DiagonalQubitUnitary",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "MultiRZ",
-        "GlobalPhase",
-        "Hadamard",
-        "S",
-        "Adjoint(S)",
-        "T",
-        "Adjoint(T)",
-        "SX",
-        "Adjoint(SX)",
-        "CNOT",
-        "SWAP",
-        "ISWAP",
-        "PSWAP",
-        "Adjoint(ISWAP)",
-        "SISWAP",
-        "Adjoint(SISWAP)",
-        "SQISW",
-        "CSWAP",
-        "Toffoli",
-        "CY",
-        "CZ",
-        "PhaseShift",
-        "ControlledPhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Adjoint(PhaseShift)",
-        "Adjoint(ControlledPhaseShift)",
-        "Adjoint(RX)",
-        "Adjoint(RY)",
-        "Adjoint(RZ)",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "Adjoint(CRX)",
-        "Adjoint(CRY)",
-        "Adjoint(CRZ)",
-        "C(PauliX)",
-        "C(PauliY)",
-        "C(PauliZ)",
-        "C(Hadamard)",
-        "C(S)",
-        "C(T)",
-        "C(PhaseShift)",
-        "C(RX)",
-        "C(RY)",
-        "C(RZ)",
-        "C(Rot)",
-        "C(SWAP)",
-        "C(IsingXX)",
-        "C(IsingXY)",
-        "C(IsingYY)",
-        "C(IsingZZ)",
-        "C(SingleExcitation)",
-        "C(SingleExcitationMinus)",
-        "C(SingleExcitationPlus)",
-        "C(DoubleExcitation)",
-        "C(DoubleExcitationMinus)",
-        "C(DoubleExcitationPlus)",
-        "C(MultiRZ)",
-        "C(GlobalPhase)",
-        "C(QubitUnitary)",
-        "CRot",
-        "IsingXX",
-        "IsingYY",
-        "IsingZZ",
-        "IsingXY",
-        "Adjoint(IsingXX)",
-        "Adjoint(IsingXY)",
-        "Adjoint(IsingYY)",
-        "Adjoint(IsingZZ)",
-        "SingleExcitation",
-        "SingleExcitationPlus",
-        "SingleExcitationMinus",
-        "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
-        "Adjoint(SingleExcitation)",
-        "Adjoint(SingleExcitationMinus)",
-        "Adjoint(SingleExcitationPlus)",
-        "Adjoint(DoubleExcitation)",
-        "Adjoint(DoubleExcitationMinus)",
-        "Adjoint(DoubleExcitationPlus)",
-        "Adjoint(MultiRZ)",
-        "Adjoint(GlobalPhase)",
-        "QubitCarry",
-        "QubitSum",
-        "OrbitalRotation",
-        "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
-    }
-)
-# End the set of supported operations.
-
-# The set of supported observables.
-_observables = frozenset(
-    {
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "Hermitian",
-        "Identity",
-        "Projector",
-        "SparseHamiltonian",
-        "LinearCombination",
-        "Sum",
-        "SProd",
-        "Prod",
-        "Exp",
-    }
-)
+_to_matrix_ops = {
+    "BlockEncode": OperatorProperties(controllable=True),
+    "DiagonalQubitUnitary": OperatorProperties(),
+    "ECR": OperatorProperties(),
+    "ISWAP": OperatorProperties(),
+    "OrbitalRotation": OperatorProperties(),
+    "PSWAP": OperatorProperties(),
+    "QubitCarry": OperatorProperties(),
+    "QubitSum": OperatorProperties(),
+    "SISWAP": OperatorProperties(),
+    "SQISW": OperatorProperties(),
+    "SX": OperatorProperties(),
+}
 
 
 def stopping_condition(op: Operator) -> bool:
@@ -199,7 +88,7 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    return op.name in _operations
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -210,7 +99,7 @@ def stopping_condition_shots(op: Operator) -> bool:
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.qubit``."""
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -225,7 +114,7 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -249,7 +138,10 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
+
+    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
+        not qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+    )
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
@@ -327,15 +219,13 @@ class LightningQubit(LightningBase):
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
 
-    # This `config` is used in Catalyst-Frontend
-    config = Path(__file__).parent / "lightning_qubit.toml"
+    # This configuration file declares the device capabilities
+    config_filepath = Path(__file__).parent / "lightning_qubit.toml"
 
-    # TODO: Move supported ops/obs to TOML file
-    operations = _operations
-    # The names of the supported operations.
-
-    observables = _observables
-    # The names of the supported observables.
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when customizable multiple decomposition pathways are implemented
+    _to_matrix_ops = _to_matrix_ops
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -390,6 +280,12 @@ class LightningQubit(LightningBase):
         else:
             self._kernel_name = None
             self._num_burnin = 0
+
+        self.device_kwargs = {
+            "mcmc": self._mcmc,
+            "num_burnin": self._num_burnin,
+            "kernel_name": self._kernel_name,
+        }
 
         # Creating the state vector
         self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
@@ -611,10 +507,14 @@ class LightningQubit(LightningBase):
         #   lib.<system>-<architecture>-<python-id>"
         # To avoid mismatching the folder name, we search for the shared object instead.
         # TODO: locate where the naming convention of the folder is decided and replicate it here.
-        editable_mode_path = package_root.parent.parent / "build"
+        editable_mode_path = package_root.parent.parent / "build_lightning_qubit"
         for path, _, files in os.walk(editable_mode_path):
             if lib_name in files:
                 lib_location = (Path(path) / lib_name).as_posix()
                 return "LightningSimulator", lib_location
 
         raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
+
+
+_supports_operation = LightningQubit.capabilities.supports_operation
+_supports_observable = LightningQubit.capabilities.supports_observable
