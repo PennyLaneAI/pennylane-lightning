@@ -52,6 +52,9 @@
   capture project.
   [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
 
+* Generalize seeding mechanism for all measurements.
+  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
+
 ### Documentation
 
 * Update Lightning-Tensor installation docs and usage suggestions.

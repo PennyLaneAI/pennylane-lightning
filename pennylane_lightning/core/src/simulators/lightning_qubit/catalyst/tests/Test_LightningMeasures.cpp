@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <random>
+#include <vector>
 
 #include "CacheManager.hpp"
 #include "LightningSimulator.hpp"
@@ -1828,6 +1829,140 @@ TEST_CASE("Sample with a seeded device", "[Measures]") {
 
         for (std::size_t i = 0; i < sample_vec[0].size(); i++) {
             CHECK((sample_vec[0][i] == sample_vec[1][i]));
+        }
+    }
+}
+
+TEST_CASE("Probs with a seeded device", "[Measures]") {
+    constexpr std::size_t shots = 1000;
+    std::array<std::unique_ptr<LQSimulator>, 2> sims;
+    std::vector<std::vector<double>> probs(2, std::vector<double>(16));
+
+    std::vector<DataView<double, 1>> views{DataView<double, 1>(probs[0]),
+                                           DataView<double, 1>(probs[1])};
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [](LQSimulator &sim, DataView<double, 1> &view,
+                      std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(shots);
+        // state-vector with #qubits = n
+        constexpr std::size_t n = 4;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n);
+        for (std::size_t i = 0; i < n; i++) {
+            Qs.push_back(sim.AllocateQubit());
+        }
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("PauliY", {}, {Qs[1]}, false);
+        sim.NamedOperation("Hadamard", {}, {Qs[2]}, false);
+        sim.NamedOperation("PauliZ", {}, {Qs[3]}, false);
+        sim.Probs(view);
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LQSimulator>();
+        sims[1] = std::make_unique<LQSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), views[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < probs[0].size(); i++) {
+            CHECK((probs[0][i] == probs[1][i]));
+        }
+    }
+}
+
+TEST_CASE("Var with a seeded device", "[Measures]") {
+    constexpr std::size_t shots = 1000;
+    std::array<std::unique_ptr<LQSimulator>, 2> sims;
+    std::array<std::vector<double>, 2> vars;
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [](LQSimulator &sim, std::vector<double> &var,
+                      std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(shots);
+        // state-vector with #qubits = n
+        constexpr std::size_t n = 4;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n);
+        for (std::size_t i = 0; i < n; i++) {
+            Qs.push_back(sim.AllocateQubit());
+        }
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("PauliY", {}, {Qs[1]}, false);
+        sim.NamedOperation("Hadamard", {}, {Qs[2]}, false);
+        sim.NamedOperation("PauliZ", {}, {Qs[3]}, false);
+
+        ObsIdType px = sim.Observable(ObsId::PauliX, {}, {Qs[2]});
+        ObsIdType py = sim.Observable(ObsId::PauliY, {}, {Qs[0]});
+        ObsIdType pz = sim.Observable(ObsId::PauliZ, {}, {Qs[3]});
+
+        var.push_back(sim.Var(px));
+        var.push_back(sim.Var(py));
+        var.push_back(sim.Var(pz));
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LQSimulator>();
+        sims[1] = std::make_unique<LQSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), vars[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < vars[0].size(); i++) {
+            CHECK((vars[0][i] == vars[1][i]));
+        }
+    }
+}
+
+TEST_CASE("Expval with a seeded device", "[Measures]") {
+    constexpr std::size_t shots = 1000;
+    std::array<std::unique_ptr<LQSimulator>, 2> sims;
+    std::array<std::vector<double>, 2> expvals;
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [](LQSimulator &sim, std::vector<double> &expval,
+                      std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(shots);
+        // state-vector with #qubits = n
+        constexpr std::size_t n = 4;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n);
+        for (std::size_t i = 0; i < n; i++) {
+            Qs.push_back(sim.AllocateQubit());
+        }
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("PauliY", {}, {Qs[1]}, false);
+        sim.NamedOperation("Hadamard", {}, {Qs[2]}, false);
+        sim.NamedOperation("PauliZ", {}, {Qs[3]}, false);
+
+        ObsIdType px = sim.Observable(ObsId::PauliX, {}, {Qs[2]});
+        ObsIdType py = sim.Observable(ObsId::PauliY, {}, {Qs[0]});
+        ObsIdType pz = sim.Observable(ObsId::PauliZ, {}, {Qs[3]});
+
+        expval.push_back(sim.Expval(px));
+        expval.push_back(sim.Expval(py));
+        expval.push_back(sim.Expval(pz));
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LQSimulator>();
+        sims[1] = std::make_unique<LQSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), expvals[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < expvals[0].size(); i++) {
+            CHECK((expvals[0][i] == expvals[1][i]));
         }
     }
 }
