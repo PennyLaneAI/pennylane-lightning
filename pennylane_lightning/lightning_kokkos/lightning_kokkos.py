@@ -358,7 +358,7 @@ class LightningKokkos(LightningBase):
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
-        if config.grad_on_execution is None:
+        if config.use_device_gradient and config.grad_on_execution is None:
             updated_values["grad_on_execution"] = True
 
         new_device_options = dict(config.device_options)
