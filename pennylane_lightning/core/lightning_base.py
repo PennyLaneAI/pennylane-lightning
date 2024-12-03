@@ -250,6 +250,7 @@ class LightningBase(QubitDevice):
         return int(qml.math.dot(state, basis_states))
 
     # pylint: disable=too-many-function-args, assignment-from-no-return, too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def _process_jacobian_tape(
         self,
         tape,
