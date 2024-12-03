@@ -23,9 +23,9 @@
 #include <vector>
 
 #include "DevTag.hpp"
+#include "TNCuda.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
-#include "TensornetBase.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
@@ -46,12 +46,12 @@ namespace Pennylane::LightningTensor::TNCuda {
  */
 
 template <class Precision>
-class ExactTNCuda final : public TNCudaBase<Precision, ExactTNCuda<Precision>> {
+class ExactTNCuda final : public TNCuda<Precision, ExactTNCuda<Precision>> {
   private:
-    using BaseType = TNCudaBase<Precision, ExactTNCuda>;
+    using BaseType = TNCuda<Precision, ExactTNCuda>;
 
   public:
-    constexpr static auto method = "exatn";
+    constexpr static auto method = "exacttn";
 
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;

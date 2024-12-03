@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file TNCudaBase.hpp
+ * @file TNCuda.hpp
  * Base class for cuTensorNet-backed tensor networks (for common APIs
  * of MPS and ExactTN).
  */
@@ -28,10 +28,10 @@
 #include <cuda.h>
 
 #include "LinearAlg.hpp"
+#include "TNCudaBase.hpp"
 #include "TNCudaGateCache.hpp"
 #include "TensorBase.hpp"
 #include "TensorCuda.hpp"
-#include "TensornetBase.hpp"
 
 #include "Util.hpp"
 
@@ -54,11 +54,11 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @tparam Derived Derived class to instantiate using CRTP.
  */
 template <class PrecisionT, class Derived>
-class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
+class TNCuda : public TNCudaBase<PrecisionT, Derived> {
   private:
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using ComplexT = std::complex<PrecisionT>;
-    using BaseType = TensornetBase<PrecisionT, Derived>;
+    using BaseType = TNCudaBase<PrecisionT, Derived>;
 
   protected:
     // Note both maxBondDim_ and bondDims_ are used for both MPS and Exact
@@ -87,9 +87,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
 
   public:
-    TNCudaBase() = delete;
+    TNCuda() = delete;
 
-    explicit TNCudaBase(std::size_t numQubits, std::size_t maxBondDim = 1)
+    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim = 1)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
           bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
           sitesExtents_(setSitesExtents_()),
@@ -105,8 +105,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
-    explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag,
-                        const std::size_t maxBondDim = 1)
+    explicit TNCuda(const std::size_t numQubits, DevTag<int> dev_tag,
+                    const std::size_t maxBondDim = 1)
         : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID()),
           maxBondDim_(maxBondDim), bondDims_(setBondDims_()),
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
@@ -122,7 +122,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
-    ~TNCudaBase() = default;
+    ~TNCuda() = default;
 
     /**
      * @brief Get the method of a derived class object.
