@@ -59,7 +59,7 @@ class QuantumScriptSerializer:
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements
     def __init__(
-        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False
+        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False, tensor_backend: str = 'mps'
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -85,7 +85,7 @@ class QuantumScriptSerializer:
                 raise ImportError(
                     f"Pre-compiled binaries for {device_name} are not available."
                 ) from exception
-        elif device_name in ["lightning.tensor_mps", "lightning.tensor_exatn", "lightning.tensor"]:
+        elif device_name == "lightning.tensor":
             try:
                 import pennylane_lightning.lightning_tensor_ops as lightning_ops
             except ImportError as exception:
@@ -95,30 +95,10 @@ class QuantumScriptSerializer:
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
-        if device_name == "lightning.tensor_mps":
-            self.tensornetwork_c64 = lightning_ops.mpsTensorNetC64
-            self.tensornetwork_c128 = lightning_ops.mpsTensorNetC128
-            self.named_obs_c64 = lightning_ops.observables.mpsNamedObsC64
-            self.named_obs_c128 = lightning_ops.observables.mpsNamedObsC128
-            self.hermitian_obs_c64 = lightning_ops.observables.mpsHermitianObsC64
-            self.hermitian_obs_c128 = lightning_ops.observables.mpsHermitianObsC128
-            self.tensor_prod_obs_c64 = lightning_ops.observables.mpsTensorProdObsC64
-            self.tensor_prod_obs_c128 = lightning_ops.observables.mpsTensorProdObsC128
-            self.hamiltonian_c64 = lightning_ops.observables.mpsHamiltonianC64
-            self.hamiltonian_c128 = lightning_ops.observables.mpsHamiltonianC128
-        elif device_name == "lightning.tensor_exatn":
-            self.tensornetwork_c64 = lightning_ops.exatnTensorNetC64
-            self.tensornetwork_c128 = lightning_ops.exatnTensorNetC128
-            self.named_obs_c64 = lightning_ops.observables.exatnNamedObsC64
-            self.named_obs_c128 = lightning_ops.observables.exatnNamedObsC128
-            self.hermitian_obs_c64 = lightning_ops.observables.exatnHermitianObsC64
-            self.hermitian_obs_c128 = lightning_ops.observables.exatnHermitianObsC128
-            self.tensor_prod_obs_c64 = lightning_ops.observables.exatnTensorProdObsC64
-            self.tensor_prod_obs_c128 = lightning_ops.observables.exatnTensorProdObsC128
-            self.hamiltonian_c64 = lightning_ops.observables.exatnHamiltonianC64
-            self.hamiltonian_c128 = lightning_ops.observables.exatnHamiltonianC128
+        self.tensor_backend = tensor_backend
+        self._use_mpi = use_mpi
 
-        else:
+        if device_name in ["lightning.qubit", "lightning.kokkos","lightning.gpu"]:
             self.statevector_c64 = lightning_ops.StateVectorC64
             self.statevector_c128 = lightning_ops.StateVectorC128
 
@@ -131,13 +111,36 @@ class QuantumScriptSerializer:
             self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
             self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
-        if device_name not in ["lightning.tensor_mps", "lightning.tensor_exatn"]:
             self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
             self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
-        self._use_mpi = use_mpi
+        elif device_name == "lightning.tensor" and self.tensor_backend == "mps":
+            self.tensornetwork_c64 = lightning_ops.mpsTensorNetC64
+            self.tensornetwork_c128 = lightning_ops.mpsTensorNetC128
 
-        if self._use_mpi:
+            self.named_obs_c64 = lightning_ops.observables.mpsNamedObsC64
+            self.named_obs_c128 = lightning_ops.observables.mpsNamedObsC128
+            self.hermitian_obs_c64 = lightning_ops.observables.mpsHermitianObsC64
+            self.hermitian_obs_c128 = lightning_ops.observables.mpsHermitianObsC128
+            self.tensor_prod_obs_c64 = lightning_ops.observables.mpsTensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.mpsTensorProdObsC128
+            self.hamiltonian_c64 = lightning_ops.observables.mpsHamiltonianC64
+            self.hamiltonian_c128 = lightning_ops.observables.mpsHamiltonianC128
+
+        elif device_name == "lightning.tensor" and self.tensor_backend == "exatn":
+            self.tensornetwork_c64 = lightning_ops.exatnTensorNetC64
+            self.tensornetwork_c128 = lightning_ops.exatnTensorNetC128
+
+            self.named_obs_c64 = lightning_ops.observables.exatnNamedObsC64
+            self.named_obs_c128 = lightning_ops.observables.exatnNamedObsC128
+            self.hermitian_obs_c64 = lightning_ops.observables.exatnHermitianObsC64
+            self.hermitian_obs_c128 = lightning_ops.observables.exatnHermitianObsC128
+            self.tensor_prod_obs_c64 = lightning_ops.observables.exatnTensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.exatnTensorProdObsC128
+            self.hamiltonian_c64 = lightning_ops.observables.exatnHamiltonianC64
+            self.hamiltonian_c128 = lightning_ops.observables.exatnHamiltonianC128
+
+        elif self._use_mpi:
             self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
             self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
             self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
@@ -152,6 +155,11 @@ class QuantumScriptSerializer:
             self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
 
             self._mpi_manager = lightning_ops.MPIManager
+            
+        else:
+            raise ImportError(
+                    f"Pre-compiled binaries for {device_name} are not available."
+                ) from exception
 
     @property
     def ctype(self):
@@ -168,7 +176,7 @@ class QuantumScriptSerializer:
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self._use_mpi:
             return self.statevector_mpi_c64 if self.use_csingle else self.statevector_mpi_c128
-        if self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"]:
+        if self.device_name ==  "lightning.tensor":
             return self.tensornetwork_c64 if self.use_csingle else self.tensornetwork_c128
         return self.statevector_c64 if self.use_csingle else self.statevector_c128
 
@@ -225,7 +233,7 @@ class QuantumScriptSerializer:
 
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
         if (
-            self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"]
+            self.device_name ==  "lightning.tensor"
             and len(wires) > 1
         ):
             raise ValueError("The number of Hermitian observables target wires should be 1.")
@@ -353,7 +361,8 @@ class QuantumScriptSerializer:
         if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
         if isinstance(observable, SparseHamiltonian):
-            if self.device_name in ["lightning.tensor_mps", "lightning.tensor_exatn"]:
+            if self.device_name ==  "lightning.tensor":
+                
                 raise NotImplementedError(
                     "SparseHamiltonian is not supported on the lightning.tensor device."
                 )

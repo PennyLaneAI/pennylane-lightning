@@ -50,7 +50,7 @@ class TestSerializeObs:
             qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
             qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=0) @ qml.Identity(1))
         s, obs_idx = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle, split_obs=obs_chunk
+            device_name, use_csingle, split_obs=obs_chunk, tensor_backend=tn_backend
         ).serialize_observables(tape, self.wires_dict)
         assert expected == len(s)
         assert [0] * (expected - 4) + [1, 2, 3, 4] == obs_idx

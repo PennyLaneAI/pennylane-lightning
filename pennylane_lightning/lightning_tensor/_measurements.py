@@ -130,7 +130,7 @@ class LightningTensorMeasurements:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name + "_" + self.method, self.dtype == np.complex64
+            self._tensornet.device_name, self.dtype == np.complex64, tensor_backend=self.method
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
 
@@ -176,7 +176,7 @@ class LightningTensorMeasurements:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name + "_" + self.method, self.dtype == np.complex64
+            self._tensornet.device_name, self.dtype == np.complex64, tensor_backend=self.method
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.var(ob_serialized)
 

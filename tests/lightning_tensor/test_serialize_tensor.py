@@ -123,7 +123,7 @@ def test_obs_returns_expected_type(tn_backend, dtype, obs, obs_type):
     obs_type_mod = globals().get(mod_name)
 
     serializer = QuantumScriptSerializer(
-        device_name + "_" + tn_backend, True if dtype == "64" else False
+        device_name, True if dtype == "64" else False, tensor_backend=tn_backend
     )
     assert isinstance(serializer._ob(obs, dict(enumerate(obs.wires))), obs_type_mod)
     assert isinstance(serializer._ob(obs), obs_type_mod)
@@ -153,7 +153,7 @@ class TestSerializeObs:
         ]
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         assert s == s_expected
 
@@ -173,7 +173,7 @@ class TestSerializeObs:
             ValueError, match="The number of Hermitian observables target wires should be 1."
         ):
             s, _ = QuantumScriptSerializer(
-                device_name + "_" + tn_backend, use_csingle
+                device_name, use_csingle, tensor_backend=tn_backend
             ).serialize_observables(tape, wires_map)
 
     def test_hermitian_return(self, tn_backend, use_csingle, wires_map):
@@ -187,7 +187,7 @@ class TestSerializeObs:
             ValueError, match="The number of Hermitian observables target wires should be 1."
         ):
             s, _ = QuantumScriptSerializer(
-                device_name + "_" + tn_backend, use_csingle
+                device_name, use_csingle, tensor_backend=tn_backend
             ).serialize_observables(tape, wires_map)
 
     def test_hermitian_tensor_return(self, tn_backend, use_csingle, wires_map):
@@ -206,7 +206,7 @@ class TestSerializeObs:
         hermitian_obs = get_module_name(tn_backend, "HermitianObsC", use_csingle)
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
 
         s_expected = tensor_prod_obs(
@@ -235,7 +235,7 @@ class TestSerializeObs:
         named_obs = get_module_name(tn_backend, "NamedObsC", use_csingle)
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
 
         s_expected = tensor_prod_obs(
@@ -284,7 +284,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
 
         s_expected = hamiltonian_obs(
@@ -336,7 +336,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
 
         # Expression (ham @ obs) is converted internally by Pennylane
@@ -412,7 +412,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         s_expected1 = hamiltonian_obs(
             np.array([0.3, 0.5, 0.4], dtype=r_dtype),
@@ -454,7 +454,7 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         s_expected = hamiltonian_obs(
             np.array([1, 1], dtype=r_dtype), [named_obs("PauliX", [0]), named_obs("PauliZ", [0])]
@@ -470,7 +470,7 @@ class TestSerializeObs:
         named_obs = get_module_name(tn_backend, "NamedObsC", use_csingle)
 
         s, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         s_expected = tensor_prod_obs([named_obs("PauliX", [0]), named_obs("PauliZ", [1])])
         assert s[0] == s_expected
@@ -484,7 +484,7 @@ class TestSerializeObs:
         rtype = np.float32 if use_csingle else np.float64
 
         res, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         assert len(res) == 1
         assert isinstance(res[0], hamiltonian_obs)
@@ -503,7 +503,7 @@ class TestSerializeObs:
         named_obs = get_module_name(tn_backend, "NamedObsC", use_csingle)
 
         res, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         assert len(res) == 1
         assert isinstance(res[0], tensor_prod_obs)
@@ -534,7 +534,7 @@ class TestSerializeObs:
         rtype = np.float32 if use_csingle else np.float64
 
         res, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         assert len(res) == 1
         assert isinstance(res[0], hamiltonian_obs)
@@ -557,7 +557,7 @@ class TestSerializeObs:
         """Tests that multi-wire Identity does not fail serialization."""
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1, 2]))])
         res, _ = QuantumScriptSerializer(
-            device_name + "_" + tn_backend, use_csingle
+            device_name, use_csingle, tensor_backend=tn_backend
         ).serialize_observables(tape, wires_map)
         assert len(res) == 1
 
@@ -579,7 +579,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_map
         )
         s_expected = (
@@ -603,7 +603,7 @@ class TestSerializeOps:
             qml.Rot(0.1, 0.2, 0.3, wires=0)
 
         tape = qml.tape.QuantumScript.from_queue(q)
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_map
         )
         s_expected = (
@@ -628,7 +628,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(ops, [4, 5])
 
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_map
         )
         s_expected = (
@@ -657,7 +657,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
 
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_map
         )
         s_expected = (
@@ -684,7 +684,7 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_map
         )
         s_expected = (
@@ -708,7 +708,7 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
             qml.RZ(0.2, wires=2)
 
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_map
         )
         s_expected = (
@@ -734,7 +734,7 @@ class TestSerializeOps:
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
 
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_dict
         )
         s_expected = (
@@ -770,7 +770,7 @@ class TestSerializeOps:
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
 
-        s = QuantumScriptSerializer(device_name + "_" + tn_backend, use_csingle).serialize_ops(
+        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
             tape, wires_map
         )
 
@@ -859,7 +859,7 @@ def test_unsupported_obs_returns_expected_type(obs):
 def test_tensornet_dtype(use_csingle, backend, init):
     """Tests that the correct TensorNet type is used for the device"""
 
-    serializer_c = QuantumScriptSerializer(device_name + "_" + backend, use_csingle)
+    serializer_c = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=backend)
 
     tensor_net = get_module_name(backend, "TensorNetC", use_csingle)
 
