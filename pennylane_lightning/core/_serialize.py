@@ -59,7 +59,12 @@ class QuantumScriptSerializer:
 
     # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements
     def __init__(
-        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False, tensor_backend: str = 'mps'
+        self,
+        device_name,
+        use_csingle: bool = False,
+        use_mpi: bool = False,
+        split_obs: bool = False,
+        tensor_backend: str = "mps",
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -98,7 +103,7 @@ class QuantumScriptSerializer:
         self.tensor_backend = tensor_backend
         self._use_mpi = use_mpi
 
-        if device_name in ["lightning.qubit", "lightning.kokkos","lightning.gpu"]:
+        if device_name in ["lightning.qubit", "lightning.kokkos", "lightning.gpu"]:
             self.statevector_c64 = lightning_ops.StateVectorC64
             self.statevector_c128 = lightning_ops.StateVectorC128
 
@@ -155,11 +160,11 @@ class QuantumScriptSerializer:
             self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
 
             self._mpi_manager = lightning_ops.MPIManager
-            
+
         else:
             raise ImportError(
-                    f"Pre-compiled binaries for {device_name} are not available."
-                ) from exception
+                f"Pre-compiled binaries for {device_name} are not available."
+            ) from exception
 
     @property
     def ctype(self):
@@ -176,7 +181,7 @@ class QuantumScriptSerializer:
         """State vector matching ``use_csingle`` precision (and MPI if it is supported)."""
         if self._use_mpi:
             return self.statevector_mpi_c64 if self.use_csingle else self.statevector_mpi_c128
-        if self.device_name ==  "lightning.tensor":
+        if self.device_name == "lightning.tensor":
             return self.tensornetwork_c64 if self.use_csingle else self.tensornetwork_c128
         return self.statevector_c64 if self.use_csingle else self.statevector_c128
 
@@ -232,10 +237,7 @@ class QuantumScriptSerializer:
         """Serializes a Hermitian observable"""
 
         wires = [wires_map[w] for w in observable.wires] if wires_map else observable.wires.tolist()
-        if (
-            self.device_name ==  "lightning.tensor"
-            and len(wires) > 1
-        ):
+        if self.device_name == "lightning.tensor" and len(wires) > 1:
             raise ValueError("The number of Hermitian observables target wires should be 1.")
         return self.hermitian_obs(matrix(observable).ravel().astype(self.ctype), wires)
 
@@ -361,8 +363,8 @@ class QuantumScriptSerializer:
         if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
         if isinstance(observable, SparseHamiltonian):
-            if self.device_name ==  "lightning.tensor":
-                
+            if self.device_name == "lightning.tensor":
+
                 raise NotImplementedError(
                     "SparseHamiltonian is not supported on the lightning.tensor device."
                 )

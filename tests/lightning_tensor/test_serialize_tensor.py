@@ -578,9 +578,9 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_map
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -602,9 +602,9 @@ class TestSerializeOps:
             qml.Rot(0.1, 0.2, 0.3, wires=0)
 
         tape = qml.tape.QuantumScript.from_queue(q)
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_map
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RZ", "RY", "RZ"],
@@ -627,9 +627,9 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(ops, [4, 5])
 
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_map
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "QubitUnitary"],
@@ -656,9 +656,9 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
 
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_map
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "PauliX"],
@@ -683,9 +683,9 @@ class TestSerializeOps:
             qml.RY(0.6, wires=1)
             qml.CNOT(wires=[0, 1])
 
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_map
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["RX", "RY", "CNOT"],
@@ -707,9 +707,9 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
             qml.RZ(0.2, wires=2)
 
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_map
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_map)
         s_expected = (
             (
                 ["CNOT", "RZ"],
@@ -733,9 +733,9 @@ class TestSerializeOps:
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
 
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_dict
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_dict)
         s_expected = (
             (
                 [
@@ -769,9 +769,9 @@ class TestSerializeOps:
             qml.DoubleExcitationMinus(0.555, wires=[0, 1, 2, 3])
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
 
-        s = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_backend).serialize_ops(
-            tape, wires_map
-        )
+        s = QuantumScriptSerializer(
+            device_name, use_csingle, tensor_backend=tn_backend
+        ).serialize_ops(tape, wires_map)
 
         dtype = np.complex64 if use_csingle else np.complex128
         s_expected = (

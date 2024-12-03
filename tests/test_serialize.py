@@ -132,7 +132,7 @@ def test_wrong_device_name():
 def test_obs_returns_expected_type(dtype, obs, obs_type):
     """Tests that observables get serialized to the expected type, with and without wires map"""
     obs_type_mod = globals().get(obs_type + dtype)
-    
+
     serializer = QuantumScriptSerializer(device_name, True if dtype == "64" else False)
     assert isinstance(serializer._ob(obs, dict(enumerate(obs.wires))), obs_type_mod)
     assert isinstance(serializer._ob(obs), obs_type_mod)
