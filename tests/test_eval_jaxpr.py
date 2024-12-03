@@ -410,3 +410,29 @@ class TestClassicalComponents:
 
         res2 = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, y, z, False, False)
         assert qml.math.allclose(res2, jax.numpy.cos(y))  # false fn = y
+
+    def test_nested_higher_order_primitives(self):
+        """Test a conditional inside a for loop."""
+
+        def true_fn(x):
+            qml.RX(x, 0)
+
+        def false_fn(x):
+            qml.RX(0.1, 0)
+
+        def f(x, n):
+            @qml.for_loop(n)
+            def loop(i):
+                qml.cond(i % 2 == 0, true_fn, false_fn=false_fn)(i * x)
+
+            loop()
+            return qml.expval(qml.Z(0))
+
+        x = jax.numpy.array(1.0)
+        n = jax.numpy.array(3)
+        jaxpr = jax.make_jaxpr(f)(x, n)
+        dev = qml.device(device_name, wires=1)
+
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, n)
+        expected = jax.numpy.cos(0 + 0.1 + 2 * x)
+        assert qml.math.allclose(res, expected)
