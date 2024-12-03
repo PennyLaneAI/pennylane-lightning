@@ -23,7 +23,6 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
-#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -503,13 +502,13 @@ class Measurements final
 
         // Burn In
         for (std::size_t i = 0; i < num_burnin; i++) {
-            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
+            idx = metropolis_step(this->_statevector, tk, this->_rng, distrib,
                                   idx); // Burn-in.
         }
 
         // Sample
         for (std::size_t i = 0; i < num_samples; i++) {
-            idx = metropolis_step(this->_statevector, tk, this->rng, distrib,
+            idx = metropolis_step(this->_statevector, tk, this->_rng, distrib,
                                   idx);
 
             if (cache.contains(idx)) {
@@ -574,17 +573,14 @@ class Measurements final
      * Reference: https://en.wikipedia.org/wiki/Alias_method
      *
      * @param num_samples The number of samples to generate.
-     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
-    std::vector<std::size_t>
-    generate_samples(const std::size_t num_samples,
-                     const std::optional<std::size_t> &seed = std::nullopt) {
+    std::vector<std::size_t> generate_samples(const std::size_t num_samples) {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
-        return generate_samples(wires, num_samples, seed);
+        return generate_samples(wires, num_samples);
     }
 
     /**
@@ -592,22 +588,16 @@ class Measurements final
      *
      * @param wires Sample are generated for the specified wires.
      * @param num_samples The number of samples to generate.
-     * @param seed Seed to generate the samples from
      * @return 1-D vector of samples in binary, each sample is
      * separated by a stride equal to the number of qubits.
      */
     std::vector<std::size_t>
     generate_samples(const std::vector<std::size_t> &wires,
-                     const std::size_t num_samples,
-                     const std::optional<std::size_t> &seed = std::nullopt) {
+                     const std::size_t num_samples) {
         const std::size_t n_wires = wires.size();
         std::vector<std::size_t> samples(num_samples * n_wires);
-        if (seed.has_value()) {
-            this->setSeed(seed.value());
-        } else {
-            this->setRandomSeed();
-        }
-        DiscreteRandomVariable<PrecisionT> drv{this->rng, probs(wires)};
+        this->setSeed(this->_deviceseed);
+        DiscreteRandomVariable<PrecisionT> drv{this->_rng, probs(wires)};
         // The Python layer expects a 2D array with dimensions (n_samples x
         // n_wires) and hence the linear index is `s * n_wires + (n_wires - 1 -
         // j)` `s` being the "slow" row index and `j` being the "fast" column
