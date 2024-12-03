@@ -28,7 +28,8 @@ if device_name != "lightning.tensor":
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-@pytest.mark.parametrize("tn_backend",["mps","exatn"])
+
+@pytest.mark.parametrize("tn_backend", ["mps", "exatn"])
 class TestSerializeObs:
     """Tests for the _serialize_observables function"""
 

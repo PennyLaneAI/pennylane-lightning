@@ -24,7 +24,7 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-if device_name == 'lightning.tensor':
+if device_name == "lightning.tensor":
     pytest.skip("Lightning Tensor has its own serialize test.", allow_module_level=True)
 
 
