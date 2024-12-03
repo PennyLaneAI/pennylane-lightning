@@ -23,6 +23,9 @@
 
 ### Improvements
 
+* Updated the logic for enabling `grad_on_execution` during device execution.
+  [(#1016)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1016)
+
 * Reverse Lightning Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
 
