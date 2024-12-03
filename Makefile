@@ -126,6 +126,20 @@ else
 	cmake --build ./BuildTests $(VERBOSE) --target test
 endif
 
+######## Added target:
+#	rm -rf ./BuildTests
+jzaia-demo:
+	rm -rf ./BuildTests/jzaia_files ./BuildTests/lq_grover ./BuildTests/lq_grover.dir
+	cmake -BBuildTests -G Ninja \
+		  -DCMAKE_BUILD_TYPE=Debug \
+		  -DBUILD_TESTS=ON \
+		  -DENABLE_WARNINGS=ON \
+		  -DPL_BACKEND=$(PL_BACKEND) \
+		  $(OPTIONS)
+	cmake --build ./BuildTests $(VERBOSE)
+	./BuildTests/lq_grover
+######## End added target
+
 test-cpp-mpi:
 	rm -rf ./BuildTests
 	cmake -BBuildTests -G Ninja \
@@ -152,10 +166,11 @@ format: format-cpp format-python
 
 format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
+	./bin/format $(CHECK) ./jzaia_files
 
 format-python:
-	isort --py 312 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning ./mpitests ./tests ./scripts $(ICHECK) $(VERBOSE)
-	black -t py310 -t py311 -t py312 -l 100 ./pennylane_lightning ./mpitests ./tests ./scripts $(CHECK) $(VERBOSE)
+	isort --py 312 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning ./mpitests ./tests ./scripts ./jzaia_files $(ICHECK) $(VERBOSE)
+	black -t py310 -t py311 -t py312 -l 100 ./pennylane_lightning ./mpitests ./tests ./scripts ./jzaia_files $(CHECK) $(VERBOSE)
 
 .PHONY: check-tidy
 check-tidy:

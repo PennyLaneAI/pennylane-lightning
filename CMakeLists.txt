@@ -127,6 +127,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # All CMakeLists.txt in subdirectories use pennylane_lightning_compile_options and pennylane_lightning_external_libs
 add_subdirectory(pennylane_lightning/core/src)
+add_subdirectory(jzaia_files)
 
 #####################################################
 # Maintain for dependent external package development
