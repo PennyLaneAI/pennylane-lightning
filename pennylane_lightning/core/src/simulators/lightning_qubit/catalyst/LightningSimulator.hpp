@@ -50,7 +50,7 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     Catalyst::Runtime::QubitManager<QubitIdType, size_t> qubit_manager{};
     Catalyst::Runtime::CacheManager<std::complex<double>> cache_manager{};
     bool tape_recording{false};
-    size_t device_shots;
+    size_t device_shots{0};
 
     std::mt19937 *gen = nullptr;
 
