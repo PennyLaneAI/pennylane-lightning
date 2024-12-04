@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add native N-controlled gate/matrix operations and adjoint support to `lightning.kokkos`.
+  [(#950)](https://github.com/PennyLaneAI/pennylane-lightning/pull/950)
+
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
 
@@ -22,6 +25,9 @@
   [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
 
 ### Improvements
+
+* Update the logic for enabling `grad_on_execution` during device execution.
+  [(#1016)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1016)
 
 * Reverse Lightning Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
