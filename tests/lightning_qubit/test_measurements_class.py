@@ -31,6 +31,7 @@ from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
+from pennylane.operation import OperatorPropertyUndefined
 
 if not LightningDevice._new_API:
     pytest.skip(
@@ -551,6 +552,85 @@ class TestMeasurements:
             dtol = max(tol, 1.0e-2)
             # allclose -> absolute(a - b) <= (atol + rtol * absolute(b))
             assert np.allclose(result, expected, rtol=dtol, atol=dtol)
+
+    @pytest.mark.parametrize("shots", [10, [10, 10]])
+    @pytest.mark.parametrize("measurement", [qml.expval])
+    @pytest.mark.parametrize(
+        "observable",
+        (
+            #[0],
+            #[1, 2],
+            #[1, 0],
+            #qml.PauliX(0),
+            #qml.PauliY(1),
+            #qml.PauliZ(2),
+            #qml.prod(qml.PauliX(0), qml.PauliY(1)),
+            #qml.s_prod(2.0, qml.PauliX(0)),
+            qml.Hermitian(get_hermitian_matrix(2**2), wires=[0, 1]),
+            qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
+            qml.Hamiltonian(
+                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
+            ),
+            qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
+        ),
+    )
+    def test_single_return_expval(self, shots, measurement, observable, lightning_sv, tol):
+        if obs_not_supported_in_ltensor(observable):
+            pytest.skip("Observable not supported in lightning.tensor.")
+
+        if isinstance(observable, list):
+            pytest.skip(
+                f"Measurement of type {type(measurement).__name__} does not have a keyword argument 'wires'."
+            )
+
+        n_qubits = 4
+        n_layers = 1
+        np.random.seed(0)
+        weights = np.random.rand(n_layers, n_qubits, 3)
+        ops = [qml.Hadamard(i) for i in range(n_qubits)]
+        if device_name != "lightning.tensor":
+            ops += [qml.StronglyEntanglingLayers(weights, wires=range(n_qubits))]
+        measurements = (
+            [qml.sample(wires=observable), measurement(wires=observable)]
+            #[measurement(wires=observable)]
+            if isinstance(observable, list)
+            else [qml.sample(op=observable), measurement(op=observable)]
+            #else[measurement(op=observable)]
+        )
+        tape = qml.tape.QuantumScript(ops, measurements, shots=shots)
+
+        statevector = lightning_sv(n_qubits)
+        statevector = get_final_state(statevector, tape)
+        m = LightningMeasurements(statevector)
+
+        skip_list = (
+            qml.ops.Sum,
+            qml.SparseHamiltonian,
+        )
+        do_skip = measurement is qml.var and isinstance(observable, skip_list)
+        do_skip = do_skip or (
+            measurement is qml.expval and isinstance(observable, qml.SparseHamiltonian)
+        )
+        do_skip = do_skip and shots is not None
+        if do_skip:
+            with pytest.raises(OperatorPropertyUndefined):
+                print("expecting error!")
+                _ = measure_final_state(m, tape)
+            return
+        else:
+            print("not expecting error")
+            result = measure_final_state(m, tape)
+        
+        print(f"observable: {observable}; result = {result}")
+        if isinstance(result[0], tuple):
+            for shot_result in result:
+                print(f"shot_result[0] = {shot_result[0]}")
+                print(f"shot_result[1] = {shot_result[1]}")
+                assert(np.average(shot_result[0]) == shot_result[1])
+        else:
+            print(f"result[0] = {result[0]}")
+            print(f"result[1] = {result[1]}")
+            assert(np.average(result[0]) == result[1])
 
     @flaky(max_runs=5)
     @pytest.mark.parametrize("shots", [None, 400_000, (400_000, 400_000)])
