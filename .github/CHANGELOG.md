@@ -26,6 +26,9 @@
 
 ### Improvements
 
+* Reduce flaky test and increase test shots count.
+  [(#1015)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1015)
+
 * Reverse Lightning Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
 
