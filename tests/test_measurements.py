@@ -24,6 +24,7 @@ from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
 from pennylane.measurements import Expectation, Shots, Variance
+from scipy.stats import chisquare
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -660,7 +661,7 @@ class TestSample:
     @pytest.mark.parametrize("nwires", range(1, 11))
     def test_sample_variations(self, qubit_device, nwires, seed):
         """Tests if `sample(wires)` returns correct statistics."""
-        shots = 20000
+        shots = 200000
         n_qubits = max(5, nwires + 1)
         np.random.seed(seed)
         wires = qml.wires.Wires(np.random.permutation(nwires))
@@ -669,6 +670,7 @@ class TestSample:
         state /= np.linalg.norm(state)
         ops = [qml.StatePrep(state, wires=range(n_qubits))]
         tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
+        tape_exact = qml.tape.QuantumScript(ops, [qml.probs(wires=wires)])
 
         def reshape_samples(samples):
             return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
@@ -679,13 +681,11 @@ class TestSample:
             reshape_samples(samples), wire_order=wires
         )
 
-        dev = qml.device("default.qubit", wires=n_qubits, shots=shots)
-        samples = dev.execute(tape)
-        ref = qml.measurements.ProbabilityMP(wires=wires).process_samples(
-            reshape_samples(samples), wire_order=wires
-        )
-
-        assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
+        dev_ref = qml.device("default.qubit", wires=n_qubits)
+        probs_ref = dev_ref.execute(tape_exact)
+        chi2 = chisquare(f_obs=probs*shots, f_exp=probs_ref*shots)
+        #assert(chi2.pvalue > 0.001)
+        assert np.allclose(probs, probs_ref, atol=2.0e-2, rtol=1.0e-4)
 
 
 class TestWiresInVar:
