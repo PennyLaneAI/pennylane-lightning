@@ -2,6 +2,9 @@
 
 ### New features since last release
 
+* Add native N-controlled gate/matrix operations and adjoint support to `lightning.kokkos`.
+  [(#950)](https://github.com/PennyLaneAI/pennylane-lightning/pull/950)
+
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
 
@@ -47,6 +50,14 @@
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
+* `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` now define
+  the `eval_jaxpr` method for integration with the experimental
+  capture project.
+  [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
+
+* Generalize seeding mechanism for all measurements.
+  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
+
 ### Documentation
 
 * Update Lightning-Tensor installation docs and usage suggestions.
@@ -85,7 +96,17 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Astral Cai, Amintor Dusko, Joseph Lee, Anton Naim Ibrahim, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
+Ali Asadi,
+Astral Cai,
+Amintor Dusko,
+Christina Lee,
+Joseph Lee,
+Anton Naim Ibrahim,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+Shuli Shu,
+Raul Torres,
+Haochen Paul Wang
 
 ---
 

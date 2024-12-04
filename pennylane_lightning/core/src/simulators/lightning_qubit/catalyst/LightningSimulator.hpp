@@ -20,6 +20,7 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <span>
 
 #include "StateVectorLQubitManaged.hpp"
@@ -85,6 +86,14 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
             wires.begin(), wires.end(), std::back_inserter(res),
             [this](auto w) { return this->qubit_manager.getDeviceId(w); });
         return res;
+    }
+
+    inline auto generateSeed() -> std::optional<std::size_t> {
+        if (this->gen != nullptr) {
+            return (*(this->gen))();
+        }
+
+        return std::nullopt;
     }
 
   public:
