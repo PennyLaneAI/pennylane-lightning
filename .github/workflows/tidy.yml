@@ -51,6 +51,7 @@ jobs:
             -DCLANG_TIDY_BINARY=$(dirname $(which python))/clang-tidy \
             -DBUILD_TESTS=ON \
             -DENABLE_WARNINGS=ON \
+            -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER="$(which g++-11)" \
             -DCMAKE_C_COMPILER="$(which gcc-11)"

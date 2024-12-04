@@ -436,14 +436,12 @@ class StateVectorCudaManaged
      * @brief Apply a single gate to the state vector.
      *
      * @param gate_matrix Gate matrix data (in row-major format).
-     * @param matrix_size Size of the matrix.
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param tgt_wires Target wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      */
     void applyControlledMatrix(const ComplexT *gate_matrix,
-                               const std::size_t matrix_size,
                                const std::vector<std::size_t> &controlled_wires,
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &tgt_wires,
@@ -454,6 +452,8 @@ class StateVectorCudaManaged
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`controlled_wires` and `controlled_values` must have the "
                     "same size.");
+        const std::size_t matrix_size =
+            Pennylane::Util::exp2(2 * tgt_wires.size());
         DataBuffer<CFP_t, int> d_matrix{
             matrix_size, BaseType::getDataBuffer().getDevTag(), true};
         d_matrix.CopyHostDataToGpu(gate_matrix, matrix_size, false);

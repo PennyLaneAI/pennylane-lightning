@@ -129,6 +129,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
+          export SCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
             -DENABLE_PYTHON=OFF \
@@ -140,6 +141,7 @@ jobs:
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
             -DCUQUANTUM_SDK=${CUQUANTUM_SDK} \
+            -DSCIPY_OPENBLAS=${SCIPY_OPENBLAS} \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja
           cmake --build ./Build

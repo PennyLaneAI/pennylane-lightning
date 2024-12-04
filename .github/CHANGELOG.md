@@ -55,6 +55,9 @@
 * Add C++ unit tests for Exact Tensor Network backends.
   [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
 
+* Add native BLAS support to the C++ layer via dynamic `scipy-openblas32` loading.
+  [(#995)](https://github.com/PennyLaneAI/pennylane-lightning/pull/995)
+
 * Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
   [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
 
