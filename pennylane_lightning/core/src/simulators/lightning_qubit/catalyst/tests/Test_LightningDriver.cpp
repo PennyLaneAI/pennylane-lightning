@@ -26,9 +26,9 @@ TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
     std::string case1;
     CHECK(parse_kwargs(case1).empty());
 
-    std::string case2{"{shots : 1000}"};
-    std::string case3{"shots : 1000"};
-    std::string case4{"'shots':'1000'"};
+    std::string case2{"{my_attr : 1000}"};
+    std::string case3{"my_attr : 1000"};
+    std::string case4{"'my_attr':'1000'"};
     CHECK(parse_kwargs(case2) == parse_kwargs(case3));
     CHECK(parse_kwargs(case3) == parse_kwargs(case4));
 
