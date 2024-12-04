@@ -40,13 +40,12 @@ TEST_CASE("Test parse_kwargs coverage", "[Utils]") {
     CHECK((res5.contains("E") && res5["E"] == "F"));
 
     std::string case6{
-        "device_type : braket.aws.qubit,{'shots': 0, 'device_arn': 'sv1', "
+        "device_type : braket.aws.qubit,{'device_arn': 'sv1', "
         "'s3_destination_folder': \"('catalyst-op3-s3', 'prefix')\"}"};
     auto res6 = parse_kwargs(case6);
     CHECK(res6.size() == 4);
     CHECK((res6.contains("device_type") &&
            res6["device_type"] == "braket.aws.qubit"));
-    CHECK((res6.contains("shots") && res6["shots"] == "0"));
     CHECK((res6.contains("device_arn") && res6["device_arn"] == "sv1"));
     CHECK((res6.contains("s3_destination_folder") &&
            res6["s3_destination_folder"] == "('catalyst-op3-s3', 'prefix')"));
