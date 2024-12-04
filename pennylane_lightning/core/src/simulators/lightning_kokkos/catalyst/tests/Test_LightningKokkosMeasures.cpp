@@ -296,14 +296,7 @@ TEST_CASE("Expval(HermitianObs) shots test", "[Measures]") {
 
     ObsIdType h1 = sim->Observable(ObsId::Hermitian, mat1, {Qs[0], Qs[1]});
 
-#ifndef PL_USE_LAPACK
-    REQUIRE_THROWS_WITH(
-        sim->Expval(h1),
-        Catch::Contains(
-            "Hermitian observables with shot measurement are not supported"));
-#else
     CHECK(sim->Expval(h1) == Approx(0.0).margin(1e-5));
-#endif
 }
 
 TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
@@ -326,14 +319,8 @@ TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
     std::vector<std::complex<double>> mat1(16, {0, 0});
 
     ObsIdType h1 = sim->Observable(ObsId::Hermitian, mat1, {Qs[0], Qs[1]});
-#ifndef PL_USE_LAPACK
-    REQUIRE_THROWS_WITH(
-        sim->Var(h1),
-        Catch::Contains(
-            "Hermitian observables with shot measurement are not supported"));
-#else
+
     CHECK(sim->Var(h1) == Approx(0.0).margin(1e-5));
-#endif
 }
 
 TEST_CASE("Expval(TensorProd(NamedObs)) test", "[Measures]") {
