@@ -28,14 +28,14 @@
 #include "DevTag.hpp"
 #include "DevicePool.hpp"
 #include "Error.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.cpp"
 #include "MPSTNCuda.hpp"
 #include "TypeList.hpp"
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
 
-/// @cond DEV
-namespace {
+    /// @cond DEV
+    namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
 using namespace Pennylane::LightningGPU::Util;
@@ -50,7 +50,7 @@ using TensorNetBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
 using AllTensorNetBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
-                              ExaTNCuda<float>, ExaTNCuda<double>, void>;
+                              ExactTNCuda<float>, ExactTNCuda<double>, void>;
 
 /**
  * @brief Register controlled matrix kernel.
@@ -184,8 +184,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 "Get the final state.")
             .def("reset", &TensorNet::reset, "Reset the statevector.");
     }
-    if constexpr (std::is_same_v<TensorNet, ExaTNCuda<double>> ||
-                  std::is_same_v<TensorNet, ExaTNCuda<float>>) {
+    if constexpr (std::is_same_v<TensorNet, ExactTNCuda<double>> ||
+                  std::is_same_v<TensorNet, ExactTNCuda<float>>) {
         pyclass
             .def(py::init<const std::size_t>()) // num_qubits
             .def(py::init<const std::size_t,
