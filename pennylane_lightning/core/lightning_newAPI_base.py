@@ -27,6 +27,8 @@ from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
 from pennylane.typing import Result, ResultBatch
 
+from ._measurements_base import LightningBaseMeasurements
+
 Result_or_ResultBatch = Union[Result, ResultBatch]
 QuantumTapeBatch = Sequence[QuantumTape]
 QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
@@ -76,7 +78,7 @@ class LightningBase(Device):
 
         # Dummy for LightningStateVector, LightningMeasurements, LightningAdjointJacobian
         self.LightningStateVector: Callable = None
-        self.LightningMeasurements: Callable = None
+        self.LightningMeasurements: type[LightningBaseMeasurements] = None
         self.LightningAdjointJacobian: Callable = None
 
     @property
@@ -230,7 +232,7 @@ class LightningBase(Device):
         jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
         return res, jac
 
-    def vjp(  # pylint: disable=too-many-arguments
+    def vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
@@ -262,7 +264,7 @@ class LightningBase(Device):
             circuit, cotangents
         )
 
-    def simulate_and_vjp(  # pylint: disable=too-many-arguments
+    def simulate_and_vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
         self,
         circuit: QuantumTape,
         cotangents: Tuple[Number],
@@ -416,3 +418,47 @@ class LightningBase(Device):
             for circuit, cots in zip(circuits, cotangents)
         )
         return tuple(zip(*results))
+
+    # pylint: disable=import-outside-toplevel
+    def eval_jaxpr(self, jaxpr, consts, *args):
+        """Execute pennylane variant jaxpr using C++ simulation tools.
+
+        Args:
+            jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
+            consts (list[TensorLike]): List of constants for the jaxpr closure variables
+            *args (TensorLike): The arguments to the jaxpr.
+
+        Returns:
+            list(TensorLike): the results of the execution
+
+        .. code-block:: python
+
+            import pennylane as qml
+            import jax
+            qml.capture.enable()
+
+            def f(x):
+                @qml.for_loop(3)
+                def loop(i, y):
+                    qml.RX(y, i)
+                    return y + 0.5
+                loop(x)
+                return [qml.expval(qml.Z(i)) for i in range(3)]
+
+            jaxpr = jax.make_jaxpr(f)(0.5)
+
+            dev = qml.device('lightning.qubit', wires=3)
+            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.0)
+
+        .. code-block::
+
+            [1.0, 0.8775825618903728, 0.5403023058681395]
+
+        """
+        # has jax dependency, so can't import up top
+        from .lightning_interpreter import LightningInterpreter
+
+        interpreter = LightningInterpreter(
+            self._statevector, self.LightningMeasurements, shots=self.shots
+        )
+        return interpreter.eval(jaxpr, consts, *args)
