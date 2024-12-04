@@ -732,7 +732,6 @@ class TestWiresInVar:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@flaky(max_runs=5)
 @pytest.mark.parametrize("shots", [None, 100000, [100000, 111111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
