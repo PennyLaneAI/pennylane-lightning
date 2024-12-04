@@ -24,7 +24,6 @@ from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
 from pennylane.measurements import Expectation, Shots, Variance
-from scipy.stats import chisquare
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -683,8 +682,7 @@ class TestSample:
 
         dev_ref = qml.device("default.qubit", wires=n_qubits)
         probs_ref = dev_ref.execute(tape_exact)
-        chi2 = chisquare(f_obs=probs*shots, f_exp=probs_ref*shots)
-        #assert(chi2.pvalue > 0.001)
+
         assert np.allclose(probs, probs_ref, atol=2.0e-2, rtol=1.0e-4)
 
 
