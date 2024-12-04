@@ -31,7 +31,6 @@ from flaky import flaky
 from pennylane.devices import DefaultQubit
 from pennylane.measurements import VarianceMP
 from scipy.sparse import csr_matrix, random_array
-from pennylane.operation import OperatorPropertyUndefined
 
 if not LightningDevice._new_API:
     pytest.skip(
