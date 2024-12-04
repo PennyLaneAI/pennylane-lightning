@@ -40,7 +40,6 @@ using namespace Pennylane::Gates;
 using namespace Pennylane::LightningKokkos;
 using namespace Pennylane::LightningKokkos::Functors;
 using namespace Pennylane::Util;
-using std::size_t;
 } // namespace
 /// @endcond
 
@@ -52,7 +51,16 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
         PL_REQUIRE_THROWS_MATCHES(state_vector.applyGenerator("XXX", {0}),
                                   LightningException,
                                   "The given value does not exist.");
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyGenerator("XXX", {1}, {true}, {0}),
+            LightningException, "The given value does not exist.");
+        PL_REQUIRE_THROWS_MATCHES(
+            state_vector.applyGenerator("PauliX", {}, {false}, {1}, false),
+            LightningException,
+            "`controlled_wires` must have the same size "
+            "as"); // invalid controlled_wires
     }
+
     SECTION("namedGeneratorFactor") {
         using StateVectorT = StateVectorKokkos<TestType>;
         using KokkosVector = StateVectorT::KokkosVector;
@@ -63,6 +71,19 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator - errors",
                                       GeneratorOperation::END, arr_, 1, {0}),
                                   LightningException,
                                   "Generator operation does not exist.");
+    }
+
+    SECTION("NCnamedGeneratorFactor") {
+        using StateVectorT = StateVectorKokkos<TestType>;
+        using KokkosVector = StateVectorT::KokkosVector;
+        using ExecutionSpace = StateVectorT::KokkosExecSpace;
+        [[maybe_unused]] StateVectorT sv{2};
+        KokkosVector arr_("arr_", 4);
+        PL_REQUIRE_THROWS_MATCHES(
+            applyNCNamedGenerator<ExecutionSpace>(
+                ControlledGeneratorOperation::END, arr_, 2, {1}, {true}, {0}),
+            LightningException,
+            "Controlled generator operation does not exist.");
     }
 }
 
@@ -104,7 +125,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
         "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
         "DoubleExcitationMinus", "DoubleExcitationPlus", "MultiRZ",
         "GlobalPhase");
-    {
+    DYNAMIC_SECTION("Generator - Gate = " << gate_name
+                                          << " Inverse = " << inverse) {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
         StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
@@ -408,6 +430,367 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGeneratorDoubleExcitationPlus",
                               imag(result_gate_svm[j])) /
                              ep)
                           .margin(EP));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
+                   "[StateVectorKokkos_Generator]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    const std::size_t num_qubits = 7;
+    const TestType ep_deriv = 1e-3;
+    const TestType ep_margin = 1e-4;
+
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    std::unordered_map<std::string, ControlledGateOperation>
+        str_to_controlled_gates_{};
+    for (const auto &[gate_op, controlled_gate_name] :
+         Constant::controlled_gate_names) {
+        str_to_controlled_gates_.emplace(controlled_gate_name, gate_op);
+    }
+
+    const bool inverse = GENERATE(true, false);
+    const std::string controlled_gate_name = GENERATE(
+        "RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "IsingXX", "IsingXY",
+        "IsingYY", "IsingZZ", "SingleExcitation", "SingleExcitationMinus",
+        "SingleExcitationPlus", "DoubleExcitation", "DoubleExcitationMinus",
+        "DoubleExcitationPlus", "MultiRZ");
+
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 1-control: c{5}") {
+        StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
+                                                   ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
+                                                    ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
+                                                    ini_st.size()};
+
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
+        const std::vector<std::size_t> control_wires = {5};
+        const std::vector<bool> control_values = {true};
+        auto scale =
+            kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
+                                          control_values, wires, inverse);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
+        kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {h});
+        kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {-h});
+
+        auto result_gntr_sv = kokkos_gntr_sv.getDataVector();
+        auto result_gate_svp = kokkos_gate_svp.getDataVector();
+        auto result_gate_svm = kokkos_gate_svm.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+        }
+    }
+
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 2-control: c{4,5}") {
+        StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
+                                                   ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
+                                                    ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
+                                                    ini_st.size()};
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
+        const std::vector<std::size_t> control_wires = {4, 5};
+        const std::vector<bool> control_values = {true, false};
+        auto scale =
+            kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
+                                          control_values, wires, inverse);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
+        kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {h});
+        kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {-h});
+
+        auto result_gntr_sv = kokkos_gntr_sv.getDataVector();
+        auto result_gate_svp = kokkos_gate_svp.getDataVector();
+        auto result_gate_svm = kokkos_gate_svm.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+        }
+    }
+
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 2-control: c{4,6}") {
+        StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
+                                                   ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
+                                                    ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
+                                                    ini_st.size()};
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
+        const std::vector<std::size_t> control_wires = {4, 6};
+        const std::vector<bool> control_values = {true, false};
+        auto scale =
+            kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
+                                          control_values, wires, inverse);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
+        kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {h});
+        kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {-h});
+
+        auto result_gntr_sv = kokkos_gntr_sv.getDataVector();
+        auto result_gate_svp = kokkos_gate_svp.getDataVector();
+        auto result_gate_svm = kokkos_gate_svm.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+        }
+    }
+
+    DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
+                                       << inverse << " 3-control: c{4,5,6}") {
+        StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
+                                                   ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
+                                                    ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
+                                                    ini_st.size()};
+        std::vector<std::size_t> wires;
+        if (controlled_gate_name != "MultiRZ") {
+            wires = createWires(
+                str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        } else {
+            wires = {0, 1, 2, 3};
+        }
+        const std::vector<std::size_t> control_wires = {4, 5, 6};
+        const std::vector<bool> control_values = {true, false, true};
+        auto scale =
+            kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
+                                          control_values, wires, inverse);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
+        kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {h});
+        kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {-h});
+
+        auto result_gntr_sv = kokkos_gntr_sv.getDataVector();
+        auto result_gate_svp = kokkos_gate_svp.getDataVector();
+        auto result_gate_svm = kokkos_gate_svm.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator empty control",
+                   "[StateVectorKokkos_Generator]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    const std::size_t num_qubits = 5;
+    const TestType ep_deriv = 1e-3;
+    const TestType ep_margin = 1e-4;
+
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+
+    std::unordered_map<std::string, ControlledGateOperation>
+        str_to_controlled_gates_{};
+    for (const auto &[gate_op, controlled_gate_name] :
+         Constant::controlled_gate_names) {
+        str_to_controlled_gates_.emplace(controlled_gate_name, gate_op);
+    }
+
+    const bool inverse = GENERATE(true, false);
+    const std::string controlled_gate_name =
+        GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase");
+    {
+        StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
+                                                   ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svp{ini_st.data(),
+                                                    ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gate_svm{ini_st.data(),
+                                                    ini_st.size()};
+
+        const auto wires = createWires(
+            str_to_controlled_gates_.at(controlled_gate_name), num_qubits);
+        const std::vector<std::size_t> control_wires = {};
+        const std::vector<bool> control_values = {};
+        auto scale =
+            kokkos_gntr_sv.applyGenerator(controlled_gate_name, control_wires,
+                                          control_values, wires, inverse);
+        auto h = static_cast<TestType>(((inverse) ? -1.0 : 1.0) * ep_deriv);
+        kokkos_gate_svp.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {h});
+        kokkos_gate_svm.applyOperation(controlled_gate_name, control_wires,
+                                       control_values, wires, inverse, {-h});
+
+        auto result_gntr_sv = kokkos_gntr_sv.getDataVector();
+        auto result_gate_svp = kokkos_gate_svp.getDataVector();
+        auto result_gate_svm = kokkos_gate_svm.getDataVector();
+
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(-scale * imag(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (real(result_gate_svp[j]) - real(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+            CHECK(scale * real(result_gntr_sv[j]) ==
+                  Approx(0.5 *
+                         (imag(result_gate_svp[j]) - imag(result_gate_svm[j])) /
+                         ep_deriv)
+                      .margin(ep_margin));
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator CRX/Y/Z",
+                   "[StateVectorKokkos_Generator]", float, double) {
+    using StateVectorT = StateVectorKokkos<TestType>;
+    const std::size_t num_qubits = 3;
+    const TestType ep_margin = 1e-4;
+
+    auto ini_st = createNonTrivialState<StateVectorT>(num_qubits);
+    const bool inverse = GENERATE(true, false);
+    const std::size_t control_wire = GENERATE(0, 1, 2);
+    const std::size_t wire = GENERATE(0, 1, 2);
+    SECTION("CRX") {
+        StateVectorKokkos<TestType> kokkos_gntr_sv_cr{ini_st.data(),
+                                                      ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gntr_sv_r{ini_st.data(),
+                                                     ini_st.size()};
+
+        if (control_wire == wire) {
+            PL_REQUIRE_THROWS_MATCHES(
+                kokkos_gntr_sv_r.applyGenerator("RX", {control_wire}, {true},
+                                                {wire}, inverse),
+                LightningException,
+                "`controlled_wires` and `target wires` must be disjoint.");
+        } else {
+            kokkos_gntr_sv_cr.applyGenerator("CRX", {control_wire, wire},
+                                             inverse);
+            kokkos_gntr_sv_r.applyGenerator("RX", {control_wire}, {true},
+                                            {wire}, inverse);
+
+            auto result_gntr_sv_cr = kokkos_gntr_sv_cr.getDataVector();
+            auto result_gntr_sv_r = kokkos_gntr_sv_r.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(result_gntr_sv_cr[j]) ==
+                      Approx(imag(result_gntr_sv_r[j])).margin(ep_margin));
+                CHECK(real(result_gntr_sv_cr[j]) ==
+                      Approx(real(result_gntr_sv_r[j])).margin(ep_margin));
+            }
+        }
+    }
+
+    SECTION("CRY") {
+        StateVectorKokkos<TestType> kokkos_gntr_sv_cr{ini_st.data(),
+                                                      ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gntr_sv_r{ini_st.data(),
+                                                     ini_st.size()};
+
+        if (control_wire == wire) {
+            PL_REQUIRE_THROWS_MATCHES(
+                kokkos_gntr_sv_r.applyGenerator("RX", {control_wire}, {true},
+                                                {wire}, inverse),
+                LightningException,
+                "`controlled_wires` and `target wires` must be disjoint.");
+        } else {
+            kokkos_gntr_sv_cr.applyGenerator("CRY", {control_wire, wire},
+                                             inverse);
+            kokkos_gntr_sv_r.applyGenerator("RY", {control_wire}, {true},
+                                            {wire}, inverse);
+
+            auto result_gntr_sv_cr = kokkos_gntr_sv_cr.getDataVector();
+            auto result_gntr_sv_r = kokkos_gntr_sv_r.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(result_gntr_sv_cr[j]) ==
+                      Approx(imag(result_gntr_sv_r[j])).margin(ep_margin));
+                CHECK(real(result_gntr_sv_cr[j]) ==
+                      Approx(real(result_gntr_sv_r[j])).margin(ep_margin));
+            }
+        }
+    }
+
+    SECTION("CRZ") {
+        StateVectorKokkos<TestType> kokkos_gntr_sv_cr{ini_st.data(),
+                                                      ini_st.size()};
+        StateVectorKokkos<TestType> kokkos_gntr_sv_r{ini_st.data(),
+                                                     ini_st.size()};
+
+        if (control_wire == wire) {
+            PL_REQUIRE_THROWS_MATCHES(
+                kokkos_gntr_sv_r.applyGenerator("RX", {control_wire}, {true},
+                                                {wire}, inverse),
+                LightningException,
+                "`controlled_wires` and `target wires` must be disjoint.");
+        } else {
+            kokkos_gntr_sv_cr.applyGenerator("CRZ", {control_wire, wire},
+                                             inverse);
+            kokkos_gntr_sv_r.applyGenerator("RZ", {control_wire}, {true},
+                                            {wire}, inverse);
+
+            auto result_gntr_sv_cr = kokkos_gntr_sv_cr.getDataVector();
+            auto result_gntr_sv_r = kokkos_gntr_sv_r.getDataVector();
+
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(imag(result_gntr_sv_cr[j]) ==
+                      Approx(imag(result_gntr_sv_r[j])).margin(ep_margin));
+                CHECK(real(result_gntr_sv_cr[j]) ==
+                      Approx(real(result_gntr_sv_r[j])).margin(ep_margin));
             }
         }
     }
