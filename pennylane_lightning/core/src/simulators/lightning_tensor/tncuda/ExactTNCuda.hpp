@@ -23,9 +23,9 @@
 #include <vector>
 
 #include "DevTag.hpp"
+#include "TNCuda.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
-#include "TensornetBase.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
@@ -40,15 +40,15 @@ namespace Pennylane::LightningTensor::TNCuda {
 
 /**
  * @brief Managed memory Exact Tensor Network class using cutensornet high-level
- * APIs backed.
+ * APIs.
  *
  * @tparam Precision Floating-point precision type.
  */
 
 template <class Precision>
-class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
+class ExactTNCuda final : public TNCuda<Precision, ExactTNCuda<Precision>> {
   private:
-    using BaseType = TNCudaBase<Precision, ExaTNCuda>;
+    using BaseType = TNCuda<Precision, ExactTNCuda>;
 
   public:
     constexpr static auto method = "exact";
@@ -58,13 +58,13 @@ class ExaTNCuda final : public TNCudaBase<Precision, ExaTNCuda<Precision>> {
     using PrecisionT = Precision;
 
   public:
-    ExaTNCuda() = delete;
+    ExactTNCuda() = delete;
 
-    explicit ExaTNCuda(const std::size_t numQubits) : BaseType(numQubits) {}
+    explicit ExactTNCuda(std::size_t numQubits) : BaseType(numQubits) {}
 
-    explicit ExaTNCuda(const std::size_t numQubits, DevTag<int> dev_tag)
+    explicit ExactTNCuda(std::size_t numQubits, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag) {}
 
-    ~ExaTNCuda() = default;
+    ~ExactTNCuda() = default;
 };
 } // namespace Pennylane::LightningTensor::TNCuda

@@ -13,9 +13,9 @@
 // limitations under the License.
 
 /**
- * @file TNCudaBase.hpp
- * Base class for cuTensorNet-backed tensor networks, specially for common APIs
- * of MPS and ExaTN.
+ * @file TNCuda.hpp
+ * Base class for cuTensorNet-backed tensor networks (for common APIs
+ * of MPS and ExactTN).
  */
 
 #pragma once
@@ -28,10 +28,12 @@
 #include <cuda.h>
 
 #include "LinearAlg.hpp"
+#include "TNCudaBase.hpp"
 #include "TNCudaGateCache.hpp"
 #include "TensorBase.hpp"
 #include "TensorCuda.hpp"
-#include "TensornetBase.hpp"
+
+#include "Util.hpp"
 
 /// @cond DEV
 namespace {
@@ -52,11 +54,11 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @tparam Derived Derived class to instantiate using CRTP.
  */
 template <class PrecisionT, class Derived>
-class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
+class TNCuda : public TNCudaBase<PrecisionT, Derived> {
   private:
     using CFP_t = decltype(cuUtil::getCudaType(PrecisionT{}));
     using ComplexT = std::complex<PrecisionT>;
-    using BaseType = TensornetBase<PrecisionT, Derived>;
+    using BaseType = TNCudaBase<PrecisionT, Derived>;
 
   protected:
     // Note both maxBondDim_ and bondDims_ are used for both MPS and Exact
@@ -85,10 +87,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     std::vector<TensorCuda<PrecisionT>> tensors_out_;
 
   public:
-    TNCudaBase() = delete;
+    TNCuda() = delete;
 
-    explicit TNCudaBase(const std::size_t numQubits,
-                        const std::size_t maxBondDim = 1)
+    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim = 1)
         : BaseType(numQubits), maxBondDim_(maxBondDim),
           bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
           sitesExtents_(setSitesExtents_()),
@@ -97,7 +98,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
               BaseType::getDevTag())) {
         initTensors_();
-        reset();
         appendInitialMPSState_(
             getSitesExtentsPtr()
                 .data()); // This API works for Exact Tensor Network as well,
@@ -105,8 +105,8 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
-    explicit TNCudaBase(const std::size_t numQubits, DevTag<int> dev_tag,
-                        const std::size_t maxBondDim = 1)
+    explicit TNCuda(const std::size_t numQubits, DevTag<int> dev_tag,
+                    const std::size_t maxBondDim = 1)
         : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID()),
           maxBondDim_(maxBondDim), bondDims_(setBondDims_()),
           sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
@@ -115,7 +115,6 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
               BaseType::getDevTag())) {
         initTensors_();
-        reset();
         appendInitialMPSState_(
             getSitesExtentsPtr()
                 .data()); // This API works for Exact Tensor Network as well,
@@ -123,7 +122,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
-    ~TNCudaBase() {}
+    ~TNCuda() = default;
 
     /**
      * @brief Get the method of a derived class object.
@@ -158,7 +157,9 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         std::size_t avail_gpu_memory = getFreeMemorySize();
 
-        PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
+        PL_ABORT_IF(avail_gpu_memory <
+                        Pennylane::Util::exp2(BaseType::getNumQubits()) *
+                            sizeof(ComplexT),
                     "State tensor size exceeds the available GPU memory!");
         get_state_tensor(res);
     }
@@ -170,7 +171,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
      * quantum state on host
      */
     auto getDataVector() -> std::vector<ComplexT> {
-        std::size_t length = std::size_t{1} << BaseType::getNumQubits();
+        std::size_t length = Pennylane::Util::exp2(BaseType::getNumQubits());
         std::vector<ComplexT> results(length);
 
         getData(results.data(), results.size());
@@ -207,18 +208,18 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
 
         CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
 
-        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+        tensors_[0].getDataBuffer().zeroInit();
+        std::size_t idx = BaseType::getNumQubits() - std::size_t{1};
+        std::size_t target = basisState[idx];
+        PL_CUDA_IS_SUCCESS(
+            cudaMemcpy(&tensors_[0].getDataBuffer().getData()[target],
+                       &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+
+        for (std::size_t i = 1; i < BaseType::getNumQubits(); i++) {
             tensors_[i].getDataBuffer().zeroInit();
-            std::size_t target = 0;
-            std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
 
-            // Rightmost site
-
-            if (i == 0) {
-                target = basisState[idx];
-            } else {
-                target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
-            }
+            idx = BaseType::getNumQubits() - std::size_t{1} - i;
+            target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
 
             PL_CUDA_IS_SUCCESS(
                 cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
@@ -553,6 +554,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
     /**
      * @brief Save quantumState information to data provided by a user
      *
+     * @param extentsPtr Pointer to extents provided by a user
      * @param tensorPtr Pointer to tensors provided by a user
      */
     void computeState(int64_t **extentsPtr, void **tensorPtr) {
@@ -832,6 +834,7 @@ class TNCudaBase : public TensornetBase<PrecisionT, Derived> {
             tensors_out_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
                                       sitesExtents_[i], BaseType::getDevTag());
         }
+        reset();
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda

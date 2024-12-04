@@ -13,7 +13,7 @@
 // limitations under the License.
 
 /**
- * @file TensornetBase.hpp
+ * @file TNCudaBase.hpp
  * Base class for all cuTensorNet backends.
  */
 
@@ -44,7 +44,7 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @tparam PrecisionT Floating point precision.
  * @tparam Derived Derived class to instantiate using CRTP.
  */
-template <class PrecisionT, class Derived> class TensornetBase {
+template <class PrecisionT, class Derived> class TNCudaBase {
   private:
     DevTag<int> dev_tag_;
 
@@ -62,10 +62,10 @@ template <class PrecisionT, class Derived> class TensornetBase {
                                        // states as v24.03
 
   public:
-    TensornetBase() = delete;
+    TNCudaBase() = delete;
 
-    explicit TensornetBase(const std::size_t numQubits, int device_id = 0,
-                           cudaStream_t stream_id = 0)
+    explicit TNCudaBase(const std::size_t numQubits, int device_id = 0,
+                        cudaStream_t stream_id = 0)
         : dev_tag_({device_id, stream_id}), numQubits_(numQubits) {
         PL_ABORT_IF(numQubits < 2,
                     "The number of qubits should be greater than 1.");
@@ -96,7 +96,7 @@ template <class PrecisionT, class Derived> class TensornetBase {
             /* cutensornetState_t * */ &quantumState_));
     }
 
-    ~TensornetBase() {
+    ~TNCudaBase() {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetDestroyState(quantumState_));
     }
 

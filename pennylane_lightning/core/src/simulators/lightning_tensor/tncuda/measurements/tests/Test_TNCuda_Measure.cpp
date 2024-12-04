@@ -24,7 +24,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
@@ -48,7 +48,7 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
 
     SECTION("Looping over different wire configurations:") {
         // Probabilities calculated with Pennylane default.qubit:
-        std::vector<
+        const std::vector<
             std::pair<std::vector<std::size_t>, std::vector<PrecisionT>>>
             input = {
                 {{0, 1, 2},
@@ -62,9 +62,9 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
                 {{2}, {0.88507558, 0.11492442}}}; // data from default.qubit
 
         // Defining the State Vector that will be measured.
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDevice_T> tn_state =
             createTNState<TNDevice_T>(num_qubits, maxBondDim);
@@ -87,9 +87,9 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
 
     SECTION("Test TNCudaOperator ctor failures") {
         // Defining the State Vector that will be measured.
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDevice_T> tn_state =
             createTNState<TNDevice_T>(num_qubits, maxBondDim);
@@ -104,9 +104,9 @@ TEMPLATE_LIST_TEST_CASE("Probabilities", "[Measures]", TestTNBackends) {
 
     SECTION("Test excessive projected wires failure") {
         // Defining the State Vector that will be measured.
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 100;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 100;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDevice_T> tn_state =
             createTNState<TNDevice_T>(num_qubits, maxBondDim);
@@ -122,14 +122,14 @@ TEMPLATE_LIST_TEST_CASE("Samples", "[TNCUDA_Measures]", TestTNBackends) {
 
     SECTION("Looping over different wire configurations:") {
         // Probabilities calculated with Pennylane default.qubit:
-        std::vector<PrecisionT> expected_probabilities = {
+        const std::vector<PrecisionT> expected_probabilities = {
             0.67078706, 0.03062806, 0.0870997,  0.00397696,
             0.17564072, 0.00801973, 0.02280642, 0.00104134};
 
         // Defining the State Vector that will be measured.
-        std::size_t bondDim = GENERATE(4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDevice_T> tn_state =
             createTNState<TNDevice_T>(num_qubits, maxBondDim);
@@ -143,7 +143,7 @@ TEMPLATE_LIST_TEST_CASE("Samples", "[TNCUDA_Measures]", TestTNBackends) {
 
         auto measure = MeasurementsTNCuda<TNDevice_T>(*tn_state);
 
-        std::size_t num_samples = 100000;
+        const std::size_t num_samples = 100000;
         const std::vector<std::size_t> wires = {0, 1, 2};
         auto samples = measure.generate_samples(wires, num_samples);
         auto counts = samples_to_decimal(samples, num_qubits, num_samples);

@@ -30,9 +30,9 @@
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "MPOTNCuda.hpp"
+#include "TNCuda.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
-#include "TensornetBase.hpp"
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
 #include "tncudaError.hpp"
@@ -57,9 +57,9 @@ namespace Pennylane::LightningTensor::TNCuda {
  */
 
 template <class Precision>
-class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
+class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
   private:
-    using BaseType = TNCudaBase<Precision, MPSTNCuda>;
+    using BaseType = TNCuda<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
 
@@ -100,7 +100,7 @@ class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
      *
      * @return std::vector<std::size_t>
      */
-    [[nodiscard]] auto getBondDims(const size_t idx) const -> std::size_t {
+    [[nodiscard]] auto getBondDims(std::size_t idx) const -> std::size_t {
         return BaseType::bondDims_[idx];
     }
 

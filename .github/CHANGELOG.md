@@ -2,25 +2,61 @@
 
 ### New features since last release
 
+* Add Exact Tensor Network C++ backend to `lightning.tensor`.
+  [(#977)](https://github.com/PennyLaneAI/pennylane-lightning/pull/977)
+
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
 
-* Add a Catalyst-specific wrapping class for Lightning Qubit.
+* Add a Catalyst-specific wrapping class for Lightning-Qubit.
   [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
+  [(#999)](https://github.com/PennyLaneAI/pennylane-lightning/pull/999)
+
+* Add native N-controlled gate/matrix operations and adjoint support to `lightning.kokkos`.
+  [(#950)](https://github.com/PennyLaneAI/pennylane-lightning/pull/950)
 
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
 
 ### Breaking changes
 
-* Removed all instances of `qml.QubitStateVector`.
-  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
-
 * Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
   [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
   [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
 
+* Removed all instances of `qml.QubitStateVector`.
+  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
+
 ### Improvements
+
+* Reverse Lightning Qubit generators vector insertion order.
+  [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
+
+* Update Kokkos version support to 4.5.
+  [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
+
+* Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
+  [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
+
+* Generalize seeding mechanism for all measurements.
+  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
+
+* `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` now define
+  the `eval_jaxpr` method for integration with the experimental
+  capture project.
+  [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
+
+* Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
+  [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
+
+* Add C++ unit tests for Exact Tensor Network backends.
+  [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
+
+* Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
+  [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
+
+* The TOML files for the devices are updated to use the new schema for declaring device capabilities.
+  [(#988)](https://github.com/PennyLaneAI/pennylane-lightning/pull/988)
 
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
   [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
@@ -28,12 +64,27 @@
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
-* Add C++ unit tests for Exact Tensor Network backends.
-  [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
-
 ### Documentation
 
+* Update Lightning-Tensor installation docs and usage suggestions.
+  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
+
 ### Bug fixes
+
+* Fix Lightning Kokkos editable mode path.
+  [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
+
+* Fix the missing `ninja` in Linux AARCH64 wheels recipe.
+  [(#1007)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1007)
+
+* Fix version switch condition the GPU workflow tests for LGPU and LKokkos.
+  [(#1006)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1006)
+
+* Fix issue with `lightning.gpu` Rot operation with adjoint.
+  [(#1004)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1004)
+
+* Fix the Lightning-Kokkos[CUDA] C++ API `cudaFree` segfaults in `applyMatrix`.
+  [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
 
 * Fix issue with adjoint-jacobian of adjoint ops.
   [(#996)](https://github.com/PennyLaneAI/pennylane-lightning/pull/996)
@@ -51,7 +102,17 @@
 
 This release contains contributions from (in alphabetical order):
 
-Ali Asadi, Joseph Lee, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu, Raul Torres, Haochen Paul Wang
+Ali Asadi,
+Astral Cai,
+Amintor Dusko,
+Christina Lee,
+Joseph Lee,
+Anton Naim Ibrahim,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+Shuli Shu,
+Raul Torres,
+Haochen Paul Wang
 
 ---
 

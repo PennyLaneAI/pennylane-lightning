@@ -18,7 +18,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "Gates.hpp"
 #include "MPSTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
@@ -32,8 +32,6 @@ using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningTensor;
 using namespace Pennylane::LightningTensor::TNCuda::Gates;
 using namespace Pennylane::Util;
-// using namespace Pennylane;
-namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
@@ -45,8 +43,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::PhaseShift", "[TNCuda_Param]",
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -97,8 +95,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RX", "[TNCuda_Param]", TestTNBackends) {
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -164,8 +162,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RY", "[MPSTNCuda_Nonparam]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -236,8 +234,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::RZ", "[TNCuda_Param]", TestTNBackends) {
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -300,8 +298,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -328,10 +326,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wire indices") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
-
         tn_state->applyOperation("ControlledPhaseShift", {0, 1}, inverse,
                                  {sign * angles[0]});
 
@@ -344,7 +340,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::ControlledPhaseShift", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wire indices") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -365,8 +360,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::Rot", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -409,8 +404,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -421,7 +416,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
     std::vector<cp_t> expected_results = std::vector<cp_t>(0b1 << num_qubits);
 
     SECTION("Apply adjacent wires") {
-
         tn_state->applyOperation("CRot", {0, 1}, inverse, angles);
 
         expected_results[0] = cp_t{1, 0};
@@ -434,7 +428,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRot", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperation("CRot", {0, 2}, inverse, angles);
 
         expected_results[0] = cp_t{1, 0};
@@ -476,8 +469,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -539,8 +532,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -570,7 +563,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -587,7 +579,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("IsingXY", {0, 2}, inverse, angles);
@@ -607,8 +598,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -638,7 +629,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -654,7 +644,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -674,8 +663,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -705,7 +694,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -721,7 +709,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -734,6 +721,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
         CHECK(results == Pennylane::Util::approx(expected_results[1]));
     }
 }
+
 /* python code to get the reference values for a single parameter with 2 target
 for CRX import pennylane as qml
 
@@ -763,8 +751,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -797,7 +785,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard"}, {{0}, {1}},
@@ -814,7 +801,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard"}, {{0}, {1}},
                                   {false, false});
 
@@ -835,8 +821,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -870,7 +856,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -886,7 +871,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -906,8 +890,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -937,7 +921,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -954,7 +937,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("CRZ", {0, 2}, inverse, angles);
@@ -974,8 +956,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -1006,7 +988,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -1022,7 +1003,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -1042,8 +1022,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -1080,7 +1060,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -1098,7 +1077,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
 
@@ -1120,8 +1098,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
 
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
@@ -1158,7 +1136,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
     }
 
     SECTION("Apply adjacent wires") {
-
         tn_state->reset();
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -1176,7 +1153,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
     }
 
     SECTION("Apply non-adjacent wires") {
-
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
                                   {{0}, {1}, {2}}, {false, false, false});
         tn_state->applyOperation("SingleExcitationPlus", {0, 2}, inverse,
@@ -1223,8 +1199,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 5;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 5;
+    constexpr std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state;
@@ -1238,7 +1214,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
             tn_state->applyOperation("DoubleExcitation", {0, 1, 2, 3}, inverse),
             LightningException);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         const std::vector<Precision_T> angles = {0.3};
@@ -1267,7 +1243,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
         }
 
         SECTION("Apply adjacent wires") {
-
             tn_state->reset();
 
             tn_state->applyOperations(
@@ -1304,8 +1279,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 5;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 5;
+    constexpr std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state;
@@ -1319,7 +1294,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
                                                    {0, 1, 2, 3}, inverse),
                           LightningException);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         const std::vector<Precision_T> angles = {0.3};
@@ -1354,7 +1329,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
         }
 
         SECTION("Apply adjacent wires") {
-
             tn_state->reset();
 
             tn_state->applyOperations(
@@ -1391,8 +1365,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 5;
-    std::size_t maxExtent = 2;
+    constexpr std::size_t num_qubits = 5;
+    constexpr std::size_t maxExtent = 2;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state;
@@ -1406,7 +1380,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
                                                    {0, 1, 2, 3}, inverse),
                           LightningException);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         tn_state = std::make_unique<TNDevice_T>(num_qubits, dev_tag);
 
         const std::vector<Precision_T> angles = {0.3};
@@ -1442,7 +1416,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
         }
 
         SECTION("Apply adjacent wires") {
-
             tn_state->reset();
 
             tn_state->applyOperations(

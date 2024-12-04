@@ -42,9 +42,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     using cp_t = typename TNDevice_T::ComplexT;
     using PrecisionT = typename TNDevice_T::PrecisionT;
 
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
-    std::size_t max_mpo_bond = 16;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
+    constexpr std::size_t max_mpo_bond = 16;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
@@ -55,6 +55,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
 
     // in-order decomposition of the cnot operator
     // data from scipy decompose in the lightning.tensor python layer
+    // TODO: this is a temporary solution, it will be removed once SVD
+    // decomposition is implemented in the C++ layer
     mpo_cnot[0][0] = {1.0, 0.0};
     mpo_cnot[0][3] = {-1.0, 0.0};
     mpo_cnot[0][9] = {1.0, 0.0};
@@ -98,7 +100,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     mpo_cswap[2][13] = mpo_cswap[2][0];
 
     SECTION("Target at wire indices") {
-
         MPSTNCuda<PrecisionT> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -118,7 +119,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     }
 
     SECTION("Target at non-adjacent wire indices") {
-
         MPSTNCuda<PrecisionT> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -138,7 +138,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::2+_wires", "[TNCuda_Nonparam]",
     }
 
     SECTION("Tests for 3-wire MPOs") {
-
         MPSTNCuda<PrecisionT> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         mps_state_mpo.applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -160,9 +159,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
     using Precision_T = typename TNDevice_T::PrecisionT;
-    std::size_t num_qubits = 3;
-    std::size_t maxExtent = 2;
-    std::size_t max_mpo_bond = 4;
+    constexpr std::size_t num_qubits = 3;
+    constexpr std::size_t maxExtent = 2;
+    constexpr std::size_t max_mpo_bond = 4;
     DevTag<int> dev_tag{0, 0};
 
     std::unique_ptr<TNDevice_T> tn_state =
@@ -173,6 +172,9 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
 
     // in-order decomposition of the cnot operator
     // data from scipy decompose in the lightning.tensor python layer
+    // TODO: this is a temporary solution, it will be removed once SVD
+    // decomposition is implemented in the C++ layer
+
     mpo_single_excitation[0][0] = {-1.40627352, 0.0};
     mpo_single_excitation[0][3] = {-0.14943813, 0.0};
     mpo_single_excitation[0][6] = {0.00794005, 0.0};
@@ -188,7 +190,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     mpo_single_excitation[1][15] = {-0.707106781, 0.0};
 
     SECTION("Target at wire indices") {
-
         MPSTNCuda<Precision_T> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},
@@ -209,7 +210,6 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::applyMPO::SingleExcitation", "[TNCuda_Param]",
     }
 
     SECTION("Target at non-adjacent wire indices") {
-
         MPSTNCuda<Precision_T> mps_state_mpo{num_qubits, maxExtent, dev_tag};
 
         tn_state->applyOperations({"Hadamard", "Hadamard", "Hadamard"},

@@ -17,7 +17,7 @@
  * This file defines the necessary functionality to test over LTensor.
  */
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "TypeList.hpp"
 
@@ -40,14 +40,13 @@ template <> struct MPSToName<MPSTNCuda<double>> {
 template <typename TNDevice_T>
 std::unique_ptr<TNDevice_T> createTNState(std::size_t num_qubits,
                                           std::size_t maxExtent) {
-
     DevTag<int> dev_tag{0, 0};
     if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
                   std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
         // Create the object for MPSTNCuda
         return std::make_unique<TNDevice_T>(num_qubits, maxExtent, dev_tag);
     } else {
-        // Create the object for ExaTNCuda
+        // Create the object for ExactTNCuda
         return std::make_unique<TNDevice_T>(num_qubits, dev_tag);
     }
 }
@@ -55,7 +54,6 @@ std::unique_ptr<TNDevice_T> createTNState(std::size_t num_qubits,
 template <typename TNDevice_T>
 inline void
 tn_state_append_mps_final_state(std::unique_ptr<TNDevice_T> const &tn_state) {
-
     if constexpr (std::is_same_v<TNDevice_T, MPSTNCuda<double>> ||
                   std::is_same_v<TNDevice_T, MPSTNCuda<float>>) {
         PL_ABORT_IF(
@@ -67,7 +65,7 @@ tn_state_append_mps_final_state(std::unique_ptr<TNDevice_T> const &tn_state) {
 
 using TestTNBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
-                              ExaTNCuda<float>, ExaTNCuda<double>>;
+                              ExactTNCuda<float>, ExactTNCuda<double>>;
 using TestMPSBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>>;
 

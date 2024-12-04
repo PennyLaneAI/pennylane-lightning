@@ -20,9 +20,10 @@
 #include <iostream>
 #include <limits>
 #include <numeric>
+#include <optional>
 #include <span>
 
-#include "StateVectorLQubitDynamic.hpp"
+#include "StateVectorLQubitManaged.hpp"
 
 #include "CacheManager.hpp"
 #include "Exception.hpp"
@@ -35,7 +36,7 @@ namespace Catalyst::Runtime::Simulator {
 class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
   private:
     using StateVectorT =
-        Pennylane::LightningQubit::StateVectorLQubitDynamic<double>;
+        Pennylane::LightningQubit::StateVectorLQubitManaged<double>;
 
     // static constants for RESULT values
     static constexpr bool GLOBAL_RESULT_TRUE_CONST = true;
@@ -85,6 +86,14 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
             wires.begin(), wires.end(), std::back_inserter(res),
             [this](auto w) { return this->qubit_manager.getDeviceId(w); });
         return res;
+    }
+
+    inline auto generateSeed() -> std::optional<std::size_t> {
+        if (this->gen != nullptr) {
+            return (*(this->gen))();
+        }
+
+        return std::nullopt;
     }
 
   public:

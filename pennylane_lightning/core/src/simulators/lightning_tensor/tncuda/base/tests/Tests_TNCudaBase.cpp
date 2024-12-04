@@ -27,7 +27,7 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
  *  Tests for functionality defined in the MPSBase class.
  */
 
-template <typename TypeList> void testTensornetBase() {
+template <typename TypeList> void testTNCudaBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using MPS_T = typename TypeList::Type;
 
@@ -43,10 +43,10 @@ template <typename TypeList> void testTensornetBase() {
             REQUIRE(mps_state.getNumQubits() == 4);
             REQUIRE(mps_state.getQubitDims() == qubitDims);
         }
-        testTensornetBase<typename TypeList::Next>();
+        testTNCudaBase<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("testTensornetBase", "[TensornetBase]") {
-    testTensornetBase<TestMPSBackends>();
+TEST_CASE("testTNCudaBase", "[TNCudaBase]") {
+    testTNCudaBase<TestMPSBackends>();
 }

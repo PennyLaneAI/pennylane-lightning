@@ -23,7 +23,7 @@
 #include <catch2/catch.hpp>
 
 #include "DevTag.hpp"
-#include "ExaTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 #include "MeasurementsTNCuda.hpp"
 #include "TNCudaGateCache.hpp"
@@ -46,9 +46,9 @@ TEMPLATE_LIST_TEST_CASE("[Identity]", "[TNCuda_Expval]", TestTNBackends) {
     using NamedObsT = NamedObsTNCuda<TNDeviceT>;
     auto ONE = PrecisionT(1);
 
-    std::size_t bondDim = GENERATE(2, 3, 4, 5);
-    std::size_t num_qubits = 3;
-    std::size_t maxBondDim = bondDim;
+    const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+    constexpr std::size_t num_qubits = 3;
+    const std::size_t maxBondDim = bondDim;
 
     std::unique_ptr<TNDeviceT> tn_state =
         createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -74,9 +74,9 @@ TEMPLATE_LIST_TEST_CASE("[PauliX]", "[TNCuda_Expval]", TestTNBackends) {
         using PrecisionT = typename TNDeviceT::PrecisionT;
         using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -130,9 +130,9 @@ TEMPLATE_LIST_TEST_CASE("[PauliY]", "[TNCuda_Expval]", TestTNBackends) {
         using PrecisionT = typename TNDeviceT::PrecisionT;
         using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -179,9 +179,9 @@ TEMPLATE_LIST_TEST_CASE("[PauliZ]", "[TNCuda_Expval]", TestTNBackends) {
 
         using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -234,9 +234,9 @@ TEMPLATE_LIST_TEST_CASE("[Hadamard]", "[TNCuda_Expval]", TestTNBackends) {
         using PrecisionT = typename TNDeviceT::PrecisionT;
         using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -270,9 +270,9 @@ TEMPLATE_LIST_TEST_CASE("[Parametric_obs]", "[TNCuda_Expval]", TestTNBackends) {
         using PrecisionT = typename TNDeviceT::PrecisionT;
         using NamedObsT = NamedObsTNCuda<TNDeviceT>;
 
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -299,9 +299,9 @@ TEMPLATE_LIST_TEST_CASE("[Hermitian]", "[TNCuda_Expval]", TestTNBackends) {
         using ComplexT = typename TNDeviceT::ComplexT;
         using HermitianObsT = HermitianObsTNCuda<TNDeviceT>;
 
-        std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2, 3, 4, 5);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
@@ -416,9 +416,9 @@ TEMPLATE_LIST_TEST_CASE("Test expectation value of HamiltonianObs",
     using HamiltonianObsT = HamiltonianTNCuda<TNDeviceT>;
     auto ONE = PrecisionT(1);
     SECTION("Using XZ") {
-        std::size_t bondDim = GENERATE(2);
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = bondDim;
+        const std::size_t bondDim = GENERATE(2);
+        constexpr std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = bondDim;
 
         std::unique_ptr<TNDeviceT> tn_state =
             createTNState<TNDeviceT>(num_qubits, maxBondDim);
