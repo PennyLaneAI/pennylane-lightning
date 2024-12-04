@@ -24,7 +24,6 @@ from pennylane_lightning.core._serialize import QuantumScriptSerializer, global_
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-
 if device_name == "lightning.kokkos":
     from pennylane_lightning.lightning_kokkos_ops.observables import (
         HamiltonianC64,
@@ -229,13 +228,7 @@ class TestSerializeObs:
     def test_hermitian_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a Hermitian return"""
         with qml.tape.QuantumTape() as tape:
-            qml.expval(
-                qml.Hermitian(
-                    np.eye(4),
-                    wires=[0, 1],
-                )
-                @ qml.Hermitian(np.eye(2), wires=[2])
-            )
+            qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.Hermitian(np.eye(2), wires=[2]))
 
         c_dtype = np.complex64 if use_csingle else np.complex128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
@@ -246,10 +239,7 @@ class TestSerializeObs:
 
         s_expected = tensor_prod_obs(
             [
-                hermitian_obs(
-                    np.eye(4, dtype=c_dtype).ravel(),
-                    [0, 1],
-                ),
+                hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
                 hermitian_obs(np.eye(2, dtype=c_dtype).ravel(), [2]),
             ]
         )
@@ -261,13 +251,7 @@ class TestSerializeObs:
     def test_mixed_tensor_return(self, use_csingle, wires_map):
         """Test expected serialization for a mixture of Hermitian and Pauli return"""
         with qml.tape.QuantumTape() as tape:
-            qml.expval(
-                qml.Hermitian(
-                    np.eye(4),
-                    wires=[0, 1],
-                )
-                @ qml.PauliY(2)
-            )
+            qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]) @ qml.PauliY(2))
 
         c_dtype = np.complex64 if use_csingle else np.complex128
         tensor_prod_obs = TensorProdObsC64 if use_csingle else TensorProdObsC128
@@ -280,10 +264,7 @@ class TestSerializeObs:
 
         s_expected = tensor_prod_obs(
             [
-                hermitian_obs(
-                    np.eye(4, dtype=c_dtype).ravel(),
-                    [0, 1],
-                ),
+                hermitian_obs(np.eye(4, dtype=c_dtype).ravel(), [0, 1]),
                 named_obs("PauliY", [2]),
             ]
         )

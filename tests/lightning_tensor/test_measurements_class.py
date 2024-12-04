@@ -15,9 +15,6 @@
 Unit tests for measurements class.
 """
 import numpy as np
-
-np.set_printoptions(precision=6)
-
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device

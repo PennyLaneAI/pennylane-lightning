@@ -34,8 +34,8 @@
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
 
-    /// @cond DEV
-    namespace {
+/// @cond DEV
+namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
 using namespace Pennylane::LightningGPU::Util;
