@@ -659,6 +659,92 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
 
+    SECTION("Controlled Pauli-X and RX") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n_qubits);
+
+        for (std::size_t i = 0; i < n_qubits; i++) {
+            Qs[i] = LKsim->AllocateQubit();
+        }
+
+        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LKsim->NamedOperation("PauliX", {}, {Qs[1]}, false, {Qs[0]}, {true});
+        LKsim->NamedOperation("RX", {M_PI_2}, {Qs[1]}, false, {Qs[0]}, {true});
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        CHECK(
+            state.at(0) ==
+            PLApproxComplex(std::complex<double>{M_SQRT1_2, 0}).epsilon(1e-5));
+        CHECK(state.at(1) ==
+              PLApproxComplex(std::complex<double>{0, 0}).epsilon(1e-5));
+        CHECK(state.at(2) ==
+              PLApproxComplex(std::complex<double>{0, -0.5}).epsilon(1e-5));
+        CHECK(state.at(3) ==
+              PLApproxComplex(std::complex<double>{0.5, 0.0}).epsilon(1e-5));
+    }
+
+    SECTION("Hadamard, CNOT and Matrix") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LKsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+
+        const std::vector<intptr_t> wires = {Qs[1]};
+        const std::vector<intptr_t> controlled_wires = {Qs[0]};
+        const std::vector<bool> controlled_values = {true};
+        std::vector<std::complex<double>> matrix{
+            {-0.6709485262524046, -0.6304426335363695},
+            {-0.14885403153998722, 0.3608498832392019},
+            {-0.2376311670004963, 0.3096798175687841},
+            {-0.8818365947322423, -0.26456390390903695},
+        };
+        LKsim->MatrixOperation(matrix, wires, false, controlled_wires,
+                               controlled_values);
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        CHECK(state[0] == PLApproxComplex(std::complex<double>{0.70710678, 0.0})
+                              .epsilon(1e-5));
+        CHECK(state[1] ==
+              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
+        CHECK(state[2] ==
+              PLApproxComplex(std::complex<double>{-0.1052557, 0.2551594})
+                  .epsilon(1e-5));
+        CHECK(state[3] ==
+              PLApproxComplex(std::complex<double>{-0.62355264, -0.187075})
+                  .epsilon(1e-5));
+    }
+
+    SECTION("Mismatch controlled wires") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        REQUIRE_THROWS_WITH(
+            LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]}, {}),
+            Catch::Contains("Controlled wires/values size mismatch"));
+        std::vector<std::complex<double>> matrix{
+            {-0.6709485262524046, -0.6304426335363695},
+            {-0.14885403153998722, 0.3608498832392019},
+            {-0.2376311670004963, 0.3096798175687841},
+            {-0.8818365947322423, -0.26456390390903695},
+        };
+        REQUIRE_THROWS_WITH(
+            LKsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
+            Catch::Contains("Controlled wires/values size mismatch"));
+    }
+
     SECTION("Test setStateVector") {
         std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
         constexpr std::size_t n_qubits = 2;
@@ -701,3 +787,5 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
         CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
     }
 }
+
+TEST_CASE("Test mismatch controlled wires", "[]") {}

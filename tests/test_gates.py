@@ -424,10 +424,6 @@ def test_state_prep(n_targets, tol):
         assert np.allclose(res.ravel(), ref.ravel(), tol)
 
 
-@pytest.mark.skipif(
-    device_name in ("lightning.kokkos"),
-    reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
-)
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
 def test_controlled_qubit_unitary(n_qubits, control_value, tol):
@@ -469,10 +465,6 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                 assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.skipif(
-    device_name in ("lightning.kokkos"),
-    reason="N-controlled operations only implemented in lightning.qubit and lightning.tensor.",
-)
 @pytest.mark.parametrize(
     "operation",
     [
@@ -551,10 +543,6 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
             assert np.allclose(circ(), circ_def(), tol)
 
 
-@pytest.mark.skipif(
-    device_name in ("lightning.kokkos"),
-    reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
-)
 def test_controlled_qubit_unitary_from_op(tol):
     n_qubits = 10
     dev_def = qml.device("default.qubit", wires=n_qubits)
@@ -612,10 +600,6 @@ def test_paulirot(n_wires, n_targets, tol):
         assert np.allclose(dev.execute(tape1), dev.execute(tape0), tol)
 
 
-@pytest.mark.skipif(
-    device_name in ("lightning.kokkos"),
-    reason="N-controlled operations are not implemented in lightning.kokkos.",
-)
 @pytest.mark.parametrize("control_wires", range(4))
 @pytest.mark.parametrize("target_wires", range(4))
 def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
