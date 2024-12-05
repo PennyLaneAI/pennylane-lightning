@@ -853,9 +853,9 @@ void applyNCGenDoubleExcitationMinus(
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i0011,
         std::size_t i1100, const KokkosIntVector &indices,
-        [[maybe_unused]] std::size_t offset) {
+        std::size_t offset) {
         [[maybe_unused]] const auto &indices_ = indices;
-        [[maybe_unused]] const auto i1100_ = i1100;
+        [[maybe_unused]] const auto offset_ = offset;
         const auto v0011 = arr(i0011);
         const auto v1100 = arr(i1100);
         arr(i0011) = Kokkos::complex<PrecisionT>{imag(v1100), -real(v1100)};
