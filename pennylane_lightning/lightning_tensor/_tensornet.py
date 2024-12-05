@@ -212,10 +212,11 @@ class LightningTensorNet:
 
         Returns: the tensor network class
         """
-        if self.method == "mps":
-            return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
         if self.method == "tn":
             return exactTensorNetC128 if self.dtype == np.complex128 else exactTensorNetC64
+        # self.method == "mps"
+        return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
+            
 
     def reset_state(self):
         """Reset the device's initial quantum state"""
