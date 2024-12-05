@@ -2,8 +2,8 @@
 
 ### New features since last release
 
-* Add native N-controlled gate/matrix operations and adjoint support to `lightning.kokkos`.
-  [(#950)](https://github.com/PennyLaneAI/pennylane-lightning/pull/950)
+* Add Exact Tensor Network C++ backend to `lightning.tensor`.
+  [(#977)](https://github.com/PennyLaneAI/pennylane-lightning/pull/977)
 
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
@@ -11,6 +11,9 @@
 * Add a Catalyst-specific wrapping class for Lightning-Qubit.
   [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
   [(#999)](https://github.com/PennyLaneAI/pennylane-lightning/pull/999)
+
+* Add native N-controlled gate/matrix operations and adjoint support to `lightning.kokkos`.
+  [(#950)](https://github.com/PennyLaneAI/pennylane-lightning/pull/950)
 
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
@@ -54,6 +57,9 @@
 
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
+
+* Add C++ unit tests for Exact Tensor Network backends.
+  [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
 
 * Add native BLAS support to the C++ layer via dynamic `scipy-openblas32` loading.
   [(#995)](https://github.com/PennyLaneAI/pennylane-lightning/pull/995)

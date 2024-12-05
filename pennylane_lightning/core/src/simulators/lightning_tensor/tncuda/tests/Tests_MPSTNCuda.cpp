@@ -70,8 +70,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
         std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
 
         REQUIRE_THROWS_WITH(
-            mps_state.updateMPSSiteData(siteIdx, site_data.data(),
-                                        site_data.size()),
+            mps_state.updateSiteData(siteIdx, site_data.data(),
+                                     site_data.size()),
             Catch::Matchers::Contains(
                 "The site index should be less than the number of qubits."));
     }
@@ -86,8 +86,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
         std::vector<std::complex<TestType>> site_data(1, {0.0, 0.0});
 
         REQUIRE_THROWS_WITH(
-            mps_state.updateMPSSiteData(siteIdx, site_data.data(),
-                                        site_data.size()),
+            mps_state.updateSiteData(siteIdx, site_data.data(),
+                                     site_data.size()),
             Catch::Matchers::Contains("The length of the host data should "
                                       "match its copy on the device."));
     }
@@ -106,8 +106,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
         site0_data[2] = {1.0, 0.0};
         site1_data[1] = {1.0, 0.0};
 
-        mps_state.updateMPSSiteData(0, site0_data.data(), site0_data.size());
-        mps_state.updateMPSSiteData(1, site1_data.data(), site1_data.size());
+        mps_state.updateSiteData(0, site0_data.data(), site0_data.size());
+        mps_state.updateSiteData(1, site1_data.data(), site1_data.size());
 
         auto results = mps_state.getDataVector();
 
