@@ -71,6 +71,9 @@
 
 ### Bug fixes
 
+* Fix Lightning Kokkos `[[maybe_unused]]` and `exp2` errors with hipcc.
+  [(#1018)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1018)
+
 * Fix Lightning Kokkos editable mode path.
   [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
 
