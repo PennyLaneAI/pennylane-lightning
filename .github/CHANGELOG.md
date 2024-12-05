@@ -26,7 +26,7 @@
 
 ### Improvements
 
-* Catalyst device interfaces supports dynamic shots, and no longer parses the device init op's attribute dictionary for a static shots literal.
+* Catalyst device interfaces support dynamic shots, and no longer parses the device init op's attribute dictionary for a static shots literal.
   [(#1017)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1017)
 
 * Reduce flaky test and increase test shots count.
