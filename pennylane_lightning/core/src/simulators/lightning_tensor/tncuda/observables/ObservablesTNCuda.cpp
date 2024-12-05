@@ -13,8 +13,8 @@
 // limitations under the License.
 
 #include "ObservablesTNCuda.hpp"
-#include "MPSTNCuda.hpp"
 #include "ExactTNCuda.hpp"
+#include "MPSTNCuda.hpp"
 
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
 
