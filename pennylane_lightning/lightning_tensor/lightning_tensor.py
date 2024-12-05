@@ -64,7 +64,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 _backends = frozenset({"cutensornet"})
 # The set of supported backends.
 
-_methods = frozenset({"mps", "exact"})
+_methods = frozenset({"mps", "tn"})
 # The set of supported methods.
 
 _operations = frozenset(
@@ -223,7 +223,7 @@ class LightningTensor(Device):
         shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        method (str): Supported method. Currently, only ``mps`` is supported.
+        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) and ``"tn"`` (Tensor Network).
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
     Keyword Args:
@@ -262,7 +262,9 @@ class LightningTensor(Device):
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
+    _device_options_mps = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
+    _device_options_tn = ("backend", "cutoff", "cutoff_mode")
+    
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
@@ -312,10 +314,15 @@ class LightningTensor(Device):
         self._backend = kwargs.get("backend", "cutensornet")
 
         for arg in kwargs:
-            if arg not in self._device_options:
+            if self._method == "mps" and arg not in self._device_options_mps:
                 raise TypeError(
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
+            if self._method == "tn" and arg not in self._device_options_tn:
+                raise TypeError(
+                    f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
+                )
+
 
         if not accepted_backends(self._backend):
             raise ValueError(f"Unsupported backend: {self._backend}")
@@ -374,8 +381,9 @@ class LightningTensor(Device):
 
         updated_values = {}
 
+        _device_options = self._device_options_mps if self.method == "mps" else self._device_options_tn
         new_device_options = dict(config.device_options)
-        for option in self._device_options:
+        for option in _device_options:
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 

@@ -89,7 +89,7 @@ class LightningTensorMeasurements:
         # return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
         if self.method == "mps":
             return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
-        if self.method == "exact":
+        if self.method == "tn":
             return exactMeasurementsC64 if self.dtype == np.complex64 else exactMeasurementsC128
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:

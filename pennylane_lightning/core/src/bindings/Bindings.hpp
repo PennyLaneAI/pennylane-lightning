@@ -770,7 +770,7 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
- * @brief Register observable classes.
+ * @brief Register observable classes for TensorNet.
  *
  * @tparam LightningBackendT
  * @param m Pybind module
@@ -800,11 +800,11 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
 
     std::string class_name;
 
-    class_name = std::string(name) + "Observable" + "C" + bitsize;
+    class_name = std::string(name) + "ObservableC" + bitsize;
     py::class_<ObservableT, std::shared_ptr<ObservableT>>(m, class_name.c_str(),
                                                           py::module_local());
 
-    class_name = std::string(name) + "NamedObs" + "C" + bitsize;
+    class_name = std::string(name) + "NamedObsC" + bitsize;
     py::class_<NamedObsT, std::shared_ptr<NamedObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init(
@@ -819,18 +819,18 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
                 if (!py::isinstance<NamedObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<NamedObsT>();
+                auto &&other_cast = other.cast<NamedObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
-    class_name = std::string(name) + "HermitianObs" + "C" + bitsize;
+    class_name = std::string(name) + "HermitianObsC" + bitsize;
     py::class_<HermitianObsT, std::shared_ptr<HermitianObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init([](const np_arr_c &matrix,
                          const std::vector<std::size_t> &wires) {
-            auto buffer = matrix.request();
-            const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
+            auto const &buffer = matrix.request();
+            const auto ptr = static_cast<ComplexT *>(buffer.ptr);
             return HermitianObsT(std::vector<ComplexT>(ptr, ptr + buffer.size),
                                  wires);
         }))
@@ -844,12 +844,12 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
                 if (!py::isinstance<HermitianObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<HermitianObsT>();
+                auto &&other_cast = other.cast<HermitianObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
-    class_name = std::string(name) + "TensorProdObs" + "C" + bitsize;
+    class_name = std::string(name) + "TensorProdObsC" + bitsize;
     py::class_<TensorProdObsT, std::shared_ptr<TensorProdObsT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init([](const std::vector<std::shared_ptr<ObservableT>> &obs) {
@@ -864,20 +864,20 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
                 if (!py::isinstance<TensorProdObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<TensorProdObsT>();
+                auto &&other_cast = other.cast<TensorProdObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
-    class_name = std::string(name) + "Hamiltonian" + "C" + bitsize;
+    class_name = std::string(name) + "HamiltonianC" + bitsize;
     using ObsPtr = std::shared_ptr<ObservableT>;
     py::class_<HamiltonianT, std::shared_ptr<HamiltonianT>, ObservableT>(
         m, class_name.c_str(), py::module_local())
         .def(py::init(
             [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
-                auto buffer = coeffs.request();
-                const auto ptr = static_cast<const ParamT *>(buffer.ptr);
-                return HamiltonianT{std::vector(ptr, ptr + buffer.size), obs};
+                auto const &buffer = coeffs.request();
+                const auto ptr = static_cast<ParamT *>(buffer.ptr);
+                return HamiltonianT{std::vector<ParamT>(ptr, ptr + buffer.size), obs};
             }))
         .def("__repr__", &HamiltonianT::getObsName)
         .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
@@ -891,7 +891,7 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
                 if (!py::isinstance<HamiltonianT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<HamiltonianT>();
+                auto &&other_cast = other.cast<HamiltonianT>();
                 return self == other_cast;
             },
             "Compare two observables");

@@ -17,15 +17,9 @@ Class implementation for tensornet manipulation.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import mpsTensorNetC64, mpsTensorNetC128
+    from pennylane_lightning.lightning_tensor_ops import mpsTensorNetC64, mpsTensorNetC128, exactTensorNetC64, exactTensorNetC128
 except ImportError:
     pass
-
-try:
-    from pennylane_lightning.lightning_tensor_ops import exactTensorNetC64, exactTensorNetC128
-except ImportError:
-    pass
-
 
 import numpy as np
 import pennylane as qml
@@ -168,11 +162,9 @@ class LightningTensorNet:
 
         self._wires = Wires(range(num_wires))
 
-        print("FDX == ", self._method)
-
         if self._method == "mps":
             self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
-        elif self._method == "exact":
+        elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
             raise NotImplementedError  # pragma: no cover
@@ -216,7 +208,7 @@ class LightningTensorNet:
         """
         if self.method == "mps":
             return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
-        if self.method == "exact":
+        if self.method == "tn":
             return exactTensorNetC128 if self.dtype == np.complex128 else exactTensorNetC64
 
     def reset_state(self):
@@ -298,7 +290,7 @@ class LightningTensorNet:
             M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
             self._tensornet.updateMPSSitesData(M)
 
-        if self.method == "exact":
+        if self.method == "tn":
             raise DeviceError("Exact Tensor Network does not support StatePrep")
 
     def _apply_basis_state(self, state, wires):
@@ -423,7 +415,7 @@ class LightningTensorNet:
 
                 if self.method == "mps":
                     self._apply_MPO(gate_ops_matrix, wires)
-                if self.method == "exact":
+                if self.method == "tn":
                     method = getattr(tensornet, "applyMatrix")
                     method(gate_ops_matrix, wires, False)
 
@@ -437,7 +429,7 @@ class LightningTensorNet:
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
                     operations = operations[1:]
-                if self.method == "exact":
+                if self.method == "tn":
                     raise DeviceError("Exact Tensor Network does not support StatePrep")
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)

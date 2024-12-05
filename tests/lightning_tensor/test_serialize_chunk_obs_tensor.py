@@ -29,7 +29,7 @@ if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.parametrize("tn_backend", ["mps", "exact"])
+@pytest.mark.parametrize("method", ["mps", "tn"])
 class TestSerializeObs:
     """Tests for the _serialize_observables function"""
 
@@ -37,7 +37,7 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("obs_chunk, expected", [(1, 5), (2, 6), (3, 7), (7, 7)])
-    def test_chunk_obs(self, tn_backend, use_csingle, obs_chunk, expected):
+    def test_chunk_obs(self, method, use_csingle, obs_chunk, expected):
         """Test chunking of observable array"""
         with qml.tape.QuantumTape() as tape:
             qml.expval(
@@ -50,7 +50,7 @@ class TestSerializeObs:
             qml.expval(qml.PauliX(0) @ qml.Hermitian([[0, 1], [1, 0]], wires=3) @ qml.Hadamard(2))
             qml.expval(qml.Hermitian(qml.PauliZ.compute_matrix(), wires=0) @ qml.Identity(1))
         s, obs_idx = QuantumScriptSerializer(
-            device_name, use_csingle, split_obs=obs_chunk, tensor_backend=tn_backend
+            device_name, use_csingle, split_obs=obs_chunk, tensor_backend=method
         ).serialize_observables(tape, self.wires_dict)
         assert expected == len(s)
         assert [0] * (expected - 4) + [1, 2, 3, 4] == obs_idx
