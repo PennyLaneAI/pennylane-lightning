@@ -17,12 +17,12 @@
 
 ### Breaking changes
 
-* Removed all instances of `qml.QubitStateVector`.
-  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
-
 * Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
   [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
   [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
+
+* Removed all instances of `qml.QubitStateVector`.
+  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
 
 ### Improvements
 
@@ -38,8 +38,19 @@
 * Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
   [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
 
+* Generalize seeding mechanism for all measurements.
+  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
+
+* `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` now define
+  the `eval_jaxpr` method for integration with the experimental
+  capture project.
+  [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
+
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
+
+* Add native BLAS support to the C++ layer via dynamic `scipy-openblas32` loading.
+  [(#995)](https://github.com/PennyLaneAI/pennylane-lightning/pull/995)
 
 * Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
   [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
@@ -52,14 +63,6 @@
 
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
-
-* `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` now define
-  the `eval_jaxpr` method for integration with the experimental
-  capture project.
-  [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
-
-* Generalize seeding mechanism for all measurements.
-  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
 
 ### Documentation
 
