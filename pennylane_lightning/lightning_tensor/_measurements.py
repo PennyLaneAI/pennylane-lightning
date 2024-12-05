@@ -87,10 +87,10 @@ class LightningTensorMeasurements:
         Returns: the Measurements class
         """
         # return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
-        if self.method == "mps":
-            return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
-        else: # self.method == "tn"
+        if self.method == "tn":
             return exactMeasurementsC64 if self.dtype == np.complex64 else exactMeasurementsC128
+        # self.method == "tn"
+        return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
