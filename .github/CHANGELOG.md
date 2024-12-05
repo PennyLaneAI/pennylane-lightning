@@ -29,6 +29,15 @@
 
 ### Improvements
 
+* Catalyst device interfaces support dynamic shots, and no longer parses the device init op's attribute dictionary for a static shots literal.
+  [(#1017)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1017)
+
+* Reduce flaky test and increase test shots count.
+  [(#1015)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1015)
+
+* Update the logic for enabling `grad_on_execution` during device execution.
+  [(#1016)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1016)
+
 * Reverse Lightning Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
 
@@ -51,6 +60,9 @@
 
 * Add C++ unit tests for Exact Tensor Network backends.
   [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
+
+* Add native BLAS support to the C++ layer via dynamic `scipy-openblas32` loading.
+  [(#995)](https://github.com/PennyLaneAI/pennylane-lightning/pull/995)
 
 * Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
   [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)

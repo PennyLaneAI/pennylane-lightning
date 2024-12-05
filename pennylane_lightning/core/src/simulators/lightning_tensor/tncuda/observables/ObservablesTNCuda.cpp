@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "ObservablesTNCuda.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 
 using namespace Pennylane::LightningTensor::TNCuda::Observables;
@@ -31,3 +32,18 @@ template class TensorProdObsTNCuda<MPSTNCuda<double>>;
 
 template class HamiltonianTNCuda<MPSTNCuda<float>>;
 template class HamiltonianTNCuda<MPSTNCuda<double>>;
+
+template class ObservableTNCuda<ExactTNCuda<float>>;
+template class ObservableTNCuda<ExactTNCuda<double>>;
+
+template class NamedObsTNCuda<ExactTNCuda<float>>;
+template class NamedObsTNCuda<ExactTNCuda<double>>;
+
+template class HermitianObsTNCuda<ExactTNCuda<float>>;
+template class HermitianObsTNCuda<ExactTNCuda<double>>;
+
+template class TensorProdObsTNCuda<ExactTNCuda<float>>;
+template class TensorProdObsTNCuda<ExactTNCuda<double>>;
+
+template class HamiltonianTNCuda<ExactTNCuda<float>>;
+template class HamiltonianTNCuda<ExactTNCuda<double>>;

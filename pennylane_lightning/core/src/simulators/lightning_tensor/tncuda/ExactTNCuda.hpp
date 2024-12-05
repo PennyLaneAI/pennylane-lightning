@@ -13,8 +13,8 @@
 // limitations under the License.
 
 /**
- * @file MPSTNCuda.hpp
- * MPS class with cuTensorNet backend. Note that current implementation only
+ * @file ExactTNCuda.hpp
+ * ExactTN class with cuTensorNet backend. Note that current implementation only
  * support the open boundary condition.
  */
 

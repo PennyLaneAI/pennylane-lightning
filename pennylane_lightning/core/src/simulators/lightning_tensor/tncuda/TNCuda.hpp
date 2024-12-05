@@ -151,9 +151,10 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
      * @param res_length Length of the result vector
      */
     void getData(ComplexT *res, const std::size_t res_length) {
-        PL_ABORT_IF(log2(res_length) != BaseType::getNumQubits(),
-                    "The size of the result vector should be equal to the "
-                    "dimension of the quantum state.");
+        PL_ABORT_IF_NOT(res_length ==
+                            Pennylane::Util::exp2(BaseType::getNumQubits()),
+                        "The size of the result vector should be equal to the "
+                        "dimension of the quantum state.");
 
         std::size_t avail_gpu_memory = getFreeMemorySize();
 

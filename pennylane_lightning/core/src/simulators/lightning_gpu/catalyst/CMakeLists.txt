@@ -16,6 +16,9 @@ target_link_libraries(lightning_gpu_catalyst PUBLIC  lightning_compile_options
                                                         lightning_gpu_measurements
 )
 
+set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
+set_target_properties(lightning_gpu_catalyst PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
+
 if (BUILD_TESTS)
     enable_testing()
     add_subdirectory("tests")
