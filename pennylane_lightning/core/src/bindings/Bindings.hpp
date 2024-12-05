@@ -877,7 +877,8 @@ void registerBackendAgnosticObservablesTensor(py::module_ &m,
             [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
                 auto const &buffer = coeffs.request();
                 const auto ptr = static_cast<ParamT *>(buffer.ptr);
-                return HamiltonianT{std::vector<ParamT>(ptr, ptr + buffer.size), obs};
+                return HamiltonianT{std::vector<ParamT>(ptr, ptr + buffer.size),
+                                    obs};
             }))
         .def("__repr__", &HamiltonianT::getObsName)
         .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")

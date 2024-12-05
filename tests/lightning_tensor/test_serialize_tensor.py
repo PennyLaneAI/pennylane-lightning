@@ -120,9 +120,9 @@ def test_obs_returns_expected_type(tn_backend, dtype, obs, obs_type):
 
     mod_name = tn_backend + obs_type + dtype
     obs_type_mod = globals().get(mod_name)
-    
+
     tn_method = tn_backend
-    tn_method = 'tn' if tn_method == 'exact' else tn_method
+    tn_method = "tn" if tn_method == "exact" else tn_method
 
     serializer = QuantumScriptSerializer(
         device_name, True if dtype == "64" else False, tensor_backend=tn_method
@@ -150,7 +150,7 @@ class TestSerializeObs:
         tensor_prod_obs = get_module_name(tn_backend, "TensorProdObsC", use_csingle)
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s_expected = [
             tensor_prod_obs([named_obs("PauliZ", [0]), named_obs("PauliX", [1])]),
@@ -178,7 +178,7 @@ class TestSerializeObs:
             ValueError, match="The number of Hermitian observables target wires should be 1."
         ):
             tn_method = tn_backend
-            tn_method = 'tn' if tn_method == 'exact' else tn_method
+            tn_method = "tn" if tn_method == "exact" else tn_method
 
             s, _ = QuantumScriptSerializer(
                 device_name, use_csingle, tensor_backend=tn_method
@@ -195,7 +195,7 @@ class TestSerializeObs:
             ValueError, match="The number of Hermitian observables target wires should be 1."
         ):
             tn_method = tn_backend
-            tn_method = 'tn' if tn_method == 'exact' else tn_method
+            tn_method = "tn" if tn_method == "exact" else tn_method
 
             s, _ = QuantumScriptSerializer(
                 device_name, use_csingle, tensor_backend=tn_method
@@ -216,7 +216,7 @@ class TestSerializeObs:
         tensor_prod_obs = get_module_name(tn_backend, "TensorProdObsC", use_csingle)
         hermitian_obs = get_module_name(tn_backend, "HermitianObsC", use_csingle)
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -247,7 +247,7 @@ class TestSerializeObs:
         hermitian_obs = get_module_name(tn_backend, "HermitianObsC", use_csingle)
         named_obs = get_module_name(tn_backend, "NamedObsC", use_csingle)
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -298,8 +298,7 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
         c_dtype = np.complex64 if use_csingle else np.complex128
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
-
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -354,7 +353,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -433,7 +432,7 @@ class TestSerializeObs:
         c_dtype = np.complex64 if use_csingle else np.complex128
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -478,7 +477,7 @@ class TestSerializeObs:
         r_dtype = np.float32 if use_csingle else np.float64
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -497,7 +496,7 @@ class TestSerializeObs:
         named_obs = get_module_name(tn_backend, "NamedObsC", use_csingle)
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -514,7 +513,7 @@ class TestSerializeObs:
         rtype = np.float32 if use_csingle else np.float64
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         res, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -536,7 +535,7 @@ class TestSerializeObs:
         named_obs = get_module_name(tn_backend, "NamedObsC", use_csingle)
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         res, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -570,7 +569,7 @@ class TestSerializeObs:
         rtype = np.float32 if use_csingle else np.float64
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         res, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -597,7 +596,7 @@ class TestSerializeObs:
         tape = qml.tape.QuantumTape(measurements=[qml.expval(qml.Identity(wires=[1, 2]))])
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         res, _ = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -623,7 +622,7 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -651,8 +650,8 @@ class TestSerializeOps:
         tape = qml.tape.QuantumScript.from_queue(q)
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
-        
+        tn_method = "tn" if tn_method == "exact" else tn_method
+
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
         ).serialize_ops(tape, wires_map)
@@ -679,7 +678,7 @@ class TestSerializeOps:
             qml.ctrl(ops, [4, 5])
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -711,7 +710,7 @@ class TestSerializeOps:
             qml.ctrl(qml.PauliX(wires=0), [1, 2, 3], control_values=[True, False, False])
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -741,7 +740,7 @@ class TestSerializeOps:
             qml.CNOT(wires=[0, 1])
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -768,7 +767,7 @@ class TestSerializeOps:
             qml.RZ(0.2, wires=2)
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -797,7 +796,7 @@ class TestSerializeOps:
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -836,7 +835,7 @@ class TestSerializeOps:
             qml.DoubleExcitationPlus(0.555, wires=[0, 1, 2, 3])
 
         tn_method = tn_backend
-        tn_method = 'tn' if tn_method == 'exact' else tn_method
+        tn_method = "tn" if tn_method == "exact" else tn_method
 
         s = QuantumScriptSerializer(
             device_name, use_csingle, tensor_backend=tn_method
@@ -928,7 +927,7 @@ def test_tensornet_dtype(use_csingle, backend, init):
     """Tests that the correct TensorNet type is used for the device"""
 
     tn_method = backend
-    tn_method = 'tn' if tn_method == 'exact' else tn_method
+    tn_method = "tn" if tn_method == "exact" else tn_method
 
     serializer_c = QuantumScriptSerializer(device_name, use_csingle, tensor_backend=tn_method)
 

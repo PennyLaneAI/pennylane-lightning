@@ -36,7 +36,9 @@ PHI = np.linspace(0.32, 1, 3)
 
 # General LightningTensorNet fixture, for any number of wires.
 @pytest.fixture(
-    params=[[c_dtype, method] for c_dtype in [np.complex64, np.complex128] for method in ["mps", "tn"]],
+    params=[
+        [c_dtype, method] for c_dtype in [np.complex64, np.complex128] for method in ["mps", "tn"]
+    ],
 )
 def lightning_tn(request):
     """Fixture for creating a LightningTensorNet object."""
@@ -44,7 +46,10 @@ def lightning_tn(request):
     def _lightning_tn(n_wires):
         if request.param[1] == "mps":
             return LightningTensorNet(
-                num_wires=n_wires, max_bond_dim=128, c_dtype=request.param[0], method=request.param[1]
+                num_wires=n_wires,
+                max_bond_dim=128,
+                c_dtype=request.param[0],
+                method=request.param[1],
             )
         if request.param[1] == "tn":
             return LightningTensorNet(

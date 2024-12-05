@@ -51,7 +51,10 @@ elif device_name == "lightning.gpu":
         TensorProdObsC128,
     )
 elif device_name == "lightning.tensor":
-    pytest.skip("Lightning Tensor seiralization are tested separately in tests/lightning_tensor/test_serialize_tensor.py", allow_module_level=True)
+    pytest.skip(
+        "Lightning Tensor seiralization are tested separately in tests/lightning_tensor/test_serialize_tensor.py",
+        allow_module_level=True,
+    )
 else:
     from pennylane_lightning.lightning_qubit_ops.observables import (
         HamiltonianC64,

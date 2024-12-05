@@ -138,7 +138,7 @@ def circuit_ansatz(params, wires):
     qml.ECR(wires=[wires[1], wires[3]])
 
 
-@pytest.mark.parametrize("method", [{"method":"mps", "max_bond_dim":128}, {"method":"tn"}])
+@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 @pytest.mark.parametrize(
     "returns",
     [
@@ -181,9 +181,7 @@ def test_integration_for_all_supported_gates(returns, method):
     operations"""
     num_wires = 8
     dev_default = qml.device("default.qubit", wires=range(num_wires))
-    dev_ltensor = LightningTensor(
-        wires=range(num_wires), c_dtype=np.complex128, **method
-    )
+    dev_ltensor = LightningTensor(wires=range(num_wires), c_dtype=np.complex128, **method)
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
@@ -246,7 +244,7 @@ class TestSparseHExpval:
             tensornet = LightningTensorNet(4, max_bond_dim=10, method=method)
         if method == "tn":
             tensornet = LightningTensorNet(4, method=method)
-            
+
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
@@ -280,7 +278,6 @@ class TestSparseHExpval:
         if method == "tn":
             tensornet = LightningTensorNet(4, method=method)
 
-        
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(

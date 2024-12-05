@@ -65,7 +65,7 @@ class QuantumScriptSerializer:
         use_csingle: bool = False,
         use_mpi: bool = False,
         split_obs: bool = False,
-        tensor_backend: str = '',
+        tensor_backend: str = "",
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -103,10 +103,10 @@ class QuantumScriptSerializer:
 
         self._tensor_backend = tensor_backend
         self._use_mpi = use_mpi
-        
+
         if device_name in ["lightning.qubit", "lightning.kokkos", "lightning.gpu"]:
             self._set_lightning_state_bindings(lightning_ops)
-        else: 
+        else:
             self._set_lightning_tensor_bindings(tensor_backend, lightning_ops)
 
     @property
@@ -169,7 +169,7 @@ class QuantumScriptSerializer:
             )
         return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
 
-    def _set_lightning_state_bindings(self,lightning_ops):
+    def _set_lightning_state_bindings(self, lightning_ops):
 
         self.statevector_c64 = lightning_ops.StateVectorC64
         self.statevector_c128 = lightning_ops.StateVectorC128
@@ -189,7 +189,7 @@ class QuantumScriptSerializer:
         if self._use_mpi:
             self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
             self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
-            
+
             self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
             self.named_obs_mpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
             self.hermitian_obs_mpi_c64 = lightning_ops.observablesMPI.HermitianObsMPIC64
@@ -198,7 +198,7 @@ class QuantumScriptSerializer:
             self.tensor_prod_obs_mpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
             self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
             self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
-            
+
             self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
             self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
 
@@ -230,10 +230,9 @@ class QuantumScriptSerializer:
             self.tensor_prod_obs_c128 = lightning_ops.observables.exactTensorProdObsC128
             self.hamiltonian_c64 = lightning_ops.observables.exactHamiltonianC64
             self.hamiltonian_c128 = lightning_ops.observables.exactHamiltonianC128
-            
-        else: 
-            raise TypeError("Missed Tensor backend")
 
+        else:
+            raise TypeError("Missed Tensor backend")
 
     def _named_obs(self, observable, wires_map: dict = None):
         """Serializes a Named observable"""

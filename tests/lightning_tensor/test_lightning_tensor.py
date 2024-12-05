@@ -52,9 +52,9 @@ class TestTensorNet:
     def test_device_name_and_init(self, num_wires, c_dtype, method):
         """Test the class initialization and returned properties."""
         wires = Wires(range(num_wires)) if num_wires else None
-        if method == 'mps':
+        if method == "mps":
             dev = LightningTensor(wires=wires, max_bond_dim=10, c_dtype=c_dtype, method=method)
-        if method == 'tn':
+        if method == "tn":
             dev = LightningTensor(wires=wires, c_dtype=c_dtype, method=method)
 
         assert dev.name == "lightning.tensor"
@@ -76,13 +76,13 @@ class TestTensorNet:
 
     def test_invalid_bonddims_mps(self, method):
         """Test that an error is raised if bond dimensions are less than 1."""
-        if method == 'mps':
+        if method == "mps":
             with pytest.raises(ValueError):
                 LightningTensor(wires=5, max_bond_dim=0, method=method)
 
     def test_invalid_bonddims_tn(self, method):
         """Test that an error is raised if bond dimensions are less than 1."""
-        if method == 'tn':
+        if method == "tn":
             with pytest.raises(TypeError):
                 LightningTensor(wires=5, max_bond_dim=10, method=method)
 

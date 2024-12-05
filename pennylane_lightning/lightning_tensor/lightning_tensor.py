@@ -264,7 +264,7 @@ class LightningTensor(Device):
     # So far we just consider the options for MPS simulator
     _device_options_mps = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
     _device_options_tn = ("backend", "cutoff", "cutoff_mode")
-    
+
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
@@ -323,7 +323,6 @@ class LightningTensor(Device):
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
 
-
         if not accepted_backends(self._backend):
             raise ValueError(f"Unsupported backend: {self._backend}")
 
@@ -381,7 +380,9 @@ class LightningTensor(Device):
 
         updated_values = {}
 
-        _device_options = self._device_options_mps if self.method == "mps" else self._device_options_tn
+        _device_options = (
+            self._device_options_mps if self.method == "mps" else self._device_options_tn
+        )
         new_device_options = dict(config.device_options)
         for option in _device_options:
             if option not in new_device_options:
