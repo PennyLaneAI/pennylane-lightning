@@ -50,7 +50,7 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
     Catalyst::Runtime::QubitManager<QubitIdType, size_t> qubit_manager{};
     Catalyst::Runtime::CacheManager<std::complex<double>> cache_manager{};
     bool tape_recording{false};
-    size_t device_shots;
+    size_t device_shots{0};
 
     std::mt19937 *gen = nullptr;
 
@@ -101,9 +101,6 @@ class LightningSimulator final : public Catalyst::Runtime::QuantumDevice {
         const std::string &kwargs = "{}") // NOLINT(hicpp-member-init)
     {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots")
-                           ? static_cast<size_t>(std::stoll(args["shots"]))
-                           : 0;
         mcmc = args.contains("mcmc") ? args["mcmc"] == "True" : false;
         num_burnin = args.contains("num_burnin")
                          ? static_cast<size_t>(std::stoll(args["num_burnin"]))
