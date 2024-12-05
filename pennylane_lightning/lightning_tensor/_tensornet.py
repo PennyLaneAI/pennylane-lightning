@@ -167,6 +167,7 @@ class LightningTensorNet:
 
         self._wires = Wires(range(num_wires))
 
+        self._tensornet = None
         if self._method == "mps":
             self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
         elif self._method == "tn":
