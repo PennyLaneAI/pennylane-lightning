@@ -26,6 +26,9 @@
 
 ### Improvements
 
+* Reduce flaky test and increase test shots count.
+  [(#1015)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1015)
+
 * Update the logic for enabling `grad_on_execution` during device execution.
   [(#1016)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1016)
 
