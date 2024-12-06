@@ -289,15 +289,14 @@ class LightningTensorNet:
                 or broadcasted state of shape ``(batch_size, 2**len(device_wires))``
             device_wires (Wires): wires that get initialized in the state
         """
+        if self.method == "tn":
+            raise DeviceError("Exact Tensor Network does not support StatePrep")
 
         if self.method == "mps":
             state = self._preprocess_state_vector(state, device_wires)
             mps_site_shape = [2]
             M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
             self._tensornet.updateMPSSitesData(M)
-
-        if self.method == "tn":
-            raise DeviceError("Exact Tensor Network does not support StatePrep")
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
@@ -430,13 +429,14 @@ class LightningTensorNet:
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
+                if self.method == "tn":
+                    raise DeviceError("Exact Tensor Network does not support StatePrep")
+
                 if self.method == "mps":
                     self._apply_state_vector(
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
                     operations = operations[1:]
-                if self.method == "tn":
-                    raise DeviceError("Exact Tensor Network does not support StatePrep")
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]

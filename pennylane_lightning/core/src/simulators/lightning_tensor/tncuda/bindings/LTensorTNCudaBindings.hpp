@@ -105,6 +105,10 @@ void registerControlledGate(PyClass &pyclass) {
 
 /**
  * @brief Get a gate kernel map for a tensor network using MPS.
+ * 
+ * @tparam TensorNetT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
@@ -179,6 +183,10 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
 
 /**
  * @brief Get a gate kernel map for a tensor network using ExactTN.
+ * 
+ * @tparam TensorNetT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
@@ -227,6 +235,10 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
 
 /**
  * @brief Get a gate kernel map for a tensor network.
+ *
+ * @tparam TensorNetT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
  */
 template <class TensorNet, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {

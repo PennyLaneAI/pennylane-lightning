@@ -774,10 +774,11 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
  *
  * @tparam LightningBackendT
  * @param m Pybind module
+ * @param name backend name of TN (mps, tn)
  */
 template <class LightningBackendT>
 void registerBackendAgnosticObservablesTensor(py::module_ &m,
-                                              std::string name) {
+                                              const std::string &name) {
     using PrecisionT =
         typename LightningBackendT::PrecisionT; // LightningBackendT's's
                                                 // precision.

@@ -33,29 +33,26 @@ if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-acces
 THETA = np.linspace(0.11, 1, 3)
 PHI = np.linspace(0.32, 1, 3)
 
-
+device_args = []
+for method in ["mps", "tn"]:
+    for c_dtype in [np.complex64, np.complex128]:
+        device_arg = {}
+        device_arg["method"]=method
+        device_arg["c_dtype"]=c_dtype
+        if method == "mps":
+            device_arg["max_bond_dim"]=128
+        device_args.append(device_arg)
+        
 # General LightningTensorNet fixture, for any number of wires.
 @pytest.fixture(
-    params=[
-        [c_dtype, method] for c_dtype in [np.complex64, np.complex128] for method in ["mps", "tn"]
-    ],
+    params=device_args,
 )
 def lightning_tn(request):
     """Fixture for creating a LightningTensorNet object."""
 
     def _lightning_tn(n_wires):
-        if request.param[1] == "mps":
-            return LightningTensorNet(
-                num_wires=n_wires,
-                max_bond_dim=128,
-                c_dtype=request.param[0],
-                method=request.param[1],
-            )
-        if request.param[1] == "tn":
-            return LightningTensorNet(
-                num_wires=n_wires, c_dtype=request.param[0], method=request.param[1]
-            )
-
+        return LightningTensorNet(num_wires=n_wires, **request.param)
+    
     return _lightning_tn
 
 
@@ -133,7 +130,7 @@ class TestMeasurementFunction:
             with pytest.raises(TypeError):
                 m.measure_tensor_network(tape)
 
-    @pytest.mark.parametrize("method", ["mps", "tn"])
+    @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
     @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
     def test_probs_many_wires(self, method, n_qubits, n_targets, tol):
@@ -141,7 +138,7 @@ class TestMeasurementFunction:
         if n_targets >= n_qubits:
             pytest.skip("Number of targets cannot exceed the number of wires.")
 
-        dev = qml.device(device_name, wires=n_qubits, method=method)
+        dev = qml.device(device_name, wires=n_qubits, **method)
         dq = qml.device("default.qubit", wires=n_qubits)
 
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
@@ -154,14 +151,14 @@ class TestMeasurementFunction:
         tape = qml.tape.QuantumScript(ops, [mp])
         ref = dq.execute(tape)
 
-        if method == "tn":
+        if method["method"] == "tn":
             with pytest.raises(qml.DeviceError):
                 res = dev.execute(tape)
         else:
             res = dev.execute(tape)
             assert np.allclose(res, ref, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize("method", ["mps", "tn"])
+    @pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
     @pytest.mark.parametrize("n_qubits", range(4, 14, 2))
     @pytest.mark.parametrize("n_targets", list(range(1, 4)) + list(range(4, 14, 2)))
     def test_state_many_wires(self, method, n_qubits, n_targets, tol):
@@ -169,7 +166,7 @@ class TestMeasurementFunction:
         if n_targets >= n_qubits:
             pytest.skip("Number of targets cannot exceed the number of wires.")
 
-        dev = qml.device(device_name, wires=n_qubits, method=method)
+        dev = qml.device(device_name, wires=n_qubits, **method)
         dq = qml.device("default.qubit", wires=n_qubits)
 
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
@@ -181,7 +178,7 @@ class TestMeasurementFunction:
 
         tape = qml.tape.QuantumScript(ops, [mp])
         ref = dq.execute(tape)
-        if method == "tn":
+        if method["method"] == "tn":
             with pytest.raises(qml.DeviceError):
                 res = dev.execute(tape)
         else:

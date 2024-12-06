@@ -203,7 +203,7 @@ def test_integration_for_all_supported_gates(returns, method):
     assert np.allclose(j_ltensor, j_default, rtol=1e-6)
 
 
-@pytest.mark.parametrize("method", ["mps", "tn"])
+@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 class TestSparseHExpval:
     """Test sparseH expectation values"""
 
@@ -220,7 +220,7 @@ class TestSparseHExpval:
     )
     def test_sparse_Pauli_words(self, cases, qubit_device, method):
         """Test expval of some simple sparse Hamiltonian"""
-        dev = qml.device(device_name, wires=4, method=method)
+        dev = qml.device(device_name, wires=4, **method)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit_expval():
@@ -240,10 +240,7 @@ class TestSparseHExpval:
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
-        if method == "mps":
-            tensornet = LightningTensorNet(4, max_bond_dim=10, method=method)
-        if method == "tn":
-            tensornet = LightningTensorNet(4, method=method)
+        tensornet = LightningTensorNet(4, **method)
 
         m = LightningTensorMeasurements(tensornet)
 
@@ -255,10 +252,7 @@ class TestSparseHExpval:
         with qml.queuing.AnnotatedQueue() as q:
             qml.var(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
-        if method == "mps":
-            tensornet = LightningTensorNet(4, max_bond_dim=10, method=method)
-        if method == "tn":
-            tensornet = LightningTensorNet(4, method=method)
+        tensornet = LightningTensorNet(4, **method)
 
         m = LightningTensorMeasurements(tensornet)
 
@@ -273,10 +267,7 @@ class TestSparseHExpval:
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
-        if method == "mps":
-            tensornet = LightningTensorNet(4, max_bond_dim=10, method=method)
-        if method == "tn":
-            tensornet = LightningTensorNet(4, method=method)
+        tensornet = LightningTensorNet(4, **method)
 
         m = LightningTensorMeasurements(tensornet)
 
@@ -290,10 +281,7 @@ class TestSparseHExpval:
         with qml.queuing.AnnotatedQueue() as q:
             qml.var(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
-        if method == "mps":
-            tensornet = LightningTensorNet(4, max_bond_dim=10, method=method)
-        if method == "tn":
-            tensornet = LightningTensorNet(4, method=method)
+        tensornet = LightningTensorNet(4, **method)
 
         m = LightningTensorMeasurements(tensornet)
 
@@ -303,7 +291,7 @@ class TestSparseHExpval:
             m.var(q.queue[0])
 
 
-@pytest.mark.parametrize("method", ["mps", "tn"])
+@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 class TestQChem:
     """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
 
@@ -333,7 +321,7 @@ class TestQChem:
         hf_state = qml.qchem.hf_state(mol.n_electrons, qubits)
 
         # Choose different batching supports here
-        dev = qml.device(device_name, wires=qubits, method=method)
+        dev = qml.device(device_name, wires=qubits, **method)
         dev_comp = qml.device("default.qubit", wires=qubits)
 
         @qml.qnode(dev, diff_method=diff_approach)
