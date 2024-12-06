@@ -80,7 +80,7 @@ class LightningTensorMeasurements:
 
         Returns: the Measurements class
         """
-        if self._method == "tn": # Using "tn" method
+        if self._method == "tn":  # Using "tn" method
             return exactMeasurementsC64 if self.dtype == np.complex64 else exactMeasurementsC128
         # Using "mps" method
         return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128

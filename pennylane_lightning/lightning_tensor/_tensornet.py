@@ -133,7 +133,7 @@ class LightningTensorNet:
         num_wires(int): the number of wires to initialize the device with
         c_dtype: Datatypes for tensor network representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        method(string): tensor network method. Supported methods are "mps" (Matrix Product State) and 
+        method(string): tensor network method. Supported methods are "mps" (Matrix Product State) and
             "tn" (Exact Tensor Network). Options: ["mps", "tn"].
         max_bond_dim(int): maximum bond dimension for the tensor network
         cutoff(float): threshold for singular value truncation. Default is 0.
@@ -213,7 +213,7 @@ class LightningTensorNet:
 
         Returns: the tensor network class
         """
-        if self.method == "tn": # Using "tn" method
+        if self.method == "tn":  # Using "tn" method
             return exactTensorNetC128 if self.dtype == np.complex128 else exactTensorNetC64
         # Using "mps" method
         return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
