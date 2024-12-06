@@ -197,7 +197,6 @@ jobs:
             -DENABLE_PYTHON=OFF \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON
           cmake --build ./Build --verbose
           cd ./Build
