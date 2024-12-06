@@ -54,7 +54,7 @@ class QuantumScriptSerializer:
     use_csingle (bool): whether to use np.complex64 instead of np.complex128
     use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
     split_obs (Union[bool, int], optional): If splitting the observables in a list. Defaults to False.
-    tensor_backend (str): If using lightning.tensor and select the TensorNetwork backend, mps or exact. Default to mps
+    tensor_backend (str): If using lightning.tensor and select the TensorNetwork backend, mps or exact. Default to ''
 
     """
 
@@ -101,12 +101,12 @@ class QuantumScriptSerializer:
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
-        self._tensor_backend = tensor_backend
         self._use_mpi = use_mpi
 
         if device_name in ["lightning.qubit", "lightning.kokkos", "lightning.gpu"]:
             self._set_lightning_state_bindings(lightning_ops)
         else:
+            self._tensor_backend = tensor_backend
             self._set_lightning_tensor_bindings(tensor_backend, lightning_ops)
 
     @property
@@ -372,7 +372,6 @@ class QuantumScriptSerializer:
             return self._hamiltonian(observable, wires_map)
         if isinstance(observable, SparseHamiltonian):
             if self.device_name == "lightning.tensor":
-
                 raise NotImplementedError(
                     "SparseHamiltonian is not supported on the lightning.tensor device."
                 )
