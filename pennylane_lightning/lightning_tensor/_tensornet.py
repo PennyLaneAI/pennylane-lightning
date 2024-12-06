@@ -182,7 +182,7 @@ class LightningTensorNet:
         device_name(string): tensor network device name. Options: ["lightning.tensor"]
     """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
         num_wires,

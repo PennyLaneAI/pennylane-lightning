@@ -707,7 +707,6 @@ class TestControlledOps:
         results = dev.execute(tapes)
         return transf_fn(results)
 
-    @flaky(max_runs=5)
     @pytest.mark.parametrize(
         "operation",
         [
@@ -798,10 +797,6 @@ class TestControlledOps:
                 else:
                     assert np.allclose(result, expected, tol * 10)
 
-    @pytest.mark.skipif(
-        device_name in ("lightning.kokkos"),
-        reason="N-controlled operations are not implemented in lightning.kokkos.",
-    )
     def test_controlled_qubit_unitary_from_op(self, tol, lightning_sv):
         n_qubits = 10
         par = 0.1234
@@ -823,7 +818,6 @@ class TestControlledOps:
 
         assert np.allclose(result, expected, tol)
 
-    @flaky(max_runs=5)
     @pytest.mark.parametrize("control_wires", range(4))
     @pytest.mark.parametrize("target_wires", range(4))
     def test_cnot_controlled_qubit_unitary(self, control_wires, target_wires, tol, lightning_sv):
@@ -835,6 +829,7 @@ class TestControlledOps:
         target_wires = [target_wires]
         wires = control_wires + target_wires
         U = qml.matrix(qml.PauliX(target_wires))
+        np.random.seed(0)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
 

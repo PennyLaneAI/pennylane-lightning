@@ -61,7 +61,7 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
     Catalyst::Runtime::CacheManager<std::complex<double>> cache_manager{};
     bool tape_recording{false};
 
-    std::size_t device_shots;
+    std::size_t device_shots{0};
 
     std::mt19937 *gen{nullptr};
 
@@ -95,14 +95,19 @@ class LightningGPUSimulator final : public Catalyst::Runtime::QuantumDevice {
         return res;
     }
 
+    inline auto generateSeed() -> std::optional<std::size_t> {
+        if (this->gen != nullptr) {
+            return (*(this->gen))();
+        }
+
+        return std::nullopt;
+    }
+
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 
   public:
     explicit LightningGPUSimulator(const std::string &kwargs = "{}") {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots")
-                           ? static_cast<std::size_t>(std::stoll(args["shots"]))
-                           : 0;
     }
     ~LightningGPUSimulator() = default;
 
