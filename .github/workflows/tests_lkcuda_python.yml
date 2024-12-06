@@ -33,7 +33,7 @@ on:
 env:
   CI_CUDA_ARCH: 86
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --cov-report=xml:./coverage.xml --no-flaky-report -p no:warnings --tb=native"
-  GCC_VERSION: 13
+  GCC_VERSION: 11
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
 
@@ -66,9 +66,6 @@ jobs:
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
           nvidia-smi
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
 
       - name: Clone Kokkos repository
         run: |
