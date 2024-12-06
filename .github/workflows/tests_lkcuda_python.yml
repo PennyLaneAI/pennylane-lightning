@@ -67,6 +67,9 @@ jobs:
           nvcc --version
           nvidia-smi
 
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION
+
       - name: Clone Kokkos repository
         run: |
           rm -rf kokkos_${{ matrix.exec_model }}
