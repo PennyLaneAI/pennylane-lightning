@@ -190,12 +190,12 @@ jobs:
       - name: Build and run unit tests
         run: |
           cd main
-          cmake . -BBuild -G Ninja \
+          CMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
+            cmake . -BBuild -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DENABLE_COVERAGE=ON
