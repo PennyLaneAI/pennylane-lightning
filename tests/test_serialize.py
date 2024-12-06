@@ -52,7 +52,7 @@ elif device_name == "lightning.gpu":
     )
 elif device_name == "lightning.tensor":
     pytest.skip(
-        "Lightning Tensor seiralization are tested separately in tests/lightning_tensor/test_serialize_tensor.py",
+        "Lightning Tensor serialization is tested separately in tests/lightning_tensor/test_serialize_tensor.py",
         allow_module_level=True,
     )
 else:

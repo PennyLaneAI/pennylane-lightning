@@ -262,8 +262,8 @@ class LightningTensor(Device):
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options_mps = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
-    _device_options_tn = ("backend", "cutoff", "cutoff_mode")
+    _device_options = {"mps":("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
+                       "tn":("backend", "cutoff", "cutoff_mode")}
 
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
@@ -314,11 +314,11 @@ class LightningTensor(Device):
         self._backend = kwargs.get("backend", "cutensornet")
 
         for arg in kwargs:
-            if self._method == "mps" and arg not in self._device_options_mps:
+            if self._method == "mps" and arg not in self._device_options["mps"]:
                 raise TypeError(
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
-            if self._method == "tn" and arg not in self._device_options_tn:
+            if self._method == "tn" and arg not in self._device_options["tn"]:
                 raise TypeError(
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
@@ -380,11 +380,8 @@ class LightningTensor(Device):
 
         updated_values = {}
 
-        _device_options = (
-            self._device_options_mps if self.method == "mps" else self._device_options_tn
-        )
         new_device_options = dict(config.device_options)
-        for option in _device_options:
+        for option in self._device_options[self.method]:
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
