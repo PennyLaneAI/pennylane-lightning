@@ -235,7 +235,9 @@ class QuantumScriptSerializer:
             self.hamiltonian_c128 = lightning_ops.observables.exactHamiltonianC128
 
         else:
-            raise ValueError(f"Unsupported method: {tensor_backend}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network).")
+            raise ValueError(
+                f"Unsupported method: {tensor_backend}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network)."
+            )
 
     def _named_obs(self, observable, wires_map: dict = None):
         """Serializes a Named observable"""

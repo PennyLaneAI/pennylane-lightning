@@ -291,7 +291,9 @@ class LightningTensor(Device):
             raise ImportError("Pre-compiled binaries for lightning.tensor are not available. ")
 
         if not accepted_methods(method):
-            raise ValueError(f"Unsupported method: {method}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network).")
+            raise ValueError(
+                f"Unsupported method: {method}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network)."
+            )
 
         if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {c_dtype}")
