@@ -83,7 +83,7 @@
 
 ### Bug fixes
 
-* Pin jax[cpu] dependence.
+* Pin `jax[cpu]==0.4.28` for compatibility with PennyLane and Catalyst.
   [(#1019)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1019)
 
 * Fix Lightning Kokkos editable mode path.
