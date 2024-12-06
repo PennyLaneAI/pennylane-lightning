@@ -58,7 +58,7 @@ class QuantumScriptSerializer:
 
     """
 
-    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements too-many-positional-arguments
+    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements too-many-positional-arguments too-many-arguments
     def __init__(
         self,
         device_name,
@@ -104,7 +104,7 @@ class QuantumScriptSerializer:
         self._use_mpi = use_mpi
 
         if device_name in ["lightning.qubit", "lightning.kokkos", "lightning.gpu"]:
-            assert(tensor_backend == str())
+            assert tensor_backend == str()
             self._set_lightning_state_bindings(lightning_ops)
         else:
             self._tensor_backend = tensor_backend
