@@ -37,12 +37,13 @@ device_args = []
 for method in ["mps", "tn"]:
     for c_dtype in [np.complex64, np.complex128]:
         device_arg = {}
-        device_arg["method"]=method
-        device_arg["c_dtype"]=c_dtype
+        device_arg["method"] = method
+        device_arg["c_dtype"] = c_dtype
         if method == "mps":
-            device_arg["max_bond_dim"]=128
+            device_arg["max_bond_dim"] = 128
         device_args.append(device_arg)
-        
+
+
 # General LightningTensorNet fixture, for any number of wires.
 @pytest.fixture(
     params=device_args,
@@ -52,7 +53,7 @@ def lightning_tn(request):
 
     def _lightning_tn(n_wires):
         return LightningTensorNet(num_wires=n_wires, **request.param)
-    
+
     return _lightning_tn
 
 
