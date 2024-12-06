@@ -83,7 +83,7 @@
 
 ### Bug fixes
 
-* Pin jaxlib dependence.
+* Pin jax[cpu] dependence.
   [(#1019)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1019)
 
 * Fix Lightning Kokkos editable mode path.
