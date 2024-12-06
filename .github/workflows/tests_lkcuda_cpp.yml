@@ -143,6 +143,7 @@ jobs:
           mkdir -p ${{ github.workspace }}/Kokkos
           ls -ltrh
           cp -r ${{ github.workspace }}/Kokkos_install/${{ matrix.exec_model }}/* ${{ github.workspace }}/Kokkos
+          ls -lthr ${{ github.workspace }}/Kokkos
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
