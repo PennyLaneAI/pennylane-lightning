@@ -174,7 +174,7 @@ class LightningTensorNet:
         elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
-            raise NotImplementedError  # pragma: no cover
+            raise DeviceError(f"The method {self._method} is not supported.")
 
     @property
     def dtype(self):
@@ -193,7 +193,7 @@ class LightningTensorNet:
 
     @property
     def method(self):
-        """Returns the method for evaluating the tensor network."""
+        """Returns the method (mps or tn) for evaluating the tensor network."""
         return self._method
 
     @property

@@ -119,9 +119,9 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     pyclass
-        .def(py::init<const std::size_t,
-                      const std::size_t>()) // num_qubits, max_bond_dim
-        .def(py::init<const std::size_t, const std::size_t,
+        .def(py::init< std::size_t,
+                       std::size_t>()) // num_qubits, max_bond_dim
+        .def(py::init< std::size_t, std::size_t,
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
         .def(
             "getState",
@@ -158,7 +158,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
             "applyMPOOperation",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
                const std::vector<std::size_t> &wires,
-               const std::size_t MPOBondDims) {
+               std::size_t MPOBondDims) {
                 using ComplexT = typename TensorNet::ComplexT;
                 std::vector<std::vector<ComplexT>> conv_tensors;
                 for (const auto &tensor : tensors) {
@@ -173,8 +173,8 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
             "Apply MPO to the tensor network graph.")
         .def(
             "appendMPSFinalState",
-            [](TensorNet &tensor_network, const double cutoff,
-               const std::string cutoff_mode) {
+            [](TensorNet &tensor_network,  double cutoff,
+                const std::string &cutoff_mode) {
                 tensor_network.append_mps_final_state(cutoff, cutoff_mode);
             },
             "Get the final state.")
@@ -196,8 +196,8 @@ void registerBackendClassSpecificBindingsExactTNCuda(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     pyclass
-        .def(py::init<const std::size_t>()) // num_qubits
-        .def(py::init<const std::size_t,
+        .def(py::init< std::size_t>()) // num_qubits
+        .def(py::init< std::size_t,
                       DevTag<int>>()) // num_qubits, dev-tag
         .def(
             "getState",

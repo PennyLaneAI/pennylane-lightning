@@ -749,7 +749,7 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
             "Variance of an observable object.")
         .def("generate_samples", [](MeasurementsT &M,
                                     const std::vector<std::size_t> &wires,
-                                    const std::size_t num_shots) {
+                                    std::size_t num_shots) {
             constexpr auto sz = sizeof(std::size_t);
             const std::size_t num_wires = wires.size();
             const std::size_t ndim = 2;
@@ -770,7 +770,7 @@ void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
 }
 
 /**
- * @brief Register observable classes for TensorNet.
+ * @brief Register observable classes for TensorNetwork.
  *
  * @tparam LightningBackendT
  * @param m Pybind module

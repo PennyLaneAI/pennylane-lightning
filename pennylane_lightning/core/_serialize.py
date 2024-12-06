@@ -54,18 +54,18 @@ class QuantumScriptSerializer:
     use_csingle (bool): whether to use np.complex64 instead of np.complex128
     use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
     split_obs (Union[bool, int], optional): If splitting the observables in a list. Defaults to False.
-    tensor_backend (str): If using lightning.tensor and select the TensorNetwork backend, mps or exact. Default to ''
+    tensor_backend (str): If using `lightning.tensor` and select the TensorNetwork backend, mps or exact. Default to ''
 
     """
 
-    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements too-many-arguments too-many-positional-arguments
+    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements too-many-positional-arguments
     def __init__(
         self,
         device_name,
         use_csingle: bool = False,
         use_mpi: bool = False,
         split_obs: bool = False,
-        tensor_backend: str = "",
+        tensor_backend: str = str(),
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -104,6 +104,7 @@ class QuantumScriptSerializer:
         self._use_mpi = use_mpi
 
         if device_name in ["lightning.qubit", "lightning.kokkos", "lightning.gpu"]:
+            assert(tensor_backend == str())
             self._set_lightning_state_bindings(lightning_ops)
         else:
             self._tensor_backend = tensor_backend
@@ -170,6 +171,7 @@ class QuantumScriptSerializer:
         return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
 
     def _set_lightning_state_bindings(self, lightning_ops):
+        """Define the variables needed to access the modules from the C++ bindings for state vector."""
 
         self.statevector_c64 = lightning_ops.StateVectorC64
         self.statevector_c128 = lightning_ops.StateVectorC128
@@ -205,6 +207,7 @@ class QuantumScriptSerializer:
             self._mpi_manager = lightning_ops.MPIManager
 
     def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
+        """Define the variables needed to access the modules from the C++ bindings for tensor network."""
         if tensor_backend == "mps":
             self.tensornetwork_c64 = lightning_ops.mpsTensorNetC64
             self.tensornetwork_c128 = lightning_ops.mpsTensorNetC128
@@ -232,7 +235,7 @@ class QuantumScriptSerializer:
             self.hamiltonian_c128 = lightning_ops.observables.exactHamiltonianC128
 
         else:
-            raise TypeError("Missed Tensor backend")
+            raise ValueError(f"Unsupported method: {tensor_backend}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network).")
 
     def _named_obs(self, observable, wires_map: dict = None):
         """Serializes a Named observable"""
