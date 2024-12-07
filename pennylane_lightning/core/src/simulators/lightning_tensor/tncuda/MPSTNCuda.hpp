@@ -38,8 +38,6 @@
 #include "tncudaError.hpp"
 #include "tncuda_helpers.hpp"
 
-#include <iostream>
-
 /// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;

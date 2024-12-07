@@ -120,8 +120,9 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
 
     return mpos, sorted_wires
 
-def setBondDims(num_qubits, max_bond_dim):
-    
+def set_bond_dims(num_qubits: int, max_bond_dim:int) -> List:
+    """Compute the MPS bond dimensions on base to the number of wires."""
+
     log_max_bond_dim = np.log2(max_bond_dim)
     limit_dimension = 2 ** int(log_max_bond_dim)
     localBondDims = [limit_dimension for _ in range(num_qubits-1)]
@@ -133,10 +134,10 @@ def setBondDims(num_qubits, max_bond_dim):
     
     return localBondDims
 
-def setSitesExtents(num_qubits, max_bond_dim):
+def set_sites_extents(num_qubits:int, max_bond_dim:int) -> List:
     """Compute the MPS sites dimensions on base to the number of wires."""
     
-    bondDims = setBondDims(num_qubits, max_bond_dim)    
+    bondDims = set_bond_dims(num_qubits, max_bond_dim)    
     qubitDims = [2 for _ in range(num_qubits)]
 
     localSiteExtents = []
@@ -152,10 +153,10 @@ def setSitesExtents(num_qubits, max_bond_dim):
     
     return localSiteExtents
 
-def custom_MPS_checks(MPS: List, num_wires: int, max_bond_dim: int):
+def MPSPrep_check(MPS: List, num_wires: int, max_bond_dim: int)->None:
     """Check if the provided MPS has the correct dimension for C++ backend."""
     
-    MPS_shape_dest = setSitesExtents(num_wires, max_bond_dim)
+    MPS_shape_dest = set_sites_extents(num_wires, max_bond_dim)
     
     MPS_shape_source = [list(site.shape) for site in MPS]
     
@@ -346,7 +347,7 @@ class LightningTensorNet:
 
         self._tensornet.setBasisState(state)
         
-    def _load_mps_state(self, state: List, wires: List):
+    def _load_mps_state(self, state: List):
         """Prepares an initial state using MPS.
 
         Args:
@@ -359,7 +360,7 @@ class LightningTensorNet:
             Note: The correct MPS sites format and layout are user responsible. 
         """
         mps = state.mps
-        custom_MPS_checks(mps, self._num_wires, self._max_bond_dim)
+        MPSPrep_check(mps, self._num_wires, self._max_bond_dim)
         self._tensornet.updateMPSSitesData(mps)
 
         
@@ -475,7 +476,7 @@ class LightningTensorNet:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], MPSPrep):
-                self._load_mps_state(operations[0], operations[0].wires)
+                self._load_mps_state(operations[0])
                 operations = operations[1:]
 
 
