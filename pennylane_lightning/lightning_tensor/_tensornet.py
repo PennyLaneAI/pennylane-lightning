@@ -125,7 +125,7 @@ def set_bond_dims(num_qubits: int, max_bond_dim: int) -> List:
 
     log_max_bond_dim = np.log2(max_bond_dim)
     limit_dimension = 2 ** int(log_max_bond_dim)
-    localBondDims = [limit_dimension for _ in range(num_qubits - 1)]
+    localBondDims = [limit_dimension] * (num_qubits - 1)
 
     for i in range(len(localBondDims)):
         bondDim = min(i + 1, num_qubits - i - 1)
