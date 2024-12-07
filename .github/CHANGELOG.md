@@ -29,6 +29,9 @@
 
 ### Improvements
 
+* Add Exact Tensor Network cpp binding.
+[(#1014)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1014/)
+
 * Catalyst device interfaces support dynamic shots, and no longer parses the device init op's attribute dictionary for a static shots literal.
   [(#1017)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1017)
 
