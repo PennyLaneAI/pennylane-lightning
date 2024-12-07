@@ -29,11 +29,11 @@ if device_name != "lightning.tensor":
 else:
     from pennylane_lightning.lightning_tensor._tensornet import (
         LightningTensorNet,
+        MPSPrep_check,
         decompose_dense,
         gate_matrix_decompose,
         set_bond_dims,
         set_sites_extents,
-        MPSPrep_check,
     )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -122,55 +122,85 @@ def test_gate_matrix_decompose():
     assert np.allclose(sorted_wired, sorted(wires), atol=1e-6)
     assert np.allclose(unitary_f, original_gate, atol=1e-6)
 
-@pytest.mark.parametrize("n_qubits,max_bond,expected",[
-    (2,128,[2]),
-    (8,128,[2, 4, 8, 16, 8, 4, 2]),
-    (8,8,[2, 4, 8, 8, 8, 4, 2]),
-    (15,2,[2 for _ in range(14)]),
-    ])
-def test_set_bond_dims(n_qubits,max_bond,expected):
-    
-    result = set_bond_dims(n_qubits,max_bond)
-    
+
+@pytest.mark.parametrize(
+    "n_qubits,max_bond,expected",
+    [
+        (2, 128, [2]),
+        (8, 128, [2, 4, 8, 16, 8, 4, 2]),
+        (8, 8, [2, 4, 8, 8, 8, 4, 2]),
+        (15, 2, [2 for _ in range(14)]),
+    ],
+)
+def test_set_bond_dims(n_qubits, max_bond, expected):
+
+    result = set_bond_dims(n_qubits, max_bond)
+
     assert len(result) == len(expected)
     assert all([a == b for a, b in zip(result, expected)])
 
-@pytest.mark.parametrize("n_qubits,max_bond,expected",[
-    (2,128,[[2, 2], [2, 2]]),
-    (8,128,[[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]),
-    (8,8,[[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]),
-    (15,2,[[2,2]] + [[2,2,2] for _ in range(13)] + [[2,2]]),
-    
-    ])
-def test_set_sites_extents(n_qubits,max_bond,expected):
-    
-    result = set_sites_extents(n_qubits,max_bond)
-    
+
+@pytest.mark.parametrize(
+    "n_qubits,max_bond,expected",
+    [
+        (2, 128, [[2, 2], [2, 2]]),
+        (
+            8,
+            128,
+            [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
+        ),
+        (8, 8, [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]),
+        (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(13)] + [[2, 2]]),
+    ],
+)
+def test_set_sites_extents(n_qubits, max_bond, expected):
+
+    result = set_sites_extents(n_qubits, max_bond)
+
     assert len(result) == len(expected)
     assert all([a == b for a, b in zip(result, expected)])
-    
-@pytest.mark.parametrize("wires,max_bond,MPS_shape",[
-    (2,128,[[2, 2], [2, 2]]),
-    (8,128,[[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]),
-    (8,8,[[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]),
-    (15,2,[[2,2]] + [[2,2,2] for _ in range(13)] + [[2,2]]),
-    
-    ])    
-def test_MPSPrep_check_pass(wires,max_bond,MPS_shape):
+
+
+@pytest.mark.parametrize(
+    "wires,max_bond,MPS_shape",
+    [
+        (2, 128, [[2, 2], [2, 2]]),
+        (
+            8,
+            128,
+            [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
+        ),
+        (8, 8, [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]),
+        (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(13)] + [[2, 2]]),
+    ],
+)
+def test_MPSPrep_check_pass(wires, max_bond, MPS_shape):
     MPS = [np.zeros(i) for i in MPS_shape]
-    
+
     MPSPrep_check(MPS, wires, max_bond)
-    
-@pytest.mark.parametrize("wires,max_bond,MPS_shape",[
-    (2,128,[[2, 3], [3, 2]]), # Incorrect bond dim.
-    (8,128,[[2, 2], [2, 4, 4], [4, 4, 8], [8, 4, 16], [16, 4, 8], [8, 4, 4], [4, 4, 2], [2, 2]]), # Incorrect physical dim.
-    (8,8,[[2, 2], [3, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]), # Incorrect only one bond dim. 
-    (15,2,[[2,2]] + [[2,2,2] for _ in range(14)] + [[2,2]]), # Incorrect amount of sites
-    
-    ])    
-def test_MPSPrep_check_fail(wires,max_bond,MPS_shape):
+
+
+@pytest.mark.parametrize(
+    "wires,max_bond,MPS_shape",
+    [
+        (2, 128, [[2, 3], [3, 2]]),  # Incorrect bond dim.
+        (
+            8,
+            128,
+            [[2, 2], [2, 4, 4], [4, 4, 8], [8, 4, 16], [16, 4, 8], [8, 4, 4], [4, 4, 2], [2, 2]],
+        ),  # Incorrect physical dim.
+        (
+            8,
+            8,
+            [[2, 2], [3, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
+        ),  # Incorrect only one bond dim.
+        (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(14)] + [[2, 2]]),  # Incorrect amount of sites
+    ],
+)
+def test_MPSPrep_check_fail(wires, max_bond, MPS_shape):
     MPS = [np.zeros(i) for i in MPS_shape]
-    
-    with pytest.raises(ValueError, match="The custom MPS does not have the correct layout for lightning.tensor"):
+
+    with pytest.raises(
+        ValueError, match="The custom MPS does not have the correct layout for lightning.tensor"
+    ):
         MPSPrep_check(MPS, wires, max_bond)
-    
