@@ -194,6 +194,7 @@ jobs:
             -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DENABLE_COVERAGE=ON
+          free -h
           cmake --build ./Build --verbose -j1
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
