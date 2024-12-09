@@ -11,4 +11,3 @@ clang-format~=16.0
 isort==5.13.2
 pylint==2.7.4
 pennylane>=0.37
-scipy-openblas32>=0.3.26

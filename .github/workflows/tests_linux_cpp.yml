@@ -46,11 +46,12 @@ jobs:
         pl_backend: ["lightning_qubit"]
         enable_kernel_omp: ["OFF", "ON"]
         enable_kernel_avx_streaming: ["OFF", "ON"]
+        enable_lapack: ["OFF", "ON"]
         exclude:
         - enable_kernel_omp: OFF
           enable_kernel_avx_streaming: ON
     timeout-minutes: 60
-    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }})
+    name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }}), ENABLE_LAPACK=${{ matrix.enable_lapack }})
     runs-on: pl-4-core-large-runner
 
     steps:
@@ -65,7 +66,7 @@ jobs:
       - name: Install dependencies
         run: |
             echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-            python -m pip install scipy-openblas32
+            python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
@@ -73,7 +74,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
+              -DENABLE_LAPACK=${{ matrix.enable_lapack }} \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
@@ -87,13 +88,13 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
             lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
-            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
+            mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}.info
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
+          name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}
           retention-days: 1
           include-hidden-files: true
           path: |
@@ -104,8 +105,8 @@ jobs:
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
-          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
+          name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}
+          path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}-${{ matrix.enable_lapack }}.info
           if-no-files-found: error
 
   cpptestswithOpenBLAS:
@@ -129,7 +130,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-base libopenblas-dev ninja-build gcovr lcov
-          python -m pip install scipy-openblas32
+          python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
@@ -138,7 +139,6 @@ jobs:
               -DENABLE_PYTHON=OFF \
               -DENABLE_BLAS=ON \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DBUILD_TESTS=ON \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
@@ -215,7 +215,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-          python -m pip install scipy-openblas32
+          python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
@@ -226,7 +226,6 @@ jobs:
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DENABLE_COVERAGE=ON
             cmake --build ./Build
             cd ./Build
@@ -315,7 +314,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-          python -m pip install scipy-openblas32
+          python -m pip install scipy
 
       - name: Build and run unit tests
         run: |
@@ -325,7 +324,6 @@ jobs:
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
-              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
             cmake --build ./Build
             cd ./Build

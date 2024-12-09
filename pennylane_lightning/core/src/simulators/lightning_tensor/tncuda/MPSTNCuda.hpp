@@ -30,9 +30,9 @@
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "MPOTNCuda.hpp"
-#include "TNCuda.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
+#include "TensornetBase.hpp"
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
 #include "tncudaError.hpp"
@@ -56,19 +56,28 @@ namespace Pennylane::LightningTensor::TNCuda {
  * @tparam Precision Floating-point precision type.
  */
 
+// TODO check if CRTP is required by the end of project.
 template <class Precision>
-class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
+class MPSTNCuda final : public TNCudaBase<Precision, MPSTNCuda<Precision>> {
   private:
-    using BaseType = TNCuda<Precision, MPSTNCuda>;
+    using BaseType = TNCudaBase<Precision, MPSTNCuda>;
 
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
+
+    const std::size_t maxBondDim_;
+    const std::vector<std::size_t> bondDims_;
+    const std::vector<std::vector<std::size_t>> sitesModes_;
+    const std::vector<std::vector<std::size_t>> sitesExtents_;
+    const std::vector<std::vector<int64_t>> sitesExtents_int64_;
+
+    std::vector<TensorCuda<Precision>> tensors_;
+
+    std::vector<TensorCuda<Precision>> tensors_out_;
 
     std::vector<std::shared_ptr<MPOTNCuda<Precision>>> mpos_;
     std::vector<std::size_t> mpo_ids_;
 
   public:
-    constexpr static auto method = "mps";
-
     using CFP_t = decltype(cuUtil::getCudaType(Precision{}));
     using ComplexT = std::complex<Precision>;
     using PrecisionT = Precision;
@@ -76,13 +85,31 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
   public:
     MPSTNCuda() = delete;
 
+    // TODO: Add method to the constructor to allow users to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim)
-        : BaseType(numQubits, maxBondDim) {}
+        : BaseType(numQubits), maxBondDim_(maxBondDim),
+          bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()) {
+        initTensors_();
+        reset();
+        appendInitialMPSState_();
+    }
 
+    // TODO: Add method to the constructor to allow users to select methods at
+    // runtime in the C++ layer
     explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
-        : BaseType(numQubits, dev_tag, maxBondDim) {}
+        : BaseType(numQubits, dev_tag), maxBondDim_(maxBondDim),
+          bondDims_(setBondDims_()), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()) {
+        initTensors_();
+        reset();
+        appendInitialMPSState_();
+    }
 
     ~MPSTNCuda() = default;
 
@@ -92,17 +119,122 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
      * @return std::size_t
      */
     [[nodiscard]] auto getMaxBondDim() const -> std::size_t {
-        return BaseType::maxBondDim_;
+        return maxBondDim_;
     };
 
     /**
-     * @brief Get the bond dimensions.
+     * @brief Get a vector of pointers to extents of each site.
      *
-     * @return std::vector<std::size_t>
+     * @return std::vector<int64_t const *> Note int64_t const* is
+     * required by cutensornet backend.
      */
-    [[nodiscard]] auto getBondDims(std::size_t idx) const -> std::size_t {
-        return BaseType::bondDims_[idx];
+    [[nodiscard]] auto getSitesExtentsPtr() -> std::vector<int64_t const *> {
+        std::vector<int64_t const *> sitesExtentsPtr_int64(
+            BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            sitesExtentsPtr_int64[i] = sitesExtents_int64_[i].data();
+        }
+        return sitesExtentsPtr_int64;
     }
+
+    /**
+     * @brief Get a vector of pointers to tensor data of each site.
+     *
+     * @return std::vector<uint64_t *>
+     */
+    [[nodiscard]] auto getTensorsDataPtr() -> std::vector<uint64_t *> {
+        std::vector<uint64_t *> tensorsDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsDataPtr[i] = reinterpret_cast<uint64_t *>(
+                tensors_[i].getDataBuffer().getData());
+        }
+        return tensorsDataPtr;
+    }
+
+    /**
+     * @brief Get a vector of pointers to tensor data of each site.
+     *
+     * @return std::vector<CFP_t *>
+     */
+    [[nodiscard]] auto getTensorsOutDataPtr() -> std::vector<CFP_t *> {
+        std::vector<CFP_t *> tensorsOutDataPtr(BaseType::getNumQubits());
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensorsOutDataPtr[i] = tensors_out_[i].getDataBuffer().getData();
+        }
+        return tensorsOutDataPtr;
+    }
+
+    /**
+     * @brief Set current quantum state as zero state.
+     */
+    void reset() {
+        const std::vector<std::size_t> zeroState(BaseType::getNumQubits(), 0);
+        setBasisState(zeroState);
+    }
+
+    /**
+     * @brief Update the ith MPS site data.
+     *
+     * @param site_idx Index of the MPS site.
+     * @param host_data Pointer to the data on host.
+     * @param host_data_size Length of the data.
+     */
+    void updateMPSSiteData(const std::size_t site_idx,
+                           const ComplexT *host_data,
+                           std::size_t host_data_size) {
+        PL_ABORT_IF_NOT(
+            site_idx < BaseType::getNumQubits(),
+            "The site index should be less than the number of qubits.");
+
+        const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
+        PL_ABORT_IF_NOT(
+            host_data_size == tensors_[idx].getDataBuffer().getLength(),
+            "The length of the host data should match its copy on the device.");
+
+        tensors_[idx].getDataBuffer().zeroInit();
+
+        tensors_[idx].getDataBuffer().CopyHostDataToGpu(host_data,
+                                                        host_data_size);
+    }
+
+    /**
+     * @brief Update quantum state with a basis state.
+     * NOTE: This API assumes the bond vector is a standard basis vector
+     * ([1,0,0,......]) and current implementation only works for qubit systems.
+     * @param basisState Vector representation of a basis state.
+     */
+    void setBasisState(const std::vector<std::size_t> &basisState) {
+        PL_ABORT_IF(BaseType::getNumQubits() != basisState.size(),
+                    "The size of a basis state should be equal to the number "
+                    "of qubits.");
+
+        bool allZeroOrOne = std::all_of(
+            basisState.begin(), basisState.end(),
+            [](std::size_t bitVal) { return bitVal == 0 || bitVal == 1; });
+
+        PL_ABORT_IF_NOT(allZeroOrOne,
+                        "Please ensure all elements of a basis state should be "
+                        "either 0 or 1.");
+
+        CFP_t value_cu = cuUtil::complexToCu<ComplexT>(ComplexT{1.0, 0.0});
+
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            tensors_[i].getDataBuffer().zeroInit();
+            std::size_t target = 0;
+            std::size_t idx = BaseType::getNumQubits() - std::size_t{1} - i;
+
+            // Rightmost site
+            if (i == 0) {
+                target = basisState[idx];
+            } else {
+                target = basisState[idx] == 0 ? 0 : bondDims_[i - 1];
+            }
+
+            PL_CUDA_IS_SUCCESS(
+                cudaMemcpy(&tensors_[i].getDataBuffer().getData()[target],
+                           &value_cu, sizeof(CFP_t), cudaMemcpyHostToDevice));
+        }
+    };
 
     /**
      * @brief Apply an MPO operator with the gate's MPO decomposition data
@@ -189,7 +321,7 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
             /* cutensornetBoundaryCondition_t */
             CUTENSORNET_BOUNDARY_CONDITION_OPEN,
             /* const int64_t *const extentsOut[] */
-            BaseType::getSitesExtentsPtr().data(),
+            getSitesExtentsPtr().data(),
             /*strides=*/nullptr));
 
         // Optional: SVD
@@ -235,8 +367,8 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
             /* std::size_t */ sizeof(mpo_attribute)));
 
         BaseType::computeState(
-            const_cast<int64_t **>(BaseType::getSitesExtentsPtr().data()),
-            reinterpret_cast<void **>(BaseType::getTensorsOutDataPtr().data()));
+            const_cast<int64_t **>(getSitesExtentsPtr().data()),
+            reinterpret_cast<void **>(getTensorsOutDataPtr().data()));
 
         // TODO: This is a dummy tensor update to allow multiple calls to the
         // `append_mps_final_state` method as well as appending additional
@@ -252,6 +384,168 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
         // wrapped inside the `dummy_tensor_update()` method.
         //
         BaseType::dummy_tensor_update();
+    }
+
+    /**
+     * @brief Get the full state vector representation of a MPS quantum state.
+     * Note that users/developers should be responsible to ensure that there is
+     * sufficient memory on the host to store the full state vector.
+     *
+     * @param res Pointer to the host memory to store the full state vector
+     * @param res_length Length of the result vector
+     */
+    void getData(ComplexT *res, const std::size_t res_length) {
+        PL_ABORT_IF(log2(res_length) != BaseType::getNumQubits(),
+                    "The size of the result vector should be equal to the "
+                    "dimension of the quantum state.");
+
+        std::size_t avail_gpu_memory = getFreeMemorySize();
+
+        PL_ABORT_IF(log2(avail_gpu_memory) < BaseType::getNumQubits(),
+                    "State tensor size exceeds the available GPU memory!");
+        BaseType::get_state_tensor(res);
+    }
+
+    /**
+     * @brief Get the full state vector representation of a MPS quantum state.
+     *
+     *
+     * @return std::vector<ComplexT> Full state vector representation of MPS
+     * quantum state on host
+     */
+    auto getDataVector() -> std::vector<ComplexT> {
+        std::size_t length = std::size_t{1} << BaseType::getNumQubits();
+        std::vector<ComplexT> results(length);
+
+        getData(results.data(), results.size());
+
+        return results;
+    }
+
+  private:
+    /**
+     * @brief Return bondDims to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::size_t>
+     */
+    std::vector<std::size_t> setBondDims_() {
+        std::vector<std::size_t> localBondDims(BaseType::getNumQubits() - 1,
+                                               maxBondDim_);
+
+        const std::size_t ubDim = log2(maxBondDim_);
+        for (std::size_t i = 0; i < localBondDims.size(); i++) {
+            const std::size_t bondDim =
+                std::min(i + 1, BaseType::getNumQubits() - i - 1);
+
+            if (bondDim <= ubDim) {
+                localBondDims[i] = std::size_t{1} << bondDim;
+            }
+        }
+        return localBondDims;
+    }
+
+    /**
+     * @brief Return siteModes to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::vector<std::size_t>>
+     */
+    std::vector<std::vector<std::size_t>> setSitesModes_() {
+        std::vector<std::vector<std::size_t>> localSitesModes;
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            std::vector<std::size_t> localSiteModes;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteModes =
+                    std::vector<std::size_t>({i, i + BaseType::getNumQubits()});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteModes = std::vector<std::size_t>(
+                    {i + BaseType::getNumQubits() - 1, i});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
+                localSiteModes =
+                    std::vector<std::size_t>({i + BaseType::getNumQubits() - 1,
+                                              i, i + BaseType::getNumQubits()});
+            }
+            localSitesModes.push_back(std::move(localSiteModes));
+        }
+        return localSitesModes;
+    }
+
+    /**
+     * @brief Return sitesExtents to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::vector<std::size_t>>
+     */
+    std::vector<std::vector<std::size_t>> setSitesExtents_() {
+        std::vector<std::vector<std::size_t>> localSitesExtents;
+
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            std::vector<std::size_t> localSiteExtents;
+            if (i == 0) {
+                // Leftmost site (state mode, shared mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {BaseType::getQubitDims()[i], bondDims_[i]});
+            } else if (i == BaseType::getNumQubits() - 1) {
+                // Rightmost site (shared mode, state mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i]});
+            } else {
+                // Interior sites (state mode, state mode, shared mode)
+                localSiteExtents = std::vector<std::size_t>(
+                    {bondDims_[i - 1], BaseType::getQubitDims()[i],
+                     bondDims_[i]});
+            }
+            localSitesExtents.push_back(std::move(localSiteExtents));
+        }
+        return localSitesExtents;
+    }
+
+    /**
+     * @brief Return siteExtents_int64 to the member initializer
+     * NOTE: This method only works for the open boundary condition
+     * @return std::vector<std::vector<int64_t>>
+     */
+    std::vector<std::vector<int64_t>> setSitesExtents_int64_() {
+        std::vector<std::vector<int64_t>> localSitesExtents_int64;
+
+        for (const auto &siteExtents : sitesExtents_) {
+            localSitesExtents_int64.push_back(
+                std::move(Pennylane::Util::cast_vector<std::size_t, int64_t>(
+                    siteExtents)));
+        }
+        return localSitesExtents_int64;
+    }
+
+    /**
+     * @brief The tensors init helper function for ctor.
+     */
+    void initTensors_() {
+        for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
+            // construct mps tensors reprensentation
+            tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
+                                  sitesExtents_[i], BaseType::getDevTag());
+
+            tensors_out_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
+                                      sitesExtents_[i], BaseType::getDevTag());
+        }
+    }
+
+    /**
+     * @brief Append initial MPS sites to the compute graph with data provided
+     * by a user
+     *
+     */
+    void appendInitialMPSState_() {
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateInitializeMPS(
+            /*const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /*cutensornetState_t*/ BaseType::getQuantumState(),
+            /*cutensornetBoundaryCondition_t */
+            CUTENSORNET_BOUNDARY_CONDITION_OPEN,
+            /*const int64_t *const* */ getSitesExtentsPtr().data(),
+            /*const int64_t *const* */ nullptr,
+            /*void ** */
+            reinterpret_cast<void **>(getTensorsDataPtr().data())));
     }
 };
 } // namespace Pennylane::LightningTensor::TNCuda

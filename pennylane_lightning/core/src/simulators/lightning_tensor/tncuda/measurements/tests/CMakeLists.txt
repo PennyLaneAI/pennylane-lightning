@@ -15,13 +15,13 @@ FetchAndIncludeCatch()
 ################################################################################
 
 add_library(${PL_BACKEND}_measurements_tests INTERFACE)
-target_link_libraries(${PL_BACKEND}_measurements_tests INTERFACE  Catch2::Catch2
-                                                                  ${PL_BACKEND}
-                                                                  ${PL_BACKEND}_gates
-                                                                  ${PL_BACKEND}_utils
-                                                                  ${PL_BACKEND}_measurements
-                                                                  ${PL_BACKEND}_observables
-                                                                  ${PL_BACKEND}_tncuda_utils)
+target_link_libraries(${PL_BACKEND}_measurements_tests INTERFACE     Catch2::Catch2
+                                                                ${PL_BACKEND}_gates
+                                                                ${PL_BACKEND}_utils
+                                                                ${PL_BACKEND}_measurements
+                                                                ${PL_BACKEND}_observables
+                                                                ${PL_BACKEND}
+                                                                )
 
 ProcessTestOptions(${PL_BACKEND}_measurements_tests)
 
@@ -30,9 +30,9 @@ target_sources(${PL_BACKEND}_measurements_tests INTERFACE runner_${PL_BACKEND}_m
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES Test_TNCuda_Expval.cpp
-                 Test_TNCuda_Var.cpp
-                 Test_TNCuda_Measure.cpp)
+set(TEST_SOURCES    Test_MPSTNCuda_Expval.cpp
+                    Test_MPSTNCuda_Var.cpp
+                    Test_MPSTNCuda_Measure.cpp)
 
 add_executable(${PL_BACKEND}_measurements_test_runner ${TEST_SOURCES})
 target_link_libraries(${PL_BACKEND}_measurements_test_runner PRIVATE ${PL_BACKEND}_measurements_tests)

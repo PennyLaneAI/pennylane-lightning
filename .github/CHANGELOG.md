@@ -2,8 +2,8 @@
 
 ### New features since last release
 
-* Add Exact Tensor Network C++ backend to `lightning.tensor`.
-  [(#977)](https://github.com/PennyLaneAI/pennylane-lightning/pull/977)
+* Add native N-controlled gate/matrix operations and adjoint support to `lightning.kokkos`.
+  [(#950)](https://github.com/PennyLaneAI/pennylane-lightning/pull/950)
 
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
   [(#970)](https://github.com/PennyLaneAI/pennylane-lightning/pull/970)
@@ -12,28 +12,19 @@
   [(#960)](https://github.com/PennyLaneAI/pennylane-lightning/pull/960)
   [(#999)](https://github.com/PennyLaneAI/pennylane-lightning/pull/999)
 
-* Add native N-controlled gate/matrix operations and adjoint support to `lightning.kokkos`.
-  [(#950)](https://github.com/PennyLaneAI/pennylane-lightning/pull/950)
-
 * Add native N-controlled gates support to `lightning.gpu`'s single-GPU backend.
   [(#938)](https://github.com/PennyLaneAI/pennylane-lightning/pull/938)
 
 ### Breaking changes
 
+* Removed all instances of `qml.QubitStateVector`.
+  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
+
 * Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
   [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
   [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
 
-* Removed all instances of `qml.QubitStateVector`.
-  [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
-
 ### Improvements
-
-* Catalyst device interfaces support dynamic shots, and no longer parses the device init op's attribute dictionary for a static shots literal.
-  [(#1017)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1017)
-
-* Reduce flaky test and increase test shots count.
-  [(#1015)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1015)
 
 * Update the logic for enabling `grad_on_execution` during device execution.
   [(#1016)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1016)
@@ -47,22 +38,8 @@
 * Enable N-controlled gate and matrix support to `lightning.gpu` simulator for Catalyst.
   [(#1005)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1005)
 
-* Generalize seeding mechanism for all measurements.
-  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
-
-* `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` now define
-  the `eval_jaxpr` method for integration with the experimental
-  capture project.
-  [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
-
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
-
-* Add C++ unit tests for Exact Tensor Network backends.
-  [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
-
-* Add native BLAS support to the C++ layer via dynamic `scipy-openblas32` loading.
-  [(#995)](https://github.com/PennyLaneAI/pennylane-lightning/pull/995)
 
 * Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
   [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
@@ -76,15 +53,20 @@
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
+* `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` now define
+  the `eval_jaxpr` method for integration with the experimental
+  capture project.
+  [(#1002)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1002)
+
+* Generalize seeding mechanism for all measurements.
+  [(#1003)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1003)
+
 ### Documentation
 
 * Update Lightning-Tensor installation docs and usage suggestions.
   [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 ### Bug fixes
-
-* Pin `jax[cpu]==0.4.28` for compatibility with PennyLane and Catalyst.
-  [(#1019)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1019)
 
 * Fix Lightning Kokkos editable mode path.
   [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
