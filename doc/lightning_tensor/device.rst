@@ -66,7 +66,7 @@ Note that as ``lightning.tensor`` cannot cleaned up the data with `reset()` like
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``lightning.tensor`` supports all gate operations supported by PennyLane, except ``qml.StatePrep`` is *not supported* by the *Exact Tensor Network* method. 
+The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of ``qml.StatePrep``, which is *not supported* by the *Exact Tensor Network* method. 
 
 **Supported operations:**
 
