@@ -334,9 +334,9 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                              const std::vector<ComplexT> &gate_matrix = {}) {
         // TODO: Need to revisit this line of code once `cutensornet` supports
         // multi-target wire controlled gates
-        PL_ABORT_IF_NOT(targetWires.size() == 1,
-                        "Unsupported controlled gate: cutensornet only "
-                        "supports 1-wire target controlled gates");
+        // PL_ABORT_IF_NOT(targetWires.size() == 1,
+        //                "Unsupported controlled gate: cutensornet only "
+        //                "supports 1-wire target controlled gates");
 
         auto &&par = (params.empty()) ? std::vector<PrecisionT>{0.0} : params;
 
