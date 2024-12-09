@@ -63,7 +63,8 @@ void applyControlledMatrix(
     const std::vector<std::size_t> &wires, bool inverse = false) {
     using ComplexT = typename StateVectorT::ComplexT;
     st.applyControlledMatrix(
-        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        static_cast<const ComplexT *>(matrix.request().ptr),
+        static_cast<const std::size_t>(matrix.request().size), controlled_wires,
         controlled_values, wires, inverse);
 }
 

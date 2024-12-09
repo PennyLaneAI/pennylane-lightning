@@ -21,19 +21,10 @@
 
 #if defined(__APPLE__) || defined(__linux__)
 #include <dlfcn.h>
-#define HANDLE_TYPE void *
 #define PL_DLOPEN(NAME, ARG) dlopen(NAME, ARG)
 #define PL_DLERROR() dlerror()
 #define PL_DLCLOSE(NAME) dlclose(NAME)
 #define PL_DLSYS(NAME, SYMBOL) dlsym(NAME, SYMBOL)
-#elif defined(_MSC_VER)
-#define NOMINMAX
-#include <windows.h>
-#define HANDLE_TYPE HMODULE
-#define PL_DLOPEN(NAME, ARG) LoadLibrary(NAME)
-#define PL_DLERROR() std::to_string(GetLastError())
-#define PL_DLCLOSE(NAME) FreeLibrary(NAME)
-#define PL_DLSYS(NAME, SYMBOL) GetProcAddress(NAME, SYMBOL)
 #endif
 
 #include "Error.hpp"
@@ -51,7 +42,7 @@ namespace Pennylane::Util {
 // NOLINTBEGIN
 class SharedLibLoader final {
   private:
-    HANDLE_TYPE handle_{nullptr};
+    void *handle_{nullptr};
 
   public:
     SharedLibLoader();
@@ -62,13 +53,12 @@ class SharedLibLoader final {
 
     ~SharedLibLoader() noexcept { PL_DLCLOSE(handle_); }
 
-    HANDLE_TYPE getHandle() { return handle_; }
+    void *getHandle() { return handle_; }
 
-    template <typename FunPtr> FunPtr getSymbol(const std::string &symbol) {
-        FunPtr func_ptr =
-            reinterpret_cast<FunPtr>(PL_DLSYS(handle_, symbol.c_str()));
-        PL_ABORT_IF(!func_ptr, PL_DLERROR());
-        return func_ptr;
+    void *getSymbol(const std::string &symbol) {
+        void *sym = PL_DLSYS(handle_, symbol.c_str());
+        PL_ABORT_IF(!sym, PL_DLERROR());
+        return sym;
     }
 };
 // NOLINTEND

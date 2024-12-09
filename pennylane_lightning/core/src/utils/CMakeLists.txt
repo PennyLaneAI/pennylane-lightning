@@ -2,11 +2,14 @@ cmake_minimum_required(VERSION 3.20)
 
 project(lightning_utils LANGUAGES CXX)
 
-set(LQUBIT_UTILS_FILES RuntimeInfo.cpp  UtilLinearAlg.cpp CACHE INTERNAL "" FORCE)
+set(LQUBIT_UTILS_FILES RuntimeInfo.cpp CACHE INTERNAL "" FORCE)
 
 
 add_library(lightning_utils STATIC ${LQUBIT_UTILS_FILES})
 
+if(ENABLE_LAPACK)
+    list(APPEND LQUBIT_UTILS_FILES UtilLinearAlg.cpp)
+endif()
 
 set(CUDA_UTILS_ADDED FALSE CACHE BOOL "Add cuda_utils header files")
 
