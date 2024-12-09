@@ -187,7 +187,6 @@ jobs:
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
             -DKokkos_ENABLE_CUDA=ON \
             -DENABLE_COVERAGE=ON
           cmake --build ./Build --verbose
