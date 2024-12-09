@@ -67,6 +67,7 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
     std::vector<std::shared_ptr<MPOTNCuda<Precision>>> mpos_;
     std::vector<std::shared_ptr<MPOTNCudaNOSWAP<Precision>>> mpos_noswap_;
     std::vector<std::size_t> mpo_ids_;
+    std::vector<std::size_t> mpo_noswap_ids_;
 
   public:
     constexpr static auto method = "mps";
@@ -210,13 +211,13 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetNetworkOperator_t */ mpos_.back()->getMPOOperator(),
+            /* cutensornetNetworkOperator_t */ mpos_noswap_.back()->getMPOOperator(),
             /* const int32_t immutable */ 1,
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
             /* int64_t * operatorId*/ &operatorId));
 
-        mpo_ids_.push_back(static_cast<std::size_t>(operatorId));
+        mpo_noswap_ids_.push_back(static_cast<std::size_t>(operatorId));
     }
 
     /**
