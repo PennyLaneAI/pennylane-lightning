@@ -32,7 +32,6 @@ using Pennylane::LightningKokkos::Util::generateBitPatterns;
 using Pennylane::LightningKokkos::Util::parity_2_offset;
 using Pennylane::LightningKokkos::Util::reverseWires;
 using Pennylane::LightningKokkos::Util::vector2view;
-using Pennylane::Util::exp2;
 } // namespace
 /// @endcond
 
@@ -59,9 +58,9 @@ template <class PrecisionT, class FuncT> class applyNCNFunctor {
                     const std::vector<bool> &controlled_values,
                     const std::vector<std::size_t> &wires, FuncT core_function_)
         : arr(arr_), core_function(core_function_) {
-        const std::size_t two2N =
-            exp2(num_qubits - wires.size() - controlled_wires.size());
-        dim = exp2(wires.size());
+        const std::size_t two2N = Pennylane::Util::exp2(
+            num_qubits - wires.size() - controlled_wires.size());
+        dim = Pennylane::Util::exp2(wires.size());
         const auto &[parity_, rev_wires_] =
             reverseWires(num_qubits, wires, controlled_wires);
         parity = parity_;
@@ -116,7 +115,8 @@ class applyNC1Functor<PrecisionT, FuncT, true> {
         indices = vector2view(indices_);
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(
-                0, exp2(num_qubits - controlled_wires.size() - wires.size())),
+                0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
+                                         wires.size())),
             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
@@ -148,9 +148,9 @@ class applyNC1Functor<PrecisionT, FuncT, false> {
           rev_wire_shift((static_cast<std::size_t>(1U) << rev_wire)),
           wire_parity(fillTrailingOnes(rev_wire)),
           wire_parity_inv(fillLeadingOnes(rev_wire + 1)) {
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits - 1)),
-            *this);
+        Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(
+                                 0, Pennylane::Util::exp2(num_qubits - 1)),
+                             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
         std::size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
@@ -645,7 +645,8 @@ class applyNC2Functor<PrecisionT, FuncT, true> {
         indices = vector2view(indices_);
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(
-                0, exp2(num_qubits - controlled_wires.size() - wires.size())),
+                0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
+                                         wires.size())),
             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
@@ -693,9 +694,9 @@ class applyNC2Functor<PrecisionT, FuncT, false> {
           parity_high(fillLeadingOnes(rev_wire_max + 1)),
           parity_middle(fillLeadingOnes(rev_wire_min + 1) &
                         fillTrailingOnes(rev_wire_max)) {
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits - 2)),
-            *this);
+        Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(
+                                 0, Pennylane::Util::exp2(num_qubits - 2)),
+                             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
         std::size_t i00 = ((k << 2U) & parity_high) |
@@ -1268,9 +1269,9 @@ template <class PrecisionT, class FuncT> class applyNC3Functor {
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_mid);
         parity_hmiddle =
             fillLeadingOnes(rev_wire_mid + 1) & fillTrailingOnes(rev_wire_max);
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits - 3)),
-            *this);
+        Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(
+                                 0, Pennylane::Util::exp2(num_qubits - 3)),
+                             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
         std::size_t i000 = ((k << 3U) & parity_high) |
@@ -1365,7 +1366,8 @@ class applyNC4Functor<PrecisionT, FuncT, true> {
         indices = vector2view(indices_);
         Kokkos::parallel_for(
             Kokkos::RangePolicy<ExecutionSpace>(
-                0, exp2(num_qubits - controlled_wires.size() - wires.size())),
+                0, Pennylane::Util::exp2(num_qubits - controlled_wires.size() -
+                                         wires.size())),
             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
@@ -1474,9 +1476,9 @@ class applyNC4Functor<PrecisionT, FuncT, false> {
                          fillTrailingOnes(rev_wire_max);
         parity_middle = fillLeadingOnes(rev_wire_min_mid + 1) &
                         fillTrailingOnes(rev_wire_max_mid);
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits - 4)),
-            *this);
+        Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(
+                                 0, Pennylane::Util::exp2(num_qubits - 4)),
+                             *this);
     }
     KOKKOS_FUNCTION void operator()(std::size_t k) const {
         std::size_t i0000 = ((k << 4U) & parity_high) |
@@ -1700,7 +1702,8 @@ void applyMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
             (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
     }
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        Kokkos::RangePolicy<ExecutionSpace>(0,
+                                            Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t k) {
             arr_(k) *= (Kokkos::Impl::bit_count(k & wires_parity) % 2 == 0)
                            ? shift_0
@@ -1778,7 +1781,8 @@ void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         get_mask([&word](const int a) { return word[a] == 'Z'; });
     const auto count_mask_y = std::popcount(mask_y);
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecutionSpace>(0, exp2(num_qubits)),
+        Kokkos::RangePolicy<ExecutionSpace>(0,
+                                            Pennylane::Util::exp2(num_qubits)),
         KOKKOS_LAMBDA(std::size_t i0) {
             std::size_t i1 = i0 ^ mask_xy;
             if (i0 <= i1) {
