@@ -186,7 +186,7 @@ jobs:
           cd main
           SCIPYBLAS_lib=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
           echo "SCIPYBLAS_lib: ${SCIPYBLAS_lib}"
-          cmake . -BBuild -G Unix Makefiles \
+          cmake . -BBuild -G "Unix Makefiles" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
