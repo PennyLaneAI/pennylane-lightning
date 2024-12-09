@@ -16,11 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths:
-      - pennylane_lightning/core/src/**
-      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
-      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
   push:
     branches:
       - master
@@ -38,7 +33,7 @@ concurrency:
 
 jobs:
   builddeps:
-    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.draft == false }}
     runs-on:
       - self-hosted
       - ubuntu-22.04
@@ -193,6 +188,7 @@ jobs:
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DENABLE_COVERAGE=ON
           cmake --build ./Build --verbose
           cd ./Build
