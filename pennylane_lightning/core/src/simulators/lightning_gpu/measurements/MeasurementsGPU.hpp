@@ -25,7 +25,6 @@
 #include <cuda.h>
 #include <cusparse.h>
 #include <custatevec.h> // custatevecApplyMatrix
-#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -215,9 +214,7 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples,
-                          const std::optional<std::size_t> &seed = std::nullopt)
-        -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -236,15 +233,11 @@ class Measurements final
         } else {
             data_type = CUDA_C_32F;
         }
+        this->setSeed(this->_deviceseed);
 
-        if (seed.has_value()) {
-            this->setSeed(seed.value());
-        } else {
-            this->setRandomSeed();
-        }
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
-            rand_nums[n] = dis(this->rng);
+            rand_nums[n] = dis(this->_rng);
         }
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;

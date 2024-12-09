@@ -23,9 +23,7 @@
 #include "Error.hpp"
 #include "Util.hpp"
 
-#ifdef PL_USE_LAPACK
 #include "UtilLinearAlg.hpp"
-#endif
 
 namespace Pennylane::Observables {
 /**
@@ -220,10 +218,8 @@ class HermitianObsBase : public Observable<StateVectorT> {
     MatrixT matrix_;
     std::vector<std::size_t> wires_;
 
-#ifdef PL_USE_LAPACK
-    std::vector<PrecisionT> eigenVals_;
-    MatrixT unitary_;
-#endif
+    mutable std::vector<PrecisionT> eigenVals_;
+    mutable MatrixT unitary_;
 
   private:
     [[nodiscard]] auto isEqual(const Observable<StateVectorT> &other) const
@@ -232,6 +228,37 @@ class HermitianObsBase : public Observable<StateVectorT> {
             static_cast<const HermitianObsBase<StateVectorT> &>(other);
 
         return (matrix_ == other_cast.matrix_) && (wires_ == other_cast.wires_);
+    }
+
+    /**
+     * @brief Decompose the Hermitian matrix into diagonalizing gates.
+     */
+    void decompose_() const {
+        std::vector<std::complex<PrecisionT>> mat(matrix_.size());
+
+        std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
+                       [](ComplexT value) {
+                           return static_cast<std::complex<PrecisionT>>(value);
+                       });
+
+        PL_ABORT_IF_NOT(
+            Pennylane::Util::is_Hermitian<PrecisionT>(Util::exp2(wires_.size()),
+                                                      Util::exp2(wires_.size()),
+                                                      mat) == true,
+            "The matrix passed to HermitianObs is not a Hermitian matrix.");
+
+        std::vector<std::complex<PrecisionT>> unitary(matrix_.size());
+        std::vector<PrecisionT> eigenVals;
+
+        Pennylane::Util::compute_diagonalizing_gates<PrecisionT>(
+            Util::exp2(wires_.size()), Util::exp2(wires_.size()), mat,
+            eigenVals, unitary);
+
+        unitary_.resize(unitary.size());
+        std::transform(
+            unitary.begin(), unitary.end(), unitary_.begin(),
+            [](ComplexT value) { return static_cast<ComplexT>(value); });
+        eigenVals_ = eigenVals;
     }
 
   public:
@@ -244,26 +271,6 @@ class HermitianObsBase : public Observable<StateVectorT> {
     HermitianObsBase(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
         PL_ASSERT(matrix_.size() == Util::exp2(2 * wires_.size()));
-
-#ifdef PL_USE_LAPACK
-        std::vector<std::complex<PrecisionT>> mat(matrix_.size());
-
-        std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
-                       [](ComplexT value) {
-                           return static_cast<std::complex<PrecisionT>>(value);
-                       });
-
-        std::vector<std::complex<PrecisionT>> unitary(matrix_.size());
-
-        Pennylane::Util::compute_diagonalizing_gates<PrecisionT>(
-            Util::exp2(wires_.size()), Util::exp2(wires_.size()), mat,
-            eigenVals_, unitary);
-
-        unitary_.resize(unitary.size());
-        std::transform(
-            unitary.begin(), unitary.end(), unitary_.begin(),
-            [](ComplexT value) { return static_cast<ComplexT>(value); });
-#endif
     }
 
     [[nodiscard]] auto getMatrix() const -> const MatrixT & { return matrix_; }
@@ -284,30 +291,14 @@ class HermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] StateVectorT &sv,
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<std::size_t> &ob_wires) const override {
-#ifdef PL_USE_LAPACK
-        std::vector<std::complex<PrecisionT>> mat(matrix_.size());
-
-        std::transform(matrix_.begin(), matrix_.end(), mat.begin(),
-                       [](ComplexT value) {
-                           return static_cast<std::complex<PrecisionT>>(value);
-                       });
-
-        PL_ABORT_IF_NOT(
-            Pennylane::Util::is_Hermitian<PrecisionT>(Util::exp2(wires_.size()),
-                                                      Util::exp2(wires_.size()),
-                                                      mat) == true,
-            "The matrix passed to HermitianObs is not a Hermitian matrix.");
+        if (eigenVals_.empty() && unitary_.empty()) {
+            decompose_();
+        }
 
         eigenValues.clear();
         ob_wires = wires_;
         sv.applyMatrix(unitary_, wires_);
         eigenValues.push_back(eigenVals_);
-#else
-        PL_ABORT(
-            "Hermitian observables with shot measurement are not supported; "
-            "consider building the device with `ENABLE_LAPACK=ON` compilation "
-            "flag.");
-#endif
     }
 };
 

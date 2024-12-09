@@ -356,6 +356,19 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::DoubleExcitationPlus",
         msb_4qbit, angle_1param);
 }
 
+TEMPLATE_TEST_CASE("StateVectorCudaMPI::GlobalPhase",
+                   "[StateVectorCudaMPI_Param]", float, double) {
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits,
+                                  applyDoubleExcitationPlus, "GlobalPhase",
+                                  lsb_4qbit, angle_1param);
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits,
+                                  applyDoubleExcitationPlus, "GlobalPhase",
+                                  mlsb_4qbit, angle_1param);
+    PLGPU_MPI_TEST_GATE_OPS_PARAM(TestType, num_qubits,
+                                  applyDoubleExcitationPlus, "GlobalPhase",
+                                  msb_4qbit, angle_1param);
+}
+
 TEMPLATE_TEST_CASE("LightningGPUMPI:applyOperation", "[LightningGPUMPI_Param]",
                    float, double) {
     using StateVectorT = StateVectorCudaMPI<TestType>;

@@ -21,7 +21,7 @@ import pytest
 from conftest import LightningDevice, device_name, validate_measurements
 from flaky import flaky
 
-if device_name not in ("lightning.qubit", "lightning.kokkos"):
+if device_name not in ("lightning.qubit", "lightning.kokkos", "lightning.gpu"):
     pytest.skip("Native MCM not supported. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
@@ -89,7 +89,7 @@ def test_unsupported_measurement():
             match=f"not accepted with finite shots on lightning.qubit",
         ):
             func(*params)
-    if device_name == "lightning.kokkos":
+    if device_name in ("lightning.kokkos", "lightning.gpu"):
         with pytest.raises(
             qml.DeviceError,
             match=r"Measurement shadow\(wires=\[0\]\) not accepted with finite shots on "

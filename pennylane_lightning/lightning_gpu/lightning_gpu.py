@@ -18,6 +18,8 @@ interfaces with the NVIDIA cuQuantum cuStateVec simulator library for GPU-enable
 """
 from __future__ import annotations
 
+import os
+import sys
 from ctypes.util import find_library
 from dataclasses import replace
 from importlib import util as imp_util
@@ -28,7 +30,7 @@ from warnings import warn
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
@@ -40,8 +42,8 @@ from pennylane.devices.preprocess import (
     validate_observables,
 )
 from pennylane.measurements import MidMeasureMP
-from pennylane.operation import DecompositionUndefinedError, Operator, Tensor
-from pennylane.ops import Prod, SProd, Sum
+from pennylane.operation import DecompositionUndefinedError, Operator
+from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
@@ -72,116 +74,36 @@ from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import MPIHandler
 from ._state_vector import LightningGPUStateVector
 
-# The set of supported operations.
-_operations = frozenset(
-    {
-        "Identity",
-        "QubitStateVector",
-        "QubitUnitary",
-        "ControlledQubitUnitary",
-        "MultiControlledX",
-        "DiagonalQubitUnitary",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "MultiRZ",
-        "GlobalPhase",
-        "C(GlobalPhase)",
-        "Hadamard",
-        "S",
-        "Adjoint(S)",
-        "T",
-        "Adjoint(T)",
-        "SX",
-        "Adjoint(SX)",
-        "CNOT",
-        "SWAP",
-        "ISWAP",
-        "PSWAP",
-        "Adjoint(ISWAP)",
-        "SISWAP",
-        "Adjoint(SISWAP)",
-        "SQISW",
-        "CSWAP",
-        "Toffoli",
-        "CY",
-        "CZ",
-        "PhaseShift",
-        "ControlledPhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "IsingXX",
-        "IsingYY",
-        "IsingZZ",
-        "IsingXY",
-        "SingleExcitation",
-        "SingleExcitationPlus",
-        "SingleExcitationMinus",
-        "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
-        "QubitCarry",
-        "QubitSum",
-        "OrbitalRotation",
-        "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
-    }
-)
-# End the set of supported operations.
-
-# The set of supported observables.
-_observables = frozenset(
-    {
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "SparseHamiltonian",
-        "Hamiltonian",
-        "LinearCombination",
-        "Hermitian",
-        "Identity",
-        "Projector",
-        "Sum",
-        "Prod",
-        "SProd",
-    }
-)
+_to_matrix_ops = {
+    "BlockEncode": OperatorProperties(controllable=True),
+    "ControlledQubitUnitary": OperatorProperties(),
+    "ECR": OperatorProperties(),
+    "SX": OperatorProperties(),
+    "ISWAP": OperatorProperties(),
+    "PSWAP": OperatorProperties(),
+    "SISWAP": OperatorProperties(),
+    "SQISW": OperatorProperties(),
+    "OrbitalRotation": OperatorProperties(),
+    "QubitCarry": OperatorProperties(),
+    "QubitSum": OperatorProperties(),
+    "DiagonalQubitUnitary": OperatorProperties(),
+}
 
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
-    # To avoid building matrices beyond the given thresholds.
-    # This should reduce runtime overheads for larger systems.
-    if isinstance(op, qml.QFT):
-        return len(op.wires) < 10
-    if isinstance(op, qml.GroverOperator):
-        return len(op.wires) < 13
-    if isinstance(op, qml.PauliRot):
-        return False
-
-    return op.name in _operations
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``
     with finite shots."""
-    if isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional)):
-        # LightningGPU does not support Mid-circuit measurements.
-        return False
-    return stopping_condition(op)
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -190,18 +112,13 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, qml.Projector):
         return False
 
-    if isinstance(obs, Tensor):
-        if any(isinstance(o, qml.Projector) for o in obs.non_identity_obs):
-            return False
-        return True
-
     if isinstance(obs, SProd):
         return adjoint_observables(obs.base)
 
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -225,7 +142,10 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
+
+    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
+        not qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+    )
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
@@ -306,15 +226,13 @@ class LightningGPU(LightningBase):
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
-    # This `config` is used in Catalyst-Frontend
-    config = Path(__file__).parent / "lightning_gpu.toml"
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when customizable multiple decomposition pathways are implemented
+    _to_matrix_ops = _to_matrix_ops
 
-    # TODO: Move supported ops/obs to TOML file
-    operations = _operations
-    # The names of the supported operations.
-
-    observables = _observables
-    # The names of the supported observables.
+    # This configuration file declares capabilities of the device
+    config_filepath = Path(__file__).parent / "lightning_gpu.toml"
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
@@ -381,7 +299,11 @@ class LightningGPU(LightningBase):
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
-        if config.grad_on_execution is None:
+        if (
+            config.use_device_gradient
+            or updated_values.get("use_device_gradient", False)
+            and config.grad_on_execution is None
+        ):
             updated_values["grad_on_execution"] = True
 
         new_device_options = dict(config.device_options)
@@ -460,6 +382,7 @@ class LightningGPU(LightningBase):
                 self.simulate(
                     circuit,
                     self._statevector,
+                    postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
             )
 
@@ -494,12 +417,16 @@ class LightningGPU(LightningBase):
         self,
         circuit: QuantumScript,
         state: LightningGPUStateVector,
+        postselect_mode: Optional[str] = None,
     ) -> Result:
         """Simulate a single quantum script.
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
             state (LightningGPUStateVector): handle to Lightning state vector
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation
@@ -507,8 +434,75 @@ class LightningGPU(LightningBase):
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            raise qml.DeviceError("LightningGPU does not support Mid-circuit measurements.")
+            if self._mpi_handler.use_mpi:
+                raise qml.DeviceError(
+                    "Lightning-GPU-MPI does not support Mid-circuit measurements."
+                )
+
+            results = []
+            aux_circ = QuantumScript(
+                circuit.operations,
+                circuit.measurements,
+                shots=[1],
+                trainable_params=circuit.trainable_params,
+            )
+            for _ in range(circuit.shots.total_shots):
+                state.reset_state()
+                mid_measurements = {}
+                final_state = state.get_final_state(
+                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+                )
+                results.append(
+                    self.LightningMeasurements(final_state).measure_final_state(
+                        aux_circ, mid_measurements=mid_measurements
+                    )
+                )
+            return tuple(results)
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state).measure_final_state(circuit)
+
+    @staticmethod
+    def get_c_interface():
+        """Returns a tuple consisting of the device name, and
+        the location to the shared object with the C/C++ device implementation.
+        """
+
+        # The shared object file extension varies depending on the underlying operating system
+        file_extension = ""
+        OS = sys.platform
+        if OS == "linux":
+            file_extension = ".so"
+        else:
+            raise RuntimeError(
+                f"'LightningGPUSimulator' shared library not available for '{OS}' platform"
+            )  # pragma: no cover
+
+        lib_name = "liblightning_gpu_catalyst" + file_extension
+        package_root = Path(__file__).parent
+
+        # The absolute path of the plugin shared object varies according to the installation mode.
+
+        # Wheel mode:
+        # Fixed location at the root of the project
+        wheel_mode_location = package_root.parent / lib_name
+        if wheel_mode_location.is_file():
+            return "LightningGPUSimulator", wheel_mode_location.as_posix()
+
+        # Editable mode:
+        # The build directory contains a folder which varies according to the platform:
+        #   lib.<system>-<architecture>-<python-id>"
+        # To avoid mismatching the folder name, we search for the shared object instead.
+        # TODO: locate where the naming convention of the folder is decided and replicate it here.
+        editable_mode_path = package_root.parent.parent / "build_lightning_gpu"
+        for path, _, files in os.walk(editable_mode_path):
+            if lib_name in files:
+                lib_location = (Path(path) / lib_name).as_posix()
+                return "LightningGPUSimulator", lib_location
+
+        raise RuntimeError("'LightningGPUSimulator' shared library not found")  # pragma: no cover
+
+
+_supports_operation = LightningGPU.capabilities.supports_operation
+_supports_observable = LightningGPU.capabilities.supports_observable

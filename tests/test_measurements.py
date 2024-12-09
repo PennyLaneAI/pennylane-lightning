@@ -321,7 +321,6 @@ class TestExpval:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.parametrize(
         "obs, coeffs, res",
         [
@@ -351,11 +350,6 @@ class TestExpval:
     )
     def test_expval_hamiltonian(self, obs, coeffs, res, tol, dev):
         """Test expval with Hamiltonian"""
-        if not qml.operation.active_new_opmath():
-            obs = [
-                qml.operation.convert_to_legacy_H(o).ops[0] if isinstance(o, qml.ops.Prod) else o
-                for o in obs
-            ]
         ham = qml.Hamiltonian(coeffs, obs)
 
         @qml.qnode(dev)
@@ -666,7 +660,7 @@ class TestSample:
     @pytest.mark.parametrize("nwires", range(1, 11))
     def test_sample_variations(self, qubit_device, nwires, seed):
         """Tests if `sample(wires)` returns correct statistics."""
-        shots = 20000
+        shots = 200000
         n_qubits = max(5, nwires + 1)
         np.random.seed(seed)
         wires = qml.wires.Wires(np.random.permutation(nwires))
@@ -675,6 +669,7 @@ class TestSample:
         state /= np.linalg.norm(state)
         ops = [qml.StatePrep(state, wires=range(n_qubits))]
         tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
+        tape_exact = qml.tape.QuantumScript(ops, [qml.probs(wires=wires)])
 
         def reshape_samples(samples):
             return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
@@ -685,13 +680,10 @@ class TestSample:
             reshape_samples(samples), wire_order=wires
         )
 
-        dev = qml.device("default.qubit", wires=n_qubits, shots=shots)
-        samples = dev.execute(tape)
-        ref = qml.measurements.ProbabilityMP(wires=wires).process_samples(
-            reshape_samples(samples), wire_order=wires
-        )
+        dev_ref = qml.device("default.qubit", wires=n_qubits)
+        probs_ref = dev_ref.execute(tape_exact)
 
-        assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
+        assert np.allclose(probs, probs_ref, atol=2.0e-2, rtol=1.0e-4)
 
 
 class TestWiresInVar:
@@ -740,8 +732,7 @@ class TestWiresInVar:
         assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
-@flaky(max_runs=5)
-@pytest.mark.parametrize("shots", [None, 10000, [10000, 11111]])
+@pytest.mark.parametrize("shots", [None, 100000, [100000, 111111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
     "obs",

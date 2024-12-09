@@ -50,7 +50,7 @@ def test_create_device_with_unsupported_dtype():
 )
 def test_create_device_with_unsupported_kokkos_args():
     with pytest.raises(TypeError, match="Argument kokkos_args must be of type .* but it is of .*."):
-        dev = qml.device(device_name, wires=1, kokkos_args=np.complex256)
+        dev = qml.device(device_name, wires=1, kokkos_args=np.complex128)
 
 
 @pytest.mark.skipif(
@@ -141,6 +141,21 @@ def test_supported_linux_platform_kokkos():
 
 
 @pytest.mark.skipif(
+    (device_name != "lightning.gpu" or sys.platform != "linux"),
+    reason="This test is for LGPU under Linux only.",
+)
+def test_supported_linux_platform_gpu():
+    """Test supported Linux platform for LGPU."""
+
+    dev = qml.device(device_name, wires=1)
+
+    dev_name, shared_lib_name = dev.get_c_interface()
+
+    assert dev_name == "LightningGPUSimulator"
+    assert "liblightning_gpu_catalyst.so" in shared_lib_name
+
+
+@pytest.mark.skipif(
     (device_name != "lightning.kokkos" or sys.platform != "darwin"),
     reason="This test is for Kokkos under MacOS only.",
 )
@@ -153,3 +168,49 @@ def test_supported_macos_platform_kokkos():
 
     assert dev_name == "LightningKokkosSimulator"
     assert "liblightning_kokkos_catalyst.dylib" in shared_lib_name
+
+
+@pytest.mark.skipif(
+    (device_name != "lightning.qubit" or sys.platform != "win32"),
+    reason="This test is for LQ under Windows only.",
+)
+def test_unsupported_windows_platform_qubit():
+    """Test unsupported Windows platform for LQ."""
+
+    dev = qml.device(device_name, wires=0)
+
+    with pytest.raises(
+        RuntimeError,
+        match="'LightningSimulator' shared library not available for 'win32' platform",
+    ):
+        dev.get_c_interface()
+
+
+@pytest.mark.skipif(
+    (device_name != "lightning.qubit" or sys.platform != "linux"),
+    reason="This test is for LQ under Linux only.",
+)
+def test_supported_linux_platform_qubit():
+    """Test supported Linux platform for LQ."""
+
+    dev = qml.device(device_name, wires=0)
+
+    dev_name, shared_lib_name = dev.get_c_interface()
+
+    assert dev_name == "LightningSimulator"
+    assert "liblightning_qubit_catalyst.so" in shared_lib_name
+
+
+@pytest.mark.skipif(
+    (device_name != "lightning.qubit" or sys.platform != "darwin"),
+    reason="This test is for LQ under MacOS only.",
+)
+def test_supported_macos_platform_qubit():
+    """Test supported MacOS platform for LQ."""
+
+    dev = qml.device(device_name, wires=0)
+
+    dev_name, shared_lib_name = dev.get_c_interface()
+
+    assert dev_name == "LightningSimulator"
+    assert "liblightning_qubit_catalyst.dylib" in shared_lib_name
