@@ -188,7 +188,6 @@ jobs:
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
-            -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
             -DENABLE_COVERAGE=ON
           cmake --build ./Build --verbose
           cd ./Build
