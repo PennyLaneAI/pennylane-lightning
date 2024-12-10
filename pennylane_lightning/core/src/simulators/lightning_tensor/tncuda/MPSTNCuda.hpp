@@ -211,7 +211,8 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
             /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* cutensornetNetworkOperator_t */ mpos_noswap_.back()->getMPOOperator(),
+            /* cutensornetNetworkOperator_t */
+            mpos_noswap_.back()->getMPOOperator(),
             /* const int32_t immutable */ 1,
             /* const int32_t adjoint */ 0,
             /* const int32_t unitary */ 1,
