@@ -282,7 +282,6 @@ class LightningTensor(Device):
 
     # pylint: disable=too-many-instance-attributes
 
-    # So far we just consider the options for MPS simulator
     _device_options = {
         "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
         "tn": ("backend"),
