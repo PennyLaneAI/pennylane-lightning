@@ -182,7 +182,7 @@ jobs:
       - name: Build and run unit tests
         run: |
           cd main
-          cmake . -BBuild -G Ninja \
+          cmake . -BBuild -G "Unix Makefiles" \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
