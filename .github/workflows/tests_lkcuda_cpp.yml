@@ -190,7 +190,7 @@ jobs:
             -DCMAKE_CXX_COMPILER="$(which g++-$GCC_VERSION)" \
             -DKokkos_ENABLE_CUDA=ON \
             -DENABLE_COVERAGE=ON
-          cmake --build ./Build --verbose -j1
+          cmake --build ./Build --verbose
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
           for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}/report_$file.xml; done;
