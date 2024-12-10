@@ -215,7 +215,7 @@ class LightningTensor(Device):
     small circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
     recommended.
 
-    Currently, only the Matrix Product State (MPS) method as implemented in the ``cutensornet`` backend is supported.
+    Currently, both Matrix Product State (MPS) and Exact Tensor Network method as implemented in the ``cutensornet`` backend are supported.
 
     Args:
         wires (int): The number of wires to initialize the device with.
@@ -234,10 +234,31 @@ class LightningTensor(Device):
             competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
             layers with a single or few gates because the arithmetic intensity is lower.
         cutoff (float): The threshold used to truncate the singular values of the MPS tensors. The default is 0.
-        cutoff_mode (str): Singular value truncation mode. The options are ``"rel"`` and ``"abs"``. The default is ``"abs"``.
+        cutoff_mode (str): Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. The default is ``"abs"``.
         backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
 
-    **Example**
+    **Example for the MPS method**
+
+    .. code-block:: python
+
+        import pennylane as qml
+
+        num_qubits = 100
+
+        dev = qml.device("lightning.tensor", wires=num_qubits)
+
+        @qml.qnode(dev)
+        def circuit(num_qubits):
+            for qubit in range(0, num_qubits - 1):
+                qml.CZ(wires=[qubit, qubit + 1])
+                qml.X(wires=[qubit])
+                qml.Z(wires=[qubit + 1])
+            return qml.expval(qml.Z(0))
+
+    >>> print(circuit(num_qubits))
+    -1.0
+
+    **Example for the Exact Tensor Network method**
 
     .. code-block:: python
 
@@ -264,7 +285,7 @@ class LightningTensor(Device):
     # So far we just consider the options for MPS simulator
     _device_options = {
         "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
-        "tn": ("backend", "cutoff", "cutoff_mode"),
+        "tn": ("backend"),
     }
 
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
@@ -312,29 +333,27 @@ class LightningTensor(Device):
         self._method = method
         self._c_dtype = c_dtype
 
-        self._max_bond_dim = kwargs.get("max_bond_dim", 128)
-        self._cutoff = kwargs.get("cutoff", 0)
-        self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
         self._backend = kwargs.get("backend", "cutensornet")
 
         for arg in kwargs:
-            if self._method == "mps" and arg not in self._device_options["mps"]:
-                raise TypeError(
-                    f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
-                )
-            if self._method == "tn" and arg not in self._device_options["tn"]:
+            if arg not in self._device_options[self._method]:
                 raise TypeError(
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
 
         if not accepted_backends(self._backend):
             raise ValueError(f"Unsupported backend: {self._backend}")
+        if self._method == "mps":
+            self._max_bond_dim = kwargs.get("max_bond_dim", 128)
+            self._cutoff = kwargs.get("cutoff", 0)
+            self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
 
-        if self._cutoff_mode not in ["rel", "abs"]:
-            raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
-
-        if not isinstance(self._max_bond_dim, int) or self._max_bond_dim < 1:
-            raise ValueError("The maximum bond dimension must be an integer greater than 0.")
+            if not isinstance(self._max_bond_dim, int) or self._max_bond_dim < 1:
+                raise ValueError("The maximum bond dimension must be an integer greater than 0.")
+            if not isinstance(self._cutoff, (int, float)) or self._cutoff < 0:
+                raise ValueError("The cutoff must be a non-negative number.")
+            if self._cutoff_mode not in ["rel", "abs"]:
+                raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
 
     @property
     def name(self):
@@ -363,13 +382,18 @@ class LightningTensor(Device):
 
     def _tensornet(self):
         """Return the tensornet object."""
+        if self.method == "mps":
+            return LightningTensorNet(
+                self._num_wires,
+                self._method,
+                self._c_dtype,
+                device_name=self.name,
+                max_bond_dim=self._max_bond_dim,
+                cutoff=self._cutoff,
+                cutoff_mode=self._cutoff_mode,
+            )
         return LightningTensorNet(
-            self._num_wires,
-            self._method,
-            self._c_dtype,
-            self._max_bond_dim,
-            self._cutoff,
-            self._cutoff_mode,
+            self._num_wires, self._method, self._c_dtype, device_name=self.name
         )
 
     dtype = c_dtype

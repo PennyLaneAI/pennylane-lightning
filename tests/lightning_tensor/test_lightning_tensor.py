@@ -90,8 +90,12 @@ class TestTensorNet:
 
     def test_invalid_cutoff_mode(self, method):
         """Test that an error is raised if an invalid cutoff mode is provided."""
-        with pytest.raises(ValueError):
-            LightningTensor(wires=2, cutoff_mode="invalid_mode", **method)
+        if method["method"] == "mps":
+            with pytest.raises(ValueError):
+                LightningTensor(wires=2, cutoff_mode="invalid_mode", **method)
+        if method["method"] == "tn":
+            with pytest.raises(TypeError):
+                LightningTensor(wires=2, cutoff_mode="invalid_mode", **method)
 
     def test_support_derivatives(self, method):
         """Test that the device does not support derivatives yet."""
