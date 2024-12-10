@@ -215,7 +215,7 @@ class LightningTensor(Device):
     small circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
     recommended.
 
-    Currently, both Matrix Product State (MPS) and Exact Tensor Network method as implemented in the ``cutensornet`` backend are supported.
+    Currently, the Matrix Product State (MPS) and the Exact Tensor Network method are supported as implemented in the ``cutensornet`` backend.
 
     Args:
         wires (int): The number of wires to initialize the device with.

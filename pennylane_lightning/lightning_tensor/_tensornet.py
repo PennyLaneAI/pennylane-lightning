@@ -463,8 +463,7 @@ class LightningTensorNet:
 
     def appendFinalState(self):
         """
-        Append the final state to the tensor network. This is an function to be called
-        by once apply_operations is called. This function only applies to the MPS method and is an empty call for the Exact Tensor Network method.
+        Append the final state to the tensor network. This function should be called once when apply_operations is called. It only applies to the MPS method and is an empty call for the Exact Tensor Network method.
         """
         if self.method == "mps":
             self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)
