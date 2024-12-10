@@ -183,7 +183,7 @@ jobs:
         run: |
           cd main
           cmake . -BBuild -G "Unix Makefiles" \
-            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
