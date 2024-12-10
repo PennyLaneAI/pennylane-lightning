@@ -45,7 +45,7 @@ and greater. This device supports both exact and finite shots measurements. Curr
 
 The ``lightning.tensor`` device is designed for expectation value calculations. Measurements of :func:`~pennylane.probs` or :func:`~pennylane.state` return dense vectors of dimension :math:`2^{\text{n_qubits}}`, so they should only be used for small systems.
 
-.. note:: Currently only single-wire `~pennylane.Hermitian` observables are supported. You can use :func:`~pennylane.pauli_decompose` on smaller matrices to obtain a compatible Pauli decomposition in the meantime.
+.. note:: Currently only single-wire ~pennylane.Hermitian observables are supported. You can use :func:`~pennylane.pauli_decompose` on smaller matrices to obtain a compatible Pauli decomposition in the meantime.
 
 The ``lightning.tensor`` device allows users to get quantum circuit gradients using the ``parameter-shift`` method. This can be enabled at the PennyLane ``QNode`` level with:
 
