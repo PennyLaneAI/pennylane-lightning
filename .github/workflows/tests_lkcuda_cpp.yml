@@ -188,7 +188,8 @@ jobs:
             -DENABLE_PYTHON=OFF \
             -DPL_BACKEND=${{ matrix.pl_backend }} \
             -DKokkos_ENABLE_CUDA=ON \
-            -DENABLE_COVERAGE=ON
+            -DENABLE_COVERAGE=ON \
+            -DENABLE_WARNINGS=OFF
           cmake --build ./Build --verbose -j4
           cd ./Build
           mkdir -p ./tests/results_${{ github.job }}_${{ matrix.pl_backend }}
