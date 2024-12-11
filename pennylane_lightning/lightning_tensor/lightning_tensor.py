@@ -297,7 +297,7 @@ class LightningTensor(Device):
     observables = _observables
     # The names of the supported observables.
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-branches
     def __init__(
         self,
         *,
