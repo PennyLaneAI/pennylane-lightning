@@ -65,7 +65,7 @@ Note that as ``lightning.tensor`` cannot be cleaned up like other state-vector d
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of :func:`~pennylane.StatePrep`, which is *not supported* by the *Exact Tensor Network* method. 
+The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of :class:`~pennylane.StatePrep`, which is *not supported* by the *Exact Tensor Network* method. 
 
 **Supported operations:**
 
@@ -136,7 +136,7 @@ The ``lightning.tensor`` supports all gate operations supported by PennyLane, wi
 
 The ``lightning.tensor`` supports all observables supported by the Lightning state-vector simulators, besides :class:`~pennylane.SparseHamiltonian`, :class:`~pennylane.Projector` and limited support to :class:`~pennylane.Sum`, :class:`~pennylane.Prod` since ``lightning.tensor`` only supports 1-wire :class:`~pennylane.Hermitian` observables.
 
-Users can not create a :class:`~pennylane.Sum` or :class:`~pennylane.Prod` observable from :class:`~pennylane.Sum` observables.
+Users can not create a :func:`~pennylane.sum` or :func:`~pennylane.prod` observable from :func:`~pennylane.sum` observables.
 
 
 
