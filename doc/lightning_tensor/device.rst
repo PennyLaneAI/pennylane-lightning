@@ -136,7 +136,7 @@ The ``lightning.tensor`` supports all gate operations supported by PennyLane, wi
 
 The ``lightning.tensor`` supports all observables supported by the Lightning state-vector simulators, besides :class:`~pennylane.SparseHamiltonian`, :class:`~pennylane.Projector` and limited support to :class:`~pennylane.ops.op_math.Sum`, :class:`~pennylane.ops.op_math.Prod` since ``lightning.tensor`` only supports 1-wire :class:`~pennylane.Hermitian` observables.
 
-Users can not create a :class:`~pennylane.ops.op_math.Sum` or :class:`pennylane.ops.op_math.Prod` observable from :func:`~pennylane.ops.op_math.Sum` observables.
+Users can not create a :class:`~pennylane.ops.op_math.Sum` observable or a :class:`~pennylane.ops.op_math.Prod` observable from :class:`~pennylane.ops.op_math.Sum` observables.
 
 
 
