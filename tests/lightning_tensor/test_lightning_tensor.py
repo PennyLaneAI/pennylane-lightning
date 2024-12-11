@@ -19,6 +19,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name  # tested device
+from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 if device_name != "lightning.tensor":
@@ -93,9 +94,23 @@ class TestTensorNet:
         if method["method"] == "mps":
             with pytest.raises(ValueError):
                 LightningTensor(wires=2, cutoff_mode="invalid_mode", **method)
+            with pytest.raises(ValueError):
+                LightningTensor(wires=2, cutoff_mode="abs", cutoff=-1e-1, **method)
         if method["method"] == "tn":
             with pytest.raises(TypeError):
                 LightningTensor(wires=2, cutoff_mode="invalid_mode", **method)
+
+    def test_unsupported_operations(self, method):
+        """Test that an error is raised if an unsupported operation is applied."""
+        if method["method"] == "mps":
+            pytest.skip("Skipping test for MPS method.")
+        dev = LightningTensor(wires=2, **method)
+
+        tape = QuantumScript([qml.StatePrep(np.array([1, 0, 0, 0]), wires=[0, 1])])
+        with pytest.raises(
+            qml.DeviceError, match="Exact Tensor Network does not support StatePrep"
+        ):
+            dev.execute(tape)
 
     def test_support_derivatives(self, method):
         """Test that the device does not support derivatives yet."""

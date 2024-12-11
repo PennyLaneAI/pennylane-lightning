@@ -294,7 +294,7 @@ class LightningTensorNet:
             device_wires (Wires): wires that get initialized in the state
         """
         if self.method == "tn":
-            raise DeviceError("Exact Tensor Network does not support qml.StatePrep")
+            raise DeviceError("Exact Tensor Network does not support StatePrep")
 
         if self.method == "mps":
             state = self._preprocess_state_vector(state, device_wires)
