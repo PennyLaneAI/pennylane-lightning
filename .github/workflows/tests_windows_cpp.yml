@@ -124,18 +124,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja scipy-openblas32
+          python -m pip install cmake build ninja scipy
 
       - name: Setup OpenCppCoverage and add to PATH
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-
-      - name: Add path to scipy-openblas32 to environment variable
-        run: |
-          $scipy_openblas32_path = python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"
-          echo "SCIPY_OPENBLAS32=${scipy_openblas32_path}" | Out-File -Append -FilePath $env:GITHUB_ENV
-          Get-Content $env:GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |
@@ -208,7 +202,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          python -m pip install cmake build ninja scipy-openblas32
+          python -m pip install cmake build ninja
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -227,12 +221,6 @@ jobs:
         run: |
           choco install OpenCppCoverage -y
           echo "C:\Program Files\OpenCppCoverage" >> $env:GITHUB_PATH
-      
-      - name: Add path to scipy-openblas32 to environment variable
-        run: |
-          $scipy_openblas32_path = python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())"
-          echo "SCIPY_OPENBLAS32=${scipy_openblas32_path}" | Out-File -Append -FilePath $env:GITHUB_ENV
-          Get-Content $env:GITHUB_ENV
 
       - name: Build and run unit tests for code coverage
         run: |

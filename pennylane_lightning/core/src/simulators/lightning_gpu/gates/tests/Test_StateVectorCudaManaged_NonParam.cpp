@@ -1196,7 +1196,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
             const auto matrix = getHadamard<std::complex, PrecisionT>();
 
             sv0.applyControlledMatrix(
-                matrix.data(), std::vector<std::size_t>{control},
+                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("Hadamard", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
@@ -1213,7 +1213,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
             const auto matrix = getS<std::complex, PrecisionT>();
 
             sv0.applyControlledMatrix(
-                matrix.data(), std::vector<std::size_t>{control},
+                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("S", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
@@ -1232,7 +1232,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                 getT<std::complex, PrecisionT>();
 
             sv0.applyControlledMatrix(
-                matrix.data(), std::vector<std::size_t>{control},
+                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("T", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
@@ -1281,7 +1281,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             const std::vector<std::complex<PrecisionT>> matrix =
                 getSWAP<std::complex, PrecisionT>();
-            sv0.applyControlledMatrix(matrix.data(),
+            sv0.applyControlledMatrix(matrix.data(), matrix.size(),
                                       std::vector<std::size_t>{control},
                                       std::vector<bool>{true},
                                       std::vector<std::size_t>{wire0, wire1});
@@ -1311,9 +1311,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::controlled Toffoli",
 
     const std::vector<std::complex<PrecisionT>> matrix =
         getToffoli<std::complex, PrecisionT>();
-    sv0.applyControlledMatrix(matrix.data(), std::vector<std::size_t>{control},
-                              std::vector<bool>{true},
-                              std::vector<std::size_t>{3, 4, 5});
+    sv0.applyControlledMatrix(
+        matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+        std::vector<bool>{true}, std::vector<std::size_t>{3, 4, 5});
     sv1.applyOperation("PauliX", std::vector<std::size_t>{control, 3, 4},
                        std::vector<bool>{true, true, true},
                        std::vector<std::size_t>{5});
@@ -1348,9 +1348,10 @@ TEMPLATE_TEST_CASE(
     SECTION("direct base matrix offload") {
         const std::vector<std::complex<PrecisionT>> matrix = {
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
-        sv0.applyControlledMatrix(
-            matrix.data(), std::vector<std::size_t>{control, 3, 4},
-            std::vector<bool>{true, true, true}, std::vector<std::size_t>{5});
+        sv0.applyControlledMatrix(matrix.data(), matrix.size(),
+                                  std::vector<std::size_t>{control, 3, 4},
+                                  std::vector<bool>{true, true, true},
+                                  std::vector<std::size_t>{5});
         sv1.applyOperation("Paulix", std::vector<std::size_t>{control, 3, 4},
                            std::vector<bool>{true, true, true},
                            std::vector<std::size_t>{5}, false, {0.0}, matrix);

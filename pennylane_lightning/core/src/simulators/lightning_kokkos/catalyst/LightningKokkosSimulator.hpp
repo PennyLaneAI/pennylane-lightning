@@ -109,6 +109,9 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     explicit LightningKokkosSimulator(
         const std::string &kwargs = "{}") noexcept {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
+        device_shots = args.contains("shots")
+                           ? static_cast<std::size_t>(std::stoll(args["shots"]))
+                           : 0;
     }
     ~LightningKokkosSimulator() noexcept = default;
 
