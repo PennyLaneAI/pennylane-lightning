@@ -64,7 +64,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 _backends = frozenset({"cutensornet"})
 # The set of supported backends.
 
-_methods = frozenset({"mps"})
+_methods = frozenset({"mps", "tn"})
 # The set of supported methods.
 
 _operations = frozenset(
@@ -165,7 +165,7 @@ _observables = frozenset(
 
 
 def stopping_condition(op: Operator) -> bool:
-    """A function that determines whether or not an operation is supported by the ``mps`` method of ``lightning.tensor``."""
+    """A function that determines whether or not an operation is supported by ``lightning.tensor``."""
     if isinstance(op, qml.ControlledQubitUnitary):
         return True
 
@@ -223,7 +223,7 @@ class LightningTensor(Device):
         shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        method (str): Supported method. Currently, only ``mps`` is supported.
+        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) and ``"tn"`` (Tensor Network).
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
     Keyword Args:
@@ -262,7 +262,11 @@ class LightningTensor(Device):
     # pylint: disable=too-many-instance-attributes
 
     # So far we just consider the options for MPS simulator
-    _device_options = ("backend", "max_bond_dim", "cutoff", "cutoff_mode")
+    _device_options = {
+        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
+        "tn": ("backend", "cutoff", "cutoff_mode"),
+    }
+
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
     _new_API = True
 
@@ -287,7 +291,9 @@ class LightningTensor(Device):
             raise ImportError("Pre-compiled binaries for lightning.tensor are not available. ")
 
         if not accepted_methods(method):
-            raise ValueError(f"Unsupported method: {method}")
+            raise ValueError(
+                f"Unsupported method: {method}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network)."
+            )
 
         if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {c_dtype}")
@@ -312,7 +318,11 @@ class LightningTensor(Device):
         self._backend = kwargs.get("backend", "cutensornet")
 
         for arg in kwargs:
-            if arg not in self._device_options:
+            if self._method == "mps" and arg not in self._device_options["mps"]:
+                raise TypeError(
+                    f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
+                )
+            if self._method == "tn" and arg not in self._device_options["tn"]:
                 raise TypeError(
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
@@ -375,7 +385,7 @@ class LightningTensor(Device):
         updated_values = {}
 
         new_device_options = dict(config.device_options)
-        for option in self._device_options:
+        for option in self._device_options[self.method]:
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
