@@ -84,6 +84,9 @@
 
 ### Documentation
 
+* Add the exact tensor network to the Lightning-Tensor docs.
+  [(#1021)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1021)
+
 * Update Lightning-Tensor installation docs and usage suggestions.
   [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
