@@ -89,6 +89,9 @@
 
 ### Bug fixes
 
+* Fix Lightning Kokkos `[[maybe_unused]]` and `exp2` errors with hipcc.
+  [(#1018)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1018)
+
 * Pin `jax[cpu]==0.4.28` for compatibility with PennyLane and Catalyst.
   [(#1019)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1019)
 
