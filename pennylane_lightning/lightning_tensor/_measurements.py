@@ -97,12 +97,12 @@ class LightningTensorMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
         state_array = self._tensornet.state
         wires = Wires(range(self._tensornet.num_wires))
         result = measurementprocess.process_state(state_array, wires)
         self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
         return result
 
     # pylint: disable=protected-access
@@ -139,13 +139,13 @@ class LightningTensorMeasurements:
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         if diagonalizing_gates:
             self._tensornet.apply_operations(diagonalizing_gates)
-            self._tensornet.appendMPSFinalState()
+            self._tensornet.appendFinalState()
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         if diagonalizing_gates:
             self._tensornet.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
-            self._tensornet.appendMPSFinalState()
+            self._tensornet.appendFinalState()
         return results
 
     def var(self, measurementprocess: MeasurementProcess):
@@ -316,7 +316,7 @@ class LightningTensorMeasurements:
             ]
 
         self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
 
     def _measure_with_samples_diagonalizing_gates(
         self,
