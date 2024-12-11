@@ -1,0 +1,27 @@
+name: Testing::x86_64::LKokkos::CUDA::C++
+on:
+  pull_request:
+    
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_gpu_runner:
+    runs-on:
+      - self-hosted
+      - ubuntu-22.04
+      - gpu
+    
+    steps:
+      - name: Validate GPU version and installed compiler
+        run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/12.4
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
