@@ -16,16 +16,6 @@ on:
       - reopened
       - synchronize
       - ready_for_review
-    paths-ignore:
-      - .github/**
-      - '!.github/workflows/tests_lkcuda_python.yml'
-      - pennylane_lightning/core/_version.py
-      - pennylane_lightning/core/src/simulators/lightning_gpu/**
-      - pennylane_lightning/core/src/simulators/lightning_qubit/**
-      - pennylane_lightning/core/src/simulators/lightning_tensor/**
-      - pennylane_lightning/lightning_gpu/**
-      - pennylane_lightning/lightning_qubit/**
-      - pennylane_lightning/lightning_tensor/**
   push:
     branches:
       - master
@@ -43,7 +33,7 @@ concurrency:
 
 jobs:
   builddeps:
-    if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
+    if: ${{ github.event_name == 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
     runs-on:
       - self-hosted
       - ubuntu-22.04
