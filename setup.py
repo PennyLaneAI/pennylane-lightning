@@ -16,6 +16,7 @@ import platform
 import subprocess
 import shutil
 import sys
+import site
 
 from importlib import import_module
 from importlib.util import find_spec
@@ -141,7 +142,11 @@ class CMakeBuild(build_ext):
             configure_args += ["-DENABLE_OPENMP=OFF", "-DENABLE_BLAS=OFF"]
         elif platform.system() not in ["Linux"]:
             raise RuntimeError(f"Unsupported '{platform.system()}' platform")
-
+        
+        # Find custatevec etc.
+        #if backend == "lightning_gpu":
+        #    configure_args += [f"-DCUQUANTUM_SDK={site.getsitepackages()[0]}/cuquantum"]
+            
         if not Path(self.build_temp).exists():
             os.makedirs(self.build_temp)
 

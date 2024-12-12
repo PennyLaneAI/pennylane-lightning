@@ -94,21 +94,6 @@ if __name__ == "__main__":
         "setuptools>=42",
         "tomli",
     ]
-    if backend == "lightning_gpu":
-        requires.append("custatevec-cu12")
-        requires.append("nvidia-nvjitlink-cu12")
-        requires.append("nvidia-cusparse-cu12")
-        requires.append("nvidia-cusolver-cu12") 
-        requires.append("nvidia-cublas-cu12")
-        requires.append("nvidia-cuda-runtime-cu12")
-    if backend == "lightning_tensor":
-        requires.append("cutensornet-cu12"),
-        requires.append("cutensor-cu12>=2.0.2")
-        requires.append("nvidia-nvjitlink-cu12") 
-        requires.append("nvidia-cusparse-cu12")
-        requires.append("nvidia-cusolver-cu12") 
-        requires.append("nvidia-cublas-cu12") 
-        requires.append("nvidia-cuda-runtime-cu12")
 
     pyproject["build-system"]["requires"] = requires
 
@@ -132,6 +117,21 @@ if __name__ == "__main__":
         "pennylane>=0.37",
         "scipy-openblas32>=0.3.26",
     ]
+
+    if backend == "lightning_gpu":
+        dependencies += ["custatevec-cu12"]
+
+    if backend == "lightning_tensor":
+        dependencies += ["cutensornet-cu12", "cutensor-cu12>=2.0.2"]
+
+    if backend in ["lightning_gpu", "lightning_tensor"]:
+        dependencies += [
+            "nvidia-nvjitlink-cu12",
+            "nvidia-cusparse-cu12",
+            "nvidia-cusolver-cu12",
+            "nvidia-cublas-cu12",
+            "nvidia-cuda-runtime-cu12",
+        ]
 
     if backend != "lightning_qubit":
         dependencies += ["pennylane_lightning==" + version]
