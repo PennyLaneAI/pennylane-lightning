@@ -43,15 +43,17 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-22.04]
-        exec_model: ["CUDA"]
         kokkos_version: ["4.5.00"]
+        exec_model: ["CUDA"]
+        cuda_version_maj: ["12"]
+        cuda_version_min: ["4"]
 
     steps:
       - name: Validate GPU version and installed compiler
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/12.2
+          module load cuda/${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
