@@ -29,17 +29,20 @@
 
 ### Improvements
 
-* Add Exact Tensor Network cpp binding.
-[(#1014)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1014/)
+* Update the python layer UI of Lightning Tensor.
+  [(#1022)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1022/)
 
 * Catalyst device interfaces support dynamic shots, and no longer parses the device init op's attribute dictionary for a static shots literal.
   [(#1017)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1017)
 
+* Update the logic for enabling `grad_on_execution` during device execution.
+  [(#1016)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1016)
+
 * Reduce flaky test and increase test shots count.
   [(#1015)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1015)
 
-* Update the logic for enabling `grad_on_execution` during device execution.
-  [(#1016)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1016)
+* Add Exact Tensor Network cpp binding.
+  [(#1014)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1014/)
 
 * Reverse Lightning Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
