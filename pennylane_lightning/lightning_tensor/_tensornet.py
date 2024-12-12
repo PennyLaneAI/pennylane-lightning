@@ -135,22 +135,26 @@ class LightningTensorNet:
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
         method(string): tensor network method. Supported methods are "mps" (Matrix Product State) and
             "tn" (Exact Tensor Network). Options: ["mps", "tn"].
-        max_bond_dim(int): maximum bond dimension for the tensor network
-        cutoff(float): threshold for singular value truncation. Default is 0.
-        cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
         device_name(string): tensor network device name. Options: ["lightning.tensor"]
+    Keyword Args:
+        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
+            The accuracy of the wavefunction representation comes with a memory tradeoff which can be
+            tuned with `max_bond_dim`. The larger the internal bond dimension, the more entanglement can
+            be described but the larger the memory requirements. Note that GPUs are ill-suited (i.e. less
+            competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
+            layers with a single or few gates because the arithmetic intensity is lower.
+        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. The default is 0.
+        cutoff_mode (str): Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. The default is ``"abs"``.
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
-        num_wires,
+        num_wires=None,
         method: str = "mps",
         c_dtype=np.complex128,
-        max_bond_dim: int = 128,
-        cutoff: float = 0,
-        cutoff_mode: str = "abs",
         device_name="lightning.tensor",
+        **kwargs,
     ):
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
@@ -161,15 +165,14 @@ class LightningTensorNet:
         self._num_wires = num_wires
         self._method = method
         self._c_dtype = c_dtype
-        self._max_bond_dim = max_bond_dim
-        self._cutoff = cutoff
-        self._cutoff_mode = cutoff_mode
         self._device_name = device_name
 
         self._wires = Wires(range(num_wires))
 
-        self._tensornet = None
         if self._method == "mps":
+            self._max_bond_dim = kwargs.get("max_bond_dim", 128)
+            self._cutoff = kwargs.get("cutoff", 0)
+            self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
             self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
         elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
@@ -322,7 +325,7 @@ class LightningTensorNet:
         self._tensornet.setBasisState(state)
 
     def _apply_MPO(self, gate_matrix, wires):
-        """Apply a matrix product operator to the quantum state.
+        """Apply a matrix product operator to the quantum state (MPS method only).
 
         Args:
             gate_matrix (array[complex/float]): matrix representation of the MPO
@@ -454,14 +457,13 @@ class LightningTensorNet:
             circuit (QuantumScript): The single circuit to simulate
         """
         self.apply_operations(circuit.operations)
-        self.appendMPSFinalState()
+        self.appendFinalState()
 
         return self
 
-    def appendMPSFinalState(self):
+    def appendFinalState(self):
         """
-        Append the final state to the tensor network for the MPS backend. This is an function to be called
-        by once apply_operations is called.
+        Append the final state to the tensor network. This function should be called once when apply_operations is called. It only applies to the MPS method and is an empty call for the Exact Tensor Network method.
         """
         if self.method == "mps":
             self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)
