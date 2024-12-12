@@ -96,8 +96,19 @@ if __name__ == "__main__":
     ]
     if backend == "lightning_gpu":
         requires.append("custatevec-cu12")
+        requires.append("nvidia-nvjitlink-cu12")
+        requires.append("nvidia-cusparse-cu12")
+        requires.append("nvidia-cusolver-cu12") 
+        requires.append("nvidia-cublas-cu12")
+        requires.append("nvidia-cuda-runtime-cu12")
     if backend == "lightning_tensor":
-        requires.append("cutensornet-cu12")
+        requires.append("cutensornet-cu12"),
+        requires.append("cutensor-cu12>=2.0.2")
+        requires.append("nvidia-nvjitlink-cu12") 
+        requires.append("nvidia-cusparse-cu12")
+        requires.append("nvidia-cusolver-cu12") 
+        requires.append("nvidia-cublas-cu12") 
+        requires.append("nvidia-cuda-runtime-cu12")
 
     pyproject["build-system"]["requires"] = requires
 
