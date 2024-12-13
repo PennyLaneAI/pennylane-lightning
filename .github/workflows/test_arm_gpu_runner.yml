@@ -1,0 +1,30 @@
+name: Test ARM GPU runner
+on:
+  pull_request:
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on:
+      - self-hosted
+      - linux
+      - ubuntu-22.04
+      - arm-gpu
+      - x64  # Not sure why this label is added by GitHub. Will need to fix. This is an ARM instance
+    
+    steps: 
+      - run: echo "Hello, world!"
+      - run: |
+          echo /proc/cpuinfo
+      - run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/12.4
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
