@@ -117,6 +117,9 @@ if __name__ == "__main__":
         "pennylane>=0.37",
         "scipy-openblas32>=0.3.26",
     ]
+    
+    if backend != "lightning_qubit":
+        dependencies += ["pennylane_lightning==" + version]
 
     if backend == "lightning_gpu":
         dependencies += ["custatevec-cu12"]
@@ -133,8 +136,6 @@ if __name__ == "__main__":
             "nvidia-cuda-runtime-cu12",
         ]
 
-    if backend != "lightning_qubit":
-        dependencies += ["pennylane_lightning==" + version]
 
     # Package requirements.
     pyproject["project"]["dependencies"] = dependencies
