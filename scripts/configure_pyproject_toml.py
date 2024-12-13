@@ -100,7 +100,7 @@ if __name__ == "__main__":
         requires.append("cutensornet-cu12")
         requires.append("cutensor-cu12>=2.0.2")
         
-    if backend in ("lightning_gpu", "lightning_tensor")
+    if backend in ("lightning_gpu", "lightning_tensor"):
         requires.append("nvidia-nvjitlink-cu12")
         requires.append("nvidia-cusparse-cu12")
         requires.append("nvidia-cusolver-cu12")
@@ -129,7 +129,6 @@ if __name__ == "__main__":
         "pennylane>=0.37",
         "scipy-openblas32>=0.3.26",
     ]
-    
     if backend != "lightning_qubit":
         dependencies += ["pennylane_lightning==" + version]
 
