@@ -16,6 +16,11 @@ on:
       - reopened
       - synchronize
       - ready_for_review
+    paths:
+      - pennylane_lightning/core/src/**
+      - '!pennylane_lightning/core/src/simulators/lightning_gpu/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_qubit/**'
+      - '!pennylane_lightning/core/src/simulators/lightning_tensor/**'
   push:
     branches:
       - master
@@ -43,17 +48,15 @@ jobs:
       max-parallel: 1
       matrix:
         os: [ubuntu-22.04]
-        kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
-        cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        kokkos_version: ["4.5.00"]
 
     steps:
       - name: Validate GPU version and installed compiler
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          module load cuda/12.2
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
@@ -107,10 +110,8 @@ jobs:
       matrix:
         os: [ubuntu-22.04]
         pl_backend: ["lightning_kokkos"]
-        kokkos_version: ["4.5.00"]
         exec_model: ["CUDA"]
-        cuda_version_maj: ["12"]
-        cuda_version_min: ["4"]
+        kokkos_version: ["4.5.00"]
 
     name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on:
@@ -123,7 +124,7 @@ jobs:
         run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
-          module load cuda/${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          module load cuda/12.2
           echo "${PATH}" >> $GITHUB_PATH
           echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
           nvcc --version
@@ -189,7 +190,7 @@ jobs:
         run: |
           cd main
           cmake . -BBuild -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DBUILD_TESTS=ON \
             -DENABLE_PYTHON=OFF \
             -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
