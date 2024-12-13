@@ -99,7 +99,7 @@ if __name__ == "__main__":
     if backend == "lightning_tensor":
         requires.append("cutensornet-cu12")
         requires.append("cutensor-cu12>=2.0.2")
-        
+
     if backend in ("lightning_gpu", "lightning_tensor"):
         requires.append("nvidia-nvjitlink-cu12")
         requires.append("nvidia-cusparse-cu12")
