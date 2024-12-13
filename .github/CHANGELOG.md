@@ -93,7 +93,7 @@
 ### Bug fixes
 
 * Update CUDA version to 12.4 for GPU tests on CI.
-  [(#1023)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1018)
+  [(#1023)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1023)
 
 * Fix Lightning Kokkos `[[maybe_unused]]` and `exp2` errors with hipcc.
   [(#1018)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1018)
