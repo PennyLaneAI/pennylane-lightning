@@ -17,7 +17,12 @@ Class implementation for tensornet manipulation.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import TensorNetC64, TensorNetC128
+    from pennylane_lightning.lightning_tensor_ops import (
+        exactTensorNetC64,
+        exactTensorNetC128,
+        mpsTensorNetC64,
+        mpsTensorNetC128,
+    )
 except ImportError:
     pass
 
@@ -180,41 +185,51 @@ class LightningTensorNet:
         num_wires(int): the number of wires to initialize the device with
         c_dtype: Datatypes for tensor network representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        method(string): tensor network method. Options: ["mps"]. Default is "mps".
-        max_bond_dim(int): maximum bond dimension for the tensor network
-        cutoff(float): threshold for singular value truncation. Default is 0.
-        cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
+        method(string): tensor network method. Supported methods are "mps" (Matrix Product State) and
+            "tn" (Exact Tensor Network). Options: ["mps", "tn"].
         device_name(string): tensor network device name. Options: ["lightning.tensor"]
+    Keyword Args:
+        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
+            The accuracy of the wavefunction representation comes with a memory tradeoff which can be
+            tuned with `max_bond_dim`. The larger the internal bond dimension, the more entanglement can
+            be described but the larger the memory requirements. Note that GPUs are ill-suited (i.e. less
+            competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
+            layers with a single or few gates because the arithmetic intensity is lower.
+        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. The default is 0.
+        cutoff_mode (str): Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. The default is ``"abs"``.
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
-        num_wires,
+        num_wires=None,
         method: str = "mps",
         c_dtype=np.complex128,
-        max_bond_dim: int = 128,
-        cutoff: float = 0,
-        cutoff_mode: str = "abs",
         device_name="lightning.tensor",
+        **kwargs,
     ):
-        self._num_wires = num_wires
-        self._max_bond_dim = max_bond_dim
-        self._method = method
-        self._cutoff = cutoff
-        self._cutoff_mode = cutoff_mode
-        self._c_dtype = c_dtype
-
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         if num_wires < 2:
             raise ValueError("Number of wires must be greater than 1.")
 
+        self._num_wires = num_wires
+        self._method = method
+        self._c_dtype = c_dtype
+        self._device_name = device_name
+
         self._wires = Wires(range(num_wires))
 
-        self._device_name = device_name
-        self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+        if self._method == "mps":
+            self._max_bond_dim = kwargs.get("max_bond_dim", 128)
+            self._cutoff = kwargs.get("cutoff", 0)
+            self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
+            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+        elif self._method == "tn":
+            self._tensornet = self._tensornet_dtype()(self._num_wires)
+        else:
+            raise DeviceError(f"The method {self._method} is not supported.")
 
     @property
     def dtype(self):
@@ -230,6 +245,11 @@ class LightningTensorNet:
     def num_wires(self):
         """Number of wires addressed on this device"""
         return self._num_wires
+
+    @property
+    def method(self):
+        """Returns the method (mps or tn) for evaluating the tensor network."""
+        return self._method
 
     @property
     def tensornet(self):
@@ -248,7 +268,10 @@ class LightningTensorNet:
 
         Returns: the tensor network class
         """
-        return TensorNetC128 if self.dtype == np.complex128 else TensorNetC64
+        if self.method == "tn":  # Using "tn" method
+            return exactTensorNetC128 if self.dtype == np.complex128 else exactTensorNetC64
+        # Using "mps" method
+        return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
 
     def reset_state(self):
         """Reset the device's initial quantum state"""
@@ -322,12 +345,14 @@ class LightningTensorNet:
                 or broadcasted state of shape ``(batch_size, 2**len(device_wires))``
             device_wires (Wires): wires that get initialized in the state
         """
+        if self.method == "tn":
+            raise DeviceError("Exact Tensor Network does not support StatePrep")
 
-        state = self._preprocess_state_vector(state, device_wires)
-        mps_site_shape = [2]
-        M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
-
-        self._tensornet.updateMPSSitesData(M)
+        if self.method == "mps":
+            state = self._preprocess_state_vector(state, device_wires)
+            mps_site_shape = [2]
+            M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
+            self._tensornet.updateMPSSitesData(M)
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
@@ -368,7 +393,7 @@ class LightningTensorNet:
         self._tensornet.updateMPSSitesData(mps)
 
     def _apply_MPO(self, gate_matrix, wires):
-        """Apply a matrix product operator to the quantum state.
+        """Apply a matrix product operator to the quantum state (MPS method only).
 
         Args:
             gate_matrix (array[complex/float]): matrix representation of the MPO
@@ -465,15 +490,25 @@ class LightningTensorNet:
                     # To support older versions of PL
                     gate_ops_matrix = operation.matrix()
 
-                self._apply_MPO(gate_ops_matrix, wires)
+                if self.method == "mps":
+                    self._apply_MPO(gate_ops_matrix, wires)
+                if self.method == "tn":
+                    method = getattr(tensornet, "applyMatrix")
+                    method(gate_ops_matrix, wires, False)
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
-                operations = operations[1:]
+                if self.method == "tn":
+                    raise DeviceError("Exact Tensor Network does not support StatePrep")
+
+                if self.method == "mps":
+                    self._apply_state_vector(
+                        operations[0].parameters[0].copy(), operations[0].wires
+                    )
+                    operations = operations[1:]
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
@@ -493,13 +528,13 @@ class LightningTensorNet:
             circuit (QuantumScript): The single circuit to simulate
         """
         self.apply_operations(circuit.operations)
-        self.appendMPSFinalState()
+        self.appendFinalState()
+
         return self
 
-    def appendMPSFinalState(self):
+    def appendFinalState(self):
         """
-        Append the final state to the tensor network for the MPS backend. This is an function to be called
-        by once apply_operations is called.
+        Append the final state to the tensor network. This function should be called once when apply_operations is called. It only applies to the MPS method and is an empty call for the Exact Tensor Network method.
         """
-        if self._method == "mps":
+        if self.method == "mps":
             self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)

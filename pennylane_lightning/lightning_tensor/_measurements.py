@@ -17,7 +17,12 @@ Class implementation for tensornet measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_tensor_ops import (
+        exactMeasurementsC64,
+        exactMeasurementsC128,
+        mpsMeasurementsC64,
+        mpsMeasurementsC128,
+    )
 except ImportError:
     pass
 
@@ -62,6 +67,7 @@ class LightningTensorMeasurements:
     ) -> None:
         self._tensornet = tensor_network
         self._dtype = tensor_network.dtype
+        self._method = tensor_network._method
         self._measurement_lightning = self._measurement_dtype()(tensor_network.tensornet)
 
     @property
@@ -74,7 +80,10 @@ class LightningTensorMeasurements:
 
         Returns: the Measurements class
         """
-        return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+        if self._method == "tn":  # Using "tn" method
+            return exactMeasurementsC64 if self.dtype == np.complex64 else exactMeasurementsC128
+        # Using "mps" method
+        return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
@@ -88,12 +97,12 @@ class LightningTensorMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
         state_array = self._tensornet.state
         wires = Wires(range(self._tensornet.num_wires))
         result = measurementprocess.process_state(state_array, wires)
         self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
         return result
 
     # pylint: disable=protected-access
@@ -114,7 +123,7 @@ class LightningTensorMeasurements:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
+            self._tensornet.device_name, self.dtype == np.complex64, tensor_backend=self._method
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
 
@@ -130,13 +139,13 @@ class LightningTensorMeasurements:
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         if diagonalizing_gates:
             self._tensornet.apply_operations(diagonalizing_gates)
-            self._tensornet.appendMPSFinalState()
+            self._tensornet.appendFinalState()
         results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
         if diagonalizing_gates:
             self._tensornet.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
-            self._tensornet.appendMPSFinalState()
+            self._tensornet.appendFinalState()
         return results
 
     def var(self, measurementprocess: MeasurementProcess):
@@ -160,7 +169,7 @@ class LightningTensorMeasurements:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
+            self._tensornet.device_name, self.dtype == np.complex64, tensor_backend=self._method
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.var(ob_serialized)
 
@@ -307,7 +316,7 @@ class LightningTensorMeasurements:
             ]
 
         self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
 
     def _measure_with_samples_diagonalizing_gates(
         self,
