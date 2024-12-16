@@ -10,41 +10,41 @@ jobs:
     name: Lightning Compatibility test (tests_gpu_python) - latest/latest
     uses: ./.github/workflows/tests_gpu_python.yml
     with:
-      lightning-version: lk_cuda_12-4
+      lightning-version: latest
       pennylane-version: latest
     secrets: inherit
   tests_lgpumpi_python:
     name: Lightning Compatibility test (tests_lgpumpi_python) - latest/latest
     uses: ./.github/workflows/tests_lgpumpi_python.yml
     with:
-      lightning-version: lk_cuda_12-4
+      lightning-version: latest
       pennylane-version: latest
     secrets: inherit
   tests_lqcpu_python:
     name: Lightning Compatibility test (tests_lqcpu_python) - latest/latest
     uses: ./.github/workflows/tests_lqcpu_python.yml
     with:
-      lightning-version: lk_cuda_12-4
+      lightning-version: latest
       pennylane-version: latest
     secrets: inherit
   tests_lkcpu_python:
     name: Lightning Compatibility test (tests_lkcpu_python) - latest/latest
     uses: ./.github/workflows/tests_lkcpu_python.yml
     with:
-      lightning-version: lk_cuda_12-4
+      lightning-version: latest
       pennylane-version: latest
     secrets: inherit
   tests_lkcuda_python:
     name: Lightning Compatibility test (tests_lkcuda_python) - latest/latest
     uses: ./.github/workflows/tests_lkcuda_python.yml
     with:
-      lightning-version: lk_cuda_12-4
+      lightning-version: latest
       pennylane-version: latest
     secrets: inherit
   tests_without_binary:
     name: Lightning Compatibility test (tests_without_binary) - latest/latest
     uses: ./.github/workflows/tests_without_binary.yml
     with:
-      lightning-version: lk_cuda_12-4
+      lightning-version: latest
       pennylane-version: latest
     secrets: inherit
