@@ -29,6 +29,9 @@
 
 ### Improvements
 
+* Added CUDA dependencies to Lightning GPU and Lightning Tensor Python wheels.
+  [(#1025)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1025/)
+
 * Update the python layer UI of Lightning Tensor.
   [(#1022)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1022/)
 
