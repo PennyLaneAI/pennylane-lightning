@@ -137,6 +137,19 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         .def(
             "updateMPSSitesData",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
+                // Extract the incoming MPS shape
+                std::vector<std::vector<std::size_t>> MPS_shape_source;
+                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
+                    py::buffer_info numpyArrayInfo = tensors[idx].request();
+                    auto MPS_site_source_shape = numpyArrayInfo.shape;
+                    std::vector<std::size_t> MPS_site_source(
+                        MPS_site_source_shape.begin(),
+                        MPS_site_source_shape.end());
+                    MPS_shape_source.push_back(std::move(MPS_site_source));
+                }
+
+                tensor_network.MPSShapeCheck(MPS_shape_source);
+
                 for (std::size_t idx = 0; idx < tensors.size(); idx++) {
                     py::buffer_info numpyArrayInfo = tensors[idx].request();
                     auto *data_ptr = static_cast<std::complex<PrecisionT> *>(

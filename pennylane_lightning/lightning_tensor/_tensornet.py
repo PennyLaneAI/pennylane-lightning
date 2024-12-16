@@ -26,8 +26,6 @@ try:
 except ImportError:
     pass
 
-from typing import List
-
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, DeviceError, MPSPrep, StatePrep
@@ -123,56 +121,6 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
             mpos.append(np.transpose(MPO, axes=(2, 3, 1, 0)))
 
     return mpos, sorted_wires
-
-
-def set_bond_dims(num_qubits: int, max_bond_dim: int) -> List:
-    """Compute the MPS bond dimensions on base to the number of wires."""
-
-    log_max_bond_dim = np.log2(max_bond_dim)
-    limit_dimension = 2 ** int(log_max_bond_dim)
-    localBondDims = [limit_dimension] * (num_qubits - 1)
-
-    for i in range(len(localBondDims)):
-        bondDim = min(i + 1, num_qubits - i - 1)
-        if bondDim <= log_max_bond_dim:
-            localBondDims[i] = 2**bondDim
-
-    return localBondDims
-
-
-def set_sites_extents(num_qubits: int, max_bond_dim: int) -> List:
-    """Compute the MPS sites dimensions on base to the number of wires."""
-
-    bondDims = set_bond_dims(num_qubits, max_bond_dim)
-    qubitDims = [2 for _ in range(num_qubits)]
-
-    localSiteExtents = []
-    for i in range(num_qubits):
-        if i == 0:
-            localSite = [qubitDims[i], bondDims[i]]
-        elif i == num_qubits - 1:
-            localSite = [bondDims[i - 1], qubitDims[i]]
-        else:
-            localSite = [bondDims[i - 1], qubitDims[i], bondDims[i]]
-
-        localSiteExtents.append(localSite)
-
-    return localSiteExtents
-
-
-def MPSPrep_check(MPS: List, num_wires: int, max_bond_dim: int) -> None:
-    """Check if the provided MPS has the correct dimension for C++ backend."""
-
-    MPS_shape_dest = set_sites_extents(num_wires, max_bond_dim)
-
-    MPS_shape_source = [list(site.shape) for site in MPS]
-
-    same_shape = [s == d for s, d in zip(MPS_shape_source, MPS_shape_dest)]
-
-    if not all(same_shape):
-        raise ValueError(
-            f"The custom MPS does not have the correct layout for lightning.tensor.\n MPS source  shape {MPS_shape_source}\n MPS destination shape {MPS_shape_dest}"
-        )
 
 
 # pylint: disable=too-many-instance-attributes
@@ -376,22 +324,6 @@ class LightningTensorNet:
 
         self._tensornet.setBasisState(state)
 
-    def _load_mps_state(self, state: List):
-        """Prepares an initial state using MPS.
-
-        Args:
-            state (List): A list of different numpy array with the MPS sites values. The structure should be as follows:
-                [ (2, 2), (2, 2, 4), (4, 2, 8), ...,
-                  (8, 2, 4), (4, 2, 2), (2, 2) ]
-            wires (List): wires that the provided computational state should be
-                initialized on.
-
-            Note: The correct MPS sites format and layout are user responsible.
-        """
-        mps = state.mps
-        MPSPrep_check(mps, self._num_wires, self._max_bond_dim)
-        self._tensornet.updateMPSSitesData(mps)
-
     def _apply_MPO(self, gate_matrix, wires):
         """Apply a matrix product operator to the quantum state (MPS method only).
 
@@ -513,7 +445,8 @@ class LightningTensorNet:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], MPSPrep):
-                self._load_mps_state(operations[0])
+                mps = operations[0].mps
+                self._tensornet.updateMPSSitesData(mps)
                 operations = operations[1:]
 
         self._apply_lightning(operations)

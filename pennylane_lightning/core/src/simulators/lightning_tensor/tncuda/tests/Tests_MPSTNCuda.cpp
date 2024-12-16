@@ -120,6 +120,54 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     }
 }
 
+TEMPLATE_TEST_CASE("MPSTNCuda::MPSShapeCheck()", "[MPSTNCuda]", float, double) {
+    const std::size_t num_qubits = 4;
+    const std::size_t maxBondDim = 8;
+    SECTION("Correct incoming MPS shape") {
+
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::vector<std::size_t>> correct_shape{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        REQUIRE_NOTHROW(mps_state.MPSShapeCheck(correct_shape));
+    }
+
+    SECTION("Incorrect incoming MPS shape, bond dimension") {
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::vector<std::size_t>> incorrect_shape{
+            {2, 2}, {2, 2, 2}, {2, 2, 2}, {2, 2}};
+
+        REQUIRE_THROWS_WITH(
+            mps_state.MPSShapeCheck(incorrect_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
+    }
+    SECTION("Incorrect incoming MPS shape, physical dimension") {
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::vector<std::size_t>> incorrect_shape{
+            {4, 2}, {2, 4, 4}, {4, 4, 2}, {2, 4}};
+
+        REQUIRE_THROWS_WITH(
+            mps_state.MPSShapeCheck(incorrect_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
+    }
+    SECTION("Incorrect incoming MPS shape, number sites") {
+        MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
+
+        std::vector<std::vector<std::size_t>> incorrect_shape{
+            {2, 2}, {2, 2, 2}, {2, 2}};
+
+        REQUIRE_THROWS_WITH(
+            mps_state.MPSShapeCheck(incorrect_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
                    float, double) {
     std::vector<std::vector<std::size_t>> basisStates = {

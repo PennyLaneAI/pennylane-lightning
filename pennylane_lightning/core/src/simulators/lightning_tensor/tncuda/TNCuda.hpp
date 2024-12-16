@@ -253,6 +253,31 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Check if the provided MPS has the correct dimension for C++
+     * backend.
+     *
+     * @param MPS_shape_source Dimension list of incoming MPS.
+     */
+
+    void MPSShapeCheck(
+        const std::vector<std::vector<std::size_t>> &MPS_shape_source) {
+        bool sameShape = sitesExtents_ == MPS_shape_source;
+        if (!sameShape) {
+            auto MPS_shape_source_str =
+                Pennylane::Util::vector2DToString<std::size_t>(
+                    MPS_shape_source);
+            auto MPS_shape_dest_str =
+                Pennylane::Util::vector2DToString<std::size_t>(sitesExtents_);
+
+            PL_ABORT_IF_NOT(
+                sitesExtents_ == MPS_shape_source,
+                "The incoming MPS does not have the correct layout for "
+                "lightning.tensor.\n    Incoming MPS: " +
+                    MPS_shape_source_str +
+                    "\n Destination MPS: " + MPS_shape_dest_str)
+        }
+    }
+    /**
      * @brief Append multiple gates to the compute graph.
      * NOTE: This function does not update the quantum state but only appends
      * gate tensor operator to the graph.
