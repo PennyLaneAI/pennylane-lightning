@@ -126,13 +126,12 @@ if __name__ == "__main__":
         dependencies += ["custatevec-cu12"]
 
     if backend == "lightning_tensor":
-        dependencies += ["cutensornet-cu12", "cutensor-cu12>=2.0.2"]
+        dependencies += ["cutensornet-cu12", "cutensor-cu12>=2.0.2", "nvidia-cusolver-cu12"]
 
     if backend in ("lightning_gpu", "lightning_tensor"):
         dependencies += [
             "nvidia-nvjitlink-cu12",
             "nvidia-cusparse-cu12",
-            "nvidia-cusolver-cu12",
             "nvidia-cublas-cu12",
             "nvidia-cuda-runtime-cu12",
         ]
