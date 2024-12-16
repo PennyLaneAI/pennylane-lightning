@@ -124,7 +124,6 @@ TEMPLATE_TEST_CASE("MPSTNCuda::MPSShapeCheck()", "[MPSTNCuda]", float, double) {
     const std::size_t num_qubits = 4;
     const std::size_t maxBondDim = 8;
     SECTION("Correct incoming MPS shape") {
-
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
         std::vector<std::vector<std::size_t>> correct_shape{
