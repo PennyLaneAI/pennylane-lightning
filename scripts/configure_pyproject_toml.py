@@ -122,8 +122,11 @@ if __name__ == "__main__":
         "scipy-openblas32>=0.3.26",
     ]
 
+    if backend == "lightning_gpu":
+        dependencies += ["custatevec-cu12"]
+
     if backend == "lightning_tensor":
-        dependencies += ["cutensor-cu12>=2.0.2"]
+        dependencies += ["cutensornet-cu12", "cutensor-cu12>=2.0.2"]
 
     if backend in ("lightning_gpu", "lightning_tensor"):
         dependencies += [
