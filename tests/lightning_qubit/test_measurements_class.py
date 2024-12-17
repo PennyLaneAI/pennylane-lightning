@@ -545,7 +545,12 @@ class TestMeasurements:
 
         # a few tests may fail in single precision, and hence we increase the tolerance
         if shots is None:
-            assert np.allclose(result, expected, max(tol, 1.0e-4), 1e-6 if statevector.dtype == np.complex64 else 1e-8 )
+            assert np.allclose(
+                result,
+                expected,
+                max(tol, 1.0e-4),
+                1e-6 if statevector.dtype == np.complex64 else 1e-8,
+            )
         else:
             # TODO Set better atol and rtol
             dtol = max(tol, 1.0e-2)
@@ -790,8 +795,10 @@ class TestControlledOps:
                 statevector = lightning_sv(n_qubits)
                 if device_name == "lightning.tensor":
                     if statevector.method == "tn":
-                        pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
-                        
+                        pytest.skip(
+                            "StatePrep not supported in lightning.tensor with the tn method."
+                        )
+
                 statevector = get_final_state(statevector, tape)
                 m = LightningMeasurements(statevector)
                 result = measure_final_state(m, tape)
@@ -852,7 +859,6 @@ class TestControlledOps:
         if device_name == "lightning.tensor":
             if statevector.method == "tn":
                 pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
-                        
 
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
@@ -900,8 +906,10 @@ class TestControlledOps:
                 statevector = lightning_sv(n_qubits)
                 if device_name == "lightning.tensor":
                     if statevector.method == "tn":
-                        pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
-                        
+                        pytest.skip(
+                            "StatePrep not supported in lightning.tensor with the tn method."
+                        )
+
                 statevector = get_final_state(statevector, tape)
                 m = LightningMeasurements(statevector)
                 result = measure_final_state(m, tape)
