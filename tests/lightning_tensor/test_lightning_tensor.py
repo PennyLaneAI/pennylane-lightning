@@ -27,7 +27,7 @@ if device_name != "lightning.tensor":
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
     from pennylane_lightning.lightning_tensor_ops import LightningException
-    
+
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("Device doesn't have C++ support yet.", allow_module_level=True)
@@ -159,7 +159,8 @@ class TestTensorNet:
             match="The computation of vector-Jacobian product has yet to be implemented for the lightning.tensor device.",
         ):
             dev.execute_and_compute_vjp(circuits=None, cotangents=None)
-            
+
+
 @pytest.mark.parametrize(
     "wires,max_bond,MPS_shape",
     [
@@ -176,19 +177,20 @@ class TestTensorNet:
 def test_MPSPrep_check_pass(wires, max_bond, MPS_shape):
     """Test the correct behavior regarding MPS shape of MPSPrep."""
     MPS = [np.zeros(i) for i in MPS_shape]
-    dev = LightningTensor(wires=wires, method='mps', max_bond_dim=max_bond)
+    dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond)
     dev_wires = dev.wires.tolist()
-    
+
     def circuit(MPS):
         qml.MPSPrep(mps=MPS, wires=dev_wires)
         return qml.state()
-    
+
     qnode_ltensor = qml.QNode(circuit, dev)
-    
-    try:  
+
+    try:
         _ = qnode_ltensor(MPS)
-    except Exception as excinfo:  
+    except Exception as excinfo:
         pytest.fail(f"Unexpected exception raised: {excinfo}")
+
 
 @pytest.mark.parametrize(
     "wires,max_bond,MPS_shape",
@@ -197,7 +199,7 @@ def test_MPSPrep_check_pass(wires, max_bond, MPS_shape):
             8,
             8,
             [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
-        ),  # Incorrect max bond dim. 
+        ),  # Incorrect max bond dim.
         (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(14)] + [[2, 2]]),  # Incorrect amount of sites
     ],
 )
@@ -205,19 +207,21 @@ def test_MPSPrep_check_fail(wires, max_bond, MPS_shape):
     """Test the exceptions regarding MPS shape of MPSPrep."""
 
     MPS = [np.zeros(i) for i in MPS_shape]
-    dev = LightningTensor(wires=wires, method='mps', max_bond_dim=max_bond)
+    dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond)
     dev_wires = dev.wires.tolist()
-    
+
     def circuit(MPS):
         qml.MPSPrep(mps=MPS, wires=dev_wires)
         return qml.state()
-    
+
     qnode_ltensor = qml.QNode(circuit, dev)
 
     with pytest.raises(
-        LightningException, match="The incoming MPS does not have the correct layout for lightning.tensor"
+        LightningException,
+        match="The incoming MPS does not have the correct layout for lightning.tensor",
     ):
         _ = qnode_ltensor(MPS)
+
 
 @pytest.mark.parametrize(
     "wires, MPS_shape",
@@ -229,16 +233,14 @@ def test_MPSPrep_with_tn(wires, MPS_shape):
     """Test the exception of MPSPrep with the method exact tensor network (tn)."""
 
     MPS = [np.zeros(i) for i in MPS_shape]
-    dev = LightningTensor(wires=wires, method='tn')
+    dev = LightningTensor(wires=wires, method="tn")
     dev_wires = dev.wires.tolist()
-    
+
     def circuit(MPS):
         qml.MPSPrep(mps=MPS, wires=dev_wires)
         return qml.state()
-    
+
     qnode_ltensor = qml.QNode(circuit, dev)
 
-    with pytest.raises(
-        qml.DeviceError, match="Exact Tensor Network does not support MPSPrep"
-    ):
+    with pytest.raises(qml.DeviceError, match="Exact Tensor Network does not support MPSPrep"):
         _ = qnode_ltensor(MPS)
