@@ -445,9 +445,13 @@ class LightningTensorNet:
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], MPSPrep):
-                mps = operations[0].mps
-                self._tensornet.updateMPSSitesData(mps)
-                operations = operations[1:]
+                if self.method == "tn":
+                    raise DeviceError("Exact Tensor Network does not support MPSPrep")
+
+                if self.method == "mps":
+                    mps = operations[0].mps
+                    self._tensornet.updateMPSSitesData(mps)
+                    operations = operations[1:]
 
         self._apply_lightning(operations)
 
