@@ -100,7 +100,11 @@ message("Python site-packages directory: ${Python_SITELIB}")
 if(DEFINED PY_INSTALL)
     # Note the following setting is only for pyenv and not for conda
     # TODO: Add support for conda
-    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+    if(APPLE)
+        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "@loader_path/../scipy_openblas32/lib")
+    else()
+        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+    endif()
 else()
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
     if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
