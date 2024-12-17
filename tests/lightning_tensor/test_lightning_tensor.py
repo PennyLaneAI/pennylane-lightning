@@ -18,7 +18,7 @@ Unit tests for the LightningTensor class.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import LightningDevice, device_name  # tested device
+from conftest import LightningDevice, LightningException, device_name
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -26,7 +26,6 @@ if device_name != "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
-    from pennylane_lightning.lightning_tensor_ops import LightningException
 
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
