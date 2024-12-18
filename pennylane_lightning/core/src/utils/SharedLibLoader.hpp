@@ -56,7 +56,7 @@ class SharedLibLoader final {
   public:
     SharedLibLoader();
     explicit SharedLibLoader(const std::string &filename) {
-        handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY);
+        handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY | RTLD_NODELETE);
         PL_ABORT_IF(!handle_, PL_DLERROR());
     }
 
