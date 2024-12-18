@@ -32,6 +32,9 @@
 * Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS`API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
   [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028/)
 
+* Add unit test for measurement with shots for Lightning Tensor with `tn` method.
+  [(#1027)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1027)
+
 * Update the python layer UI of Lightning Tensor.
   [(#1022)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1022/)
 
