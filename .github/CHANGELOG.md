@@ -29,6 +29,9 @@
 
 ### Improvements
 
+* Add unit test for measurement with shots for Lightning Tensor with `tn` method.
+  [(#1027)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1027)
+
 * Update the python layer UI of Lightning Tensor.
   [(#1022)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1022/)
 
