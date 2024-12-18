@@ -84,3 +84,52 @@ TEST_CASE("swap_op_wires_queue", "[TNCuda_utils]") {
         REQUIRE(swap_wires_queue[1] == swap_wires_queue_ref1);
     }
 }
+
+TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
+    SECTION("Correct incoming MPS shape") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        std::vector<std::vector<std::size_t>> MPS_shape_source{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        REQUIRE_NOTHROW(MPSShapeCheck(MPS_shape_dest, MPS_shape_source));
+    }
+
+    SECTION("Incorrect incoming MPS shape, bond dimension") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        std::vector<std::vector<std::size_t>> incorrect_MPS_shape{
+            {2, 2}, {2, 2, 2}, {2, 2, 2}, {2, 2}};
+
+        REQUIRE_THROWS_WITH(
+            MPSShapeCheck(MPS_shape_dest, incorrect_MPS_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
+    }
+    SECTION("Incorrect incoming MPS shape, physical dimension") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        std::vector<std::vector<std::size_t>> incorrect_shape{
+            {4, 2}, {2, 4, 4}, {4, 4, 2}, {2, 4}};
+
+        REQUIRE_THROWS_WITH(
+            MPSShapeCheck(MPS_shape_dest, incorrect_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
+    }
+    SECTION("Incorrect incoming MPS shape, number sites") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        std::vector<std::vector<std::size_t>> incorrect_shape{
+            {2, 2}, {2, 2, 2}, {2, 2}};
+
+        REQUIRE_THROWS_WITH(
+            MPSShapeCheck(MPS_shape_dest, incorrect_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
+    }
+}

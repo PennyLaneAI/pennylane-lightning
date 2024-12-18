@@ -194,4 +194,29 @@ inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires)
     return {local_wires, swap_wires_queue};
 }
 
+/**
+ * @brief Check if the provided MPS has the correct dimension for C++
+ * backend.
+ *
+ * @param MPS_shape_dest Dimension list of destination MPS.
+ * @param MPS_shape_source Dimension list of incoming MPS.
+ */
+inline void MPSShapeCheck(
+    const std::vector<std::vector<std::size_t>> &MPS_shape_dest,
+    const std::vector<std::vector<std::size_t>> &MPS_shape_source) {
+
+    if (!(MPS_shape_dest == MPS_shape_source)) {
+        auto MPS_shape_source_str =
+            Pennylane::Util::vector2DToString<std::size_t>(MPS_shape_source);
+        auto MPS_shape_dest_str =
+            Pennylane::Util::vector2DToString<std::size_t>(MPS_shape_dest);
+
+        PL_ABORT_IF_NOT(MPS_shape_dest == MPS_shape_source,
+                        "The incoming MPS does not have the correct layout for "
+                        "lightning.tensor.\n    Incoming MPS: " +
+                            MPS_shape_source_str +
+                            "\n Destination MPS: " + MPS_shape_dest_str)
+    }
+}
+
 } // namespace Pennylane::LightningTensor::TNCuda::Util

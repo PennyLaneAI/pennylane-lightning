@@ -253,31 +253,6 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Check if the provided MPS has the correct dimension for C++
-     * backend.
-     *
-     * @param MPS_shape_source Dimension list of incoming MPS.
-     */
-
-    void MPSShapeCheck(
-        const std::vector<std::vector<std::size_t>> &MPS_shape_source) {
-        bool sameShape = sitesExtents_ == MPS_shape_source;
-        if (!sameShape) {
-            auto MPS_shape_source_str =
-                Pennylane::Util::vector2DToString<std::size_t>(
-                    MPS_shape_source);
-            auto MPS_shape_dest_str =
-                Pennylane::Util::vector2DToString<std::size_t>(sitesExtents_);
-
-            PL_ABORT_IF_NOT(
-                sitesExtents_ == MPS_shape_source,
-                "The incoming MPS does not have the correct layout for "
-                "lightning.tensor.\n    Incoming MPS: " +
-                    MPS_shape_source_str +
-                    "\n Destination MPS: " + MPS_shape_dest_str)
-        }
-    }
-    /**
      * @brief Append multiple gates to the compute graph.
      * NOTE: This function does not update the quantum state but only appends
      * gate tensor operator to the graph.
@@ -522,6 +497,16 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                           const int32_t numHyperSamples = 1) const {
         get_accessor_(tensor_data, tensor_data_size, projected_modes,
                       projected_mode_values, numHyperSamples);
+    }
+
+    /**
+     * @brief Get a const vector reference of sitesExtents_.
+     *
+     * @return const std::vector<std::vector<std::size_t>>
+     */
+    [[nodiscard]] auto getSitesExtents()
+        -> const std::vector<std::vector<std::size_t>> & {
+        return sitesExtents_;
     }
 
   protected:
