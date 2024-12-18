@@ -29,6 +29,9 @@
 
 ### Improvements
 
+* Add unit test for measurement with shots for Lightning Tensor with `tn` method.
+  [(#1027)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1027)
+
 * Update the python layer UI of Lightning Tensor.
   [(#1022)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1022/)
 
@@ -91,6 +94,9 @@
   [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 ### Bug fixes
+
+* Set rpath with `@loader_path` instead of `$ORIGIN` for macOS.
+  [(#1029)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1029)
 
 * Update CUDA version to 12.4 for GPU tests on CI.
   [(#1023)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1023)
