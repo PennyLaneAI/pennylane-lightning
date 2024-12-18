@@ -95,6 +95,9 @@
 
 ### Bug fixes
 
+* Add `RTLD_NODELETE` flag to `dlopen` in order to mitigate the segfault issues for arm64-macos Catalyst support.
+  [(#1030)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1030)
+
 * Set rpath with `@loader_path` instead of `$ORIGIN` for macOS.
   [(#1029)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1029)
 
