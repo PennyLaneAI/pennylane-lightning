@@ -201,9 +201,9 @@ inline auto create_swap_wire_pair_queue(const std::vector<std::size_t> &wires)
  * @param MPS_shape_dest Dimension list of destination MPS.
  * @param MPS_shape_source Dimension list of incoming MPS.
  */
-inline void MPSShapeCheck(
-    const std::vector<std::vector<std::size_t>> &MPS_shape_dest,
-    const std::vector<std::vector<std::size_t>> &MPS_shape_source) {
+inline void
+MPSShapeCheck(const std::vector<std::vector<std::size_t>> &MPS_shape_dest,
+              const std::vector<std::vector<std::size_t>> &MPS_shape_source) {
 
     if (!(MPS_shape_dest == MPS_shape_source)) {
         auto MPS_shape_source_str =
