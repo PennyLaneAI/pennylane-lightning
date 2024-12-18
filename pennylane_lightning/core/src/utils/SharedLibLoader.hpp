@@ -56,7 +56,9 @@ class SharedLibLoader final {
   public:
     SharedLibLoader();
     explicit SharedLibLoader(const std::string &filename) {
-        //TODO: RTLD_NODELETE flag could be problematic if the shared library is not static stored in memory and runtime unloaded is needed. Come back to this later.
+        // NOTE: RTLD_NODELETE flag is a temporary solution. It could be
+        // problematic if the shared library is not static stored in memory and
+        // runtime unloaded is needed. Come back to this later.
         handle_ = PL_DLOPEN(filename.c_str(), RTLD_LAZY | RTLD_NODELETE);
         PL_ABORT_IF(!handle_, PL_DLERROR());
     }
