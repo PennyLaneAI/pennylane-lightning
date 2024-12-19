@@ -17,6 +17,8 @@ jobs:
       - run: echo "Hello, world!"
       - run: |
           cat /proc/cpuinfo
+          lscpu
+          
       - run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
