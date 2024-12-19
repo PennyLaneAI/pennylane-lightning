@@ -16,7 +16,7 @@ jobs:
     steps: 
       - run: echo "Hello, world!"
       - run: |
-          echo /proc/cpuinfo
+          cat /proc/cpuinfo
       - run: |
           source /etc/profile.d/modules.sh
           module use /opt/modules
