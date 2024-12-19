@@ -504,7 +504,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
      *
      * @return const std::vector<std::vector<std::size_t>>
      */
-    [[nodiscard]] auto getSitesExtents()
+    [[nodiscard]] auto getSitesExtents() const
         -> const std::vector<std::vector<std::size_t>> & {
         return sitesExtents_;
     }

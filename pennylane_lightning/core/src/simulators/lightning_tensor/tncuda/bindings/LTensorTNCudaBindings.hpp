@@ -146,7 +146,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                     std::vector<std::size_t> MPS_site_source(
                         MPS_site_source_shape.begin(),
                         MPS_site_source_shape.end());
-                    MPS_shape_source.push_back(std::move(MPS_site_source));
+                    MPS_shape_source.emplace_back(std::move(MPS_site_source));
                 }
 
                 const auto &MPS_shape_dest = tensor_network.getSitesExtents();

@@ -205,7 +205,7 @@ inline void
 MPSShapeCheck(const std::vector<std::vector<std::size_t>> &MPS_shape_dest,
               const std::vector<std::vector<std::size_t>> &MPS_shape_source) {
 
-    if (!(MPS_shape_dest == MPS_shape_source)) {
+    if (MPS_shape_dest != MPS_shape_source) {
         auto MPS_shape_source_str =
             Pennylane::Util::vector2DToString<std::size_t>(MPS_shape_source);
         auto MPS_shape_dest_str =
