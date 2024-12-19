@@ -499,6 +499,16 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                       projected_mode_values, numHyperSamples);
     }
 
+    /**
+     * @brief Get a const vector reference of sitesExtents_.
+     *
+     * @return const std::vector<std::vector<std::size_t>>
+     */
+    [[nodiscard]] auto getSitesExtents() const
+        -> const std::vector<std::vector<std::size_t>> & {
+        return sitesExtents_;
+    }
+
   protected:
     /**
      * @brief Get a vector of pointers to tensor data of each site.

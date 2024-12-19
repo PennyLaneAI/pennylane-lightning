@@ -71,7 +71,7 @@ def test_wrong_device_name():
 
 
 def test_wrong_method_name():
-    """Test an invalid device name"""
+    """Test an invalid method name"""
     with pytest.raises(qml.DeviceError, match="The method "):
         LightningTensorNet(3, max_bond_dim=5, device_name="lightning.tensor", method="spider_web")
 

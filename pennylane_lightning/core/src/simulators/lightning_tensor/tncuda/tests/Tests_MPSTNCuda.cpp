@@ -324,3 +324,63 @@ TEMPLATE_TEST_CASE("MPOTNCuda::getBondDims()", "[MPOTNCuda]", float, double) {
         CHECK(bondDims == expected_bondDims);
     }
 }
+
+TEMPLATE_TEST_CASE("MPSTNCuda::getSitesExtents()", "[MPSTNCuda]", float,
+                   double) {
+    SECTION("Check if sitesExtents retrun is correctly with 3 qubits") {
+        const std::size_t num_qubits = 3;
+        const std::size_t maxBondDim = 128;
+        const DevTag<int> dev_tag{0, 0};
+
+        const std::vector<std::vector<std::size_t>> reference{
+            {{2, 2}, {2, 2, 2}, {2, 2}}};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        const auto &sitesExtents = mps.getSitesExtents();
+
+        CHECK(reference == sitesExtents);
+    }
+
+    SECTION("Check if sitesExtents retrun is correctly with 8 qubits") {
+        const std::size_t num_qubits = 8;
+        const std::size_t maxBondDim = 128;
+        const DevTag<int> dev_tag{0, 0};
+
+        const std::vector<std::vector<std::size_t>> reference{{{2, 2},
+                                                               {2, 2, 4},
+                                                               {4, 2, 8},
+                                                               {8, 2, 16},
+                                                               {16, 2, 8},
+                                                               {8, 2, 4},
+                                                               {4, 2, 2},
+                                                               {2, 2}}};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        const auto &sitesExtents = mps.getSitesExtents();
+
+        CHECK(reference == sitesExtents);
+    }
+    SECTION("Check if sitesExtents retrun is correctly with 8 qubits and "
+            "maxBondDim=8") {
+        const std::size_t num_qubits = 8;
+        const std::size_t maxBondDim = 8;
+        const DevTag<int> dev_tag{0, 0};
+
+        const std::vector<std::vector<std::size_t>> reference{{{2, 2},
+                                                               {2, 2, 4},
+                                                               {4, 2, 8},
+                                                               {8, 2, 8},
+                                                               {8, 2, 8},
+                                                               {8, 2, 4},
+                                                               {4, 2, 2},
+                                                               {2, 2}}};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        const auto &sitesExtents = mps.getSitesExtents();
+
+        CHECK(reference == sitesExtents);
+    }
+}
