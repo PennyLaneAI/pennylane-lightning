@@ -29,6 +29,9 @@
 
 ### Improvements
 
+* Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS`API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
+  [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028/)
+
 * Add unit test for measurement with shots for Lightning Tensor with `tn` method.
   [(#1027)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1027)
 
@@ -94,6 +97,9 @@
   [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 ### Bug fixes
+
+* Add `RTLD_NODELETE` flag to `dlopen` in order to mitigate the segfault issues for arm64-macos Catalyst support.
+  [(#1030)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1030)
 
 * Set rpath with `@loader_path` instead of `$ORIGIN` for macOS.
   [(#1029)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1029)

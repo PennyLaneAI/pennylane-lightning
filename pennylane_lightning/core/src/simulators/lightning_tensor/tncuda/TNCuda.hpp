@@ -539,30 +539,6 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Dummy tensor operator update to allow multiple calls of
-     * appendMPSFinalize. This is a workaround to avoid the issue of the
-     * cutensornet library not allowing multiple calls of appendMPSFinalize.
-     *
-     * This function either appends a new `Identity` gate to the graph when the
-     * gate cache is empty or update the existing gate operator by itself.
-     */
-    void dummy_tensor_update() {
-        if (identiy_gate_ids_.empty()) {
-            applyOperation("Identity", {0}, false);
-        }
-
-        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateUpdateTensorOperator(
-            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
-            /* cutensornetState_t */ BaseType::getQuantumState(),
-            /* int64_t tensorId*/
-            static_cast<int64_t>(identiy_gate_ids_.front()),
-            /* void* */
-            static_cast<void *>(
-                gate_cache_->get_gate_device_ptr(identiy_gate_ids_.front())),
-            /* int32_t unitary*/ 1));
-    }
-
-    /**
      * @brief Save quantumState information to data provided by a user
      *
      * @param extentsPtr Pointer to extents provided by a user
