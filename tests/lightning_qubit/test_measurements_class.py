@@ -545,7 +545,12 @@ class TestMeasurements:
 
         # a few tests may fail in single precision, and hence we increase the tolerance
         if shots is None:
-            assert np.allclose(result, expected, max(tol, 1.0e-4))
+            assert np.allclose(
+                result,
+                expected,
+                max(tol, 1.0e-4),
+                1e-6 if statevector.dtype == np.complex64 else 1e-8,
+            )
         else:
             # TODO Set better atol and rtol
             dtol = max(tol, 1.0e-2)
@@ -788,6 +793,9 @@ class TestControlledOps:
                 tape = qml.tape.QuantumScript(ops, measurements)
 
                 statevector = lightning_sv(n_qubits)
+                if device_name == "lightning.tensor" and statevector.method == "tn":
+                    pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
+
                 statevector = get_final_state(statevector, tape)
                 m = LightningMeasurements(statevector)
                 result = measure_final_state(m, tape)
@@ -845,6 +853,9 @@ class TestControlledOps:
         )
 
         statevector = lightning_sv(n_qubits)
+        if device_name == "lightning.tensor" and statevector.method == "tn":
+            pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
+
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
         result = measure_final_state(m, tape)
@@ -889,6 +900,9 @@ class TestControlledOps:
                     [qml.state()],
                 )
                 statevector = lightning_sv(n_qubits)
+                if device_name == "lightning.tensor" and statevector.method == "tn":
+                    pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
+
                 statevector = get_final_state(statevector, tape)
                 m = LightningMeasurements(statevector)
                 result = measure_final_state(m, tape)
@@ -967,6 +981,9 @@ def test_state_vector_2_qubit_subset(tol, op, par, wires, expected, lightning_sv
     )
 
     statevector = lightning_sv(2)
+    if device_name == "lightning.tensor" and statevector.method == "tn":
+        pytest.skip("StatePrep not supported in lightning.tensor with the tn method.")
+
     statevector = get_final_state(statevector, tape)
 
     m = LightningMeasurements(statevector)
