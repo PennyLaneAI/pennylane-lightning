@@ -11,10 +11,7 @@ jobs:
   test:
     runs-on:
       - self-hosted
-      - linux
-      - ubuntu-22.04
       - arm-gpu
-      - x64  # Not sure why this label is added by GitHub. Will need to fix. This is an ARM instance
     
     steps: 
       - run: echo "Hello, world!"
