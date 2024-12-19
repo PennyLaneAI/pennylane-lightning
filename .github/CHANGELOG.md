@@ -29,6 +29,9 @@
 
 ### Improvements
 
+* Add CUDA dependencies to Lightning GPU and Lightning Tensor Python wheels.
+  [(#1025)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1025/)
+
 * Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS`API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
   [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028/)
 
