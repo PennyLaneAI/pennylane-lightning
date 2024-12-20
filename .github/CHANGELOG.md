@@ -29,6 +29,9 @@
 
 ### Improvements
 
+* Optimize lightning.tensor by adding direct MPS sites data set with `qml.MPSPrep`.
+  [(#983)](https://github.com/PennyLaneAI/pennylane-lightning/pull/983)
+
 * Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS`API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
   [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028/)
 

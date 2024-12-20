@@ -438,7 +438,6 @@ class LightningTensorNet:
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
                     operations = operations[1:]
-                    
                 if self.method == "tn":
                     raise DeviceError("Exact Tensor Network does not support StatePrep")
             elif isinstance(operations[0], BasisState):
