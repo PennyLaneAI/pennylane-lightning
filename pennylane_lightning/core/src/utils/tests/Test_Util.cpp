@@ -233,15 +233,3 @@ TEST_CASE("Util::areVecsDisjoint", "[Util][LinearAlgebra]") {
         REQUIRE(areVecsDisjoint(vec0, vec1) == false);
     }
 }
-
-TEST_CASE("Utils::vector2DToString", "[Utils]") {
-    SECTION("Test for convert 2Dvector to string") {
-        std::vector<std::vector<std::size_t>> vec{
-            {2, 2, 4}, {4, 2, 8}, {8, 2, 8}};
-        std::string ref_str{"[[2, 2, 4], [4, 2, 8], [8, 2, 8]]"};
-
-        std::string vec2str = vector2DToString<std::size_t>(vec);
-
-        REQUIRE(ref_str == vec2str);
-    }
-}

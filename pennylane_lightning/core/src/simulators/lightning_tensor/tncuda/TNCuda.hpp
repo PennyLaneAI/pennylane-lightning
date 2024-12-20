@@ -60,32 +60,6 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     using ComplexT = std::complex<PrecisionT>;
     using BaseType = TNCudaBase<PrecisionT, Derived>;
 
-  protected:
-    // Note both maxBondDim_ and bondDims_ are used for both MPS and Exact
-    // Tensor Network. Per Exact Tensor Network, maxBondDim_ is 1 and bondDims_
-    // is {1}. Per Exact Tensor Network, setting bondDims_ allows call to
-    // appendInitialMPSState_() to append the initial state to the Exact Tensor
-    // Network state.
-    const std::size_t
-        maxBondDim_; // maxBondDim_ default is 1 for Exact Tensor Network
-    const std::vector<std::size_t>
-        bondDims_; // bondDims_ default is {1} for Exact Tensor Network
-
-  private:
-    const std::vector<std::vector<std::size_t>> sitesModes_;
-    const std::vector<std::vector<std::size_t>> sitesExtents_;
-    const std::vector<std::vector<int64_t>> sitesExtents_int64_;
-
-    SharedCublasCaller cublascaller_;
-
-    std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
-    std::set<int64_t> gate_ids_;
-
-    std::vector<std::size_t> identiy_gate_ids_;
-
-    std::vector<TensorCuda<PrecisionT>> tensors_;
-    std::vector<TensorCuda<PrecisionT>> tensors_out_;
-
   public:
     TNCuda() = delete;
 
@@ -510,6 +484,16 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
   protected:
+    // Note both maxBondDim_ and bondDims_ are used for both MPS and Exact
+    // Tensor Network. Per Exact Tensor Network, maxBondDim_ is 1 and bondDims_
+    // is {1}. Per Exact Tensor Network, setting bondDims_ allows call to
+    // appendInitialMPSState_() to append the initial state to the Exact Tensor
+    // Network state.
+    const std::size_t
+        maxBondDim_; // maxBondDim_ default is 1 for Exact Tensor Network
+    const std::vector<std::size_t>
+        bondDims_; // bondDims_ default is {1} for Exact Tensor Network
+
     /**
      * @brief Get a vector of pointers to tensor data of each site.
      *
@@ -588,6 +572,20 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
     }
 
   private:
+    const std::vector<std::vector<std::size_t>> sitesModes_;
+    const std::vector<std::vector<std::size_t>> sitesExtents_;
+    const std::vector<std::vector<int64_t>> sitesExtents_int64_;
+
+    SharedCublasCaller cublascaller_;
+
+    std::shared_ptr<TNCudaGateCache<PrecisionT>> gate_cache_;
+    std::set<int64_t> gate_ids_;
+
+    std::vector<std::size_t> identiy_gate_ids_;
+
+    std::vector<TensorCuda<PrecisionT>> tensors_;
+    std::vector<TensorCuda<PrecisionT>> tensors_out_;
+
     /**
      * @brief Get accessor of a state tensor
      *

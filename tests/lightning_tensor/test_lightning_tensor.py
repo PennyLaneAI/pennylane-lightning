@@ -185,10 +185,7 @@ def test_MPSPrep_check_pass(wires, max_bond, MPS_shape):
 
     qnode_ltensor = qml.QNode(circuit, dev)
 
-    try:
-        _ = qnode_ltensor(MPS)
-    except Exception as excinfo:
-        pytest.fail(f"Unexpected exception raised: {excinfo}")
+    _ = qnode_ltensor(MPS)
 
 
 @pytest.mark.parametrize(

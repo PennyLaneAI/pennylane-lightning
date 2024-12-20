@@ -433,25 +433,25 @@ class LightningTensorNet:
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                if self.method == "tn":
-                    raise DeviceError("Exact Tensor Network does not support StatePrep")
-
                 if self.method == "mps":
                     self._apply_state_vector(
                         operations[0].parameters[0].copy(), operations[0].wires
                     )
                     operations = operations[1:]
+                    
+                if self.method == "tn":
+                    raise DeviceError("Exact Tensor Network does not support StatePrep")
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], MPSPrep):
-                if self.method == "tn":
-                    raise DeviceError("Exact Tensor Network does not support MPSPrep")
-
                 if self.method == "mps":
                     mps = operations[0].mps
                     self._tensornet.updateMPSSitesData(mps)
                     operations = operations[1:]
+
+                if self.method == "tn":
+                    raise DeviceError("Exact Tensor Network does not support MPSPrep")
 
         self._apply_lightning(operations)
 

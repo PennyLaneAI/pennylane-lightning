@@ -593,33 +593,4 @@ bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
     return true;
 }
 
-/**
- * @brief Convert a 2D vector to string.
- * @tparam T Data type.
- * @param vec Vector to convert.
- *
- * @return std::string String with the vector values.
- */
-template <typename T>
-std::string vector2DToString(const std::vector<std::vector<T>> &vec) {
-    std::ostringstream oss;
-    oss << "[";
-
-    for (std::size_t i = 0; i < vec.size(); ++i) {
-        oss << "[";
-        for (std::size_t j = 0; j < vec[i].size(); ++j) {
-            oss << vec[i][j];
-            if (j != vec[i].size() - 1) {
-                oss << ", "; // Add a comma between elements in the inner vector
-            }
-        }
-        oss << "]";
-        if (i != vec.size() - 1) {
-            oss << ", "; // Add a comma between inner vectors
-        }
-    }
-    oss << "]";
-    return oss.str(); // Return the resulting string
-}
-
 } // namespace Pennylane::Util
