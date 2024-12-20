@@ -592,4 +592,5 @@ bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
     }
     return true;
 }
+
 } // namespace Pennylane::Util
