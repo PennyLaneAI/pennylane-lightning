@@ -485,8 +485,8 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
 
   protected:
     // Note both maxBondDim_ and bondDims_ are used for both MPS and Exact
-    // Tensor Network. Per Exact Tensor Network, maxBondDim_ is 1 and bondDims_
-    // is {1}. Per Exact Tensor Network, setting bondDims_ allows call to
+    // Tensor Network. For Exact Tensor Network, maxBondDim_ is 1 and bondDims_
+    // is {1}. For Exact Tensor Network, setting bondDims_ allows call to
     // appendInitialMPSState_() to append the initial state to the Exact Tensor
     // Network state.
     const std::size_t
