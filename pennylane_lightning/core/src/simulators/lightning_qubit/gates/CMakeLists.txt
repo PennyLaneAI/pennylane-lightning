@@ -31,7 +31,7 @@ if (ENABLE_GATE_DISPATCHER AND UNIX AND (${CMAKE_SYSTEM_PROCESSOR} MATCHES "(AMD
     target_include_directories(lq_gates_register_kernels_avx512 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     set_target_properties(lq_gates_register_kernels_avx512 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    add_library(lq_gates_register_kernels_x64 STATIC RegisterKernels_x64.cpp cpu_kernels/GateImplementationsLM.cpp cpu_kernels/GateImplementationsPI.cpp GateIndices.cpp)
+    add_library(lq_gates_register_kernels_x64 STATIC RegisterKernels_x64.cpp cpu_kernels/GateImplementationsLM.cpp GateIndices.cpp)
     target_link_libraries(lq_gates_register_kernels_x64 PRIVATE lightning_external_libs lightning_compile_options lightning_gates lightning_utils lightning_qubit_utils)
     target_include_directories(lq_gates_register_kernels_x64 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     set_target_properties(lq_gates_register_kernels_x64 PROPERTIES POSITION_INDEPENDENT_CODE ON)
@@ -53,7 +53,7 @@ else()
                                                         lightning_gates)
     set_target_properties(lq_gates_kernel_map PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-    add_library(lq_gates_register_kernels_default STATIC RegisterKernels_Default.cpp cpu_kernels/GateImplementationsLM.cpp cpu_kernels/GateImplementationsPI.cpp GateIndices.cpp)
+    add_library(lq_gates_register_kernels_default STATIC RegisterKernels_Default.cpp cpu_kernels/GateImplementationsLM.cpp GateIndices.cpp)
     target_include_directories(lq_gates_register_kernels_default PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_libraries(lq_gates_register_kernels_default PRIVATE lightning_gates
                                                                     lightning_external_libs

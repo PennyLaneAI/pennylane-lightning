@@ -3,6 +3,7 @@ COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=htm
 TESTRUNNER := -m pytest tests --tb=short
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
+SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
 
 ifdef check
     CHECK := --check --diff
@@ -35,8 +36,12 @@ help:
 	@echo "  test-cpp [verbose=1]     to run the C++ test suite (requires CMake)"
 	@echo "                           use with 'verbose=1' for building with verbose flag"
 	@echo "  test-cpp [target=?]      to run a specific C++ test target (requires CMake)."
+	@echo "  test-cpp-mpi [backend=?] to run the C++ test suite with MPI (requires CMake and MPI)"
+	@echo "                           Default: lightning_gpu"
 	@echo "  test-python [device=?]   to run the Python test suite"
 	@echo "                           Default: lightning.qubit"
+	@echo "  wheel [backend=?]        to configure and build Python wheels"
+	@echo "                           Default: lightning_qubit"
 	@echo "  coverage [device=?]      to generate a coverage report for python interface"
 	@echo "                           Default: lightning.qubit"
 	@echo "  coverage-cpp [backend=?] to generate a coverage report for C++ interface"
@@ -61,6 +66,20 @@ clean:
 	rm -rf pennylane_lightning/*_ops*
 	rm -rf *.egg-info
 
+.PHONY: python python-skip-compile
+python:
+	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
+	pip install -e . --config-settings editable_mode=compat -vv
+
+python-skip-compile:
+	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
+	SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
+
+.PHONY: wheel
+wheel:
+	PL_BACKEND=$(PL_BACKEND) python scripts/configure_pyproject_toml.py
+	python -m build
+
 .PHONY: coverage coverage-cpp
 coverage:
 	@echo "Generating coverage report for $(if $(device:-=),$(device),lightning.qubit) device:"
@@ -77,12 +96,12 @@ coverage-cpp:
 		  -DENABLE_COVERAGE=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
 		  $(OPTIONS)
-	cmake --build ./BuildCov
+	cmake --build ./BuildCov $(VERBOSE) --target $(target)
 	cd ./BuildCov; for file in *runner ; do ./$file; done; \
-	lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info; \
+	lcov --directory . -b ../pennylane_lightning/core/src/ --capture --output-file coverage.info; \
 	genhtml coverage.info --output-directory out
 
-.PHONY: test-python test-builtin test-suite test-cpp
+.PHONY: test-python test-builtin test-suite test-cpp test-cpp-mpi
 test-python: test-builtin test-suite
 
 test-builtin:
@@ -99,6 +118,7 @@ test-cpp:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
+		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -108,6 +128,28 @@ else
 	cmake --build ./BuildTests $(VERBOSE) --target test
 endif
 
+test-cpp-mpi:
+	rm -rf ./BuildTests
+	cmake -BBuildTests -G Ninja \
+		  -DCMAKE_BUILD_TYPE=Debug \
+		  -DBUILD_TESTS=ON \
+		  -DENABLE_WARNINGS=ON \
+		  -DPL_BACKEND=lightning_gpu \
+		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
+		  -DENABLE_MPI=ON \
+		  $(OPTIONS)
+ifdef target
+	cmake --build ./BuildTests $(VERBOSE) --target $(target)
+	mpirun -np 2 ./BuildTests/$(target)
+else
+	cmake --build ./BuildTests $(VERBOSE)
+	for file in ./BuildTests/*_test_runner_mpi; do \
+		echo "Running $$file"; \
+		mpirun -np 2 $$file ; \
+	done
+endif
+
+
 .PHONY: format format-cpp format-python
 format: format-cpp format-python
 
@@ -115,8 +157,8 @@ format-cpp:
 	./bin/format $(CHECK) ./pennylane_lightning
 
 format-python:
-	isort --py 311 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning/ ./mpitests ./tests $(ICHECK) $(VERBOSE)
-	black -l 100 ./pennylane_lightning/ ./mpitests ./tests $(CHECK) $(VERBOSE)
+	isort --py 312 --profile black -l 100 -p pennylane_lightning ./pennylane_lightning ./mpitests ./tests ./scripts $(ICHECK) $(VERBOSE)
+	black -t py310 -t py311 -t py312 -l 100 ./pennylane_lightning ./mpitests ./tests ./scripts $(CHECK) $(VERBOSE)
 
 .PHONY: check-tidy
 check-tidy:

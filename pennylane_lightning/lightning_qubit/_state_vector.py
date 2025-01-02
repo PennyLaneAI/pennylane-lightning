@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Class implementation for state-vector manipulation.
+Class implementation for lightning_qubit state-vector manipulation.
 """
+from warnings import warn
 
 try:
     from pennylane_lightning.lightning_qubit_ops import (
@@ -21,25 +22,27 @@ try:
         StateVectorC128,
         allocate_aligned_array,
     )
-except ImportError:
-    pass
+except ImportError as ex:
+    warn(str(ex), UserWarning)
 
-from itertools import product
+from typing import Union
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, DeviceError, StatePrep
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
+# pylint: disable=ungrouped-imports
+from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
+
 from ._measurements import LightningMeasurements
 
 
-class LightningStateVector:
-    """Lightning state-vector class.
+class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few-public-methods
+    """Lightning Qubit state-vector class.
 
     Interfaces with C++ python binding methods for state-vector manipulation.
 
@@ -50,44 +53,14 @@ class LightningStateVector:
         device_name(string): state vector device name. Options: ["lightning.qubit"]
     """
 
-    def __init__(self, num_wires, dtype=np.complex128, device_name="lightning.qubit"):
-        self._num_wires = num_wires
-        self._wires = Wires(range(num_wires))
-        self._dtype = dtype
+    def __init__(self, num_wires: int, dtype: Union[np.complex128, np.complex64] = np.complex128):
 
-        if dtype not in [np.complex64, np.complex128]:  # pragma: no cover
-            raise TypeError(f"Unsupported complex type: {dtype}")
+        super().__init__(num_wires, dtype)
 
-        if device_name != "lightning.qubit":
-            raise DeviceError(f'The device name "{device_name}" is not a valid option.')
+        self._device_name = "lightning.qubit"
 
-        self._device_name = device_name
+        # Initialize the state vector
         self._qubit_state = self._state_dtype()(self._num_wires)
-
-    @property
-    def dtype(self):
-        """Returns the state vector data type."""
-        return self._dtype
-
-    @property
-    def device_name(self):
-        """Returns the state vector device name."""
-        return self._device_name
-
-    @property
-    def wires(self):
-        """All wires that can be addressed on this device"""
-        return self._wires
-
-    @property
-    def num_wires(self):
-        """Number of wires addressed on this device"""
-        return self._num_wires
-
-    @property
-    def state_vector(self):
-        """Returns a handle to the state vector."""
-        return self._qubit_state
 
     @property
     def state(self):
@@ -111,75 +84,6 @@ class LightningStateVector:
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
 
-    def _create_basis_state(self, index):
-        """Return a computational basis state over all wires.
-
-        Args:
-            index (int): integer representing the computational basis state.
-        """
-        self._qubit_state.setBasisState(index)
-
-    def reset_state(self):
-        """Reset the device's state"""
-        # init the state vector to |00..0>
-        self._qubit_state.resetStateVector()
-
-    def _preprocess_state_vector(self, state, device_wires):
-        """Initialize the internal state vector in a specified state.
-
-        Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-            device_wires (Wires): wires that get initialized in the state
-
-        Returns:
-            array[int]: indices for which the state is changed to input state vector elements
-            array[complex]: normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-        """
-        # special case for integral types
-        if state.dtype.kind == "i":
-            state = np.array(state, dtype=self.dtype)
-
-        if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
-            return None, state
-
-        # generate basis states on subset of qubits via the cartesian product
-        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
-
-        # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2 ** len(device_wires), self._num_wires), dtype=int)
-        unravelled_indices[:, device_wires] = basis_states
-
-        # get indices for which the state is changed to input state vector elements
-        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self._num_wires)
-        return ravelled_indices, state
-
-    def _get_basis_state_index(self, state, wires):
-        """Returns the basis state index of a specified computational basis state.
-
-        Args:
-            state (array[int]): computational basis state of shape ``(wires,)``
-                consisting of 0s and 1s
-            wires (Wires): wires that the provided computational state should be initialized on
-
-        Returns:
-            int: basis state index
-        """
-        # length of basis state parameter
-        n_basis_state = len(state)
-
-        if not set(state.tolist()).issubset({0, 1}):
-            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
-
-        if n_basis_state != len(wires):
-            raise ValueError("BasisState parameter and wires must be of equal length.")
-
-        # get computational basis state number
-        basis_states = 2 ** (self._num_wires - 1 - np.array(wires))
-        basis_states = qml.math.convert_like(basis_states, state)
-        return int(qml.math.dot(state, basis_states))
-
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
@@ -193,32 +97,14 @@ class LightningStateVector:
             state.getState(state_data)
             state = state_data
 
-        ravelled_indices, state = self._preprocess_state_vector(state, device_wires)
-
-        # translate to wire labels used by device
-        output_shape = [2] * self._num_wires
-
         if len(device_wires) == self._num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
+            output_shape = (2,) * self._num_wires
             state = np.reshape(state, output_shape).ravel(order="C")
             self._qubit_state.UpdateData(state)
             return
 
-        self._qubit_state.setStateVector(ravelled_indices, state)
-
-    def _apply_basis_state(self, state, wires):
-        """Initialize the state vector in a specified computational basis state.
-
-        Args:
-            state (array[int]): computational basis state of shape ``(wires,)``
-                consisting of 0s and 1s.
-            wires (Wires): wires that the provided computational state should be
-                initialized on
-
-        Note: This function does not support broadcasted inputs yet.
-        """
-        num = self._get_basis_state_index(state, wires)
-        self._create_basis_state(num)
+        self._qubit_state.setStateVector(state, list(device_wires))
 
     def _apply_lightning_controlled(self, operation):
         """Apply an arbitrary controlled operation to the state tensor.
@@ -267,10 +153,10 @@ class LightningStateVector:
         """
         wires = self.wires.indices(operation.wires)
         wire = list(wires)[0]
-        circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
         if postselect_mode == "fill-shots" and operation.postselect is not None:
             sample = operation.postselect
         else:
+            circuit = QuantumScript([], [qml.sample(wires=operation.wires)], shots=1)
             sample = LightningMeasurements(self).measure_final_state(circuit)
             sample = np.squeeze(sample)
         mid_measurements[operation] = sample
@@ -280,7 +166,7 @@ class LightningStateVector:
 
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
-    ):
+    ):  # pylint: disable=protected-access
         """Apply a list of operations to the state tensor.
 
         Args:
@@ -316,6 +202,14 @@ class LightningStateVector:
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
+            elif isinstance(operation, qml.PauliRot):
+                method = getattr(state, "applyPauliRot")
+                paulis = operation._hyperparameters[  # pylint: disable=protected-access
+                    "pauli_word"
+                ]
+                wires = [i for i, w in zip(wires, paulis) if w != "I"]
+                word = "".join(p for p in paulis if p != "I")
+                method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
@@ -330,48 +224,3 @@ class LightningStateVector:
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     method(operation.matrix, wires, False)
-
-    def apply_operations(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None
-    ):
-        """Applies operations to the state vector."""
-        # State preparation is currently done in Python
-        if operations:  # make sure operations[0] exists
-            if isinstance(operations[0], StatePrep):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
-                operations = operations[1:]
-            elif isinstance(operations[0], BasisState):
-                self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
-                operations = operations[1:]
-
-        self._apply_lightning(
-            operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-        )
-
-    def get_final_state(
-        self,
-        circuit: QuantumScript,
-        mid_measurements: dict = None,
-        postselect_mode: str = None,
-    ):
-        """
-        Get the final state that results from executing the given quantum script.
-
-        This is an internal function that will be called by the successor to ``lightning.qubit``.
-
-        Args:
-            circuit (QuantumScript): The single circuit to simulate
-            mid_measurements (None, dict): Dictionary of mid-circuit measurements
-            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
-                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
-                keep the same number of shots. Default is ``None``.
-
-        Returns:
-            LightningStateVector: Lightning final state class.
-
-        """
-        self.apply_operations(
-            circuit.operations, mid_measurements=mid_measurements, postselect_mode=postselect_mode
-        )
-
-        return self

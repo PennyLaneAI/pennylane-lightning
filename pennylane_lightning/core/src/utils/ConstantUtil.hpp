@@ -46,7 +46,7 @@ namespace Pennylane::Util {
 template <typename Key, typename Value, std::size_t size>
 constexpr auto lookup(const std::array<std::pair<Key, Value>, size> &arr,
                       const Key &key) -> Value {
-    for (size_t idx = 0; idx < size; idx++) {
+    for (std::size_t idx = 0; idx < size; idx++) {
         if (std::get<0>(arr[idx]) == key) {
             return std::get<1>(arr[idx]);
         }
@@ -68,7 +68,7 @@ template <typename Key, typename Value, std::size_t size>
 constexpr auto
 reverse_lookup(const std::array<std::pair<Key, Value>, size> &arr,
                const Value &value) -> Key {
-    for (size_t idx = 0; idx < size; idx++) {
+    for (std::size_t idx = 0; idx < size; idx++) {
         if (std::get<1>(arr[idx]) == value) {
             return std::get<0>(arr[idx]);
         }
@@ -87,7 +87,7 @@ reverse_lookup(const std::array<std::pair<Key, Value>, size> &arr,
 template <typename U, std::size_t size>
 constexpr auto array_has_elem(const std::array<U, size> &arr, const U &elem)
     -> bool {
-    for (size_t idx = 0; idx < size; idx++) {
+    for (std::size_t idx = 0; idx < size; idx++) {
         if (arr[idx] == elem) {
             return true;
         }
@@ -108,7 +108,7 @@ template <typename Key, typename Value, std::size_t size>
 constexpr auto
 array_contains(const std::array<std::pair<Key, Value>, size> &arr,
                const Value &value) -> bool {
-    for (size_t idx = 0; idx < size; idx++) {
+    for (std::size_t idx = 0; idx < size; idx++) {
         if (std::get<1>(arr[idx]) == value) {
             return true;
         }

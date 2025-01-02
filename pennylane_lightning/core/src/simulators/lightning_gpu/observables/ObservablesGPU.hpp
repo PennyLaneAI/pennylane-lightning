@@ -194,9 +194,11 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
             std::make_unique<DataBuffer<CFP_t>>(sv.getDataBuffer().getLength(),
                                                 sv.getDataBuffer().getDevTag());
         buffer->zeroInit();
+        StateVectorT tmp(sv);
 
-        for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
-            StateVectorT tmp(sv);
+        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
+             term_idx++) {
+            tmp.updateData(sv);
             this->obs_[term_idx]->applyInPlace(tmp);
             scaleAndAddC_CUDA(
                 std::complex<PrecisionT>{this->coeffs_[term_idx], 0.0},

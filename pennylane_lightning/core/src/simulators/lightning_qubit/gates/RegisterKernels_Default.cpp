@@ -18,18 +18,15 @@
 #include "DynamicDispatcher.hpp"
 #include "RegisterKernel.hpp"
 #include "cpu_kernels/GateImplementationsLM.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 namespace Pennylane::LightningQubit::Internal {
 int registerAllAvailableKernels_Float() {
     registerKernel<float, float, Gates::GateImplementationsLM>();
-    registerKernel<float, float, Gates::GateImplementationsPI>();
     return 1;
 }
 
 int registerAllAvailableKernels_Double() {
     registerKernel<double, double, Gates::GateImplementationsLM>();
-    registerKernel<double, double, Gates::GateImplementationsPI>();
     return 1;
 }
 } // namespace Pennylane::LightningQubit::Internal

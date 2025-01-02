@@ -11,6 +11,11 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
     paths:
       - .github/workflows/tests_linux_cpp.yml
       - pennylane_lightning/core/src/**
@@ -34,15 +39,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  determine_runner:
-    name: Determine runner type to use
-    uses: ./.github/workflows/determine-workflow-runner.yml
-    with:
-      default_runner: ubuntu-22.04
-
   cpptests:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [determine_runner]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
@@ -53,13 +51,13 @@ jobs:
           enable_kernel_avx_streaming: ON
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, ENABLE_KERNEL_OMP=${{ matrix.enable_kernel_omp }}, ENABLE_KERNEL_AVX_STREAMING=${{ matrix.enable_kernel_avx_streaming }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -67,7 +65,7 @@ jobs:
       - name: Install dependencies
         run: |
             echo ${{ github.event_name }} && sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-            python -m pip install scipy
+            python -m pip install scipy-openblas32
 
       - name: Build and run unit tests
         run: |
@@ -75,6 +73,7 @@ jobs:
               -DCMAKE_BUILD_TYPE=Debug \
               -DBUILD_TESTS=ON \
               -DENABLE_PYTHON=OFF \
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON \
@@ -91,17 +90,19 @@ jobs:
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
+          retention-days: 1
+          include-hidden-files: true
           path: |
             ./Build/tests/results/
 
           if-no-files-found: error
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
@@ -109,19 +110,18 @@ jobs:
 
   cpptestswithOpenBLAS:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [determine_runner]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, blas-ON)
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -129,7 +129,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-base libopenblas-dev ninja-build gcovr lcov
-          python -m pip install scipy
+          python -m pip install scipy-openblas32
 
       - name: Build and run unit tests
         run: |
@@ -138,6 +138,7 @@ jobs:
               -DENABLE_PYTHON=OFF \
               -DENABLE_BLAS=ON \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DBUILD_TESTS=ON \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
               -DENABLE_COVERAGE=ON
@@ -150,31 +151,34 @@ jobs:
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-blas-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results/
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: ubuntu-codecov-results-blas-${{ matrix.pl_backend }}
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   build_and_cache_Kokkos:
     name: "Build and cache Kokkos"
-    needs: [determine_runner]
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      runs_on: ${{ needs.determine_runner.outputs.runner_group }}
+      runs_on: pl-4-core-large-runner
       os: ubuntu-22.04
 
   cpptestswithKokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_and_cache_Kokkos, determine_runner]
+    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -183,13 +187,13 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -211,7 +215,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-          python -m pip install scipy
+          python -m pip install scipy-openblas32
 
       - name: Build and run unit tests
         run: |
@@ -222,6 +226,7 @@ jobs:
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND=${{ matrix.pl_backend }} \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION) \
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DENABLE_COVERAGE=ON
             cmake --build ./Build
             cd ./Build
@@ -232,19 +237,23 @@ jobs:
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: ubuntu-tests-reports-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/tests/results-${{ github.job }}-${{ matrix.pl_backend }}
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
+          name: ubuntu-codecov-results-cpp-${{ github.job }}-${{ matrix.pl_backend }}
           path: ./Build/coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-cpp:
     needs: [cpptests, cpptestswithOpenBLAS, cpptestswithKokkos]
@@ -255,9 +264,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-cpp
+          pattern: ubuntu-codecov-*
+          merge-multiple: true
 
       - name: Upload to Codecov
         uses: codecov/codecov-action@v4
@@ -269,7 +279,7 @@ jobs:
   cpptestsWithMultipleBackends:
   # Device-specific tests are performed for both. Device-agnostic tests default to LightningQubit.
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
-    needs: [build_and_cache_Kokkos, determine_runner]
+    needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
         os: [ubuntu-22.04]
@@ -277,13 +287,13 @@ jobs:
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
     name: C++ Tests (multiple-backends, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
@@ -305,7 +315,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION ninja-build gcovr lcov
-          python -m pip install scipy
+          python -m pip install scipy-openblas32
 
       - name: Build and run unit tests
         run: |
@@ -315,6 +325,7 @@ jobs:
               -DENABLE_PYTHON=OFF \
               -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos \
               -DPL_BACKEND="lightning_qubit;lightning_kokkos" \
+              -DSCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())") \
               -DCMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)
             cmake --build ./Build
             cd ./Build
@@ -322,9 +333,11 @@ jobs:
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results_multiple_backends/report_$file.xml; done;
 
       - name: Upload test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ubuntu-tests-reports-${{ github.job }}-multiple-backends
+          name: ubuntu-tests-reports-${{ github.job }}-multiple-backends-kokkos${{ matrix.kokkos_version }}-${{ matrix.exec_model }}
           path: ./Build/tests/results_multiple_backends/
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true

@@ -25,7 +25,6 @@
 #include "StateVectorLQubitRaw.hpp"
 #include "TestHelpers.hpp" // createRandomStateVectorData
 #include "TestHelpersWires.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 /**
  * @file
@@ -46,6 +45,130 @@ TEMPLATE_TEST_CASE("StateVectorLQubit::Constructibility",
                    StateVectorLQubitManaged<>) {
     SECTION("StateVectorBackend<>") {
         REQUIRE(!std::is_constructible_v<TestType>);
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setBasisState",
+                           "[setBasisState]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    SECTION("setBasisState") {
+        const ComplexT one{1.0};
+        const ComplexT zero{0.0};
+
+        std::vector<ComplexT> init_state_zeros = {zero, zero, zero, zero,
+                                                  zero, zero, zero, zero};
+        std::vector<ComplexT> expected_state_000 = {one,  zero, zero, zero,
+                                                    zero, zero, zero, zero};
+
+        StateVectorT sv(init_state_zeros.data(), init_state_zeros.size());
+        sv.setBasisState({0}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_000));
+
+        std::vector<ComplexT> expected_state_001 = {zero, one,  zero, zero,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1}, {2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_001));
+
+        std::vector<ComplexT> expected_state_010 = {zero, zero, one,  zero,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1}, {1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_010));
+
+        std::vector<ComplexT> expected_state_011 = {zero, zero, zero, one,
+                                                    zero, zero, zero, zero};
+        sv.setBasisState({1, 1}, {1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_011));
+
+        std::vector<ComplexT> expected_state_100 = {zero, zero, zero, zero,
+                                                    one,  zero, zero, zero};
+        sv.setBasisState({1}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_100));
+
+        std::vector<ComplexT> expected_state_101 = {zero, zero, zero, zero,
+                                                    zero, one,  zero, zero};
+
+        sv.setBasisState({1, 0, 1}, {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_101));
+
+        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+                                                    zero, zero, one,  zero};
+        sv.setBasisState({1, 1}, {0, 1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_110));
+
+        std::vector<ComplexT> expected_state_111 = {zero, zero, zero, zero,
+                                                    zero, zero, zero, one};
+        sv.setBasisState({1, 1, 1}, {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_111));
+    }
+}
+
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::setStateVector",
+                           "[setStateVector]",
+                           (StateVectorLQubitManaged, StateVectorLQubitRaw),
+                           (float, double)) {
+    using StateVectorT = TestType;
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    SECTION("setStateVector") {
+        const ComplexT one{1.0};
+        const ComplexT zero{0.0};
+
+        std::vector<ComplexT> init_state_zeros = {zero, zero, zero, zero,
+                                                  zero, zero, zero, zero};
+        std::vector<ComplexT> expected_state_000 = {one,  zero, zero, zero,
+                                                    zero, zero, zero, zero};
+
+        StateVectorT sv(init_state_zeros.data(), init_state_zeros.size());
+        sv.setStateVector({one, zero}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_000));
+
+        std::vector<ComplexT> expected_state_001 = {zero, one,  zero, zero,
+                                                    zero, zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, one}, {2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_001));
+
+        std::vector<ComplexT> expected_state_010 = {zero, zero, one,  zero,
+                                                    zero, zero, zero, zero};
+
+        sv.resetStateVector();
+        sv.setStateVector({zero, one}, {1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_010));
+
+        std::vector<ComplexT> expected_state_011 = {zero, zero, zero, one,
+                                                    zero, zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, one}, {1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_011));
+
+        std::vector<ComplexT> expected_state_100 = {zero, zero, zero, zero,
+                                                    one,  zero, zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, one}, {0});
+        REQUIRE(sv.getDataVector() == approx(expected_state_100));
+
+        std::vector<ComplexT> expected_state_101 = {zero, zero, zero, zero,
+                                                    zero, one,  zero, zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, one}, {0, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_101));
+
+        std::vector<ComplexT> expected_state_110 = {zero, zero, zero, zero,
+                                                    zero, zero, one,  zero};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, one}, {0, 1});
+        REQUIRE(sv.getDataVector() == approx(expected_state_110));
+
+        std::vector<ComplexT> expected_state_111 = {zero, zero, zero, zero,
+                                                    zero, zero, zero, one};
+        sv.resetStateVector();
+        sv.setStateVector({zero, zero, zero, zero, zero, zero, zero, one},
+                          {0, 1, 2});
+        REQUIRE(sv.getDataVector() == approx(expected_state_111));
     }
 }
 
@@ -134,33 +257,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorLQubit::applyMatrix with a pointer",
         StateVectorT state_vector(st_data.data(), st_data.size());
         REQUIRE_THROWS_WITH(state_vector.applyMatrix(m.data(), {}),
                             Catch::Contains("must be larger than 0"));
-    }
-
-    SECTION("Test with different number of wires") {
-        const std::size_t num_qubits = 5;
-        for (size_t num_wires = 1; num_wires < num_qubits; num_wires++) {
-            VectorT st_data_1 =
-                createRandomStateVectorData<PrecisionT>(re, num_qubits);
-            VectorT st_data_2 = st_data_1;
-
-            StateVectorT state_vector_1(st_data_1.data(), st_data_1.size());
-            StateVectorT state_vector_2(st_data_2.data(), st_data_2.size());
-
-            std::vector<std::size_t> wires(num_wires);
-            std::iota(wires.begin(), wires.end(), 0);
-
-            const auto m = randomUnitary<PrecisionT>(re, num_wires);
-
-            state_vector_1.applyMatrix(m, wires);
-
-            Gates::GateImplementationsPI::applyMultiQubitOp<PrecisionT>(
-                state_vector_2.getData(), num_qubits, m.data(), wires, false);
-
-            PrecisionT eps = std::numeric_limits<PrecisionT>::epsilon() * 10E3;
-            REQUIRE(isApproxEqual(
-                state_vector_1.getData(), state_vector_1.getLength(),
-                state_vector_2.getData(), state_vector_2.getLength(), eps));
-        }
     }
 }
 

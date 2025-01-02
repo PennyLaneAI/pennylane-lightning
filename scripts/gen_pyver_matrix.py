@@ -1,6 +1,6 @@
 import argparse
-import re
 import json
+import re
 
 
 def version_map(py_ver: str):

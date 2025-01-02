@@ -36,6 +36,7 @@
 namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::LightningGPU::MPI;
+using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::Util;
 
 using Pennylane::Util::isApproxEqual;
@@ -52,6 +53,23 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::Constructibility",
     }
 }
 
+TEMPLATE_TEST_CASE("cuStateVec_helper::compute_local_index",
+                   "[Default Constructibility]", StateVectorCudaMPI<>) {
+    const std::size_t local_num_qubits = 4;
+
+    SECTION("compute_local_index, index inside the current qubits set") {
+        const std::size_t index = 2; // 0b00010
+        std::size_t local_index = compute_local_index(index, local_num_qubits);
+        REQUIRE(local_index == index);
+    }
+
+    SECTION("compute_local_index, index outside the current qubits set") {
+        const std::size_t index = 16; // 0b10000
+        std::size_t local_index = compute_local_index(index, local_num_qubits);
+        REQUIRE(local_index == 0);
+    }
+}
+
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
                            "[General Constructibility]", (StateVectorCudaMPI),
                            (float, double)) {
@@ -63,12 +81,12 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaMPI::Constructibility",
     }
     SECTION(
         "StateVectorBackend<TestType> {MPIManager, DevTag<int>, std::size_t, "
-        "size_t, std::size_t}") {
+        "std::size_t, std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, MPIManager, DevTag<int>,
                                         std::size_t, std::size_t, std::size_t>);
     }
     SECTION("StateVectorBackend<TestType> {MPI_Comm, DevTag<int>, std::size_t, "
-            "size_t, std::size_t}") {
+            "std::size_t, std::size_t}") {
         REQUIRE(std::is_constructible_v<StateVectorT, MPI_Comm, DevTag<int>,
                                         std::size_t, std::size_t, std::size_t>);
     }

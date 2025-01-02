@@ -157,6 +157,25 @@ template <class PrecisionT> class TNCudaGateCache {
         return device_gates_.at(gate_id).second.getDataBuffer().getData();
     }
 
+    /**
+     * @brief Returns the size of the `device_gates_`.
+     *
+     * @return std::size_t Size of `device_gates_`.
+     */
+    auto size() const -> std::size_t { return device_gates_.size(); }
+
+    /**
+     * @brief Update an existing key with a new one.
+     *
+     * @param old_key The old key to be updated.
+     * @param new_key The new key to be updated.
+     */
+    void update_key(const std::size_t old_key, const std::size_t new_key) {
+        auto it = device_gates_.extract(old_key);
+        it.key() = new_key;
+        device_gates_.insert(std::move(it));
+    }
+
   private:
     const DevTag<int> device_tag_;
     std::size_t total_alloc_bytes_;

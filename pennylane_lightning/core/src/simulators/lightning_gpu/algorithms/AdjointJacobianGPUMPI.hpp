@@ -151,7 +151,7 @@ class AdjointJacobianMPI final
                             lambda_ref.getNumLocalQubits(),
                             lambda_ref.getData());
 
-        for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+        for (std::size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
             lambda.updateData(lambda_ref);
 
             // Create observable-applied state-vectors
@@ -171,8 +171,7 @@ class AdjointJacobianMPI final
                 PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                             "The operation is not supported using the adjoint "
                             "differentiation method");
-                if ((ops_name[op_idx] == "QubitStateVector") ||
-                    (ops_name[op_idx] == "StatePrep") ||
+                if ((ops_name[op_idx] == "StatePrep") ||
                     (ops_name[op_idx] == "BasisState")) {
                     continue;
                 }
@@ -281,7 +280,7 @@ class AdjointJacobianMPI final
         using SVTypePtr = std::unique_ptr<StateVectorT>;
         std::unique_ptr<SVTypePtr[]> H_lambda(new SVTypePtr[num_observables]);
 
-        for (size_t h_i = 0; h_i < num_observables; h_i++) {
+        for (std::size_t h_i = 0; h_i < num_observables; h_i++) {
             H_lambda[h_i] = std::make_unique<StateVectorT>(
                 dt_local, lambda.getNumGlobalQubits(),
                 lambda.getNumLocalQubits(), lambda.getData());
@@ -296,8 +295,7 @@ class AdjointJacobianMPI final
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops_name[op_idx] == "QubitStateVector") ||
-                (ops_name[op_idx] == "StatePrep") ||
+            if ((ops_name[op_idx] == "StatePrep") ||
                 (ops_name[op_idx] == "BasisState")) {
                 continue;
             }
@@ -317,7 +315,7 @@ class AdjointJacobianMPI final
                             !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                    for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
                         updateJacobian(*H_lambda[obs_idx], mu, jac,
                                        scalingFactor, obs_idx,
@@ -330,7 +328,8 @@ class AdjointJacobianMPI final
                 current_param_idx--;
             }
 
-            for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+            for (std::size_t obs_idx = 0; obs_idx < num_observables;
+                 obs_idx++) {
                 BaseType::applyOperationAdj(*H_lambda[obs_idx], ops, op_idx);
             }
         }

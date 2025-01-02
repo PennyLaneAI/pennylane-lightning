@@ -74,7 +74,7 @@ TEMPLATE_TEST_CASE("apply_Sparse_Matrix", "[Sparse]", float, double) {
     write_CSR_vectors(row_map, entries, values, data_size);
 
     SECTION("Testing sparse matrix dense vector product:") {
-        for (size_t vec = 0; vec < vectors.size(); vec++) {
+        for (std::size_t vec = 0; vec < vectors.size(); vec++) {
             std::vector<complex<TestType>> result = apply_Sparse_Matrix(
                 vectors[vec].data(), vectors[vec].size(), row_map.data(),
                 row_map.size(), entries.data(), values.data(), values.size());

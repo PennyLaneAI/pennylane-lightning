@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,52 +16,41 @@ import platform
 import subprocess
 import shutil
 import sys
+
+from importlib import import_module
+from importlib.util import find_spec
+
 from pathlib import Path
 from setuptools import setup, Extension, find_namespace_packages
 from setuptools.command.build_ext import build_ext
 
-default_backend = "lightning_qubit"
-supported_backends = {"lightning_kokkos", "lightning_qubit", "lightning_gpu", "lightning_tensor"}
-supported_backends.update({sb.replace("_", ".") for sb in supported_backends})
 
+has_toml = False
+toml_libs = ["tomli", "tomllib", "tomlkit", "toml"]
+for pkg in toml_libs:
+    spec = find_spec(pkg)
+    if spec:
+        toml = import_module(pkg)
+        has_toml = True
+        break
 
-def get_backend():
-    """Return backend.
+if not has_toml:
+    raise ImportError(
+        "A TOML parser is required to configure 'pyproject.toml'. "
+        f"We support any of the following TOML parsers: {toml_libs} "
+        "You can install tomlkit via `pip install tomlkit`, or tomli via `pip install tomli`, "
+        "or use Python 3.11 or above which natively offers the tomllib library."
+    )
 
-    The backend is ``lightning_qubit`` by default.
-    Allowed values are: "lightning_kokkos", "lightning_qubit" and "lightning_gpu".
-    A dot can also be used instead of an underscore.
-    If the environment variable ``PL_BACKEND`` is defined, its value is used.
-    Otherwise, if the environment variable ``CMAKE_ARGS`` is defined and it
-    contains the CMake option ``PL_BACKEND``, its value is used.
-    Dots are replaced by underscores upon exiting.
-    """
-    backend = None
-    if "PL_BACKEND" in os.environ:
-        backend = os.environ.get("PL_BACKEND", default_backend)
-        backend = backend.replace(".", "_")
-    if "CMAKE_ARGS" in os.environ:
-        cmake_args = os.environ["CMAKE_ARGS"].split(" ")
-        arg = [x for x in cmake_args if "PL_BACKEND" in x]
-        if not arg and backend is not None:
-            cmake_backend = backend
-        else:
-            cmake_backend = arg[0].split("=")[1].replace(".", "_") if arg else default_backend
-        if backend is not None and backend != cmake_backend:
-            raise ValueError(
-                f"Backends {backend} and {cmake_backend} specified by PL_BACKEND and CMAKE_ARGS respectively do not match."
-            )
-        backend = cmake_backend
-    if backend is None:
-        backend = default_backend
-    if backend not in supported_backends:
-        raise ValueError(f"Invalid backend {backend}.")
-    return backend
+try:
+    with open("pyproject.toml", "rb") as f:
+        project_name = toml.load(f)['project']['name']
+except TypeError:
+    # To support toml and tomli APIs
+    project_name = toml.load("pyproject.toml")['project']['name']
 
-
-backend = get_backend()
-device_name = backend.replace("_", ".")
-
+backend = project_name.replace("PennyLane_", "").lower()
+if (backend == "lightning"): backend = "lightning_qubit"
 
 class CMakeExtension(Extension):
     def __init__(self, name, sourcedir=""):
@@ -105,9 +94,10 @@ class CMakeBuild(build_ext):
         ]
         configure_args += (
             [f"-DPYTHON_EXECUTABLE={sys.executable}"]
-            if platform.system() == "Linux"
+            if platform.system() != "Darwin"
             else [f"-DPython_EXECUTABLE={sys.executable}"]
         )
+        configure_args += ["-DPYBIND11_FINDPYTHON=ON"]
 
         if platform.system() == "Windows":
             # As Ninja does not support long path for windows yet:
@@ -123,6 +113,9 @@ class CMakeBuild(build_ext):
 
         configure_args += [f"-DPL_BACKEND={backend}"]
         configure_args += self.cmake_defines
+
+        if not self.editable_mode:
+            configure_args += ["-DPY_INSTALL=ON"]
 
         # Add more platform dependent options
         if platform.system() == "Darwin":
@@ -166,53 +159,36 @@ class CMakeBuild(build_ext):
             env=os.environ,
         )
 
+        # Ensure that catalyst shared object is copied to the build directory for pip editable install
+        if backend in ("lightning_gpu"):
+            source = os.path.join(f"{extdir}", f"lib{backend}_catalyst.so")
+            destination = os.path.join(os.getcwd(), f"build_{backend}")
+            shutil.copy(source, destination)
+    
+        if backend in ("lightning_kokkos", "lightning_qubit"):
+            if platform.system() in ["Linux", "Darwin"]:
+                shared_lib_ext = {"Linux": ".so", "Darwin": ".dylib"}[platform.system()]
+                source = os.path.join(f"{extdir}", f"lib{backend}_catalyst{shared_lib_ext}")
+                destination = os.path.join(os.getcwd(), self.build_temp)
+                shutil.copy(source, destination)
 
 with open(os.path.join("pennylane_lightning", "core", "_version.py"), encoding="utf-8") as f:
     version = f.readlines()[-1].split()[-1].strip("\"'")
-
-requirements = [
-    "pennylane>=0.36",
-]
 
 packages_list = ["pennylane_lightning." + backend]
 
 if backend == "lightning_qubit":
     packages_list += ["pennylane_lightning.core"]
-else:
-    requirements += ["pennylane_lightning==" + version]
-
-suffix = backend.replace("lightning_", "")
-if suffix == "gpu":
-    suffix = suffix[0:].upper()
-suffix = suffix[0].upper() + suffix[1:]
-
-pennylane_plugins = [device_name + " = pennylane_lightning." + backend + ":Lightning" + suffix]
-
-pkg_suffix = "" if suffix == "Qubit" else "_" + suffix
 
 info = {
-    "name": f"PennyLane_Lightning{pkg_suffix}",
     "version": version,
-    "maintainer": "Xanadu Inc.",
-    "maintainer_email": "software@xanadu.ai",
-    "url": "https://github.com/PennyLaneAI/pennylane-lightning",
-    "license": "Apache License 2.0",
     "packages": find_namespace_packages(include=packages_list),
     "include_package_data": True,
-    "entry_points": {"pennylane.plugins": pennylane_plugins},
-    "description": "PennyLane-Lightning plugin",
-    "long_description": open("README.rst").read(),
-    "long_description_content_type": "text/x-rst",
-    "install_requires": requirements,
     "ext_modules": (
         [] if os.environ.get("SKIP_COMPILATION", False) else [CMakeExtension(f"{backend}_ops")]
     ),
     "cmdclass": {"build_ext": CMakeBuild},
     "ext_package": "pennylane_lightning",
-    "extras_require": {
-        "gpu": ["pennylane-lightning-gpu"],
-        "kokkos": ["pennylane-lightning-kokkos"],
-    },
 }
 
 if backend == "lightning_qubit":
@@ -227,24 +203,4 @@ if backend == "lightning_qubit":
         }
     )
 
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
-    "Natural Language :: English",
-    "Operating System :: POSIX",
-    "Operating System :: MacOS :: MacOS X",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: Microsoft :: Windows",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Programming Language :: Python :: 3 :: Only",
-    "Topic :: Scientific/Engineering :: Physics",
-]
-
-setup(classifiers=classifiers, **(info))
+setup(**(info))

@@ -2,11 +2,13 @@ name: Compat Check w/PL - release/release
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 0-6"  # Run daily at 5am UTC everyday
 
 jobs:
-  tests_lgpu_python:
-    name: Lightning Compatibility test (tests_lgpu_python) - release/release
-    uses: ./.github/workflows/tests_lgpu_python.yml
+  tests_gpu_python:
+    name: Lightning Compatibility test (tests_gpu_python) - release/release
+    uses: ./.github/workflows/tests_gpu_python.yml
     with:
       lightning-version: release
       pennylane-version: release
@@ -46,4 +48,4 @@ jobs:
       lightning-version: release
       pennylane-version: release
     secrets: inherit
-    
+

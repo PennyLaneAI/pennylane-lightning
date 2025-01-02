@@ -21,12 +21,12 @@ In this case, you may first create a file and add a class:
         /* This defines the required alignment for this kernel. If there is no special requirement,
            using std::alignment_of_v is sufficient. */
         template <typename PrecisionT>
-        constexpr static size_t required_alignment = std::alignment_of_v<PrecisionT>;
+        constexpr static std::size_t required_alignment = std::alignment_of_v<PrecisionT>;
 
         template <class PrecisionT>
         static void applyPauliX(std::complex<PrecisionT>* data,
-                                size_t num_qubits,
-                                const std::vector<size_t>& wires,
+                                std::size_t num_qubits,
+                                const std::vector<std::size_t>& wires,
                                 [[maybe_unused]] bool inverse) {
             /* Write your implementation */
             ...
@@ -40,7 +40,7 @@ This can be done by modifying two files:
 
     // file: gates/KernelType.hpp
     namespace Pennylane {
-    enum class KernelType { PI, LM, MyKernel /* This is added */, None };
+    enum class KernelType { LM, MyKernel /* This is added */, None };
 
     /* Rest of the file */
 
@@ -53,7 +53,6 @@ and
     // file: gates/AvailableKernels.hpp
     namespace Pennylane {
         using AvailableKernels = Util::TypeList<GateImplementationsLM,
-                                                GateImplementationsPI,
                                                 MyGateImplementation /* This is added*/,
                                                 void>;
     } // namespace Pennylane
@@ -111,7 +110,6 @@ To test your own kernel implementations, you can go to ``tests/TestKernels.hpp``
 .. code-block:: cpp
 
     using TestKernels = Pennylane::Util::TypeList<Pennylane::Gates::GateImplementationsLM,
-                                                  Pennylane::Gates::GateImplementationsPI,
                                                   MyGateImplementation /*This is added */, void>;
 
 It will automatically test your gate implementation.

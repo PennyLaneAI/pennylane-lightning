@@ -18,14 +18,13 @@
 
 #pragma once
 
-#define __device_lightning_kokkos
-
 #include <bitset>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <limits>
 #include <optional>
+#include <random>
 #include <span>
 #include <stdexcept>
 #include <unordered_map>
@@ -61,7 +60,10 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     Catalyst::Runtime::CacheManager<Kokkos::complex<double>> cache_manager{};
     bool tape_recording{false};
 
-    std::size_t device_shots;
+    // set default to avoid C++ tests segfaults in analytic mode
+    std::size_t device_shots{0};
+
+    std::mt19937 *gen{nullptr};
 
     std::unique_ptr<StateVectorT> device_sv = std::make_unique<StateVectorT>(0);
     LightningKokkosObsManager<double> obs_manager{};
@@ -93,14 +95,22 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
         return res;
     }
 
-  public:
-    explicit LightningKokkosSimulator(const std::string &kwargs = "{}") {
-        auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots")
-                           ? static_cast<std::size_t>(std::stoll(args["shots"]))
-                           : 0;
+    inline auto generateSeed() -> std::optional<std::size_t> {
+        if (this->gen != nullptr) {
+            return (*(this->gen))();
+        }
+
+        return std::nullopt;
     }
-    ~LightningKokkosSimulator() = default;
+
+    auto GenerateSamples(size_t shots) -> std::vector<size_t>;
+
+  public:
+    explicit LightningKokkosSimulator(
+        const std::string &kwargs = "{}") noexcept {
+        auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
+    }
+    ~LightningKokkosSimulator() noexcept = default;
 
     LightningKokkosSimulator(const LightningKokkosSimulator &) = delete;
     LightningKokkosSimulator &
@@ -109,14 +119,20 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     LightningKokkosSimulator &operator=(LightningKokkosSimulator &&) = delete;
 
     auto AllocateQubit() -> QubitIdType override;
-    auto AllocateQubits(size_t num_qubits) -> std::vector<QubitIdType> override;
+    auto AllocateQubits(std::size_t num_qubits)
+        -> std::vector<QubitIdType> override;
     void ReleaseQubit(QubitIdType q) override;
     void ReleaseAllQubits() override;
-    [[nodiscard]] auto GetNumQubits() const -> size_t override;
+    [[nodiscard]] auto GetNumQubits() const -> std::size_t override;
     void StartTapeRecording() override;
     void StopTapeRecording() override;
-    void SetDeviceShots(size_t shots) override;
-    [[nodiscard]] auto GetDeviceShots() const -> size_t override;
+    void SetDeviceShots(std::size_t shots) override;
+    void SetDevicePRNG(std::mt19937 *) override;
+    void SetState(DataView<std::complex<double>, 1> &,
+                  std::vector<QubitIdType> &) override;
+    void SetBasisState(DataView<int8_t, 1> &,
+                       std::vector<QubitIdType> &) override;
+    [[nodiscard]] auto GetDeviceShots() const -> std::size_t override;
     void PrintState() override;
     [[nodiscard]] auto Zero() const -> Result override;
     [[nodiscard]] auto One() const -> Result override;
@@ -146,21 +162,21 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
     void Probs(DataView<double, 1> &probs) override;
     void PartialProbs(DataView<double, 1> &probs,
                       const std::vector<QubitIdType> &wires) override;
-    void Sample(DataView<double, 2> &samples, size_t shots) override;
+    void Sample(DataView<double, 2> &samples, std::size_t shots) override;
     void PartialSample(DataView<double, 2> &samples,
                        const std::vector<QubitIdType> &wires,
-                       size_t shots) override;
+                       std::size_t shots) override;
     void Counts(DataView<double, 1> &eigvals, DataView<int64_t, 1> &counts,
-                size_t shots) override;
+                std::size_t shots) override;
     void PartialCounts(DataView<double, 1> &eigvals,
                        DataView<int64_t, 1> &counts,
                        const std::vector<QubitIdType> &wires,
-                       size_t shots) override;
+                       std::size_t shots) override;
     auto Measure(QubitIdType wire,
                  std::optional<int32_t> postselect = std::nullopt)
         -> Result override;
     void Gradient(std::vector<DataView<double, 1>> &gradients,
-                  const std::vector<size_t> &trainParams) override;
+                  const std::vector<std::size_t> &trainParams) override;
 
     auto CacheManagerInfo()
         -> std::tuple<std::size_t, std::size_t, std::size_t,

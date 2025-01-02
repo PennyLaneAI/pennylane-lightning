@@ -10,7 +10,7 @@ If making a feature request, delete the following template and describe, in deta
 the feature and why it is needed.
 
 For general technical details check out our documentation:
-https://pennylane-lightning.readthedocs.io/
+https://docs.pennylane.ai/projects/lightning
 
 -------------------------------------------------------------------------------------------------------------
 

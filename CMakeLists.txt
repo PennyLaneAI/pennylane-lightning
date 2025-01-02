@@ -12,7 +12,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "11" CACHE STRING "Minimum OS X deployment versi
 set(CMAKE_CXX_STANDARD 20) # At least C++20 is required
 
 project(pennylane_lightning
-    DESCRIPTION "C++ suite of state-vector simulators bindings for PennyLane. "
+    DESCRIPTION "C++ suite of state-vector and tensor network simulators bindings for PennyLane. "
     LANGUAGES CXX
 )
 
@@ -20,16 +20,16 @@ project(pennylane_lightning
 function(set_pennylane_lightning_version VERSION_FILE_PATH)
     file(STRINGS ${VERSION_FILE_PATH} VERSION_FILE_STR)
     foreach (LINE IN LISTS VERSION_FILE_STR)
-    if("${LINE}" MATCHES "__version__.*")
+    if("${LINE}" MATCHES "version.*")
         set(VERSION_LINE_STR "${LINE}")
     endif()
     endforeach()
 
-    string(REGEX REPLACE "__version__ = \"(.*)\"" "\\1" VERSION_STRING ${VERSION_LINE_STR})
+    string(REGEX REPLACE "version = \"(.*)\"" "\\1" VERSION_STRING ${VERSION_LINE_STR})
     set(VERSION_STRING ${VERSION_STRING} PARENT_SCOPE)
 endfunction()
 
-set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pennylane_lightning/core/_version.py)
+set_pennylane_lightning_version(${PROJECT_SOURCE_DIR}/pyproject.toml)
 
 message(STATUS "pennylane_lightning version ${VERSION_STRING}")
 set(PROJECT_VERSION ${VERSION_STRING})
@@ -46,8 +46,6 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(ENABLE_WARNINGS "Enable warnings" ON)
 option(ENABLE_NATIVE "Enable native CPU build tuning" OFF)
 option(ENABLE_PYTHON "Enable compilation of the Python module" ON)
-
-option(ENABLE_LAPACK "Enable compilation with scipy/LAPACK" ON)
 
 # OpenMP
 find_package(OpenMP)
@@ -74,9 +72,8 @@ endif()
 foreach(BACKEND ${PL_BACKEND})
     message(STATUS "PL_BACKEND: ${BACKEND}")
     if("${BACKEND}" STREQUAL "lightning_tensor")
-        set(PL_TENSOR_METHOD "mps" CACHE STRING "PennyLane LightningTensor MPS simulator.")
         set(PL_TENSOR_BACKEND "cutensornet" CACHE STRING "PennyLane LightningTensor backed by cutensornet")
-        set(PL_TENSOR "${PL_BACKEND}_${PL_TENSOR_METHOD}_${PL_TENSOR_BACKEND}")
+        set(PL_TENSOR "${PL_BACKEND}_${PL_TENSOR_BACKEND}")
     endif()
 endforeach()
 
@@ -88,40 +85,38 @@ set(CMAKE_POLICY_DEFAULT_CMP0127 NEW) # To suppress pybind11 CMP0127 warning
 # Add pybind11
 include(FetchContent)
 
-if(ENABLE_LAPACK)
-    find_package(Python COMPONENTS Interpreter Development)
-    set(SCIPYLIBS ${Python_SITELIB})
-
-    if(CMAKE_SYSTEM_NAME MATCHES "Darwin")
-        set(SCIPYLIBS "/System/Library/Frameworks/Accelerate.framework/Versions/Current/Frameworks/vecLib.framework/libLAPACK.dylib")
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Linux")
-        if(EXISTS ${SCIPYLIBS}/scipy.libs)
-            set(SCIPYLIBS ${SCIPYLIBS}/scipy.libs)
-        else()
-            # Fallback to the lib path of Python for `conda` support
-            set(SCIPYLIBS ${SCIPYLIBS}/../..)
-        endif()
-    elseif(CMAKE_SYSTEM_NAME MATCHES "Windows")
-    else()
-        message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
-    endif()
-
-    add_compile_definitions(SCIPY_LIBS_PATH="${SCIPYLIBS}")
-
-    message(STATUS "Python scipy-lib path: ${SCIPYLIBS}")
-endif()
-
 if(ENABLE_PYTHON)
     find_package(Python COMPONENTS Interpreter Development)
     FetchContent_Declare(pybind11
                         GIT_REPOSITORY https://github.com/pybind/pybind11.git
-                        GIT_TAG        v2.11.1
+                        GIT_TAG        v2.13.5
     )
     FetchContent_MakeAvailable(pybind11)
 endif()
 
 # Print Python site-packages directory for reference
 message("Python site-packages directory: ${Python_SITELIB}")
+
+if(DEFINED PY_INSTALL)
+    # Note the following setting is only for pyenv and not for conda
+    # TODO: Add support for conda
+    if(APPLE)
+        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "@loader_path/../scipy_openblas32/lib")
+    else()
+        set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "$ORIGIN/../scipy_openblas32/lib")
+    endif()
+else()
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindSCIPY_OPENBLAS32.cmake")
+    if(NOT DEFINED SCIPY_OPENBLAS32_LIB_PATH AND NOT EXISTS ${SCIPY_OPENBLAS32_LIB_PATH})
+        set(SCIPY_OPENBLAS32_LIB_PATH "")
+        find_path_to_openblas(SCIPY_OPENBLAS32_LIB_PATH)
+        add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+        message(STATUS "SCIPY_OPENBLAS32_LIB_PATH: ${SCIPY_OPENBLAS32_LIB_PATH}")
+    else()
+        add_compile_definitions(SCIPY_OPENBLAS32_LIB="${SCIPY_OPENBLAS32_LIB_PATH}")
+    endif()
+    set(SCIPY_OPENBLAS32_RUNTIME_LIB_PATH "${SCIPY_OPENBLAS32_LIB_PATH}")
+endif()
 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
@@ -146,7 +141,7 @@ foreach(BACKEND ${PL_BACKEND})
                                                         "${BACKEND}_measurements"
                                                         )
 endforeach()
-                                                
+
 target_include_directories(pennylane_lightning  INTERFACE "$<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/pennylane_lightning/core/src;include>")
 
 #####################################################
@@ -154,10 +149,13 @@ if(ENABLE_PYTHON)
     message(STATUS "ENABLE_PYTHON is ON.")
     pybind11_add_module("${PL_BACKEND}_ops" "pennylane_lightning/core/src/bindings/Bindings.cpp")
 
-    # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
+    set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
     if("${PL_BACKEND}" STREQUAL "lightning_gpu" OR "${PL_BACKEND}" STREQUAL "lightning_tensor")
-        set(CMAKE_BUILD_RPATH_USE_ORIGIN ON)
-        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN")
+        # Allow pip installation of cuQuantum & CUDA 12 libs to be accessible without setting LD_LIBRARY_PATH for lightning_gpu
+        # BUILD_RPATH only works for the last call
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}:$ORIGIN")
+    else()
+        set_target_properties("${PL_BACKEND}_ops" PROPERTIES BUILD_RPATH "${SCIPY_OPENBLAS32_RUNTIME_LIB_PATH}")
     endif()
 
     target_link_libraries("${PL_BACKEND}_ops" PRIVATE   lightning_compile_options

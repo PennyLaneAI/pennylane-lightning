@@ -86,9 +86,6 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
     using HermitianObsT = HermitianObsTNCuda<TensorNetT>;
 
     SECTION("HermitianObs only accepts correct arguments") {
-        auto ob1 =
-            HermitianObsT{std::vector<ComplexT>{0.0, 0.0, 0.0, 0.0}, {0}};
-        auto ob2 = HermitianObsT{std::vector<ComplexT>(16, ComplexT{}), {0, 1}};
         REQUIRE_THROWS_AS(
             HermitianObsT(std::vector<ComplexT>{0.0, 0.0, 0.0}, {0}),
             LightningException);
@@ -96,6 +93,11 @@ TEMPLATE_TEST_CASE("[Hermitian]", "[Observables]", float, double) {
             HermitianObsT(std::vector<ComplexT>{0.0, 0.0, 0.0, 0.0, 0.0},
                           {0, 1}),
             LightningException);
+        REQUIRE_THROWS_WITH(
+            HermitianObsT(std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
+                          {0, 1}),
+            Catch::Matchers::Contains("The number of Hermitian target wires "
+                                      "must be 1 for Lightning-Tensor."));
     }
 
     SECTION("Test get obs name") {
@@ -153,8 +155,8 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
 
         SECTION("Overlapping wires throw an exception") {
             auto ob1 = std::make_shared<HermitianObsT>(
-                std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
-                std::vector<std::size_t>{0, 1});
+                std::vector<ComplexT>(4, ComplexT{0.0, 0.0}),
+                std::vector<std::size_t>{1});
             auto ob2_1 = std::make_shared<NamedObsT>(
                 "PauliX", std::vector<std::size_t>{1});
             auto ob2_2 = std::make_shared<NamedObsT>(
@@ -167,8 +169,8 @@ TEMPLATE_TEST_CASE("[TensorProd]", "[Observables]", float, double) {
 
         SECTION("Constructing an observable with non-overlapping wires ") {
             auto ob1 = std::make_shared<HermitianObsT>(
-                std::vector<ComplexT>(16, ComplexT{0.0, 0.0}),
-                std::vector<std::size_t>{0, 1});
+                std::vector<ComplexT>(4, ComplexT{0.0, 0.0}),
+                std::vector<std::size_t>{1});
             auto ob2_1 = std::make_shared<NamedObsT>(
                 "PauliX", std::vector<std::size_t>{2});
             auto ob2_2 = std::make_shared<NamedObsT>(

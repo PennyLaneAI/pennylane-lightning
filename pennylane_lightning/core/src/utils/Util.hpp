@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <concepts> // integral, floating_point
 #include <numbers>
 #include <numeric> // transform_reduce
 #include <set>
@@ -41,6 +42,7 @@ namespace Pennylane::Util {
  * @return constexpr std::complex<T>
  */
 template <class T, class U = T>
+    requires std::integral<U> || std::floating_point<U>
 inline static constexpr auto ConstMult(U a, std::complex<T> b)
     -> std::complex<T> {
     return {a * b.real(), a * b.imag()};
@@ -245,7 +247,7 @@ inline auto exp2(const std::size_t &n) -> std::size_t {
  * @param value Value to calculate for.
  * @return std::size_t
  */
-inline auto log2(size_t value) -> std::size_t {
+inline auto log2(std::size_t value) -> std::size_t {
     return static_cast<std::size_t>(std::log2(value));
 }
 
@@ -257,7 +259,7 @@ inline auto log2(size_t value) -> std::size_t {
  * @param qubits the number of qubits in the circuit
  * @return decimal value for the qubit at specified index
  */
-inline auto maxDecimalForQubit(size_t qubitIndex, std::size_t qubits)
+inline auto maxDecimalForQubit(std::size_t qubitIndex, std::size_t qubits)
     -> std::size_t {
     PL_ASSERT(qubitIndex < qubits);
     return exp2(qubits - qubitIndex - 1);
@@ -315,7 +317,7 @@ inline auto operator<<(std::ostream &os, const std::vector<T> &vec)
     -> std::ostream & {
     os << '[';
     if (!vec.empty()) {
-        for (size_t i = 0; i < vec.size() - 1; i++) {
+        for (std::size_t i = 0; i < vec.size() - 1; i++) {
             os << vec[i] << ", ";
         }
         os << vec.back();
@@ -396,7 +398,7 @@ inline auto sorting_indices(const T *arr, std::size_t length)
 
     // indices will be sorted in accordance to the array provided.
     sort(indices.begin(), indices.end(),
-         [&arr](size_t i1, std::size_t i2) { return arr[i1] < arr[i2]; });
+         [&arr](std::size_t i1, std::size_t i2) { return arr[i1] < arr[i2]; });
 
     return indices;
 }
@@ -429,12 +431,12 @@ inline auto
 getIndicesAfterExclusion(const std::vector<std::size_t> &indicesToExclude,
                          std::size_t num_qubits) -> std::vector<std::size_t> {
     std::vector<std::size_t> indices;
-    for (size_t i = 0; i < num_qubits; i++) {
+    for (std::size_t i = 0; i < num_qubits; i++) {
         indices.emplace_back(i);
     }
 
     for (auto j : indicesToExclude) {
-        for (size_t i = 0; i < indices.size(); i++) {
+        for (std::size_t i = 0; i < indices.size(); i++) {
             if (j == indices[i]) {
                 indices.erase(indices.begin() + static_cast<int>(i));
             }
@@ -461,13 +463,14 @@ inline auto generateBitsPatterns(const std::vector<std::size_t> &qubitIndices,
     indices.reserve(exp2(qubitIndices.size()));
     indices.emplace_back(0);
 
-    for (size_t index_it0 = 0; index_it0 < qubitIndices.size(); index_it0++) {
+    for (std::size_t index_it0 = 0; index_it0 < qubitIndices.size();
+         index_it0++) {
         std::size_t index_it = qubitIndices.size() - 1 - index_it0;
         const std::size_t value =
             maxDecimalForQubit(qubitIndices[index_it], num_qubits);
 
         const std::size_t currentSize = indices.size();
-        for (size_t j = 0; j < currentSize; j++) {
+        for (std::size_t j = 0; j < currentSize; j++) {
             indices.emplace_back(indices[j] + value);
         }
     }
@@ -481,7 +484,7 @@ inline auto generateBitsPatterns(const std::vector<std::size_t> &qubitIndices,
  * @param new_axes new axes distribution.
  * @return unsigned int with the new transposed index.
  */
-inline auto transposed_state_index(size_t ind,
+inline auto transposed_state_index(std::size_t ind,
                                    const std::vector<std::size_t> &new_axes)
     -> std::size_t {
     std::size_t new_index = 0;
@@ -508,7 +511,7 @@ auto transpose_state_tensor(const std::vector<T> &tensor,
                             const std::vector<std::size_t> &new_axes)
     -> std::vector<T> {
     std::vector<T> transposed_tensor(tensor.size());
-    for (size_t ind = 0; ind < tensor.size(); ind++) {
+    for (std::size_t ind = 0; ind < tensor.size(); ind++) {
         transposed_tensor[ind] = tensor[transposed_state_index(ind, new_axes)];
     }
     return transposed_tensor;
@@ -529,8 +532,8 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
     -> std::vector<T> {
     std::vector<T> result(diagA.size() * diagB.size(), 0);
 
-    for (size_t i = 0; i < diagA.size(); i++) {
-        for (size_t j = 0; j < diagB.size(); j++) {
+    for (std::size_t i = 0; i < diagA.size(); i++) {
+        for (std::size_t j = 0; j < diagB.size(); j++) {
             result[i * diagB.size() + j] = diagA[i] * diagB[j];
         }
     }
@@ -550,11 +553,11 @@ auto kronProd(const std::vector<T> &diagA, const std::vector<T> &diagB)
  * @return is_Hermitian Is the matrix a Hermitian matrix or not.
  */
 template <typename T>
-bool is_Hermitian(size_t n, std::size_t lda,
+bool is_Hermitian(std::size_t n, std::size_t lda,
                   const std::vector<std::complex<T>> &mat) {
     // TODO OMP support
-    for (size_t i = 0; i < n; i++) {
-        for (size_t j = i + 1; j < lda; j++) {
+    for (std::size_t i = 0; i < n; i++) {
+        for (std::size_t j = i + 1; j < lda; j++) {
             if (mat[j + i * lda] != std::conj(mat[i + j * n])) {
                 return false;
             }
@@ -569,6 +572,25 @@ std::vector<T1> cast_vector(const std::vector<T0> &vec) {
     std::transform(vec.begin(), vec.end(), result.begin(),
                    [&](T0 x) { return static_cast<T1>(x); });
     return result;
+}
+
+/**
+ * @brief Check if two vectors are disjoint.
+ * @tparam T Data type.
+ * @param v1 First vector.
+ * @param v2 Second vector.
+ *
+ * @return bool True if the vectors are disjoint, false otherwise.
+ */
+template <typename T = std::size_t>
+bool areVecsDisjoint(const std::vector<T> &v1, const std::vector<T> &v2) {
+    std::set<T> s0(v1.begin(), v1.end());
+    for (const auto &element : v2) {
+        if (s0.find(element) != s0.end()) {
+            return false;
+        }
+    }
+    return true;
 }
 
 } // namespace Pennylane::Util

@@ -21,6 +21,7 @@ import json
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath(""))
+sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath("_ext"))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath("doc")), "doc"))
 
@@ -188,6 +189,8 @@ today_fmt = "%Y-%m-%d"
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+nbsphinx_execute = "never"
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.

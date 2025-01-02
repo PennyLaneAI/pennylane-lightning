@@ -13,9 +13,12 @@
 // limitations under the License.
 
 #include "ObservablesTNCudaOperator.hpp"
+#include "ExactTNCuda.hpp"
 #include "MPSTNCuda.hpp"
 
 using namespace Pennylane::LightningTensor::TNCuda;
 
 template class Observables::ObservableTNCudaOperator<MPSTNCuda<float>>;
 template class Observables::ObservableTNCudaOperator<MPSTNCuda<double>>;
+template class Observables::ObservableTNCudaOperator<ExactTNCuda<float>>;
+template class Observables::ObservableTNCudaOperator<ExactTNCuda<double>>;

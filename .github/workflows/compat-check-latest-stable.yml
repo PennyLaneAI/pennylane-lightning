@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  tests_lgpu_python:
-    name: Lightning Compatibility test (tests_lgpu_python) - latest/stable
-    uses: ./.github/workflows/tests_lgpu_python.yml
+  tests_gpu_python:
+    name: Lightning Compatibility test (tests_gpu_python) - latest/stable
+    uses: ./.github/workflows/tests_gpu_python.yml
     with:
       lightning-version: latest
       pennylane-version: stable
@@ -48,4 +48,3 @@ jobs:
       lightning-version: latest
       pennylane-version: stable
     secrets: inherit
-

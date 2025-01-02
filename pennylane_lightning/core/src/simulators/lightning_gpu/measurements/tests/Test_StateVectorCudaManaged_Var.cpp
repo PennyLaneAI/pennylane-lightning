@@ -38,7 +38,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
     const std::size_t num_qubits = 2;
     SECTION("var(PauliX[0])") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -53,7 +52,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
 
     SECTION("var(PauliY[0])") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -68,7 +66,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
 
     SECTION("var(PauliZ[1])") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -89,7 +86,6 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs",
     using ComplexT = typename StateVectorT::ComplexT;
     SECTION("Using var") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -122,7 +118,6 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
     const std::size_t num_qubits = 3;
     SECTION("Using var") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(

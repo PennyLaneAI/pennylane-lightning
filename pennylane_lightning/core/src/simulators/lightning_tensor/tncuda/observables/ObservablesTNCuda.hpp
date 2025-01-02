@@ -20,6 +20,7 @@
 
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
+#include "Error.hpp"
 #include "Util.hpp"
 
 #include "cuda_helpers.hpp"
@@ -241,6 +242,8 @@ class HermitianObsTNCuda : public ObservableTNCuda<TensorNetT> {
      */
     HermitianObsTNCuda(MatrixT matrix, std::vector<std::size_t> wires)
         : matrix_{std::move(matrix)}, wires_{std::move(wires)} {
+        PL_ABORT_IF(wires_.size() != 1, "The number of Hermitian target wires "
+                                        "must be 1 for Lightning-Tensor.");
         PL_ASSERT(matrix_.size() == Pennylane::Util::exp2(2 * wires_.size()));
         BaseType::coeffs_.emplace_back(PrecisionT{1.0});
         BaseType::numTensors_.emplace_back(std::size_t{1});
@@ -296,7 +299,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<TensorNetT> {
             return false;
         }
 
-        for (size_t i = 0; i < obs_.size(); i++) {
+        for (std::size_t i = 0; i < obs_.size(); i++) {
             if (*obs_[i] != *other_cast.obs_[i]) {
                 return false;
             }
@@ -421,7 +424,7 @@ class TensorProdObsTNCuda : public ObservableTNCuda<TensorNetT> {
         using Pennylane::Util::operator<<;
         std::ostringstream obs_stream;
         const auto obs_size = obs_.size();
-        for (size_t idx = 0; idx < obs_size; idx++) {
+        for (std::size_t idx = 0; idx < obs_size; idx++) {
             obs_stream << obs_[idx]->getObsName();
             if (idx != obs_size - 1) {
                 obs_stream << " @ ";
@@ -463,7 +466,7 @@ class HamiltonianTNCuda : public ObservableTNCuda<TensorNetT> {
             return false;
         }
 
-        for (size_t i = 0; i < obs_.size(); i++) {
+        for (std::size_t i = 0; i < obs_.size(); i++) {
             if (*obs_[i] != *other_cast.obs_[i]) {
                 return false;
             }
@@ -538,7 +541,7 @@ class HamiltonianTNCuda : public ObservableTNCuda<TensorNetT> {
         ss << "Hamiltonian: { 'coeffs' : " << BaseType::coeffs_
            << ", 'observables' : [";
         const auto term_size = BaseType::coeffs_.size();
-        for (size_t t = 0; t < term_size; t++) {
+        for (std::size_t t = 0; t < term_size; t++) {
             ss << obs_[t]->getObsName();
             if (t != term_size - 1) {
                 ss << ", ";
