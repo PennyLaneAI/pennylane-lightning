@@ -799,7 +799,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         applyNCHadamard(arr, num_qubits, {}, {}, wires, inverse);
     }
 
-
     template <class PrecisionT>
     static void
     applyNCS(std::complex<PrecisionT> *arr, const std::size_t num_qubits,

@@ -465,9 +465,6 @@ Ali Asadi, Amintor Dusko, Diego Guala, Joseph Lee, Luis Alfredo Nuñez Meneses, 
 * Enable setting the PennyLane version when invoking, for example, `make docker-build version=master pl_version=master`.
   [(#791)](https://github.com/PennyLaneAI/pennylane-lightning/pull/791)
 
-* Add a Catalyst-specific wrapping class for Lightning Kokkos.
-  [(#770)](https://github.com/PennyLaneAI/pennylane-lightning/pull/770)
-
 ### Documentation
 
 * The installation instructions for all lightning plugins have been improved.
@@ -614,7 +611,7 @@ Ali Asadi, Astral Cai, Ahmed Darwish, Amintor Dusko, Vincent Michaud-Rioux, Luis
 
 * Changed the name of `lightning.tensor` to `default.tensor` with the `quimb` backend.
   [(#719)](https://github.com/PennyLaneAI/pennylane-lightning/pull/719)
-  
+
 * `lightning.qubit` and `lightning.kokkos` adhere to user-specified mid-circuit measurement configuration options.
   [(#736)](https://github.com/PennyLaneAI/pennylane-lightning/pull/736)
 
