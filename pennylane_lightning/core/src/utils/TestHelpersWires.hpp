@@ -114,7 +114,7 @@ class CombinationGenerator : public WiresGenerator {
     std::vector<std::vector<std::size_t>> all_perms_;
 
   public:
-    void comb(size_t n, std::size_t r) {
+    void comb(std::size_t n, std::size_t r) {
         if (r == 0) {
             all_perms_.push_back(v_);
             return;
@@ -129,7 +129,7 @@ class CombinationGenerator : public WiresGenerator {
         comb(n - 1, r);
     }
 
-    CombinationGenerator(size_t n, std::size_t r) {
+    CombinationGenerator(std::size_t n, std::size_t r) {
         v_.resize(r);
         comb(n, r);
     }
@@ -156,12 +156,12 @@ class PermutationGenerator : public WiresGenerator {
     std::vector<std::size_t> v;
 
   public:
-    void perm(size_t n, std::size_t r) {
+    void perm(std::size_t n, std::size_t r) {
         if (r == 0) {
             all_perms_.push_back(v);
             return;
         }
-        for (size_t i = 0; i < n; i++) {
+        for (std::size_t i = 0; i < n; i++) {
             v[r - 1] = available_elems_[i];
             std::swap(available_elems_[n - 1], available_elems_[i]);
             perm(n - 1, r - 1);
@@ -169,7 +169,7 @@ class PermutationGenerator : public WiresGenerator {
         }
     }
 
-    PermutationGenerator(size_t n, std::size_t r) {
+    PermutationGenerator(std::size_t n, std::size_t r) {
         v.resize(r);
 
         available_elems_.resize(n);
@@ -191,7 +191,7 @@ class PermutationGenerator : public WiresGenerator {
  * @param gate_op Gate operation
  * @param order Whether the ordering matters (if true, permutation is used)
  */
-auto inline createAllWires(size_t n_qubits,
+auto inline createAllWires(std::size_t n_qubits,
                            Pennylane::Gates::GateOperation gate_op, bool order)
     -> std::vector<std::vector<std::size_t>> {
     if (array_has_elem(Pennylane::Gates::Constant::multi_qubit_gates,
@@ -199,12 +199,12 @@ auto inline createAllWires(size_t n_qubits,
         // make all possible 2^N permutations
         std::vector<std::vector<std::size_t>> res;
         res.reserve((1U << n_qubits) - 1);
-        for (size_t k = 1; k < (static_cast<std::size_t>(1U) << n_qubits);
+        for (std::size_t k = 1; k < (static_cast<std::size_t>(1U) << n_qubits);
              k++) {
             std::vector<std::size_t> wires;
             wires.reserve(std::popcount(k));
 
-            for (size_t i = 0; i < n_qubits; i++) {
+            for (std::size_t i = 0; i < n_qubits; i++) {
                 if (((k >> i) & 1U) == 1U) {
                     wires.emplace_back(i);
                 }

@@ -27,7 +27,7 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
     SECTION("isPerfectPowerOf2") {
         std::size_t n = 1U;
         CHECK(Util::isPerfectPowerOf2(n));
-        for (size_t k = 0; k < sizeof(size_t) - 2; k++) {
+        for (std::size_t k = 0; k < sizeof(std::size_t) - 2; k++) {
             n *= 2;
             CHECK(Util::isPerfectPowerOf2(n));
             CHECK(!Util::isPerfectPowerOf2(n + 1));
@@ -38,7 +38,7 @@ TEST_CASE("Utility bit operations", "[Util][BitUtil]") {
         CHECK(!Util::isPerfectPowerOf2(1077U));
         CHECK(!Util::isPerfectPowerOf2(1000000000U));
 
-        if constexpr (sizeof(size_t) == 8) {
+        if constexpr (sizeof(std::size_t) == 8) {
             // if std::size_t is uint64_t
             CHECK(!Util::isPerfectPowerOf2(1234556789012345678U));
         }

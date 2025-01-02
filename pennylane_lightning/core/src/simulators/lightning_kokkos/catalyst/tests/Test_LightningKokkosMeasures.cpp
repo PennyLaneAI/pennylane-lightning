@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <random>
+
 #include "CacheManager.hpp"
 #include "LightningKokkosSimulator.hpp"
 #include "QuantumDevice.hpp"
@@ -294,14 +296,7 @@ TEST_CASE("Expval(HermitianObs) shots test", "[Measures]") {
 
     ObsIdType h1 = sim->Observable(ObsId::Hermitian, mat1, {Qs[0], Qs[1]});
 
-#ifndef PL_USE_LAPACK
-    REQUIRE_THROWS_WITH(
-        sim->Expval(h1),
-        Catch::Contains(
-            "Hermitian observables with shot measurement are not supported"));
-#else
     CHECK(sim->Expval(h1) == Approx(0.0).margin(1e-5));
-#endif
 }
 
 TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
@@ -324,14 +319,8 @@ TEST_CASE("Var(HermitianObs) shots test", "[Measures]") {
     std::vector<std::complex<double>> mat1(16, {0, 0});
 
     ObsIdType h1 = sim->Observable(ObsId::Hermitian, mat1, {Qs[0], Qs[1]});
-#ifndef PL_USE_LAPACK
-    REQUIRE_THROWS_WITH(
-        sim->Var(h1),
-        Catch::Contains(
-            "Hermitian observables with shot measurement are not supported"));
-#else
+
     CHECK(sim->Var(h1) == Approx(0.0).margin(1e-5));
-#endif
 }
 
 TEST_CASE("Expval(TensorProd(NamedObs)) test", "[Measures]") {
@@ -1749,4 +1738,208 @@ TEST_CASE("Counts and PartialCounts tests with numWires=0-4 shots=100",
     }
     CHECK(sum3 == shots);
     CHECK(sum4 == shots);
+}
+
+TEST_CASE("Measurement with a seeded device", "[Measures]") {
+    std::array<std::unique_ptr<LKSimulator>, 2> sims;
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [](LKSimulator &sim, std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        std::vector<intptr_t> Qs;
+        Qs.reserve(1);
+        Qs.push_back(sim.AllocateQubit());
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        auto m = sim.Measure(Qs[0]);
+        return m;
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LKSimulator>();
+        sims[1] = std::make_unique<LKSimulator>();
+
+        auto m0 = circuit(*(sims[0]), gens[0]);
+        auto m1 = circuit(*(sims[1]), gens[1]);
+
+        CHECK(*m0 == *m1);
+    }
+}
+
+TEST_CASE("Sample with a seeded device", "[Measures]") {
+    std::size_t shots = 100;
+    std::array<std::unique_ptr<LKSimulator>, 2> sims;
+    std::vector<std::vector<double>> sample_vec(2,
+                                                std::vector<double>(shots * 4));
+
+    std::vector<MemRefT<double, 2>> buffers{
+        MemRefT<double, 2>{
+            sample_vec[0].data(), sample_vec[0].data(), 0, {shots, 1}, {1, 1}},
+        MemRefT<double, 2>{
+            sample_vec[1].data(), sample_vec[1].data(), 0, {shots, 1}, {1, 1}},
+    };
+    std::vector<DataView<double, 2>> views{
+        DataView<double, 2>(buffers[0].data_aligned, buffers[0].offset,
+                            buffers[0].sizes, buffers[0].strides),
+        DataView<double, 2>(buffers[1].data_aligned, buffers[1].offset,
+                            buffers[1].sizes, buffers[1].strides)};
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [shots](LKSimulator &sim, DataView<double, 2> &view,
+                           std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        std::vector<intptr_t> Qs;
+        Qs.reserve(1);
+        Qs.push_back(sim.AllocateQubit());
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("RX", {0.5}, {Qs[0]}, false);
+        sim.Sample(view, shots);
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LKSimulator>();
+        sims[1] = std::make_unique<LKSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), views[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < sample_vec[0].size(); i++) {
+            CHECK((sample_vec[0][i] == sample_vec[1][i]));
+        }
+    }
+}
+
+TEST_CASE("Probs with a seeded device", "[Measures]") {
+    constexpr std::size_t shots = 1000;
+    std::array<std::unique_ptr<LKSimulator>, 2> sims;
+    std::vector<std::vector<double>> probs(2, std::vector<double>(16));
+
+    std::vector<DataView<double, 1>> views{DataView<double, 1>(probs[0]),
+                                           DataView<double, 1>(probs[1])};
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [](LKSimulator &sim, DataView<double, 1> &view,
+                      std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(shots);
+        // state-vector with #qubits = n
+        constexpr std::size_t n = 4;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n);
+        for (std::size_t i = 0; i < n; i++) {
+            Qs.push_back(sim.AllocateQubit());
+        }
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("PauliY", {}, {Qs[1]}, false);
+        sim.NamedOperation("Hadamard", {}, {Qs[2]}, false);
+        sim.NamedOperation("PauliZ", {}, {Qs[3]}, false);
+        sim.Probs(view);
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LKSimulator>();
+        sims[1] = std::make_unique<LKSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), views[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < probs[0].size(); i++) {
+            CHECK((probs[0][i] == probs[1][i]));
+        }
+    }
+}
+
+TEST_CASE("Var with a seeded device", "[Measures]") {
+    constexpr std::size_t shots = 1000;
+    std::array<std::unique_ptr<LKSimulator>, 2> sims;
+    std::array<std::vector<double>, 2> vars;
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [](LKSimulator &sim, std::vector<double> &var,
+                      std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(shots);
+        // state-vector with #qubits = n
+        constexpr std::size_t n = 4;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n);
+        for (std::size_t i = 0; i < n; i++) {
+            Qs.push_back(sim.AllocateQubit());
+        }
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("PauliY", {}, {Qs[1]}, false);
+        sim.NamedOperation("Hadamard", {}, {Qs[2]}, false);
+        sim.NamedOperation("PauliZ", {}, {Qs[3]}, false);
+
+        ObsIdType px = sim.Observable(ObsId::PauliX, {}, {Qs[2]});
+        ObsIdType py = sim.Observable(ObsId::PauliY, {}, {Qs[0]});
+        ObsIdType pz = sim.Observable(ObsId::PauliZ, {}, {Qs[3]});
+
+        var.push_back(sim.Var(px));
+        var.push_back(sim.Var(py));
+        var.push_back(sim.Var(pz));
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LKSimulator>();
+        sims[1] = std::make_unique<LKSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), vars[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < vars[0].size(); i++) {
+            CHECK((vars[0][i] == vars[1][i]));
+        }
+    }
+}
+
+TEST_CASE("Expval with a seeded device", "[Measures]") {
+    constexpr std::size_t shots = 1000;
+    std::array<std::unique_ptr<LKSimulator>, 2> sims;
+    std::array<std::vector<double>, 2> expvals;
+
+    std::vector<std::mt19937> gens{std::mt19937{37}, std::mt19937{37}};
+
+    auto circuit = [](LKSimulator &sim, std::vector<double> &expval,
+                      std::mt19937 &gen) {
+        sim.SetDevicePRNG(&gen);
+        sim.SetDeviceShots(shots);
+        // state-vector with #qubits = n
+        constexpr std::size_t n = 4;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n);
+        for (std::size_t i = 0; i < n; i++) {
+            Qs.push_back(sim.AllocateQubit());
+        }
+        sim.NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        sim.NamedOperation("PauliY", {}, {Qs[1]}, false);
+        sim.NamedOperation("Hadamard", {}, {Qs[2]}, false);
+        sim.NamedOperation("PauliZ", {}, {Qs[3]}, false);
+
+        ObsIdType px = sim.Observable(ObsId::PauliX, {}, {Qs[2]});
+        ObsIdType py = sim.Observable(ObsId::PauliY, {}, {Qs[0]});
+        ObsIdType pz = sim.Observable(ObsId::PauliZ, {}, {Qs[3]});
+
+        expval.push_back(sim.Expval(px));
+        expval.push_back(sim.Expval(py));
+        expval.push_back(sim.Expval(pz));
+    };
+
+    for (std::size_t trial = 0; trial < 5; trial++) {
+        sims[0] = std::make_unique<LKSimulator>();
+        sims[1] = std::make_unique<LKSimulator>();
+
+        for (std::size_t sim_idx = 0; sim_idx < sims.size(); sim_idx++) {
+            circuit(*(sims[sim_idx]), expvals[sim_idx], gens[sim_idx]);
+        }
+
+        for (std::size_t i = 0; i < expvals[0].size(); i++) {
+            CHECK((expvals[0][i] == expvals[1][i]));
+        }
+    }
 }

@@ -125,12 +125,11 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        if device_name == "lightning.kokkos":
-            message = "Adjoint differentiation does not support State measurements."
+        if dev._new_API:
+            message = "Adjoint differentiation method does not support measurement StateMP."
         elif device_name == "lightning.gpu":
             message = "Adjoint differentiation does not support State measurements."
-        else:
-            message = "Adjoint differentiation method does not support measurement StateMP."
+
         with pytest.raises(
             qml.QuantumFunctionError,
             match=message,
@@ -195,7 +194,6 @@ class TestAdjointJacobian:
             ):
                 dev.adjoint_jacobian(tape)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_proj_unsupported(self, dev):
         """Test if a QuantumFunctionError is raised for a Projector observable"""
@@ -221,15 +219,14 @@ class TestAdjointJacobian:
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_pauli_rotation_gradient(self, stateprep, G, theta, dev):
+    def test_pauli_rotation_gradient(self, G, theta, dev):
         """Tests that the automatic gradients of Pauli rotations are correct."""
         random_state = np.array(
             [0.43593284 - 0.02945156j, 0.40812291 + 0.80158023j], requires_grad=False
         )
 
         tape = qml.tape.QuantumScript(
-            [stateprep(random_state, 0), G(theta, 0)], [qml.expval(qml.PauliZ(0))]
+            [qml.StatePrep(random_state, 0), G(theta, 0)], [qml.expval(qml.PauliZ(0))]
         )
 
         tape.trainable_params = {1}
@@ -245,14 +242,13 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_Rot_gradient(self, stateprep, theta, dev):
+    def test_Rot_gradient(self, theta, dev):
         """Tests that the device gradient of an arbitrary Euler-angle-parameterized gate is
         correct."""
         params = np.array([theta, theta**3, np.sqrt(2) * theta])
 
         with qml.tape.QuantumTape() as tape:
-            stateprep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
+            qml.StatePrep(np.array([1.0, -1.0], requires_grad=False) / np.sqrt(2), wires=0)
             qml.Rot(*params, wires=[0])
             qml.expval(qml.PauliZ(0))
 
@@ -269,8 +265,8 @@ class TestAdjointJacobian:
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        device_name in ("lightning.kokkos"),
+        reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
     )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
@@ -398,7 +394,6 @@ class TestAdjointJacobian:
     qubit_ops = [getattr(qml, name) for name in qml.ops._qubit__ops__]
     ops = {qml.RX, qml.RY, qml.RZ, qml.PhaseShift, qml.CRX, qml.CRY, qml.CRZ, qml.Rot}
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_multiple_rx_gradient_expval_hamiltonian(self, tol, dev):
         """Tests that the gradient of multiple RX gates in a circuit yields the correct result
         with Hermitian observable
@@ -576,7 +571,6 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    @pytest.mark.usefixtures("use_legacy_and_new_opmath")
     def test_gradient_gate_with_multiple_parameters_hamiltonian(self, dev):
         """Tests that gates with multiple free parameters yield correct gradients."""
         x, y, z = [0.5, 0.3, -0.7]
@@ -700,13 +694,13 @@ class TestAdjointJacobianQNode:
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_finite_shots_warning(self):
-        """Tests that a warning is raised when computing the adjoint diff on a device with finite shots"""
+    def test_finite_shots_error(self):
+        """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
 
         dev = qml.device(device_name, wires=1, shots=1)
 
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
+        with pytest.raises(
+            qml.QuantumFunctionError, match="does not support adjoint with requested circuit."
         ):
 
             @qml.qnode(dev, diff_method="adjoint")
@@ -714,9 +708,6 @@ class TestAdjointJacobianQNode:
                 qml.RX(x, wires=0)
                 return qml.expval(qml.PauliZ(0))
 
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
-        ):
             qml.grad(circ)(0.1)
 
     def test_qnode(self, mocker, dev):
@@ -741,7 +732,7 @@ class TestAdjointJacobianQNode:
         spy = (
             mocker.spy(dev, "execute_and_compute_derivatives")
             if ld._new_API
-            else mocker.spy(dev, "adjoint_jacobian")
+            else mocker.spy(dev.target_device, "adjoint_jacobian")
         )
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
@@ -790,7 +781,7 @@ class TestAdjointJacobianQNode:
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
 
         num_wires = max(operation.num_wires, 1)
@@ -820,9 +811,73 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad.shape, jac_bp.shape)
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
+    @pytest.mark.parametrize(
+        "operation",
+        [
+            qml.PhaseShift,
+            qml.RX,
+            qml.RY,
+            qml.RZ,
+            qml.IsingXX,
+            qml.IsingXY,
+            qml.IsingYY,
+            qml.IsingZZ,
+            qml.CRX,
+            qml.CRY,
+            qml.CRZ,
+            qml.ControlledPhaseShift,
+            qml.SingleExcitation,
+            qml.SingleExcitationMinus,
+            qml.SingleExcitationPlus,
+            qml.DoubleExcitation,
+            qml.DoubleExcitationMinus,
+            qml.DoubleExcitationPlus,
+            qml.MultiRZ,
+            qml.GlobalPhase,
+        ],
+    )
+    @pytest.mark.parametrize("n_qubits", range(2, 6))
+    @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
+    def test_inverse_jacobian(self, par, n_qubits, operation, tol):
+        """Test that the jacobian of the controlled gate matches backprop."""
+        par = np.array([0.1234, par, 0.5678])
+        dev = qml.device(device_name, wires=n_qubits)
+        dqu = qml.device("default.qubit", wires=n_qubits)
+        np.random.seed(1337)
+        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+        init_state /= np.linalg.norm(init_state)
+        init_state = np.array(init_state, requires_grad=False)
+
+        num_wires = max(operation.num_wires, 1)
+        if num_wires > n_qubits:
+            return
+
+        for w in range(0, n_qubits - num_wires):
+
+            def circuit(p):
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.RX(p[0], 0)
+                if operation is qml.GlobalPhase:
+                    qml.adjoint(operation(p[1], wires=range(n_qubits)))
+                else:
+                    qml.adjoint(operation(p[1], wires=range(w, w + num_wires)))
+                qml.RY(p[2], 0)
+                return np.array([qml.expval(qml.PauliY(i)) for i in range(n_qubits)])
+
+            circ_ad = qml.QNode(circuit, dev, diff_method="adjoint")
+            circ_bp = qml.QNode(circuit, dqu, diff_method="backprop")
+            jac_ad = np.array(qml.jacobian(circ_ad)(par))
+            jac_bp = np.array(qml.jacobian(circ_bp)(par))
+
+            # different methods must agree
+            assert jac_ad.size == n_qubits * 3
+            assert np.allclose(jac_ad.shape, [n_qubits, 3])
+            assert np.allclose(jac_ad.shape, jac_bp.shape)
+            assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
+
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="N-controlled operations only implemented in lightning.qubit.",
+        device_name == "lightning.kokkos",
+        reason="N-controlled generator operations only implemented in lightning.qubit and lightning.gpu",
     )
     @pytest.mark.parametrize(
         "operation",
@@ -852,11 +907,11 @@ class TestAdjointJacobianQNode:
     def test_controlled_jacobian(self, par, n_qubits, control_value, operation, tol):
         """Test that the jacobian of the controlled gate matches the parameter-shift formula."""
         par = np.array([0.1234, par, 0.5678])
-        dev = qml.device("lightning.qubit", wires=n_qubits)
+        dev = qml.device(device_name, wires=n_qubits)
         dqu = qml.device("default.qubit", wires=n_qubits)
         np.random.seed(1337)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
         init_state = np.array(init_state, requires_grad=False)
         num_wires = max(operation.num_wires, 1)
         if num_wires > n_qubits:
@@ -868,13 +923,12 @@ class TestAdjointJacobianQNode:
             def circuit(p):
                 qml.StatePrep(init_state, wires=range(n_qubits))
                 if operation.num_params == 3:
-                    # Check against the first wire in `control_wires` as any
-                    # decomposition to `ctrl_decomp_zyz` works now with only
-                    # one single controlled wire.
                     qml.ctrl(
                         operation(*p, wires=range(n_qubits - num_wires, n_qubits)),
-                        control_wires[0],
-                        control_values=control_value,
+                        control_wires,
+                        control_values=[
+                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                        ],
                     )
                 else:
                     qml.RX(p[0], 0)
@@ -926,7 +980,7 @@ class TestAdjointJacobianQNode:
         if ld._new_API:
             spy = mocker.spy(dev, "execute_and_compute_derivatives")
         else:
-            spy = mocker.spy(dev, "adjoint_jacobian")
+            spy = mocker.spy(dev.target_device, "adjoint_jacobian")
 
         # analytic gradient
         grad_fn = qml.grad(cost)
@@ -968,7 +1022,7 @@ class TestAdjointJacobianQNode:
         spy_analytic = (
             mocker.spy(dev, "execute_and_compute_derivatives")
             if ld._new_API
-            else mocker.spy(dev, "adjoint_jacobian")
+            else mocker.spy(dev.target_device, "adjoint_jacobian")
         )
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
@@ -1086,7 +1140,7 @@ class TestAdjointJacobianQNode:
 
 def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
-    qml.QubitStateVector(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
+    qml.StatePrep(unitary_group.rvs(2**4, random_state=0)[0], wires=wires)
     qml.RX(params[0], wires=wires[0])
     qml.RY(params[1], wires=wires[1])
     qml.adjoint(qml.RX(params[2], wires=wires[2]))
@@ -1119,7 +1173,6 @@ def circuit_ansatz(params, wires):
     qml.RX(params[29], wires=wires[1])
 
 
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 def test_tape_qchem(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1138,11 +1191,11 @@ def test_tape_qchem(tol):
 
     circuit_ld = qml.QNode(circuit, dev_ld, diff_method="adjoint")
     circuit_dq = qml.QNode(circuit, dev_dq, diff_method="parameter-shift")
+    res = qml.grad(circuit_ld)(params)
+    ref = qml.grad(circuit_dq)(params)
+    assert np.allclose(res, ref, tol)
 
-    assert np.allclose(qml.grad(circuit_ld)(params), qml.grad(circuit_dq)(params), tol)
 
-
-@pytest.mark.usefixtures("use_legacy_and_new_opmath")
 def test_tape_qchem_sparse(tol):
     """Tests the circuit Ansatz with a QChem Hamiltonian produces correct results"""
 
@@ -1249,7 +1302,7 @@ def test_integration(returns):
 
     def circuit(params):
         circuit_ansatz(params, wires=range(4))
-        return qml.expval(returns), qml.expval(qml.PauliY(1))
+        return np.array([qml.expval(returns), qml.expval(qml.PauliY(1))])
 
     n_params = 30
     params = np.linspace(0, 10, n_params)
@@ -1257,27 +1310,37 @@ def test_integration(returns):
     qnode_def = qml.QNode(circuit, dev_def)
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
 
-    def casted_to_array_def(params):
-        return np.array(qnode_def(params))
-
-    def casted_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
-
-    j_def = qml.jacobian(casted_to_array_def)(params)
-    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
 
 
 def test_integration_chunk_observables():
     """Integration tests that compare to default.qubit for a large circuit with multiple expectation values. Expvals are generated in parallelized chunks."""
-    dev_def = qml.device("default.qubit", wires=range(4))
-    dev_lightning = qml.device(device_name, wires=range(4))
-    dev_lightning_batched = qml.device(device_name, wires=range(4), batch_obs=True)
+    num_qubits = 4
+
+    dev_def = qml.device("default.qubit", wires=range(num_qubits))
+    dev_lightning = qml.device(device_name, wires=range(num_qubits))
+    dev_lightning_batched = qml.device(device_name, wires=range(num_qubits), batch_obs=True)
 
     def circuit(params):
-        circuit_ansatz(params, wires=range(4))
-        return [qml.expval(qml.PauliZ(i)) for i in range(4)]
+        circuit_ansatz(params, wires=range(num_qubits))
+        return np.array(
+            [qml.expval(qml.PauliZ(i)) for i in range(num_qubits)]
+            + [
+                qml.expval(
+                    qml.Hamiltonian(
+                        np.arange(1, num_qubits + 1),
+                        [
+                            qml.PauliZ(i % num_qubits) @ qml.PauliY((i + 1) % num_qubits)
+                            for i in range(num_qubits)
+                        ],
+                    )
+                )
+            ]
+            + [qml.expval(qml.PauliY(i)) for i in range(num_qubits)]
+        )
 
     n_params = 30
     params = np.linspace(0, 10, n_params)
@@ -1286,18 +1349,9 @@ def test_integration_chunk_observables():
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
     qnode_lightning_batched = qml.QNode(circuit, dev_lightning_batched, diff_method="adjoint")
 
-    def casted_to_array_def(params):
-        return np.array(qnode_def(params))
-
-    def casted_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
-
-    def casted_to_array_batched(params):
-        return np.array(qnode_lightning_batched(params))
-
-    j_def = qml.jacobian(casted_to_array_def)(params)
-    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
-    j_lightning_batched = qml.jacobian(casted_to_array_batched)(params)
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
+    j_lightning_batched = qml.jacobian(qnode_lightning_batched)(params)
 
     assert np.allclose(j_def, j_lightning)
     assert np.allclose(j_def, j_lightning_batched)
@@ -1332,7 +1386,7 @@ def test_integration_custom_wires(returns):
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
-        return qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))
+        return np.array([qml.expval(returns), qml.expval(qml.PauliY(custom_wires[1]))])
 
     n_params = 30
     params = np.linspace(0, 10, n_params)
@@ -1340,21 +1394,15 @@ def test_integration_custom_wires(returns):
     qnode_def = qml.QNode(circuit, dev_def)
     qnode_lightning = qml.QNode(circuit, dev_lightning, diff_method="adjoint")
 
-    def casted_to_array_def(params):
-        return np.array(qnode_def(params))
-
-    def casted_to_array_lightning(params):
-        return np.array(qnode_lightning(params))
-
-    j_def = qml.jacobian(casted_to_array_def)(params)
-    j_lightning = qml.jacobian(casted_to_array_lightning)(params)
+    j_def = qml.jacobian(qnode_def)(params)
+    j_lightning = qml.jacobian(qnode_lightning)(params)
 
     assert np.allclose(j_def, j_lightning)
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu",
-    reason="Tests only for lightning.gpu",
+    device_name not in ("lightning.qubit", "lightning.gpu"),
+    reason="Tests only for lightning.qubit and lightning.gpu",
 )
 @pytest.mark.parametrize(
     "returns",
@@ -1380,7 +1428,7 @@ def test_integration_custom_wires_batching(returns):
     operations and when using custom wire labels"""
 
     dev_def = qml.device("default.qubit", wires=custom_wires)
-    dev_gpu = qml.device("lightning.gpu", wires=custom_wires, batch_obs=True)
+    dev_gpu = qml.device(device_name, wires=custom_wires, batch_obs=True)
 
     def circuit(params):
         circuit_ansatz(params, wires=custom_wires)
@@ -1406,8 +1454,8 @@ def test_integration_custom_wires_batching(returns):
 
 
 @pytest.mark.skipif(
-    device_name != "lightning.gpu",
-    reason="Tests only for lightning.gpu",
+    device_name not in ("lightning.qubit", "lightning.gpu"),
+    reason="Tests only for lightning.qubit and lightning.gpu",
 )
 @pytest.mark.parametrize(
     "returns",
@@ -1553,17 +1601,17 @@ def test_qubit_unitary(n_targets):
     """Tests that ``qml.QubitUnitary`` can be included in circuits differentiated with the adjoint method."""
     n_wires = 6
     dev = qml.device(device_name, wires=n_wires)
-    dev_def = qml.device("default.qubit.legacy", wires=n_wires)
+    dev_def = qml.device("default.qubit", wires=n_wires)
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 
@@ -1599,13 +1647,13 @@ def test_diff_qubit_unitary(n_targets):
 
     np.random.seed(1337)
     init_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
     init_state = np.array(init_state, requires_grad=False)
     U = np.random.rand(2**n_targets, 2**n_targets) + 1j * np.random.rand(2**n_targets, 2**n_targets)
     U, _ = np.linalg.qr(U)
     U = np.array(U, requires_grad=False)
 
-    obs = qml.operation.Tensor(*(qml.PauliZ(i) for i in range(n_wires)))
+    obs = qml.prod(*(qml.PauliZ(i) for i in range(n_wires)))
 
     par = 2 * np.pi * np.random.rand(n_wires)
 

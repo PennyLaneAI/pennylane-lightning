@@ -198,29 +198,20 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
         data_buffer_ = std::move(other);
     }
 
-    /**
-     * @brief Initialize the statevector data to the |0...0> state
-     *
-     */
-    void initSV(bool async = false) {
-        std::size_t index = 0;
-        const std::complex<Precision> value(1, 0);
-        static_cast<Derived *>(this)->setBasisState(value, index, async);
-    };
-
   protected:
     using ParFunc = std::function<void(const std::vector<std::size_t> &, bool,
                                        const std::vector<Precision> &)>;
     using FMap = std::unordered_map<std::string, ParFunc>;
 
-    StateVectorCudaBase(size_t num_qubits, int device_id = 0,
+    StateVectorCudaBase(std::size_t num_qubits, int device_id = 0,
                         cudaStream_t stream_id = 0, bool device_alloc = true)
         : StateVectorBase<Precision, Derived>(num_qubits),
           data_buffer_{std::make_unique<LightningGPU::DataBuffer<CFP_t>>(
               Pennylane::Util::exp2(num_qubits), device_id, stream_id,
               device_alloc)} {}
 
-    StateVectorCudaBase(size_t num_qubits, LightningGPU::DevTag<int> dev_tag,
+    StateVectorCudaBase(std::size_t num_qubits,
+                        LightningGPU::DevTag<int> dev_tag,
                         bool device_alloc = true)
         : StateVectorBase<Precision, Derived>(num_qubits),
           data_buffer_{std::make_unique<LightningGPU::DataBuffer<CFP_t>>(

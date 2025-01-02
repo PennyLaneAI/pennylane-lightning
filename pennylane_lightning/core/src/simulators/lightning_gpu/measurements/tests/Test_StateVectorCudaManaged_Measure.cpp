@@ -149,7 +149,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
             Measurer.expval(operations_list, wires_list, coeffs.data());
         exp_values_ref = {0.49272486, 0.42073549, 0.28232124};
         PrecisionT expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
+        for (std::size_t i = 0; i < coeffs.size(); i++) {
             expected_values += exp_values_ref[i] * (coeffs[i].real());
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));
@@ -159,7 +159,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
             Measurer.expval(operations_list, wires_list, coeffs.data());
         exp_values_ref = {-0.64421768, -0.47942553, -0.29552020};
         expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
+        for (std::size_t i = 0; i < coeffs.size(); i++) {
             expected_values += exp_values_ref[i] * (coeffs[i].real());
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));
@@ -169,7 +169,7 @@ TEMPLATE_TEST_CASE("Pauli word based API", "[Measurements]", float, double) {
             Measurer.expval(operations_list, wires_list, coeffs.data());
         exp_values_ref = {0.58498357, 0.77015115, 0.91266780};
         expected_values = 0;
-        for (size_t i = 0; i < coeffs.size(); i++) {
+        for (std::size_t i = 0; i < coeffs.size(); i++) {
             expected_values += exp_values_ref[i] * (coeffs[i].real());
         }
         CHECK(exp_values == Approx(expected_values).margin(1e-7));
@@ -257,7 +257,7 @@ TEMPLATE_TEST_CASE("Probabilities", "[Measures]", float, double) {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     // Probabilities calculated with Pennylane default.qubit:
     std::vector<std::pair<std::vector<std::size_t>, std::vector<TestType>>>
-        input = {{{2, 1, 0},
+        input = {{{0, 1, 2},
                   {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
                    0.00801973, 0.02280642, 0.00104134}}};
 

@@ -16,25 +16,20 @@ r"""
 This module contains the base class for all PennyLane Lightning simulator devices,
 and interfaces with C++ for improved performance.
 """
-from itertools import islice, product
-from typing import List
+from itertools import product
+from typing import List, Union
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, QubitDevice, StatePrep
+from pennylane import BasisState, StatePrep
+from pennylane.devices import QubitDevice
 from pennylane.measurements import Expectation, MeasurementProcess, State
-from pennylane.operation import Operation, Tensor
+from pennylane.operation import Operation
 from pennylane.ops import Prod, Projector, SProd, Sum
 from pennylane.wires import Wires
 
 from ._serialize import QuantumScriptSerializer
 from ._version import __version__
-
-
-def _chunk_iterable(iteration, num_chunks):
-    "Lazy-evaluated chunking of given iterable from https://stackoverflow.com/a/22045226"
-    iteration = iter(iteration)
-    return iter(lambda: tuple(islice(iteration, num_chunks)), ())
 
 
 class LightningBase(QubitDevice):
@@ -55,7 +50,7 @@ class LightningBase(QubitDevice):
             OpenMP.
     """
 
-    pennylane_requires = ">=0.36"
+    pennylane_requires = ">=0.38"
     version = __version__
     author = "Xanadu Inc."
     short_name = "lightning.base"
@@ -74,7 +69,7 @@ class LightningBase(QubitDevice):
             raise ImportError(
                 f"Pre-compiled binaries for {self.short_name} are not available. "
                 "To manually compile from source, follow the instructions at "
-                "https://pennylane-lightning.readthedocs.io/en/latest/installation.html."
+                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
             )
         if c_dtype is np.complex64:
             r_dtype = np.float32
@@ -99,10 +94,6 @@ class LightningBase(QubitDevice):
         and observable) and returns ``True`` if supported by the device."""
 
         def accepts_obj(obj):
-            if isinstance(obj, qml.QFT):
-                return len(obj.wires) < 10
-            if isinstance(obj, qml.GroverOperator):
-                return len(obj.wires) < 13
             is_not_tape = not isinstance(obj, qml.tape.QuantumTape)
             is_supported = getattr(self, "supports_operation", lambda name: False)(obj.name)
             return is_not_tape and is_supported
@@ -187,9 +178,7 @@ class LightningBase(QubitDevice):
     def _get_diagonalizing_gates(self, circuit: qml.tape.QuantumTape) -> List[Operation]:
         # pylint: disable=no-member, protected-access
         def skip_diagonalizing(obs):
-            return isinstance(obs, qml.Hamiltonian) or (
-                isinstance(obs, qml.ops.Sum) and obs._pauli_rep is not None
-            )
+            return isinstance(obs, qml.ops.Sum) and obs._pauli_rep is not None
 
         meas_filtered = list(
             filter(lambda m: m.obs is None or not skip_diagonalizing(m.obs), circuit.measurements)
@@ -261,12 +250,18 @@ class LightningBase(QubitDevice):
         return int(qml.math.dot(state, basis_states))
 
     # pylint: disable=too-many-function-args, assignment-from-no-return, too-many-arguments
+    # pylint: disable=too-many-positional-arguments
     def _process_jacobian_tape(
-        self, tape, starting_state, use_device_state, use_mpi: bool = False, split_obs: bool = False
+        self,
+        tape,
+        starting_state,
+        use_device_state,
+        use_mpi: bool = False,
+        split_obs: Union[bool, int] = False,
     ):
         state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
 
-        obs_serialized, obs_idx_offsets = QuantumScriptSerializer(
+        obs_serialized, obs_indices = QuantumScriptSerializer(
             self.short_name, self.use_csingle, use_mpi, split_obs
         ).serialize_observables(tape, self.wire_map)
 
@@ -309,7 +304,7 @@ class LightningBase(QubitDevice):
             "tp_shift": tp_shift,
             "record_tp_rows": record_tp_rows,
             "all_params": all_params,
-            "obs_idx_offsets": obs_idx_offsets,
+            "obs_indices": obs_indices,
         }
 
     @staticmethod
@@ -323,18 +318,12 @@ class LightningBase(QubitDevice):
         Raises:
             ~pennylane.QuantumFunctionError: if a ``Projector`` is found.
         """
-        if isinstance(observable, Tensor):
-            if any(isinstance(o, Projector) for o in observable.non_identity_obs):
-                raise qml.QuantumFunctionError(
-                    "Adjoint differentiation method does not support the Projector observable"
-                )
-
-        elif isinstance(observable, Projector):
+        if isinstance(observable, Projector):
             raise qml.QuantumFunctionError(
                 "Adjoint differentiation method does not support the Projector observable"
             )
 
-        elif isinstance(observable, SProd):
+        if isinstance(observable, SProd):
             LightningBase._assert_adjdiff_no_projectors(observable.base)
 
         elif isinstance(observable, (Sum, Prod)):

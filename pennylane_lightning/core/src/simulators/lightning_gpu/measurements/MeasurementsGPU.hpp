@@ -93,16 +93,10 @@ class Measurements final
      */
     auto probs(const std::vector<std::size_t> &wires)
         -> std::vector<PrecisionT> {
-        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()) ||
-                            std::is_sorted(wires.rbegin(), wires.rend()),
-                        "LightningGPU does not currently support out-of-order "
-                        "wire indices with probability calculations");
-
         // Data return type fixed as double in custatevec function call
         std::vector<double> probabilities(Pennylane::Util::exp2(wires.size()));
         // this should be built upon by the wires not participating
-        int maskLen =
-            0; // static_cast<int>(BaseType::getNumQubits() - wires.size());
+        int maskLen = 0;
         int *maskBitString = nullptr; //
         int *maskOrdering = nullptr;
 
@@ -124,6 +118,8 @@ class Measurements final
                                this->_statevector.getNumQubits() - 1 - x);
                        });
 
+        std::reverse(wires_int.begin(), wires_int.end());
+
         PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumArray(
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
             /* const void* */ this->_statevector.getData(),
@@ -135,6 +131,8 @@ class Measurements final
             /* const int32_t* */ maskBitString,
             /* const int32_t* */ maskOrdering,
             /* const uint32_t */ maskLen));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
@@ -155,7 +153,7 @@ class Measurements final
      */
     auto probs() -> std::vector<PrecisionT> {
         std::vector<std::size_t> wires;
-        for (size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
+        for (std::size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
             wires.push_back(i);
         }
         return this->probs(wires);
@@ -183,7 +181,7 @@ class Measurements final
      *
      * @return Floating point std::vector with probabilities.
      */
-    std::vector<PrecisionT> probs(size_t num_shots) {
+    std::vector<PrecisionT> probs(std::size_t num_shots) {
         return BaseType::probs(num_shots);
     }
 
@@ -216,7 +214,7 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -235,14 +233,14 @@ class Measurements final
         } else {
             data_type = CUDA_C_32F;
         }
+        this->setSeed(this->_deviceseed);
 
-        this->setRandomSeed();
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
-        for (size_t n = 0; n < num_samples; n++) {
-            rand_nums[n] = dis(this->rng);
+        for (std::size_t n = 0; n < num_samples; n++) {
+            rand_nums[n] = dis(this->_rng);
         }
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
-        std::unordered_map<size_t, std::size_t> cache;
+        std::unordered_map<std::size_t, std::size_t> cache;
         std::vector<custatevecIndex_t> bitStrings(num_samples);
 
         void *extraWorkspace = nullptr;
@@ -252,6 +250,8 @@ class Measurements final
             this->_statevector.getCusvHandle(), this->_statevector.getData(),
             data_type, num_qubits, &sampler, num_samples,
             &extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // allocate external workspace if necessary
         if (extraWorkspaceSizeInBytes > 0)
@@ -262,18 +262,22 @@ class Measurements final
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerPreprocess(
             this->_statevector.getCusvHandle(), sampler, extraWorkspace,
             extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // sample bit strings
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
             this->_statevector.getCusvHandle(), sampler, bitStrings.data(),
             bitOrdering.data(), bitStringLen, rand_nums.data(), num_samples,
-            CUSTATEVEC_SAMPLER_OUTPUT_ASCENDING_ORDER));
+            CUSTATEVEC_SAMPLER_OUTPUT_RANDNUM_ORDER));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // destroy descriptor and handle
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerDestroy(sampler));
 
         // Pick samples
-        for (size_t i = 0; i < num_samples; i++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
             auto idx = bitStrings[i];
             // If cached, retrieve sample from cache
             if (cache.count(idx) != 0) {
@@ -284,7 +288,7 @@ class Measurements final
             }
             // If not cached, compute
             else {
-                for (size_t j = 0; j < num_qubits; j++) {
+                for (std::size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
                         (idx >> j) & 1U;
                 }
@@ -374,7 +378,7 @@ class Measurements final
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
         }
@@ -496,6 +500,9 @@ class Measurements final
             /* const int32_t ** */
             const_cast<const int32_t **>(basisBits_ptr.data()),
             /* const uint32_t */ n_basisBits.data()));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         std::complex<PrecisionT> result{0, 0};
 
@@ -625,7 +632,7 @@ class Measurements final
 
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -653,9 +660,9 @@ class Measurements final
                    const int64_t csrOffsets_size, const index_type *columns_ptr,
                    const std::complex<PrecisionT> *values_ptr,
                    const int64_t numNNZ) {
-        PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(csrOffsets_size) - 1)),
-            "Statevector and Hamiltonian have incompatible sizes.");
+        PL_ABORT_IF((this->_statevector.getLength() !=
+                     (std::size_t(csrOffsets_size) - 1)),
+                    "Statevector and Hamiltonian have incompatible sizes.");
 
         StateVectorT ob_sv(this->_statevector.getData(),
                            this->_statevector.getLength());
@@ -804,6 +811,8 @@ class Measurements final
             /* const uint32_t */ tgtsInt.size(),
             /* custatevecComputeType_t */ compute_type,
             /* std::size_t* */ &extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
@@ -831,6 +840,9 @@ class Measurements final
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
             /* std::size_t */ extraWorkspaceSizeInBytes));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)

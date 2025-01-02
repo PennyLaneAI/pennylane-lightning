@@ -47,6 +47,7 @@ endmacro()
 
 # Macro to aid in finding cuStateVec lib
 macro(findCustatevec external_libs)
+    set(CUQUANTUM_ENV "$ENV{CUQUANTUM_SDK}")
     find_library(CUSTATEVEC_LIB
         NAMES   libcustatevec.so.1 custatevec.so.1
         HINTS   /usr/lib
@@ -58,6 +59,8 @@ macro(findCustatevec external_libs)
             lib64
             ${CUQUANTUM_SDK}/lib
             ${CUQUANTUM_SDK}/lib64
+            ${CUQUANTUM_ENV}/lib
+            ${CUQUANTUM_ENV}/lib64
             ${CUDAToolkit_LIBRARY_DIR}
             ${CUDA_TOOLKIT_ROOT_DIR}/lib
             ${CUDA_TOOLKIT_ROOT_DIR}/lib64
@@ -74,6 +77,7 @@ macro(findCustatevec external_libs)
             /opt/cuda
             include
             ${CUQUANTUM_SDK}/include
+            ${CUQUANTUM_ENV}/include
             ${CUDAToolkit_INCLUDE_DIRS}
             ${CUDA_TOOLKIT_ROOT_DIR}/include
             ${Python_SITELIB}/cuquantum/include

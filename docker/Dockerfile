@@ -73,14 +73,14 @@ RUN python3 -m venv $VIRTUAL_ENV
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 RUN rm -rf tmp && git clone --depth 1 --branch ${LIGHTNING_VERSION} https://github.com/PennyLaneAI/pennylane-lightning.git tmp\
     && mv tmp/* /opt/pennylane-lightning && rm -rf tmp
-RUN pip install --no-cache-dir cmake ninja pybind11 wheel
+RUN pip install --no-cache-dir build cmake ninja pybind11 toml wheel
 
 # Download Lightning release and build lightning-qubit backend
 FROM base-build-python AS build-wheel-lightning-qubit
 WORKDIR /opt/pennylane-lightning
 RUN pip uninstall -y pennylane-lightning
-RUN python setup.py build_ext
-RUN python setup.py bdist_wheel
+RUN python scripts/configure_pyproject_toml.py || true
+RUN python -m build --wheel
 
 # Install lightning-qubit backend
 FROM base-runtime AS wheel-lightning-qubit
@@ -93,8 +93,8 @@ FROM base-build-python AS build-wheel-lightning-kokkos-openmp
 WORKDIR /opt/pennylane-lightning
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
-RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON"
-RUN python setup.py bdist_wheel
+RUN python scripts/configure_pyproject_toml.py || true
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON" python -m build --wheel
 
 # Install lightning-kokkos OpenMP backend
 FROM base-runtime AS wheel-lightning-kokkos-openmp
@@ -118,8 +118,8 @@ WORKDIR /opt/pennylane-lightning
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
 RUN echo >> cmake/support_kokkos.cmake && echo "find_package(CUDAToolkit REQUIRED)" >> cmake/support_kokkos.cmake
-RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_CUDA:BOOL=ON;Kokkos_ARCH_${CUDA_ARCH}=ON"
-RUN python setup.py bdist_wheel
+RUN python scripts/configure_pyproject_toml.py || true
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_CUDA:BOOL=ON -DKokkos_ARCH_${CUDA_ARCH}=ON" python -m build --wheel
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
@@ -148,8 +148,9 @@ WORKDIR /opt/pennylane-lightning
 ENV PL_BACKEND=lightning_gpu
 RUN pip install --no-cache-dir wheel custatevec-cu12
 RUN pip uninstall -y pennylane-lightning
-RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')") python setup.py build_ext
-RUN python setup.py bdist_wheel
+RUN python scripts/configure_pyproject_toml.py || true
+RUN CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum/lib')") python -m build --wheel
+
 
 # Install python3 and setup runtime virtual env in CUDA-12-runtime image (includes CUDA runtime and math libraries)
 # Install lightning-kokkos CUDA backend
@@ -192,8 +193,8 @@ ENV CMAKE_PREFIX_PATH=/opt/rocm:$CMAKE_PREFIX_PATH
 ENV CXX=hipcc
 ENV PL_BACKEND=lightning_kokkos
 RUN pip uninstall -y pennylane-lightning
-RUN python setup.py build_ext -i --define="Kokkos_ENABLE_SERIAL:BOOL=ON;Kokkos_ENABLE_OPENMP:BOOL=ON;Kokkos_ENABLE_HIP:BOOL=ON;Kokkos_ARCH_${AMD_ARCH}=ON"
-RUN python setup.py bdist_wheel
+RUN python scripts/configure_pyproject_toml.py || true
+RUN CMAKE_ARGS="-DKokkos_ENABLE_SERIAL:BOOL=ON -DKokkos_ENABLE_OPENMP:BOOL=ON -DKokkos_ENABLE_HIP:BOOL=ON -DKokkos_ARCH_${AMD_ARCH}=ON" python -m build --wheel
 
 # Install lightning-kokkos HIP backend
 FROM rocm/dev-ubuntu-22.04:5.7 AS wheel-lightning-kokkos-rocm

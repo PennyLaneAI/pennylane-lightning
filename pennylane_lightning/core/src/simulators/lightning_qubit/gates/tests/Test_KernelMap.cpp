@@ -35,7 +35,7 @@ using Pennylane::Util::LightningException;
 
 TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
     auto pds = PriorityDispatchSet();
-    pds.emplace(Pennylane::Gates::KernelType::PI, 10U,
+    pds.emplace(Pennylane::Gates::KernelType::LM, 10U,
                 Util::IntegerInterval<std::size_t>(10, 20));
 
     SECTION("Test conflict") {
@@ -45,7 +45,7 @@ TEST_CASE("Test PriorityDispatchSet", "[PriorityDispatchSet]") {
     }
 
     SECTION("Get Kernel") {
-        REQUIRE(pds.getKernel(15) == Pennylane::Gates::KernelType::PI);
+        REQUIRE(pds.getKernel(15) == Pennylane::Gates::KernelType::LM);
         PL_CHECK_THROWS_MATCHES(pds.getKernel(30), LightningException,
                                 "Cannot find a kernel");
     }
@@ -56,7 +56,7 @@ TEST_CASE("Test default kernels for gates are well defined", "[KernelMap]") {
         OperationKernelMap<Pennylane::Gates::GateOperation>::getInstance();
     for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
-            for (size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
+            for (std::size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
                 REQUIRE_NOTHROW(
                     instance.getKernelMap(num_qubits, threading, memory_model));
             }
@@ -69,7 +69,7 @@ TEST_CASE("Test default kernels for generators are well defined",
         OperationKernelMap<Pennylane::Gates::GeneratorOperation>::getInstance();
     for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
-            for (size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
+            for (std::size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
                 REQUIRE_NOTHROW(
                     instance.getKernelMap(num_qubits, threading, memory_model));
             }
@@ -82,7 +82,7 @@ TEST_CASE("Test default kernels for matrix operation are well defined",
         OperationKernelMap<Pennylane::Gates::MatrixOperation>::getInstance();
     for_each_enum<Threading, CPUMemoryModel>(
         [&instance](Threading threading, CPUMemoryModel memory_model) {
-            for (size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
+            for (std::size_t num_qubits = 1; num_qubits < 27; num_qubits++) {
                 REQUIRE_NOTHROW(
                     instance.getKernelMap(num_qubits, threading, memory_model));
             }
@@ -143,12 +143,12 @@ TEST_CASE("Test KernelMap functionalities", "[KernelMap]") {
         instance.assignKernelForOp(
             Pennylane::Gates::GateOperation::PauliX, Threading::SingleThread,
             CPUMemoryModel::Unaligned, 100, Util::full_domain<std::size_t>(),
-            KernelType::PI);
+            KernelType::LM);
 
         REQUIRE(instance.getKernelMap(24, Threading::SingleThread,
                                       CPUMemoryModel::Unaligned)
                     [Pennylane::Gates::GateOperation::PauliX] ==
-                KernelType::PI);
+                KernelType::LM);
 
         instance.removeKernelForOp(Pennylane::Gates::GateOperation::PauliX,
                                    Threading::SingleThread,
@@ -216,7 +216,7 @@ TEST_CASE("Test KernelMap is consistent in extreme usecase", "[KernelMap]") {
 #ifdef _OPENMP
 #pragma omp for
 #endif
-        for (size_t i = 0; i < num_iter; i++) {
+        for (std::size_t i = 0; i < num_iter; i++) {
             const auto num_qubit = num_qubits[num_qubit_dist(re)];
             const auto threading = threadings[threading_dist(re)];
             const auto memory_model = memory_models[memory_model_dist(re)];

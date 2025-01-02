@@ -71,7 +71,6 @@ TEMPLATE_TEST_CASE("[Identity]", "[StateVectorCudaMPI_Expval]", float, double) {
 
     StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                     nLocalIndexBits);
-    sv.initSV();
 
     auto m = MeasurementsMPI(sv);
 
@@ -112,7 +111,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV();
 
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
@@ -126,7 +124,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Plus states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
                                {{0}, {1}, {2}}, {{false}, {false}, {false}});
@@ -138,7 +135,6 @@ TEMPLATE_TEST_CASE("[PauliX]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Minus states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations(
                 {{"PauliX"},
@@ -185,7 +181,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"Hadamard"}, {"CNOT"}, {"CNOT"}},
                                {{0}, {0, 1}, {1, 2}},
@@ -198,7 +193,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Plus i states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                {{false}, {false}, {false}},
@@ -211,7 +205,6 @@ TEMPLATE_TEST_CASE("[PauliY]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval: Minus i states") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperations({{"RX"}, {"RX"}, {"RX"}}, {{0}, {1}, {2}},
                                {{false}, {false}, {false}},
@@ -293,7 +286,6 @@ TEMPLATE_TEST_CASE("[Hadamard]", "[StateVectorCudaMPI_Expval]", float, double) {
         SECTION("Using expval") {
             StateVectorT sv(mpi_manager, dt_local, mpi_buffersize,
                             nGlobalIndexBits, nLocalIndexBits);
-            sv.initSV();
             auto m = MeasurementsMPI(sv);
             sv.applyOperation("PauliX", {0});
             auto ob = NamedObsMPI<StateVectorT>("Hadamard", {0});

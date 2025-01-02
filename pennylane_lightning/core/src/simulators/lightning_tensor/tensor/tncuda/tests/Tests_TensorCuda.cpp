@@ -55,7 +55,7 @@ TEMPLATE_TEST_CASE("TensorCuda::baseMethods", "[TensorCuda]", float, double) {
     const std::size_t rank = 3;
     const std::vector<std::size_t> modes = {0, 1, 2};
     const std::vector<std::size_t> extents = {2, 2, 2};
-    const size_t length = 8;
+    const std::size_t length = 8;
     DevTag<int> dev_tag{0, 0};
 
     TensorCuda<TestType> tensor{rank, modes, extents, dev_tag};

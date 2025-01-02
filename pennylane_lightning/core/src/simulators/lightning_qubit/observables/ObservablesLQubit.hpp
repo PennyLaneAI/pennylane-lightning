@@ -165,8 +165,10 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
             auto allocator = sv.allocator();
             std::vector<ComplexT, decltype(allocator)> res(
                 sv.getLength(), ComplexT{0.0, 0.0}, allocator);
-            for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
-                StateVectorT tmp(sv);
+            StateVectorT tmp(sv);
+            for (std::size_t term_idx = 0; term_idx < coeffs.size();
+                 term_idx++) {
+                tmp.updateData(sv.getDataVector());
                 terms[term_idx]->applyInPlace(tmp);
                 scaleAndAdd(tmp.getLength(), ComplexT{coeffs[term_idx], 0.0},
                             tmp.getData(), res.data());
@@ -176,7 +178,8 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
                                  typename StateVectorT::MemoryStorageT,
                                  MemoryStorageLocation::External>) {
             std::vector<ComplexT> res(sv.getLength(), ComplexT{0.0, 0.0});
-            for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
+            for (std::size_t term_idx = 0; term_idx < coeffs.size();
+                 term_idx++) {
                 std::vector<ComplexT> tmp_data_storage(
                     sv.getData(), sv.getData() + sv.getLength());
                 StateVectorT tmp(tmp_data_storage.data(),
@@ -220,7 +223,8 @@ struct HamiltonianApplyInPlace<StateVectorLQubitManaged<PrecisionT>, true> {
                 length, ComplexT{}, allocator);
 
 #pragma omp for
-            for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
+            for (std::size_t term_idx = 0; term_idx < terms.size();
+                 term_idx++) {
                 try {
                     tmp.updateData(sv.getDataVector());
                     terms[term_idx]->applyInPlace(tmp);
@@ -280,7 +284,8 @@ struct HamiltonianApplyInPlace<StateVectorLQubitRaw<PrecisionT>, true> {
             }
 
 #pragma omp for
-            for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
+            for (std::size_t term_idx = 0; term_idx < terms.size();
+                 term_idx++) {
                 std::copy(sv.getData(), sv.getData() + sv.getLength(),
                           tmp_data_storage->data());
                 try {

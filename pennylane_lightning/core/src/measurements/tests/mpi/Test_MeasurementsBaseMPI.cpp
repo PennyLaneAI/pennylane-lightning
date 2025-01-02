@@ -58,7 +58,7 @@ template <typename TypeList> void testProbabilities() {
             input = {// Bit index reodering conducted in the python layer
                      // for L-GPU. Also L-GPU backend doesn't support
                      // out of order wires for probability calculation
-                     {{2, 1, 0},
+                     {{0, 1, 2},
                       {0.67078706, 0.03062806, 0.0870997, 0.00397696,
                        0.17564072, 0.00801973, 0.02280642, 0.00104134}}};
 
@@ -185,7 +185,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test PauliX"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("PauliX", {i});
                 MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
@@ -202,7 +202,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test PauliY"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("PauliY", {i});
                 MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
@@ -220,7 +220,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test PauliZ"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("PauliZ", {i});
                 MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
@@ -235,7 +235,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test Hadamard"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("Hadamard", {i});
                 MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
                 const PrecisionT theta = -M_PI / 4.0;
@@ -252,7 +252,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test Identity"
                         << StateVectorMPIToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObsMPI<StateVectorT> obs("Identity", {i});
                 MeasurementsMPI<StateVectorT> Measurer_obs(statevector);
 
@@ -386,7 +386,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
-            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
+            auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
             auto prob_all = mpi_manager.allgather(prob);
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob_all).margin(5e-2));
         }
@@ -473,11 +473,11 @@ template <typename TypeList> void testNamedObsExpval() {
             {-0.64421768, -0.47942553, -0.29552020},
             {0.58498357, 0.77015115, 0.91266780}};
 
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorMPIToName<StateVectorT>::name) {
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
                                                   wires_list[ind_wires]);
@@ -548,11 +548,11 @@ template <typename TypeList> void testNamedObsExpvalShot() {
         std::size_t num_shots = 10000;
         std::vector<std::size_t> shots_range = {};
 
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorMPIToName<StateVectorT>::name) {
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
                                                   wires_list[ind_wires]);
@@ -628,7 +628,7 @@ template <typename TypeList> void testHermitianObsExpval() {
             MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
                                      ComplexT{0, -imag_term}, real_term};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObsMPI<StateVectorT> obs(Hermitian_matrix,
                                                   wires_list[ind_wires]);
@@ -655,7 +655,7 @@ template <typename TypeList> void testHermitianObsExpval() {
             Hermitian_matrix[10] = ComplexT{1.0, 0};
             Hermitian_matrix[15] = ComplexT{1.0, 0};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObsMPI<StateVectorT> obs(Hermitian_matrix,
                                                   wires_list[ind_wires]);
@@ -747,7 +747,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::size_t num_shots = 10000;
             std::vector<std::size_t> shots_range;
-            for (size_t i = 0; i < num_shots; i += 2) {
+            for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -764,7 +764,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::size_t num_shots = 10000;
             std::vector<std::size_t> shots_range;
-            for (size_t i = 0; i < num_shots; i += 2) {
+            for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -861,7 +861,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::size_t num_shots = 10000;
             std::vector<std::size_t> shots_range;
-            for (size_t i = 0; i < num_shots; i += 2) {
+            for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -879,7 +879,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::size_t num_shots = 10000;
             std::vector<std::size_t> shots_range;
-            for (size_t i = 0; i < num_shots; i += 2) {
+            for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
@@ -950,11 +950,11 @@ template <typename TypeList> void testNamedObsVar() {
             {0.5849835, 0.7701511, 0.9126678},
             {0.6577942, 0.4068672, 0.1670374}};
 
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorMPIToName<StateVectorT>::name) {
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
                                                   wires_list[ind_wires]);
@@ -967,7 +967,7 @@ template <typename TypeList> void testNamedObsVar() {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " Shots - Varying wires"
                             << StateVectorMPIToName<StateVectorT>::name) {
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
                                                   wires_list[ind_wires]);
@@ -1043,7 +1043,7 @@ template <typename TypeList> void testHermitianObsVar() {
             MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
                                      ComplexT{0, -imag_term}, real_term};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObsMPI<StateVectorT> obs(Hermitian_matrix,
                                                   wires_list[ind_wires]);
@@ -1069,7 +1069,7 @@ template <typename TypeList> void testHermitianObsVar() {
             Hermitian_matrix[10] = ComplexT{1.0, 0};
             Hermitian_matrix[15] = ComplexT{1.0, 0};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObsMPI<StateVectorT> obs(Hermitian_matrix,
                                                   wires_list[ind_wires]);
@@ -1225,8 +1225,8 @@ template <typename TypeList> void testSamples() {
         std::vector<std::size_t> samples_decimal(num_samples, 0);
 
         // convert samples to decimal and then bin them in counts
-        for (size_t i = 0; i < num_samples; i++) {
-            for (size_t j = 0; j < num_qubits; j++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
+            for (std::size_t j = 0; j < num_qubits; j++) {
                 if (samples[i * num_qubits + j] != 0) {
                     samples_decimal[i] += twos[(num_qubits - 1 - j)];
                 }
@@ -1236,7 +1236,7 @@ template <typename TypeList> void testSamples() {
 
         // compute estimated probabilities from histogram
         std::vector<PrecisionT> probabilities(counts.size());
-        for (size_t i = 0; i < counts.size(); i++) {
+        for (std::size_t i = 0; i < counts.size(); i++) {
             probabilities[i] = counts[i] / (PrecisionT)num_samples;
         }
 
@@ -1312,12 +1312,12 @@ template <typename TypeList> void testSamplesCountsObs() {
             {0.58498357, 0.77015115, 0.91266780},
             {0.7620549436, 0.8420840225, 0.8449848566},
             {1.0, 1.0, 1.0}};
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " Sample Obs - Varying wires"
                             << StateVectorMPIToName<StateVectorT>::name) {
                 std::size_t num_shots = 10000;
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
                                                   wires_list[ind_wires]);
@@ -1338,7 +1338,7 @@ template <typename TypeList> void testSamplesCountsObs() {
                             << " Counts Obs - Varying wires"
                             << StateVectorMPIToName<StateVectorT>::name) {
                 std::size_t num_shots = 10000;
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObsMPI<StateVectorT> obs(obs_name[ind_obs],
                                                   wires_list[ind_wires]);
@@ -1371,8 +1371,8 @@ template <typename TypeList> void testSamplesCountsObs() {
             std::vector<std::size_t> samples_decimal(num_samples, 0);
 
             // convert samples to decimal and then bin them in counts
-            for (size_t i = 0; i < num_samples; i++) {
-                for (size_t j = 0; j < num_qubits; j++) {
+            for (std::size_t i = 0; i < num_samples; i++) {
+                for (std::size_t j = 0; j < num_qubits; j++) {
                     if (samples[i * num_qubits + j] != 0) {
                         samples_decimal[i] += twos[(num_qubits - 1 - j)];
                     }
@@ -1382,7 +1382,7 @@ template <typename TypeList> void testSamplesCountsObs() {
 
             // compute estimated probabilities from histogram
             std::vector<PrecisionT> probabilities(counts.size());
-            for (size_t i = 0; i < counts.size(); i++) {
+            for (std::size_t i = 0; i < counts.size(); i++) {
                 probabilities[i] = counts[i] / (PrecisionT)num_samples;
             }
 
@@ -1415,7 +1415,7 @@ template <typename TypeList> void testSamplesCountsObs() {
 
             // compute estimated probabilities from histogram
             std::vector<PrecisionT> probabilities(counts.size());
-            for (size_t i = 0; i < counts.size(); i++) {
+            for (std::size_t i = 0; i < counts.size(); i++) {
                 probabilities[i] = counts[i] / (PrecisionT)num_samples;
             }
 

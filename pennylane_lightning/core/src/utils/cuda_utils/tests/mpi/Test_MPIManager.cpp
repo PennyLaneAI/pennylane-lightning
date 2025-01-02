@@ -59,7 +59,7 @@ TEMPLATE_TEST_CASE("MPIManager::Scatter", "[MPIManager]", float, double) {
         int root = 0;
         cp_t result(2.0 * rank, 2.0 * rank + 1);
         if (rank == root) {
-            for (size_t i = 0; i < sendBuf.size(); i++) {
+            for (std::size_t i = 0; i < sendBuf.size(); i++) {
                 cp_t data(2.0 * i, 2.0 * i + 1);
                 sendBuf[i] = data;
             }
@@ -76,7 +76,7 @@ TEMPLATE_TEST_CASE("MPIManager::Scatter", "[MPIManager]", float, double) {
         int root = 0;
         cp_t result(2.0 * rank, 2.0 * rank + 1);
         if (rank == root) {
-            for (size_t i = 0; i < sendBuf.size(); i++) {
+            for (std::size_t i = 0; i < sendBuf.size(); i++) {
                 cp_t data(2.0 * i, 2.0 * i + 1);
                 sendBuf[i] = data;
             }
@@ -104,7 +104,7 @@ TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
 
         mpi_manager.Allgather<cp_t>(sendBuf, recvBuf);
 
-        for (size_t i = 0; i < recvBuf.size(); i++) {
+        for (std::size_t i = 0; i < recvBuf.size(); i++) {
             CHECK(recvBuf[i].real() == static_cast<PrecisionT>(i));
             CHECK(recvBuf[i].imag() == static_cast<PrecisionT>(0));
         }
@@ -116,7 +116,7 @@ TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
 
         mpi_manager.Allgather<cp_t>(sendBuf, recvBuf);
 
-        for (size_t i = 0; i < recvBuf.size(); i++) {
+        for (std::size_t i = 0; i < recvBuf.size(); i++) {
             CHECK(recvBuf[i].real() == static_cast<PrecisionT>(i));
             CHECK(recvBuf[i].imag() == static_cast<PrecisionT>(0));
         }
@@ -126,7 +126,7 @@ TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
         cp_t sendBuf = {static_cast<PrecisionT>(rank), 0};
 
         auto recvBuf = mpi_manager.allgather<cp_t>(sendBuf);
-        for (size_t i = 0; i < recvBuf.size(); i++) {
+        for (std::size_t i = 0; i < recvBuf.size(); i++) {
             CHECK(recvBuf[i].real() == static_cast<PrecisionT>(i));
             CHECK(recvBuf[i].imag() == static_cast<PrecisionT>(0));
         }
@@ -136,7 +136,7 @@ TEMPLATE_TEST_CASE("MPIManager::Allgather", "[MPIManager]", float, double) {
         std::vector<cp_t> sendBuf(1, {static_cast<PrecisionT>(rank), 0});
         auto recvBuf = mpi_manager.allgather<cp_t>(sendBuf);
 
-        for (size_t i = 0; i < recvBuf.size(); i++) {
+        for (std::size_t i = 0; i < recvBuf.size(); i++) {
             CHECK(recvBuf[i].real() == static_cast<PrecisionT>(i));
             CHECK(recvBuf[i].imag() == static_cast<PrecisionT>(0));
         }

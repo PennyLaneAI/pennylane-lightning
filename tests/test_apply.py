@@ -31,8 +31,8 @@ if not ld._CPP_BINARY_AVAILABLE:
 
 
 @pytest.mark.skipif(
-    ld._new_API or device_name == "lightning.tensor",
-    reason="Old API required, lightning.tensor does not support qml.state().",
+    ld._new_API,
+    reason="Old API required.",
 )
 class TestApply:
     """Tests that operations of certain operations are applied correctly or
@@ -183,24 +183,24 @@ class TestApply:
 
     @pytest.mark.parametrize(
         "operation,expected_output,par",
-        [
-            (qml.BasisState, [0, 0, 1, 0], [1, 0]),
-            (qml.BasisState, [0, 0, 0, 1], [1, 1]),
-            (qml.QubitStateVector, [0, 0, 1, 0], [0, 0, 1, 0]),
-            (qml.QubitStateVector, [0, 0, 0, 1], [0, 0, 0, 1]),
-            (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
-            (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
-            (
-                qml.StatePrep,
-                [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-                [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-            ),
-            (
-                qml.StatePrep,
-                [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-                [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-            ),
-        ],
+        (
+            [
+                (qml.BasisState, [0, 0, 1, 0], [1, 0]),
+                (qml.BasisState, [0, 0, 0, 1], [1, 1]),
+                (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
+                (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
+                (
+                    qml.StatePrep,
+                    [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
+                    [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
+                ),
+                (
+                    qml.StatePrep,
+                    [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
+                    [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
+                ),
+            ]
+        ),
     )
     def test_apply_operation_state_preparation(
         self, qubit_device, tol, operation, expected_output, par
@@ -477,30 +477,25 @@ class TestApply:
 
         assert pointer_before == pointer_after
 
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_apply_errors_qubit_state_vector(self, stateprep, qubit_device):
+    def test_apply_errors_qubit_state_vector(self, qubit_device):
         """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""
         dev = qubit_device(wires=2)
-        with pytest.raises(ValueError, match="Sum of amplitudes-squared does not equal one."):
-            dev.apply([stateprep(np.array([1, -1]), wires=[0])])
+        with pytest.raises(ValueError, match="The state must be a vector of norm 1.0;"):
+            dev.apply([qml.StatePrep(np.array([1, -1]), wires=[0])])
 
         with pytest.raises(
             DeviceError,
-            match=f"Operation {stateprep(np.array([1, 0]), wires=[0]).name} cannot be used after other Operations have already been applied ",
+            match=f"Operation {qml.StatePrep(np.array([1, 0]), wires=[0]).name} cannot be used after other Operations have already been applied ",
         ):
             dev.reset()
-            dev.apply([qml.RZ(0.5, wires=[0]), stateprep(np.array([0, 1, 0, 0]), wires=[0, 1])])
+            dev.apply([qml.RZ(0.5, wires=[0]), qml.StatePrep(np.array([0, 1, 0, 0]), wires=[0, 1])])
 
     def test_apply_errors_basis_state(self, qubit_device):
         dev = qubit_device(wires=2)
-        with pytest.raises(
-            ValueError, match="BasisState parameter must consist of 0 or 1 integers."
-        ):
+        with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
             dev.apply([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
 
-        with pytest.raises(
-            ValueError, match="BasisState parameter and wires must be of equal length."
-        ):
+        with pytest.raises(ValueError, match="State must be of length 1;"):
             dev.apply([qml.BasisState(np.array([0, 1]), wires=[0])])
 
         with pytest.raises(
@@ -529,7 +524,7 @@ class TestExpval:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector & qml.StatePrep",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "operation,input,expected_output",
@@ -551,27 +546,21 @@ class TestExpval:
             (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 1),
         ],
     )
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_expval_single_wire_no_parameters(
-        self, qubit_device, tol, stateprep, operation, input, expected_output
+        self, qubit_device, tol, operation, input, expected_output
     ):
         """Tests that expectation values are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
-        ops = [stateprep(np.array(input), wires=[0])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops, obs.diagonalizing_gates())
-            res = dev.expval(obs)
+        ops = [qml.StatePrep(np.array(input), wires=[0])]
+        tape = qml.tape.QuantumScript(ops, [qml.expval(op=obs)])
+        res = dev.execute(tape)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurement",
+        reason="lightning.tensor does not support single wire devices",
     )
     def test_expval_estimate(self):
         """Test that the expectation value is not analytically calculated"""
@@ -593,7 +582,7 @@ class TestVar:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector & qml.StatePrep",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "operation,input,expected_output",
@@ -615,27 +604,21 @@ class TestVar:
             (qml.Identity, [1 / math.sqrt(2), -1 / math.sqrt(2)], 0),
         ],
     )
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_var_single_wire_no_parameters(
-        self, qubit_device, tol, stateprep, operation, input, expected_output
+        self, qubit_device, tol, operation, input, expected_output
     ):
         """Tests that variances are properly calculated for single-wire observables without parameters."""
         dev = qubit_device(wires=1)
         obs = operation(wires=[0])
-        ops = [stateprep(np.array(input), wires=[0])]
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
-            res = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops, obs.diagonalizing_gates())
-            res = dev.var(obs)
+        ops = [qml.StatePrep(np.array(input), wires=[0])]
+        tape = qml.tape.QuantumScript(ops, [qml.var(op=obs)])
+        res = dev.execute(tape)
 
         assert np.isclose(res, expected_output, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurement",
+        reason="lightning.tensor does not support single-wire devices",
     )
     def test_var_estimate(self):
         """Test that the variance is not analytically calculated"""
@@ -653,10 +636,6 @@ class TestVar:
         assert var != 1.0
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor device does not support qml.samples()",
-)
 class TestSample:
     """Tests that samples are properly calculated."""
 
@@ -673,42 +652,22 @@ class TestSample:
 
         shots = 10
         obs = qml.PauliZ(wires=[0])
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s1 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops)
-            dev.shots = shots
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
+
         assert np.array_equal(s1.shape, (shots,))
 
         shots = 12
         obs = qml.PauliZ(wires=[1])
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s2 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.shots = shots
-            dev._wires_measured = {1}
-            dev._samples = dev.generate_samples()
-            s2 = dev.sample(qml.PauliZ(wires=[1]))
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s2 = dev.execute(tape)
         assert np.array_equal(s2.shape, (shots,))
 
         shots = 17
         obs = qml.PauliX(0) @ qml.PauliZ(1)
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s3 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.shots = shots
-            dev._wires_measured = {0, 1}
-            dev._samples = dev.generate_samples()
-            s3 = dev.sample(qml.PauliZ(wires=[1]))
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s3 = dev.execute(tape)
+
         assert np.array_equal(s3.shape, (shots,))
 
     def test_sample_values(self, qubit_device, tol):
@@ -723,18 +682,10 @@ class TestSample:
 
         ops = [qml.RX(1.5708, wires=[0])]
 
-        shots = 1000
+        shots = qml.measurements.Shots(1000)
         obs = qml.PauliZ(0)
-        if ld._new_API:
-            tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
-            s1 = dev.execute(tape)
-        else:
-            dev.reset()
-            dev.apply(ops)
-            dev.shots = shots
-            dev._wires_measured = {0}
-            dev._samples = dev.generate_samples()
-            s1 = dev.sample(obs)
+        tape = qml.tape.QuantumScript(ops, [qml.sample(op=obs)], shots=shots)
+        s1 = dev.execute(tape)
 
         # s1 should only contain 1 and -1, which is guaranteed if
         # they square to 1
@@ -749,13 +700,8 @@ class TestLightningDeviceIntegration:
         """Test that the default plugin loads correctly"""
 
         dev = qml.device(device_name, wires=2)
-        if dev._new_API:
-            assert not dev.shots
-            assert len(dev.wires) == 2
-        else:
-            assert dev.shots is None
-            assert dev.num_wires == 2
-            assert dev.short_name == device_name
+        assert not dev.shots
+        assert len(dev.wires) == 2
 
     @pytest.mark.xfail(ld._new_API, reason="Old device API required.")
     def test_no_backprop(self):
@@ -830,7 +776,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements",
+        reason="lightning.tensor does not support single wire devices",
     )
     def test_nonzero_shots(self, tol_stochastic):
         """Test that the default qubit plugin provides correct result for high shot number"""
@@ -855,7 +801,7 @@ class TestLightningDeviceIntegration:
     # This test is ran against the state |0> with one Z expval
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements",
+        reason="lightning.tensor does not support single-wire devices",
     )
     @pytest.mark.parametrize(
         "name,expected_output",
@@ -883,11 +829,6 @@ class TestLightningDeviceIntegration:
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    # This test is ran against the state |Phi+> with two Z expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.Stateprep()",
-    )
     @pytest.mark.parametrize(
         "name,expected_output",
         [
@@ -896,10 +837,7 @@ class TestLightningDeviceIntegration:
             ("CZ", [-1 / 2, -1 / 2]),
         ],
     )
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_supported_gate_two_wires_no_parameters(
-        self, qubit_device, tol, stateprep, name, expected_output
-    ):
+    def test_supported_gate_two_wires_no_parameters(self, qubit_device, tol, name, expected_output):
         """Tests supported gates that act on two wires that are not parameterized"""
         dev = qubit_device(wires=2)
         op = getattr(qml.ops, name)
@@ -909,7 +847,7 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            stateprep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
+            qml.StatePrep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
             op(wires=[0, 1])
             return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
 
@@ -946,33 +884,9 @@ class TestLightningDeviceIntegration:
             ("BasisState", [0, 0], [1, 1]),
             ("BasisState", [1, 0], [-1, 1]),
             ("BasisState", [0, 1], [1, -1]),
-            pytest.param(
-                "QubitStateVector",
-                [1, 0, 0, 0],
-                [1, 1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
-            pytest.param(
-                "QubitStateVector",
-                [0, 0, 1, 0],
-                [-1, 1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
-            pytest.param(
-                "QubitStateVector",
-                [0, 1, 0, 0],
-                [1, -1],
-                marks=pytest.mark.skipif(
-                    device_name == "lightning.tensor",
-                    reason="lightning.tensor does not support qml.QubitStateVector()",
-                ),
-            ),
+            ("StatePrep", [1, 0, 0, 0], [1, 1]),
+            ("StatePrep", [0, 0, 1, 0], [-1, 1]),
+            ("StatePrep", [0, 1, 0, 0], [1, -1]),
         ],
     )
     def test_supported_state_preparation(self, qubit_device, tol, name, par, expected_output):
@@ -1030,18 +944,14 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is run with two expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support QubitStateVector",
-    )
     @pytest.mark.parametrize(
         "name,par,wires,expected_output",
         [
-            ("QubitStateVector", [0, 1], [1], [1, -1]),
-            ("QubitStateVector", [0, 1], [0], [-1, 1]),
-            ("QubitStateVector", [1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], [1], [1, 0]),
-            ("QubitStateVector", [1j / 2.0, np.sqrt(3) / 2.0], [1], [1, -0.5]),
-            ("QubitStateVector", [(2 - 1j) / 3.0, 2j / 3.0], [0], [1 / 9.0, 1]),
+            ("StatePrep", [0, 1], [1], [1, -1]),
+            ("StatePrep", [0, 1], [0], [-1, 1]),
+            ("StatePrep", [1.0 / np.sqrt(2), 1.0 / np.sqrt(2)], [1], [1, 0]),
+            ("StatePrep", [1j / 2.0, np.sqrt(3) / 2.0], [1], [1, -0.5]),
+            ("StatePrep", [(2 - 1j) / 3.0, 2j / 3.0], [0], [1 / 9.0, 1]),
         ],
     )
     def test_state_vector_2_qubit_subset(
@@ -1061,25 +971,21 @@ class TestLightningDeviceIntegration:
         assert np.allclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is run with three expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector()",
-    )
     @pytest.mark.parametrize(
         "name,par,wires,expected_output",
         [
             (
-                "QubitStateVector",
+                "StatePrep",
                 [1j / np.sqrt(10), (1 - 2j) / np.sqrt(10), 0, 0, 0, 2 / np.sqrt(10), 0, 0],
                 [0, 1, 2],
                 [1 / 5.0, 1.0, -4 / 5.0],
             ),
-            ("QubitStateVector", [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)], [0, 2], [0.0, 1.0, 0.0]),
-            ("QubitStateVector", [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)], [0, 1], [0.0, 0.0, 1.0]),
-            ("QubitStateVector", [0, 1, 0, 0, 0, 0, 0, 0], [2, 1, 0], [-1.0, 1.0, 1.0]),
-            ("QubitStateVector", [0, 1j, 0, 0, 0, 0, 0, 0], [0, 2, 1], [1.0, -1.0, 1.0]),
-            ("QubitStateVector", [0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)], [1, 0], [-1.0, 0.0, 1.0]),
-            ("QubitStateVector", [0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)], [0, 1], [0.0, -1.0, 1.0]),
+            ("StatePrep", [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)], [0, 2], [0.0, 1.0, 0.0]),
+            ("StatePrep", [1 / np.sqrt(2), 0, 0, 1 / np.sqrt(2)], [0, 1], [0.0, 0.0, 1.0]),
+            ("StatePrep", [0, 1, 0, 0, 0, 0, 0, 0], [2, 1, 0], [-1.0, 1.0, 1.0]),
+            ("StatePrep", [0, 1j, 0, 0, 0, 0, 0, 0], [0, 2, 1], [1.0, -1.0, 1.0]),
+            ("StatePrep", [0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)], [1, 0], [-1.0, 0.0, 1.0]),
+            ("StatePrep", [0, 1 / np.sqrt(2), 0, 1 / np.sqrt(2)], [0, 1], [0.0, -1.0, 1.0]),
         ],
     )
     def test_state_vector_3_qubit_subset(
@@ -1100,7 +1006,8 @@ class TestLightningDeviceIntegration:
 
     # This test is ran on the state |0> with one Z expvals
     @pytest.mark.skipif(
-        device_name == "lightning.tensor", reason="lightning.tensor requires num_wires > 1"
+        device_name == "lightning.tensor",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "name,par,expected_output",
@@ -1139,10 +1046,6 @@ class TestLightningDeviceIntegration:
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
     # This test is ran against the state 1/2|00>+sqrt(3)/2|11> with two Z expvals
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
-    )
     @pytest.mark.parametrize(
         "name,par,expected_output",
         [
@@ -1167,9 +1070,8 @@ class TestLightningDeviceIntegration:
             ("ControlledPhaseShift", [math.pi], [-1 / 2, -1 / 2]),
         ],
     )
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_supported_gate_two_wires_with_parameters(
-        self, qubit_device, tol, stateprep, name, par, expected_output
+        self, qubit_device, tol, name, par, expected_output
     ):
         """Tests supported gates that act on two wires that are parameterized"""
         dev = qubit_device(wires=2)
@@ -1180,7 +1082,7 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            stateprep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
+            qml.StatePrep(np.array([1 / 2, 0, 0, math.sqrt(3) / 2]), wires=[0, 1])
             op(*par, wires=[0, 1])
             return qml.expval(qml.PauliZ(0)), qml.expval(qml.PauliZ(1))
 
@@ -1188,7 +1090,7 @@ class TestLightningDeviceIntegration:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
+        reason="lightning.tensor does not support a single wire device",
     )
     @pytest.mark.parametrize(
         "name,state,expected_output",
@@ -1207,9 +1109,8 @@ class TestLightningDeviceIntegration:
             ("Hadamard", [1 / math.sqrt(2), 1 / math.sqrt(2)], 1 / math.sqrt(2)),
         ],
     )
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_supported_observable_single_wire_no_parameters(
-        self, qubit_device, tol, stateprep, name, state, expected_output
+        self, qubit_device, tol, name, state, expected_output
     ):
         """Tests supported observables on single wires without parameters."""
         dev = qubit_device(wires=1)
@@ -1220,14 +1121,14 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            stateprep(np.array(state), wires=[0])
+            qml.StatePrep(np.array(state), wires=[0])
             return qml.expval(obs(wires=[0]))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.QubitStateVector() and qml.StatePrep()",
+        reason="lightning.tensor does not support single wire devices",
     )
     @pytest.mark.parametrize(
         "name,state,expected_output,par",
@@ -1237,9 +1138,8 @@ class TestLightningDeviceIntegration:
             ("Identity", [1 / math.sqrt(2), -1 / math.sqrt(2)], 1, []),
         ],
     )
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
     def test_supported_observable_single_wire_with_parameters(
-        self, qubit_device, tol, stateprep, name, state, expected_output, par
+        self, qubit_device, tol, name, state, expected_output, par
     ):
         """Tests supported observables on single wires with parameters."""
         dev = qubit_device(wires=1)
@@ -1250,15 +1150,11 @@ class TestLightningDeviceIntegration:
 
         @qml.qnode(dev)
         def circuit():
-            stateprep(np.array(state), wires=[0])
+            qml.StatePrep(np.array(state), wires=[0])
             return qml.expval(obs(*par, wires=[0]))
 
         assert np.isclose(circuit(), expected_output, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements",
-    )
     def test_multi_samples_return_correlated_results(self, qubit_device):
         """Tests if the samples returned by the sample function have
         the correct dimensions
@@ -1269,21 +1165,13 @@ class TestLightningDeviceIntegration:
         def circuit():
             qml.Hadamard(0)
             qml.CNOT(wires=[0, 1])
-            if ld._new_API:
-                return qml.sample(wires=[0, 1])
-            else:
-                return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
+            return qml.sample(wires=[0, 1])
 
         outcomes = circuit()
-        if ld._new_API:
-            outcomes = outcomes.T
+        outcomes = outcomes.T
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements.",
-    )
     @pytest.mark.parametrize("num_wires", [3, 4, 5, 6, 7, 8])
     def test_multi_samples_return_correlated_results_more_wires_than_size_of_observable(
         self, num_wires
@@ -1298,21 +1186,13 @@ class TestLightningDeviceIntegration:
         def circuit():
             qml.Hadamard(0)
             qml.CNOT(wires=[0, 1])
-            if ld._new_API:
-                return qml.sample(wires=[0, 1])
-            else:
-                return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
+            return qml.sample(wires=[0, 1])
 
         outcomes = circuit()
-        if ld._new_API:
-            outcomes = outcomes.T
+        outcomes = outcomes.T
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements",
-    )
     def test_snapshot_is_ignored_without_shot(self):
         """Tests if the Snapshot operator is ignored correctly"""
         dev = qml.device(device_name, wires=4)
@@ -1329,10 +1209,6 @@ class TestLightningDeviceIntegration:
 
         assert np.allclose(outcomes, [0.0])
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support shot measurements",
-    )
     def test_snapshot_is_ignored_with_shots(self):
         """Tests if the Snapshot operator is ignored correctly"""
         dev = qml.device(device_name, wires=4, shots=1000)
@@ -1343,20 +1219,16 @@ class TestLightningDeviceIntegration:
             qml.Snapshot()
             qml.adjoint(qml.Snapshot())
             qml.CNOT(wires=[0, 1])
-            if ld._new_API:
-                return qml.sample(wires=[0, 1])
-            else:
-                return qml.sample(qml.PauliZ(0)), qml.sample(qml.PauliZ(1))
+            return qml.sample(wires=[0, 1])
 
         outcomes = circuit()
-        if ld._new_API:
-            outcomes = outcomes.T
+        outcomes = outcomes.T
 
         assert np.array_equal(outcomes[0], outcomes[1])
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.prob()",
+        reason="lightning.tensor does not support _tensornet.state access",
     )
     def test_apply_qpe(self, qubit_device, tol):
         """Test the application of qml.QuantumPhaseEstimation"""
@@ -1393,10 +1265,6 @@ class TestLightningDeviceIntegration:
 
     # Check the BlockEncode PennyLane page for details:
     # https://docs.pennylane.ai/en/stable/code/api/pennylane.BlockEncode.html
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.state()",
-    )
     @pytest.mark.parametrize(
         "op, op_wires",
         [
@@ -1437,7 +1305,7 @@ class TestApplyLightningMethod:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor does not support _apply_state_vector",
+        reason="lightning.tensor does not support direct access to the state",
     )
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_apply_identity_skipped(self, mocker, tol):
@@ -1469,10 +1337,6 @@ class TestApplyLightningMethod:
         with pytest.raises(ValueError, match="Unsupported operation"):
             dev.apply_lightning([EmptyGate(0)])
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="lightning.tensor does not support qml.state()",
-    )
     @pytest.mark.parametrize(
         "ops0",
         [
@@ -1502,7 +1366,7 @@ class TestApplyLightningMethod:
         dev = qml.device(device_name, wires=n_qubits)
         dq = qml.device("default.qubit", wires=n_qubits)
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+        init_state /= np.linalg.norm(init_state)
 
         def circuit():
             qml.StatePrep(init_state, wires=range(n_qubits))
@@ -1516,15 +1380,10 @@ class TestApplyLightningMethod:
         assert np.allclose(results, expected)
 
 
-@pytest.mark.skipif(
-    device_name == "lightning.tensor",
-    reason="lightning.tensor does not support qml.StatePrep()",
-)
 @pytest.mark.parametrize(
     "op",
     [
         qml.BasisState([0, 0], wires=[0, 1]),
-        qml.QubitStateVector([0, 1, 0, 0], wires=[0, 1]),
         qml.StatePrep([0, 1, 0, 0], wires=[0, 1]),
     ],
 )
@@ -1539,7 +1398,7 @@ def test_circuit_with_stateprep(op, theta, phi, tol):
     U = np.random.rand(m, m) + 1j * np.random.rand(m, m)
     U, _ = np.linalg.qr(U)
     init_state = np.random.rand(2**n_qubits) + 1j * np.random.rand(2**n_qubits)
-    init_state /= np.sqrt(np.dot(np.conj(init_state), init_state))
+    init_state /= np.linalg.norm(init_state)
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))

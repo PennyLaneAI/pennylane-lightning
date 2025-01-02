@@ -1,37 +1,27 @@
 Lightning Tensor device
 =======================
 
-The ``lightning.tensor`` device is a tensor network simulator device. The device is built on top of the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`__ from the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum tensor network evolution.
+The ``lightning.tensor`` device is a tensor network simulator, supporting both the Matrix Product State (MPS) and Exact Tensor Network methods. The device is built on top of the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`__ from the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum tensor network evolution. This device is designed to simulate large-scale quantum circuits using tensor networks. For small circuits, state-vector simulator plugins may be more suitable.
 
-A ``lightning.tensor`` device can be loaded simply using:
+The ``lightning.tensor`` device defaults to the Matrix Product State (MPS) method, and can be loaded using:
 
 .. code-block:: python
 
     import pennylane as qml
     dev = qml.device("lightning.tensor", wires=100)
 
-By default, the device represents the quantum state approximated as a Matrix Product State (MPS).
+By default, the device approximates the quantum state using an MPS.
 The default setup for the MPS tensor network approximation is:
     - ``max_bond_dim`` (maximum bond dimension) defaults to ``128`` .
     - ``cutoff`` (singular value truncation threshold) defaults to ``0`` .
-    - ``cutoff_mode`` (singular value truncation mode) defaults to ``abs`` , considering the absolute values of the singular values; Alternatively, users can opt to set ``cutoff_mode`` to ``rel`` to consider the relative values of the singular values. 
+    - ``cutoff_mode`` (singular value truncation mode) defaults to ``abs`` , considering the absolute values of the singular values; Alternatively, users can opt to set ``cutoff_mode`` to ``rel`` to consider the relative values of the singular values.
+Note that the ``cutensornet`` will automatically determine the reduced extent of the bond dimension based on the lowest among the multiple truncation cutoffs (``max_bond_dim``, ``cutoff-abs`` and ``cutoff-rel``). For more details on how the ``cutoff`` works, please check the `cuQuantum documentation <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/types.html#cutensornettensorsvdconfigattributes-t>`__.
 
-The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0 (Volta)
-and greater.
-
-.. note:: 
-    Given the inherent parallelism of GPUs, simulations with intensive parallel computation, such as those with larger maximum
-    bond dimensions, stand to gain the most from the computational power offered by GPU and those simulations can benifit from the 
-    ``lightning.tensor`` device.  It's worth noting that if the bond dimension used in the simulation is small, the ``lightning.tensor`` 
-    device with ``MPS`` running a GPU may perform slower compared to a ``default.tensor`` device with ``MPS`` running on a CPU. For more details
-    on how bond dimension affects the simulation performance, please refer to the ``Approximate Tensor Network Methods`` section in the `cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`__.
-
-Users also have the flexibility to customize these parameters according to their specific needs with:
+Users also have the flexibility to customize MPS parameters according to their specific needs with:
 
 .. code-block:: python
     
     import pennylane as qml
-    import numpy as np
     
     num_qubits = 100
 
@@ -43,7 +33,21 @@ Users also have the flexibility to customize these parameters according to their
 
     dev = qml.device("lightning.tensor", wires=num_qubits, method="mps", **device_kwargs_mps)
 
-The ``lightning.tensor`` device allows users to get quantum circuit gradients using the ``parameter-shift`` method. This can be enabled at the PennyLane ``QNode`` level with:
+Users can also run the ``lightning.tensor`` device in the **Exact Tensor Network** mode by setting the ``method`` argument to ``"tn"``:
+
+.. code-block:: python
+
+    import pennylane as qml
+    dev = qml.device("lightning.tensor", wires=100, method="tn")
+
+The lightning.tensor device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0+ (Volta and later)
+and greater. This device supports both exact and finite shots measurements. Currently, the supported differentiation methods are parameter-shift and finite-diff. Note that the MPS backend of ``lightning.tensor`` supports multi-wire gates via Matrix Product Operators (MPO).
+
+The ``lightning.tensor`` device is designed for expectation value calculations. Measurements of :func:`~pennylane.probs` or :func:`~pennylane.state` return dense vectors of dimension :math:`2^{\text{n_qubits}}`, so they should only be used for small systems.
+
+.. note:: Currently only single-wire :class:`~pennylane.Hermitian` observables are supported. You can use :func:`~pennylane.pauli_decompose` on smaller matrices to obtain a compatible Pauli decomposition in the meantime.
+
+The ``lightning.tensor`` device allows users to get quantum circuit gradients using the :func:`~pennylane.gradients.param_shift` method. This can be enabled at the PennyLane :class:`~pennylane.QNode` level with:
 
 .. code-block:: python
 
@@ -55,10 +59,13 @@ Check out the :doc:`/lightning_tensor/installation` guide for more information.
 
 .. seealso:: `DefaultTensor <https://docs.pennylane.ai/en/latest/code/api/pennylane.devices.default_tensor.DefaultTensor.html>`__ for a CPU only tensor network simulator device.
 
+Note that as ``lightning.tensor`` cannot be cleaned up like other state-vector devices because the data is attached to the graph. It is recommended to create a new ``lightning.tensor`` device per circuit to ensure resources are correctly handled.
+
+
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The "lightning.tensor" supports 1- and 2-wire gate operations and all other operations that can be decomposed to that by PennyLane.
+The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of :class:`~pennylane.StatePrep`, which is *not supported* by the *Exact Tensor Network* method. 
 
 **Supported operations:**
 
@@ -83,7 +90,10 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     ~pennylane.CZ
     ~pennylane.DiagonalQubitUnitary
     ~pennylane.DoubleExcitation
+    ~pennylane.DoubleExcitationMinus
+    ~pennylane.DoubleExcitationPlus
     ~pennylane.ECR
+    ~pennylane.GlobalPhase
     ~pennylane.Hadamard
     ~pennylane.Identity
     ~pennylane.IsingXX
@@ -109,6 +119,7 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
     ~pennylane.SingleExcitation
     ~pennylane.SingleExcitationMinus
     ~pennylane.SingleExcitationPlus
+    ~pennylane.StatePrep
     ~pennylane.SISWAP
     ~pennylane.SQISW
     ~pennylane.SWAP
@@ -120,30 +131,12 @@ The "lightning.tensor" supports 1- and 2-wire gate operations and all other oper
 
     </div>
 
-**Unsupported operations:**
-
-.. raw:: html
-
-    <div class="summary-table">
-
-.. autosummary::
-    :nosignatures:
-
-    ~pennylane.StatePrep
-    ~pennylane.QubitStateVector
-    ~pennylane.DoubleExcitationMinus
-    ~pennylane.DoubleExcitationPlus
-    ~pennylane.GlobalPhase
-
-.. raw:: html
-
-    </div>
 
 **Supported observables:**
 
-The ``lightning.tensor`` supports all observables supported by the Lightning state-vector simulators, besides ``qml.SparseHamiltonian``, ``qml.Projector`` and limited support to ``qml.Hamiltonian``, ``qml.Prod``.
+The ``lightning.tensor`` supports all observables supported by the Lightning state-vector simulators, besides :class:`~pennylane.SparseHamiltonian`, :class:`~pennylane.Projector` and limited support to :class:`~pennylane.ops.op_math.Sum`, :class:`~pennylane.ops.op_math.Prod` since ``lightning.tensor`` only supports 1-wire :class:`~pennylane.Hermitian` observables.
 
-Users can not create a ``Hamiltonian`` or ``Prod`` observable from ``Hamiltonian`` observables.
+Users cannot create a :class:`~pennylane.ops.op_math.Sum` observable or a :class:`~pennylane.ops.op_math.Prod` observable from :class:`~pennylane.ops.op_math.Sum` observables.
 
 
 
@@ -156,7 +149,6 @@ Users can not create a ``Hamiltonian`` or ``Prod`` observable from ``Hamiltonian
 
     ~pennylane.ops.op_math.Exp
     ~pennylane.Hadamard
-    ~pennylane.Hamiltonian
     ~pennylane.Hermitian
     ~pennylane.Identity
     ~pennylane.PauliX

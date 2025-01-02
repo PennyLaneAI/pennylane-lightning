@@ -24,7 +24,7 @@ namespace Pennylane::LightningGPU::Util {
  * alpha*SparseMat*X + beta)
  *
  * @tparam index_type Integer type for offsets, indices and number of elements
- * (size_t for the moment).
+ * (std::size_t for the moment).
  * @tparam Precision Floating data-type.
  * @tparam DevTypeID Integer type of device id.
  *
@@ -57,7 +57,7 @@ inline void SparseMV_cuSparseMPI(
     mpi_manager.Barrier();
 
     std::vector<CSRMatrix<Precision, index_type>> localCSRMatVector;
-    for (size_t i = 0; i < mpi_manager.getSize(); i++) {
+    for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
         auto localCSRMat = scatterCSRMatrix<Precision, index_type>(
             mpi_manager, csrmatrix_blocks[i], length_local, 0);
         localCSRMatVector.push_back(localCSRMat);
@@ -67,7 +67,7 @@ inline void SparseMV_cuSparseMPI(
     DataBuffer<CFP_t, int> d_res_per_block{length_local, device_id, stream_id,
                                            true};
 
-    for (size_t i = 0; i < mpi_manager.getSize(); i++) {
+    for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
         // Need to investigate if non-blocking MPI operation can improve
         // performace here.
         auto &localCSRMatrix = localCSRMatVector[i];

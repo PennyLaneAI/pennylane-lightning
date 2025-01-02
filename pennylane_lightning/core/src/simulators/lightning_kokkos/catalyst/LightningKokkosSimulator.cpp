@@ -106,6 +106,10 @@ auto LightningKokkosSimulator::GetDeviceShots() const -> std::size_t {
     return this->device_shots;
 }
 
+void LightningKokkosSimulator::SetDevicePRNG(std::mt19937 *gen) {
+    this->gen = gen;
+}
+
 /// LCOV_EXCL_START
 void LightningKokkosSimulator::PrintState() {
     using std::cout;
@@ -133,6 +137,20 @@ void LightningKokkosSimulator::PrintState() {
 }
 /// LCOV_EXCL_STOP
 
+void LightningKokkosSimulator::SetState(DataView<std::complex<double>, 1> &data,
+                                        std::vector<QubitIdType> &wires) {
+    std::size_t expected_wires = static_cast<std::size_t>(log2(data.size()));
+    RT_ASSERT(expected_wires == wires.size());
+    std::vector<Kokkos::complex<double>> data_vector(data.begin(), data.end());
+    this->device_sv->setStateVector(data_vector, getDeviceWires(wires));
+}
+
+void LightningKokkosSimulator::SetBasisState(DataView<int8_t, 1> &data,
+                                             std::vector<QubitIdType> &wires) {
+    std::vector<std::size_t> basis_state(data.begin(), data.end());
+    this->device_sv->setBasisState(basis_state, getDeviceWires(wires));
+}
+
 auto LightningKokkosSimulator::Zero() const -> Result {
     return const_cast<Result>(&GLOBAL_RESULT_FALSE_CONST);
 }
@@ -146,25 +164,31 @@ void LightningKokkosSimulator::NamedOperation(
     const std::vector<QubitIdType> &wires, bool inverse,
     const std::vector<QubitIdType> &controlled_wires,
     const std::vector<bool> &controlled_values) {
-    RT_FAIL_IF(!controlled_wires.empty() || !controlled_values.empty(),
-               "LightningKokkos does not support native quantum control.");
-
     // Check the validity of number of qubits and parameters
+    RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
+               "Controlled wires/values size mismatch");
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
     RT_FAIL_IF(!isValidQubits(controlled_wires),
                "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
+    auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
     // Update the state-vector
-    this->device_sv->applyOperation(name, dev_wires, inverse, params);
+    if (controlled_wires.empty()) {
+        this->device_sv->applyOperation(name, dev_wires, inverse, params);
+    } else {
+        this->device_sv->applyOperation(name, dev_controlled_wires,
+                                        controlled_values, dev_wires, inverse,
+                                        params);
+    }
 
     // Update tape caching if required
     if (this->tape_recording) {
         this->cache_manager.addOperation(name, params, dev_wires, inverse, {},
-                                         {/*controlled_wires*/},
-                                         {/*controlled_values*/});
+                                         dev_controlled_wires,
+                                         controlled_values);
     }
 }
 
@@ -177,16 +201,15 @@ void LightningKokkosSimulator::MatrixOperation(
         Kokkos::View<Kokkos::complex<double> *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 
-    // TODO: Remove when controlled wires API is supported
-    RT_FAIL_IF(
-        !controlled_wires.empty() || !controlled_values.empty(),
-        "LightningKokkos device does not support native quantum control.");
+    RT_FAIL_IF(controlled_wires.size() != controlled_values.size(),
+               "Controlled wires/values size mismatch");
     RT_FAIL_IF(!isValidQubits(wires), "Given wires do not refer to qubits");
     RT_FAIL_IF(!isValidQubits(controlled_wires),
                "Given controlled wires do not refer to qubits");
 
     // Convert wires to device wires
     auto &&dev_wires = getDeviceWires(wires);
+    auto &&dev_controlled_wires = getDeviceWires(controlled_wires);
 
     std::vector<Kokkos::complex<double>> matrix_kok;
     matrix_kok.resize(matrix.size());
@@ -200,13 +223,19 @@ void LightningKokkosSimulator::MatrixOperation(
                                                             matrix_kok.size()));
 
     // Update the state-vector
-    this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+    if (controlled_wires.empty()) {
+        this->device_sv->applyMultiQubitOp(gate_matrix, dev_wires, inverse);
+    } else {
+        this->device_sv->applyNCMultiQubitOp(gate_matrix, dev_controlled_wires,
+                                             controlled_values, dev_wires,
+                                             inverse);
+    }
 
     // Update tape caching if required
     if (this->tape_recording) {
         this->cache_manager.addOperation("QubitUnitary", {}, dev_wires, inverse,
-                                         matrix_kok, {/*controlled_wires*/},
-                                         {/*controlled_values*/});
+                                         matrix_kok, dev_controlled_wires,
+                                         controlled_values);
     }
 }
 
@@ -250,6 +279,8 @@ auto LightningKokkosSimulator::Expval(ObsIdType obsKey) -> double {
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
 
+    m.setSeed(this->generateSeed());
+
     return device_shots ? m.expval(*obs, device_shots, {}) : m.expval(*obs);
 }
 
@@ -266,6 +297,8 @@ auto LightningKokkosSimulator::Var(ObsIdType obsKey) -> double {
 
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.setSeed(this->generateSeed());
 
     return device_shots ? m.var(*obs, device_shots) : m.var(*obs);
 }
@@ -296,6 +329,9 @@ void LightningKokkosSimulator::State(DataView<std::complex<double>, 1> &state) {
 void LightningKokkosSimulator::Probs(DataView<double, 1> &probs) {
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.setSeed(this->generateSeed());
+
     auto &&dv_probs = device_shots ? m.probs(device_shots) : m.probs();
 
     RT_FAIL_IF(probs.size() != dv_probs.size(),
@@ -315,6 +351,9 @@ void LightningKokkosSimulator::PartialProbs(
     auto dev_wires = getDeviceWires(wires);
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.setSeed(this->generateSeed());
+
     auto &&dv_probs =
         device_shots ? m.probs(dev_wires, device_shots) : m.probs(dev_wires);
 
@@ -324,13 +363,21 @@ void LightningKokkosSimulator::PartialProbs(
     std::move(dv_probs.begin(), dv_probs.end(), probs.begin());
 }
 
-void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
-                                      std::size_t shots) {
+std::vector<size_t> LightningKokkosSimulator::GenerateSamples(size_t shots) {
+    // generate_samples is a member function of the Measures class.
     Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
         *(this->device_sv)};
+
+    m.setSeed(this->generateSeed());
+
     // PL-Lightning-Kokkos generates samples using the alias method.
     // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    return m.generate_samples(shots);
+}
+
+void LightningKokkosSimulator::Sample(DataView<double, 2> &samples,
+                                      std::size_t shots) {
+    auto li_samples = this->GenerateSamples(shots);
 
     RT_FAIL_IF(samples.size() != li_samples.size(),
                "Invalid size for the pre-allocated samples");
@@ -363,13 +410,7 @@ void LightningKokkosSimulator::PartialSample(
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    // generate_samples is a member function of the MeasuresKokkos class.
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
-    // PL-Lightning-Kokkos generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = this->GenerateSamples(shots);
 
     // The lightning samples are layed out as a single vector of size
     // shots*qubits, where each element represents a single bit. The
@@ -393,13 +434,7 @@ void LightningKokkosSimulator::Counts(DataView<double, 1> &eigvals,
     RT_FAIL_IF(eigvals.size() != numElements || counts.size() != numElements,
                "Invalid size for the pre-allocated counts");
 
-    // generate_samples is a member function of the MeasuresKokkos class.
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
-    // PL-Lightning-Kokkos generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = this->GenerateSamples(shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
@@ -437,13 +472,7 @@ void LightningKokkosSimulator::PartialCounts(
     // get device wires
     auto &&dev_wires = getDeviceWires(wires);
 
-    // generate_samples is a member function of the MeasuresKokkos class.
-    Pennylane::LightningKokkos::Measures::Measurements<StateVectorT> m{
-        *(this->device_sv)};
-
-    // PL-Lightning-Kokkos generates samples using the alias method.
-    // Reference: https://en.wikipedia.org/wiki/Inverse_transform_sampling
-    auto li_samples = m.generate_samples(shots);
+    auto li_samples = this->GenerateSamples(shots);
 
     // Fill the eigenvalues with the integer representation of the corresponding
     // computational basis bitstring. In the future, eigenvalues can also be
@@ -480,7 +509,7 @@ auto LightningKokkosSimulator::Measure(QubitIdType wire,
     SetDeviceShots(device_shots);
 
     // It represents the measured result, true for 1, false for 0
-    bool mres = Lightning::simulateDraw(probs, postselect);
+    bool mres = Lightning::simulateDraw(probs, postselect, this->gen);
     auto dev_wires = getDeviceWires(wires);
     this->device_sv->collapse(dev_wires[0], mres ? 1 : 0);
     return mres ? this->One() : this->Zero();

@@ -34,7 +34,7 @@ struct ApplyGeneratorIsingYY {
     constexpr static std::size_t packed_size_ = packed_size;
     constexpr static bool symmetric = true;
 
-    template <size_t rev_wire0, std::size_t rev_wire1>
+    template <std::size_t rev_wire0, std::size_t rev_wire1>
     static auto applyInternalInternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       [[maybe_unused]] bool adj) -> PrecisionT {
@@ -42,14 +42,14 @@ struct ApplyGeneratorIsingYY {
         constexpr static auto perm = compilePermutation<Precision, packed_size>(
             flip(flip(identity<packed_size>(), rev_wire0), rev_wire1));
 
-        auto parityFunc = [](size_t idx) -> std::size_t {
+        auto parityFunc = [](std::size_t idx) -> std::size_t {
             return std::size_t{1U} - (((idx >> rev_wire0) & std::size_t{1U}) ^
                                       ((idx >> rev_wire1) & std::size_t{1U}));
         };
 
         const auto signs = toParity<PrecisionT, packed_size>(parityFunc);
         PL_LOOP_PARALLEL(1)
-        for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
+        for (std::size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n, signs * permute<perm>(v));
         }
@@ -57,7 +57,7 @@ struct ApplyGeneratorIsingYY {
             0.5); // NOLINT(readability-magic-numbers)
     }
 
-    template <size_t min_rev_wire>
+    template <std::size_t min_rev_wire>
     static auto applyInternalExternal(std::complex<PrecisionT> *arr,
                                       std::size_t num_qubits,
                                       std::size_t max_rev_wire,
@@ -77,7 +77,8 @@ struct ApplyGeneratorIsingYY {
             -internalParity<Precision, packed_size>(min_rev_wire);
         const auto sign1 = internalParity<Precision, packed_size>(min_rev_wire);
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
             const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
             const std::size_t i1 = i0 | max_rev_wire_shift;
@@ -112,7 +113,8 @@ struct ApplyGeneratorIsingYY {
         const std::size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
         PL_LOOP_PARALLEL(1)
-        for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
             const std::size_t i00 = ((k << 2U) & parity_high) |
                                     ((k << 1U) & parity_middle) |
                                     (k & parity_low);

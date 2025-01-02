@@ -522,7 +522,6 @@ template <typename TypeList> void testHamiltonianBase() {
 
                 StateVectorT sv_mpi(mpi_manager, dt_local, mpi_buffersize,
                                     nGlobalIndexBits, nLocalIndexBits);
-                sv_mpi.initSV();
 
                 REQUIRE_THROWS_AS(ham->applyInPlace(sv_mpi),
                                   LightningException);

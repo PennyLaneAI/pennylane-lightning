@@ -471,17 +471,16 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
 
         LKsim->NamedOperation("RX", {M_PI}, {Qs[1]}, false);
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
-        LKsim->NamedOperation("MultiRZ", {M_PI}, {Qs[0], Qs[1]}, false);
         LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
-        LKsim->NamedOperation("Hadamard", {}, {Qs[1]}, false);
+        LKsim->NamedOperation("MultiRZ", {M_PI / 2}, {Qs[0], Qs[1]}, false);
 
         std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
         DataView<std::complex<double>, 1> view(state);
         LKsim->State(view);
 
-        CHECK(state[2] ==
-              PLApproxComplex(std::complex<double>{-1, 0}).epsilon(1e-5));
+        CHECK(state[1] ==
+              PLApproxComplex(std::complex<double>{0.707107, -0.707107})
+                  .epsilon(1e-5));
     }
 
     SECTION("Hadamard, CNOT and Matrix") {
@@ -659,4 +658,134 @@ TEST_CASE("LightningKokkosSimulator::GateSet", "[GateSet]") {
             expected{3, 0, 1, {"Hadamard", "Hadamard", "IsingZZ"}, {}};
         REQUIRE(LKsim->CacheManagerInfo() == expected);
     }
+
+    SECTION("Controlled Pauli-X and RX") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs;
+        Qs.reserve(n_qubits);
+
+        for (std::size_t i = 0; i < n_qubits; i++) {
+            Qs[i] = LKsim->AllocateQubit();
+        }
+
+        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LKsim->NamedOperation("PauliX", {}, {Qs[1]}, false, {Qs[0]}, {true});
+        LKsim->NamedOperation("RX", {M_PI_2}, {Qs[1]}, false, {Qs[0]}, {true});
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        CHECK(
+            state.at(0) ==
+            PLApproxComplex(std::complex<double>{M_SQRT1_2, 0}).epsilon(1e-5));
+        CHECK(state.at(1) ==
+              PLApproxComplex(std::complex<double>{0, 0}).epsilon(1e-5));
+        CHECK(state.at(2) ==
+              PLApproxComplex(std::complex<double>{0, -0.5}).epsilon(1e-5));
+        CHECK(state.at(3) ==
+              PLApproxComplex(std::complex<double>{0.5, 0.0}).epsilon(1e-5));
+    }
+
+    SECTION("Hadamard, CNOT and Matrix") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false);
+        LKsim->NamedOperation("CNOT", {}, {Qs[0], Qs[1]}, false);
+
+        const std::vector<intptr_t> wires = {Qs[1]};
+        const std::vector<intptr_t> controlled_wires = {Qs[0]};
+        const std::vector<bool> controlled_values = {true};
+        std::vector<std::complex<double>> matrix{
+            {-0.6709485262524046, -0.6304426335363695},
+            {-0.14885403153998722, 0.3608498832392019},
+            {-0.2376311670004963, 0.3096798175687841},
+            {-0.8818365947322423, -0.26456390390903695},
+        };
+        LKsim->MatrixOperation(matrix, wires, false, controlled_wires,
+                               controlled_values);
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        CHECK(state[0] == PLApproxComplex(std::complex<double>{0.70710678, 0.0})
+                              .epsilon(1e-5));
+        CHECK(state[1] ==
+              PLApproxComplex(std::complex<double>{0.0, 0.0}).epsilon(1e-5));
+        CHECK(state[2] ==
+              PLApproxComplex(std::complex<double>{-0.1052557, 0.2551594})
+                  .epsilon(1e-5));
+        CHECK(state[3] ==
+              PLApproxComplex(std::complex<double>{-0.62355264, -0.187075})
+                  .epsilon(1e-5));
+    }
+
+    SECTION("Mismatch controlled wires") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        REQUIRE_THROWS_WITH(
+            LKsim->NamedOperation("Hadamard", {}, {Qs[0]}, false, {Qs[1]}, {}),
+            Catch::Contains("Controlled wires/values size mismatch"));
+        std::vector<std::complex<double>> matrix{
+            {-0.6709485262524046, -0.6304426335363695},
+            {-0.14885403153998722, 0.3608498832392019},
+            {-0.2376311670004963, 0.3096798175687841},
+            {-0.8818365947322423, -0.26456390390903695},
+        };
+        REQUIRE_THROWS_WITH(
+            LKsim->MatrixOperation(matrix, {Qs[0]}, false, {Qs[1]}, {}),
+            Catch::Contains("Controlled wires/values size mismatch"));
+    }
+
+    SECTION("Test setStateVector") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        constexpr std::size_t n_qubits = 2;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        std::vector<std::complex<double>> data = {{0.5, 0.5}, {0.0, 0.0}};
+        DataView<std::complex<double>, 1> data_view(data);
+        std::vector<QubitIdType> wires = {1};
+        LKsim->SetState(data_view, wires);
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        std::complex<double> c1{0.5, 0.5};
+        std::complex<double> c2{0.0, 0.0};
+        CHECK(state[0] == PLApproxComplex(c1).epsilon(1e-5));
+        CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
+        CHECK(state[2] == PLApproxComplex(c2).epsilon(1e-5));
+        CHECK(state[3] == PLApproxComplex(c2).epsilon(1e-5));
+    }
+
+    SECTION("Test setBasisState") {
+        std::unique_ptr<LKSimulator> LKsim = std::make_unique<LKSimulator>();
+        constexpr std::size_t n_qubits = 1;
+        std::vector<intptr_t> Qs = LKsim->AllocateQubits(n_qubits);
+
+        std::vector<int8_t> data = {0};
+        DataView<int8_t, 1> data_view(data);
+        std::vector<QubitIdType> wires = {0};
+        LKsim->SetBasisState(data_view, wires);
+
+        std::vector<std::complex<double>> state(1U << LKsim->GetNumQubits());
+        DataView<std::complex<double>, 1> view(state);
+        LKsim->State(view);
+
+        std::complex<double> c1{1.0, 0.0};
+        std::complex<double> c2{0.0, 0.0};
+        CHECK(state[0] == PLApproxComplex(c1).epsilon(1e-5));
+        CHECK(state[1] == PLApproxComplex(c2).epsilon(1e-5));
+    }
 }
+
+TEST_CASE("Test mismatch controlled wires", "[]") {}

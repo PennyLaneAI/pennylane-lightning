@@ -62,10 +62,11 @@ template <> struct AVXIntrinsic<double, 8> {
  * @brief one or minus one parity for reverse wire in packed data.
  */
 template <typename PrecisionT, std::size_t packed_size>
-constexpr auto internalParity(size_t rev_wire)
+constexpr auto internalParity(std::size_t rev_wire)
     -> AVXIntrinsicType<PrecisionT, packed_size>;
 #ifdef PL_USE_AVX2
-template <> constexpr auto internalParity<float, 8>(size_t rev_wire) -> __m256 {
+template <>
+constexpr auto internalParity<float, 8>(std::size_t rev_wire) -> __m256 {
     switch (rev_wire) {
     case 0:
         // When Z is applied to the 0th qubit
@@ -89,7 +90,7 @@ constexpr auto internalParity<double, 4>([[maybe_unused]] std::size_t rev_wire)
 #ifdef PL_USE_AVX512F
 // LCOV_EXCL_START
 template <>
-constexpr auto internalParity<float, 16>(size_t rev_wire) -> __m512 {
+constexpr auto internalParity<float, 16>(std::size_t rev_wire) -> __m512 {
     // AVX512 with float
     // clang-format off
     switch(rev_wire) {
@@ -116,7 +117,7 @@ constexpr auto internalParity<float, 16>(size_t rev_wire) -> __m512 {
     };
 };
 template <>
-constexpr auto internalParity<double, 8>(size_t rev_wire) -> __m512d {
+constexpr auto internalParity<double, 8>(std::size_t rev_wire) -> __m512d {
     // AVX512 with double
     switch (rev_wire) {
     case 0:
@@ -207,10 +208,10 @@ constexpr auto set1(PrecisionT val) {
     return Set1<PrecisionT, packed_size>::create(val);
 }
 
-template <size_t packed_size> struct InternalWires {
+template <std::size_t packed_size> struct InternalWires {
     constexpr static auto value = log2PerfectPower(packed_size / 2);
 };
-template <size_t packed_size>
+template <std::size_t packed_size>
 constexpr auto internal_wires_v = InternalWires<packed_size>::value;
 
 #ifdef PL_USE_AVX2
@@ -306,7 +307,7 @@ template <typename PrecisionT, std::size_t packed_size, typename Func>
 auto toParity(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
     PL_LOOP_SIMD
-    for (size_t idx = 0; idx < packed_size / 2; idx++) {
+    for (std::size_t idx = 0; idx < packed_size / 2; idx++) {
         data[2 * idx + 0] = static_cast<PrecisionT>(1.0) -
                             2 * static_cast<PrecisionT>(func(idx));
         data[2 * idx + 1] = static_cast<PrecisionT>(1.0) -
@@ -325,7 +326,7 @@ template <typename PrecisionT, std::size_t packed_size, typename Func>
 auto setValueOneTwo(Func &&func) -> AVXIntrinsicType<PrecisionT, packed_size> {
     std::array<PrecisionT, packed_size> data{};
     PL_LOOP_SIMD
-    for (size_t idx = 0; idx < packed_size / 2; idx++) {
+    for (std::size_t idx = 0; idx < packed_size / 2; idx++) {
         data[2 * idx + 0] = static_cast<PrecisionT>(func(idx));
         data[2 * idx + 1] = data[2 * idx + 0];
     }

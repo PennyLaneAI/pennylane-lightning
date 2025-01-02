@@ -20,6 +20,7 @@ using Pennylane::Util::isApproxEqual;
 } // namespace
 /// @endcond
 #include <algorithm>
+#include <optional>
 #include <string>
 
 #ifdef _ENABLE_PLQUBIT
@@ -84,47 +85,33 @@ template <typename TypeList> void testProbabilities() {
         // Expected results calculated with Pennylane default.qubit:
         std::vector<
             std::pair<std::vector<std::size_t>, std::vector<PrecisionT>>>
-            input = {
-#if defined(_ENABLE_PLGPU)
-                // Bit index reodering conducted in the python layer
-                // for L-GPU. Also L-GPU backend doesn't support
-                // out of order wires for probability calculation
-                {{2, 1, 0},
-                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                  0.00801973, 0.02280642, 0.00104134}}
-#else
-#if defined(_ENABLE_PLQUBIT)
-                // LightningQubit currently supports arbitrary wire index
-                // ordering.
-                {{0, 2, 1},
-                 {0.67078706, 0.0870997, 0.03062806, 0.00397696, 0.17564072,
-                  0.02280642, 0.00801973, 0.00104134}},
-                {{1, 0, 2},
-                 {0.67078706, 0.03062806, 0.17564072, 0.00801973, 0.0870997,
-                  0.00397696, 0.02280642, 0.00104134}},
-                {{1, 2, 0},
-                 {0.67078706, 0.17564072, 0.03062806, 0.00801973, 0.0870997,
-                  0.02280642, 0.00397696, 0.00104134}},
-                {{2, 0, 1},
-                 {0.67078706, 0.0870997, 0.17564072, 0.02280642, 0.03062806,
-                  0.00397696, 0.00801973, 0.00104134}},
-                {{2, 1, 0},
-                 {0.67078706, 0.17564072, 0.0870997, 0.02280642, 0.03062806,
-                  0.00801973, 0.00397696, 0.00104134}},
-                {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
-
-#endif
-                {{0, 1, 2},
-                 {0.67078706, 0.03062806, 0.0870997, 0.00397696, 0.17564072,
-                  0.00801973, 0.02280642, 0.00104134}},
-                {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
-                {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
-                {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
-                {{0}, {0.79249179, 0.20750821}},
-                {{1}, {0.88507558, 0.11492442}},
-                {{2}, {0.9563339, 0.0436661}}
-#endif
-            };
+            input = {// LightningQubit currently supports arbitrary wire index
+                     // ordering.
+                     {{0, 2, 1},
+                      {0.67078706, 0.0870997, 0.03062806, 0.00397696,
+                       0.17564072, 0.02280642, 0.00801973, 0.00104134}},
+                     {{1, 0, 2},
+                      {0.67078706, 0.03062806, 0.17564072, 0.00801973,
+                       0.0870997, 0.00397696, 0.02280642, 0.00104134}},
+                     {{1, 2, 0},
+                      {0.67078706, 0.17564072, 0.03062806, 0.00801973,
+                       0.0870997, 0.02280642, 0.00397696, 0.00104134}},
+                     {{2, 0, 1},
+                      {0.67078706, 0.0870997, 0.17564072, 0.02280642,
+                       0.03062806, 0.00397696, 0.00801973, 0.00104134}},
+                     {{2, 1, 0},
+                      {0.67078706, 0.17564072, 0.0870997, 0.02280642,
+                       0.03062806, 0.00801973, 0.00397696, 0.00104134}},
+                     {{2, 1}, {0.84642778, 0.10990612, 0.0386478, 0.0050183}},
+                     {{0, 1, 2},
+                      {0.67078706, 0.03062806, 0.0870997, 0.00397696,
+                       0.17564072, 0.00801973, 0.02280642, 0.00104134}},
+                     {{0, 1}, {0.70141512, 0.09107666, 0.18366045, 0.02384776}},
+                     {{0, 2}, {0.75788676, 0.03460502, 0.19844714, 0.00906107}},
+                     {{1, 2}, {0.84642778, 0.0386478, 0.10990612, 0.0050183}},
+                     {{0}, {0.79249179, 0.20750821}},
+                     {{1}, {0.88507558, 0.11492442}},
+                     {{2}, {0.9563339, 0.0436661}}};
 
         // Defining the Statevector that will be measured.
         auto statevector_data = createNonTrivialState<StateVectorT>();
@@ -233,7 +220,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test PauliX"
                         << StateVectorToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliX", {i});
                 Measurements<StateVectorT> Measurer_obs(statevector);
 
@@ -250,7 +237,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test PauliY"
                         << StateVectorToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliY", {i});
                 Measurements<StateVectorT> Measurer_obs(statevector);
 
@@ -268,7 +255,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test PauliZ"
                         << StateVectorToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("PauliZ", {i});
                 Measurements<StateVectorT> Measurer_obs(statevector);
 
@@ -283,7 +270,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test Hadamard"
                         << StateVectorToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("Hadamard", {i});
                 Measurements<StateVectorT> Measurer_obs(statevector);
                 const PrecisionT theta = -M_PI / 4.0;
@@ -300,7 +287,7 @@ template <typename TypeList> void testProbabilitiesObs() {
 
         DYNAMIC_SECTION("Test Identity"
                         << StateVectorToName<StateVectorT>::name) {
-            for (size_t i = 0; i < num_qubits; i++) {
+            for (std::size_t i = 0; i < num_qubits; i++) {
                 NamedObs<StateVectorT> obs("Identity", {i});
                 Measurements<StateVectorT> Measurer_obs(statevector);
 
@@ -406,11 +393,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
             std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
 
-#ifdef _ENABLE_PLGPU
-            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
-#else
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
-#endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
         }
@@ -436,11 +419,7 @@ template <typename TypeList> void testProbabilitiesObsShots() {
 
             std::size_t num_shots = 10000;
             auto prob_obs_shots = Measurer_obs_shots.probs(*obs, num_shots);
-#ifdef _ENABLE_PLGPU
-            auto prob = Measurer.probs(std::vector<std::size_t>({2, 1, 0}));
-#else
             auto prob = Measurer.probs(std::vector<std::size_t>({0, 1, 2}));
-#endif
 
             REQUIRE_THAT(prob_obs_shots, Catch::Approx(prob).margin(5e-2));
         }
@@ -477,11 +456,11 @@ template <typename TypeList> void testNamedObsExpval() {
             {-0.64421768, -0.47942553, -0.29552020},
             {0.58498357, 0.77015115, 0.91266780}};
 
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
@@ -525,13 +504,13 @@ template <typename TypeList> void testNamedObsExpvalShot() {
             {0.58498357, 0.77015115, 0.91266780},
             {0.7620549436, 0.8420840225, 0.8449848566},
             {1.0, 1.0, 1.0}};
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
                 std::size_t num_shots = 20000;
                 std::vector<std::size_t> shots_range = {};
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
@@ -545,16 +524,16 @@ template <typename TypeList> void testNamedObsExpvalShot() {
             }
         }
 
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires-with shots_range"
                             << StateVectorToName<StateVectorT>::name) {
                 std::size_t num_shots = 20000;
                 std::vector<std::size_t> shots_range;
-                for (size_t i = 0; i < num_shots; i += 2) {
+                for (std::size_t i = 0; i < num_shots; i += 2) {
                     shots_range.push_back(i);
                 }
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
@@ -577,7 +556,6 @@ TEST_CASE("Expval Shot- NamedObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifdef PL_USE_LAPACK
 template <typename TypeList> void testHermitianObsExpvalShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -680,7 +658,6 @@ TEST_CASE("Expval Shot - HermitianObs ", "[MeasurementsBase][Observables]") {
         testHermitianObsExpvalShot<TestStateVectorBackends>();
     }
 }
-#endif
 
 template <typename TypeList> void testHermitianObsExpval() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -712,7 +689,7 @@ template <typename TypeList> void testHermitianObsExpval() {
             MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
                                      ComplexT{0, -imag_term}, real_term};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
@@ -739,7 +716,7 @@ template <typename TypeList> void testHermitianObsExpval() {
             Hermitian_matrix[10] = ComplexT{1.0, 0};
             Hermitian_matrix[15] = ComplexT{1.0, 0};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
@@ -812,7 +789,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                         << StateVectorToName<StateVectorT>::name) {
             std::size_t num_shots = 20000;
             std::vector<std::size_t> shots_range;
-            for (size_t i = 0; i < num_shots; i += 2) {
+            for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -831,7 +808,7 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                         << StateVectorToName<StateVectorT>::name) {
             std::size_t num_shots = 20000;
             std::vector<std::size_t> shots_range;
-            for (size_t i = 0; i < num_shots; i += 2) {
+            for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
             auto X0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -846,7 +823,6 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION(" With Identity and shots_range"
                         << StateVectorToName<StateVectorT>::name) {
             std::size_t num_shots = 80000;
@@ -867,7 +843,6 @@ template <typename TypeList> void testTensorProdObsExpvalShot() {
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
                                      expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         testTensorProdObsExpvalShot<typename TypeList::Next>();
     }
@@ -901,11 +876,11 @@ template <typename TypeList> void testNamedObsVar() {
             {0.5849835, 0.7701511, 0.9126678},
             {0.6577942, 0.4068672, 0.1670374}};
 
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
@@ -918,7 +893,7 @@ template <typename TypeList> void testNamedObsVar() {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " Shots - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
@@ -972,7 +947,7 @@ template <typename TypeList> void testHermitianObsVar() {
             MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
                                      ComplexT{0, -imag_term}, real_term};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
@@ -998,7 +973,7 @@ template <typename TypeList> void testHermitianObsVar() {
             Hermitian_matrix[10] = ComplexT{1.0, 0};
             Hermitian_matrix[15] = ComplexT{1.0, 0};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
@@ -1018,7 +993,6 @@ TEST_CASE("Var - HermitianObs", "[MeasurementsBase][Observables]") {
     }
 }
 
-#ifdef PL_USE_LAPACK
 template <typename TypeList> void testHermitianObsShotVar() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
@@ -1049,7 +1023,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
             MatrixT Hermitian_matrix{real_term, ComplexT{0, imag_term},
                                      ComplexT{0, -imag_term}, real_term};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
@@ -1079,7 +1053,7 @@ template <typename TypeList> void testHermitianObsShotVar() {
             Hermitian_matrix[10] = ComplexT{1.0, 0};
             Hermitian_matrix[15] = ComplexT{1.0, 0};
 
-            for (size_t ind_wires = 0; ind_wires < wires_list.size();
+            for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                  ind_wires++) {
                 HermitianObs<StateVectorT> obs(Hermitian_matrix,
                                                wires_list[ind_wires]);
@@ -1103,7 +1077,6 @@ TEST_CASE("Var - HermitianObs Shot", "[MeasurementsBase][Observables]") {
         testHermitianObsShotVar<TestStateVectorBackends>();
     }
 }
-#endif
 
 template <typename TypeList> void testTensorProdObsVarShot() {
     if constexpr (!std::is_same_v<TypeList, void>) {
@@ -1154,7 +1127,6 @@ template <typename TypeList> void testTensorProdObsVarShot() {
                                      expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("With Hermitian and NameObs"
                         << StateVectorToName<StateVectorT>::name) {
             using MatrixT = std::vector<ComplexT>;
@@ -1204,7 +1176,6 @@ template <typename TypeList> void testTensorProdObsVarShot() {
             REQUIRE_THAT(result, Catch::Matchers::WithinRel(
                                      expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         DYNAMIC_SECTION(" full wires with apply operations"
                         << StateVectorToName<StateVectorT>::name) {
@@ -1254,7 +1225,9 @@ TEST_CASE("Var Shot- TensorProdObs", "[MeasurementsBase][Observables]") {
         testTensorProdObsVarShot<TestStateVectorBackends>();
     }
 }
-template <typename TypeList> void testSamples() {
+
+template <typename TypeList>
+void testSamples(const std::optional<std::size_t> &seed = std::nullopt) {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -1276,6 +1249,7 @@ template <typename TypeList> void testSamples() {
         // This object attaches to the statevector allowing several
         // measurements.
         Measurements<StateVectorT> Measurer(statevector);
+        Measurer.setSeed(seed);
 
         std::vector<PrecisionT> expected_probabilities = {
             0.67078706, 0.03062806, 0.0870997,  0.00397696,
@@ -1290,8 +1264,8 @@ template <typename TypeList> void testSamples() {
         std::vector<std::size_t> samples_decimal(num_samples, 0);
 
         // convert samples to decimal and then bin them in counts
-        for (size_t i = 0; i < num_samples; i++) {
-            for (size_t j = 0; j < num_qubits; j++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
+            for (std::size_t j = 0; j < num_qubits; j++) {
                 if (samples[i * num_qubits + j] != 0) {
                     samples_decimal[i] += twos[(num_qubits - 1 - j)];
                 }
@@ -1301,7 +1275,7 @@ template <typename TypeList> void testSamples() {
 
         // compute estimated probabilities from histogram
         std::vector<PrecisionT> probabilities(counts.size());
-        for (size_t i = 0; i < counts.size(); i++) {
+        for (std::size_t i = 0; i < counts.size(); i++) {
             probabilities[i] = counts[i] / (PrecisionT)num_samples;
         }
 
@@ -1310,13 +1284,19 @@ template <typename TypeList> void testSamples() {
             REQUIRE_THAT(probabilities,
                          Catch::Approx(expected_probabilities).margin(.05));
         }
-        testSamples<typename TypeList::Next>();
+        testSamples<typename TypeList::Next>(seed);
     }
 }
 
 TEST_CASE("Samples", "[MeasurementsBase]") {
     if constexpr (BACKEND_FOUND) {
         testSamples<TestStateVectorBackends>();
+    }
+}
+
+TEST_CASE("Seeded samples", "[MeasurementsBase]") {
+    if constexpr (BACKEND_FOUND) {
+        testSamples<TestStateVectorBackends>(37);
     }
 }
 
@@ -1352,12 +1332,12 @@ template <typename TypeList> void testSamplesCountsObs() {
             {0.58498357, 0.77015115, 0.91266780},
             {0.7620549436, 0.8420840225, 0.8449848566},
             {1.0, 1.0, 1.0}};
-        for (size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
+        for (std::size_t ind_obs = 0; ind_obs < obs_name.size(); ind_obs++) {
             DYNAMIC_SECTION(obs_name[ind_obs]
                             << " Sample Obs - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
                 std::size_t num_shots = 20000;
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
@@ -1380,7 +1360,7 @@ template <typename TypeList> void testSamplesCountsObs() {
                             << " Counts Obs - Varying wires"
                             << StateVectorToName<StateVectorT>::name) {
                 std::size_t num_shots = 20000;
-                for (size_t ind_wires = 0; ind_wires < wires_list.size();
+                for (std::size_t ind_wires = 0; ind_wires < wires_list.size();
                      ind_wires++) {
                     NamedObs<StateVectorT> obs(obs_name[ind_obs],
                                                wires_list[ind_wires]);
@@ -1415,8 +1395,8 @@ template <typename TypeList> void testSamplesCountsObs() {
             std::vector<std::size_t> samples_decimal(num_samples, 0);
 
             // convert samples to decimal and then bin them in counts
-            for (size_t i = 0; i < num_samples; i++) {
-                for (size_t j = 0; j < num_qubits; j++) {
+            for (std::size_t i = 0; i < num_samples; i++) {
+                for (std::size_t j = 0; j < num_qubits; j++) {
                     if (samples[i * num_qubits + j] != 0) {
                         samples_decimal[i] += twos[(num_qubits - 1 - j)];
                     }
@@ -1426,7 +1406,7 @@ template <typename TypeList> void testSamplesCountsObs() {
 
             // compute estimated probabilities from histogram
             std::vector<PrecisionT> probabilities(counts.size());
-            for (size_t i = 0; i < counts.size(); i++) {
+            for (std::size_t i = 0; i < counts.size(); i++) {
                 probabilities[i] = counts[i] / (PrecisionT)num_samples;
             }
 
@@ -1460,7 +1440,7 @@ template <typename TypeList> void testSamplesCountsObs() {
 
             // compute estimated probabilities from histogram
             std::vector<PrecisionT> probabilities(counts.size());
-            for (size_t i = 0; i < counts.size(); i++) {
+            for (std::size_t i = 0; i < counts.size(); i++) {
                 probabilities[i] = counts[i] / (PrecisionT)num_samples;
             }
 
@@ -1525,7 +1505,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
                         << StateVectorToName<StateVectorT>::name) {
             std::size_t num_shots = 20000;
             std::vector<std::size_t> shots_range;
-            for (size_t i = 0; i < num_shots; i += 2) {
+            for (std::size_t i = 0; i < num_shots; i += 2) {
                 shots_range.push_back(i);
             }
 
@@ -1562,7 +1542,7 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#ifdef PL_USE_LAPACK
+
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
                 "PauliY", std::vector<std::size_t>{0});
@@ -1583,7 +1563,6 @@ template <typename TypeList> void testHamiltonianObsExpvalShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         testHamiltonianObsExpvalShot<typename TypeList::Next>();
     }
@@ -1643,7 +1622,6 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
                                   expected, static_cast<PrecisionT>(0.20)));
         }
 
-#ifdef PL_USE_LAPACK
         DYNAMIC_SECTION("YHer" << StateVectorToName<StateVectorT>::name) {
             using ComplexT = typename StateVectorT::ComplexT;
             auto Y0 = std::make_shared<NamedObs<StateVectorT>>(
@@ -1672,7 +1650,6 @@ template <typename TypeList> void testHamiltonianObsVarShot() {
             REQUIRE_THAT(res, Catch::Matchers::WithinRel(
                                   expected, static_cast<PrecisionT>(0.20)));
         }
-#endif
 
         testHamiltonianObsVarShot<typename TypeList::Next>();
     }

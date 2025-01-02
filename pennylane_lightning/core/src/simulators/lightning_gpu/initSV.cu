@@ -59,7 +59,7 @@ void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                         cudaStream_t stream_id);
 
 /**
- * @brief The CUDA kernel that setS state vector data on GPU device from the
+ * @brief The CUDA kernel that sets state vector data on GPU device from the
  * input values (on device) and their corresponding indices (on device)
  * information.
  *
@@ -103,96 +103,6 @@ void setStateVector_CUDA_call(GPUDataT *sv, index_type &num_indices,
     setStateVectorkernel<GPUDataT, index_type>
         <<<gridSize, blockSize, 0, stream_id>>>(sv, num_indices, value,
                                                 indices);
-    PL_CUDA_IS_SUCCESS(cudaGetLastError());
-}
-
-/**
- * @brief The CUDA kernel that multiplies the state vector data on GPU device
- * by a global phase.
- *
- * @param sv Complex data pointer of state vector on device.
- * @param num_sv Number of state vector elements.
- * @param phase Complex data pointer of input values (on device).
- */
-template <class GPUDataT, class index_type>
-__global__ void globalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
-                                             GPUDataT phase) {
-    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < num_sv) {
-        sv[i] = Cmul(sv[i], phase);
-    }
-}
-
-/**
- * @brief The CUDA kernel call wrapper.
- *
- * @param sv Complex data pointer of state vector on device.
- * @param num_sv Number of state vector elements.
- * @param phase Constant complex phase.
- * @param thread_per_block Number of threads set per block.
- * @param stream_id Stream id of CUDA calls
- */
-template <class GPUDataT, class index_type>
-void globalPhaseStateVector_CUDA_call(GPUDataT *sv, index_type num_sv,
-                                      GPUDataT phase,
-                                      std::size_t thread_per_block,
-                                      cudaStream_t stream_id) {
-    auto dv = std::div(static_cast<long>(num_sv), thread_per_block);
-    std::size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
-    const std::size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
-    dim3 blockSize(thread_per_block, 1, 1);
-    dim3 gridSize(block_per_grid, 1);
-
-    globalPhaseStateVectorkernel<GPUDataT, index_type>
-        <<<gridSize, blockSize, 0, stream_id>>>(sv, num_sv, phase);
-    PL_CUDA_IS_SUCCESS(cudaGetLastError());
-}
-
-/**
- * @brief The CUDA kernel that multiplies the state vector data on GPU device
- * by a controlled global phase.
- *
- * @param sv Complex data pointer of state vector on device.
- * @param num_sv Number of state vector elements.
- * @param phase Complex data pointer of controlled global phase values (on
- * device).
- */
-template <class GPUDataT, class index_type, bool adjoint = false>
-__global__ void cGlobalPhaseStateVectorkernel(GPUDataT *sv, index_type num_sv,
-                                              GPUDataT *phase) {
-    const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < num_sv) {
-        if constexpr (adjoint) {
-            sv[i] = Cmul(sv[i], Conj(phase[i]));
-        } else {
-            sv[i] = Cmul(sv[i], phase[i]);
-        }
-    }
-}
-
-/**
- * @brief The CUDA kernel call wrapper.
- *
- * @param sv Complex data pointer of state vector on device.
- * @param num_sv Number of state vector elements.
- * @param phase Complex data pointer of controlled global phase values (on
- * device).
- * @param thread_per_block Number of threads set per block.
- * @param stream_id Stream id of CUDA calls
- */
-template <class GPUDataT, class index_type, bool adjoint = false>
-void cGlobalPhaseStateVector_CUDA_call(GPUDataT *sv, index_type num_sv,
-                                       GPUDataT *phase,
-                                       std::size_t thread_per_block,
-                                       cudaStream_t stream_id) {
-    auto dv = std::div(static_cast<long>(num_sv), thread_per_block);
-    std::size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
-    const std::size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
-    dim3 blockSize(thread_per_block, 1, 1);
-    dim3 gridSize(block_per_grid, 1);
-
-    cGlobalPhaseStateVectorkernel<GPUDataT, index_type, adjoint>
-        <<<gridSize, blockSize, 0, stream_id>>>(sv, num_sv, phase);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
 
@@ -242,44 +152,4 @@ void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
                         cudaStream_t stream_id) {
     setBasisState_CUDA_call(sv, value, index, async, stream_id);
 }
-
-void globalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
-                                 cuComplex phase, std::size_t thread_per_block,
-                                 cudaStream_t stream_id) {
-    globalPhaseStateVector_CUDA_call(sv, num_sv, phase, thread_per_block,
-                                     stream_id);
-}
-void globalPhaseStateVector_CUDA(cuDoubleComplex *sv, std::size_t num_sv,
-                                 cuDoubleComplex phase,
-                                 std::size_t thread_per_block,
-                                 cudaStream_t stream_id) {
-    globalPhaseStateVector_CUDA_call(sv, num_sv, phase, thread_per_block,
-                                     stream_id);
-}
-
-void cGlobalPhaseStateVector_CUDA(cuComplex *sv, std::size_t num_sv,
-                                  bool adjoint, cuComplex *phase,
-                                  std::size_t thread_per_block,
-                                  cudaStream_t stream_id) {
-    if (adjoint) {
-        cGlobalPhaseStateVector_CUDA_call<cuComplex, std::size_t, true>(
-            sv, num_sv, phase, thread_per_block, stream_id);
-    } else {
-        cGlobalPhaseStateVector_CUDA_call<cuComplex, std::size_t, false>(
-            sv, num_sv, phase, thread_per_block, stream_id);
-    }
-}
-void cGlobalPhaseStateVector_CUDA(cuDoubleComplex *sv, std::size_t num_sv,
-                                  bool adjoint, cuDoubleComplex *phase,
-                                  std::size_t thread_per_block,
-                                  cudaStream_t stream_id) {
-    if (adjoint) {
-        cGlobalPhaseStateVector_CUDA_call<cuDoubleComplex, std::size_t, true>(
-            sv, num_sv, phase, thread_per_block, stream_id);
-    } else {
-        cGlobalPhaseStateVector_CUDA_call<cuDoubleComplex, std::size_t, false>(
-            sv, num_sv, phase, thread_per_block, stream_id);
-    }
-}
-
 } // namespace Pennylane::LightningGPU

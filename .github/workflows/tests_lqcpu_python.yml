@@ -11,6 +11,11 @@ on:
         required: true
         description: The version of PennyLane to use. Valid values are either 'release' (most recent release candidate), 'stable' (most recent git-tag) or 'latest' (most recent commit from master)
   pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
   push:
     branches:
       - master
@@ -28,45 +33,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  determine_runner:
-    name: Determine runner type to use
-    uses: ./.github/workflows/determine-workflow-runner.yml
-    with:
-      default_runner: ubuntu-22.04
-
   build_lightning_qubit_wheels:
-    needs: [determine_runner]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
         blas: ["OFF", "ON"]
     timeout-minutes: 60
     name: Build (${{ matrix.pl_backend }}, blas-${{ matrix.blas }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
+      - name: Make disk space
+        run: |
+          sudo apt-get autoremove -y && sudo apt-get autoclean -y && sudo apt-get clean -y
+          for DIR in /usr/share/dotnet /usr/local/share/powershell /usr/share/swift; do
+            sudo du -sh $DIR || echo $DIR not found
+            sudo rm -rf $DIR
+          done
+
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Switch to release build of Lightning
         if: inputs.lightning-version == 'release'
         run: |
-          cd main
           git fetch --all
           git checkout $(git branch -a --list "origin/v0.*rc*" | sort | tail -1)
 
       - name: Switch to stable build of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
           git log -1 --format='%H'
@@ -75,19 +78,16 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-base libopenblas-dev
-          python -m pip install scipy wheel
+          python -m pip install scipy-openblas32 wheel
 
       - name: Get required Python packages
         run: |
-          cd main
           python -m pip install -r requirements-dev.txt
 
-      - name: Create device wheel
-        id: create_lq_wheel
+      - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
-          cd main
-          python setup.py build_ext -i --define="PL_BACKEND=${{ matrix.pl_backend }};ENABLE_BLAS=${{ matrix.blas }};LQ_ENABLE_KERNEL_OMP=ON;ENABLE_PYTHON=ON;CMAKE_CXX_COMPILER=$(which g++-$GCC_VERSION)"
-          PL_BACKEND=${{ matrix.pl_backend }} python setup.py bdist_wheel
+          PL_BACKEND=${{ matrix.pl_backend }} python scripts/configure_pyproject_toml.py
+          CMAKE_ARGS="-DENABLE_BLAS=${{ matrix.blas }} -DLQ_ENABLE_KERNEL_OMP=ON -DENABLE_PYTHON=ON" python -m build
           cd dist
           WHEEL_NAME=$(ls *.whl)
           cp $WHEEL_NAME ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
@@ -99,6 +99,7 @@ jobs:
           name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
           path: ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
 
       - name: Cache wheel directories
@@ -107,11 +108,12 @@ jobs:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
           path: |
             ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
 
   test_lightning_qubit_wheels:
-    needs: [determine_runner, build_lightning_qubit_wheels]
+    needs: [build_lightning_qubit_wheels]
     strategy:
       matrix:
         pl_backend: ["lightning_qubit"]
@@ -119,19 +121,18 @@ jobs:
         group: [1, 2, 3, 4]
     timeout-minutes: 60
     name: Python Tests (${{ matrix.pl_backend }}, blas-${{ matrix.blas }}, test-group-${{ matrix.group }})
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: pl-4-core-large-runner
 
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - uses: actions/download-artifact@v4
         with:
@@ -146,18 +147,25 @@ jobs:
       - name: Get required Python packages
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
-          cd main
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-dev.txt
           python -m pip install openfermionpyscf
+          python -m pip install semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
 
-      - name: Checkout PennyLane for release build
-        if: inputs.pennylane-version == 'release'
+      - name: Checkout PennyLane for release or latest build
+        if: inputs.pennylane-version == 'release' || inputs.pennylane-version == 'latest'
         uses: actions/checkout@v4
         with:
           path: pennylane
           repository: PennyLaneAI/pennylane
+
+      - name: Switch to latest build of PennyLane
+        if: inputs.pennylane-version == 'latest'
+        run: |
+          cd pennylane
+          git checkout master
+          python -m pip uninstall -y pennylane && python -m pip install . -vv --no-deps
 
       - name: Switch to release build of PennyLane
         if: inputs.pennylane-version == 'release'
@@ -170,19 +178,16 @@ jobs:
       - name: Install Stable PennyLane
         if: inputs.pennylane-version == 'stable'
         run: |
-          cd main
           python -m pip uninstall -y pennylane && python -m pip install -U pennylane --no-deps
 
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
       - name: Switch to stable tag of Lightning
         if: inputs.lightning-version == 'stable'
         run: |
-          cd main
           git fetch --tags --force
           git checkout latest_release
           git log -1 --format='%H'
@@ -190,44 +195,54 @@ jobs:
 
       - name: Run PennyLane-Lightning unit tests
         run: |
-          cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" \
-            $COVERAGE_FLAGS --splits 4 --group ${{ matrix.group }} \
+          # Remove `python -m` to avoid running tests with relative modules
+          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
+            $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
             --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+          mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
+
+      - name: Upload test durations
+        uses: actions/upload-artifact@v4
+        with:
+          name: .test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+          retention-days: 1
+          path: ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
 
       - name: Upload code coverage results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          name: .coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
           path: |
-            ./main/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.group }}
+            ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
+          retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   upload-to-codecov-linux-python:
-    needs: [determine_runner, test_lightning_qubit_wheels]
+    if: github.event_name == 'pull_request'
+    needs: [test_lightning_qubit_wheels]
     name: Upload python coverage data to codecov
-    runs-on: ${{ needs.determine_runner.outputs.runner_group }}
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-tags: true
-          path: main
 
       - name: Download coverage reports
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: ubuntu-codecov-results-python
+          pattern: .coverage-*
+          merge-multiple: true
 
       - name: Combine coverage files
         run: |
           python -m pip install coverage
-          python -m coverage combine .coverage*
+          python -m coverage combine .coverage-*
           # Added cov xml -i to ignore "No source for code" random errors
           # https://stackoverflow.com/questions/2386975/no-source-for-code-message-in-coverage-py
           python -m coverage xml -i -o coverage-${{ github.job }}.xml

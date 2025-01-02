@@ -46,13 +46,13 @@ inline std::vector<int2> createWirePairs(const int numLocalQubits,
             int2 wirepair = make_int2(localbit, globalbit);
             wirePairs.push_back(wirepair);
             if (statusWires[globalbit] == WireStatus::Control) {
-                for (size_t k = 0; k < ctrls.size(); k++) {
+                for (std::size_t k = 0; k < ctrls.size(); k++) {
                     if (ctrls[k] == globalbit) {
                         ctrls[k] = localbit;
                     }
                 }
             } else {
-                for (size_t k = 0; k < tgts.size(); k++) {
+                for (std::size_t k = 0; k < tgts.size(); k++) {
                     if (tgts[k] == globalbit) {
                         tgts[k] = localbit;
                     }
@@ -143,8 +143,9 @@ inline void tgtsVecProcess(const std::size_t numLocalQubits,
                 tgtsSwapStatus.push_back(WiresSwapStatus::Swappable);
 
                 std::vector<int> localVec(vec.size());
-                std::transform(vec.begin(), vec.end(), localVec.begin(),
-                               [&](size_t x) { return static_cast<int>(x); });
+                std::transform(
+                    vec.begin(), vec.end(), localVec.begin(),
+                    [&](std::size_t x) { return static_cast<int>(x); });
                 auto wirePairs = createWirePairs(numLocalQubits, numTotalQubits,
                                                  localVec, statusWires);
                 std::vector<std::size_t> localVecSizeT(localVec.size());

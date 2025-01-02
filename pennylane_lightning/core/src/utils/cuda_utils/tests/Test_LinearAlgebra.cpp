@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the License);
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
 #include <algorithm>
 #include <complex>
 #include <cstdio>
+#include <cuComplex.h>
+#include <type_traits>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -26,8 +28,7 @@
 
 /**
  * @file
- *  Tests linear algebra functionality defined for the class
- * StateVectorCudaManaged.
+ *  Tests CUDA library based linear algebra functionality.
  */
 
 /// @cond DEV
@@ -95,5 +96,25 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
             CHECK(result[j].x == Approx(real(result_refs[j])));
             CHECK(result[j].y == Approx(imag(result_refs[j])));
         }
+    }
+}
+
+TEMPLATE_TEST_CASE("Linear Algebra::asum_CUDA_device", "[Linear Algebra]",
+                   float, double) {
+    std::vector<TestType> vec{1.0, 2.0, 3.0, 4.0, 5.0,
+                              6.0, 7.0, 8.0, 9.0, 10.0};
+
+    DataBuffer<TestType> vec_d(vec.size());
+
+    vec_d.CopyHostDataToGpu(vec.data(), vec.size());
+
+    auto cublasCaller = make_shared_cublas_caller();
+
+    SECTION("Testing asum_CUDA_device") {
+        TestType result;
+        asum_CUDA_device(vec_d.getData(), vec_d.getLength(), vec_d.getDevice(),
+                         vec_d.getStream(), *cublasCaller, &result);
+
+        CHECK(result == Approx(55.0));
     }
 }

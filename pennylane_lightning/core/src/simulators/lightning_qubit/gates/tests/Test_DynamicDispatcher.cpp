@@ -29,7 +29,6 @@
 
 /* Kernels */
 #include "cpu_kernels/GateImplementationsLM.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 #include "TestHelpers.hpp" // createProductState, createRandomStateVectorData
 #include "TestHelpersWires.hpp"
@@ -73,7 +72,7 @@ TEMPLATE_TEST_CASE("Print registered kernels", "[DynamicDispatcher]", float,
 
     std::ostringstream ss;
     ss << "Registered kernels: ";
-    for (size_t n = 0; n < kernels.size(); n++) {
+    for (std::size_t n = 0; n < kernels.size(); n++) {
         ss << dispatcher.getKernelName(kernels[n]);
         if (n != kernels.size() - 1) {
             ss << ", ";

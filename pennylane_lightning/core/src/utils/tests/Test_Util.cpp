@@ -70,13 +70,13 @@ TEMPLATE_TEST_CASE("Constant values", "[Util]", float, double) {
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("Utility math functions", "[Util]", float, double) {
     SECTION("exp2: 2^n") {
-        for (size_t i = 0; i < 10; i++) {
+        for (std::size_t i = 0; i < 10; i++) {
             CHECK(Util::exp2(i) == static_cast<std::size_t>(std::pow(2, i)));
         }
     }
     SECTION("maxDecimalForQubit") {
-        for (size_t num_qubits = 0; num_qubits < 4; num_qubits++) {
-            for (size_t index = 0; index < num_qubits; index++) {
+        for (std::size_t num_qubits = 0; num_qubits < 4; num_qubits++) {
+            for (std::size_t index = 0; index < num_qubits; index++) {
                 CHECK(Util::maxDecimalForQubit(index, num_qubits) ==
                       static_cast<std::size_t>(
                           std::pow(2, num_qubits - index - 1)));
@@ -215,5 +215,21 @@ TEMPLATE_TEST_CASE("Util::kronProd", "[Util][LinearAlgebra]", float, double) {
         std::vector<TestType> expected = {-12, 15, 8, -10};
 
         CHECK(vec == expected);
+    }
+}
+
+TEST_CASE("Util::areVecsDisjoint", "[Util][LinearAlgebra]") {
+    SECTION("Test for disjoint vectors") {
+        std::vector<std::size_t> vec0{0, 1, 2};
+        std::vector<std::size_t> vec1{3, 4, 5};
+
+        REQUIRE(areVecsDisjoint(vec0, vec1) == true);
+    }
+
+    SECTION("Test for joint vectors") {
+        std::vector<std::size_t> vec0{0, 1, 2};
+        std::vector<std::size_t> vec1{2, 4, 5};
+
+        REQUIRE(areVecsDisjoint(vec0, vec1) == false);
     }
 }

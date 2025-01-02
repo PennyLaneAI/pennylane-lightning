@@ -22,9 +22,7 @@
 #include "TypeList.hpp"
 
 #include "cpu_kernels/GateImplementationsLM.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 using TestKernels = Pennylane::Util::TypeList<
-    Pennylane::LightningQubit::Gates::GateImplementationsPI,
     Pennylane::LightningQubit::Gates::GateImplementationsLM, void>;
 #endif
