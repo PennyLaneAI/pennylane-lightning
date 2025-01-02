@@ -85,6 +85,9 @@
 * The TOML files for the devices are updated to use the new schema for declaring device capabilities.
   [(#988)](https://github.com/PennyLaneAI/pennylane-lightning/pull/988)
 
+* Optimize lightning.tensor by adding direct MPS sites data set with `qml.MPSPrep`.
+  [(#983)](https://github.com/PennyLaneAI/pennylane-lightning/pull/983)
+
 * Unify excitation gates memory layout to row-major for both LGPU and LT.
   [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
 

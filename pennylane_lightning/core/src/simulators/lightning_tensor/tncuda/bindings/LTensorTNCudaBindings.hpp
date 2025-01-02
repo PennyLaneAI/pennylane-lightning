@@ -33,13 +33,14 @@
 #include "TypeList.hpp"
 #include "Util.hpp"
 #include "cuda_helpers.hpp"
+#include "tncuda_helpers.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane;
 using namespace Pennylane::Bindings;
 using namespace Pennylane::LightningGPU::Util;
-using Pennylane::LightningTensor::TNCuda::MPSTNCuda;
+using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
 
@@ -137,6 +138,20 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         .def(
             "updateMPSSitesData",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
+                // Extract the incoming MPS shape
+                std::vector<std::vector<std::size_t>> MPS_shape_source;
+                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
+                    py::buffer_info numpyArrayInfo = tensors[idx].request();
+                    auto MPS_site_source_shape = numpyArrayInfo.shape;
+                    std::vector<std::size_t> MPS_site_source(
+                        MPS_site_source_shape.begin(),
+                        MPS_site_source_shape.end());
+                    MPS_shape_source.emplace_back(std::move(MPS_site_source));
+                }
+
+                const auto &MPS_shape_dest = tensor_network.getSitesExtents();
+                MPSShapeCheck(MPS_shape_dest, MPS_shape_source);
+
                 for (std::size_t idx = 0; idx < tensors.size(); idx++) {
                     py::buffer_info numpyArrayInfo = tensors[idx].request();
                     auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
