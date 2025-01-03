@@ -51,7 +51,7 @@ set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # To avoid DSO errors on platforms preferring static linkage, uncomment the following line:
 # string(REPLACE "libcudart_static.a" "libcudart.so" CUDA_SHARED_RT "${CUDA_LIBRARIES}")
-set_target_properties(${PL_BACKEND} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
+set_target_properties(${PL_BACKEND} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN/../cutensor/lib:$ORIGIN/../nvidia/nvjitlink/lib:$ORIGIN/../nvidia/cusolver/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/")
 
 if(PL_DISABLE_CUDA_SAFETY)
     target_compile_options(${PL_BACKEND} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
