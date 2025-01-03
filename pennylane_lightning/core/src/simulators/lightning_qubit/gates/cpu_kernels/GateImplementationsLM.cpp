@@ -101,6 +101,13 @@ GateImplementationsLM::applyS<float>(std::complex<float> *, std::size_t,
 template void
 GateImplementationsLM::applyS<double>(std::complex<double> *, std::size_t,
                                       const std::vector<std::size_t> &, bool);
+template void GateImplementationsLM::applySX<float>(std::complex<float> *,
+                                                    size_t,
+                                                    const std::vector<size_t> &,
+                                                    bool);
+template void
+GateImplementationsLM::applySX<double>(std::complex<double> *, size_t,
+                                       const std::vector<size_t> &, bool);
 template void
 GateImplementationsLM::applyT<float>(std::complex<float> *, std::size_t,
                                      const std::vector<std::size_t> &, bool);
@@ -323,8 +330,14 @@ template void GateImplementationsLM::applyNCT<float>(
     std::complex<float> *, std::size_t, const std::vector<std::size_t> &,
     const std::vector<bool> &, const std::vector<std::size_t> &, bool);
 template void GateImplementationsLM::applyNCT<double>(
-    std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
-    const std::vector<bool> &, const std::vector<std::size_t> &, bool);
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<bool> &, const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCSX<float>(
+    std::complex<float> *, size_t, const std::vector<size_t> &,
+    const std::vector<bool> &, const std::vector<size_t> &, bool);
+template void GateImplementationsLM::applyNCSX<double>(
+    std::complex<double> *, size_t, const std::vector<size_t> &,
+    const std::vector<bool> &, const std::vector<size_t> &, bool);
 template void GateImplementationsLM::applyNCPhaseShift<float, float>(
     std::complex<float> *, std::size_t, const std::vector<std::size_t> &,
     const std::vector<bool> &, const std::vector<std::size_t> &, bool, float);

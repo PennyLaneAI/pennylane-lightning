@@ -334,6 +334,14 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::S", "[StateVectorCudaMPI_Nonparam]",
                                      {num_qubits - 1});
 }
 
+TEMPLATE_TEST_CASE("StateVectorCudaMPI::SX", "[StateVectorCudaMPI_Nonparam]",
+                   float, double) {
+    PLGPU_MPI_TEST_GATE_OPS_NONPARAM(TestType, num_qubits, applySX, "SX",
+                                     lsb_1qbit);
+    PLGPU_MPI_TEST_GATE_OPS_NONPARAM(TestType, num_qubits, applySX, "SX",
+                                     {num_qubits - 1});
+}
+
 TEMPLATE_TEST_CASE("StateVectorCudaMPI::T", "[StateVectorCudaMPI_Nonparam]",
                    float, double) {
     PLGPU_MPI_TEST_GATE_OPS_NONPARAM(TestType, num_qubits, applyT, "T",

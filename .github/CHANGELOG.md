@@ -94,6 +94,9 @@
 * Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
+* `SX` and `C(SX)` gates are natively supported with `lightning.qubit`.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+
 ### Documentation
 
 * Add the exact tensor network to the Lightning-Tensor docs.
