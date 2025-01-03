@@ -110,9 +110,10 @@ static constexpr auto getHadamard() -> std::vector<ComplexT<T>> {
  * of SX data.
  */
 template <template <typename...> class ComplexT, typename T>
-static constexpr auto getSX() -> std::vector<ComplexT<T>> {
-    constexpr ComplexT<T> z0{0.5, 0.5};
-    constexpr ComplexT<T> z1{0.5, -0.5};
+static constexpr auto getSX(const bool inverse = false) -> std::vector<ComplexT<T>> {
+    const T half = (inverse) ? -0.5 : 0.5;
+    const ComplexT<T> z0{0.5, half};
+    const ComplexT<T> z1{0.5,-half};
     return {z0, z1, z1, z0};
 }
 

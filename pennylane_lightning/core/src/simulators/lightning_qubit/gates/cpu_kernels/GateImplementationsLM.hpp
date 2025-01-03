@@ -869,9 +869,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     template <class PrecisionT>
     static void
     applyNCSX(std::complex<PrecisionT> *arr, const size_t num_qubits,
-              const std::vector<size_t> &controlled_wires,
+              const std::vector<std::size_t> &controlled_wires,
               const std::vector<bool> &controlled_values,
-              const std::vector<size_t> &wires, const bool inverse) {
+              const std::vector<std::size_t> &wires, const bool inverse) {
         using ParamT = PrecisionT;
 
         constexpr PrecisionT half = 0.5;
