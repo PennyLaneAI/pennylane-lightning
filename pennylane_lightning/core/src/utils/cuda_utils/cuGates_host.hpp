@@ -109,6 +109,24 @@ template <class CFP_t> static constexpr auto getS() -> std::vector<CFP_t> {
 }
 
 /**
+ * @brief Create a matrix representation of the SX gate data in row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<CFP_t> Return constant expression
+ * of SX gate data.
+ */
+template <class CFP_t>
+static constexpr auto getSX() -> std::vector<CFP_t>
+{
+    return {
+        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>())),
+        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>())),
+        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>())),
+        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>())),
+    };
+}
+
+/**
  * @brief Create a matrix representation of the T gate data in row-major format.
  *
  * @tparam CFP_t Required precision of gate (`float` or `double`).
@@ -1645,6 +1663,7 @@ template <class PrecisionT> class DynamicGateDataAccess {
         {"PauliZ",
          []() -> std::vector<CFP_t> { return cuGates::getPauliZ<CFP_t>(); }},
         {"S", []() -> std::vector<CFP_t> { return cuGates::getS<CFP_t>(); }},
+        {"SX", []() -> std::vector<CFP_t> { return cuGates::getSX<CFP_t>(); }},
         {"Hadamard",
          []() -> std::vector<CFP_t> { return cuGates::getHadamard<CFP_t>(); }},
         {"T", []() -> std::vector<CFP_t> { return cuGates::getT<CFP_t>(); }},

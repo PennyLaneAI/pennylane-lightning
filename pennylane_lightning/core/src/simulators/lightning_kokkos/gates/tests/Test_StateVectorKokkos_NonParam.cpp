@@ -102,7 +102,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Param-Operation",
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
-        GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T",
+        GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "S", "SX", "T",
                  "CNOT", "SWAP", "CY", "CZ", "CSWAP", "Toffoli");
     DYNAMIC_SECTION("Matrix - Gate = " << gate_name
                                        << " Inverse = " << inverse) {
@@ -309,7 +309,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyPauliZ",
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyS", "[StateVectorKokkos_Nonparam]",
-                   float, double) {
+                   float, double)
+{
     {
         using ComplexT = StateVectorKokkos<TestType>::ComplexT;
         const std::size_t num_qubits = 3;
@@ -327,14 +328,61 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyS", "[StateVectorKokkos_Nonparam]",
             {r, r, i, i, r, r, i, i},
             {r, i, r, i, r, i, r, i}};
 
-        SECTION("Apply using dispatcher") {
-            for (std::size_t index = 0; index < num_qubits; index++) {
+        SECTION("Apply using dispatcher")
+        {
+            for (std::size_t index = 0; index < num_qubits; index++)
+            {
                 StateVectorKokkos<TestType> kokkos_sv{num_qubits};
                 kokkos_sv.applyOperations(
                     {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                     {{false}, {false}, {false}});
                 kokkos_sv.applyOperation("S", {index}, false);
-                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                for (std::size_t j = 0; j < exp2(num_qubits); j++)
+                {
+                    auto result_subview =
+                        Kokkos::subview(kokkos_sv.getView(), j);
+                    Kokkos::complex<TestType> result;
+                    Kokkos::deep_copy(result, result_subview);
+                    CHECK(imag(expected_results[index][j]) ==
+                          Approx(imag(result)));
+                    CHECK(real(expected_results[index][j]) ==
+                          Approx(real(result)));
+                }
+            }
+        }
+    }
+}
+TEMPLATE_TEST_CASE("StateVectorKokkos::applySX", "[StateVectorKokkos_Nonparam]",
+                   float, double)
+{
+    const bool inverse = GENERATE(true, false);
+    {
+        using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+        const std::size_t num_qubits = 3;
+
+        const ComplexT z(0.0, 0.0);
+        ComplexT p(0.5, 0.5);
+        ComplexT m(0.5, -0.5);
+
+        if (inverse)
+        {
+            p = conj(p);
+            m = conj(m);
+        }
+
+        const std::vector<std::vector<ComplexT>> expected_results = {
+            {p, z, z, z, m, z, z, z},
+            {p, z, m, z, z, z, z, z},
+            {p, m, z, z, z, z, z, z}};
+
+        SECTION("Apply using dispatcher")
+        {
+            for (std::size_t index = 0; index < num_qubits; index++)
+            {
+                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+                kokkos_sv.applyOperation("SX", {index}, inverse);
+                for (std::size_t j = 0; j < exp2(num_qubits); j++)
+                {
                     auto result_subview =
                         Kokkos::subview(kokkos_sv.getView(), j);
                     Kokkos::complex<TestType> result;

@@ -31,7 +31,7 @@
  * @file Test_GateImplementations_Nonparam.cpp
  *
  * This file contains tests for non-parameterized gates. List of such gates are
- * [PauliX, PauliY, PauliZ, Hadamard, S, T, CNOT, SWAP, CZ, Toffoli, CSWAP].
+ * [PauliX, PauliY, PauliZ, Hadamard, S, SX, T, CNOT, SWAP, CZ, Toffoli, CSWAP].
  */
 
 /// @cond DEV
