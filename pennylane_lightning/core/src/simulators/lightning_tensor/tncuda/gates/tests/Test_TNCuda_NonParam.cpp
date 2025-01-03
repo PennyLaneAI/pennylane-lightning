@@ -266,8 +266,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::S", "[TNCuda_Nonparam]",
 }
 
 TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SX", "[TNCuda_Nonparam]",
-                        TestTNBackends)
-{
+                        TestTNBackends) {
     const bool inverse = GENERATE(false, true);
     using TNDevice_T = TestType;
     using cp_t = typename TNDevice_T::ComplexT;
@@ -278,8 +277,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SX", "[TNCuda_Nonparam]",
     cp_t p(0.5, 0.5);
     cp_t m(0.5, -0.5);
 
-    if (inverse)
-    {
+    if (inverse) {
         p = conj(p);
         m = conj(m);
     }
@@ -292,8 +290,7 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SX", "[TNCuda_Nonparam]",
     std::unique_ptr<TNDevice_T> tn_state =
         createTNState<TNDevice_T>(num_qubits, maxExtent);
 
-    SECTION("Apply different wire indices")
-    {
+    SECTION("Apply different wire indices") {
         const std::size_t index = GENERATE(0, 1, 2);
 
         tn_state->applyOperation("SX", {index}, inverse);

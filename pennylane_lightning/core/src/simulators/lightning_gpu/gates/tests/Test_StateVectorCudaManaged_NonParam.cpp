@@ -310,8 +310,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyS",
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySX",
-                   "[StateVectorCudaManaged_Nonparam]", float, double)
-{
+                   "[StateVectorCudaManaged_Nonparam]", float, double) {
     const bool inverse = GENERATE(true, false);
     {
         using cp_t = std::complex<TestType>;
@@ -323,8 +322,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySX",
         cp_t p(0.5, 0.5);
         cp_t m(0.5, -0.5);
 
-        if (inverse)
-        {
+        if (inverse) {
             p = conj(p);
             m = conj(m);
         }
@@ -335,10 +333,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySX",
             {p, m, z, z, z, z, z, z}};
 
         const auto init_state = sv.getDataVector();
-        SECTION("Apply directly")
-        {
-            for (std::size_t index = 0; index < num_qubits; index++)
-            {
+        SECTION("Apply directly") {
+            for (std::size_t index = 0; index < num_qubits; index++) {
                 StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
                                                            init_state.size()};
                 CHECK(sv_direct.getDataVector() == init_state);
@@ -347,10 +343,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySX",
                       Pennylane::Util::approx(expected_results[index]));
             }
         }
-        SECTION("Apply using dispatcher")
-        {
-            for (std::size_t index = 0; index < num_qubits; index++)
-            {
+        SECTION("Apply using dispatcher") {
+            for (std::size_t index = 0; index < num_qubits; index++) {
                 StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
                                                              init_state.size()};
                 CHECK(sv_dispatch.getDataVector() == init_state);

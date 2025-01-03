@@ -109,20 +109,23 @@ template <class CFP_t> static constexpr auto getS() -> std::vector<CFP_t> {
 }
 
 /**
- * @brief Create a matrix representation of the SX gate data in row-major format.
+ * @brief Create a matrix representation of the SX gate data in row-major
+ * format.
  *
  * @tparam CFP_t Required precision of gate (`float` or `double`).
  * @return constexpr std::vector<CFP_t> Return constant expression
  * of SX gate data.
  */
-template <class CFP_t>
-static constexpr auto getSX() -> std::vector<CFP_t>
-{
+template <class CFP_t> static constexpr auto getSX() -> std::vector<CFP_t> {
     return {
-        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>())),
-        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>())),
-        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), -cuUtil::IMAG<CFP_t>())),
-        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>())),
+        cuUtil::ConstMultSC(
+            0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>())),
+        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(),
+                                                  -cuUtil::IMAG<CFP_t>())),
+        cuUtil::ConstMultSC(0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(),
+                                                  -cuUtil::IMAG<CFP_t>())),
+        cuUtil::ConstMultSC(
+            0.5, cuUtil::ConstSum(cuUtil::ONE<CFP_t>(), cuUtil::IMAG<CFP_t>())),
     };
 }
 

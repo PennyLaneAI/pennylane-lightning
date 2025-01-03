@@ -112,11 +112,7 @@ template <class fp_t> class GateCache {
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"SX"}, 0.0)),
             std::forward_as_tuple(std::vector<CFP_t>{
-                {0.5, 0.5},
-                {0.5, -0.5},
-                {0.5, -0.5},
-                {0.5, 0.5}
-            }));
+                {0.5, 0.5}, {0.5, -0.5}, {0.5, -0.5}, {0.5, 0.5}}));
         host_gates_.emplace(
             std::piecewise_construct,
             std::forward_as_tuple(std::make_pair(std::string{"T"}, 0.0)),

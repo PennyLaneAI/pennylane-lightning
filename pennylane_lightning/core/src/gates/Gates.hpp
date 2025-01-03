@@ -125,8 +125,8 @@ static constexpr auto getS(const bool inverse = false)
  * of SX data.
  */
 template <template <typename...> class ComplexT, typename T>
-static constexpr auto getSX(const bool inverse = false) -> std::vector<ComplexT<T>>
-{
+static constexpr auto getSX(const bool inverse = false)
+    -> std::vector<ComplexT<T>> {
     const T half = (inverse) ? -0.5 : 0.5;
     const ComplexT<T> z0{0.5, half};
     const ComplexT<T> z1{0.5, -half};

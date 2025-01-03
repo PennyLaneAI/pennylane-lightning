@@ -244,8 +244,9 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
   private:
     std::unique_ptr<LightningGPU::DataBuffer<CFP_t>> data_buffer_;
     const std::unordered_set<std::string> const_gates_{
-        "Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "T",   "S", "SX",
-        "CNOT",     "SWAP",   "CY",     "CZ",     "CSWAP",    "Toffoli"};
+        "Identity", "PauliX", "PauliY", "PauliZ", "Hadamard",
+        "T",        "S",      "SX",     "CNOT",   "SWAP",
+        "CY",       "CZ",     "CSWAP",  "Toffoli"};
     const std::unordered_map<std::string, std::size_t> ctrl_map_{
         // Add mapping from function name to required wires.
         {"Identity", 0},
