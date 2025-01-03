@@ -16,8 +16,8 @@ isort==5.13.2
 click==8.0.4
 cmake
 jax[cpu]==0.4.28
-custatevec-cu12
-cutensornet-cu12
+custatevec-cu12; sys_platform == "linux"
+cutensornet-cu12; sys_platform == "linux"
 pylint==2.7.4
 scipy-openblas32>=0.3.26
 git+https://github.com/PennyLaneAI/pennylane.git@master
