@@ -92,7 +92,10 @@ jobs:
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            PL_DEVICE=${DEVICENAME} python -m pytest tests
+            if ${{ matrix.pl_backend == 'lightning_gpu'}}
+            then
+              pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+            fi
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 
