@@ -89,6 +89,7 @@ jobs:
             python -m pip install -r requirements-tests.txt
             PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
             SKIP_COMPILATION=True python -m pip install . -vv
+            python -m pip install ./wheelhouse/*.whl
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
