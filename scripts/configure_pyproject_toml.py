@@ -94,10 +94,10 @@ if __name__ == "__main__":
         "setuptools>=42",
         "tomli",
     ]
-#    if backend == "lightning_gpu":
-#        requires.append("custatevec-cu12")
-#    if backend == "lightning_tensor":
-#        requires.append("cutensornet-cu12")
+    if backend == "lightning_gpu":
+        requires.append("custatevec-cu12")
+    if backend == "lightning_tensor":
+        requires.append("cutensornet-cu12")
 
     pyproject["build-system"]["requires"] = requires
 
