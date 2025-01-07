@@ -108,7 +108,12 @@ jobs:
           SKIP_COMPILATION=True python -m pip install . -vv
           python -m pip install ./wheelhouse/*.whl
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm"
+          if (${{ matrix.pl_backend == 'lightning_tensor' }}) then
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/
+          else
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+          fi
+          
 
       - name: Validate wheels
         run: |
