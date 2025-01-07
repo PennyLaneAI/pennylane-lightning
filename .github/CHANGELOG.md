@@ -1,4 +1,4 @@
-# Release 0.40.0-dev
+# Release 0.40.0
 
 ### New features since last release
 
@@ -29,14 +29,14 @@
 
 ### Improvements
 
-* Add CUDA dependencies to Lightning GPU and Lightning Tensor Python wheels.
-  [(#1025)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1025/)
-
 * Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS`API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
   [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028/)
 
 * Add unit test for measurement with shots for Lightning Tensor with `tn` method.
   [(#1027)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1027)
+
+* Add CUDA dependencies to Lightning GPU and Lightning Tensor Python wheels.
+  [(#1025)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1025/)
 
 * Update the python layer UI of Lightning Tensor.
   [(#1022)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1022/)
@@ -113,11 +113,11 @@
 * Update CUDA version to 12.4 for GPU tests on CI.
   [(#1023)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1023)
 
-* Fix Lightning Kokkos `[[maybe_unused]]` and `exp2` errors with hipcc.
-  [(#1018)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1018)
-
 * Pin `jax[cpu]==0.4.28` for compatibility with PennyLane and Catalyst.
   [(#1019)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1019)
+
+* Fix Lightning Kokkos `[[maybe_unused]]` and `exp2` errors with hipcc.
+  [(#1018)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1018)
 
 * Fix Lightning Kokkos editable mode path.
   [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
