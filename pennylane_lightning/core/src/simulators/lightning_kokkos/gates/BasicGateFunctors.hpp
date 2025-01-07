@@ -338,6 +338,7 @@ void applyNCSX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                const std::vector<bool> &controlled_values,
                const std::vector<std::size_t> &wires, bool inverse = false,
                [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+
     constexpr PrecisionT half = 0.5;
     const Kokkos::complex<PrecisionT> z0{half, (inverse) ? -half : half};
     const Kokkos::complex<PrecisionT> z1 = Kokkos::conj(z0);
@@ -347,6 +348,7 @@ void applyNCSX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                       std::size_t i0, std::size_t i1) {
         const Kokkos::complex<PrecisionT> v0 = arr(i0);
         const Kokkos::complex<PrecisionT> v1 = arr(i1);
+
         arr[i0] = z0 * v0 + z1 * v1;
         arr[i1] = z1 * v0 + z0 * v1;
     };

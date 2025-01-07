@@ -161,8 +161,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::PauliZ,
         ControlledGateOperation::Hadamard,
         ControlledGateOperation::S,
-        ControlledGateOperation::T,
         ControlledGateOperation::SX,
+        ControlledGateOperation::T,
         ControlledGateOperation::PhaseShift,
         ControlledGateOperation::RX,
         ControlledGateOperation::RY,
@@ -874,17 +874,26 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
               const std::vector<std::size_t> &wires, const bool inverse) {
         using ParamT = PrecisionT;
 
-        constexpr PrecisionT half = 0.5;
-        const std::complex<PrecisionT> z0{half, (inverse) ? -half : half};
-        const std::complex<PrecisionT> z1 = std::conj(z0);
+        const PrecisionT inv = (inverse) ? -1.0 : 1.0;
 
-        auto core_function = [&z0, &z1](std::complex<PrecisionT> *arr,
-                                        const std::size_t i0,
-                                        const std::size_t i1) {
+        auto core_function = [&inv](std::complex<PrecisionT> *arr,
+                                    const std::size_t i0,
+                                    const std::size_t i1) {
             const std::complex<PrecisionT> v0 = arr[i0];
             const std::complex<PrecisionT> v1 = arr[i1];
-            arr[i0] = z0 * v0 + z1 * v1;
-            arr[i1] = z1 * v0 + z0 * v1;
+
+            const PrecisionT v0_plus = v0.real() + v0.imag() * inv;
+            const PrecisionT v0_minus = v0.real() - v0.imag() * inv;
+
+            const PrecisionT v1_plus = v1.real() + v1.imag() * inv;
+            const PrecisionT v1_minus = v1.real() - v1.imag() * inv;
+
+            arr[i0] = std::complex<PrecisionT>(v0_minus + v1_plus,
+                                               v0_plus - v1_minus) *
+                      PrecisionT(0.5);
+            arr[i1] = std::complex<PrecisionT>(v0_plus + v1_minus,
+                                               -v0_minus + v1_plus) *
+                      PrecisionT(0.5);
         };
         if (controlled_wires.empty()) {
             applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
