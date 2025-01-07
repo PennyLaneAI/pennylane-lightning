@@ -104,6 +104,7 @@ jobs:
           python -m ensurepip --upgrade
           python -m pip install setuptools
           python -m pip install -r requirements-tests.txt
+          python -m pip install cutensornet-cu${{ matrix.cuda_version }} custatevec-cu${{ matrix.cuda_version }}
           PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
           python -m pip install . -vv
           cd wheelhouse
