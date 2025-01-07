@@ -874,25 +874,25 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
               const std::vector<std::size_t> &wires, const bool inverse) {
         using ParamT = PrecisionT;
 
-        const PrecisionT inv = (inverse) ? -1.0 : 1.0;
+        const PrecisionT shift = (inverse) ? -1.0 : 1.0;
 
-        auto core_function = [&inv](std::complex<PrecisionT> *arr,
-                                    const std::size_t i0,
-                                    const std::size_t i1) {
+        auto core_function = [shift](std::complex<PrecisionT> *arr,
+                                     const std::size_t i0,
+                                     const std::size_t i1) {
             const std::complex<PrecisionT> v0 = arr[i0];
             const std::complex<PrecisionT> v1 = arr[i1];
 
-            const PrecisionT v0_plus = v0.real() + v0.imag() * inv;
-            const PrecisionT v0_minus = v0.real() - v0.imag() * inv;
+            const PrecisionT vr_plus = v0.real() + v1.real();
+            const PrecisionT vi_plus = v0.imag() + v1.imag();
 
-            const PrecisionT v1_plus = v1.real() + v1.imag() * inv;
-            const PrecisionT v1_minus = v1.real() - v1.imag() * inv;
+            const PrecisionT vr_minus = (v0.real() - v1.real()) * shift;
+            const PrecisionT vi_minus = (-v0.imag() + v1.imag()) * shift;
 
-            arr[i0] = std::complex<PrecisionT>(v0_minus + v1_plus,
-                                               v0_plus - v1_minus) *
+            arr[i0] = std::complex<PrecisionT>(vr_plus + vi_minus,
+                                               vi_plus + vr_minus) *
                       PrecisionT(0.5);
-            arr[i1] = std::complex<PrecisionT>(v0_plus + v1_minus,
-                                               -v0_minus + v1_plus) *
+            arr[i1] = std::complex<PrecisionT>(vr_plus - vi_minus,
+                                               vi_plus - vr_minus) *
                       PrecisionT(0.5);
         };
         if (controlled_wires.empty()) {
