@@ -88,8 +88,6 @@ jobs:
             dnf clean all -y
             dnf install gcc-toolset-12 dnf-utils -y
             source /opt/rh/gcc-toolset-12/enable -y
-            yum-config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa/cuda-rhel8.repo -y
-            dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
@@ -102,7 +100,6 @@ jobs:
             python -m pip install -r requirements-tests.txt
             PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
             SKIP_COMPILATION=True python -m pip install . -vv
-            python -m pip install ./wheelhouse/*.whl
 
           CIBW_TEST_COMMAND: |
             DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
