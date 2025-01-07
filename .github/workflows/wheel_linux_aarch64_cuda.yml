@@ -47,6 +47,19 @@ jobs:
       - ${{ matrix.os }}
 
     steps:
+      - run: |
+          cat /proc/cpuinfo
+          lscpu
+      
+      - run: |
+          source /etc/profile.d/modules.sh
+          module use /opt/modules
+          module load cuda/12.4
+          echo "${PATH}" >> $GITHUB_PATH
+          echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH}" >> $GITHUB_ENV
+          nvcc --version
+          nvidia-smi
+
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
