@@ -109,7 +109,7 @@ jobs:
           cd wheelhouse
           for wheel in *.whl;do
             echo "Installing $wheel"
-            python -m pip install $wheel --force-reinstall --no-deps
+            python -m pip install $wheel --force-reinstall
           done
           cd ..
 
