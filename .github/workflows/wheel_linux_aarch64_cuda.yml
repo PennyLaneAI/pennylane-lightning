@@ -104,6 +104,8 @@ jobs:
           python -m ensurepip --upgrade
           python -m pip install setuptools
           python -m pip install -r requirements-tests.txt
+          PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+          SKIP_COMPILATION=True python -m pip install . -vv
           cd wheelhouse
           for wheel in *.whl;do
             echo "Installing $wheel"
