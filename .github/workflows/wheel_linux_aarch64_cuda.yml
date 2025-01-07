@@ -74,30 +74,17 @@ jobs:
           CIBW_BEFORE_BUILD: |
             python -m pip install ninja cmake~=3.27.0 auditwheel~=5.0 custatevec-cu${{ matrix.cuda_version }} cutensornet-cu${{ matrix.cuda_version }}
             dnf clean all -y
-            dnf install gcc-toolset-13 dnf-utils -y
-            source /opt/rh/gcc-toolset-13/enable -y
+            dnf install gcc-toolset-12 dnf-utils -y
+            source /opt/rh/gcc-toolset-12/enable -y
             yum-config-manager --add-repo http://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa/cuda-rhel8.repo -y
             dnf -y install cuda-toolkit-${{ matrix.cuda_version }}-0 git
 
           # ensure nvcc is available
           CIBW_ENVIRONMENT: |
-            PATH=/opt/rh/gcc-toolset-13/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
-            LD_LIBRARY_PATH=/opt/rh/gcc-toolset-13/root/usr/lib64:/opt/rh/gcc-toolset-13/root/usr/lib:/opt/rh/gcc-toolset-13/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-13/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
-            PKG_CONFIG_PATH=/opt/rh/gcc-toolset-13/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH \
+            PATH=/opt/rh/gcc-toolset-12/root/usr/bin:$PATH:/usr/local/cuda-${{ matrix.cuda_version }}/bin \
+            LD_LIBRARY_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64:/opt/rh/gcc-toolset-12/root/usr/lib:/opt/rh/gcc-toolset-12/root/usr/lib64/dyninst:/opt/rh/gcc-toolset-12/root/usr/lib/dyninst:$LD_LIBRARY_PATH:/usr/local/cuda-${{ matrix.cuda_version }}/lib64 \
+            PKG_CONFIG_PATH=/opt/rh/gcc-toolset-12/root/usr/lib64/pkgconfig:$PKG_CONFIG_PATH \
             CMAKE_ARGS="-DCMAKE_BUILD_TYPE=Release"
-          
-          CIBW_BEFORE_TEST: |
-            python -m pip install -r requirements-tests.txt
-            PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
-            SKIP_COMPILATION=True python -m pip install . -vv
-
-          CIBW_TEST_COMMAND: |
-            DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-            ls
-            if ${{ matrix.pl_backend == 'lightning_gpu'}}
-            then
-              pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
-            fi
 
           CIBW_REPAIR_WHEEL_COMMAND_LINUX: "./bin/auditwheel repair -w {dest_dir} {wheel}"
 
@@ -106,6 +93,28 @@ jobs:
           CIBW_BUILD_VERBOSITY: 1
 
         run: python3 -m cibuildwheel --output-dir wheelhouse
+
+      - name: Test wheels
+        run: |
+          python -m ensurepip --upgrade
+          python -m pip install setuptools
+          python -m pip install -r requirements-tests.txt
+          PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+          SKIP_COMPILATION=True python -m pip install . -vv
+  
+          cd wheelhouse
+          for wheel in *.whl;do
+            echo "Installing $wheel"
+            python -m pip install $wheel
+          done
+          cd ..
+          DEVICENAME=(echo ${{ matrix.pl_backend }} | %{$_ -replace "_","."})
+          if ${{ matrix.pl_backend == 'lightning_gpu'}}
+          then
+            pl-device-test --device=$DEVICENAME --skip-ops -x --tb=short --no-flaky-report
+          fi
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm"
+
 
       - name: Validate wheels
         run: |
