@@ -50,8 +50,13 @@ jobs:
       - name: Checkout PennyLane-Lightning
         uses: actions/checkout@v4
 
+      - name: Install Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
       - name: Install cibuildwheel
-        run: python -m pip install cibuildwheel~=2.20.0 tomlkit
+        run: python3.10 -m pip install cibuildwheel~=2.20.0 tomlkit
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
@@ -86,7 +91,7 @@ jobs:
 
           CIBW_BUILD_VERBOSITY: 3
 
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: python3 -m cibuildwheel --output-dir wheelhouse
 
       - name: Determine Python version
         id: pyvs
@@ -119,8 +124,8 @@ jobs:
 
       - name: Validate wheels
         run: |
-         python -m pip install twine
-         python -m twine check ./wheelhouse/*.whl
+         python3 -m pip install twine
+         python3 -m twine check ./wheelhouse/*.whl
 
       - uses: actions-ecosystem/action-regex-match@main
         id: rc_build
