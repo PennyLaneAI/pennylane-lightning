@@ -140,7 +140,7 @@ class TestMeasurementFunction:
             pytest.skip("Number of targets cannot exceed the number of wires.")
 
         dev = qml.device(device_name, wires=n_qubits, **method)
-        dq = qml.device("lightning.qubit", wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
 
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
@@ -168,7 +168,7 @@ class TestMeasurementFunction:
             pytest.skip("Number of targets cannot exceed the number of wires.")
 
         dev = qml.device(device_name, wires=n_qubits, **method)
-        dq = qml.device("lightning.qubit", wires=n_qubits)
+        dq = qml.device("default.qubit", wires=n_qubits)
 
         init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
         init_state /= np.linalg.norm(init_state)
