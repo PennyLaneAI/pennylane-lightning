@@ -143,8 +143,8 @@ class LightningTensorNet:
             be described but the larger the memory requirements. Note that GPUs are ill-suited (i.e. less
             competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
             layers with a single or few gates because the arithmetic intensity is lower.
-        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. The default is 0.
-        cutoff_mode (str): Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. The default is ``"abs"``.
+        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0.
+        cutoff_mode (str): Singular value truncation mode for MPS tensors. Options:[``"rel"``, ``"abs"`` (default)].
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -177,7 +177,7 @@ class LightningTensorNet:
         elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
-            raise DeviceError(f"The method {self._method} is not supported.")
+            raise DeviceError(f"The method {self._method} is not supported. Only supported methods are mps or tn.")
 
     @property
     def dtype(self):
@@ -191,7 +191,7 @@ class LightningTensorNet:
 
     @property
     def num_wires(self):
-        """Number of wires addressed on this device"""
+        """Returns the number of wires addressed on this device"""
         return self._num_wires
 
     @property
