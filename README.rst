@@ -46,10 +46,10 @@ Features
 
 PennyLane-Lightning high performance simulators include the following backends:
 
-* ``lightning.qubit``: is a fast state-vector simulator written in C++.
-* ``lightning.gpu``: is a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on MPI.
-* ``lightning.kokkos``: is a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/>`_ programming models.
-* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). The supported methods are Matrix Product State (MPS) and Exact Tensor Network (ExactTN).
+* ``lightning.qubit``: a fast state-vector simulator written in C++.
+* ``lightning.gpu``: a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on MPI.
+* ``lightning.kokkos``: a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/>`_ programming models.
+* ``lightning.tensor``: a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). The supported methods are Matrix Product State (MPS) and Exact Tensor Network (ExactTN).
 
 .. header-end-inclusion-marker-do-not-remove
 
@@ -87,7 +87,7 @@ Install from source
 
 .. note::
 
-    The below contains instructions for installing Lightning-Qubit ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install>`__.
+    The section below contains instructions for installing Lightning-Qubit ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install>`__.
     If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
 To build Lightning plugins from source you can run
@@ -97,7 +97,7 @@ To build Lightning plugins from source you can run
     PL_BACKEND=${PL_BACKEND} pip install pybind11 pennylane-lightning --no-binary :all:
 
 where ``${PL_BACKEND}`` can be ``lightning_qubit`` (default), ``lightning_gpu``,  ``lightning_kokkos``, or ``lightning_tensor``.
-The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is required to bind the C++ functionality to Python.
+The `pybind11 <https://pybind11.readthedocs.io/en/stable/>`_ library is required to bind the C++ functionality to Python. If installing Lightning-GPU, Lightning-Tensor, or Lightning-Kokkos, additional dependencies may be required. We recommend referring to the respective guides for `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_ , `Lightning-Tensor installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_ , and `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_ .
 
 A C++ compiler such as ``g++``, ``clang++``, or ``MSVC`` is required.
 On Debian-based systems, this can be installed via ``apt``:
@@ -112,9 +112,6 @@ On MacOS, we recommend using the latest version of ``clang++`` and ``libomp``:
 .. code-block:: bash
 
     brew install llvm libomp
-
-The Lightning-GPU and Lightning-Tensor backend has several dependencies (e.g. ``CUDA``, ``custatevec-cu12``, etc.), and hence we recommend referring to `Lightning-GPU installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_gpu/installation.html>`_ or `Lightning-Tensor installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_tensor/installation.html>`_ section.
-Similarly, for Lightning-Kokkos it is recommended to configure and install Kokkos independently as prescribed in the `Lightning-Kokkos installation <https://docs.pennylane.ai/projects/lightning/en/stable/lightning_kokkos/installation.html>`_ section.
 
 Development installation
 ========================
