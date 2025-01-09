@@ -48,8 +48,8 @@ PennyLane-Lightning high performance simulators include the following backends:
 
 * ``lightning.qubit``: is a fast state-vector simulator written in C++.
 * ``lightning.gpu``: is a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on MPI.
-* ``lightning.kokkos``: is a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://docs.amd.com/projects/HIP/en/docs-5.3.0/index.html>`_ programming models.
-* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). The supported method is Matrix Product State (MPS).
+* ``lightning.kokkos``: is a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/>`_ programming models.
+* ``lightning.tensor``: is a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). The supported methods are Matrix Product State (MPS) and Exact Tensor Network(TN).
 
 .. header-end-inclusion-marker-do-not-remove
 
