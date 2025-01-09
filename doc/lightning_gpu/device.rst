@@ -142,7 +142,7 @@ Each problem is unique, so it can often be best to choose the default behaviour 
  
 **Multi-GPU/multi-node support:**
 
-The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs sitting on separate nodes for running large-scale simulations. 
+The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs distributed across multiple nodes for running large-scale simulations. 
 Provided that NVIDIA ``cuQuantum`` libraries, a ``CUDA-aware MPI`` library and ``mpi4py`` are properly installed and the path to the ``libmpi.so`` is 
 added to the ``LD_LIBRARY_PATH`` environment variable, the following requirements should be met to enable multi-node and multi-GPU simulations:
 
