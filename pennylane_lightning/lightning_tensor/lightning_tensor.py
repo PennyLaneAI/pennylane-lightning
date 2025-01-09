@@ -249,7 +249,7 @@ class LightningTensor(Device):
 
         num_qubits = 100
 
-        dev = qml.device("lightning.tensor", wires=num_qubits, max_bond_dim=20)
+        dev = qml.device("lightning.tensor", wires=num_qubits, max_bond_dim=32)
 
         @qml.qnode(dev)
         def circuit(num_qubits):
