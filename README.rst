@@ -260,7 +260,7 @@ Install Lightning-GPU with MPI
 
     - **Lightning-Qubit**, ``CUDA-aware MPI`` **and** ``custatevec`` **are installed**.
     - **The environment variable** ``CUQUANTUM_SDK`` **is set properly**.
-    - **``path/to/libmpi.so`` **is added to** ``LD_LIBRARY_PATH``.
+    - ``path/to/libmpi.so`` **is added to** ``LD_LIBRARY_PATH``.
 
 Then Lightning-GPU with MPI support can be installed in the *editable* mode:
 
