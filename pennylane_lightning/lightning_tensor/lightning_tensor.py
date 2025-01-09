@@ -216,7 +216,7 @@ class LightningTensor(Device):
     A device to perform tensor network operations on a quantum circuit.
 
     This device is designed to simulate large-scale quantum circuits using tensor network methods. For
-    small circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
+    small circuits, other devices like ``lightning.qubit``, ``lightning.gpu`` or ``lightning.kokkos`` are
     recommended.
 
     Currently, the Matrix Product State (MPS) and the Exact Tensor Network methods are supported as implemented in the ``cutensornet`` backend.
@@ -227,7 +227,7 @@ class LightningTensor(Device):
         shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) (default) and ``"tn"`` (Tensor Network).
+        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) (default) and ``"tn"`` (Exact Tensor Network).
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
     Keyword Args:
