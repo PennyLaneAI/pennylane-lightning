@@ -99,6 +99,9 @@
 
 ### Documentation
 
+* Add the exact tensor network to the `README.rst` and update link to `HIP`.
+  [(#1034)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1034)
+
 * Add the exact tensor network to the Lightning-Tensor docs.
   [(#1021)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1021)
 
