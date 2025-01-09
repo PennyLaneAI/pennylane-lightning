@@ -40,7 +40,7 @@ Users can also run the ``lightning.tensor`` device in the **Exact Tensor Network
     import pennylane as qml
     dev = qml.device("lightning.tensor", wires=100, method="tn")
 
-The lightning.tensor device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0+ (Volta and later)
+The ``lightning.tensor`` device dispatches all operations to be performed on a CUDA-capable GPU of generation SM 7.0+ (Volta and later)
 and greater. This device supports both exact and finite shots measurements. Currently, the supported differentiation methods are parameter-shift and finite-diff. Note that the MPS backend of ``lightning.tensor`` supports multi-wire gates via Matrix Product Operators (MPO).
 
 The ``lightning.tensor`` device is designed for expectation value calculations. Measurements of :func:`~pennylane.probs` or :func:`~pennylane.state` return dense vectors of dimension :math:`2^{\text{n_qubits}}`, so they should only be used for small systems.
