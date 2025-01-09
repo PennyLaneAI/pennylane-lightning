@@ -65,7 +65,7 @@ Note that ``lightning.tensor`` cannot be cleaned up like other state-vector devi
 Operations and observables support
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of :class:`~pennylane.StatePrep`, which is *not supported* by the *Exact Tensor Network* method. 
+The ``lightning.tensor`` supports all gate operations supported by PennyLane, with the exception of :class:`~pennylane.StatePrep`, which is **not supported** by the **Exact Tensor Network** method. 
 
 **Supported operations:**
 

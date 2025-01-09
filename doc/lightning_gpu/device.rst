@@ -282,4 +282,4 @@ To enable the memory-optimized adjoint method with MPI support, ``batch_obs`` sh
 For the adjoint method, each MPI process will provide the overall simulation results.
 
 .. note::
-    The observable ``Projector``` does not have support with the multi-GPU backend.
+    The observable ``Projector`` does not have support with the multi-GPU backend.
