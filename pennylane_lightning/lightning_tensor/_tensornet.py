@@ -177,7 +177,9 @@ class LightningTensorNet:
         elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
-            raise DeviceError(f"The method {self._method} is not supported. Only supported methods are mps or tn.")
+            raise DeviceError(
+                f"The method {self._method} is not supported. Only supported methods are mps or tn."
+            )
 
     @property
     def dtype(self):
