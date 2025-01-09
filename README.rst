@@ -238,7 +238,7 @@ The Lightning-GPU can then be installed with ``pip``:
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
     python -m pip install -e . --config-settings editable_mode=compat -vv
 
-Lightning-GPU also requires additional Nvidia libraries including `nvjilink`, `cusparse`, `cublas`, and `cuda-runtime`. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
+Lightning-GPU also requires additional Nvidia libraries including ``nvJitLink``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
 
 To simplify the build, we recommend using the containerized build process described in Docker support section.
 
@@ -434,7 +434,7 @@ The Lightning-Tensor can then be installed with ``pip``:
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
-Lightning-Tensor also requires additional Nvidia libraries including `nvjilink`, `cusolver`, `cusparse`, `cublas`, and `cuda-runtime`. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
+Lightning-Tensor also requires additional Nvidia libraries including ``nvJitLink``, ``cuSOLVER``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
 
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
