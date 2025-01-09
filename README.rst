@@ -379,7 +379,7 @@ The supported backend options are
       - ``HIP``
       - ``CUDA``
 
-and the corresponding build options are ``-DKokkos_ENABLE_XXX=ON``, where ``XXX`` needs be replaced by the backend name, for instance ``OPENMP``.
+and the corresponding build options are ``-DKokkos_ENABLE_XYZ=ON``, where ``XYZ`` needs be replaced by the backend name, for instance ``OPENMP``.
 
 One can activate simultaneously one serial, one parallel CPU host (e.g. ``OPENMP``, ``THREADS``) and one parallel GPU device backend (e.g. ``HIP``, ``CUDA``), but not two of any category at the same time.
 For ``HIP`` and ``CUDA``, the appropriate software stacks are required to enable compilation and subsequent use.
