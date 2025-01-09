@@ -20,6 +20,9 @@
 
 ### Breaking changes
 
+* Update Pennylane requirement to v0.40
+  [(#1033)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1033)
+
 * Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
   [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
   [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
