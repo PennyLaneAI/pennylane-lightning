@@ -1,13 +1,13 @@
 Lightning Plugins
 #################
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_linux.yml?branch=master&label=Test%20%28Linux%29&style=flat-square
-    :alt: Linux x86_64 tests (branch)
-    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_linux.yml
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_linux_cpp.yml?branch=master&label=Test%20%28Linux%20C%2B%2B%29&style=flat-square
+    :alt: Linux x86_64 C++ tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_linux_cpp.yml
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_windows.yml?branch=master&label=Test%20%28Windows%29&style=flat-square
-    :alt: Windows tests (branch)
-    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_windows.yml
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_windows_cpp.yml?branch=master&label=Test%20%28Windows%20C%2B%2B%29&style=flat-square
+    :alt: Windows C++ tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_windows_cpp.yml
 
 .. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/.github/workflows/wheel_linux_x86_64.yml?branch=master&logo=github&style=flat-square
     :alt: Linux x86_64 wheel builds (branch)
