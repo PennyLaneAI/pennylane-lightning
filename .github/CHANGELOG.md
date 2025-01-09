@@ -96,6 +96,9 @@
 
 ### Documentation
 
+* Update and improve README and documentations.
+  [(#1035)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1035)
+
 * Add the exact tensor network to the Lightning-Tensor docs.
   [(#1021)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1021)
 
