@@ -262,7 +262,7 @@ Install Lightning-GPU with MPI
 
 .. note::
 
-    - Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec`` are installed.
+    - Lightning-Qubit, ``CUDA-aware MPI`` and ``custatevec-cu12`` are installed.
     - The environment variable ``CUQUANTUM_SDK`` is set properly.
     - ``path/to/libmpi.so`` is added to ``LD_LIBRARY_PATH``.
 
@@ -321,7 +321,7 @@ Download the `Kokkos code <https://github.com/kokkos/kokkos/releases>`_. Lightni
 .. code-block:: bash
 
     # Replace x, y, and z by the correct version
-    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.y.z.tar.gz
+    wget https://github.com/kokkos/kokkos/archive/refs/tags/4.x.yz.tar.gz
     tar -xvf 4.x.y.z.tar.gz
     cd kokkos-4.x.y.z
 
