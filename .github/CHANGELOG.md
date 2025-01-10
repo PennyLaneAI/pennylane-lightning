@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Exact Tensor Network C++ backend to `lightning.tensor`.
+* Add Exact Tensor Network (`method="tn"`) C++ backend to `lightning.tensor`.
   [(#977)](https://github.com/PennyLaneAI/pennylane-lightning/pull/977)
 
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
@@ -32,16 +32,16 @@
 * Add CI wheels checks for `aarch64` wheels of Lightning-GPU and Lightning-Tensor.
   [(#1031)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1031)
 
-* Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS`API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
+* Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS` API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
   [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028)
 
-* Add unit test for measurement with shots for Lightning Tensor with `tn` method.
+* Add unit test for measurement with shots for Lightning-Tensor with `tn` method.
   [(#1027)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1027)
 
-* Add CUDA dependencies to Lightning GPU and Lightning Tensor Python wheels.
+* Add CUDA dependencies to Lightning GPU and Lightning-Tensor Python wheels.
   [(#1025)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1025)
 
-* Update the python layer UI of Lightning Tensor.
+* Update the python layer UI of Lightning-Tensor.
   [(#1022)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1022)
 
 * Catalyst device interfaces support dynamic shots, and no longer parses the device init op's attribute dictionary for a static shots literal.
@@ -99,7 +99,7 @@
 
 ### Documentation
 
-* Update and improve README and documentations.
+* Update and improve `README.rst` and documentations.
   [(#1035)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1035)
 
 * Add the exact tensor network to the `README.rst` and update link to `HIP`.
