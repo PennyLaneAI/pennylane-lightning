@@ -1,13 +1,17 @@
 Lightning Plugins
 #################
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_linux_cpp.yml?branch=master&label=Test%20%28Linux%20C%2B%2B%29&style=flat-square
-    :alt: Linux x86_64 C++ tests (branch)
-    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_linux_cpp.yml
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lqcpu_python.yml?branch=master&label=LQubit%20%28Python%20Tests%29&style=flat-square
+    :alt: Linux x86_64 L-Qubit Python tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lqcpu_python.yml
 
-.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_windows_cpp.yml?branch=master&label=Test%20%28Windows%20C%2B%2B%29&style=flat-square
-    :alt: Windows C++ tests (branch)
-    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_windows_cpp.yml
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_lkcpu_python.yml?branch=master&label=LKokkos%20%28Python%20Tests%29&style=flat-square
+    :alt: Linux x86_64 L-Kokkos Python tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_lkcpu_python.yml
+
+.. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/tests_gpu_python.yml?branch=master&label=GPU%20%28Python%20Tests%29&style=flat-square
+    :alt: Linux x86_64 GPU Python tests (branch)
+    :target: https://github.com/PennyLaneAI/pennylane-lightning/actions/workflows/tests_gpu_python.yml
 
 .. image:: https://img.shields.io/github/actions/workflow/status/PennyLaneAI/pennylane-lightning/.github/workflows/wheel_linux_x86_64.yml?branch=master&logo=github&style=flat-square
     :alt: Linux x86_64 wheel builds (branch)
@@ -46,10 +50,10 @@ Features
 
 PennyLane-Lightning high performance simulators include the following backends:
 
-* ``lightning.qubit``: a fast state-vector simulator written in C++.
+* ``lightning.qubit``: a fast state-vector simulator written in C++ with optional `OpenMP <https://www.openmp.org/>`_ additions and parallelized gate-level SIMD kernels.
 * ``lightning.gpu``: a state-vector simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. It notably implements a distributed state-vector simulator based on `MPI <https://www.mpi-forum.org/docs/>`_.
 * ``lightning.kokkos``: a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/>`_ programming models.
-* ``lightning.tensor``: a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). The supported methods are Matrix Product State (MPS) and Exact Tensor Network (ExactTN).
+* ``lightning.tensor``: a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_ (requires NVIDIA GPUs with SM 7.0 or greater). The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
 .. header-end-inclusion-marker-do-not-remove
 
@@ -87,7 +91,7 @@ Install from source
 
 .. note::
 
-    The section below contains instructions for installing Lightning-Qubit ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install>`__.
+    The section below contains instructions for installing Lightning-Qubit **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install>`__.
     If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
 To build Lightning plugins from source you can run
@@ -212,7 +216,7 @@ Install Lightning-GPU from source
 
 .. note::
 
-    The section below contains instructions for installing Lightning-GPU ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
+    The section below contains instructions for installing Lightning-GPU **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
 To install Lightning-GPU from source, Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-GPU (compilation is not necessary):
 
@@ -238,7 +242,7 @@ The Lightning-GPU can then be installed with ``pip``:
     PL_BACKEND="lightning_gpu" python scripts/configure_pyproject_toml.py
     python -m pip install -e . --config-settings editable_mode=compat -vv
 
-Lightning-GPU also requires additional Nvidia libraries including ``nvJitLink``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
+Lightning-GPU also requires additional NVIDIA libraries including ``nvJitLink``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
 
 To simplify the build, we recommend using the containerized build process described in Docker support section.
 
@@ -302,7 +306,7 @@ Install Lightning-Kokkos from source
 
 .. note::
 
-    The section below contains instructions for installing Lightning-Kokkos ***from source***. For most cases, one can install Lightning-Kokkos via Spack or Docker by the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
+    The section below contains instructions for installing Lightning-Kokkos **from source**. For most cases, one can install Lightning-Kokkos via Spack or Docker by the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
 As Kokkos enables support for many different HPC-targeted hardware platforms, ``lightning.kokkos`` can be built to support any of these platforms when building from source.
 
@@ -402,7 +406,7 @@ Install Lightning-Tensor from source
 
 .. note::
 
-    The below section contains instructions for installing Lightning-Tensor ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
+    The below section contains instructions for installing Lightning-Tensor **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
 Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Tensor (compilation is not necessary):
 
@@ -430,7 +434,7 @@ The Lightning-Tensor can then be installed with ``pip``:
 
 .. installation_LTensor-end-inclusion-marker-do-not-remove
 
-Lightning-Tensor also requires additional Nvidia libraries including ``nvJitLink``, ``cuSOLVER``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
+Lightning-Tensor also requires additional NVIDIA libraries including ``nvJitLink``, ``cuSOLVER``, ``cuSPARSE``, ``cuBLAS``, and ``CUDA runtime``. These can be installed through the `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit/>`_ or from ``pip``.
 
 Please refer to the `plugin documentation <https://docs.pennylane.ai/projects/lightning/>`_ as
 well as to the `PennyLane documentation <https://docs.pennylane.ai/>`_ for further reference.
