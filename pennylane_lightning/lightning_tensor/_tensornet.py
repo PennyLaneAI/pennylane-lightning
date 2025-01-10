@@ -146,7 +146,7 @@ class LightningTensorNet:
         cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0.
         cutoff_mode (str): Singular value truncation mode for MPS tensors can be done either by
             considering the absolute values of the singular values (``"abs"``) or by considering
-            the relative values of the singular values (``"abs"``). Default is ``"abs"``.
+            the relative values of the singular values (``"rel"``). Default is ``"abs"``.
     """
 
     # pylint: disable=too-many-arguments, too-many-positional-arguments
