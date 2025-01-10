@@ -2,7 +2,7 @@
 
 ### New features since last release
 
-* Add Exact Tensor Network (`method="tn"`) C++ backend to `lightning.tensor`.
+* Add Exact Tensor Network (TN) C++ backend to Lightning-Tensor.
   [(#977)](https://github.com/PennyLaneAI/pennylane-lightning/pull/977)
 
 * Add native N-controlled generators and adjoint support to `lightning.gpu`'s single-GPU backend.
@@ -20,11 +20,11 @@
 
 ### Breaking changes
 
-* Handling for the legacy operator arithmetic (the `Hamiltonian` and `Tensor` classes in PennyLane) is removed.
+* Remove all instances of the legacy operator arithmetic (the `Hamiltonian` and `Tensor` deprecated classes in PennyLane).
   [(#994)](https://github.com/PennyLaneAI/pennylane-lightning/pull/994)
   [(#997)](https://github.com/PennyLaneAI/pennylane-lightning/pull/997)
 
-* Removed all instances of `qml.QubitStateVector`.
+* Remove all instances of `qml.QubitStateVector` as deprecated in PennyLane.
   [(#985)](https://github.com/PennyLaneAI/pennylane-lightning/pull/985)
 
 ### Improvements
@@ -35,10 +35,10 @@
 * Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS` API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
   [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028)
 
-* Add unit test for measurement with shots for Lightning-Tensor with `tn` method.
+* Add unit tests for measurement with shots for Lightning-Tensor (`method="tn"`).
   [(#1027)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1027)
 
-* Add CUDA dependencies to Lightning GPU and Lightning-Tensor Python wheels.
+* Add CUDA dependencies to Lightning-GPU and Lightning-Tensor Python wheels.
   [(#1025)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1025)
 
 * Update the python layer UI of Lightning-Tensor.
@@ -53,10 +53,10 @@
 * Reduce flaky test and increase test shots count.
   [(#1015)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1015)
 
-* Add Exact Tensor Network cpp binding.
+* Add Python bindings for Lightning-Tensor (Exact Tensor Network).
   [(#1014)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1014)
 
-* Reverse Lightning Qubit generators vector insertion order.
+* Reverse Lightning-Qubit generators vector insertion order.
   [(#1009)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1009)
 
 * Update Kokkos version support to 4.5.
@@ -76,7 +76,7 @@
 * Update Kokkos version support to 4.4.1 and enable Lightning-Kokkos[CUDA] C++ tests on CI.
   [(#1000)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1000)
 
-* Add C++ unit tests for Exact Tensor Network backends.
+* Add C++ unit tests for Lightning-Tensor (Exact Tensor Network).
   [(#998)](https://github.com/PennyLaneAI/pennylane-lightning/pull/998)
 
 * Add native BLAS support to the C++ layer via dynamic `scipy-openblas32` loading.
@@ -85,16 +85,16 @@
 * Update installation instruction for Lightning-GPU-MPI to explicitly ask users to add `path/to/libmpi.so` to the `LD_LIBRARY_PATH`. Update the runtime error message to ensure users know how to fix.
   [(#993)](https://github.com/PennyLaneAI/pennylane-lightning/pull/993)
 
-* The TOML files for the devices are updated to use the new schema for declaring device capabilities.
+* Update the Lightning TOML files for the devices to use the new schema for declaring device capabilities.
   [(#988)](https://github.com/PennyLaneAI/pennylane-lightning/pull/988)
 
 * Optimize lightning.tensor by adding direct MPS sites data set with `qml.MPSPrep`.
   [(#983)](https://github.com/PennyLaneAI/pennylane-lightning/pull/983)
 
-* Unify excitation gates memory layout to row-major for both LGPU and LT.
+* Unify excitation gates memory layout to row-major for both Lightning-GPU and Lightning-Tensor.
   [(#959)](https://github.com/PennyLaneAI/pennylane-lightning/pull/959)
 
-* Update the `lightning.kokkos` CUDA backend for compatibility with Catalyst.
+* Update the Lightning-Kokkos CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
 ### Documentation
@@ -119,7 +119,7 @@
 * Add `RTLD_NODELETE` flag to `dlopen` in order to mitigate the segfault issues for arm64-macos Catalyst support.
   [(#1030)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1030)
 
-* Set rpath with `@loader_path` instead of `$ORIGIN` for macOS.
+* Set RPATH with `@loader_path` instead of `$ORIGIN` for macOS.
   [(#1029)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1029)
 
 * Update CUDA version to 12.4 for GPU tests on CI.
@@ -128,10 +128,10 @@
 * Pin `jax[cpu]==0.4.28` for compatibility with PennyLane and Catalyst.
   [(#1019)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1019)
 
-* Fix Lightning Kokkos `[[maybe_unused]]` and `exp2` errors with hipcc.
+* Fix Lightning-Kokkos `[[maybe_unused]]` and `exp2` errors with hipcc.
   [(#1018)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1018)
 
-* Fix Lightning Kokkos editable mode path.
+* Fix Lightning-Kokkos editable mode path.
   [(#1010)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1010)
 
 * Fix the missing `ninja` in Linux AARCH64 wheels recipe.
