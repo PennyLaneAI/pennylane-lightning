@@ -227,7 +227,7 @@ class LightningTensor(Device):
         shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) (default) and ``"tn"`` (Exact Tensor Network).
+        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) and ``"tn"`` (Exact Tensor Network). Default is ``"mps"``.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
     Keyword Args:
