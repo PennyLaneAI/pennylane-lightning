@@ -1,7 +1,7 @@
 Lightning Tensor device
 =======================
 
-The ``lightning.tensor`` device is a tensor network simulator, supporting both the Matrix Product State (MPS) and Exact Tensor Network methods. The device is built on top of the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`__ library from the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum tensor network evolution. This device is designed to simulate large-scale quantum circuits using tensor networks. For small circuits, state-vector simulator plugins may be more suitable.
+The ``lightning.tensor`` device is a tensor network simulator, supporting both the Matrix Product State (MPS) and Exact Tensor Network (TN) methods. The device is built on top of the `cutensornet <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/index.html>`__ library from the NVIDIA cuQuantum SDK, enabling GPU-accelerated simulation of quantum tensor network evolution. This device is designed to simulate large-scale quantum circuits using tensor networks. For small circuits, state-vector simulator plugins may be more suitable.
 
 The ``lightning.tensor`` device defaults to the Matrix Product State (MPS) method, and can be loaded using:
 
