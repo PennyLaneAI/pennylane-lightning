@@ -179,7 +179,7 @@ def _kokkos_configuration():
 class LightningKokkos(LightningBase):
     """PennyLane Lightning Kokkos device.
 
-    A device that interfaces with C++ to perform fast linear algebra calculations.
+    A device that interfaces with C++ to perform fast linear algebra calculations on CPUs or GPUs using `Kokkos`.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/lightning_kokkos/installation` guide for more details.

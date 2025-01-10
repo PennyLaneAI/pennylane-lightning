@@ -87,7 +87,7 @@ class LightningTensorMeasurements:
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
-            This method is bypassing the measurement process to default.qubit implementation.
+            This method bypasses default.qubit's implementation of the measurement process.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state

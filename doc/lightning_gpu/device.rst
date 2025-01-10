@@ -66,7 +66,6 @@ Supported operations and observables
     ~pennylane.PauliZ
     ~pennylane.PhaseShift
     ~pennylane.PSWAP
-    ~pennylane.QFT
     ~pennylane.QubitCarry
     ~pennylane.QubitSum
     ~pennylane.QubitUnitary
@@ -142,7 +141,7 @@ Each problem is unique, so it can often be best to choose the default behaviour 
  
 **Multi-GPU/multi-node support:**
 
-The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs sitting on separate nodes for running large-scale simulations. 
+The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs distributed across multiple nodes for running large-scale simulations. 
 Provided that NVIDIA ``cuQuantum`` libraries, a ``CUDA-aware MPI`` library and ``mpi4py`` are properly installed and the path to the ``libmpi.so`` is 
 added to the ``LD_LIBRARY_PATH`` environment variable, the following requirements should be met to enable multi-node and multi-GPU simulations:
 
@@ -282,4 +281,4 @@ To enable the memory-optimized adjoint method with MPI support, ``batch_obs`` sh
 For the adjoint method, each MPI process will provide the overall simulation results.
 
 .. note::
-    The observable ``Projector``` does not have support with the multi-GPU backend.
+    The observable ``Projector`` does not have support with the multi-GPU backend.

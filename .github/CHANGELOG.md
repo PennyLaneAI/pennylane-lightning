@@ -99,6 +99,9 @@
 
 ### Documentation
 
+* Update and improve README and documentations.
+  [(#1035)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1035)
+
 * Add the exact tensor network to the `README.rst` and update link to `HIP`.
   [(#1034)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1034)
 
