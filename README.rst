@@ -229,7 +229,7 @@ To install Lightning-GPU from source, Lightning-Qubit needs to be 'installed' by
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat -vv
 
-Note that `custatevec-cu12` is a requirement for Lightning-GPU, and is installed by ``pip`` separately. Then the ``CUQUANTUM_SDK`` environment variable can be set to enable discovery during installation:
+Note that `custatevec-cu12` is a requirement for Lightning-GPU, and is installed by ``pip`` separately. After `custatevec-cu12` is installed, the ``CUQUANTUM_SDK`` environment variable should be set to enable discovery during installation:
 
 .. code-block:: bash
 
