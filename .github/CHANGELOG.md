@@ -32,7 +32,7 @@
 * Add CI wheels checks for `aarch64` wheels of Lightning-GPU and Lightning-Tensor.
   [(#1031)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1031)
 
-* Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS` API to ensure that further gates apply is allowed after the `cutensornetStateCompute` call.
+* Replace the `dummy_tensor_update` method with the `cutensornetStateCaptureMPS` API to ensure that applying gates is allowed after the `cutensornetStateCompute` call.
   [(#1028)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1028)
 
 * Add unit tests for measurement with shots for Lightning-Tensor (`method="tn"`).
