@@ -182,7 +182,7 @@ Test the Python code with:
 
     make test-python device=${PL.DEVICE}
 
-where ``${PL.DEVICE}`` differ from ``${PL_BACKEND}`` by replacing the underscore by a dot. Options for ``${PL.DEVICE}`` are
+where ``${PL.DEVICE}`` differs from ``${PL_BACKEND}`` by replacing the underscore with a period. Options for ``${PL.DEVICE}`` are
 
 - ``lightning.qubit`` (default)
 - ``lightning.gpu``
