@@ -15,7 +15,7 @@ The default setup for the MPS tensor network approximation is:
     - ``max_bond_dim`` (maximum bond dimension) defaults to ``128`` .
     - ``cutoff`` (singular value truncation threshold) defaults to ``0`` .
     - ``cutoff_mode`` (singular value truncation mode) defaults to ``abs`` , considering the absolute values of the singular values; Alternatively, users can opt to set ``cutoff_mode`` to ``rel`` to consider the relative values of the singular values.
-Note that the ``cutensornet`` will automatically determine the reduced extent of the bond dimension based on the lowest among the multiple truncation cutoffs (``max_bond_dim``, ``cutoff-abs`` or ``cutoff-rel``). For more details on how the ``cutoff`` works, please check the `cuQuantum documentation <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/types.html#cutensornettensorsvdconfigattributes-t>`__.
+Note that ``cutensornet`` will automatically determine the reduced extent of the bond dimension based on the lowest among the multiple truncation cutoffs (``max_bond_dim``, ``cutoff-abs`` or ``cutoff-rel``). For more details on how the ``cutoff`` works, please check the `cuQuantum documentation <https://docs.nvidia.com/cuda/cuquantum/latest/cutensornet/api/types.html#cutensornettensorsvdconfigattributes-t>`__.
 
 Users also have the flexibility to customize MPS parameters according to their specific needs with:
 
