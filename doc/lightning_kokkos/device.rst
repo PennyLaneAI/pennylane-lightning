@@ -64,7 +64,6 @@ Supported operations and observables
     ~pennylane.PauliZ
     ~pennylane.PhaseShift
     ~pennylane.PSWAP
-    ~pennylane.QFT
     ~pennylane.QubitCarry
     ~pennylane.QubitSum
     ~pennylane.QubitUnitary

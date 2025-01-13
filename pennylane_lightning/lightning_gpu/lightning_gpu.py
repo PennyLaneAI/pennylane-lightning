@@ -198,7 +198,7 @@ def check_gpu_resources() -> None:
 class LightningGPU(LightningBase):
     """PennyLane Lightning GPU device.
 
-    A device that interfaces with C++ to perform fast linear algebra calculations.
+    A device that interfaces with C++ to perform fast linear algebra calculations on GPUs using `custatevec`.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/lightning_gpu/installation` guide for more details.

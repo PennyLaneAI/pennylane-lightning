@@ -216,10 +216,10 @@ class LightningTensor(Device):
     A device to perform tensor network operations on a quantum circuit.
 
     This device is designed to simulate large-scale quantum circuits using tensor network methods. For
-    small circuits, other devices like ``lightning.qubit``, ``lightning.gpu``or ``lightning.kokkos``  are
+    small circuits, other devices like ``lightning.qubit``, ``lightning.gpu`` or ``lightning.kokkos`` are
     recommended.
 
-    Currently, the Matrix Product State (MPS) and the Exact Tensor Network method are supported as implemented in the ``cutensornet`` backend.
+    Currently, the Matrix Product State (MPS) and the Exact Tensor Network methods are supported as implemented in the ``cutensornet`` backend.
 
     Args:
         wires (int): The number of wires to initialize the device with.
@@ -227,19 +227,19 @@ class LightningTensor(Device):
         shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) and ``"tn"`` (Tensor Network).
+        method (str): Supported method. The supported methods are ``"mps"`` (Matrix Product State) and ``"tn"`` (Exact Tensor Network). Default is ``"mps"``.
         c_dtype: Datatypes for the tensor representation. Must be one of
             ``numpy.complex64`` or ``numpy.complex128``. Default is ``numpy.complex128``.
     Keyword Args:
-        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
+        max_bond_dim (int): (Only for ``method=mps``) The maximum bond dimension to be used in the MPS simulation. Default is 128.
             The accuracy of the wavefunction representation comes with a memory tradeoff which can be
             tuned with `max_bond_dim`. The larger the internal bond dimension, the more entanglement can
             be described but the larger the memory requirements. Note that GPUs are ill-suited (i.e. less
             competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
             layers with a single or few gates because the arithmetic intensity is lower.
-        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. The default is 0.
-        cutoff_mode (str): Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. The default is ``"abs"``.
-        backend (str): Supported backend. Currently, only ``cutensornet`` is supported.
+        cutoff (float): (Only for ``method=mps``) The threshold used to truncate the singular values of the MPS tensors. The default is 0.
+        cutoff_mode (str): (Only for ``method=mps``) Singular value truncation mode for MPS tensors. The options are ``"rel"`` and ``"abs"``. Default is ``"abs"``.
+        backend (str): Supported backend. Currently, only ``cutensornet`` is supported. Default is ``cutensornet``.
 
     **Example for the MPS method**
 
@@ -249,7 +249,7 @@ class LightningTensor(Device):
 
         num_qubits = 100
 
-        dev = qml.device("lightning.tensor", wires=num_qubits)
+        dev = qml.device("lightning.tensor", wires=num_qubits, max_bond_dim=32)
 
         @qml.qnode(dev)
         def circuit(num_qubits):
@@ -270,7 +270,7 @@ class LightningTensor(Device):
 
         num_qubits = 100
 
-        dev = qml.device("lightning.tensor", wires=num_qubits)
+        dev = qml.device("lightning.tensor", wires=num_qubits, method="tn")
 
         @qml.qnode(dev)
         def circuit(num_qubits):
