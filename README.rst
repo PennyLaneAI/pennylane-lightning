@@ -419,7 +419,7 @@ Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-Tensor (comp
     PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
     SKIP_COMPILATION=True pip install -e . --config-settings editable_mode=compat
 
-Note that `cutensornet-cu12` is a requirement for Lightning-Tensor, and is installed by ``pip`` separately. Then the ``CUQUANTUM_SDK`` environment variable can be set to enable discovery during installation:
+Note that `cutensornet-cu12` is a requirement for Lightning-Tensor, and is installed by ``pip`` separately. After `cutensornet-cu12` is installed, the ``CUQUANTUM_SDK`` environment variable should be set to enable discovery during installation:
 
 .. code-block:: bash
 
