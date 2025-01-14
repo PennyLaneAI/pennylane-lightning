@@ -118,7 +118,7 @@ if __name__ == "__main__":
     pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: plugin}
 
     dependencies = [
-        "pennylane>=0.37",
+        "pennylane>=0.40",
         "scipy-openblas32>=0.3.26",
     ]
 
