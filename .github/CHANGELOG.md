@@ -1,3 +1,26 @@
+# Release 0.41.0-dev
+
+### New features since last release
+
+### Breaking changes
+
+### Improvements
+
+* Merge the `v0.40.0-rc` branch to the master and bump version.
+  [(#1038)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1038)
+
+### Documentation
+
+### Bug fixes
+
+### Contributors
+
+This release contains contributions from (in alphabetical order):
+
+Shuli Shu
+
+---
+
 # Release 0.40.0
 
 ### New features since last release
