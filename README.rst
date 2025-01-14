@@ -217,7 +217,15 @@ Install Lightning-GPU from source
 
     The below contains instructions for installing Lightning-GPU ***from source***. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
-To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be install before Lightning-GPU (compilation is not necessary):
+Since you will be installing PennyLane-Lightning from the master branch, you will also need to install PennyLane from master:
+
+.. code-block:: bash
+
+    git clone https://github.com/PennyLaneAI/pennylane.git
+    cd pennylane
+    pip install .
+
+To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be installed before Lightning-GPU (compilation is not necessary):
 
 .. code-block:: bash
 
