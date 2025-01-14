@@ -223,9 +223,7 @@ Since you will be installing PennyLane-Lightning from the master branch, you wil
 
 .. code-block:: bash
 
-    git clone https://github.com/PennyLaneAI/pennylane.git
-    cd pennylane
-    pip install .
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
 
 To install Lightning-GPU from the package sources using the direct SDK path, Lightning-Qubit should be installed before Lightning-GPU (compilation is not necessary):
 
