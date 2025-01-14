@@ -242,7 +242,7 @@ Then a ``CUQUANTUM_SDK`` environment variable can be set:
 
     export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
-The Lightning-GPU can then be installed with ``pip``:
+Lightning-GPU can then be installed with ``pip``:
 
 .. code-block:: bash
 
