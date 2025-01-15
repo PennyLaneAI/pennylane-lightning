@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [pl-4-core-large-runner]
+        os: [arm-gpu]
         arch: [aarch64]
         pl_backend: ["lightning_gpu", "lightning_tensor"]
         cuda_version: ["12"]
@@ -42,7 +42,9 @@ jobs:
         container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
     timeout-minutes: 45
     name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12" }')[matrix.cibw_build] }})
-    runs-on: ${{ matrix.os }}
+    runs-on: 
+      - self-hosted
+      - ${{ matrix.os }}
 
     steps:
       - name: Checkout PennyLane-Lightning
@@ -58,9 +60,6 @@ jobs:
 
       - name: Configure pyproject.toml file
         run: PL_BACKEND="${{ matrix.pl_backend }}" python scripts/configure_pyproject_toml.py
-
-      - uses: docker/setup-qemu-action@v3
-        name: Set up QEMU
 
       - name: Build wheels
         env:
@@ -93,6 +92,34 @@ jobs:
           CIBW_BUILD_VERBOSITY: 3
 
         run: python3 -m cibuildwheel --output-dir wheelhouse
+
+      - name: Determine Python version
+        id: pyvs
+        shell: bash
+        run: |
+          echo "version=$(echo  ${{ matrix.cibw_build }} | tr -cd '[:digit:].' | sed 's/./&./1')" >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: ${{ steps.pyvs.outputs.version }}
+
+      - name: Test wheels
+        run: |
+          python -m ensurepip --upgrade
+          python -m pip install -r requirements-tests.txt
+          PL_BACKEND="lightning_qubit" python scripts/configure_pyproject_toml.py
+          SKIP_COMPILATION=True python -m pip install . -vv
+          python -m pip install ./wheelhouse/*.whl
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          if (${{ matrix.pl_backend == 'lightning_tensor' }}) then
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/
+          else
+            pl-device-test --device=${DEVICENAME} --skip-ops -x --tb=short --no-flaky-report
+            # MCM tests are slow and skipped. get_c_interface() API is not supported with current test setup and skipped.
+            PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_supported_linux_platform_gpu and not test_native_mcm"
+          fi
+          
 
       - name: Validate wheels
         run: |
