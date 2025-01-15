@@ -67,7 +67,7 @@ template <class fp_t> class GateCache {
     /**
      * @brief Add a default gate-set to the given cache. Assumes
      * initializer-list evaluated gates for "PauliX", "PauliY", "PauliZ",
-     * "Hadamard", "S", "T", "SWAP", with "CNOT" and "CZ" represented as their
+     * "Hadamard", "S", "SX", "T", "SWAP", with "CNOT" and "CZ" represented as their
      * single-qubit values.
      *
      */

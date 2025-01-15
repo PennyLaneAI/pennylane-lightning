@@ -123,7 +123,7 @@ Joseph Lee, Shuli Shu
 * Update the Lightning-Kokkos CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
-* `SX` and `C(SX)` gates are natively supported with `lightning.qubit`.
+* `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
 ### Documentation
