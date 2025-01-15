@@ -35,5 +35,5 @@ jobs:
           title: Version Bump
           body: updated changelog and _version.py
           branch: post-release-version-bump
-          reviewers: mlxd
+          reviewers: tomlqc, maliasadi
           base: master
