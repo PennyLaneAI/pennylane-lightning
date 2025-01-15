@@ -50,7 +50,7 @@ class LightningBase(QubitDevice):
             OpenMP.
     """
 
-    pennylane_requires = ">=0.38"
+    pennylane_requires = ">=0.40"
     version = __version__
     author = "Xanadu Inc."
     short_name = "lightning.base"
