@@ -6,7 +6,7 @@
 
 ### Improvements
 
-* Update Pennylane requirement to v0.40
+* Update Pennylane required version to v0.40.0
   [(#1033)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1033)
   
 * Merge the `v0.40.0-rc` branch to the master and bump version.
@@ -20,7 +20,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Shuli Shu
+Joseph Lee, Shuli Shu
 
 ---
 
