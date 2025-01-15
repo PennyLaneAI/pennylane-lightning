@@ -8,9 +8,12 @@
 
 * Update the minimum required version of PennyLane to `v0.40.0`.
   [(#1033)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1033)
-  
+
 * Merge the `v0.40.0-rc` branch to the master and bump version.
   [(#1038)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1038)
+
+* Update two tests that involved `qml.MultiControlledX` to latests PennyLane version.
+  [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
 ### Documentation
 
@@ -20,7 +23,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Joseph Lee, Shuli Shu
+Yushao Chen, Joseph Lee, Shuli Shu
 
 ---
 
