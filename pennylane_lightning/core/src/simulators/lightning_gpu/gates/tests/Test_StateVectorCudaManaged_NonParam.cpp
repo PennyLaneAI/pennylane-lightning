@@ -1274,10 +1274,8 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
     DYNAMIC_SECTION("N-controlled SX - "
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
-                    << PrecisionToName<PrecisionT>::value)
-    {
-        if (control != wire)
-        {
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
             const auto matrix = getSX<std::complex, PrecisionT>();
 
             sv0.applyControlledMatrix(

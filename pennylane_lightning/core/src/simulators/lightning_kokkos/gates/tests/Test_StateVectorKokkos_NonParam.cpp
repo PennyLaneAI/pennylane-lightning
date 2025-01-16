@@ -765,8 +765,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Controlled-Operation",
     }
 
     const bool inverse = GENERATE(false, true);
-    const std::string gate_name =
-        GENERATE("PauliX", "PauliY", "PauliZ", "Hadamard", "S", "SX", "T", "SWAP");
+    const std::string gate_name = GENERATE("PauliX", "PauliY", "PauliZ",
+                                           "Hadamard", "S", "SX", "T", "SWAP");
     DYNAMIC_SECTION("1-controlled Matrix - Gate = "
                     << gate_name << " Inverse = " << inverse) {
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
@@ -1396,8 +1396,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
         }
     }
 
-    SECTION("2-controlled SX")
-    {
+    SECTION("2-controlled SX") {
         Kokkos::deep_copy(sv_gate.getView(), ini_sv);
 
         const std::vector<std::size_t> control_wires = {0, 2};
@@ -1410,17 +1409,12 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
 
         std::vector<ComplexT> expected_result{
             // Generated using Pennylane
-            ComplexT{0.35355339, 0.0},
-            ComplexT{0.35355339, 0.0},
-            ComplexT{0.35355339, 0.0},
-            ComplexT{0.35355339, 0.0},
-            ComplexT{0.35355339, 0.0},
-            ComplexT{0.35355339, 0.0},
-            ComplexT{0.35355339, 0.0},
-            ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
         };
-        for (std::size_t j = 0; j < exp2(num_qubits); j++)
-        {
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
             CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
             CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
         }
