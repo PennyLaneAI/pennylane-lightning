@@ -1252,6 +1252,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
+
     DYNAMIC_SECTION("N-controlled S - "
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
@@ -1263,6 +1264,26 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                 matrix.data(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("S", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled SX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value)
+    {
+        if (control != wire)
+        {
+            const auto matrix = getSX<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(
+                matrix.data(), std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            sv1.applyOperation("SX", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
                                std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
