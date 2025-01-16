@@ -15,6 +15,9 @@
 ### Documentation
 
 ### Bug fixes
+  
+* Remove libopenblas-base package for Ubuntu 24 github CI
+  [(#1041)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1041)
 
 ### Contributors
 
