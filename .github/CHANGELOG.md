@@ -12,8 +12,8 @@
 * Merge the `v0.40.0-rc` branch to the master and bump version.
   [(#1038)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1038)
 
-* Update two tests that involved `qml.MultiControlledX` to latests PennyLane version.
-  [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
+* Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
+ [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
 ### Documentation
 
