@@ -55,6 +55,8 @@ PennyLane-Lightning high performance simulators include the following backends:
 * ``lightning.kokkos``: a state-vector simulator written with `Kokkos <https://kokkos.github.io/kokkos-core-wiki/index.html>`_. It can exploit the inherent parallelism of modern processing units supporting the `OpenMP <https://www.openmp.org/>`_, `CUDA <https://developer.nvidia.com/cuda-toolkit>`_ or `HIP <https://rocm.docs.amd.com/projects/HIP/en/latest/>`_ programming models.
 * ``lightning.tensor``: a tensor network simulator based on the `NVIDIA cuQuantum SDK <https://developer.nvidia.com/cuquantum-sdk>`_. The supported methods are Matrix Product State (MPS) and Exact Tensor Network (TN).
 
+If you're not sure what simulator to use, check out our `PennyLane performance <https://pennylane.ai/performance>`_ page.
+
 .. header-end-inclusion-marker-do-not-remove
 
 The following table summarizes the supported platforms and the primary installation mode:
@@ -218,7 +220,13 @@ Install Lightning-GPU from source
 
     The section below contains instructions for installing Lightning-GPU **from source**. For most cases, *this is not required* and one can simply use the installation instructions at `pennylane.ai/install <https://pennylane.ai/install/#high-performance-computing-and-gpus>`__. If those instructions do not work for you, or you have a more complex build environment that requires building from source, then consider reading on.
 
-To install Lightning-GPU from source, Lightning-Qubit needs to be 'installed' by ``pip`` before Lightning-GPU (compilation is not necessary):
+Since you will be installing PennyLane-Lightning from the master branch, it is recommended to install PennyLane from master:
+
+.. code-block:: bash
+
+    pip install git+https://github.com/PennyLaneAI/pennylane.git@master
+
+To install Lightning-GPU from the package sources using the direct SDK path first install Lightning-Qubit (compilation is not necessary):
 
 .. code-block:: bash
 
@@ -235,7 +243,7 @@ Note that `custatevec-cu12` is a requirement for Lightning-GPU, and is installed
 
     export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
 
-The Lightning-GPU can then be installed with ``pip``:
+Lightning-GPU can then be installed with ``pip``:
 
 .. code-block:: bash
 
