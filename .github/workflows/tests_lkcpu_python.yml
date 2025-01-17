@@ -48,14 +48,14 @@ jobs:
     name: "Build and cache Kokkos"
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
-      os: ubuntu-22.04
+      os: ubuntu-latest
       kokkos_version: "4.5.00"
 
   build_lightning_kokkos_wheels:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest]
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
@@ -144,7 +144,7 @@ jobs:
     needs: [build_and_cache_Kokkos, build_lightning_kokkos_wheels]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest]
         pl_backend: ["lightning_kokkos"]
         group: [1, 2, 3, 4, 5, 6, 7]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
