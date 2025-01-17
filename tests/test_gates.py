@@ -89,7 +89,7 @@ def op(op_name):
         "MultiControlledX": [
             qml.MultiControlledX,
             [],
-            {"wires": [0, 1, 2], "control_values": "01"},
+            {"wires": [0, 1, 2], "control_values": [0, 1]},
         ],
         "SingleExcitation": [qml.SingleExcitation, [0.123], {"wires": [0, 1]}],
         "SingleExcitationPlus": [qml.SingleExcitationPlus, [0.123], {"wires": [0, 1]}],
