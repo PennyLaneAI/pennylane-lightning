@@ -6,14 +6,14 @@
 
 ### Improvements
 
+* Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
+  [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
+
 * Update the minimum required version of PennyLane to `v0.40.0`.
   [(#1033)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1033)
 
 * Merge the `v0.40.0-rc` branch to the master and bump version.
   [(#1038)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1038)
-
-* Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
- [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
 ### Documentation
 
