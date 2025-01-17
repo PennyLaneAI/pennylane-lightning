@@ -24,7 +24,7 @@ env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
 
@@ -77,7 +77,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-base libopenblas-dev
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-dev
           python -m pip install scipy-openblas32 wheel
 
       - name: Get required Python packages
@@ -143,6 +143,10 @@ jobs:
         with:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           path: ${{ github.workspace }}
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install libopenblas-dev
 
       - name: Get required Python packages
         run: |
