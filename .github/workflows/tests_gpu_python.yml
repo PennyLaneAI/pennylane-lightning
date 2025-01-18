@@ -206,7 +206,8 @@ jobs:
           OMP_PROC_BIND: false
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/ $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest -n 2 tests/ -k "not unitary_correct" $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS
 
       - name: Test wheels for Lightning-GPU
         if : matrix.pl_backend == 'lightning_gpu'
