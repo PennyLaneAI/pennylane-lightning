@@ -30,7 +30,7 @@ env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
 
@@ -85,7 +85,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info  --ignore-errors mismatch # Catch2 causes mismatch errors that needs to be ignored
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.enable_kernel_avx_streaming }}-${{ matrix.enable_kernel_omp }}.info
 
@@ -128,7 +128,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-base libopenblas-dev ninja-build gcovr lcov
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION  g++-$GCC_VERSION libopenblas-dev ninja-build gcovr lcov
           python -m pip install scipy-openblas32
 
       - name: Build and run unit tests
@@ -146,7 +146,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results/report_$file.xml; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info  --ignore-errors mismatch # Catch2 causes mismatch errors that needs to be ignored
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
@@ -174,14 +174,14 @@ jobs:
     uses: ./.github/workflows/build_and_cache_Kokkos_linux.yml
     with:
       runs_on: pl-4-core-large-runner
-      os: ubuntu-22.04
+      os: ubuntu-latest
 
   cpptestswithKokkos:
     if: ${{ !contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name) }}
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest]
         pl_backend: ["lightning_kokkos"]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
@@ -232,7 +232,7 @@ jobs:
             cd ./Build
             mkdir -p ./tests/results-${{ github.job }}-${{ matrix.pl_backend }}
             for file in *runner ; do ./$file --order lex --reporter junit --out ./tests/results-${{ github.job }}-${{ matrix.pl_backend }}/report_$file.xml; done;
-            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info
+            lcov --directory . -b ../pennylane_lightning/core/src --capture --output-file coverage.info  --ignore-errors mismatch # Catch2 causes mismatch errors that needs to be ignored
             lcov --remove coverage.info '/usr/*' --output-file coverage.info
             mv coverage.info coverage-${{ github.job }}-${{ matrix.pl_backend }}.info
 
@@ -282,7 +282,7 @@ jobs:
     needs: [build_and_cache_Kokkos]
     strategy:
       matrix:
-        os: [ubuntu-22.04]
+        os: [ubuntu-latest]
         exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
         kokkos_version: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.kokkos_version) }}
     timeout-minutes: 60
