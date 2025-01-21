@@ -60,8 +60,8 @@ class LightningBase(Device):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
         *,
+        wires: Union[int, List],
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
         batch_obs: bool,
@@ -71,7 +71,7 @@ class LightningBase(Device):
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
 
-        if isinstance(wires, int):
+        if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}

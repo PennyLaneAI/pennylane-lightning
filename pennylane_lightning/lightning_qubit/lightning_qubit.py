@@ -229,8 +229,8 @@ class LightningQubit(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
         *,
+        wires: Union[int, List] = None,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
@@ -288,7 +288,7 @@ class LightningQubit(LightningBase):
         }
 
         # Creating the state vector
-        self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=c_dtype)
+        self._statevector = self.LightningStateVector(num_wires=(len(self.wires) if self.wires else 1), dtype=c_dtype)
 
     @property
     def name(self):
@@ -348,7 +348,7 @@ class LightningQubit(LightningBase):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name)
+        program.add_transform(validate_device_wires, self.wires, name=self.name) #TODO: NEED to change?
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
@@ -386,6 +386,8 @@ class LightningQubit(LightningBase):
             "kernel_name": self._kernel_name,
             "num_burnin": self._num_burnin,
         }
+        if self.wires is None:
+            self._statevector=
         results = []
         for circuit in circuits:
             if self._wire_map is not None:

@@ -183,6 +183,9 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
         }))
+        .def("updateNumQubits", [](StateVectorT &sv, std::size_t num_qubits) {
+            sv.updateNumQubits(num_qubits);
+        })
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",

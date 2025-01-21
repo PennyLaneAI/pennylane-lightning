@@ -64,7 +64,6 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     const Threading threading_;
     const CPUMemoryModel memory_model_;
 
-  private:
     using BaseType = StateVectorBase<PrecisionT, Derived>;
     using GateKernelMap = std::unordered_map<GateOperation, KernelType>;
     using GeneratorKernelMap =
@@ -115,6 +114,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 .getKernelMap(num_qubits, threading, memory_model);
     }
 
+  private:
     /**
      * @brief Get a kernel for a gate operation.
      *
