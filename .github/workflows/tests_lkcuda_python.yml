@@ -313,6 +313,7 @@ jobs:
 
       - name: Move coverage file
         run: |
+          cd main/
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
