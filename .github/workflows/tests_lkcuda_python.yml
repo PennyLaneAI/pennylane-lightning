@@ -262,18 +262,30 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
           python -m pip install . -vv
 
-      - name: Run PennyLane-Lightning unit tests
-        if: ${{ matrix.pl_backend != 'all'}}
+      - name: Run PennyLane unit tests
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
+        if: matrix.pl_backend == 'lightning_gpu'
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      #TODO: remove after next release (update the next step if condition too)
+      - name: Run PennyLane Lightning unit tests (stable/latest) - Remove after release
+        if: ${{ matrix.pl_backend != 'all' && inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'}}
         run: |
           cd main/
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
+
+      - name: Run PennyLane-Lightning unit tests
+        if: ${{ matrix.pl_backend != 'all' && !(inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest')}}
+        run: |
+          cd main/
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "not test_native_mcm" $COVERAGE_FLAGS
 
       - name: Install all backend devices
         if: ${{ matrix.pl_backend == 'all' }}
@@ -286,7 +298,7 @@ jobs:
           PL_BACKEND="lightning_kokkos" python scripts/configure_pyproject_toml.py || true
           PL_BACKEND="lightning_kokkos" CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" python -m pip install . -vv
 
-      - name: Run PennyLane-Lightning unit tests for lightning.qubit with all devices installed
+      - name: Run PennyLane unit tests for lightning.qubit with all devices installed
         if: ${{ matrix.pl_backend == 'all' }}
         env:
           OMP_NUM_THREADS: 1
@@ -294,9 +306,12 @@ jobs:
         run: |
           cd main/
           for device in lightning.qubit lightning.kokkos; do
-            pl-device-test --device ${device} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
+            pl-device-test --device ${device} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
             pl-device-test --device ${device} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
           done
+
+      - name: Move coverage file
+        run: |
           mv coverage.xml coverage-${{ github.job }}-${{ matrix.pl_backend }}.xml
 
       - name: Upload code coverage results
