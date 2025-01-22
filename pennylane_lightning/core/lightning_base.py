@@ -23,7 +23,6 @@ import numpy as np
 import pennylane as qml
 from pennylane import BasisState, StatePrep
 from pennylane.devices import QubitDevice
-from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
 from pennylane.ops import Prod, Projector, SProd, Sum
 from pennylane.wires import Wires
