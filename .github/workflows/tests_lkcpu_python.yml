@@ -237,7 +237,7 @@ jobs:
           python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
-      - name: Run PennyLane unit tests
+      - name: Run PennyLane-Lightning integration tests
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
