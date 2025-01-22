@@ -76,10 +76,15 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
         self._qubit_state.getState(state)
         return state
-    
-    def update_num_qubits(self, new_num_wires: int):
-        self._num_wires = new_num_wires
-        self._qubit_state.updateNumQubits(new_num_wires)
+
+    def update_num_qubits(self, num_wires: int):
+        """Update number of qubits in the state vector.
+
+        Args:
+            new_num_wires (int): _description_
+        """
+        self._num_wires = num_wires
+        self._qubit_state.updateNumQubits(num_wires)
         self.reset_state()
 
     def _state_dtype(self):
