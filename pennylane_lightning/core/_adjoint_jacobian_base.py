@@ -85,9 +85,9 @@ class LightningBaseAdjointJacobian(ABC):
             return None
 
         if len(measurements) == 1 and isinstance(measurements[0], StateMP):
-            return State
+            return "state"
 
-        return Expectation
+        return "expval"
 
     def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False):
         """Process a tape, serializing and building a dictionary proper for
@@ -184,7 +184,7 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements
                 return True
 
-            if tape_return_type is State:
+            if tape_return_type is "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support measurement StateMP."
                 )
@@ -194,7 +194,7 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements or the gradient is 0.0
                 return True
 
-            if tape_return_type is State:
+            if tape_return_type is "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation does not support State measurements."
                 )
