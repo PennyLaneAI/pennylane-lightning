@@ -262,7 +262,7 @@ jobs:
           PL_BACKEND=${{ matrix.pl_backend }} CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${{ github.workspace }}/Kokkos" \
           python -m pip install . -vv
 
-      - name: Run PennyLane unit tests
+      - name: Run PennyLane-Lightning integration tests
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
