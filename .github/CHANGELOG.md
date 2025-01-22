@@ -18,7 +18,7 @@
 ### Documentation
 
 ### Bug fixes
-* Patch MultiControlledX tests to fix current stable/latest fails.
+* Patch `MultiControlledX` tests to fix stable/latest failures after the v0.40.0 release.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
 * Update Github CI to use Ubuntu 24 and remove `libopenblas-base` package.
