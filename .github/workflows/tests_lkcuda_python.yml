@@ -272,7 +272,7 @@ jobs:
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
-      #TODO: remove after next release (update the next step if condition too)
+      #TODO: remove after v0.41.0 release (update the next step if condition too)
       - name: Patch (stable/latest) - Remove after release
         if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
         run: |
