@@ -740,6 +740,38 @@ class TestLightningDeviceIntegration:
             qml.device(device_name)
 
     @pytest.mark.skipif(
+        device_name != "lightning.qubit",
+        reason="Only Lightning Qubit support dynamic qubit allocation",
+    )
+    def test_dynamic_allocate_qubit(self, qubit_device, tol):
+        """Test the dynamic allocation of qubits in Lightning devices"""
+
+        dev = qubit_device(None)
+        dev_default = qml.device("default.qubit")
+
+        def circuit1():
+            qml.Identity(wires=2)
+            qml.Identity(wires=1)
+            qml.Hadamard(wires=0)
+            return qml.state()
+
+        def circuit2():
+            qml.Identity(wires=3)
+            qml.Identity(wires=1)
+            qml.Hadamard(wires=0)
+            return qml.state()
+
+        def circuit3():
+            qml.Identity(wires=3)
+            qml.Hadamard(wires=0)
+            return qml.state()
+
+        for circuit in [circuit1, circuit2, circuit3]:
+            results = qml.qnode(dev)(circuit)()
+            expected = qml.qnode(dev_default)(circuit)()
+            assert np.allclose(results, expected, atol=tol, rtol=0)
+
+    @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor requires num_wires > 1"
     )
     def test_qubit_circuit(self, qubit_device, tol):

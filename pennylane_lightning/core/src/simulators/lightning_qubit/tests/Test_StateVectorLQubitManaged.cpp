@@ -165,3 +165,27 @@ TEMPLATE_TEST_CASE("StateVectorLQubitManaged::SetStateVector",
         REQUIRE(sv.getDataVector() == approx(expected_state));
     }
 }
+
+TEMPLATE_TEST_CASE("StateVectorLQubitManaged::updateNumQubits",
+                   "[StateVectorLQubitManaged]", float, double) {
+    using PrecisionT = TestType;
+
+    SECTION("StateVectorLQubitManaged<TestType> {std::size_t}") {
+        const std::size_t original_num_qubits = 3;
+        const std::size_t updated_num_qubits = 5;
+        StateVectorLQubitManaged<PrecisionT> sv(original_num_qubits);
+        REQUIRE(sv.getNumQubits() == 3);
+        REQUIRE(sv.getLength() == 8);
+        REQUIRE(sv.getDataVector().size() == 8);
+
+        sv.updateNumQubits(updated_num_qubits);
+        REQUIRE(sv.getNumQubits() == 5);
+        REQUIRE(sv.getLength() == 32);
+        REQUIRE(sv.getDataVector().size() == 32);
+
+        sv.updateNumQubits(original_num_qubits);
+        REQUIRE(sv.getNumQubits() == 3);
+        REQUIRE(sv.getLength() == 8);
+        REQUIRE(sv.getDataVector().size() == 8);
+    }
+}

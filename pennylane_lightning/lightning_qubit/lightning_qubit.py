@@ -229,8 +229,8 @@ class LightningQubit(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        *,
         wires: Union[int, List] = None,
+        *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
         batch_obs: bool = False,
@@ -288,10 +288,10 @@ class LightningQubit(LightningBase):
         }
 
         # Creating the state vector
-        #self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype) if self.wires else None
+        # self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype) if self.wires else None
         self._statevector = None
         self._c_dtype = c_dtype
-        
+
     @property
     def name(self):
         """The name of the device."""
@@ -350,7 +350,9 @@ class LightningQubit(LightningBase):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(validate_device_wires, self.wires, name=self.name) #TODO: NEED to change?
+        program.add_transform(
+            validate_device_wires, self.wires, name=self.name
+        )  # TODO: NEED to change?
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )
@@ -392,15 +394,19 @@ class LightningQubit(LightningBase):
         for circuit in circuits:
             if self._statevector is None:
                 if self.wires:
-                    self._statevector = self.LightningStateVector(num_wires = len(self.wires), dtype=self._c_dtype)
+                    self._statevector = self.LightningStateVector(
+                        num_wires=len(self.wires), dtype=self._c_dtype
+                    )
                 else:
-                    self._statevector = self.LightningStateVector(num_wires = circuit.num_wires, dtype=self._c_dtype)
+                    self._statevector = self.LightningStateVector(
+                        num_wires=circuit.num_wires, dtype=self._c_dtype
+                    )
                     circuit = circuit.map_to_standard_wires()
             else:
                 if not self.wires:
                     self._statevector._update_num_qubits(circuit.num_wires)
                     circuit = circuit.map_to_standard_wires()
-                    
+
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(

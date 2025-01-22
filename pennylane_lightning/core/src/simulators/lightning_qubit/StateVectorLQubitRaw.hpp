@@ -22,7 +22,6 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#include <iostream>
 
 #include "BitUtil.hpp"        // log2PerfectPower, isPerfectPowerOf2
 #include "CPUMemoryModel.hpp" // getMemoryModel
@@ -145,9 +144,10 @@ class StateVectorLQubitRaw final
      * @param num_qubits The number of qubits.
      */
     void updateNumQubits(std::size_t num_qubits) {
-      BaseType::num_qubits_ = num_qubits;
-      length_ = exp2(num_qubits);
-      BaseType::setKernels(num_qubits, BaseType::threading_, BaseType::memory_model_);
+        BaseType::num_qubits_ = num_qubits;
+        length_ = exp2(num_qubits);
+        BaseType::setKernels(num_qubits, BaseType::threading_,
+                             BaseType::memory_model_);
     }
 };
 } // namespace Pennylane::LightningQubit

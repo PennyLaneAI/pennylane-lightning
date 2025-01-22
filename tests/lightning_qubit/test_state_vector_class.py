@@ -483,3 +483,41 @@ def test_get_final_state(tol, operation, input, expected_output, par):
     assert np.allclose(final_state.state, np.array(expected_output), atol=tol, rtol=0)
     assert final_state.state.dtype == final_state.dtype
     assert final_state == state_vector
+
+
+def test_dynamically_allocate_qubit(tol, operation, input, expected_output, par):
+    """Tests that applying an operation yields the expected output state for two wire
+    operations that have parameters."""
+    if device_name != "lightning.qubit":
+        pytest.skip("Only Lightning Qubit allows dynamic qubit allocation", allow_module_level=True)
+
+    wires = 2
+    state_vector = LightningStateVector(wires)
+    tape = QuantumScript(
+        [qml.StatePrep(np.array(input), Wires(range(wires))), operation(*par, Wires(range(wires)))]
+    )
+    final_state = state_vector.get_final_state(tape)
+
+    assert np.allclose(final_state.state, np.array(expected_output), atol=tol, rtol=0)
+    assert final_state.state.dtype == final_state.dtype
+    assert final_state == state_vector
+
+
+@pytest.mark.parametrize("num_wires", range(2, 5))
+@pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+def test_update_num_qubit(num_wires, dtype):
+    """ """
+    if device_name != "lightning.qubit":
+        pytest.skip("Only Lightning Qubit allows dynamic qubit allocation")
+
+    state_vector = LightningStateVector(num_wires, dtype=dtype)
+
+    state_vector._update_num_qubits(num_wires + 2)
+    expected_output = np.zeros(2 ** (num_wires + 2), dtype=dtype)
+    expected_output[0] = 1
+    assert np.allclose(state_vector.state, expected_output)
+
+    state_vector._update_num_qubits(num_wires - 1)
+    expected_output = np.zeros(2 ** (num_wires - 1), dtype=dtype)
+    expected_output[0] = 1
+    assert np.allclose(state_vector.state, expected_output)
