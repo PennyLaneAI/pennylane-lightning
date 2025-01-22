@@ -6,9 +6,6 @@
 
 ### Improvements
 
-* Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
-  [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
-
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
   [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
