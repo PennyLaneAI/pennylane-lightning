@@ -23,7 +23,7 @@ import numpy as np
 import pennylane as qml
 from pennylane import BasisState, StatePrep
 from pennylane.devices import QubitDevice
-from pennylane.measurements import Expectation, MeasurementProcess, State
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
 from pennylane.ops import Prod, Projector, SProd, Sum
 from pennylane.wires import Wires
@@ -348,14 +348,14 @@ class LightningBase(QubitDevice):
         if not measurements:
             return None
 
-        if len(measurements) == 1 and measurements[0].return_type is State:
+        if len(measurements) == 1 and isinstance(measurements[0], StateMP):
             # return State
             raise qml.QuantumFunctionError(
                 "Adjoint differentiation does not support State measurements."
             )
 
         # The return_type of measurement processes must be expectation
-        if any(m.return_type is not Expectation for m in measurements):
+        if any(not isinstance(m, ExpectationMP) for m in measurements):
             raise qml.QuantumFunctionError(
                 "Adjoint differentiation method does not support expectation return type "
                 "mixed with other return types"
@@ -363,7 +363,7 @@ class LightningBase(QubitDevice):
 
         for measurement in measurements:
             LightningBase._assert_adjdiff_no_projectors(measurement.obs)
-        return Expectation
+        return "expval"
 
     @staticmethod
     def _adjoint_jacobian_processing(jac):
