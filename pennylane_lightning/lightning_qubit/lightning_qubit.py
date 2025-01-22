@@ -404,7 +404,7 @@ class LightningQubit(LightningBase):
                     circuit = circuit.map_to_standard_wires()
             else:
                 if not self.wires:
-                    self._statevector._update_num_qubits(circuit.num_wires)
+                    self._statevector.update_num_qubits(circuit.num_wires)
                     circuit = circuit.map_to_standard_wires()
 
             if self._wire_map is not None:

@@ -76,6 +76,11 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         state = np.zeros(2**self._num_wires, dtype=self.dtype)
         self._qubit_state.getState(state)
         return state
+    
+    def update_num_qubits(self, new_num_wires: int):
+        self._num_wires = new_num_wires
+        self._qubit_state.updateNumQubits(new_num_wires)
+        self.reset_state()
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -83,11 +88,6 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         Returns: the state vector class
         """
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
-
-    def _update_num_qubits(self, new_num_wires: int):
-        self._num_wires = new_num_wires
-        self._qubit_state.updateNumQubits(new_num_wires)
-        self.reset_state()
 
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
