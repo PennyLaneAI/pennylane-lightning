@@ -2369,4 +2369,4 @@ Initial release.
 
 This release contains contributions from (in alphabetical order):
 
-Tom Bromley, Josh Izaac, Nathan Killoran, Antal Száva
+Tom Bromley, Josh Izaac, Nathan Killoran, Andrija Paurevic, Antal Száva
