@@ -288,8 +288,10 @@ class LightningQubit(LightningBase):
         }
 
         # Creating the state vector
-        self._statevector = self.LightningStateVector(num_wires=(len(self.wires) if self.wires else 1), dtype=c_dtype)
-
+        #self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype) if self.wires else None
+        self._statevector = None
+        self._c_dtype = c_dtype
+        
     @property
     def name(self):
         """The name of the device."""
@@ -386,10 +388,17 @@ class LightningQubit(LightningBase):
             "kernel_name": self._kernel_name,
             "num_burnin": self._num_burnin,
         }
-        if self.wires is None:
-            self._statevector=
         results = []
         for circuit in circuits:
+            if self._statevector is None:
+                if self.wires:
+                    self._statevector = self.LightningStateVector(num_wires = len(self.wires), dtype=self._c_dtype)
+                else:
+                    self._statevector = self.LightningStateVector(num_wires = circuit.num_wires, dtype=self._c_dtype)
+            else:
+                if not self.wires:
+                    self._statevector._update_num_qubits(circuit.num_wires)
+                    
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
