@@ -204,22 +204,17 @@ jobs:
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
       #TODO: remove after next release (update the next step if condition too)
-      - name: Run PennyLane-Lightning unit tests (stable/latest) - Remove after release
-        env:
-          OMP_NUM_THREADS: 1
+      - name: Patch (stable/latest) - Remove after release
         if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
         run: |
-          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          # Remove `python -m` to avoid running tests with relative modules
-          PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct and not test_gate_unitary_correct and not test_gate_unitary_correct_lt" \
-            $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
-            --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
-          PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          pushd tests
+          find . -type f -exec sed -i 's/control_values=[wires[0], wires[1]]/control_values=[0, 1]/g' {} +
+          find . -type f -exec sed -i 's/"control_values": "01"/"control_values": [0, 1]/g' {} +
+          popd
 
       - name: Run PennyLane-Lightning unit tests
         env:
           OMP_NUM_THREADS: 1
-        if: ${{!(inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest')}}
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
