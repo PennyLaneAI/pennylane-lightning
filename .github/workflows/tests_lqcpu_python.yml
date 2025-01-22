@@ -197,17 +197,36 @@ jobs:
           git log -1 --format='%H'
           git status
 
-      - name: Run PennyLane-Lightning unit tests
+      - name: Run PennyLane unit tests
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      #TODO: remove after next release (update the next step if condition too)
+      - name: Run PennyLane-Lightning unit tests (stable/latest) - Remove after release
+        env:
+          OMP_NUM_THREADS: 1
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
-          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
+          PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct and not test_gate_unitary_correct and not test_gate_unitary_correct_lt" \
             $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
             --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
           PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
-          mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
+
+      - name: Run PennyLane-Lightning unit tests
+        env:
+          OMP_NUM_THREADS: 1
+        if: ${{!(inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest')}}
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          # Remove `python -m` to avoid running tests with relative modules
+          PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
+            $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
+            --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
+          PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
         uses: actions/upload-artifact@v4
@@ -215,6 +234,10 @@ jobs:
           name: .test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
           retention-days: 1
           path: ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+
+      - name: Move coverage file
+        run: |
+          mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
 
       - name: Upload code coverage results
         uses: actions/upload-artifact@v4
