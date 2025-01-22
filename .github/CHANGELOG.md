@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Update deprecated `gradient_kwargs` usage.
+  [(#1045)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1045)
+
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
   [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
