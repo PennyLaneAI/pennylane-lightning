@@ -190,11 +190,8 @@ class StateVectorLQubitManaged final
      */
     void updateNumQubits(std::size_t num_qubits) {
       BaseType::num_qubits_ = num_qubits;
-      std::cout << "problem here?" << std::endl;
       BaseType::setKernels(num_qubits, BaseType::threading_, BaseType::memory_model_);
-      std::cout << "problem here?" << std::endl;
       data_.resize(exp2(num_qubits));
-      std::cout << "problem here?" << std::endl;
     }
 
     AlignedAllocator<ComplexT> allocator() const {
