@@ -330,41 +330,6 @@ class LightningBase(QubitDevice):
             for obs in observable:
                 LightningBase._assert_adjdiff_no_projectors(obs)
 
-    # pylint: disable=unnecessary-pass
-    @staticmethod
-    def _check_adjdiff_supported_measurements(measurements: List[MeasurementProcess]):
-        """Check whether given list of measurements is supported by adjoint_differentiation.
-
-        Args:
-            measurements (List[MeasurementProcess]): a list of measurement processes to check.
-
-        Returns:
-            Expectation or State: a common return type of measurements.
-
-        Raises:
-            ~pennylane.QuantumFunctionError: if a measurement is unsupported with adjoint
-            differentiation.
-        """
-        if not measurements:
-            return None
-
-        if len(measurements) == 1 and isinstance(measurements[0], StateMP):
-            # return State
-            raise qml.QuantumFunctionError(
-                "Adjoint differentiation does not support State measurements."
-            )
-
-        # The return_type of measurement processes must be expectation
-        if any(not isinstance(m, ExpectationMP) for m in measurements):
-            raise qml.QuantumFunctionError(
-                "Adjoint differentiation method does not support expectation return type "
-                "mixed with other return types"
-            )
-
-        for measurement in measurements:
-            LightningBase._assert_adjdiff_no_projectors(measurement.obs)
-        return "expval"
-
     @staticmethod
     def _adjoint_jacobian_processing(jac):
         """
