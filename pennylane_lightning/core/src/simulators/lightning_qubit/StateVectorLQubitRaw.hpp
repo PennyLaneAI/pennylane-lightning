@@ -145,7 +145,7 @@ class StateVectorLQubitRaw final
      * @param num_qubits The number of qubits.
      */
     void updateNumQubits(std::size_t num_qubits) {
-      std::cout << "Updating num qubits in StateVectorLQubitRaw.hpp. New numqubit = " << num_qubits << std::endl;
+      BaseType::num_qubits_ = num_qubits;
       length_ = exp2(num_qubits);
       BaseType::setKernels(num_qubits, BaseType::threading_, BaseType::memory_model_);
     }

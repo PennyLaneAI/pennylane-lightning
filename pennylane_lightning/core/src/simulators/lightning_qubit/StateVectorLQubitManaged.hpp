@@ -189,12 +189,12 @@ class StateVectorLQubitManaged final
      * @param num_qubits The number of qubits.
      */
     void updateNumQubits(std::size_t num_qubits) {
-      std::cout << "Updating num qubits in StateVectorLQubitManaged.hpp. New numqubit = " << num_qubits << std::endl;
+      BaseType::num_qubits_ = num_qubits;
+      std::cout << "problem here?" << std::endl;
       BaseType::setKernels(num_qubits, BaseType::threading_, BaseType::memory_model_);
+      std::cout << "problem here?" << std::endl;
       data_.resize(exp2(num_qubits));
-      for (auto &val : data_) {
-        std::cout << val << std::endl;
-      }
+      std::cout << "problem here?" << std::endl;
     }
 
     AlignedAllocator<ComplexT> allocator() const {
