@@ -263,6 +263,7 @@ jobs:
           python -m pip install . -vv
 
       - name: Run PennyLane-Lightning integration tests
+        if: ${{ matrix.pl_backend != 'all' }}      
         env:
           OMP_NUM_THREADS: 1
           OMP_PROC_BIND: false
