@@ -70,7 +70,7 @@ def circuit_ansatz(params, wires):
     qml.Identity(wires=wires[0])
     qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
     qml.ControlledQubitUnitary(
-        qml.matrix(qml.PauliX([wires[1]])), control_wires=[wires[0]], wires=wires[1]
+        qml.matrix(qml.PauliX([wires[1]])), wires=[wires[0], wires[1]]
     )
     qml.DiagonalQubitUnitary(np.array([1, 1]), wires=wires[2])
     qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[0, 1])

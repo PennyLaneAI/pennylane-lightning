@@ -450,8 +450,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                     qml.StatePrep(init_state, wires=range(n_qubits))
                     qml.ControlledQubitUnitary(
                         U,
-                        control_wires=control_wires,
-                        wires=target_wires,
+                        wires=control_wires+target_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
                             if device_name != "lightning.tensor"
@@ -550,7 +549,7 @@ def test_controlled_qubit_unitary_from_op(tol):
 
     def circuit(x):
         qml.ControlledQubitUnitary(
-            qml.QubitUnitary(qml.RX.compute_matrix(x), wires=5), control_wires=range(5)
+            qml.RX.compute_matrix(x), wires=range(6)
         )
         return qml.expval(qml.PauliX(0))
 
@@ -617,7 +616,7 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))
-        qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=target_wires)
+        qml.ControlledQubitUnitary(U, wires=control_wires+target_wires)
         return qml.state()
 
     def cnot_circuit():
