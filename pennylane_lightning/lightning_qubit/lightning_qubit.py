@@ -289,8 +289,11 @@ class LightningQubit(LightningBase):
 
         # Creating the state vector
         # self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype) if self.wires else None
-        self._statevector = None
-        self._c_dtype = c_dtype
+        self._statevector = (
+            self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype)
+            if wires
+            else None
+        )
 
     @property
     def name(self):
@@ -350,9 +353,7 @@ class LightningQubit(LightningBase):
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
-        program.add_transform(
-            validate_device_wires, self.wires, name=self.name
-        )  # TODO: NEED to change?
+        program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
         )

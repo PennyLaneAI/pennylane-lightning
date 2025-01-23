@@ -733,12 +733,6 @@ class TestLightningDeviceIntegration:
     @pytest.mark.xfail(
         device_name == "lightning.tensor", reason="lightning.tensor raises different errors"
     )
-    def test_args(self):
-        """Test that the plugin requires correct arguments"""
-
-        with pytest.raises(TypeError, match="missing 1 required positional argument: 'wires'"):
-            qml.device(device_name)
-
     @pytest.mark.skipif(
         device_name != "lightning.qubit",
         reason="Only Lightning Qubit support dynamic qubit allocation",
