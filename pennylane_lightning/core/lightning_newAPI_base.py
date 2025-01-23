@@ -315,20 +315,15 @@ class LightningBase(Device):
 
         results = []
         for circuit in circuits:
-            if self._statevector is None:
-                if self.wires:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=len(self.wires), dtype=self._c_dtype
-                    )
-                else:
+            if self.wires is None:  # Dynamic wires allocation
+                if self._statevector is None:
                     self._statevector = self.LightningStateVector(
                         num_wires=circuit.num_wires, dtype=self._c_dtype
                     )
-                    circuit = circuit.map_to_standard_wires()
-            else:
-                if not self.wires:
-                    self._statevector.update_num_qubits(circuit.num_wires)
-                    circuit = circuit.map_to_standard_wires()
+                else:
+                    if self._statevector._num_wires != circuit.num_wires:
+                        self._statevector.update_num_qubits(circuit.num_wires)
+                circuit = circuit.map_to_standard_wires()
             results.append(
                 self.jacobian(
                     circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
@@ -352,26 +347,23 @@ class LightningBase(Device):
             Tuple: A numeric result of the computation and the gradient.
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        if self._statevector is None:
-            if self.wires:
-                self._statevector = self.LightningStateVector(
-                    num_wires=len(self.wires), dtype=self._c_dtype
-                )
-            else:
-                self._statevector = self.LightningStateVector(
-                    num_wires=circuit.num_wires, dtype=self._c_dtype
-                )
+        results = []
+        for circuit in circuits:
+            if self.wires is None:  # Dynamic wires allocation
+                if self._statevector is None:
+                    self._statevector = self.LightningStateVector(
+                        num_wires=circuit.num_wires, dtype=self._c_dtype
+                    )
+                else:
+                    if self._statevector._num_wires != circuit.num_wires:
+                        self._statevector.update_num_qubits(circuit.num_wires)
                 circuit = circuit.map_to_standard_wires()
-        else:
-            if not self.wires:
-                self._statevector.update_num_qubits(circuit.num_wires)
-                circuit = circuit.map_to_standard_wires()
-        results = tuple(
-            self.simulate_and_jacobian(
-                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+
+            results.append(
+                self.simulate_and_jacobian(
+                    circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+                )
             )
-            for c in circuits
-        )
         return tuple(zip(*results))
 
     def supports_vjp(
@@ -424,20 +416,16 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = []
         for circuit, cots in zip(circuits, cotangents):
-            if self._statevector is None:
-                if self.wires:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=len(self.wires), dtype=self._c_dtype
-                    )
-                else:
+            if self.wires is None:  # Dynamic wires allocation
+                if self._statevector is None:
                     self._statevector = self.LightningStateVector(
                         num_wires=circuit.num_wires, dtype=self._c_dtype
                     )
-                    circuit = circuit.map_to_standard_wires()
-            else:
-                if not self.wires:
-                    self._statevector.update_num_qubits(circuit.num_wires)
-                    circuit = circuit.map_to_standard_wires()
+                else:
+                    if self._statevector._num_wires != circuit.num_wires:
+                        self._statevector.update_num_qubits(circuit.num_wires)
+                circuit = circuit.map_to_standard_wires()
+
             results.append(
                 self.vjp(
                     circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
@@ -462,27 +450,23 @@ class LightningBase(Device):
             Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        if self._statevector is None:
-            if self.wires:
-                self._statevector = self.LightningStateVector(
-                    num_wires=len(self.wires), dtype=self._c_dtype
-                )
-            else:
-                self._statevector = self.LightningStateVector(
-                    num_wires=circuit.num_wires, dtype=self._c_dtype
-                )
-                circuit = circuit.map_to_standard_wires()
-        else:
-            if not self.wires:
-                self._statevector.update_num_qubits(circuit.num_wires)
+
+        results = []
+        for circuit, cots in zip(circuits, cotangents):
+            if self.wires is None:  # Dynamic wires allocation
+                if self._statevector is None:
+                    self._statevector = self.LightningStateVector(
+                        num_wires=circuit.num_wires, dtype=self._c_dtype
+                    )
+                else:
+                    if self._statevector._num_wires != circuit.num_wires:
+                        self._statevector.update_num_qubits(circuit.num_wires)
                 circuit = circuit.map_to_standard_wires()
 
-        results = tuple(
-            self.simulate_and_vjp(
+            result = self.simulate_and_vjp(
                 circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
             )
-            for circuit, cots in zip(circuits, cotangents)
-        )
+            results.append(result)
         return tuple(zip(*results))
 
     # pylint: disable=import-outside-toplevel
@@ -524,20 +508,6 @@ class LightningBase(Device):
         # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
 
-        if self._statevector is None:
-            if self.wires:
-                self._statevector = self.LightningStateVector(
-                    num_wires=len(self.wires), dtype=self._c_dtype
-                )
-            else:
-                self._statevector = self.LightningStateVector(
-                    num_wires=circuit.num_wires, dtype=self._c_dtype
-                )
-                circuit = circuit.map_to_standard_wires()
-        else:
-            if not self.wires:
-                self._statevector.update_num_qubits(circuit.num_wires)
-                circuit = circuit.map_to_standard_wires()
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots
         )

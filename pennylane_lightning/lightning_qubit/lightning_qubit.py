@@ -287,11 +287,10 @@ class LightningQubit(LightningBase):
             "kernel_name": self._kernel_name,
         }
 
-        # Creating the state vector
-        # self._statevector = self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype) if self.wires else None
+        # Creating the state vector if wires are specified
         self._statevector = (
             self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype)
-            if wires
+            if wires is not None
             else None
         )
 
@@ -393,20 +392,15 @@ class LightningQubit(LightningBase):
         }
         results = []
         for circuit in circuits:
-            if self._statevector is None:
-                if self.wires:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=len(self.wires), dtype=self._c_dtype
-                    )
-                else:
+            if self.wires is None:  # Dynamic wires allocation
+                if self._statevector is None:
                     self._statevector = self.LightningStateVector(
                         num_wires=circuit.num_wires, dtype=self._c_dtype
                     )
-                    circuit = circuit.map_to_standard_wires()
-            else:
-                if not self.wires:
-                    self._statevector.update_num_qubits(circuit.num_wires)
-                    circuit = circuit.map_to_standard_wires()
+                else:
+                    if self._statevector._num_wires != circuit.num_wires:
+                        self._statevector.update_num_qubits(circuit.num_wires)
+                circuit = circuit.map_to_standard_wires()
 
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
