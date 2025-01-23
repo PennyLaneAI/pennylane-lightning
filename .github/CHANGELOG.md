@@ -15,10 +15,15 @@
 * Merge the `v0.40.0-rc` branch to the master and bump version.
   [(#1038)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1038)
 
+* Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
+  [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
+
 ### Documentation
 
 ### Bug fixes
-  
+* Patch `MultiControlledX` tests to fix stable/latest failures after the v0.40.0 release.
+  [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
+
 * Update Github CI to use Ubuntu 24 and remove `libopenblas-base` package.
   [(#1041)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1041)
 
@@ -26,7 +31,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Yushao Chen, Joseph Lee, Shuli Shu
+Yushao Chen, Amintor Dusko, Joseph Lee, Shuli Shu
 
 ---
 
