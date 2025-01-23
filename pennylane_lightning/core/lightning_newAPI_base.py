@@ -326,7 +326,7 @@ class LightningBase(Device):
                         num_wires=circuit.num_wires, dtype=self._c_dtype
                     )
                 else:
-                    if self._statevector._num_wires != circuit.num_wires:
+                    if self._statevector.num_wires != circuit.num_wires:
                         self._statevector.update_num_qubits(circuit.num_wires)
                 circuit = circuit.map_to_standard_wires()
             results.append(
