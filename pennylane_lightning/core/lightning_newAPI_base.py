@@ -60,8 +60,8 @@ class LightningBase(Device):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
+        wires: Union[int, List],
         *,
-        wires: Union[int, List] = None,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
         batch_obs: bool,
@@ -330,7 +330,7 @@ class LightningBase(Device):
                 )
             )
 
-        return results
+        return tuple(results)
 
     def execute_and_compute_derivatives(
         self,
