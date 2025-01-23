@@ -276,7 +276,7 @@ jobs:
       - name: Patch (stable/latest) - Remove after release
         if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
         run: |
-          pushd tests
+          pushd main/tests
           find . -type f -exec sed -i 's/control_values=[wires[0], wires[1]]/control_values=[0, 1]/g' {} +
           find . -type f -exec sed -i 's/"control_values": "01"/"control_values": [0, 1]/g' {} +
           popd
