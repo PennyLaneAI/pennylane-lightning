@@ -15,6 +15,9 @@
 * Merge the `v0.40.0-rc` branch to the master and bump version.
   [(#1038)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1038)
 
+* Reduce the number of shots on PennyLane Python tests, from 20k to 10k.
+  [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
+
 ### Documentation
 
 ### Bug fixes
