@@ -81,7 +81,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """Update number of qubits in the state vector.
 
         Args:
-            new_num_wires (int): _description_
+            num_wires (int): _description_
         """
         self._num_wires = num_wires
         self._qubit_state.updateNumQubits(num_wires)
