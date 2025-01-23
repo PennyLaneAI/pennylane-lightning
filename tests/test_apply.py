@@ -730,9 +730,6 @@ class TestLightningDeviceIntegration:
         qnode = qml.QNode(circuit, dev, diff_method="best")
         assert isinstance(qnode.device, ld)
 
-    @pytest.mark.xfail(
-        device_name == "lightning.tensor", reason="lightning.tensor raises different errors"
-    )
     @pytest.mark.skipif(
         device_name != "lightning.qubit",
         reason="Only Lightning Qubit support dynamic qubit allocation",
@@ -742,6 +739,11 @@ class TestLightningDeviceIntegration:
 
         dev = qubit_device(None)
         dev_default = qml.device("default.qubit")
+
+        def circuit0():
+            qml.Hadamard(wires=0)
+            qml.Identity(wires=1)
+            return qml.state()
 
         def circuit1():
             qml.Identity(wires=2)
@@ -760,7 +762,7 @@ class TestLightningDeviceIntegration:
             qml.Hadamard(wires=0)
             return qml.state()
 
-        for circuit in [circuit1, circuit2, circuit3]:
+        for circuit in [circuit0, circuit1, circuit2, circuit3]:
             results = qml.qnode(dev)(circuit)()
             expected = qml.qnode(dev_default)(circuit)()
             assert np.allclose(results, expected, atol=tol, rtol=0)
