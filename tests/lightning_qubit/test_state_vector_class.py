@@ -489,7 +489,7 @@ def test_get_final_state(tol, operation, input, expected_output, par):
 @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
 def test_update_num_qubit(num_wires, dtype):
     """Tests that the state vector is correctly updated when the number of qubits is changed."""
-    if device_name != "lightning.qubit":
+    if device_name not in ("lightning.qubit", "lightning.kokkos"):
         pytest.skip("This device doesn't allow dynamic qubit allocation.")
 
     state_vector = LightningStateVector(num_wires, dtype=dtype)

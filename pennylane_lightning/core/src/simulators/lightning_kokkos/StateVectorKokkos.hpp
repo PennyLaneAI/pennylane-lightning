@@ -180,6 +180,16 @@ class StateVectorKokkos final
     }
 
     /**
+     * @brief Update the number of qubits in the statevector.
+     *
+     * @param num_qubits The number of qubits.
+     */
+    void updateNumQubits(std::size_t num_qubits) {
+        BaseType::num_qubits_ = num_qubits;
+        Kokkos::resize(*data_, exp2(num_qubits));
+    }
+
+    /**
      * @brief Set values for a batch of elements of the state-vector.
      *
      * @param indices Indices of the target elements.

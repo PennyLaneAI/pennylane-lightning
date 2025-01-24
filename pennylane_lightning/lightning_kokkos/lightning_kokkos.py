@@ -215,7 +215,7 @@ class LightningKokkos(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
@@ -244,8 +244,12 @@ class LightningKokkos(LightningBase):
         self._kokkos_args = kokkos_args
 
         # Creating the state vector
-        self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args
+        self._statevector = (
+            self.LightningStateVector(
+                num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args
+            )
+            if wires is not None
+            else None
         )
 
         if not LightningKokkos.kokkos_config:
@@ -348,6 +352,9 @@ class LightningKokkos(LightningBase):
         """
         results = []
         for circuit in circuits:
+            if self.wires is None:  # Dynamic wires allocation
+                circuit = self.update_dynamic_wires(circuit)
+                
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
