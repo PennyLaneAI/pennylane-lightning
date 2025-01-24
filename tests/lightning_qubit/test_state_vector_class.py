@@ -495,11 +495,13 @@ def test_update_num_qubit(num_wires, dtype):
     state_vector = LightningStateVector(num_wires, dtype=dtype)
 
     state_vector.update_num_qubits(num_wires + 2)
+    state_vector.reset_state()
     expected_output = np.zeros(2 ** (num_wires + 2), dtype=dtype)
     expected_output[0] = 1
     assert np.allclose(state_vector.state, expected_output)
 
     state_vector.update_num_qubits(num_wires - 1)
+    state_vector.reset_state()
     expected_output = np.zeros(2 ** (num_wires - 1), dtype=dtype)
     expected_output[0] = 1
     assert np.allclose(state_vector.state, expected_output)
