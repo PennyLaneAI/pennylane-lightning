@@ -187,7 +187,7 @@ class LightningBase(Device):
 
         Args:
             circuit (QuantumTape): The circuit to execute.
-            
+
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
