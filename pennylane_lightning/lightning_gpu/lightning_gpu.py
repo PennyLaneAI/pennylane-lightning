@@ -277,7 +277,7 @@ class LightningGPU(LightningBase):
                 num_wires=len(self.wires),
                 dtype=c_dtype,
                 mpi_handler=self._mpi_handler,
-                use_async=self._use_async
+                use_async=self._use_async,
             )
             if wires is not None
             else None
@@ -320,7 +320,7 @@ class LightningGPU(LightningBase):
         new_device_options.update(mcmc_default)
 
         return replace(config, **updated_values, device_options=new_device_options)
-    
+
     def update_dynamic_wires(self, circuit):
         """Update the number of dynamic wires in the statevector for a given circuit. If the statevector does not already exist, it will be created. If it does exist and the number of wires has changed, it will be updated.
 
@@ -332,8 +332,10 @@ class LightningGPU(LightningBase):
         """
         if self._statevector is None:
             self._statevector = self.LightningStateVector(
-                num_wires=circuit.num_wires, dtype=self._c_dtype, mpi_handler=self._mpi_handler,
-                use_async=self._use_async
+                num_wires=circuit.num_wires,
+                dtype=self._c_dtype,
+                mpi_handler=self._mpi_handler,
+                use_async=self._use_async,
             )
         else:
             if self._statevector.num_wires != circuit.num_wires:
@@ -342,6 +344,7 @@ class LightningGPU(LightningBase):
             circuit.map_to_standard_wires()
         )  # Map to follow default.qubit wire order for dynamic wires
         return circuit
+
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
@@ -401,9 +404,9 @@ class LightningGPU(LightningBase):
         """
         results = []
         for circuit in circuits:
-             if self.wires is None:  # Dynamic wires allocation
+            if self.wires is None:  # Dynamic wires allocation
                 circuit = self.update_dynamic_wires(circuit)
-                
+
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(

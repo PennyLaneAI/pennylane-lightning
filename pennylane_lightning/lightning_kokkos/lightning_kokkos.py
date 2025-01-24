@@ -313,7 +313,7 @@ class LightningKokkos(LightningBase):
             circuit.map_to_standard_wires()
         )  # Map to follow default.qubit wire order for dynamic wires
         return circuit
-    
+
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
