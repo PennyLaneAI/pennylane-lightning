@@ -251,7 +251,7 @@ class StateVectorCudaManaged
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
 
         BaseType::updateData(std::make_unique<LightningGPU::DataBuffer<CFP_t>>(
-              Pennylane::Util::exp2(num_qubits), device_id, stream_id));
+            Pennylane::Util::exp2(num_qubits), device_id, stream_id));
     }
 
     /**

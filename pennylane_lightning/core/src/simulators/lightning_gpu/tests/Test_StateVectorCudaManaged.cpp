@@ -163,8 +163,9 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a pointer",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::updateNumQubits", "[errors]",
-                           (StateVectorCudaManaged), (float, double)) {
+TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::updateNumQubits",
+                           "[errors]", (StateVectorCudaManaged),
+                           (float, double)) {
     using StateVectorT = TestType;
     const std::size_t original_num_qubits = 3;
     const std::size_t new_num_qubits = 5;

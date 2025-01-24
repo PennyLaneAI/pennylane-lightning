@@ -236,7 +236,7 @@ class LightningGPU(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
@@ -272,11 +272,15 @@ class LightningGPU(LightningBase):
         # Creating the state vector
         self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
 
-        self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires),
-            dtype=c_dtype,
-            mpi_handler=self._mpi_handler,
-            use_async=self._use_async,
+        self._statevector = (
+            self.LightningStateVector(
+                num_wires=len(self.wires),
+                dtype=c_dtype,
+                mpi_handler=self._mpi_handler,
+                use_async=self._use_async
+            )
+            if wires is not None
+            else None
         )
 
     @property
