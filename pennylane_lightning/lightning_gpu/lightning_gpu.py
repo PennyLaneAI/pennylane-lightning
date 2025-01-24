@@ -269,19 +269,20 @@ class LightningGPU(LightningBase):
         self._dp = DevPool()
         self._use_async = use_async
 
+        self._mpi = mpi
+        self._mpi_buf_size = mpi_buf_size
         # Creating the state vector
-        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
-
-        self._statevector = (
-            self.LightningStateVector(
+        if wires is not None:
+            self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
+            self._statevector = self.LightningStateVector(
                 num_wires=len(self.wires),
                 dtype=c_dtype,
                 mpi_handler=self._mpi_handler,
                 use_async=self._use_async,
             )
-            if wires is not None
-            else None
-        )
+        else:
+            self._statevector = None
+            self._mpi_handler = None
 
     @property
     def name(self):
@@ -331,6 +332,9 @@ class LightningGPU(LightningBase):
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
         if self._statevector is None:
+            self._mpi_handler = MPIHandler(
+                self._mpi, self._mpi_buf_size, circuit.num_wires, self._c_dtype
+            )
             self._statevector = self.LightningStateVector(
                 num_wires=circuit.num_wires,
                 dtype=self._c_dtype,

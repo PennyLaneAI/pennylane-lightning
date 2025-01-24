@@ -114,7 +114,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
             num_wires (int): _description_
         """
         self._num_wires = num_wires
+        self._num_local_wires = num_wires
         self._qubit_state.updateNumQubits(num_wires)
+        # TODO: UPDATE MPI HANDLER
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
