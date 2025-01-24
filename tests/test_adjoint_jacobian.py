@@ -46,9 +46,7 @@ if device_name == "lightning.kokkos":
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
 fixture_params = itertools.product(
-    [np.complex64, np.complex128],
-    kokkos_args,
-    [None, 3] # number of wires
+    [np.complex64, np.complex128], kokkos_args, [None, 3]  # number of wires
 )
 
 

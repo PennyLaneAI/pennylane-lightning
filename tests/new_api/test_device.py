@@ -17,6 +17,7 @@ This module contains unit tests for new device API Lightning classes.
 # pylint: disable=too-many-arguments, unused-argument
 
 import itertools
+
 import numpy as np
 import pennylane as qml
 import pytest
@@ -94,11 +95,10 @@ if not LightningDevice._new_API:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-fixture_params = itertools.product([3, None], # wires
-                                   [np.complex64, np.complex128])
-@pytest.fixture(
-    params=fixture_params
-)
+fixture_params = itertools.product([3, None], [np.complex64, np.complex128])  # wires
+
+
+@pytest.fixture(params=fixture_params)
 def dev(request):
     return LightningDevice(wires=request.param[0], c_dtype=request.param[1])
 

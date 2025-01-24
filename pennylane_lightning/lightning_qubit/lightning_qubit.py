@@ -393,14 +393,7 @@ class LightningQubit(LightningBase):
         results = []
         for circuit in circuits:
             if self.wires is None:  # Dynamic wires allocation
-                if self._statevector is None:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=circuit.num_wires, dtype=self._c_dtype
-                    )
-                else:
-                    if self._statevector.num_wires != circuit.num_wires:
-                        self._statevector.update_num_qubits(circuit.num_wires)
-                circuit = circuit.map_to_standard_wires()
+                circuit = self.update_dynamic_wires(circuit)
 
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)

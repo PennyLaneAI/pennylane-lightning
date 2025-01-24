@@ -181,6 +181,24 @@ class LightningBase(Device):
 
         """
 
+    def update_dynamic_wires(self, circuit):
+        """Update the number of dynamic wires in the statevector for a given circuit. If the statevector does not already exist, it will be created. If it does exist and the number of wires has changed, it will be updated.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+        """
+        if self._statevector is None:
+            self._statevector = self.LightningStateVector(
+                num_wires=circuit.num_wires, dtype=self._c_dtype
+            )
+        else:
+            if self._statevector.num_wires != circuit.num_wires:
+                self._statevector.update_num_qubits(circuit.num_wires)
+        circuit = (
+            circuit.map_to_standard_wires()
+        )  # Map to follow default.qubit wire order for dynamic wires
+        return circuit
+
     def jacobian(
         self,
         circuit: QuantumTape,
@@ -321,14 +339,8 @@ class LightningBase(Device):
         results = []
         for circuit in circuits:
             if self.wires is None:  # Dynamic wires allocation
-                if self._statevector is None:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=circuit.num_wires, dtype=self._c_dtype
-                    )
-                else:
-                    if self._statevector.num_wires != circuit.num_wires:
-                        self._statevector.update_num_qubits(circuit.num_wires)
-                circuit = circuit.map_to_standard_wires()
+                circuit = self.update_dynamic_wires(circuit)
+
             results.append(
                 self.jacobian(
                     circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
@@ -355,14 +367,7 @@ class LightningBase(Device):
         results = []
         for circuit in circuits:
             if self.wires is None:  # Dynamic wires allocation
-                if self._statevector is None:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=circuit.num_wires, dtype=self._c_dtype
-                    )
-                else:
-                    if self._statevector.num_wires != circuit.num_wires:
-                        self._statevector.update_num_qubits(circuit.num_wires)
-                circuit = circuit.map_to_standard_wires()
+                circuit = self.update_dynamic_wires(circuit)
 
             results.append(
                 self.simulate_and_jacobian(
@@ -422,14 +427,7 @@ class LightningBase(Device):
         results = []
         for circuit, cots in zip(circuits, cotangents):
             if self.wires is None:  # Dynamic wires allocation
-                if self._statevector is None:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=circuit.num_wires, dtype=self._c_dtype
-                    )
-                else:
-                    if self._statevector.num_wires != circuit.num_wires:
-                        self._statevector.update_num_qubits(circuit.num_wires)
-                circuit = circuit.map_to_standard_wires()
+                circuit = self.update_dynamic_wires(circuit)
 
             results.append(
                 self.vjp(
@@ -459,14 +457,7 @@ class LightningBase(Device):
         results = []
         for circuit, cots in zip(circuits, cotangents):
             if self.wires is None:  # Dynamic wires allocation
-                if self._statevector is None:
-                    self._statevector = self.LightningStateVector(
-                        num_wires=circuit.num_wires, dtype=self._c_dtype
-                    )
-                else:
-                    if self._statevector.num_wires != circuit.num_wires:
-                        self._statevector.update_num_qubits(circuit.num_wires)
-                circuit = circuit.map_to_standard_wires()
+                circuit = self.update_dynamic_wires(circuit)
 
             result = self.simulate_and_vjp(
                 circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
