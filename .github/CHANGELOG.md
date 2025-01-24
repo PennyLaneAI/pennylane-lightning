@@ -9,6 +9,10 @@
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
   [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
 
+* Update Lightning integration tests following the `gradient_kwargs` deprecation
+  in Pennylane.
+  [(#1045)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1045)
+
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
   [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
@@ -34,7 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Yushao Chen, Amintor Dusko, Joseph Lee, Shuli Shu
+Yushao Chen, Amintor Dusko, Joseph Lee, Andrija Paurevic, Shuli Shu
 
 ---
 
