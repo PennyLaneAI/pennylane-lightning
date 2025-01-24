@@ -85,7 +85,6 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         """
         self._num_wires = num_wires
         self._qubit_state.updateNumQubits(num_wires)
-        self.reset_state()
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
