@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Add Lightning Kokkos tests for Adjoint Jacobian
+  [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
+
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
   [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
