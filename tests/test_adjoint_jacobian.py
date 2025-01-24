@@ -48,6 +48,7 @@ if device_name == "lightning.kokkos":
 fixture_params = itertools.product(
     [np.complex64, np.complex128],
     kokkos_args,
+    [None, 3] # number of wires
 )
 
 
@@ -104,7 +105,7 @@ class TestAdjointJacobian:
         params = request.param
         if device_name == "lightning.kokkos":
             return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
-        return qml.device(device_name, wires=3, c_dtype=params[0])
+        return qml.device(device_name, wires=params[2], c_dtype=params[0])
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
