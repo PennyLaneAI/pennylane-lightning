@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
+  [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
+
 * Update `qml.MultiControlledX` tests following the latest updates in PennyLane.
   [(#1040)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1040)
 
