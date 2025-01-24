@@ -293,6 +293,27 @@ class LightningKokkos(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
+    def update_dynamic_wires(self, circuit):
+        """Update the number of dynamic wires in the statevector for a given circuit. If the statevector does not already exist, it will be created. If it does exist and the number of wires has changed, it will be updated.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+
+        Returns:
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
+        """
+        if self._statevector is None:
+            self._statevector = self.LightningStateVector(
+                num_wires=circuit.num_wires, dtype=self._c_dtype, kokkos_args=self._kokkos_args
+            )
+        else:
+            if self._statevector.num_wires != circuit.num_wires:
+                self._statevector.update_num_qubits(circuit.num_wires)
+        circuit = (
+            circuit.map_to_standard_wires()
+        )  # Map to follow default.qubit wire order for dynamic wires
+        return circuit
+    
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
