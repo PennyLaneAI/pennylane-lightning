@@ -226,8 +226,9 @@ class TestAdjointJacobian:  # pylint: disable=too-many-public-methods
         ],
     )
     @pytest.mark.parametrize("batch_obs", [True, False])
-    # pylint: disable=too-many-arguments
-    def test_r_gradient(self, tol, param, rotation, meas, expected_func, batch_obs, dev):
+    def test_r_gradient(
+        self, tol, param, rotation, meas, expected_func, batch_obs, dev
+    ):  # pylint: disable=too-many-arguments
         """Test for the gradient of the rotation gate matches the known formula."""
 
         qs = QuantumScript(
@@ -555,8 +556,9 @@ class TestAdjointJacobianQNode:
 
     @pytest.mark.parametrize("reused_p", thetas**3 / 19)
     @pytest.mark.parametrize("other_p", thetas**2 / 1)
-    # pylint: disable=too-many-arguments
-    def test_fanout_multiple_params(self, reused_p, other_p, tol, mocker, dev):
+    def test_fanout_multiple_params(
+        self, reused_p, other_p, tol, mocker, dev
+    ):  # pylint: disable=too-many-arguments
         """Tests that the correct gradient is computed for qnodes which
         use the same parameter in multiple gates."""
 
