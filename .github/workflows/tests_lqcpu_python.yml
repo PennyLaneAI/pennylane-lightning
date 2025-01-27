@@ -23,7 +23,7 @@ on:
 env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
-  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-debug=path --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
+  COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
   GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
@@ -218,10 +218,10 @@ jobs:
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
-          PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
+          PL_DEVICE=${DEVICENAME} python -m pytest -n auto tests/ -k "not unitary_correct" \
             $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
             --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
-          PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
         uses: actions/upload-artifact@v4
