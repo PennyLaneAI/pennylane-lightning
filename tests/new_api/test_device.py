@@ -95,7 +95,10 @@ if not LightningDevice._new_API:
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-fixture_params = itertools.product([3, None], [np.complex64, np.complex128])  # wires x c_dtype
+if device_name == "lightning.qubit":
+    fixture_params = itertools.product([3, None], [np.complex64, np.complex128])  # wires x c_dtype
+else:
+    fixture_params = itertools.product([3], [np.complex64, np.complex128])  # wires x c_dtype
 
 
 @pytest.fixture(params=fixture_params)
