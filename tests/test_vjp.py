@@ -14,6 +14,7 @@
 """
 Tests for the ``vjp`` method.
 """
+import itertools
 import math
 
 import pennylane as qml
@@ -50,9 +51,12 @@ def get_jacobian(device, tape):
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    fixture_params = itertools.product([np.complex64, np.complex128], [None, 2])
+
+    @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        params = request.param
+        return qml.device(device_name, wires=params[1], c_dtype=params[0])
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_use_device_state(self, tol, dev):
