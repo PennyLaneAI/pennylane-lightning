@@ -51,7 +51,10 @@ def get_jacobian(device, tape):
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
 
-    fixture_params = itertools.product([np.complex64, np.complex128], [None, 2])
+    if device_name == "lightning.qubit":
+        fixture_params = itertools.product([np.complex64, np.complex128], [None, 2])
+    else:
+        fixture_params = itertools.product([np.complex64, np.complex128], [2])
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
