@@ -86,11 +86,6 @@ class LightningBase(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    @property
-    def num_wires(self):
-        """Number of wires"""
-        return self._num_wires
-
     dtype = c_dtype
 
     @abstractmethod
