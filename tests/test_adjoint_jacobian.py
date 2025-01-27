@@ -45,9 +45,12 @@ if device_name == "lightning.kokkos":
 
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
-fixture_params = itertools.product(
-    [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
-)
+if device_name in ("lightning.qubit", "lightning.kokkos"):
+    fixture_params = itertools.product(
+        [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
+    )
+else:
+    fixture_params = itertools.product([np.complex64, np.complex128], kokkos_args, [3])
 
 
 def Rx(theta):
