@@ -17,6 +17,7 @@ This module contains the :class:`~.LightningBase` class, that serves as a base c
 interfaces with C++ for fast linear algebra calculations.
 """
 from abc import abstractmethod
+from functools import partial
 from numbers import Number
 from typing import Callable, List, Optional, Sequence, Tuple, Union
 
@@ -457,8 +458,33 @@ class LightningBase(Device):
         """
         # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
+        from pennylane.capture.primitives import AbstractMeasurement
+        import jax
+
+        if jax.config.jax_enable_x64:  # pylint: disable=no-member
+            dtype_map = {
+                float: jax.numpy.float64,
+                int: jax.numpy.int64,
+                complex: jax.numpy.complex128,
+            }
+        else:
+            dtype_map = {
+                float: jax.numpy.float32,
+                int: jax.numpy.int32,
+                complex: jax.numpy.complex64,
+            }
 
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots
         )
-        return interpreter.eval(jaxpr, consts, *args)
+        evaluator = partial(interpreter.eval, jaxpr)
+
+        def shape(var):
+            if isinstance(var.aval, AbstractMeasurement):
+                shots = self.shots.total_shots
+                s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
+                return jax.core.ShapedArray(s, dtype_map[dtype])
+            return var.aval
+
+        shapes = [shape(var) for var in jaxpr.outvars]
+        return jax.pure_callback(evaluator, shapes, consts, *args, vectorized=False)
