@@ -26,17 +26,16 @@ repos:
       args:
         [
           "--py",
-          "311",
+          "312",
           "--profile",
           "black",
           "-l",
           "100",
-          "-o",
-          "autoray",
           "-p",
-          "./pennylane",
-          "--skip",
-          "__init__.py",
-          "--filter-files",
+          "pennylane_lightning",
+          "./pennylane_lightning",
+          "./mpitests",
+          "./tests",
+          "./scripts",
         ]
       exclude: ^(bin/|doc/|scripts/|setup.py|tests/|mpitests/)
