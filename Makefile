@@ -84,7 +84,7 @@ wheel:
 coverage:
 	@echo "Generating coverage report for $(if $(device:-=),$(device),lightning.qubit) device:"
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000 $(COVERAGE) --cov-append
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000 $(COVERAGE) --cov-append
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops $(COVERAGE) --cov-append
 
 coverage-cpp:
@@ -108,7 +108,7 @@ test-builtin:
 	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
 
 test-cpp:
