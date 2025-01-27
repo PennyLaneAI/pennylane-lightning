@@ -125,7 +125,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
     def update_num_qubits(self, num_wires: int):
         """Update number of qubits in the state vector.
         Args:
-            num_wires (int): _description_
+            num_wires (int): New number of qubits in the state vector.
         """
         self._num_wires = num_wires
         self._num_local_wires = num_wires
