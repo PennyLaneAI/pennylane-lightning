@@ -125,8 +125,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
         .def(
             "getState",
-            [](TensorNet &tensor_network, np_arr_c &state)
-            {
+            [](TensorNet &tensor_network, np_arr_c &state) {
                 py::buffer_info numpyArrayInfo = state.request();
                 auto *data_ptr =
                     static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
@@ -138,12 +137,10 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
              "Apply controlled operation")
         .def(
             "updateMPSSitesData",
-            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors)
-            {
+            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
                 // Extract the incoming MPS shape
                 std::vector<std::vector<std::size_t>> MPS_shape_source;
-                for (std::size_t idx = 0; idx < tensors.size(); idx++)
-                {
+                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
                     py::buffer_info numpyArrayInfo = tensors[idx].request();
                     auto MPS_site_source_shape = numpyArrayInfo.shape;
                     std::vector<std::size_t> MPS_site_source(
@@ -155,8 +152,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                 const auto &MPS_shape_dest = tensor_network.getSitesExtents();
                 MPSShapeCheck(MPS_shape_dest, MPS_shape_source);
 
-                for (std::size_t idx = 0; idx < tensors.size(); idx++)
-                {
+                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
                     py::buffer_info numpyArrayInfo = tensors[idx].request();
                     auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
                         numpyArrayInfo.ptr);
@@ -168,20 +164,17 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         .def(
             "setBasisState",
             [](TensorNet &tensor_network,
-               std::vector<std::size_t> &basisState)
-            {
+               std::vector<std::size_t> &basisState) {
                 tensor_network.setBasisState(basisState);
             },
             "Create Basis State on GPU.")
         .def(
             "applyMPOOperation",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
-               const std::vector<std::size_t> &wires, std::size_t MPOBondDims)
-            {
+               const std::vector<std::size_t> &wires, std::size_t MPOBondDims) {
                 using ComplexT = typename TensorNet::ComplexT;
                 std::vector<std::vector<ComplexT>> conv_tensors;
-                for (const auto &tensor : tensors)
-                {
+                for (const auto &tensor : tensors) {
                     py::buffer_info numpyArrayInfo = tensor.request();
                     auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
                     conv_tensors.push_back(
@@ -189,26 +182,6 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                 }
                 tensor_network.applyMPOOperation(conv_tensors, wires,
                                                  MPOBondDims);
-            },
-            "Apply MPO to the tensor network graph.")
-        .def(
-            "applyMPOOperation_noswap",
-            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
-               std::vector<std::size_t> &wires, const std::size_t MPOBondDims)
-            {
-                using ComplexT = typename TensorNet::ComplexT;
-                std::vector<std::vector<ComplexT>> conv_tensors;
-                for (const auto &tensor : tensors)
-                {
-                    py::buffer_info numpyArrayInfo = tensor.request();
-                    auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
-                    conv_tensors.push_back(
-                        std::vector<ComplexT>{m_ptr, m_ptr + tensor.size()});
-                }
-                // tensor_network.applyMPOOperation(conv_tensors, wires,
-                //                                  MPOBondDims);
-                tensor_network.applyMPOOperation_noswap(conv_tensors, wires,
-                                                        MPOBondDims);
             },
             "Apply MPO to the tensor network graph.")
         .def(

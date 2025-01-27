@@ -124,12 +124,6 @@ template <class PrecisionT> class MPOTNCuda {
         PL_ABORT_IF(maxMPOBondDim < 2,
                     "Max MPO bond dimension must be at least 2.");
 
-        PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
-                        "Only sorted target wires is accepeted.");
-
-        PL_ABORT_IF_NOT(wires.size() == wires.back() - wires.front() + 1,
-                        "Only support local target wires.");
-
         // Create an empty MPO tensor network operator. Note that the state
         // extents are aligned with the quantum state.
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
@@ -144,11 +138,7 @@ template <class PrecisionT> class MPOTNCuda {
 
         MPO_modes_int32_.resize(numMPOSites_);
 
-        std::iota(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
-                  wires.front());
-
-        std::transform(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
-                       MPO_modes_int32_.begin(),
+        std::transform(wires.begin(), wires.end(), MPO_modes_int32_.begin(),
                        [&numQubits](const std::size_t mode) {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
