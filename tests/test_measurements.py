@@ -23,7 +23,7 @@ import pytest
 from conftest import LightningDevice as ld
 from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
-from pennylane.measurements import Expectation, Shots, Variance
+from pennylane.measurements import ExpectationMP, Shots, VarianceMP
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -387,12 +387,12 @@ class TestExpval:
             circuit()
 
     def test_observable_return_type_is_expectation(self, dev):
-        """Test that the return type of the observable is :attr:`ObservableReturnTypes.Expectation`"""
+        """Test that the return type of the observable is :class:`ExpectationMP`"""
 
         @qml.qnode(dev)
         def circuit():
             res = qml.expval(qml.PauliZ(0))
-            assert res.return_type is Expectation
+            assert isinstance(res, ExpectationMP)
             return res
 
         circuit()
@@ -488,12 +488,12 @@ class TestVar:
             circuit()
 
     def test_observable_return_type_is_variance(self, dev):
-        """Test that the return type of the observable is :attr:`ObservableReturnTypes.Variance`"""
+        """Test that the return type is :class:`VarianceMP`"""
 
         @qml.qnode(dev)
         def circuit():
             res = qml.var(qml.PauliZ(0))
-            assert res.return_type is Variance
+            assert isinstance(res, VarianceMP)
             return res
 
         circuit()
