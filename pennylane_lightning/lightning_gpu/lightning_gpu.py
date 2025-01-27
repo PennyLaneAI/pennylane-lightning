@@ -281,6 +281,8 @@ class LightningGPU(LightningBase):
                 use_async=self._use_async,
             )
         else:
+            if self._mpi:
+                raise qml.DeviceError("Dynamic wires allocation is not supported with MPI enabled for Lightning GPU.")
             self._statevector = None
             self._mpi_handler = None
 

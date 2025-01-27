@@ -108,16 +108,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         else:  # without MPI
             self._qubit_state = self._state_dtype()(self.num_wires)
 
-    def update_num_qubits(self, num_wires: int):
-        """Update number of qubits in the state vector.
-        Args:
-            num_wires (int): _description_
-        """
-        self._num_wires = num_wires
-        self._num_local_wires = num_wires
-        self._qubit_state.updateNumQubits(num_wires)
-        # TODO: UPDATE MPI HANDLER
-
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
 
@@ -131,6 +121,15 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         # without MPI
         return StateVectorC128 if self.dtype == np.complex128 else StateVectorC64
+
+    def update_num_qubits(self, num_wires: int):
+        """Update number of qubits in the state vector.
+        Args:
+            num_wires (int): _description_
+        """
+        self._num_wires = num_wires
+        self._num_local_wires = num_wires
+        self._qubit_state.updateNumQubits(num_wires)
 
     def syncD2H(self, state_vector, use_async: bool = False):
         """Copy the state vector data on device to a state vector on the host provided by the user.
