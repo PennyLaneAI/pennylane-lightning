@@ -787,7 +787,6 @@ class TestApplyLightningMethod:
         device_name == "lightning.tensor",
         reason="lightning.tensor does not support direct access to the state",
     )
-
     @pytest.mark.parametrize(
         "ops0",
         [

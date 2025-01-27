@@ -398,6 +398,7 @@ class TestBetaStatisticsError:
         with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
             circuit()
 
+
 class TestSample:
     """Tests that samples are properly calculated."""
 

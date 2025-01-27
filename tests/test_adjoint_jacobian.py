@@ -97,7 +97,7 @@ class TestAdjointJacobian:
 
     @staticmethod
     def get_derivatives_method(device):
-        return device.compute_derivatives 
+        return device.compute_derivatives
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
@@ -883,7 +883,7 @@ class TestAdjointJacobianQNode:
             return qml.expval(qml.PauliX(0))
 
         spy_analytic = mocker.spy(dev, "execute_and_compute_derivatives")
-           
+
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         cost = QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})

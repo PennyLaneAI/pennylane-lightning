@@ -33,6 +33,7 @@ def get_vjp(device, tapes, dy):
     """Helper to get VJP for a tape or batch of tapes"""
     return device.compute_vjp(tapes, dy)
 
+
 def get_jacobian(device, tape):
     """Helper to get Jacobian of a tape"""
     return device.compute_derivatives(tape)
@@ -113,7 +114,6 @@ class TestVectorJacobianProduct:
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
             get_vjp(dev, tape, dy)
-
 
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
