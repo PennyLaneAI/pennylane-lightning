@@ -282,7 +282,9 @@ class LightningGPU(LightningBase):
             )
         else:
             if self._mpi:
-                raise qml.DeviceError("Lightning-GPU-MPI does not support dynamic wires allocation.")
+                raise qml.DeviceError(
+                    "Lightning-GPU-MPI does not support dynamic wires allocation."
+                )
             self._statevector = None
             self._mpi_handler = None
 
