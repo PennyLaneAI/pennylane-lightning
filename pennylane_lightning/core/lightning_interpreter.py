@@ -17,12 +17,8 @@ This module contains a class for executing plxpr using default qubit tools.
 
 import jax
 from pennylane.capture import disable, enable
-from pennylane.capture.base_interpreter import PlxprInterpreter, FlattenedHigherOrderPrimitives
-from pennylane.capture.primitives import (
-    adjoint_transform_prim,
-    ctrl_transform_prim,
-    measure_prim,
-)
+from pennylane.capture.base_interpreter import FlattenedHigherOrderPrimitives, PlxprInterpreter
+from pennylane.capture.primitives import adjoint_transform_prim, ctrl_transform_prim, measure_prim
 from pennylane.measurements import MidMeasureMP, Shots
 
 from ._measurements_base import LightningBaseMeasurements
