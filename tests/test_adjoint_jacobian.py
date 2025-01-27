@@ -97,7 +97,7 @@ class TestAdjointJacobian:
 
     @staticmethod
     def get_derivatives_method(device):
-        return device.compute_derivatives if device._new_API else device.adjoint_jacobian
+        return device.compute_derivatives 
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
@@ -125,10 +125,7 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        if dev._new_API:
-            message = "Adjoint differentiation method does not support measurement StateMP."
-        elif device_name == "lightning.gpu":
-            message = "Adjoint differentiation does not support State measurements."
+        message = "Adjoint differentiation method does not support measurement StateMP."
 
         with pytest.raises(
             qml.QuantumFunctionError,
@@ -136,21 +133,6 @@ class TestAdjointJacobian:
         ):
             method(tape)
 
-    @pytest.mark.skipif(ld._new_API, reason="Requires old API")
-    def test_finite_shots_warns(self):
-        """Tests warning raised when finite shots specified"""
-
-        dev = qml.device(device_name, wires=1, shots=1)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ(0))
-
-        with pytest.warns(
-            UserWarning, match="Requested adjoint differentiation to be computed with finite shots."
-        ):
-            dev.adjoint_jacobian(tape)
-
-    @pytest.mark.skipif(not ld._new_API, reason="Requires new API")
     def test_finite_shots_error(self):
         """Tests warning raised when finite shots specified"""
 
@@ -182,40 +164,11 @@ class TestAdjointJacobian:
             qml.CRot(0.1, 0.2, 0.3, wires=[0, 1])
             qml.expval(qml.PauliZ(0))
 
-        if dev._new_API:
-            with pytest.raises(
-                LightningException,
-                match="The operation is not supported using the adjoint differentiation method",
-            ):
-                dev.compute_derivatives(tape)
-        else:
-            with pytest.raises(
-                qml.QuantumFunctionError, match="The CRot operation is not supported using the"
-            ):
-                dev.adjoint_jacobian(tape)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_proj_unsupported(self, dev):
-        """Test if a QuantumFunctionError is raised for a Projector observable"""
-        with qml.tape.QuantumTape() as tape:
-            qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0, 1], wires=[0, 1]))
-
-        method = self.get_derivatives_method(dev)
-
         with pytest.raises(
-            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
+            LightningException,
+            match="The operation is not supported using the adjoint differentiation method",
         ):
-            method(tape)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(1))
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="differentiation method does not support the Projector"
-        ):
-            method(tape)
+            dev.compute_derivatives(tape)
 
     @pytest.mark.parametrize("theta", np.linspace(-2 * np.pi, 2 * np.pi, 7))
     @pytest.mark.parametrize("G", [qml.RX, qml.RY, qml.RZ])
@@ -600,72 +553,6 @@ class TestAdjointJacobian:
         # the different methods agree
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_use_device_state(self, tol, dev):
-        """Tests that when using the device state, the correct answer is still returned."""
-
-        x, y, z = [0.5, 0.3, -0.7]
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1, 2, 3}
-
-        dM1 = dev.adjoint_jacobian(tape)
-
-        qml.execute([tape], dev, None)
-        dM2 = dev.adjoint_jacobian(tape, use_device_state=True)
-
-        assert np.allclose(dM1, dM2, atol=tol, rtol=0)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_provide_starting_state(self, tol, dev):
-        """Tests provides correct answer when provided starting state."""
-        x, y, z = [0.5, 0.3, -0.7]
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1, 2, 3}
-
-        dM1 = dev.adjoint_jacobian(tape)
-
-        if device_name in ["lightning.kokkos", "lightning.qubit"]:
-            qml.execute([tape], dev, None)
-            dM2 = dev.adjoint_jacobian(tape, starting_state=dev.state_vector)
-
-            assert np.allclose(dM1, dM2, atol=tol, rtol=0)
-        else:
-            state_vector = dev.state
-            qml.execute([tape], dev, None)
-            dM2 = dev.adjoint_jacobian(tape, starting_state=state_vector)
-            assert np.allclose(dM1, dM2, atol=tol, rtol=0)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_provide_wrong_starting_state(self, dev):
-        """Tests raise an exception when provided starting state mismatches."""
-        x, y, z = [0.5, 0.3, -0.7]
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1, 2, 3}
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="The number of qubits of starting_state must be the same as",
-        ):
-            dev.adjoint_jacobian(tape, starting_state=np.ones(7))
-
     @pytest.mark.skipif(
         device_name == "lightning.kokkos" or device_name == "lightning.gpu",
         reason="Adjoint differentiation does not support State measurements.",
@@ -693,23 +580,6 @@ class TestAdjointJacobianQNode:
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_finite_shots_error(self):
-        """Tests that an error is raised when computing the adjoint diff on a device with finite shots"""
-
-        dev = qml.device(device_name, wires=1, shots=1)
-
-        with pytest.raises(
-            qml.QuantumFunctionError, match="does not support adjoint with requested circuit."
-        ):
-
-            @qml.qnode(dev, diff_method="adjoint")
-            def circ(x):
-                qml.RX(x, wires=0)
-                return qml.expval(qml.PauliZ(0))
-
-            qml.grad(circ)(0.1)
-
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""
         args = np.array([0.54, 0.1, 0.5], requires_grad=True)
@@ -729,11 +599,7 @@ class TestAdjointJacobianQNode:
             return qml.expval(qml.PauliX(0) @ qml.PauliZ(1))
 
         qnode1 = QNode(circuit, dev, diff_method="adjoint")
-        spy = (
-            mocker.spy(dev, "execute_and_compute_derivatives")
-            if ld._new_API
-            else mocker.spy(dev.target_device, "adjoint_jacobian")
-        )
+        spy = mocker.spy(dev, "execute_and_compute_derivatives")
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         grad_fn = qml.grad(qnode1)
@@ -977,10 +843,7 @@ class TestAdjointJacobianQNode:
         zero_state = np.array([1.0, 0.0])
         cost(reused_p, other_p)
 
-        if ld._new_API:
-            spy = mocker.spy(dev, "execute_and_compute_derivatives")
-        else:
-            spy = mocker.spy(dev.target_device, "adjoint_jacobian")
+        spy = mocker.spy(dev, "execute_and_compute_derivatives")
 
         # analytic gradient
         grad_fn = qml.grad(cost)
@@ -1019,11 +882,8 @@ class TestAdjointJacobianQNode:
             qml.Rot(params[1], params[0], 2 * params[0], wires=[0])
             return qml.expval(qml.PauliX(0))
 
-        spy_analytic = (
-            mocker.spy(dev, "execute_and_compute_derivatives")
-            if ld._new_API
-            else mocker.spy(dev.target_device, "adjoint_jacobian")
-        )
+        spy_analytic = mocker.spy(dev, "execute_and_compute_derivatives")
+           
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         cost = QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})

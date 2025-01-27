@@ -31,20 +31,11 @@ if device_name == "lightning.tensor":
 
 def get_vjp(device, tapes, dy):
     """Helper to get VJP for a tape or batch of tapes"""
-    if device._new_API:
-        return device.compute_vjp(tapes, dy)
-
-    if isinstance(tapes, qml.tape.QuantumScript):
-        return device.vjp(tapes.measurements, dy)(tapes)
-
-    return device.batch_vjp(tapes, dy)(tapes)
-
+    return device.compute_vjp(tapes, dy)
 
 def get_jacobian(device, tape):
     """Helper to get Jacobian of a tape"""
-    if device._new_API:
-        return device.compute_derivatives(tape)
-    return device.adjoint_jacobian(tape)
+    return device.compute_derivatives(tape)
 
 
 class TestVectorJacobianProduct:
@@ -53,55 +44,6 @@ class TestVectorJacobianProduct:
     @pytest.fixture(params=[np.complex64, np.complex128])
     def dev(self, request):
         return qml.device(device_name, wires=2, c_dtype=request.param)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_use_device_state(self, tol, dev):
-        """Tests that when using the device state, the correct answer is still returned."""
-        x, y, z = [0.5, 0.3, -0.7]
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1, 2, 3}
-
-        dy = np.array([1.0])
-
-        fn1 = dev.vjp(tape.measurements, dy)
-        vjp1 = fn1(tape)
-
-        qml.execute([tape], dev, None)
-        fn2 = dev.vjp(tape.measurements, dy, use_device_state=True)
-        vjp2 = fn2(tape)
-
-        assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_provide_starting_state(self, tol, dev):
-        """Tests provides correct answer when provided starting state."""
-        x, y, z = [0.5, 0.3, -0.7]
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {1, 2, 3}
-
-        dy = np.array([1.0])
-
-        fn1 = dev.vjp(tape.measurements, dy)
-        vjp1 = fn1(tape)
-
-        qml.execute([tape], dev, None)
-
-        fn2 = dev.vjp(tape.measurements, dy, starting_state=dev.state)
-        vjp2 = fn2(tape)
-
-        assert np.allclose(vjp1, vjp2, atol=tol, rtol=0)
 
     def test_multiple_measurements(self, tol, dev):
         """Tests provides correct answer when provided multiple measurements."""
@@ -172,36 +114,6 @@ class TestVectorJacobianProduct:
         ):
             get_vjp(dev, tape, dy)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_finite_shots_warns(self):
-        """Tests warning raised when finite shots specified"""
-
-        dev = qml.device(device_name, wires=1, shots=1)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.expval(qml.PauliZ(0))
-
-        dy = np.array([1.0])
-
-        with pytest.warns(
-            UserWarning,
-            match="Requested adjoint differentiation to be computed with finite shots.",
-        ):
-            dev.vjp(tape.measurements, dy)(tape)
-
-    @pytest.mark.skipif(not ld._new_API, reason="New API required")
-    def test_finite_shots_error(self):
-        """Test that an error is raised when finite shots specified"""
-        dev = qml.device(device_name, wires=1)
-
-        tape = qml.tape.QuantumScript([], [qml.expval(qml.Z(0))], shots=1)
-        dy = np.array([1.0])
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="Requested adjoint differentiation to be computed with finite shots.",
-        ):
-            dev.compute_vjp(tape, dy)
 
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
@@ -213,45 +125,11 @@ class TestVectorJacobianProduct:
 
         dy = np.array([1.0])
 
-        if dev._new_API:
-            with pytest.raises(
-                LightningException,
-                match="The operation is not supported using the",
-            ):
-                dev.compute_vjp(tape, dy)
-
-        else:
-            with pytest.raises(
-                qml.QuantumFunctionError,
-                match="The CRot operation is not supported using the",
-            ):
-                dev.vjp(tape.measurements, dy)(tape)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_proj_unsupported(self, dev):
-        """Test if a QuantumFunctionError is raised for a Projector observable"""
-
-        with qml.tape.QuantumTape() as tape:
-            qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0, 1], wires=[0, 1]))
-
-        dy = np.array([1.0])
-
         with pytest.raises(
-            qml.QuantumFunctionError,
-            match="differentiation method does not support the Projector",
+            LightningException,
+            match="The operation is not supported using the",
         ):
-            dev.vjp(tape.measurements, dy)(tape)
-
-        with qml.tape.QuantumTape() as tape:
-            qml.CRX(0.1, wires=[0, 1])
-            qml.expval(qml.Projector([0], wires=[0]) @ qml.PauliZ(1))
-
-        with pytest.raises(
-            qml.QuantumFunctionError,
-            match="differentiation method does not support the Projector",
-        ):
-            dev.vjp(tape.measurements, dy)(tape)
+            dev.compute_vjp(tape, dy)
 
     def test_hermitian_expectation(self, dev, tol):
         obs = np.array([[1, 0], [0, -1]], dtype=dev.dtype, requires_grad=False)
@@ -291,25 +169,6 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {}
         dy = np.array([1.0])
 
-        vjp = get_vjp(dev, tape, dy)
-
-        assert len(vjp) == 0
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_no_trainable_parameters_NEW(self, dev):
-        """A tape with no trainable parameters will simply return None"""
-        _state = dev._asarray(dev.state)
-        dev._apply_state_vector(_state, dev.wires)
-
-        x = 0.4
-
-        with qml.tape.QuantumTape() as tape:
-            qml.RX(x, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        tape.trainable_params = {}
-        dy = np.array([1.0])
         vjp = get_vjp(dev, tape, dy)
 
         assert len(vjp) == 0
@@ -473,61 +332,3 @@ class TestBatchVectorJacobianProduct:
         vjps = get_vjp(dev, tapes, dys)
 
         assert np.allclose(vjps[0], 0)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_reduction_append(self, dev):
-        """Test the 'append' reduction strategy"""
-        _state = dev._asarray(dev.state)
-        dev._apply_state_vector(_state, dev.wires)
-
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with qml.tape.QuantumTape() as tape2:
-            qml.RX(0.4, wires=0)
-            qml.RX(0.6, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        tape1.trainable_params = {0}
-        tape2.trainable_params = {0, 1}
-
-        tapes = [tape1, tape2]
-        dys = [np.array([1.0]), np.array([1.0])]
-
-        fn = dev.batch_vjp(tapes, dys, reduction="append")
-        vjps = fn(tapes)
-
-        assert len(vjps) == 2
-        assert len(vjps[1]) == 2
-        assert isinstance(vjps[0], np.ndarray)
-        assert isinstance(vjps[1][0], np.ndarray)
-        assert isinstance(vjps[1][1], np.ndarray)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.parametrize("reduction_keyword", ("extend", list.extend))
-    def test_reduction_extend(self, dev, reduction_keyword):
-        """Test the 'extend' reduction strategy"""
-        with qml.tape.QuantumTape() as tape1:
-            qml.RX(0.4, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        with qml.tape.QuantumTape() as tape2:
-            qml.RX(0.4, wires=0)
-            qml.RX(0.6, wires=0)
-            qml.CNOT(wires=[0, 1])
-            qml.expval(qml.PauliZ(0))
-
-        tape1.trainable_params = {0}
-        tape2.trainable_params = {0, 1}
-
-        tapes = [tape1, tape2]
-        dys = [np.array([1.0]), np.array([1.0])]
-
-        fn = dev.batch_vjp(tapes, dys, reduction=reduction_keyword)
-        vjps = fn(tapes)
-
-        assert len(vjps) == sum(len(t.trainable_params) for t in tapes)
