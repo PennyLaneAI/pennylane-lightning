@@ -343,7 +343,8 @@ class LightningTensorNet:
             gate_matrix, wires, max_mpo_bond_dim, self._c_dtype
         )
 
-        self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
+        # self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
+        self._tensornet.applyMPOOperation_noswap(mpos, sorted_wires, max_mpo_bond_dim)
 
     # pylint: disable=too-many-branches
     def _apply_lightning_controlled(self, operation):

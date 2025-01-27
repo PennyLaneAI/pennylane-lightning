@@ -30,6 +30,7 @@
 #include "DataBuffer.hpp"
 #include "DevTag.hpp"
 #include "MPOTNCuda.hpp"
+#include "MPOTNCudaNOSWAP.hpp"
 #include "TNCuda.hpp"
 #include "TNCudaBase.hpp"
 #include "TensorCuda.hpp"
@@ -64,7 +65,9 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
     MPSStatus MPSInitialized_ = MPSStatus::MPSInitNotSet;
 
     std::vector<std::shared_ptr<MPOTNCuda<Precision>>> mpos_;
+    std::vector<std::shared_ptr<MPOTNCudaNOSWAP<Precision>>> mpos_noswap_;
     std::vector<std::size_t> mpo_ids_;
+    std::vector<std::size_t> mpo_noswap_ids_;
 
   public:
     constexpr static auto method = "mps";
@@ -173,6 +176,49 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
                                   });
                      });
         }
+    }
+
+    /**
+     * @brief Apply an MPO operator with the gate's MPO decomposition data
+     * provided by the user to the compute graph.
+     *
+     * This API only works for the MPS backend.
+     *
+     * @param tensors The MPO representation of a gate. Each element in the
+     * outer vector represents a MPO tensor site.
+     * @param wires The wire indices of the gate acts on. The size of this
+     * vector should match the size of the `tensors` vector.
+     * @param max_mpo_bond_dim The maximum bond dimension of the MPO operator.
+     */
+    void
+    applyMPOOperation_noswap(const std::vector<std::vector<ComplexT>> &tensors,
+                             const std::vector<std::size_t> &wires,
+                             const std::size_t max_mpo_bond_dim) {
+        PL_ABORT_IF_NOT(
+            tensors.size() == wires.size(),
+            "The number of tensors should be equal to the number of "
+            "wires.");
+
+        // Create a MPO object based on the host data from the user
+        mpos_noswap_.emplace_back(std::make_shared<MPOTNCudaNOSWAP<Precision>>(
+            tensors, wires, max_mpo_bond_dim, BaseType::getNumQubits(),
+            BaseType::getTNCudaHandle(), BaseType::getCudaDataType(),
+            BaseType::getDevTag()));
+
+        // Append the MPO operator to the compute graph
+        // Note MPO operator only works for local target wires as of v24.08
+        int64_t operatorId;
+        PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
+            /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
+            /* cutensornetState_t */ BaseType::getQuantumState(),
+            /* cutensornetNetworkOperator_t */
+            mpos_noswap_.back()->getMPOOperator(),
+            /* const int32_t immutable */ 1,
+            /* const int32_t adjoint */ 0,
+            /* const int32_t unitary */ 1,
+            /* int64_t * operatorId*/ &operatorId));
+
+        mpo_noswap_ids_.push_back(static_cast<std::size_t>(operatorId));
     }
 
     /**

@@ -17,7 +17,7 @@ include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pltensortncuda.cmake")
 findCUDATK(lightning_external_libs)
 findCutensornet(lightning_external_libs)
 
-set(LTENSOR_MPS_FILES  MPSTNCuda.cpp ExactTNCuda.cpp MPOTNCuda.cpp CACHE INTERNAL "" FORCE)
+set(LTENSOR_MPS_FILES  MPSTNCuda.cpp ExactTNCuda.cpp MPOTNCuda.cpp MPOTNCudaNOSWAP.cpp CACHE INTERNAL "" FORCE)
 
 add_library(${PL_BACKEND} STATIC ${LTENSOR_MPS_FILES})
 
