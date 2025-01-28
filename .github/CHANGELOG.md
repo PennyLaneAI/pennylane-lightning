@@ -22,6 +22,9 @@
 * Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
+  * Update Lightning-Tensor installation docs and usage suggestions.
+  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
+
 ### Documentation
 
 ### Bug fixes
@@ -35,7 +38,7 @@
 
 This release contains contributions from (in alphabetical order):
 
-Yushao Chen, Amintor Dusko, Joseph Lee, Andrija Paurevic, Shuli Shu
+Yushao Chen, Amintor Dusko, Joseph Lee, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu
 
 ---
 
@@ -151,9 +154,6 @@ Yushao Chen, Amintor Dusko, Joseph Lee, Andrija Paurevic, Shuli Shu
 
 * Add the exact tensor network to the Lightning-Tensor docs.
   [(#1021)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1021)
-
-* Update Lightning-Tensor installation docs and usage suggestions.
-  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 ### Bug fixes
 
