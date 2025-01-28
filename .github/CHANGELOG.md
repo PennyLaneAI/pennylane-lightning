@@ -25,6 +25,9 @@
 * Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
+* `SX` and `C(SX)` gates are natively supported for all lightning devices.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+
 ### Documentation
 
 ### Bug fixes
@@ -34,11 +37,21 @@
 * Update Github CI to use Ubuntu 24 and remove `libopenblas-base` package.
   [(#1041)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1041)
 
+* Updates the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and
+  `for` primitives.
+  [(#1051)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1051)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Yushao Chen, Amintor Dusko, Joseph Lee, Andrija Paurevic, Shuli Shu
+Yushao Chen,
+Amintor Dusko,
+Christina Lee,
+Joseph Lee,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+Shuli Shu
 
 ---
 
