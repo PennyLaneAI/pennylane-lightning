@@ -260,7 +260,7 @@ jobs:
         name: Install Python
         with:
           python-version: '3.10'
-          
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -285,8 +285,6 @@ jobs:
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-dev.txt
-          python -m pip install openfermionpyscf
-          python -m pip install semantic-version
           python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
 
       - name: Download coverage reports
