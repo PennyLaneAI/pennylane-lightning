@@ -14,12 +14,14 @@
 """
 This module tests the eval_jaxpr method.
 """
+from functools import partial
+
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
 
 jax = pytest.importorskip("jax")
-
+jaxlib = pytest.importorskip("jaxlib")
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
@@ -45,7 +47,8 @@ def test_no_partitioned_shots():
         dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.0)
 
 
-def test_simple_execution():
+@pytest.mark.parametrize("use_jit", (True, False))
+def test_simple_execution(use_jit):
     """Test the execution, jitting, and gradient of a simple quantum circuit."""
 
     def f(x):
@@ -55,21 +58,24 @@ def test_simple_execution():
     dev = qml.device(device_name, wires=1)
     jaxpr = jax.make_jaxpr(f)(0.5)
 
-    res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
+    if use_jit:
+        res = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts, 0.5)
+    else:
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
     assert qml.math.allclose(res, jax.numpy.cos(0.5))
 
 
 def test_capture_remains_enabled_if_measurement_error():
     """Test that capture remains enabled if there is a measurement error."""
 
-    dev = qml.device(device_name, wires=1)
+    dev = qml.device(device_name, wires=1, shots=1)
 
     def g():
-        return qml.sample(wires=0)  # sampling with analytic execution.
+        return qml.state()
 
     jaxpr = jax.make_jaxpr(g)()
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
         dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
     assert qml.capture.enabled()
@@ -109,7 +115,8 @@ def test_operator_arithmetic():
 class TestSampling:
     """Test cases for generating samples."""
 
-    def test_known_sampling(self):
+    @pytest.mark.parametrize("use_jit", (True, False))
+    def test_known_sampling(self, use_jit):
         """Test sampling output with deterministic sampling output"""
 
         def sampler():
@@ -118,7 +125,11 @@ class TestSampling:
 
         dev = qml.device(device_name, wires=2, shots=10)
         jaxpr = jax.make_jaxpr(sampler)()
-        results = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+
+        if use_jit:
+            results = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+        else:
+            results = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
         expected0 = jax.numpy.ones((10,))  # zero wire
         expected1 = jax.numpy.zeros((10,))  # one wire
@@ -167,10 +178,10 @@ class TestSampling:
                 return mp_type(op=m0)
             return mp_type(m0)
 
-        dev = qml.device(device_name, wires=1)
+        dev = qml.device(device_name, wires=1, shots=2)
         jaxpr = jax.make_jaxpr(f)()
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
 
@@ -187,7 +198,7 @@ class TestQuantumHOP:
         dev = qml.device(device_name, wires=1)
         jaxpr = jax.make_jaxpr(circuit)(0.5)
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
 
     def test_ctrl_transform(self):
@@ -195,11 +206,12 @@ class TestQuantumHOP:
 
         def circuit():
             qml.ctrl(qml.X, control=1)(0)
+            return 2
 
         dev = qml.device(device_name, wires=2)
         jaxpr = jax.make_jaxpr(circuit)()
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
 
@@ -436,3 +448,16 @@ class TestClassicalComponents:
         res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, n)
         expected = jax.numpy.cos(0 + 0.1 + 2 * x)
         assert qml.math.allclose(res, expected)
+
+
+def test_vmap_integration():
+    """Test that the lightning devices can execute circuits with vmap applied."""
+
+    @qml.qnode(qml.device("lightning.qubit", wires=1))
+    def circuit(x):
+        qml.RX(x, 0)
+        return qml.expval(qml.Z(0))
+
+    x = jax.numpy.array([1.0, 2.0, 3.0])
+    results = jax.vmap(circuit)(x)
+    assert qml.math.allclose(results, jax.numpy.cos(x))
