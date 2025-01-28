@@ -325,6 +325,121 @@ TEMPLATE_TEST_CASE("MPOTNCuda::getBondDims()", "[MPOTNCuda]", float, double) {
     }
 }
 
+TEMPLATE_TEST_CASE("MPOTNCuda::execution", "[MPOTNCuda]", float, double)
+{
+    using cp_t = std::complex<TestType>;
+    SECTION("Check initialization for wires out of order")
+    {
+        const std::size_t num_qubits = 4;
+        const std::size_t maxBondDim = 128;
+        const DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
+        const std::vector<std::size_t> wires = {2, 0, 1};
+        const std::size_t maxMPOBondDim = 3;
+
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+
+        const auto tensors_const = tensors;
+
+        REQUIRE_NOTHROW(
+            MPOTNCuda<TestType> {tensors_const,
+                                 wires,
+                                 maxMPOBondDim,
+                                 num_qubits,
+                                 mps.getTNCudaHandle(),
+                                 mps.getCudaDataType(),
+                                 dev_tag});
+    }
+    SECTION("Check initialization for non-contiguous wires")
+    {
+        const std::size_t num_qubits = 4;
+        const std::size_t maxBondDim = 128;
+        const DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
+        const std::vector<std::size_t> wires = {0, 1, 3};
+        const std::size_t maxMPOBondDim = 3;
+
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+
+        const auto tensors_const = tensors;
+
+        REQUIRE_NOTHROW(
+            MPOTNCuda<TestType>{tensors_const,
+                                wires,
+                                maxMPOBondDim,
+                                num_qubits,
+                                mps.getTNCudaHandle(),
+                                mps.getCudaDataType(),
+                                dev_tag});
+    }
+    SECTION("Check wrong initialization for wires great than MPO sites")
+    {
+        const std::size_t num_qubits = 4;
+        const std::size_t maxBondDim = 128;
+        const DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        const std::vector<std::size_t> wires = {0, 1}; // Should be {0, 1, 2}
+        std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
+        const std::size_t maxMPOBondDim = 3;
+
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
+        tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
+
+        const auto tensors_const = tensors;
+
+        PL_CHECK_THROWS_MATCHES(
+            (MPOTNCuda<TestType>{tensors_const,
+                                 wires,
+                                 maxMPOBondDim,
+                                 num_qubits,
+                                 mps.getTNCudaHandle(),
+                                 mps.getCudaDataType(),
+                                 dev_tag}),
+            LightningException,
+            "Number of tensors and wires must match.");
+    }
+    SECTION("Check wrong initialization for maxBondDim less than 2")
+    {
+        const std::size_t num_qubits = 4;
+        const std::size_t maxBondDim = 128;
+        const DevTag<int> dev_tag{0, 0};
+
+        MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
+
+        const std::vector<std::size_t> wires = {0}; 
+        std::vector<std::vector<cp_t>> tensors; //([2,2,2]])
+        const std::size_t maxMPOBondDim = 1; // Should be greater than 1
+
+        tensors.emplace_back(std::vector<cp_t>(8, {0.0, 0.0}));
+
+        const auto tensors_const = tensors;
+
+        PL_CHECK_THROWS_MATCHES(
+            (MPOTNCuda<TestType>{tensors_const,
+                                 wires,
+                                 maxMPOBondDim,
+                                 num_qubits,
+                                 mps.getTNCudaHandle(),
+                                 mps.getCudaDataType(),
+                                 dev_tag}),
+            LightningException,
+            "Max MPO bond dimension must be at least 2.");
+    }
+}
+
 TEMPLATE_TEST_CASE("MPSTNCuda::getSitesExtents()", "[MPSTNCuda]", float,
                    double) {
     SECTION("Check if sitesExtents retrun is correct with 3 qubits") {
