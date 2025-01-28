@@ -309,6 +309,53 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyS",
     }
 }
 
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySX",
+                   "[StateVectorCudaManaged_Nonparam]", float, double) {
+    const bool inverse = GENERATE(true, false);
+    {
+        using cp_t = std::complex<TestType>;
+        const std::size_t num_qubits = 3;
+        StateVectorCudaManaged<TestType> sv{num_qubits};
+        // Test using |000> state
+
+        const cp_t z(0.0, 0.0);
+        cp_t p(0.5, 0.5);
+        cp_t m(0.5, -0.5);
+
+        if (inverse) {
+            p = conj(p);
+            m = conj(m);
+        }
+
+        const std::vector<std::vector<cp_t>> expected_results = {
+            {p, z, z, z, m, z, z, z},
+            {p, z, m, z, z, z, z, z},
+            {p, m, z, z, z, z, z, z}};
+
+        const auto init_state = sv.getDataVector();
+        SECTION("Apply directly") {
+            for (std::size_t index = 0; index < num_qubits; index++) {
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
+                CHECK(sv_direct.getDataVector() == init_state);
+                sv_direct.applySX({index}, inverse);
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(expected_results[index]));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (std::size_t index = 0; index < num_qubits; index++) {
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                CHECK(sv_dispatch.getDataVector() == init_state);
+                sv_dispatch.applyOperation("SX", {index}, inverse);
+                CHECK(sv_dispatch.getDataVector() ==
+                      Pennylane::Util::approx(expected_results[index]));
+            }
+        }
+    }
+}
+
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyT",
                    "[StateVectorCudaManaged_Nonparam]", float, double) {
     const bool inverse = GENERATE(true, false);
@@ -1205,6 +1252,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
+
     DYNAMIC_SECTION("N-controlled S - "
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
@@ -1216,6 +1264,24 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                 matrix.data(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("S", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled SX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            const auto matrix = getSX<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(
+                matrix.data(), std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            sv1.applyOperation("SX", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
                                std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==

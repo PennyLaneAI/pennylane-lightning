@@ -25,6 +25,9 @@
 * Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
+* `SX` and `C(SX)` gates are natively supported for all lightning devices.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+
 ### Documentation
 
 ### Bug fixes
@@ -46,6 +49,7 @@ Yushao Chen,
 Amintor Dusko,
 Christina Lee,
 Joseph Lee,
+Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Shuli Shu
 
