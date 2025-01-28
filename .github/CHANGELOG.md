@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
+  [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
+
 * Update Lightning integration tests following the `gradient_kwargs` deprecation
   in Pennylane.
   [(#1045)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1045)
@@ -34,11 +37,21 @@
 * Update Github CI to use Ubuntu 24 and remove `libopenblas-base` package.
   [(#1041)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1041)
 
+* Updates the `eval_jaxpr` method to handle the new signatures for the `cond`, `while`, and
+  `for` primitives.
+  [(#1051)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1051)
+
 ### Contributors
 
 This release contains contributions from (in alphabetical order):
 
-Yushao Chen, Amintor Dusko, Joseph Lee, Luis Alfredo Nuñez Meneses, Andrija Paurevic, Shuli Shu
+Yushao Chen,
+Amintor Dusko,
+Christina Lee,
+Joseph Lee,
+Luis Alfredo Nuñez Meneses,
+Andrija Paurevic,
+Shuli Shu
 
 ---
 
