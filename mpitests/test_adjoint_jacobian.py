@@ -546,7 +546,7 @@ class TestAdjointJacobianQNode:
         h = self.tol_for_allclose(dev.c_dtype)
         tol = self.tol_for_allclose(dev.c_dtype)
 
-        qnode2 = QNode(circuit, dev, diff_method="finite-diff", h=h)
+        qnode2 = QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})
         grad_fn = qml.grad(qnode2)
         grad_F = grad_fn(*args)
 
@@ -638,7 +638,7 @@ class TestAdjointJacobianQNode:
         h = self.tol_for_allclose(dev.c_dtype)
         tol = self.tol_for_allclose(dev.c_dtype)
 
-        cost = QNode(circuit, dev, diff_method="finite-diff", h=h)
+        cost = QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})
 
         grad_fn = qml.grad(cost)
         grad_F = grad_fn(params)
@@ -678,7 +678,7 @@ class TestAdjointJacobianQNode:
         tol = self.tol_for_allclose(dev.c_dtype)
 
         qnode1 = QNode(f, dev, interface="tf", diff_method="adjoint")
-        qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", h=h)
+        qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", gradient_kwargs={"h": h})
 
         with tf.GradientTape() as tape:
             res1 = qnode1(params1, params2)
@@ -710,7 +710,9 @@ class TestAdjointJacobianQNode:
         h = self.tol_for_allclose(dev.c_dtype)
 
         qnode1 = QNode(f, dev, interface="torch", diff_method="adjoint")
-        qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff", h=h)
+        qnode2 = QNode(
+            f, dev, interface="torch", diff_method="finite-diff", gradient_kwargs={"h": h}
+        )
 
         res1 = qnode1(params1, params2)
         res1.backward()
@@ -749,7 +751,9 @@ class TestAdjointJacobianQNode:
         tol = self.tol_for_allclose(dev.c_dtype)
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
-        qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff", h=h)
+        qnode_fd = QNode(
+            f, dev, interface="jax", diff_method="finite-diff", gradient_kwargs={"h": h}
+        )
 
         grad_adjoint = jax.grad(qnode_adjoint)(params1, params2)
         grad_fd = jax.grad(qnode_fd)(params1, params2)
@@ -1327,7 +1331,7 @@ def test_diff_qubit_unitary(dev, n_targets):
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
     circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
-    circ_fd = qml.QNode(circuit, dev, diff_method="finite-diff", h=h)
+    circ_fd = qml.QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})
     circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
     jacs = qml.jacobian(circ)(par, U)
     jacs_def = qml.jacobian(circ_def)(par, U)
