@@ -87,9 +87,6 @@ elif device_name == "lightning.tensor":
 else:
     raise TypeError(f"The device name: {device_name} is not a valid name")
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
-
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 

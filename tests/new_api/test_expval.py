@@ -21,9 +21,6 @@ import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
 from pennylane.devices import DefaultQubit
 
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
-
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 

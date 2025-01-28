@@ -28,9 +28,6 @@ else:
     from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
     from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
-if not LightningDevice._new_API:  # pylint: disable=protected-access
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
-
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 

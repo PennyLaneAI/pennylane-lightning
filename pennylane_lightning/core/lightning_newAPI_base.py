@@ -55,9 +55,6 @@ class LightningBase(Device):
 
     # pylint: disable=too-many-instance-attributes
 
-    # General device options
-    _new_API = True
-
     def __init__(  # pylint: disable=too-many-arguments
         self,
         wires: Union[int, List],
