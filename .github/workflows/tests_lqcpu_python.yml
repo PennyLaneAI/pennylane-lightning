@@ -282,6 +282,7 @@ jobs:
 
       - name: Get required Python packages
         run: |
+          # Install wheel to get source files for combining coverage files
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-dev.txt
