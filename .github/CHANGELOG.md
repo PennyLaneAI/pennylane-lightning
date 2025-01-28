@@ -32,7 +32,7 @@
 
 ### Bug fixes
 
-* Update QEMU to fix aarch64 wheel action
+* Upgrade the version of QEMU image to fix AARCH64 wheel action.
   [(#1056)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1056)
 
 * Patch `MultiControlledX` tests to fix stable/latest failures after the v0.40.0 release.
