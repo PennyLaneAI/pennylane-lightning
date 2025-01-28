@@ -144,6 +144,10 @@ jobs:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           path: ${{ github.workspace }}
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install libopenblas-dev
+    
       - name: Get required Python packages
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
@@ -271,10 +275,6 @@ jobs:
         with:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           path: ${{ github.workspace }}
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update && sudo apt-get -y -q install libopenblas-dev
 
       - name: Get required Python packages
         run: |
