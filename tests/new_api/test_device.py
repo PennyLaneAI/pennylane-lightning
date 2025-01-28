@@ -100,6 +100,7 @@ if device_name != "lightning.tensor":
 else:
     fixture_params = itertools.product([3], [np.complex64, np.complex128])  # wires x c_dtype
 
+
 @pytest.fixture(params=fixture_params)
 def dev(request):
     return LightningDevice(wires=request.param[0], c_dtype=request.param[1])
