@@ -14,7 +14,6 @@
 """
 This module contains a class for executing plxpr using default qubit tools.
 """
-from copy import copy
 
 import jax
 from pennylane.capture import disable, enable
@@ -113,6 +112,10 @@ class LightningInterpreter(PlxprInterpreter):
             enable()
 
 
+# pylint: disable=protected-access
+LightningInterpreter._primitive_registrations.update(FlattenedHigherOrderPrimitives)
+
+
 @LightningInterpreter.register_primitive(measure_prim)
 def _(self, *invals, reset, postselect):
     mp = MidMeasureMP(invals, reset=reset, postselect=postselect)
@@ -133,6 +136,3 @@ def _(self, *invals, jaxpr, n_consts, lazy=True):
 def _(self, *invals, n_control, jaxpr, control_values, work_wires, n_consts):
     # TODO: requires jaxpr -> list of ops first
     raise NotImplementedError
-
-
-LightningInterpreter._primitive_registrations.update(FlattenedHigherOrderPrimitives)

@@ -27,6 +27,7 @@ PauliY                 = { properties = [ "invertible", "controllable", "differe
 PauliZ                 = { properties = [ "invertible", "controllable", "differentiable" ] }
 Hadamard               = { properties = [ "invertible", "controllable", "differentiable" ] }
 S                      = { properties = [ "invertible", "controllable", "differentiable" ] }
+SX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
 T                      = { properties = [ "invertible", "controllable", "differentiable" ] }
 PhaseShift             = { properties = [ "invertible", "controllable", "differentiable" ] }
 RX                     = { properties = [ "invertible", "controllable", "differentiable" ] }
@@ -64,7 +65,6 @@ GlobalPhase            = { properties = [ "invertible", "controllable", "differe
 BlockEncode            = { properties = [ "controllable" ] }
 ControlledQubitUnitary = {}
 ECR                    = {}
-SX                     = {}
 ISWAP                  = {}
 PSWAP                  = {}
 SISWAP                 = {}

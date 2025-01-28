@@ -62,6 +62,9 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::T, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GateOperation::SX, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
     instance.assignKernelForOp(GateOperation::PhaseShift, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
@@ -252,6 +255,9 @@ void assignKernelsForControlledGateOp_Default() {
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::T, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::SX, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::PhaseShift,
