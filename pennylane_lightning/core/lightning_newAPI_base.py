@@ -176,17 +176,6 @@ class LightningBase(Device):
 
         """
 
-    @abstractmethod
-    def update_dynamic_wires(self, circuit):
-        """Update the number of dynamic wires in the statevector for a given circuit. If the statevector does not already exist, it will be created. If it does exist and the number of wires has changed, it will be updated.
-
-        Args:
-            circuit (QuantumTape): The circuit to execute.
-
-        Returns:
-            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
-        """
-
     def jacobian(
         self,
         circuit: QuantumTape,
