@@ -25,8 +25,8 @@
 * Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
-  * Update Lightning-Tensor installation docs and usage suggestions.
-  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
+* `SX` and `C(SX)` gates are natively supported for all lightning devices.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
 ### Documentation
 
@@ -154,9 +154,6 @@ Shuli Shu
 * Update the Lightning-Kokkos CUDA backend for compatibility with Catalyst.
   [(#942)](https://github.com/PennyLaneAI/pennylane-lightning/pull/942)
 
-* `SX` and `C(SX)` gates are natively supported for all lightning devices.
-  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
-
 ### Documentation
 
 * Update and improve `README.rst` and documentations.
@@ -167,6 +164,9 @@ Shuli Shu
 
 * Add the exact tensor network to the Lightning-Tensor docs.
   [(#1021)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1021)
+
+* Update Lightning-Tensor installation docs and usage suggestions.
+  [(#979)](https://github.com/PennyLaneAI/pennylane-lightning/pull/979)
 
 ### Bug fixes
 
