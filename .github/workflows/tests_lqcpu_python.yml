@@ -200,6 +200,8 @@ jobs:
       - name: Run PennyLane-Lightning integration tests
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          # Remove source files here to ensure pytest collect source coverage from wheel package
+          rm -r pennylane_lightning
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
@@ -217,7 +219,6 @@ jobs:
           OMP_NUM_THREADS: 1
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          rm -r pennylane_lightning/
           # Remove `python -m` to avoid running tests with relative modules
           PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
             $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
