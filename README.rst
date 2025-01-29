@@ -487,7 +487,7 @@ Black & Pylint
 ==============
 
 If you contribute to the Python code, please mind the following.
-The Python code is formatted with the PEP 8 compliant opinionated formatter `Black <https://github.com/psf/black>`_ (`black==23.7.0`).
+The Python code is formatted with the PEP 8 compliant opinionated formatter `Black <https://github.com/psf/black>`_ (`black==25.1.0`).
 We set a line width of a 100 characters.
 The Python code is statically analyzed with `Pylint <https://pylint.readthedocs.io/en/stable/>`_.
 We set up a pre-commit hook (see `Git hooks <https://git-scm.com/docs/githooks>`_) to run both of these on `git commit`.
