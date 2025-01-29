@@ -114,6 +114,18 @@ class TestVectorJacobianProduct:
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
             get_vjp(dev, tape, dy)
+    def test_finite_shots_error(self):
+        """Test that an error is raised when finite shots specified"""
+        dev = qml.device(device_name, wires=1)
+
+        tape = qml.tape.QuantumScript([], [qml.expval(qml.Z(0))], shots=1)
+        dy = np.array([1.0])
+
+        with pytest.raises(
+            qml.QuantumFunctionError,
+            match="Requested adjoint differentiation to be computed with finite shots.",
+        ):
+            dev.compute_vjp(tape, dy)
 
     def test_unsupported_op(self, dev):
         """Test if a QuantumFunctionError is raised for an unsupported operation, i.e.,
