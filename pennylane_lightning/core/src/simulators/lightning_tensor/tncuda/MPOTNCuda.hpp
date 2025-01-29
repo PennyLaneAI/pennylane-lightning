@@ -50,7 +50,8 @@ namespace Pennylane::LightningTensor::TNCuda {
  left side bound MPO tensor is 1 and the bondR of the right side bound MPO
  tensor is 1.
 
- * Note that the gate tensor should be decomposed into MPO sites and use column-major order (Fortran order) before passing to this class.
+ * Note that the gate tensor should be decomposed into MPO sites and use
+ column-major order (Fortran order) before passing to this class.
 
  * @tparam PrecisionT Floating point type.
  */
