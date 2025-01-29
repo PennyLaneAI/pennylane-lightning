@@ -35,12 +35,10 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 namespace Pennylane::LightningTensor::TNCuda {
 
 /**
- * @brief Class representing an Matrix Product Operator (MPO) object for the MPS
+ * @brief Class representing a Matrix Product Operator (MPO) object for the MPS
  backend.
  * Any gate tensor can be represented as an MPO tensor network in the context of
- MPS. The gate tensor must be decomposed with respect to its target wires. Note
- that the only local target wires are supported. The non-adjacent target wires
- must be swapped to local before contructing the MPO tensor network.
+ MPS. The gate tensor must be decomposed with respect to its target wires.
  * The MPO tensors' modes order in an open boundary condition are:
    2              3              2
    |              |              |
@@ -52,10 +50,7 @@ namespace Pennylane::LightningTensor::TNCuda {
  left side bound MPO tensor is 1 and the bondR of the right side bound MPO
  tensor is 1.
 
- * Note that the gate tensor should be permuted to ascending order and
- decomposed into MPO sites before passing to this class. Preprocess and
- postprocess with SWAP operations are required to ensure MPOs target at adjacent
- wires and the target wires are correct.
+ * Note that the gate tensor should be decomposed into MPO sites and use column-major order (Fortran order) before passing to this class.
 
  * @tparam PrecisionT Floating point type.
  */

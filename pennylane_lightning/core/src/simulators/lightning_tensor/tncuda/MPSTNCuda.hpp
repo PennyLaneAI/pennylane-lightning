@@ -131,7 +131,6 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
             BaseType::getDevTag()));
 
         // Append the MPO operator to the compute graph
-        // Note MPO operator only works for local target wires as of v24.08
         int64_t operatorId;
         PL_CUTENSORNET_IS_SUCCESS(cutensornetStateApplyNetworkOperator(
             /* const cutensornetHandle_t */ BaseType::getTNCudaHandle(),
