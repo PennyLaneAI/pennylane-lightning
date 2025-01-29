@@ -217,10 +217,6 @@ class TestAdjointJacobian:
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name in ("lightning.kokkos"),
-        reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
-    )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_phaseshift_gradient(self, n_qubits, par, tol):
@@ -554,7 +550,7 @@ class TestAdjointJacobian:
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+        device_name == "lightning.gpu",
         reason="Adjoint differentiation does not support State measurements.",
     )
     def test_state_return_type(self, dev):
@@ -741,10 +737,6 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad.shape, jac_bp.shape)
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.kokkos",
-        reason="N-controlled generator operations only implemented in lightning.qubit and lightning.gpu",
-    )
     @pytest.mark.parametrize(
         "operation",
         [
