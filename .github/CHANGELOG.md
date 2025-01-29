@@ -9,6 +9,9 @@
 * Fix CI to collect Python code coverage for Lightning-Qubit.
   [(#1053)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1053)
 
+* Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
+  [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
+
 * Update source code to use black formatter 25.1.0.
   [(#1059)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1059)
 
