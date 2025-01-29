@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Remove Old API base class and pytest.skipif(ld._new_API).
+  [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
+
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
   [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
 
