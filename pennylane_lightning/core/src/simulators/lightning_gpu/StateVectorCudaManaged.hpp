@@ -694,6 +694,13 @@ class StateVectorCudaManaged
                                {wires.begin(), wires.end() - 1}, {wires.back()},
                                adjoint);
     }
+    inline void applySX(const std::vector<std::size_t> &wires, bool adjoint) {
+        static const std::string name{"SX"};
+        static const Precision param = 0.0;
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
+    }
     inline void applyT(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"T"};
         static const Precision param = 0.0;

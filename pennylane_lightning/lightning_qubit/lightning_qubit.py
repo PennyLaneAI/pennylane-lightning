@@ -73,7 +73,6 @@ _to_matrix_ops = {
     "QubitSum": OperatorProperties(),
     "SISWAP": OperatorProperties(),
     "SQISW": OperatorProperties(),
-    "SX": OperatorProperties(),
 }
 
 

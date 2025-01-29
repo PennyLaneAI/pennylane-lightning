@@ -9,6 +9,12 @@
 * Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 
+* Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
+  [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
+
+* Update source code to use black formatter 25.1.0.
+  [(#1059)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1059)
+
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
   [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
 
@@ -28,9 +34,16 @@
 * Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
+* `SX` and `C(SX)` gates are natively supported for all lightning devices.
+  [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
+
 ### Documentation
 
 ### Bug fixes
+
+* Upgrade the version of QEMU image to fix AARCH64 wheel action.
+  [(#1056)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1056)
+
 * Patch `MultiControlledX` tests to fix stable/latest failures after the v0.40.0 release.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
@@ -49,6 +62,7 @@ Yushao Chen,
 Amintor Dusko,
 Christina Lee,
 Joseph Lee,
+Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Shuli Shu
 

@@ -102,8 +102,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Param-Operation",
 
     const bool inverse = GENERATE(false, true);
     const std::string gate_name =
-        GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T",
-                 "CNOT", "SWAP", "CY", "CZ", "CSWAP", "Toffoli");
+        GENERATE("Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "S",
+                 "SX", "T", "CNOT", "SWAP", "CY", "CZ", "CSWAP", "Toffoli");
     DYNAMIC_SECTION("Matrix - Gate = " << gate_name
                                        << " Inverse = " << inverse) {
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
@@ -334,6 +334,45 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyS", "[StateVectorKokkos_Nonparam]",
                     {{"Hadamard"}, {"Hadamard"}, {"Hadamard"}}, {{0}, {1}, {2}},
                     {{false}, {false}, {false}});
                 kokkos_sv.applyOperation("S", {index}, false);
+                for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                    auto result_subview =
+                        Kokkos::subview(kokkos_sv.getView(), j);
+                    Kokkos::complex<TestType> result;
+                    Kokkos::deep_copy(result, result_subview);
+                    CHECK(imag(expected_results[index][j]) ==
+                          Approx(imag(result)));
+                    CHECK(real(expected_results[index][j]) ==
+                          Approx(real(result)));
+                }
+            }
+        }
+    }
+}
+TEMPLATE_TEST_CASE("StateVectorKokkos::applySX", "[StateVectorKokkos_Nonparam]",
+                   float, double) {
+    const bool inverse = GENERATE(true, false);
+    {
+        using ComplexT = StateVectorKokkos<TestType>::ComplexT;
+        const std::size_t num_qubits = 3;
+
+        const ComplexT z(0.0, 0.0);
+        ComplexT p(0.5, 0.5);
+        ComplexT m(0.5, -0.5);
+
+        if (inverse) {
+            p = conj(p);
+            m = conj(m);
+        }
+
+        const std::vector<std::vector<ComplexT>> expected_results = {
+            {p, z, z, z, m, z, z, z},
+            {p, z, m, z, z, z, z, z},
+            {p, m, z, z, z, z, z, z}};
+
+        SECTION("Apply using dispatcher") {
+            for (std::size_t index = 0; index < num_qubits; index++) {
+                StateVectorKokkos<TestType> kokkos_sv{num_qubits};
+                kokkos_sv.applyOperation("SX", {index}, inverse);
                 for (std::size_t j = 0; j < exp2(num_qubits); j++) {
                     auto result_subview =
                         Kokkos::subview(kokkos_sv.getView(), j);
@@ -726,8 +765,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Controlled-Operation",
     }
 
     const bool inverse = GENERATE(false, true);
-    const std::string gate_name =
-        GENERATE("PauliX", "PauliY", "PauliZ", "Hadamard", "S", "T", "SWAP");
+    const std::string gate_name = GENERATE("PauliX", "PauliY", "PauliZ",
+                                           "Hadamard", "S", "SX", "T", "SWAP");
     DYNAMIC_SECTION("1-controlled Matrix - Gate = "
                     << gate_name << " Inverse = " << inverse) {
         auto gate_matrix = getMatrix<Kokkos::complex, PrecisionT>(
@@ -1350,6 +1389,30 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation non-param "
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
             ComplexT{0.0, 0.35355339}, ComplexT{0.35355339, 0.0},
+        };
+        for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+            CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
+            CHECK(real(sv_gate_host[j]) == Approx(real(expected_result[j])));
+        }
+    }
+
+    SECTION("2-controlled SX") {
+        Kokkos::deep_copy(sv_gate.getView(), ini_sv);
+
+        const std::vector<std::size_t> control_wires = {0, 2};
+        const std::vector<bool> control_values = {true, false};
+        const std::vector<std::size_t> target_wire = {1};
+        sv_gate.applyOperation("SX", control_wires, control_values, target_wire,
+                               inverse);
+        auto sv_gate_host = Kokkos::create_mirror_view_and_copy(
+            Kokkos::HostSpace{}, sv_gate.getView());
+
+        std::vector<ComplexT> expected_result{
+            // Generated using Pennylane
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
+            ComplexT{0.35355339, 0.0}, ComplexT{0.35355339, 0.0},
         };
         for (std::size_t j = 0; j < exp2(num_qubits); j++) {
             CHECK(imag(sv_gate_host[j]) == Approx(imag(expected_result[j])));
