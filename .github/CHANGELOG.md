@@ -6,7 +6,7 @@
 
 ### Improvements
 
-* Add Lightning Kokkos tests for Adjoint Jacobian
+* Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
   [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
 
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
