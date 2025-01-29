@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Update source code to use black formatter 25.1.0.
+  [(#1059)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1059)
+
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
   [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
 
@@ -31,6 +34,10 @@
 ### Documentation
 
 ### Bug fixes
+
+* Upgrade the version of QEMU image to fix AARCH64 wheel action.
+  [(#1056)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1056)
+
 * Patch `MultiControlledX` tests to fix stable/latest failures after the v0.40.0 release.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
