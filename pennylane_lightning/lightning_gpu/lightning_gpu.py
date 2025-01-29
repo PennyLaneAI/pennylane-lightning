@@ -78,7 +78,6 @@ _to_matrix_ops = {
     "BlockEncode": OperatorProperties(controllable=True),
     "ControlledQubitUnitary": OperatorProperties(),
     "ECR": OperatorProperties(),
-    "SX": OperatorProperties(),
     "ISWAP": OperatorProperties(),
     "PSWAP": OperatorProperties(),
     "SISWAP": OperatorProperties(),

@@ -332,6 +332,46 @@ void applyS(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
+void applyNCSX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+               std::size_t num_qubits,
+               const std::vector<std::size_t> &controlled_wires,
+               const std::vector<bool> &controlled_values,
+               const std::vector<std::size_t> &wires, bool inverse = false,
+               [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+
+    constexpr PrecisionT half = 0.5;
+    const Kokkos::complex<PrecisionT> z0{half, (inverse) ? -half : half};
+    const Kokkos::complex<PrecisionT> z1 = Kokkos::conj(z0);
+
+    auto core_function =
+        KOKKOS_LAMBDA(Kokkos::View<Kokkos::complex<PrecisionT> *> arr,
+                      std::size_t i0, std::size_t i1) {
+        const Kokkos::complex<PrecisionT> v0 = arr(i0);
+        const Kokkos::complex<PrecisionT> v1 = arr(i1);
+
+        arr[i0] = z0 * v0 + z1 * v1;
+        arr[i1] = z1 * v0 + z0 * v1;
+    };
+    if (controlled_wires.empty()) {
+        applyNC1Functor<PrecisionT, decltype(core_function), false>(
+            ExecutionSpace{}, arr_, num_qubits, wires, core_function);
+    } else {
+        applyNC1Functor<PrecisionT, decltype(core_function), true>(
+            ExecutionSpace{}, arr_, num_qubits, controlled_wires,
+            controlled_values, wires, core_function);
+    }
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applySX(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+             std::size_t num_qubits, const std::vector<std::size_t> &wires,
+             bool inverse = false,
+             [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNCSX<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {}, wires,
+                                          inverse);
+}
+
+template <class ExecutionSpace, class PrecisionT>
 void applyNCT(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
               std::size_t num_qubits,
               const std::vector<std::size_t> &controlled_wires,
@@ -1821,6 +1861,9 @@ void applyNamedOperation(const GateOperation gateop,
     case GateOperation::S:
         applyS<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
         return;
+    case GateOperation::SX:
+        applySX<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
+        return;
     case GateOperation::T:
         applyT<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
         return;
@@ -1955,6 +1998,10 @@ void applyNCNamedOperation(const ControlledGateOperation gateop,
     case ControlledGateOperation::S:
         applyNCS<ExecutionSpace>(arr_, num_qubits, controlled_wires,
                                  controlled_values, wires, inverse, params);
+        return;
+    case ControlledGateOperation::SX:
+        applyNCSX<ExecutionSpace>(arr_, num_qubits, controlled_wires,
+                                  controlled_values, wires, inverse, params);
         return;
     case ControlledGateOperation::T:
         applyNCT<ExecutionSpace>(arr_, num_qubits, controlled_wires,

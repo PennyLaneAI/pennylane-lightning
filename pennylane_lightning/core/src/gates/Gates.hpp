@@ -116,6 +116,24 @@ static constexpr auto getS(const bool inverse = false)
 }
 
 /**
+ * @brief Create a matrix representation of the SX gate data in row-major
+ * format.
+ *
+ * @tparam ComplexT Complex class.
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<ComplexT<T>> Return constant expression
+ * of SX data.
+ */
+template <template <typename...> class ComplexT, typename T>
+static constexpr auto getSX(const bool inverse = false)
+    -> std::vector<ComplexT<T>> {
+    const T half = (inverse) ? -0.5 : 0.5;
+    const ComplexT<T> z0{0.5, half};
+    const ComplexT<T> z1{0.5, -half};
+    return {z0, z1, z1, z0};
+}
+
+/**
  * @brief Create a matrix representation of the T gate data in row-major format.
  *
  * @tparam ComplexT Complex class.
@@ -1216,6 +1234,8 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
         return getHadamard<ComplexT, T>();
     case GateOperation::S:
         return getS<ComplexT, T>(inverse);
+    case GateOperation::SX:
+        return getSX<ComplexT, T>(inverse);
     case GateOperation::T:
         return getT<ComplexT, T>(inverse);
     case GateOperation::RX:
