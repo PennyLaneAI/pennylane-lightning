@@ -13,7 +13,7 @@
 # limitations under the License.
 """
 This module contains the LightningTensor class that inherits from the new device interface.
-It is a device to perform tensor network simulations of quantum circuits using `cutensornet`. 
+It is a device to perform tensor network simulations of quantum circuits using `cutensornet`.
 """
 from dataclasses import replace
 from numbers import Number
