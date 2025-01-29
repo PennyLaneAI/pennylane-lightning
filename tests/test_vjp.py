@@ -114,6 +114,7 @@ class TestVectorJacobianProduct:
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
             get_vjp(dev, tape, dy)
+
     def test_finite_shots_error(self):
         """Test that an error is raised when finite shots specified"""
         dev = qml.device(device_name, wires=1)
