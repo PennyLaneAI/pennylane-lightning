@@ -264,10 +264,6 @@ class TestAdjointJacobian:
         numeric_val = fn(qml.execute(tapes, dev, None))
         assert np.allclose(calculated_val, numeric_val, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name in ("lightning.kokkos"),
-        reason="N-controlled operations only implemented in lightning.qubit and lightning.gpu.",
-    )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_phaseshift_gradient(self, n_qubits, par, tol):
@@ -667,7 +663,7 @@ class TestAdjointJacobian:
             dev.adjoint_jacobian(tape, starting_state=np.ones(7))
 
     @pytest.mark.skipif(
-        device_name == "lightning.kokkos" or device_name == "lightning.gpu",
+        device_name == "lightning.gpu",
         reason="Adjoint differentiation does not support State measurements.",
     )
     def test_state_return_type(self, dev):
@@ -741,7 +737,7 @@ class TestAdjointJacobianQNode:
 
         spy.assert_called()
 
-        qnode2 = QNode(circuit, dev, diff_method="finite-diff", h=h)
+        qnode2 = QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})
         grad_fn = qml.grad(qnode2)
         grad_F = grad_fn(*args)
 
@@ -875,10 +871,6 @@ class TestAdjointJacobianQNode:
             assert np.allclose(jac_ad.shape, jac_bp.shape)
             assert np.allclose(jac_ad, jac_bp, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.kokkos",
-        reason="N-controlled generator operations only implemented in lightning.qubit and lightning.gpu",
-    )
     @pytest.mark.parametrize(
         "operation",
         [
@@ -1026,7 +1018,7 @@ class TestAdjointJacobianQNode:
         )
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
-        cost = QNode(circuit, dev, diff_method="finite-diff", h=h)
+        cost = QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})
 
         grad_fn = qml.grad(cost)
         grad_F = grad_fn(params)
@@ -1061,7 +1053,7 @@ class TestAdjointJacobianQNode:
         params2 = tf.Variable(0.4, dtype=tf_r_dtype)
 
         qnode1 = QNode(f, dev, interface="tf", diff_method="adjoint")
-        qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", h=h)
+        qnode2 = QNode(f, dev, interface="tf", diff_method="finite-diff", gradient_kwargs={"h": h})
 
         with tf.GradientTape() as tape:
             res1 = qnode1(params1, params2)
@@ -1093,7 +1085,9 @@ class TestAdjointJacobianQNode:
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         qnode1 = QNode(f, dev, interface="torch", diff_method="adjoint")
-        qnode2 = QNode(f, dev, interface="torch", diff_method="finite-diff", h=h)
+        qnode2 = QNode(
+            f, dev, interface="torch", diff_method="finite-diff", gradient_kwargs={"h": h}
+        )
 
         res1 = qnode1(params1, params2)
         res1.backward()
@@ -1130,7 +1124,9 @@ class TestAdjointJacobianQNode:
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         qnode_adjoint = QNode(f, dev, interface="jax", diff_method="adjoint")
-        qnode_fd = QNode(f, dev, interface="jax", diff_method="finite-diff", h=h)
+        qnode_fd = QNode(
+            f, dev, interface="jax", diff_method="finite-diff", gradient_kwargs={"h": h}
+        )
 
         grad_adjoint = jax.grad(qnode_adjoint)(params1, params2)
         grad_fd = jax.grad(qnode_fd)(params1, params2)
@@ -1668,7 +1664,7 @@ def test_diff_qubit_unitary(n_targets):
 
     circ = qml.QNode(circuit, dev, diff_method="adjoint")
     circ_def = qml.QNode(circuit, dev_def, diff_method="adjoint")
-    circ_fd = qml.QNode(circuit, dev, diff_method="finite-diff", h=h)
+    circ_fd = qml.QNode(circuit, dev, diff_method="finite-diff", gradient_kwargs={"h": h})
     circ_ps = qml.QNode(circuit, dev, diff_method="parameter-shift")
     jacs = qml.jacobian(circ)(par, U)
     jacs_def = qml.jacobian(circ_def)(par, U)

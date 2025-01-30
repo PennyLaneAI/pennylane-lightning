@@ -276,11 +276,11 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize(
         "test_hermobs0",
-        [(qml.Hermitian(np.eye(4), wires=[0, 1]))],
+        [qml.Hermitian(np.eye(4), wires=[0, 1])],
     )
     @pytest.mark.parametrize(
         "test_hermobs1",
-        [(qml.Hermitian(np.ones((8, 8)), wires=range(3)))],
+        [qml.Hermitian(np.ones((8, 8)), wires=range(3))],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -328,11 +328,11 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize(
         "test_hermobs0",
-        [(qml.Hermitian(np.eye(4), wires=[0, 1]))],
+        [qml.Hermitian(np.eye(4), wires=[0, 1])],
     )
     @pytest.mark.parametrize(
         "test_hermobs1",
-        [(qml.Hermitian(np.ones((8, 8)), wires=range(3)))],
+        [qml.Hermitian(np.ones((8, 8)), wires=range(3))],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
@@ -394,11 +394,11 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize(
         "test_hermobs0",
-        [(qml.Hermitian(np.eye(4), wires=[0, 1]))],
+        [qml.Hermitian(np.eye(4), wires=[0, 1])],
     )
     @pytest.mark.parametrize(
         "test_hermobs1",
-        [(qml.Hermitian(np.ones((8, 8)), wires=range(3)))],
+        [qml.Hermitian(np.ones((8, 8)), wires=range(3))],
     )
     @pytest.mark.parametrize("use_csingle", [True, False])
     @pytest.mark.parametrize("wires_map", [wires_dict, None])

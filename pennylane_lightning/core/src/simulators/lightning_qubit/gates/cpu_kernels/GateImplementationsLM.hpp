@@ -123,6 +123,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::PauliZ,
         GateOperation::Hadamard,
         GateOperation::S,
+        GateOperation::SX,
         GateOperation::T,
         GateOperation::PhaseShift,
         GateOperation::RX,
@@ -160,6 +161,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::PauliZ,
         ControlledGateOperation::Hadamard,
         ControlledGateOperation::S,
+        ControlledGateOperation::SX,
         ControlledGateOperation::T,
         ControlledGateOperation::PhaseShift,
         ControlledGateOperation::RX,
@@ -862,6 +864,52 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     applyT(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
            const std::vector<std::size_t> &wires, const bool inverse) {
         applyNCT(arr, num_qubits, {}, {}, wires, inverse);
+    }
+
+    template <class PrecisionT>
+    static void
+    applyNCSX(std::complex<PrecisionT> *arr, const size_t num_qubits,
+              const std::vector<std::size_t> &controlled_wires,
+              const std::vector<bool> &controlled_values,
+              const std::vector<std::size_t> &wires, const bool inverse) {
+        using ParamT = PrecisionT;
+
+        const PrecisionT shift = (inverse) ? -1.0 : 1.0;
+
+        auto core_function = [shift](std::complex<PrecisionT> *arr,
+                                     const std::size_t i0,
+                                     const std::size_t i1) {
+            const std::complex<PrecisionT> v0 = arr[i0];
+            const std::complex<PrecisionT> v1 = arr[i1];
+
+            const PrecisionT vr_plus = v0.real() + v1.real();
+            const PrecisionT vi_plus = v0.imag() + v1.imag();
+
+            const PrecisionT vr_minus = (v0.real() - v1.real()) * shift;
+            const PrecisionT vi_minus = (-v0.imag() + v1.imag()) * shift;
+
+            arr[i0] = std::complex<PrecisionT>(vr_plus + vi_minus,
+                                               vi_plus + vr_minus) *
+                      PrecisionT(0.5);
+            arr[i1] = std::complex<PrecisionT>(vr_plus - vi_minus,
+                                               vi_plus - vr_minus) *
+                      PrecisionT(0.5);
+        };
+        if (controlled_wires.empty()) {
+            applyNC1<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        } else {
+            applyNC1<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        }
+    }
+
+    template <class PrecisionT>
+    static void applySX(std::complex<PrecisionT> *arr, const size_t num_qubits,
+                        const std::vector<size_t> &wires, const bool inverse) {
+        applyNCSX(arr, num_qubits, {}, {}, wires, inverse);
     }
 
     template <class PrecisionT, class ParamT = PrecisionT>
