@@ -258,11 +258,11 @@ class TestSerializeObs:
 
     @pytest.mark.parametrize(
         "test_hermobs0",
-        [(qml.Hermitian(np.eye(2), wires=[0]))],
+        [qml.Hermitian(np.eye(2), wires=[0])],
     )
     @pytest.mark.parametrize(
         "test_hermobs1",
-        [(qml.Hermitian(np.ones((2, 2)), wires=[0]))],
+        [qml.Hermitian(np.ones((2, 2)), wires=[0])],
     )
     def test_hamiltonian_return(self, test_hermobs0, test_hermobs1, use_csingle, wires_map):
         """Test expected serialization for a Hamiltonian return"""
