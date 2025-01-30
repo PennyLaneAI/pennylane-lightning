@@ -286,7 +286,7 @@ class LightningQubit(LightningBase):
             "kernel_name": self._kernel_name,
         }
 
-        # Creating the state vector if wires are specified
+        # Create the state vector if wires are specified
         self._statevector = (
             self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype)
             if wires is not None
@@ -328,7 +328,7 @@ class LightningQubit(LightningBase):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wire_alloc(self, circuit):
-        """Allocate a new statevector for a given circuit.
+        """Allocate a new statevector with number of wires for a given circuit.
 
         Args:
             circuit (QuantumTape): The circuit to execute.

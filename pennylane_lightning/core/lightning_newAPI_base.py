@@ -338,7 +338,6 @@ class LightningBase(Device):
             Tuple: A numeric result of the computation and the gradient.
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-
         results = tuple(
             self.simulate_and_jacobian(
                 self.dynamic_wire_alloc(circuit) if self.wires is None else circuit,
