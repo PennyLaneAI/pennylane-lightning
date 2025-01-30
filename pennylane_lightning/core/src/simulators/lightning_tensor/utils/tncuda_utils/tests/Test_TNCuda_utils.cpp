@@ -26,17 +26,6 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
 
-TEST_CASE("swap_op_wires_queue", "[TNCuda_utils]") {
-    SECTION("is_wires_local: true") {
-        std::vector<std::size_t> wires = {0, 1, 2, 3};
-        REQUIRE(is_wires_local(wires) == true);
-    }
-
-    SECTION("is_wires_local: false") {
-        std::vector<std::size_t> wires = {0, 1, 3, 4};
-        REQUIRE(is_wires_local(wires) == false);
-    }
-}
 
 TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
     SECTION("Correct incoming MPS shape") {

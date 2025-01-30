@@ -105,21 +105,6 @@ inline void setWorkSpaceMemory(const cutensornetHandle_t &tncuda_handle,
 }
 
 /**
- * @brief Check if the wires are local.
- *
- * @param wires The wires to check.
- */
-inline bool is_wires_local(const std::vector<std::size_t> &wires) {
-    const std::size_t num_wires = wires.size();
-    for (std::size_t i = 0; i < num_wires - 1; ++i) {
-        if (wires[i + 1] - wires[i] != 1) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/**
  * @brief Check if the provided MPS has the correct dimension for C++
  * backend.
  *

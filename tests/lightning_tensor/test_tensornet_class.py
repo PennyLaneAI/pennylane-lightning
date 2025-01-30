@@ -120,7 +120,7 @@ def test_gate_matrix_decompose():
 
     max_mpo_bond_dim = 2 ** len(wires)
 
-    mpos, sorted_wired = gate_matrix_decompose(gate, wires, max_mpo_bond_dim, np.complex128)
+    mpos = gate_matrix_decompose(gate, wires, max_mpo_bond_dim, np.complex128)
 
     # restore the C-ordering of the matrices
     mpo0 = np.transpose(mpos[0], axes=(2, 1, 0))
@@ -133,5 +133,4 @@ def test_gate_matrix_decompose():
     unitary_f = np.transpose(unitary, axes=(5, 3, 1, 4, 2, 0))
     unitary_f = np.reshape(unitary_f, (2 ** len(wires), 2 ** len(wires)))
 
-    assert np.allclose(sorted_wired, sorted(wires), atol=1e-6)
     assert np.allclose(unitary_f, original_gate, atol=1e-6)

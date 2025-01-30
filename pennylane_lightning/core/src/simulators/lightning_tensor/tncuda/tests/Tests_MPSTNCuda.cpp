@@ -61,9 +61,9 @@ TEMPLATE_PRODUCT_TEST_CASE("MPSTNCuda::Constructibility",
 
 TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     SECTION("Set MPS site with wrong site index") {
-        const std::size_t num_qubits = 3;
-        const std::size_t maxBondDim = 3;
-        const std::size_t siteIdx = 3;
+        constexpr std::size_t num_qubits = 3;
+        constexpr std::size_t maxBondDim = 3;
+        constexpr std::size_t siteIdx = 3;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -77,9 +77,9 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     }
 
     SECTION("Set MPS site with wrong site data size") {
-        const std::size_t num_qubits = 3;
-        const std::size_t maxBondDim = 3;
-        const std::size_t siteIdx = 0;
+        constexpr std::size_t num_qubits = 3;
+        constexpr std::size_t maxBondDim = 3;
+        constexpr std::size_t siteIdx = 0;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -93,8 +93,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::setIthMPSSite", "[MPSTNCuda]", float, double) {
     }
 
     SECTION("Set MPS sites") {
-        const std::size_t num_qubits = 2;
-        const std::size_t maxBondDim = 3;
+        constexpr std::size_t num_qubits = 2;
+        constexpr std::size_t maxBondDim = 3;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
 
@@ -127,8 +127,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
         {1, 0, 0}, {1, 0, 1}, {1, 1, 0}, {1, 1, 1}};
 
     SECTION("Failure for wrong basisState size") {
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = 3;
+        constexpr std::size_t num_qubits = 3;
+        constexpr std::size_t maxBondDim = 3;
         std::vector<std::size_t> basisState = {0, 0, 0, 0};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
@@ -140,8 +140,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
     }
 
     SECTION("Failure for wrong basisState input") {
-        std::size_t num_qubits = 3;
-        std::size_t maxBondDim = 3;
+        constexpr std::size_t num_qubits = 3;
+        constexpr std::size_t maxBondDim = 3;
         std::vector<std::size_t> basisState = {0, 0, 2};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
@@ -154,7 +154,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 
     SECTION("Set reset on device with data on the host") {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
-        std::size_t num_qubits = 3;
+        constexpr std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
 
         MPSTNCuda<TestType> mps_state{num_qubits, bondDim};
@@ -178,7 +178,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
     SECTION("Test different bondDim and different basisstate") {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t stateIdx = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
-        std::size_t num_qubits = 3;
+        constexpr std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
@@ -205,7 +205,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
     SECTION("Test different bondDim and different basisstate & reset()") {
         std::size_t bondDim = GENERATE(2, 3, 4, 5);
         std::size_t stateIdx = GENERATE(0, 1, 2, 3, 4, 5, 6, 7);
-        std::size_t num_qubits = 3;
+        constexpr std::size_t num_qubits = 3;
         std::size_t maxBondDim = bondDim;
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim};
@@ -230,8 +230,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::SetBasisStates() & reset()", "[MPSTNCuda]",
 TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
     using cp_t = std::complex<TestType>;
     SECTION("Get zero state") {
-        std::size_t num_qubits = 10;
-        std::size_t maxBondDim = 2;
+        constexpr std::size_t num_qubits = 10;
+        constexpr std::size_t maxBondDim = 2;
         DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
@@ -246,13 +246,13 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
     }
 
     SECTION("Throw error for getData() on device") {
-        std::size_t num_qubits = 50;
-        std::size_t maxBondDim = 2;
+        constexpr std::size_t num_qubits = 50;
+        constexpr std::size_t maxBondDim = 2;
         DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
 
-        const std::size_t length = std::size_t{1} << num_qubits;
+        constexpr std::size_t length = std::size_t{1} << num_qubits;
         std::vector<cp_t> results(1);
 
         REQUIRE_THROWS_WITH(
@@ -262,13 +262,13 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
     }
 
     SECTION("Throw wrong size for getData() on device") {
-        std::size_t num_qubits = 50;
-        std::size_t maxBondDim = 2;
+        constexpr std::size_t num_qubits = 50;
+        constexpr std::size_t maxBondDim = 2;
         DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps_state{num_qubits, maxBondDim, dev_tag};
 
-        const std::size_t length = 1;
+        constexpr std::size_t length = 1;
         std::vector<cp_t> results(1);
 
         REQUIRE_THROWS_WITH(mps_state.getData(results.data(), length),
@@ -279,7 +279,7 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 
     SECTION("Throw error for 0 an 1 qubit circuit") {
         std::size_t num_qubits = GENERATE(0, 1);
-        std::size_t maxBondDim = 2;
+        constexpr std::size_t maxBondDim = 2;
         DevTag<int> dev_tag{0, 0};
 
         REQUIRE_THROWS_WITH(
@@ -292,15 +292,15 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getDataVector()", "[MPSTNCuda]", float, double) {
 TEMPLATE_TEST_CASE("MPOTNCuda::getBondDims()", "[MPOTNCuda]", float, double) {
     using cp_t = std::complex<TestType>;
     SECTION("Check if bondDims is correct set") {
-        const std::size_t num_qubits = 3;
-        const std::size_t maxBondDim = 128;
+        constexpr std::size_t num_qubits = 3;
+        constexpr std::size_t maxBondDim = 128;
         const DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
 
         std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
         const std::vector<std::size_t> wires = {0, 1, 2};
-        const std::size_t maxMPOBondDim = 3;
+        constexpr std::size_t maxMPOBondDim = 3;
 
         tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
         tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
@@ -328,15 +328,15 @@ TEMPLATE_TEST_CASE("MPOTNCuda::getBondDims()", "[MPOTNCuda]", float, double) {
 TEMPLATE_TEST_CASE("MPOTNCuda::execution", "[MPOTNCuda]", float, double) {
     using cp_t = std::complex<TestType>;
     SECTION("Check initialization for wires out of order") {
-        const std::size_t num_qubits = 4;
-        const std::size_t maxBondDim = 128;
+        constexpr std::size_t num_qubits = 4;
+        constexpr std::size_t maxBondDim = 128;
         const DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
 
         std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
         const std::vector<std::size_t> wires = {2, 0, 1};
-        const std::size_t maxMPOBondDim = 3;
+        constexpr std::size_t maxMPOBondDim = 3;
 
         tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
         tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
@@ -349,15 +349,15 @@ TEMPLATE_TEST_CASE("MPOTNCuda::execution", "[MPOTNCuda]", float, double) {
                                             mps.getCudaDataType(), dev_tag});
     }
     SECTION("Check initialization for non-contiguous wires") {
-        const std::size_t num_qubits = 4;
-        const std::size_t maxBondDim = 128;
+        constexpr std::size_t num_qubits = 4;
+        constexpr std::size_t maxBondDim = 128;
         const DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
 
         std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
         const std::vector<std::size_t> wires = {0, 1, 3};
-        const std::size_t maxMPOBondDim = 3;
+        constexpr std::size_t maxMPOBondDim = 3;
 
         tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
         tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
@@ -370,15 +370,15 @@ TEMPLATE_TEST_CASE("MPOTNCuda::execution", "[MPOTNCuda]", float, double) {
                                             mps.getCudaDataType(), dev_tag});
     }
     SECTION("Check wrong initialization for wires great than MPO sites") {
-        const std::size_t num_qubits = 4;
-        const std::size_t maxBondDim = 128;
+        constexpr std::size_t num_qubits = 4;
+        constexpr std::size_t maxBondDim = 128;
         const DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
 
         const std::vector<std::size_t> wires = {0, 1}; // Should be {0, 1, 2}
         std::vector<std::vector<cp_t>> tensors; //([2,2,3], [3,2,2,3], [3,2,2])
-        const std::size_t maxMPOBondDim = 3;
+        constexpr std::size_t maxMPOBondDim = 3;
 
         tensors.emplace_back(std::vector<cp_t>(12, {0.0, 0.0}));
         tensors.emplace_back(std::vector<cp_t>(36, {0.0, 0.0}));
@@ -393,15 +393,15 @@ TEMPLATE_TEST_CASE("MPOTNCuda::execution", "[MPOTNCuda]", float, double) {
             LightningException, "Number of tensors and wires must match.");
     }
     SECTION("Check wrong initialization for maxBondDim less than 2") {
-        const std::size_t num_qubits = 4;
-        const std::size_t maxBondDim = 128;
+        constexpr std::size_t num_qubits = 4;
+        constexpr std::size_t maxBondDim = 128;
         const DevTag<int> dev_tag{0, 0};
 
         MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
 
         const std::vector<std::size_t> wires = {0};
         std::vector<std::vector<cp_t>> tensors; //([2,2,2]])
-        const std::size_t maxMPOBondDim = 1;    // Should be greater than 1
+        constexpr std::size_t maxMPOBondDim = 1;    // Should be greater than 1
 
         tensors.emplace_back(std::vector<cp_t>(8, {0.0, 0.0}));
 
@@ -418,8 +418,8 @@ TEMPLATE_TEST_CASE("MPOTNCuda::execution", "[MPOTNCuda]", float, double) {
 TEMPLATE_TEST_CASE("MPSTNCuda::getSitesExtents()", "[MPSTNCuda]", float,
                    double) {
     SECTION("Check if sitesExtents retrun is correct with 3 qubits") {
-        const std::size_t num_qubits = 3;
-        const std::size_t maxBondDim = 128;
+        constexpr std::size_t num_qubits = 3;
+        constexpr std::size_t maxBondDim = 128;
         const DevTag<int> dev_tag{0, 0};
 
         const std::vector<std::vector<std::size_t>> reference{
@@ -433,8 +433,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getSitesExtents()", "[MPSTNCuda]", float,
     }
 
     SECTION("Check if sitesExtents retrun is correct with 8 qubits") {
-        const std::size_t num_qubits = 8;
-        const std::size_t maxBondDim = 128;
+        constexpr std::size_t num_qubits = 8;
+        constexpr std::size_t maxBondDim = 128;
         const DevTag<int> dev_tag{0, 0};
 
         const std::vector<std::vector<std::size_t>> reference{{{2, 2},
@@ -454,8 +454,8 @@ TEMPLATE_TEST_CASE("MPSTNCuda::getSitesExtents()", "[MPSTNCuda]", float,
     }
     SECTION("Check if sitesExtents retrun is correct with 8 qubits and "
             "maxBondDim=8") {
-        const std::size_t num_qubits = 8;
-        const std::size_t maxBondDim = 8;
+        constexpr std::size_t num_qubits = 8;
+        constexpr std::size_t maxBondDim = 8;
         const DevTag<int> dev_tag{0, 0};
 
         const std::vector<std::vector<std::size_t>> reference{{{2, 2},

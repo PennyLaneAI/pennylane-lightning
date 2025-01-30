@@ -135,7 +135,7 @@ template <class PrecisionT> class MPOTNCuda {
         MPO_modes_int32_.resize(numMPOSites_);
 
         std::transform(wires.begin(), wires.end(), MPO_modes_int32_.begin(),
-                       [&numQubits](const std::size_t mode) {
+                       [&numQubits](std::size_t mode) {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
 
