@@ -83,7 +83,7 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
     """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention."""
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
-    original_axes, _ = zip(*sorted_indexed_wires)
+    original_axes, sorted_wires = zip(*sorted_indexed_wires)
 
     tensor_shape = [2] * len(wires) * 2
 
@@ -120,7 +120,7 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
             # [bondL, ket, bra, bondR](0, 1, 2, 3) -> [bondL, ket, bondR, bra](0, 1, 3, 2) -> Fortran order or reverse indices(2, 3, 1, 0) to match the requirement of cutensornet backend.
             mpos.append(np.transpose(MPO, axes=(2, 3, 1, 0)))
 
-    return mpos
+    return mpos, sorted_wires
 
 
 # pylint: disable=too-many-instance-attributes
@@ -339,9 +339,11 @@ class LightningTensorNet:
         max_mpo_bond_dim = self._max_bond_dim
 
         # Get sorted wires and MPO site tensor
-        mpos = gate_matrix_decompose(gate_matrix, wires, max_mpo_bond_dim, self._c_dtype)
+        mpos, sorted_wires = gate_matrix_decompose(
+            gate_matrix, wires, max_mpo_bond_dim, self._c_dtype
+        )
 
-        self._tensornet.applyMPOOperation(mpos, wires, max_mpo_bond_dim)
+        self._tensornet.applyMPOOperation(mpos, sorted_wires, max_mpo_bond_dim)
 
     # pylint: disable=too-many-branches
     def _apply_lightning_controlled(self, operation):
