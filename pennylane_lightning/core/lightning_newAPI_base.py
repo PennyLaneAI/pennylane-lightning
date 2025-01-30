@@ -313,18 +313,15 @@ class LightningBase(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
-        results = []
-        for circuit in circuits:
-            if self.wires is None:  # Dynamic wires allocation
-                circuit = self.update_dynamic_wires(circuit)
-
-            results.append(
-                self.jacobian(
-                    circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
-                )
+        return tuple(
+            self.jacobian(
+                self.dynamic_wire_alloc(circuit) if self.wires is None else circuit,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
-
-        return tuple(results)
+            for circuit in circuits
+        )
 
     def execute_and_compute_derivatives(
         self,
@@ -341,16 +338,16 @@ class LightningBase(Device):
             Tuple: A numeric result of the computation and the gradient.
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        results = []
-        for circuit in circuits:
-            if self.wires is None:  # Dynamic wires allocation
-                circuit = self.update_dynamic_wires(circuit)
 
-            results.append(
-                self.simulate_and_jacobian(
-                    circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
-                )
+        results = tuple(
+            self.simulate_and_jacobian(
+                self.dynamic_wire_alloc(circuit) if self.wires is None else circuit,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
+            for circuit in circuits
+        )
         return tuple(zip(*results))
 
     def supports_vjp(
@@ -401,17 +398,17 @@ class LightningBase(Device):
           then the shape must be ``(batch_size,)``.
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
-        results = []
-        for circuit, cots in zip(circuits, cotangents):
-            if self.wires is None:  # Dynamic wires allocation
-                circuit = self.update_dynamic_wires(circuit)
 
-            results.append(
-                self.vjp(
-                    circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
-                )
+        return tuple(
+            self.vjp(
+                self.dynamic_wire_alloc(circuit) if self.wires is None else circuit,
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
-        return tuple(results)
+            for circuit, cots in zip(circuits, cotangents)
+        )
 
     def execute_and_compute_vjp(
         self,
@@ -431,15 +428,16 @@ class LightningBase(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
-        results = []
-        for circuit, cots in zip(circuits, cotangents):
-            if self.wires is None:  # Dynamic wires allocation
-                circuit = self.update_dynamic_wires(circuit)
-
-            result = self.simulate_and_vjp(
-                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+        results = (
+            self.simulate_and_vjp(
+                self.dynamic_wire_alloc(circuit) if self.wires is None else circuit,
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
-            results.append(result)
+            for circuit, cots in zip(circuits, cotangents)
+        )
         return tuple(zip(*results))
 
     # pylint: disable=import-outside-toplevel

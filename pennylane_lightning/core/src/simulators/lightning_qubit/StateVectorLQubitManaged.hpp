@@ -182,18 +182,6 @@ class StateVectorLQubitManaged final
         updateData(new_data.data(), new_data.size());
     }
 
-    /**
-     * @brief Update the number of qubits in the statevector.
-     *
-     * @param num_qubits The number of qubits.
-     */
-    void updateNumQubits(std::size_t num_qubits) {
-        BaseType::num_qubits_ = num_qubits;
-        BaseType::setKernels(num_qubits, BaseType::threading_,
-                             BaseType::memory_model_);
-        data_.resize(exp2(num_qubits));
-    }
-
     AlignedAllocator<ComplexT> allocator() const {
         return data_.get_allocator();
     }
