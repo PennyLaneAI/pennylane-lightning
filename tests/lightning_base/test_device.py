@@ -196,12 +196,30 @@ class TestHelpers:
         assert _supports_adjoint(circuit) == expected
 
 
+class TestInitialization:
+    """Unit tests for device initialization"""
+
+    @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
+    def test_property_complex(self, c_dtype):
+        """Test that the property complex is set correctly"""
+        dev = LightningDevice(wires=2, c_dtype=c_dtype)
+        assert dev.c_dtype == c_dtype
+
+    def test_wires_mapping(self):
+        """Test that the wires mapping is set correctly"""
+        dev = LightningDevice(wires=2)
+        assert dev._wire_map == None
+
+        dev = LightningDevice(wires=["a", "b"])
+        assert dev._wire_map == {"a": 0, "b": 1}
+
+
 @pytest.mark.skipif(
     device_name != "lightning.qubit",
     reason=f"The device {device_name} does not support mcmc",
 )
-class TestInitialization:
-    """Unit tests for device initialization"""
+class TestMCMCInitialization:
+    """Unit tests for device initialization for MCMC"""
 
     def test_invalid_num_burnin_error(self):
         """Test that an error is raised when num_burnin is more than number of shots"""
