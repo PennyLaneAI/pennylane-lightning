@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
+  [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
+
 * Update source code to use black formatter 25.1.0.
   [(#1059)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1059)
 
