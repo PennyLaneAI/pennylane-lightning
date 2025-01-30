@@ -844,7 +844,7 @@ class TestControlledOps:
         tape = qml.tape.QuantumScript(
             [
                 qml.StatePrep(init_state, wires=range(n_qubits)),
-                qml.ControlledQubitUnitary(U, wires=control_wires+target_wires),
+                qml.ControlledQubitUnitary(U, wires=control_wires + target_wires),
             ],
             [qml.state()],
         )
