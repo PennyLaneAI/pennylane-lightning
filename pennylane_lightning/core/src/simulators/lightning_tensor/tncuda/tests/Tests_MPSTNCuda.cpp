@@ -400,8 +400,8 @@ TEMPLATE_TEST_CASE("MPOTNCuda::execution", "[MPOTNCuda]", float, double) {
         MPSTNCuda<TestType> mps{num_qubits, maxBondDim, dev_tag};
 
         const std::vector<std::size_t> wires = {0};
-        std::vector<std::vector<cp_t>> tensors; //([2,2,2]])
-        constexpr std::size_t maxMPOBondDim = 1;    // Should be greater than 1
+        std::vector<std::vector<cp_t>> tensors;  //([2,2,2]])
+        constexpr std::size_t maxMPOBondDim = 1; // Should be greater than 1
 
         tensors.emplace_back(std::vector<cp_t>(8, {0.0, 0.0}));
 

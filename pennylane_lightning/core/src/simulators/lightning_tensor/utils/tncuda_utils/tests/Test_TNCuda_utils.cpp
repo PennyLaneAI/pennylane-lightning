@@ -26,7 +26,6 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
 
-
 TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
     SECTION("Correct incoming MPS shape") {
         std::vector<std::vector<std::size_t>> MPS_shape_dest{
