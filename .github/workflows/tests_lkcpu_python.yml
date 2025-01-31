@@ -331,6 +331,7 @@ jobs:
 
       - name: Get required Python packages
         run: |
+          pip install -r requirements-dev.txt
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
