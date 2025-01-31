@@ -322,9 +322,6 @@ class LightningTensor(Device):
         if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {c_dtype}")
 
-        if wires is None:
-            raise ValueError("The number of wires must be specified.")
-
         super().__init__(wires=wires, shots=shots)
 
         if isinstance(wires, int):
@@ -332,7 +329,7 @@ class LightningTensor(Device):
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        self._num_wires = len(self.wires) if self.wires else 0
+        self._num_wires = len(self.wires) if self.wires else None
         self._method = method
         self._c_dtype = c_dtype
 
@@ -383,11 +380,11 @@ class LightningTensor(Device):
         """Tensor complex data type."""
         return self._c_dtype
 
-    def _tensornet(self):
+    def _tensornet(self, num_wires=num_wires):
         """Return the tensornet object."""
         if self.method == "mps":
             return LightningTensorNet(
-                self._num_wires,
+                num_wires,
                 self._method,
                 self._c_dtype,
                 device_name=self.name,
@@ -396,7 +393,7 @@ class LightningTensor(Device):
                 cutoff_mode=self._cutoff_mode,
             )
         return LightningTensorNet(
-            self._num_wires, self._method, self._c_dtype, device_name=self.name
+            num_wires, self._method, self._c_dtype, device_name=self.name
         )
 
     dtype = c_dtype
@@ -427,7 +424,9 @@ class LightningTensor(Device):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-
+        circuit = (
+            circuit.map_to_standard_wires()
+        )  # Map to follow default.qubit wire order for dynamic wires
         return circuit
 
     def preprocess(
@@ -486,9 +485,12 @@ class LightningTensor(Device):
         results = []
 
         for circuit in circuits:
+            if self.wires is None:
+                circuit = self.dynamic_wire_alloc(circuit)
+                
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._tensornet()))
+            results.append(simulate(circuit, self._tensornet(self.num_wires )))
 
         return tuple(results)
 
