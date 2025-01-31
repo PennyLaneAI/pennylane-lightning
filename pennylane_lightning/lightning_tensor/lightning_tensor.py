@@ -380,7 +380,7 @@ class LightningTensor(Device):
         """Tensor complex data type."""
         return self._c_dtype
 
-    def _tensornet(self, num_wires=num_wires):
+    def _tensornet(self, num_wires):
         """Return the tensornet object."""
         if self.method == "mps":
             return LightningTensorNet(
