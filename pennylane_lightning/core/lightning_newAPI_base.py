@@ -99,6 +99,17 @@ class LightningBase(Device):
         """
 
     @abstractmethod
+    def dynamic_wire_alloc(self, circuit):
+        """Allocate a new statevector with number of wires for a given circuit.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+
+        Returns:
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
+        """
+        
+    @abstractmethod
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 

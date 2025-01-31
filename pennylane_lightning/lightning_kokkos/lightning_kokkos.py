@@ -288,6 +288,18 @@ class LightningKokkos(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
+    def dynamic_wire_alloc(self, circuit):
+        """(DUMMY IMPLEMENTATION) Allocate a new statevector with number of wires for a given circuit.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+
+        Returns:
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
+        """
+        
+        return circuit
+    
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
 
