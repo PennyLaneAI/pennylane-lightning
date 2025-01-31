@@ -301,7 +301,7 @@ jobs:
 
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
-    needs: [test_lightning_kokkos_wheels]
+    needs: [build_and_cache_Kokkos,test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     strategy:
