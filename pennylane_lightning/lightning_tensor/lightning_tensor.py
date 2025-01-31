@@ -392,9 +392,7 @@ class LightningTensor(Device):
                 cutoff=self._cutoff,
                 cutoff_mode=self._cutoff_mode,
             )
-        return LightningTensorNet(
-            num_wires, self._method, self._c_dtype, device_name=self.name
-        )
+        return LightningTensorNet(num_wires, self._method, self._c_dtype, device_name=self.name)
 
     dtype = c_dtype
 
@@ -487,10 +485,17 @@ class LightningTensor(Device):
         for circuit in circuits:
             if self.num_wires is None:
                 circuit = self.dynamic_wires_from_circuit(circuit)
-                
+
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._tensornet(self.num_wires if self.num_wires is not None else circuit.num_wires)))
+            results.append(
+                simulate(
+                    circuit,
+                    self._tensornet(
+                        self.num_wires if self.num_wires is not None else circuit.num_wires
+                    ),
+                )
+            )
 
         return tuple(results)
 
