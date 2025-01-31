@@ -243,8 +243,9 @@ jobs:
           OMP_PROC_BIND: false
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
-          # Remove source files here to ensure pytest collect source coverage from wheel package
-          rm -r pennylane_lightning
+          # Temporarily rename source files here to ensure pytest collect source coverage from wheel package
+          # Rename as we want to restore them for editable install test
+          mv pennylane_lightning/ pennylane_lightning_tmp/
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
@@ -268,6 +269,7 @@ jobs:
       - name: Test editable install
         run: |
           pip uninstall pennylane-lightning pennylane-lightning-kokkos -y
+          mv pennylane_lightning_tmp/ pennylane_lightning/
           python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
