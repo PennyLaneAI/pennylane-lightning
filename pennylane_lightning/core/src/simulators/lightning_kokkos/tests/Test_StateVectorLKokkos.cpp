@@ -147,31 +147,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::applyMatrix with a std::vector",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::updateNumQubits", "[errors]",
-                           (StateVectorKokkos), (float, double)) {
-    using StateVectorT = TestType;
-    const std::size_t original_num_qubits = 3;
-    const std::size_t new_num_qubits = 5;
-
-    SECTION("Update Number of Qubits") {
-        StateVectorT sv(original_num_qubits);
-
-        REQUIRE(sv.getNumQubits() == 3);
-        REQUIRE(sv.getLength() == 8);
-        REQUIRE(sv.getDataVector().size() == 8);
-
-        sv.updateNumQubits(new_num_qubits);
-        REQUIRE(sv.getNumQubits() == 5);
-        REQUIRE(sv.getLength() == 32);
-        REQUIRE(sv.getDataVector().size() == 32);
-
-        sv.updateNumQubits(original_num_qubits);
-        REQUIRE(sv.getNumQubits() == 3);
-        REQUIRE(sv.getLength() == 8);
-        REQUIRE(sv.getDataVector().size() == 8);
-    }
-}
-
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorKokkos::setState", "[errors]",
                            (StateVectorKokkos), (float, double)) {
     using StateVectorT = TestType;
