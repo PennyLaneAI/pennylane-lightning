@@ -416,7 +416,7 @@ class LightningTensor(Device):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wires_from_circuit(self, circuit):
-        """From a given circuit, determine the number of wires and allocate a statevector if applicable. Circuit wires will be mapped to Pennylane default.qubit standard wire order.
+        """Map circuit wires to Pennylane default.qubit standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
@@ -485,12 +485,12 @@ class LightningTensor(Device):
         results = []
 
         for circuit in circuits:
-            if self.wires is None:
-                circuit = self.dynamic_wire_alloc(circuit)
+            if self.num_wires is None:
+                circuit = self.dynamic_wires_from_circuit(circuit)
                 
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._tensornet(self.num_wires )))
+            results.append(simulate(circuit, self._tensornet(self.num_wires if self.num_wires is not None else circuit.num_wires)))
 
         return tuple(results)
 
