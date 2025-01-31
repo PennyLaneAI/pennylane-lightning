@@ -204,9 +204,7 @@ def test_gate_unitary_correct(op, op_name):
         out = output(np.array(input))
         unitary[:, i] = out
 
-    unitary_expected = qml.matrix(op[0](*op1, **op2)) @ qml.matrix(
-        op[0](*op[1], **op[2])
-    )
+    unitary_expected = qml.matrix(op[0](*op1, **op2)) @ qml.matrix(op[0](*op[1], **op[2]))
     assert np.allclose(unitary, unitary_expected)
 
 
@@ -454,8 +452,7 @@ def test_state_prep(n_targets, tol):
         else:
             wires = np.random.permutation(n_wires)[0:n_targets]
         tape = qml.tape.QuantumTape(
-            [qml.StatePrep(init_state, wires=wires)]
-            + [qml.X(i) for i in range(n_wires)],
+            [qml.StatePrep(init_state, wires=wires)] + [qml.X(i) for i in range(n_wires)],
             [qml.state()],
         )
         ref = dq.execute([tape])[0]
@@ -482,9 +479,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                 m = 2 ** len(target_wires)
                 U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
                 U, _ = np.linalg.qr(U)
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(
-                    2**n_qubits
-                )
+                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
                 def circuit():
@@ -493,10 +488,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                         U,
                         wires=control_wires + target_wires,
                         control_values=(
-                            [
-                                control_value or bool(i % 2)
-                                for i, _ in enumerate(control_wires)
-                            ]
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
                             if device_name != "lightning.tensor"
                             else [control_value for _ in control_wires]
                         ),
@@ -555,9 +547,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
         for all_wires in wire_lists:
             target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
-            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(
-                2**n_qubits
-            )
+            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
             init_state /= np.linalg.norm(init_state)
 
             def circuit():
@@ -567,25 +557,17 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
                         operation(target_wires),
                         control_wires,
                         control_values=(
-                            [
-                                control_value or bool(i % 2)
-                                for i, _ in enumerate(control_wires)
-                            ]
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
                             if device_name != "lightning.tensor"
                             else [control_value for _ in control_wires]
                         ),
                     )
                 else:
                     qml.ctrl(
-                        operation(
-                            *tuple([0.1234] * operation.num_params), target_wires
-                        ),
+                        operation(*tuple([0.1234] * operation.num_params), target_wires),
                         control_wires,
                         control_values=(
-                            [
-                                control_value or bool(i % 2)
-                                for i, _ in enumerate(control_wires)
-                            ]
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
                             if device_name != "lightning.tensor"
                             else [control_value for _ in control_wires]
                         ),
@@ -699,9 +681,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
         for all_wires in wire_lists:
             target_wires = all_wires[0:num_wires]
             control_wires = all_wires[num_wires:]
-            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(
-                2**n_qubits
-            )
+            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
             init_state /= np.linalg.norm(init_state)
 
             def circuit():
@@ -710,10 +690,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
                     operation(0.1234, target_wires),
                     control_wires,
                     control_values=(
-                        [
-                            control_value or bool(i % 2)
-                            for i, _ in enumerate(control_wires)
-                        ]
+                        [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
                         if device_name != "lightning.tensor"
                         else [control_value for _ in control_wires]
                     ),
