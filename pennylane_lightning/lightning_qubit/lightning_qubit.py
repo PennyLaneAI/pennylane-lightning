@@ -327,8 +327,8 @@ class LightningQubit(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def dynamic_wire_alloc(self, circuit):
-        """Allocate a new statevector with number of wires for a given circuit.
+    def dynamic_wires_from_circuit(self, circuit):
+        """From a given circuit, determine the number of wires and allocate a statevector if applicable. Circuit wires will be mapped Pennylane default.qubit standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
@@ -410,7 +410,7 @@ class LightningQubit(LightningBase):
         results = []
         for circuit in circuits:
             if self.wires is None:
-                circuit = self.dynamic_wire_alloc(circuit)
+                circuit = self.dynamic_wires_from_circuit(circuit)
 
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
