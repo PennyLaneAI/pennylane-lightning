@@ -355,7 +355,7 @@ jobs:
           echo "    pennylane_lightning" >> .coveragerc
           echo "    $wheelpath" >> .coveragerc
           python -m pip install coverage
-          python -m coverage combine .coverage-*
+          python -m coverage combine --debug=pathmap .coverage-*
           # Added cov xml -i to ignore "No source for code" random errors
           # https://stackoverflow.com/questions/2386975/no-source-for-code-message-in-coverage-py
           python -m coverage xml -i -o coverage-${{ github.job }}.xml
