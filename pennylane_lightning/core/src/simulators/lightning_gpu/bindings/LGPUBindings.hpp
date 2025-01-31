@@ -142,10 +142,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Set State Vector on GPU with values for the state vector and "
             "wires on the host memory.")
-        .def("updateNumQubits",
-             [](StateVectorT &sv, std::size_t num_qubits) {
-                 sv.updateNumQubits(num_qubits);
-             })
         .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
              "Apply controlled operation")
         .def(

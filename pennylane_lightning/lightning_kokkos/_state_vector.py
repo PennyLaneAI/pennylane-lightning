@@ -103,14 +103,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         self.sync_d2h(state)
         return state
 
-    def update_num_qubits(self, num_wires: int):
-        """Update number of qubits in the state vector.
-        Args:
-            num_wires (int): _description_
-        """
-        self._num_wires = num_wires
-        self._qubit_state.updateNumQubits(num_wires)
-
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
 

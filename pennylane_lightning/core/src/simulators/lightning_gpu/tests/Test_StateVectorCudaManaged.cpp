@@ -163,32 +163,6 @@ TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyMatrix with a pointer",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::updateNumQubits",
-                           "[errors]", (StateVectorCudaManaged),
-                           (float, double)) {
-    using StateVectorT = TestType;
-    const std::size_t original_num_qubits = 3;
-    const std::size_t new_num_qubits = 5;
-
-    SECTION("Update Number of Qubits") {
-        StateVectorT sv(original_num_qubits);
-
-        REQUIRE(sv.getNumQubits() == 3);
-        REQUIRE(sv.getLength() == 8);
-        REQUIRE(sv.getDataVector().size() == 8);
-
-        sv.updateNumQubits(new_num_qubits);
-        REQUIRE(sv.getNumQubits() == 5);
-        REQUIRE(sv.getLength() == 32);
-        REQUIRE(sv.getDataVector().size() == 32);
-
-        sv.updateNumQubits(original_num_qubits);
-        REQUIRE(sv.getNumQubits() == 3);
-        REQUIRE(sv.getLength() == 8);
-        REQUIRE(sv.getDataVector().size() == 8);
-    }
-}
-
 TEMPLATE_PRODUCT_TEST_CASE("StateVectorCudaManaged::applyOperations",
                            "[applyOperations invalid arguments]",
                            (StateVectorCudaManaged), (float, double)) {

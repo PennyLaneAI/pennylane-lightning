@@ -240,21 +240,6 @@ class StateVectorCudaManaged
     }
 
     /**
-     * @brief Update the number of qubits in the statevector.
-     *
-     * @param num_qubits The number of qubits.
-     */
-    void updateNumQubits(std::size_t num_qubits) {
-        BaseType::num_qubits_ = num_qubits;
-
-        auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
-
-        BaseType::updateData(std::make_unique<LightningGPU::DataBuffer<CFP_t>>(
-            Pennylane::Util::exp2(num_qubits), device_id, stream_id));
-    }
-
-    /**
      * @brief Apply a single gate to the state-vector. Offloads to custatevec
      * specific API calls if available. If unable, attempts to use prior cached
      * gate values on the device. Lastly, accepts a host-provided matrix if

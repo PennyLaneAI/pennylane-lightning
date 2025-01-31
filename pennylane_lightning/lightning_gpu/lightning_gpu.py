@@ -325,8 +325,8 @@ class LightningGPU(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def update_dynamic_wires(self, circuit):
-        """Update the number of dynamic wires in the statevector for a given circuit. If the statevector does not already exist, it will be created. If it does exist and the number of wires has changed, it will be updated.
+    def dynamic_wire_alloc(self, circuit):
+        """(DUMMY IMPLEMENTATION) Allocate a new statevector with number of wires for a given circuit.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
@@ -334,7 +334,7 @@ class LightningGPU(LightningBase):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-        if self._statevector is None:
+        if (self._statevector is None) or (self._statevector.num_wires != circuit.num_wires):
             self._mpi_handler = MPIHandler(
                 self._mpi, self._mpi_buf_size, circuit.num_wires, self._c_dtype
             )
@@ -344,9 +344,6 @@ class LightningGPU(LightningBase):
                 mpi_handler=self._mpi_handler,
                 use_async=self._use_async,
             )
-        else:
-            if self._statevector.num_wires != circuit.num_wires:
-                self._statevector.update_num_qubits(circuit.num_wires)
         circuit = (
             circuit.map_to_standard_wires()
         )  # Map to follow default.qubit wire order for dynamic wires

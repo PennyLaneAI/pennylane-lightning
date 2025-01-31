@@ -286,7 +286,7 @@ class LightningQubit(LightningBase):
             "kernel_name": self._kernel_name,
         }
 
-        # Creating the state vector if wires are specified
+        # Create the state vector if wires are specified
         self._statevector = (
             self.LightningStateVector(num_wires=len(self.wires), dtype=self._c_dtype)
             if wires is not None
@@ -327,8 +327,8 @@ class LightningQubit(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-    def update_dynamic_wires(self, circuit):
-        """Update the number of dynamic wires in the statevector for a given circuit. If the statevector does not already exist, it will be created. If it does exist and the number of wires has changed, it will be updated.
+    def dynamic_wire_alloc(self, circuit):
+        """Allocate a new statevector with number of wires for a given circuit.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
@@ -336,13 +336,10 @@ class LightningQubit(LightningBase):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-        if self._statevector is None:
+        if (self._statevector is None) or (self._statevector.num_wires != circuit.num_wires):
             self._statevector = self.LightningStateVector(
                 num_wires=circuit.num_wires, dtype=self._c_dtype
             )
-        else:
-            if self._statevector.num_wires != circuit.num_wires:
-                self._statevector.update_num_qubits(circuit.num_wires)
         circuit = (
             circuit.map_to_standard_wires()
         )  # Map to follow default.qubit wire order for dynamic wires
@@ -412,8 +409,8 @@ class LightningQubit(LightningBase):
         }
         results = []
         for circuit in circuits:
-            if self.wires is None:  # Dynamic wires allocation
-                circuit = self.update_dynamic_wires(circuit)
+            if self.wires is None:
+                circuit = self.dynamic_wire_alloc(circuit)
 
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)

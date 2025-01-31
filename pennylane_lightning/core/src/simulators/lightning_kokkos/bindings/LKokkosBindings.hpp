@@ -141,10 +141,6 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                   wires);
             },
             "Set the state vector to the data contained in `state`.")
-        .def("updateNumQubits",
-             [](StateVectorT &sv, std::size_t num_qubits) {
-                 sv.updateNumQubits(num_qubits);
-             })
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, np_arr_c &host_sv) {

@@ -483,22 +483,3 @@ def test_get_final_state(tol, operation, input, expected_output, par):
     assert np.allclose(final_state.state, np.array(expected_output), atol=tol, rtol=0)
     assert final_state.state.dtype == final_state.dtype
     assert final_state == state_vector
-
-
-@pytest.mark.parametrize("num_wires", range(2, 5))
-@pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
-def test_update_num_qubit(num_wires, dtype):
-    """Tests that the state vector is correctly updated when the number of qubits is changed."""
-    state_vector = LightningStateVector(num_wires, dtype=dtype)
-
-    state_vector.update_num_qubits(num_wires + 2)
-    state_vector.reset_state()
-    expected_output = np.zeros(2 ** (num_wires + 2), dtype=dtype)
-    expected_output[0] = 1
-    assert np.allclose(state_vector.state, expected_output)
-
-    state_vector.update_num_qubits(num_wires - 1)
-    state_vector.reset_state()
-    expected_output = np.zeros(2 ** (num_wires - 1), dtype=dtype)
-    expected_output[0] = 1
-    assert np.allclose(state_vector.state, expected_output)
