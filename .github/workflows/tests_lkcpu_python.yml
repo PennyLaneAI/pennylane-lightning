@@ -348,6 +348,12 @@ jobs:
 
       - name: Combine coverage files
         run: |
+          wheelpath=$(pip show pennylane-lightning | grep Location | awk -F: '{print $2}' | xargs)
+          echo "" >> .coveragerc
+          echo "[paths]" >> .coveragerc
+          echo "source =" >> .coveragerc
+          echo "    pennylane_lightning" >> .coveragerc
+          echo "    $wheelpath" >> .coveragerc
           python -m pip install coverage
           python -m coverage combine .coverage-*
           # Added cov xml -i to ignore "No source for code" random errors
