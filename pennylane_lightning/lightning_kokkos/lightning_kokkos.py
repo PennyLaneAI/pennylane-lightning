@@ -293,7 +293,7 @@ class LightningKokkos(LightningBase):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wire_alloc(self, circuit):
-        """(DUMMY IMPLEMENTATION) Allocate a new statevector with number of wires for a given circuit.
+        """Allocate a new statevector with number of wires for a given circuit.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
