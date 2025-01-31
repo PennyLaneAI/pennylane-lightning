@@ -200,6 +200,8 @@ jobs:
       - name: Run PennyLane-Lightning integration tests
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          # Remove source files here to ensure pytest collect source coverage from wheel package
+          rm -r pennylane_lightning
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
@@ -247,13 +249,39 @@ jobs:
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
     needs: [test_lightning_qubit_wheels]
+    strategy:
+      matrix:
+        pl_backend: ["lightning_qubit"]
+        blas: ["OFF"]
     name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.10'
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-tags: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
+          path: ${{ github.workspace }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
+          path: ${{ github.workspace }}
+
+      - name: Get required Python packages
+        run: |
+          # Install wheel to get source files for combining coverage files
+          WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
+          mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
+          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
 
       - name: Download coverage reports
         uses: actions/download-artifact@v4
