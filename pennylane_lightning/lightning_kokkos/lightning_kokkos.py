@@ -301,7 +301,13 @@ class LightningKokkos(LightningBase):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-
+        if (self._statevector is None) or (self._statevector.num_wires != circuit.num_wires):
+            self._statevector = self.LightningStateVector(
+                num_wires=circuit.num_wires, dtype=self._c_dtype, kokkos_args=self._kokkos_args
+            )
+        circuit = (
+            circuit.map_to_standard_wires()
+        )  # Map to follow default.qubit wire order for dynamic wires
         return circuit
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
