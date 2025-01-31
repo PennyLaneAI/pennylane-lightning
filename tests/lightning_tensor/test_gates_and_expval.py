@@ -22,10 +22,15 @@ from pennylane import DeviceError
 from pennylane import numpy as np
 
 if device_name != "lightning.tensor":
-    pytest.skip("Exclusive tests for Lightning Tensor device. Skipping.", allow_module_level=True)
+    pytest.skip(
+        "Exclusive tests for Lightning Tensor device. Skipping.",
+        allow_module_level=True,
+    )
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
-    from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
+    from pennylane_lightning.lightning_tensor._measurements import (
+        LightningTensorMeasurements,
+    )
     from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
 
 if not LightningDevice._new_API:  # pylint: disable=protected-access
@@ -127,10 +132,14 @@ def circuit_ansatz(params, wires):
     qml.SingleExcitationMinus(params[26], wires=[wires[4], wires[2]])
     qml.DoubleExcitation(params[27], wires=[wires[0], wires[1], wires[2], wires[3]])
     qml.DoubleExcitationPlus(params[28], wires=[wires[1], wires[2], wires[3], wires[4]])
-    qml.DoubleExcitationMinus(params[29], wires=[wires[2], wires[3], wires[4], wires[5]])
+    qml.DoubleExcitationMinus(
+        params[29], wires=[wires[2], wires[3], wires[4], wires[5]]
+    )
     qml.DoubleExcitation(params[30], wires=[wires[0], wires[2], wires[4], wires[6]])
     qml.DoubleExcitationPlus(params[31], wires=[wires[0], wires[2], wires[4], wires[6]])
-    qml.DoubleExcitationMinus(params[32], wires=[wires[0], wires[2], wires[4], wires[6]])
+    qml.DoubleExcitationMinus(
+        params[32], wires=[wires[0], wires[2], wires[4], wires[6]]
+    )
     qml.QubitCarry(wires=[wires[0], wires[1], wires[6], wires[7]])
     qml.QubitSum(wires=[wires[2], wires[3], wires[7]])
     qml.OrbitalRotation(params[33], wires=[wires[0], wires[1], wires[5], wires[6]])
@@ -139,7 +148,9 @@ def circuit_ansatz(params, wires):
 
 
 # The expected values were generated using default.qubit
-@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
+@pytest.mark.parametrize(
+    "method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}]
+)
 @pytest.mark.parametrize(
     "returns,expected_value",
     [
@@ -180,7 +191,11 @@ def circuit_ansatz(params, wires):
         ((qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),), -0.034583947),
         ((0.5 * qml.PauliZ(0) @ qml.PauliZ(2),), 0.002016079),
         (
-            (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
+            (
+                qml.ops.LinearCombination(
+                    [1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)]
+                )
+            ),
             [0.08618213, 0.09506244],
         ),
         ((qml.ops.prod(qml.X(0), qml.Y(1))), [-0.094606, 0.03522784]),
@@ -191,7 +206,9 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
     operations"""
 
     num_wires = 8
-    dev_ltensor = LightningTensor(wires=range(num_wires), c_dtype=np.complex128, **method)
+    dev_ltensor = LightningTensor(
+        wires=range(num_wires), c_dtype=np.complex128, **method
+    )
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
@@ -209,7 +226,9 @@ def test_integration_for_all_supported_gates(returns, expected_value, method):
     assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
 
 
-@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
+@pytest.mark.parametrize(
+    "method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}]
+)
 class TestSparseHExpval:
     """Test sparseH expectation values"""
 
@@ -244,13 +263,17 @@ class TestSparseHExpval:
     def test_expval_sparseH_not_supported(self, method):
         """Test that expval of SparseH is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
-            qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
+            qml.expval(
+                qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0)
+            )
 
         tensornet = LightningTensorNet(4, **method)
 
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
+        with pytest.raises(
+            NotImplementedError, match="Sparse Hamiltonians are not supported."
+        ):
             m.expval(q.queue[0])
 
     def test_var_sparseH_not_supported(self, method):
@@ -278,7 +301,8 @@ class TestSparseHExpval:
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            ValueError, match="The number of Hermitian observables target wires should be 1."
+            ValueError,
+            match="The number of Hermitian observables target wires should be 1.",
         ):
             m.expval(q.queue[0])
 
@@ -292,12 +316,15 @@ class TestSparseHExpval:
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            ValueError, match="The number of Hermitian observables target wires should be 1."
+            ValueError,
+            match="The number of Hermitian observables target wires should be 1.",
         ):
             m.var(q.queue[0])
 
 
-@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
+@pytest.mark.parametrize(
+    "method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}]
+)
 class TestQChem:
     """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
 
@@ -313,7 +340,10 @@ class TestQChem:
         symbols = ["H", "H"]
 
         geometry = np.array(
-            [[-0.676411907, 0.000000000, 0.000000000], [0.676411907, 0.000000000, 0.000000000]],
+            [
+                [-0.676411907, 0.000000000, 0.000000000],
+                [0.676411907, 0.000000000, 0.000000000],
+            ],
             requires_grad=False,
         )
 
