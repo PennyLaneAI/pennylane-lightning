@@ -317,7 +317,7 @@ class LightningGPU(LightningBase):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wires_from_circuit(self, circuit):
-        """(DUMMY IMPLEMENTATION) From a given circuit, determine the number of wires and allocate a statevector if applicable. Circuit wires will be mapped Pennylane default.qubit standard wire order.
+        """(DUMMY IMPLEMENTATION) From a given circuit, determine the number of wires and allocate a statevector if applicable. Circuit wires will be mapped to Pennylane default.qubit standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
