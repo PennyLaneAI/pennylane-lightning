@@ -353,7 +353,7 @@ jobs:
           echo "[paths]" >> .coveragerc
           echo "source =" >> .coveragerc
           echo "    pennylane_lightning" >> .coveragerc
-          echo "    $wheelpath" >> .coveragerc
+          echo "    $wheelpath/pennylane_lightning" >> .coveragerc
           echo "    /home/runner/work/pennylane-lightning/pennylane-lightning/pennylane_lightning" >> .coveragerc
           python -m pip install coverage
           python -m coverage combine --debug=pathmap .coverage-*
