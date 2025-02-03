@@ -324,7 +324,7 @@ class LightningTensor(Device):
 
         super().__init__(wires=wires, shots=shots)
 
-        if isinstance(wires, int):
+        if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}

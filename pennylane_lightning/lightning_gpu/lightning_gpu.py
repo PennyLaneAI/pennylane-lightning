@@ -409,7 +409,7 @@ class LightningGPU(LightningBase):
         results = []
         for circuit in circuits:
             if self.wires is None:  # Dynamic wires allocation
-                circuit = self.dynamic_wire_alloc(circuit)
+                circuit = self.dynamic_wires_from_circuit(circuit)
 
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
