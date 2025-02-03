@@ -302,4 +302,4 @@ class TestComparison:
 
         default_state = default(qml.state)
 
-        assert np.allclose( dev_l._statevector.state, default_state)
+        assert np.allclose(dev_l._statevector.state, default_state)
