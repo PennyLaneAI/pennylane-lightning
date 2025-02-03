@@ -155,7 +155,7 @@ def test_gate_matrix_decompose_out_of_order():
     mpo2 = np.transpose(mpos[2], axes=(2, 1, 0))
 
     # check if the wires are the same
-    assert sorted_wired == [0, 1, 2]
+    assert sorted_wired == (0, 1, 2)
 
     # recreate unitary
     unitary = np.tensordot(mpo0, mpo1, axes=([1], [0]))
