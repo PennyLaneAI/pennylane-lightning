@@ -95,10 +95,6 @@ def get_tolerance_and_stepsize(device, step_size=False):
 class TestAdjointJacobian:
     """Tests for the adjoint_jacobian method"""
 
-    @staticmethod
-    def get_derivatives_method(device):
-        return device.compute_derivatives
-
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
         params = request.param
@@ -114,7 +110,7 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.var(qml.PauliZ(0))
 
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
 
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
@@ -125,11 +121,9 @@ class TestAdjointJacobian:
             qml.RX(0.1, wires=0)
             qml.state()
 
-        message = "Adjoint differentiation method does not support measurement StateMP."
-
         with pytest.raises(
             qml.QuantumFunctionError,
-            match=message,
+            match="Adjoint differentiation method does not support measurement StateMP.",
         ):
             method(tape)
 
@@ -152,7 +146,7 @@ class TestAdjointJacobian:
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=[0])
 
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         jac = method(tape)
         assert len(jac) == 0
 
@@ -184,7 +178,7 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1}
 
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         calculated_val = method(tape)
 
         tol, _ = get_tolerance_and_stepsize(dev)
@@ -207,7 +201,7 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {1, 2, 3}
 
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         calculated_val = method(tape)
 
         tol, _ = get_tolerance_and_stepsize(dev)
@@ -234,7 +228,7 @@ class TestAdjointJacobian:
         tape.trainable_params = {1}
 
         exact = np.cos(par)
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         grad_A = method(tape)
 
         # different methods must agree
@@ -251,7 +245,7 @@ class TestAdjointJacobian:
 
         # gradients
         exact = np.cos(par)
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         grad_A = method(tape)
 
         # different methods must agree
@@ -266,7 +260,7 @@ class TestAdjointJacobian:
             qml.expval(qml.PauliZ(0))
 
         # circuit jacobians
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         dev_jacobian = method(tape)
         expected_jacobian = -np.sin(a)
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
@@ -284,7 +278,7 @@ class TestAdjointJacobian:
                 qml.expval(qml.PauliZ(idx))
 
         # circuit jacobians
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         dev_jacobian = method(tape)
         expected_jacobian = -np.diag(np.sin(params))
         assert np.allclose(dev_jacobian, expected_jacobian, atol=tol, rtol=0)
@@ -305,7 +299,7 @@ class TestAdjointJacobian:
 
         tape.trainable_params = {0, 1, 2}
         # circuit jacobians
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         dev_jacobian = method(tape)
         expected_jacobian = -np.diag(np.sin(params))
 
@@ -332,7 +326,7 @@ class TestAdjointJacobian:
             )
 
         tape.trainable_params = {0, 1, 2}
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         dev_jacobian = method(tape)
         expected_jacobian = np.array(
             [-np.sin(params[0]) * np.cos(params[2]), 0, -np.cos(params[0]) * np.sin(params[2])]
@@ -369,7 +363,7 @@ class TestAdjointJacobian:
             qml.expval(ham)
 
         tape.trainable_params = {0, 1, 2}
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         dev_jacobian = method(tape)
         expected_jacobian = (
             0.3 * np.array([-np.sin(params[0]), 0, 0])
@@ -421,7 +415,7 @@ class TestAdjointJacobian:
         tol, _ = get_tolerance_and_stepsize(dev)
 
         grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         grad_D = method(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -465,7 +459,7 @@ class TestAdjointJacobian:
         tol, _ = get_tolerance_and_stepsize(dev)
 
         grad_F = (lambda t, fn: fn(qml.execute(t, dev, None)))(*qml.gradients.param_shift(tape))
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         grad_D = method(tape)
 
         assert np.allclose(grad_D, grad_F, atol=tol, rtol=0)
@@ -483,7 +477,7 @@ class TestAdjointJacobian:
 
         tol, _ = get_tolerance_and_stepsize(dev)
 
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         grad_D = method(tape)
         tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
@@ -508,7 +502,7 @@ class TestAdjointJacobian:
 
         tol, _ = get_tolerance_and_stepsize(dev)
 
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         grad_D = method(tape)
         tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
@@ -537,7 +531,7 @@ class TestAdjointJacobian:
 
         tol, _ = get_tolerance_and_stepsize(dev)
 
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
         grad_D = method(tape)
         tapes, fn = qml.gradients.param_shift(tape)
         grad_F = fn(qml.execute(tapes, dev, None))
@@ -560,7 +554,7 @@ class TestAdjointJacobian:
             qml.state()
 
         tape.trainable_params = {0}
-        method = self.get_derivatives_method(dev)
+        method = dev.compute_derivatives
 
         with pytest.raises(
             qml.QuantumFunctionError,

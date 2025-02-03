@@ -95,11 +95,10 @@ class TestComparison:
 
         lightning(qml.expval(qml.PauliZ(0)))
         # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state
 
         default_state = default(qml.state)
 
-        assert np.allclose(lightning_state, default_state)
+        assert np.allclose(dev_l._statevector.state, default_state)
         assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
 
     @pytest.mark.skipif(
@@ -148,8 +147,7 @@ class TestComparison:
         default_state = default(qml.state)
 
         # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state
-        assert np.allclose(lightning_state, default_state)
+        assert np.allclose(dev_l._statevector.state, default_state)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -205,8 +203,7 @@ class TestComparison:
         default_state = default(qml.state)
 
         # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state
-        assert np.allclose(lightning_state, default_state)
+        assert np.allclose(dev_l._statevector.state, default_state)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -267,8 +264,7 @@ class TestComparison:
         default_state = default(qml.state)
 
         # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state
-        assert np.allclose(lightning_state, default_state)
+        assert np.allclose(dev_l._statevector.state, default_state)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
@@ -303,8 +299,7 @@ class TestComparison:
 
         lightning(qml.expval(qml.PauliZ(0)))
         # pylint: disable=protected-access
-        lightning_state = dev_l._statevector.state
 
         default_state = default(qml.state)
 
-        assert np.allclose(lightning_state, default_state)
+        assert np.allclose( dev_l._statevector.state, default_state)

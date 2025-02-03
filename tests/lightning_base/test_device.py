@@ -20,6 +20,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
+from conftest import LightningStateVector, LightningMeasurements, LightningAdjointJacobian
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.measurements import ProbabilityMP
@@ -212,6 +213,14 @@ class TestInitialization:
 
         dev = LightningDevice(wires=["a", "b"])
         assert dev._wire_map == {"a": 0, "b": 1}
+    
+    @pytest.mark.skipif(device_name == "lightning.tensor", reason="lightning.tensor is not a state-vector simulator")
+    def test_dummies_definition(self):
+        """Test that the dummies are defined correctly"""
+        dev = LightningDevice(wires=2)
+        assert dev.LightningStateVector == LightningStateVector
+        assert dev.LightningMeasurements == LightningMeasurements
+        assert dev.LightningAdjointJacobian == LightningAdjointJacobian
 
 
 @pytest.mark.skipif(
