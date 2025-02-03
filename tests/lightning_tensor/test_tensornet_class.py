@@ -15,6 +15,10 @@
 Unit tests for the tensornet functions.
 """
 import numpy as np
+
+# extend the print line width
+np.set_printoptions(linewidth=500)
+
 import pennylane as qml
 import pytest
 import scipy
@@ -135,33 +139,33 @@ def test_gate_matrix_decompose():
 
     assert np.allclose(unitary_f, original_gate, atol=1e-6)
 
-
-def test_gate_matrix_decompose_non_sorted():
+def test_gate_matrix_decompose_out_order():
     """Test the gate matrix decomposition function when the wires are not sorted."""
-    wires = [0, 1, 2, 3]
+    wires = [1, 2, 0]
+    hermitian = np.random.rand(2 ** len(wires), 2 ** len(wires))
+    hermitian = hermitian @ hermitian.conj().T
 
-    gate = qml.ctrl(qml.MultiRZ(np.pi / 4, wires=wires[1:]), control=wires[0])
-    gate = gate.matrix()
+    gate = scipy.linalg.expm(1j * hermitian)
+    original_gate = gate.copy()  # for later to double check
 
     max_mpo_bond_dim = 2 ** len(wires)
 
     mpos, sorted_wired = gate_matrix_decompose(gate, wires, max_mpo_bond_dim, np.complex128)
 
-    wires_b = [3, 1, 2, 0]
-    gate_b = qml.ctrl(qml.MultiRZ(np.pi / 4, wires=wires_b[:-1]), control=wires_b[-1])
-    gate_b = gate_b.matrix()
-
-    max_mpo_bond_dim = 2 ** len(wires_b)
-
-    mpos_b, sorted_wired_b = gate_matrix_decompose(gate_b, wires_b, max_mpo_bond_dim, np.complex128)
-
-    # check if gate matrices are the same
-    assert np.allclose(gate, gate_b, atol=1e-6)
+    # restore the C-ordering of the matrices
+    mpo0 = np.transpose(mpos[0], axes=(2, 1, 0))
+    mpo1 = np.transpose(mpos[1], axes=(3, 2, 1, 0))
+    mpo2 = np.transpose(mpos[2], axes=(2, 1, 0))
 
     # check if the wires are the same
-    assert sorted_wired == sorted_wired_b
+    assert sorted_wired == [0, 1, 2]
 
-    # check if the mpos are different since the wires are different
-    assert not np.allclose(mpos[0], mpos_b[0], atol=1e-6)
-    assert not np.allclose(mpos[1], mpos_b[1], atol=1e-6)
-    assert not np.allclose(mpos[2], mpos_b[2], atol=1e-6)
+
+    # recreate unitary
+    unitary = np.tensordot(mpo0, mpo1, axes=([1], [0]))
+    unitary = np.tensordot(unitary, mpo2, axes=([3], [0]))
+    unitary_f = np.transpose(unitary, axes=(3,1,5,2,0,4))
+    unitary_f = np.reshape(unitary_f, (2 ** len(wires), 2 ** len(wires)))
+    
+    assert np.allclose(unitary_f, original_gate, atol=1e-6)
+
