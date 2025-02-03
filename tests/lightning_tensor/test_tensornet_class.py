@@ -139,6 +139,7 @@ def test_gate_matrix_decompose():
 
     assert np.allclose(unitary_f, original_gate, atol=1e-6)
 
+
 def test_gate_matrix_decompose_out_order():
     """Test the gate matrix decomposition function when the wires are not sorted."""
     wires = [1, 2, 0]
@@ -160,12 +161,10 @@ def test_gate_matrix_decompose_out_order():
     # check if the wires are the same
     assert sorted_wired == [0, 1, 2]
 
-
     # recreate unitary
     unitary = np.tensordot(mpo0, mpo1, axes=([1], [0]))
     unitary = np.tensordot(unitary, mpo2, axes=([3], [0]))
-    unitary_f = np.transpose(unitary, axes=(3,1,5,2,0,4))
+    unitary_f = np.transpose(unitary, axes=(3, 1, 5, 2, 0, 4))
     unitary_f = np.reshape(unitary_f, (2 ** len(wires), 2 ** len(wires)))
-    
-    assert np.allclose(unitary_f, original_gate, atol=1e-6)
 
+    assert np.allclose(unitary_f, original_gate, atol=1e-6)
