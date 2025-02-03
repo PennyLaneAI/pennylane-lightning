@@ -29,16 +29,6 @@ if device_name == "lightning.tensor":
     pytest.skip("lightning.tensor doesn't support vjp.", allow_module_level=True)
 
 
-def get_vjp(device, tapes, dy):
-    """Helper to get VJP for a tape or batch of tapes"""
-    return device.compute_vjp(tapes, dy)
-
-
-def get_jacobian(device, tape):
-    """Helper to get Jacobian of a tape"""
-    return device.compute_derivatives(tape)
-
-
 class TestVectorJacobianProduct:
     """Tests for the `vjp` function"""
 
@@ -70,8 +60,8 @@ class TestVectorJacobianProduct:
 
         tape2.trainable_params = {1, 2, 3}
 
-        vjp = get_vjp(dev, tape1, dy)
-        jac = get_jacobian(dev, tape2)
+        vjp = dev.compute_vjp(tape1, dy)
+        jac = dev.compute_derivatives( tape2)
 
         assert np.allclose(vjp, jac, atol=tol, rtol=0)
 
@@ -94,12 +84,12 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             ValueError, match="Number of observables in the tape must be the same as"
         ):
-            get_vjp(dev, tape1, dy1)
+            dev.compute_vjp( tape1, dy1)
 
         with pytest.raises(
             ValueError, match="The vjp method only works with a real-valued grad_vec"
         ):
-            get_vjp(dev, tape1, dy2)
+            dev.compute_vjp( tape1, dy2)
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -113,7 +103,7 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             qml.QuantumFunctionError, match="Adjoint differentiation method does not"
         ):
-            get_vjp(dev, tape, dy)
+            dev.compute_vjp(tape, dy)
 
     def test_finite_shots_error(self):
         """Test that an error is raised when finite shots specified"""
@@ -154,7 +144,7 @@ class TestVectorJacobianProduct:
                 qml.expval(qml.Hermitian(obs, wires=(0,)))
 
             tape.trainable_params = {0}
-            vjp = get_vjp(dev, tape, dy)
+            vjp = dev.compute_vjp(tape, dy)
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
 
     def test_hermitian_tensor_expectation(self, dev, tol):
@@ -167,7 +157,7 @@ class TestVectorJacobianProduct:
                 qml.expval(qml.Hermitian(obs, wires=(0,)) @ qml.PauliZ(wires=1))
 
             tape.trainable_params = {0}
-            vjp = get_vjp(dev, tape, dy)
+            vjp = dev.compute_vjp(tape, dy)
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
 
     def test_no_trainable_parameters(self, dev):
@@ -182,7 +172,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {}
         dy = np.array([1.0])
 
-        vjp = get_vjp(dev, tape, dy)
+        vjp = dev.compute_vjp(tape, dy)
 
         assert len(vjp) == 0
 
@@ -200,7 +190,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([0.0])
 
-        vjp = get_vjp(dev, tape, dy)
+        vjp = dev.compute_vjp(tape, dy)
 
         assert np.all(vjp == np.zeros([len(tape.trainable_params)]))
 
@@ -219,7 +209,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0])
 
-        vjp = get_vjp(dev, tape, dy)
+        vjp = dev.compute_vjp(tape, dy)
 
         expected = np.array([-np.sin(y) * np.sin(x), np.cos(y) * np.cos(x)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
@@ -240,7 +230,7 @@ class TestVectorJacobianProduct:
         tape.trainable_params = {0, 1}
         dy = np.array([1.0, 2.0])
 
-        vjp = get_vjp(dev, tape, dy)
+        vjp = dev.compute_vjp(tape, dy)
 
         expected = np.array([-np.sin(x), 2 * np.cos(y)])
         assert np.allclose(vjp, expected, atol=tol, rtol=0)
@@ -265,7 +255,7 @@ class TestVectorJacobianProduct:
             qml.QuantumFunctionError,
             match="Adjoint differentiation method does not support",
         ):
-            get_vjp(dev, tape, dy)
+            dev.compute_vjp(tape, dy)
 
 
 class TestBatchVectorJacobianProduct:
@@ -294,7 +284,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = get_vjp(dev, tapes, dys)
+        vjps = dev.compute_vjp( tapes, dys)
 
         assert len(vjps[0]) == 0
         assert vjps[1] is not None
@@ -318,7 +308,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = get_vjp(dev, tapes, dys)
+        vjps = dev.compute_vjp( tapes, dys)
 
         assert len(vjps[0]) == 0
         assert len(vjps[1]) == 0
@@ -342,6 +332,6 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([0.0]), np.array([1.0])]
 
-        vjps = get_vjp(dev, tapes, dys)
+        vjps = dev.compute_vjp( tapes, dys)
 
         assert np.allclose(vjps[0], 0)
