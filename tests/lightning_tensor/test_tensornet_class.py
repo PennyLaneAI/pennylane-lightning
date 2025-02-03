@@ -135,19 +135,20 @@ def test_gate_matrix_decompose():
 
     assert np.allclose(unitary_f, original_gate, atol=1e-6)
 
+
 def test_gate_matrix_decompose_non_sorted():
     """Test the gate matrix decomposition function when the wires are not sorted."""
     wires = [0, 1, 2, 3]
 
-    gate = qml.ctrl(qml.MultiRZ(np.pi/4, wires=wires[1:]),control=wires[0])
+    gate = qml.ctrl(qml.MultiRZ(np.pi / 4, wires=wires[1:]), control=wires[0])
     gate = gate.matrix()
-    
+
     max_mpo_bond_dim = 2 ** len(wires)
 
     mpos, sorted_wired = gate_matrix_decompose(gate, wires, max_mpo_bond_dim, np.complex128)
 
-    wires_b = [3,1,2,0]
-    gate_b = qml.ctrl(qml.MultiRZ(np.pi/4, wires=wires_b[:-1]),control=wires_b[-1])
+    wires_b = [3, 1, 2, 0]
+    gate_b = qml.ctrl(qml.MultiRZ(np.pi / 4, wires=wires_b[:-1]), control=wires_b[-1])
     gate_b = gate_b.matrix()
 
     max_mpo_bond_dim = 2 ** len(wires_b)
@@ -156,7 +157,7 @@ def test_gate_matrix_decompose_non_sorted():
 
     # check if gate matrices are the same
     assert np.allclose(gate, gate_b, atol=1e-6)
-    
+
     # check if the wires are the same
     assert sorted_wired == sorted_wired_b
 
@@ -164,4 +165,3 @@ def test_gate_matrix_decompose_non_sorted():
     assert not np.allclose(mpos[0], mpos_b[0], atol=1e-6)
     assert not np.allclose(mpos[1], mpos_b[1], atol=1e-6)
     assert not np.allclose(mpos[2], mpos_b[2], atol=1e-6)
-    
