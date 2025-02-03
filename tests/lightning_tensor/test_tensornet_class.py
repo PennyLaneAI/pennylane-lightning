@@ -16,9 +16,6 @@ Unit tests for the tensornet functions.
 """
 import numpy as np
 
-# extend the print line width
-np.set_printoptions(linewidth=500)
-
 import pennylane as qml
 import pytest
 import scipy
@@ -140,7 +137,7 @@ def test_gate_matrix_decompose():
     assert np.allclose(unitary_f, original_gate, atol=1e-6)
 
 
-def test_gate_matrix_decompose_out_order():
+def test_gate_matrix_decompose_out_of_order():
     """Test the gate matrix decomposition function when the wires are not sorted."""
     wires = [1, 2, 0]
     hermitian = np.random.rand(2 ** len(wires), 2 ** len(wires))
