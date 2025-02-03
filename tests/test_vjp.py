@@ -61,7 +61,7 @@ class TestVectorJacobianProduct:
         tape2.trainable_params = {1, 2, 3}
 
         vjp = dev.compute_vjp(tape1, dy)
-        jac = dev.compute_derivatives( tape2)
+        jac = dev.compute_derivatives(tape2)
 
         assert np.allclose(vjp, jac, atol=tol, rtol=0)
 
@@ -84,12 +84,12 @@ class TestVectorJacobianProduct:
         with pytest.raises(
             ValueError, match="Number of observables in the tape must be the same as"
         ):
-            dev.compute_vjp( tape1, dy1)
+            dev.compute_vjp(tape1, dy1)
 
         with pytest.raises(
             ValueError, match="The vjp method only works with a real-valued grad_vec"
         ):
-            dev.compute_vjp( tape1, dy2)
+            dev.compute_vjp(tape1, dy2)
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -284,7 +284,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.compute_vjp( tapes, dys)
+        vjps = dev.compute_vjp(tapes, dys)
 
         assert len(vjps[0]) == 0
         assert vjps[1] is not None
@@ -308,7 +308,7 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([1.0]), np.array([1.0])]
 
-        vjps = dev.compute_vjp( tapes, dys)
+        vjps = dev.compute_vjp(tapes, dys)
 
         assert len(vjps[0]) == 0
         assert len(vjps[1]) == 0
@@ -332,6 +332,6 @@ class TestBatchVectorJacobianProduct:
         tapes = [tape1, tape2]
         dys = [np.array([0.0]), np.array([1.0])]
 
-        vjps = dev.compute_vjp( tapes, dys)
+        vjps = dev.compute_vjp(tapes, dys)
 
         assert np.allclose(vjps[0], 0)
