@@ -730,10 +730,6 @@ class TestLightningDeviceIntegration:
         qnode = qml.QNode(circuit, dev, diff_method="best")
         assert isinstance(qnode.device, ld)
 
-    @pytest.mark.skipif(
-        device_name == "lightning.tensor",
-        reason="This device doesn't allow dynamic qubit allocation.",
-    )
     def test_dynamic_allocate_qubit(self, qubit_device, tol):
         """Test the dynamic allocation of qubits in Lightning devices"""
 
