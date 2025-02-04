@@ -9,6 +9,9 @@
 * Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 
+* Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
+  [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
+
 * Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
   [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
 

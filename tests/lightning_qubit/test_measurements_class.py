@@ -389,7 +389,8 @@ class TestExpvalHamiltonian:
 
 
 @pytest.mark.skipif(
-    device_name == "lightning.tensor", reason="lightning.tensor does not support sparseH."
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support sparseH.",
 )
 class TestSparseExpval:
     """Tests for the expval function"""
@@ -474,7 +475,8 @@ class TestMeasurements:
             qml.Hermitian(get_hermitian_matrix(2**2), wires=[0, 1]),
             qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
             qml.Hamiltonian(
-                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
+                [1.0, 2.0, 3.0],
+                [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)],
             ),
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
@@ -572,7 +574,8 @@ class TestMeasurements:
             qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
             qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
             qml.Hamiltonian(
-                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
+                [1.0, 2.0, 3.0],
+                [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)],
             ),
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
@@ -589,7 +592,8 @@ class TestMeasurements:
             qml.Hermitian(get_hermitian_matrix(2), wires=[0]),
             qml.Hermitian(get_hermitian_matrix(2**2), wires=[2, 3]),
             qml.Hamiltonian(
-                [1.0, 2.0, 3.0], [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)]
+                [1.0, 2.0, 3.0],
+                [qml.PauliX(0), qml.PauliY(1), qml.PauliZ(2) @ qml.PauliZ(3)],
             ),
             qml.SparseHamiltonian(get_sparse_hermitian_matrix(2**4), wires=range(4)),
         ),
@@ -810,11 +814,7 @@ class TestControlledOps:
         par = 0.1234
 
         tape = qml.tape.QuantumScript(
-            [
-                qml.ControlledQubitUnitary(
-                    qml.QubitUnitary(qml.RX.compute_matrix(par), wires=5), control_wires=range(5)
-                )
-            ],
+            [qml.ControlledQubitUnitary(qml.RX.compute_matrix(par), wires=range(6))],
             [qml.expval(qml.PauliX(0))],
         )
 
@@ -844,12 +844,13 @@ class TestControlledOps:
         tape = qml.tape.QuantumScript(
             [
                 qml.StatePrep(init_state, wires=range(n_qubits)),
-                qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=target_wires),
+                qml.ControlledQubitUnitary(U, wires=control_wires + target_wires),
             ],
             [qml.state()],
         )
         tape_cnot = qml.tape.QuantumScript(
-            [qml.StatePrep(init_state, wires=range(n_qubits)), qml.CNOT(wires=wires)], [qml.state()]
+            [qml.StatePrep(init_state, wires=range(n_qubits)), qml.CNOT(wires=wires)],
+            [qml.state()],
         )
 
         statevector = lightning_sv(n_qubits)
