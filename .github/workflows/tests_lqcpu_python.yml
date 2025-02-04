@@ -249,10 +249,6 @@ jobs:
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
     needs: [test_lightning_qubit_wheels]
-    strategy:
-      matrix:
-        pl_backend: ["lightning_qubit"]
-        blas: ["OFF"]
     name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     steps:
@@ -266,23 +262,6 @@ jobs:
         with:
           fetch-tags: true
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt
-          path: ${{ github.workspace }}
-
-      - uses: actions/download-artifact@v4
-        with:
-          name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
-          path: ${{ github.workspace }}
-
-      - name: Get required Python packages
-        run: |
-          # Install wheel to get source files for combining coverage files
-          WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
-          mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps --force-reinstall
-
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
@@ -291,6 +270,7 @@ jobs:
 
       - name: Combine coverage files
         run: |
+          # Update .coveragerc to include sources for combining equivalent paths
           wheelpath=$(pip show pennylane-lightning | grep Location | awk -F: '{print $2}' | xargs)
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc

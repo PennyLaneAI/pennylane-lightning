@@ -269,13 +269,14 @@ jobs:
       - name: Test editable install
         run: |
           pip uninstall pennylane-lightning pennylane-lightning-kokkos -y
+          # Rename source files back to test editable installation
           mv pennylane_lightning_tmp/ pennylane_lightning/
           python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
           python -m pip install -e . --config-settings editable_mode=compat -vv
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
         uses: actions/upload-artifact@v4
@@ -319,27 +320,6 @@ jobs:
         with:
           fetch-tags: true
 
-      - uses: actions/download-artifact@v4
-        with:
-          name: ${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt
-          path: ${{ github.workspace }}
-  
-      - uses: actions/download-artifact@v4
-        with:
-          name: wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl
-          path: ${{ github.workspace }}
-
-      - name: Get required Python packages
-        run: |
-          python -m pip install -r requirements.txt
-          WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
-          mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
-          if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
-            python scripts/configure_pyproject_toml.py
-            SKIP_COMPILATION=True python -m pip install . -vv
-          fi
-          python -m pip install ${{ github.workspace }}/$WHEEL_NAME --no-deps
-
       - name: Download coverage reports
         uses: actions/download-artifact@v4
         with:
@@ -348,6 +328,7 @@ jobs:
 
       - name: Combine coverage files
         run: |
+          # Update .coveragerc to include sources for combining equivalent paths
           wheelpath=$(pip show pennylane-lightning | grep Location | awk -F: '{print $2}' | xargs)
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc
