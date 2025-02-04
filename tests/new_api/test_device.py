@@ -245,7 +245,7 @@ class TestExecution:
         return transf_fn(results)
 
     @staticmethod
-    def process_and_execute(device, tape):
+    def process_and_execute(device, *tape):
         program, _ = device.preprocess()
         tapes, transf_fn = program([tape])
         results = device.execute(tapes)
@@ -526,6 +526,39 @@ class TestExecution:
         assert len(res) == 2
         for r, e in zip(res, expected):
             assert np.allclose(r, e)
+            
+    def test_execute_multi_tapes_update_dynamic_wires(self, dev):
+        """Test that execute handles multiple tapes with changing wire number."""
+
+        qs0 = QuantumScript(
+            [
+                qml.RX(0.1, 0),
+                qml.CNOT([0, 2]),
+                qml.RZ(0.1, 1),
+                qml.CNOT([1, 2]),
+            ],
+            [qml.probs(op=qml.X(2)), qml.probs(op=qml.X(2))],
+        )
+        qs1 = QuantumScript(
+            [
+                qml.RX(0.1, 0),
+                qml.CNOT([0, 1]),
+                qml.RZ(0.1, 1),
+                qml.CNOT([0, 1]),
+            ],
+            [qml.probs(op=qml.X(2)), qml.probs(op=qml.X(2))],
+        )
+        qs2 = QuantumScript(
+            [
+                qml.RX(0.1, 4),
+                qml.CNOT([0, 2]),
+                qml.RZ(0.1, 1),
+                qml.CNOT([0, 1]),
+            ],
+            [qml.probs(op=qml.X(2)), qml.probs(op=qml.X(2))],
+        )
+        result = dev.execute([qs0, qs1, qs2])
+        #TODO: ADD RESULT
 
     @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
     @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
