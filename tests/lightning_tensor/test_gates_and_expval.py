@@ -22,7 +22,10 @@ from pennylane import DeviceError
 from pennylane import numpy as np
 
 if device_name != "lightning.tensor":
-    pytest.skip("Exclusive tests for Lightning Tensor device. Skipping.", allow_module_level=True)
+    pytest.skip(
+        "Exclusive tests for Lightning Tensor device. Skipping.",
+        allow_module_level=True,
+    )
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
     from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
@@ -69,9 +72,7 @@ def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.Identity(wires=wires[0])
     qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
-    qml.ControlledQubitUnitary(
-        qml.matrix(qml.PauliX([wires[1]])), control_wires=[wires[0]], wires=wires[1]
-    )
+    qml.ControlledQubitUnitary(qml.matrix(qml.PauliX([wires[1]])), wires=[wires[0], wires[1]])
     qml.DiagonalQubitUnitary(np.array([1, 1]), wires=wires[2])
     qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[0, 1])
     qml.PauliX(wires=wires[1])
@@ -278,7 +279,8 @@ class TestSparseHExpval:
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            ValueError, match="The number of Hermitian observables target wires should be 1."
+            ValueError,
+            match="The number of Hermitian observables target wires should be 1.",
         ):
             m.expval(q.queue[0])
 
@@ -292,7 +294,8 @@ class TestSparseHExpval:
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            ValueError, match="The number of Hermitian observables target wires should be 1."
+            ValueError,
+            match="The number of Hermitian observables target wires should be 1.",
         ):
             m.var(q.queue[0])
 
@@ -313,7 +316,10 @@ class TestQChem:
         symbols = ["H", "H"]
 
         geometry = np.array(
-            [[-0.676411907, 0.000000000, 0.000000000], [0.676411907, 0.000000000, 0.000000000]],
+            [
+                [-0.676411907, 0.000000000, 0.000000000],
+                [0.676411907, 0.000000000, 0.000000000],
+            ],
             requires_grad=False,
         )
 
