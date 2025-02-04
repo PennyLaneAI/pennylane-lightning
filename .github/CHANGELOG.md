@@ -9,6 +9,9 @@
 * Fix CI to collect Python code coverage for Lightning-Qubit and Lightning-Kokkos CPU.
   [(#1053)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1053)
 
+* Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
+  [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
+
 * Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
   [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
 
