@@ -336,7 +336,11 @@ class LightningQubit(LightningBase):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-        if (self._statevector is None) or (self._statevector.num_wires != circuit.num_wires):
+        if (self._statevector is None):
+            self._statevector = self.LightningStateVector(
+                num_wires=circuit.num_wires, dtype=self._c_dtype
+            )
+        elif (self._statevector.num_wires != circuit.num_wires):
             self._statevector = self.LightningStateVector(
                 num_wires=circuit.num_wires, dtype=self._c_dtype
             )
