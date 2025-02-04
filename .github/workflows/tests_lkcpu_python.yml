@@ -302,13 +302,9 @@ jobs:
 
   upload-to-codecov-linux-python:
     if: github.event_name == 'pull_request'
-    needs: [build_and_cache_Kokkos,test_lightning_kokkos_wheels]
+    needs: [test_lightning_kokkos_wheels]
     name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        pl_backend: ["lightning_kokkos"]
-        exec_model: ${{ fromJson(needs.build_and_cache_Kokkos.outputs.exec_model) }}
     steps:
       - uses: actions/setup-python@v5
         name: Install Python
