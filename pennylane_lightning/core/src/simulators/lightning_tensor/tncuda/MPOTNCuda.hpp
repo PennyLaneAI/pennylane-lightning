@@ -35,12 +35,10 @@ namespace cuUtil = Pennylane::LightningGPU::Util;
 namespace Pennylane::LightningTensor::TNCuda {
 
 /**
- * @brief Class representing an Matrix Product Operator (MPO) object for the MPS
+ * @brief Class representing a Matrix Product Operator (MPO) object for the MPS
  backend.
  * Any gate tensor can be represented as an MPO tensor network in the context of
- MPS. The gate tensor must be decomposed with respect to its target wires. Note
- that the only local target wires are supported. The non-adjacent target wires
- must be swapped to local before contructing the MPO tensor network.
+ MPS. The gate tensor must be decomposed with respect to its target wires.
  * The MPO tensors' modes order in an open boundary condition are:
    2              3              2
    |              |              |
@@ -52,10 +50,8 @@ namespace Pennylane::LightningTensor::TNCuda {
  left side bound MPO tensor is 1 and the bondR of the right side bound MPO
  tensor is 1.
 
- * Note that the gate tensor should be permuted to ascending order and
- decomposed into MPO sites before passing to this class. Preprocess and
- postprocess with SWAP operations are required to ensure MPOs target at adjacent
- wires and the target wires are correct.
+ * Note that the gate tensor should be decomposed into MPO sites and use
+ column-major order (Fortran order) before passing to this class.
 
  * @tparam PrecisionT Floating point type.
  */
@@ -124,12 +120,6 @@ template <class PrecisionT> class MPOTNCuda {
         PL_ABORT_IF(maxMPOBondDim < 2,
                     "Max MPO bond dimension must be at least 2.");
 
-        PL_ABORT_IF_NOT(std::is_sorted(wires.begin(), wires.end()),
-                        "Only sorted target wires is accepeted.");
-
-        PL_ABORT_IF_NOT(wires.size() == wires.back() - wires.front() + 1,
-                        "Only support local target wires.");
-
         // Create an empty MPO tensor network operator. Note that the state
         // extents are aligned with the quantum state.
         PL_CUTENSORNET_IS_SUCCESS(cutensornetCreateNetworkOperator(
@@ -144,12 +134,8 @@ template <class PrecisionT> class MPOTNCuda {
 
         MPO_modes_int32_.resize(numMPOSites_);
 
-        std::iota(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
-                  wires.front());
-
-        std::transform(MPO_modes_int32_.begin(), MPO_modes_int32_.end(),
-                       MPO_modes_int32_.begin(),
-                       [&numQubits](const std::size_t mode) {
+        std::transform(wires.begin(), wires.end(), MPO_modes_int32_.begin(),
+                       [&numQubits](std::size_t mode) {
                            return static_cast<int32_t>(numQubits - 1 - mode);
                        });
 

@@ -133,5 +133,34 @@ def test_gate_matrix_decompose():
     unitary_f = np.transpose(unitary, axes=(5, 3, 1, 4, 2, 0))
     unitary_f = np.reshape(unitary_f, (2 ** len(wires), 2 ** len(wires)))
 
-    assert np.allclose(sorted_wired, sorted(wires), atol=1e-6)
+    assert np.allclose(unitary_f, original_gate, atol=1e-6)
+
+
+def test_gate_matrix_decompose_out_of_order():
+    """Test the gate matrix decomposition function when the wires are not sorted."""
+    wires = [1, 2, 0]
+    hermitian = np.random.rand(2 ** len(wires), 2 ** len(wires))
+    hermitian = hermitian @ hermitian.conj().T
+
+    gate = scipy.linalg.expm(1j * hermitian)
+    original_gate = gate.copy()  # for later to double check
+
+    max_mpo_bond_dim = 2 ** len(wires)
+
+    mpos, sorted_wired = gate_matrix_decompose(gate, wires, max_mpo_bond_dim, np.complex128)
+
+    # restore the C-ordering of the matrices
+    mpo0 = np.transpose(mpos[0], axes=(2, 1, 0))
+    mpo1 = np.transpose(mpos[1], axes=(3, 2, 1, 0))
+    mpo2 = np.transpose(mpos[2], axes=(2, 1, 0))
+
+    # check if the wires are the same
+    assert sorted_wired == (0, 1, 2)
+
+    # recreate unitary
+    unitary = np.tensordot(mpo0, mpo1, axes=([1], [0]))
+    unitary = np.tensordot(unitary, mpo2, axes=([3], [0]))
+    unitary_f = np.transpose(unitary, axes=(3, 1, 5, 2, 0, 4))
+    unitary_f = np.reshape(unitary_f, (2 ** len(wires), 2 ** len(wires)))
+
     assert np.allclose(unitary_f, original_gate, atol=1e-6)
