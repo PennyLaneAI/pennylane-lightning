@@ -329,7 +329,7 @@ jobs:
       - name: Combine coverage files
         run: |
           # Update .coveragerc to include sources for combining equivalent paths
-          wheelpath=$(pip show pennylane-lightning | grep Location | awk -F: '{print $2}' | xargs)
+          wheelpath=$Python_ROOT_DIR/lib/python3.10/site-packages
           echo "" >> .coveragerc
           echo "[paths]" >> .coveragerc
           echo "source =" >> .coveragerc
