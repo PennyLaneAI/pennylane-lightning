@@ -58,8 +58,7 @@ class TestVectorJacobianProduct:
 
     @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        params = request.param
-        return qml.device(device_name, wires=params[1], c_dtype=params[0])
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     @pytest.mark.skipif(ld._new_API, reason="Old API required")
     def test_use_device_state(self, tol, dev):
