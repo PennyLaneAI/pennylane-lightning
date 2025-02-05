@@ -44,6 +44,9 @@
 
 ### Bug fixes
 
+* Fix CI to collect Python code coverage for Lightning-Qubit and Lightning-Kokkos CPU.
+  [(#1053)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1053)
+
 * Upgrade the version of QEMU image to fix AARCH64 wheel action.
   [(#1056)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1056)
 
