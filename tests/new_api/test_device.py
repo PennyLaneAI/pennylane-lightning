@@ -528,7 +528,7 @@ class TestExecution:
             assert np.allclose(r, e)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
+        device_name not in ("lightning.qubit", "lightning.kokkos"),
         reason=f"The device {device_name} does not dynamic wires",
     )
     def test_execute_tape_batch_with_dynamic_wires(self):
@@ -919,7 +919,7 @@ class TestDerivatives:
         """Test that results are correct when we execute and compute derivatives for a batch of
         tapes with and without dynamic wires."""
 
-        if device_name != "lightning.qubit" and device_wires is None:
+        if device_name not in ("lightning.qubit", "lightning.kokkos") and device_wires is None:
             pytest.skip("This device does not support dynamic wires")
 
         device = LightningDevice(wires=device_wires, batch_obs=batch_obs)
@@ -1287,7 +1287,7 @@ class TestVJP:
         """Test that results are correct when we execute and compute vjp for a batch of
         tapes with and without dynamic wires."""
 
-        if device_name != "lightning.qubit" and device_wires is None:
+        if device_name not in ("lightning.qubit", "lightning.kokkos") and device_wires is None:
             pytest.skip("This device does not support dynamic wires")
 
         device = LightningDevice(wires=device_wires, batch_obs=batch_obs)
