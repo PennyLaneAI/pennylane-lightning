@@ -527,38 +527,45 @@ class TestExecution:
         for r, e in zip(res, expected):
             assert np.allclose(r, e)
             
-    def test_execute_multi_tapes_update_dynamic_wires(self, dev):
-        """Test that execute handles multiple tapes with changing wire number."""
+    def test_execute_tape_batch_with_dynamic_wires(self):
+        """Test that execute handles multiple tapes with dynamic number of wires."""
 
         qs0 = QuantumScript(
             [
                 qml.RX(0.1, 0),
-                qml.CNOT([0, 2]),
+                qml.CNOT([1, 0]),
                 qml.RZ(0.1, 1),
-                qml.CNOT([1, 2]),
+                qml.CNOT([2, 1]),
             ],
-            [qml.probs(op=qml.X(2)), qml.probs(op=qml.X(2))],
+            [qml.state()]
         )
         qs1 = QuantumScript(
             [
                 qml.RX(0.1, 0),
-                qml.CNOT([0, 1]),
+                qml.CNOT([1, 0]),
                 qml.RZ(0.1, 1),
                 qml.CNOT([0, 1]),
             ],
-            [qml.probs(op=qml.X(2)), qml.probs(op=qml.X(2))],
+            [qml.state()]
         )
         qs2 = QuantumScript(
             [
                 qml.RX(0.1, 4),
+                qml.CNOT([2, 4]),
+                qml.RZ(0.1, 2),
+                qml.CNOT([1, 2]),
                 qml.CNOT([0, 2]),
-                qml.RZ(0.1, 1),
-                qml.CNOT([0, 1]),
             ],
-            [qml.probs(op=qml.X(2)), qml.probs(op=qml.X(2))],
+            [qml.state()]
         )
+        dev = LightningDevice(wires=None)
         result = dev.execute([qs0, qs1, qs2])
-        #TODO: ADD RESULT
+        
+        dev_ref = DefaultQubit(max_workers=1)
+        result_ref = dev_ref.execute([qs0, qs1, qs2])
+        
+        for r, e in zip(result, result_ref):
+             assert np.allclose(r, e)
 
     @pytest.mark.parametrize("phi, theta", list(zip(PHI, THETA)))
     @pytest.mark.parametrize("wires", (["a", "b", -3], [0, "target", "other_target"]))
@@ -901,12 +908,13 @@ class TestDerivatives:
         with pytest.raises(qml.DeviceError, match="Finite shots are not supported"):
             _, _ = program([qs])
 
+    @pytest.mark.parametrize("device_wires", [None, 4])
     @pytest.mark.parametrize("phi", PHI)
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_derivatives_tape_batch(self, phi, execute_and_derivatives, batch_obs):
+    def test_derivatives_tape_batch(self, device_wires, phi, execute_and_derivatives, batch_obs):
         """Test that results are correct when we execute and compute derivatives for a batch of
-        tapes."""
-        device = LightningDevice(wires=4, batch_obs=batch_obs)
+        tapes with and without dynamic wires."""
+        device = LightningDevice(wires=device_wires, batch_obs=batch_obs)
 
         ops = [qml.X(0), qml.X(1)]
         if device_name == "lightning.qubit":
@@ -1264,12 +1272,13 @@ class TestVJP:
         ):
             _ = dev.execute_and_compute_vjp(qs, dy, config)
 
+    @pytest.mark.parametrize("device_wires", [None, 4])
     @pytest.mark.parametrize("phi", PHI)
     @pytest.mark.parametrize("execute_and_derivatives", [True, False])
-    def test_vjp_tape_batch(self, phi, execute_and_derivatives, batch_obs):
-        """Test that results are correct when we execute and compute derivatives for a batch of
-        tapes."""
-        device = LightningDevice(wires=4, batch_obs=batch_obs)
+    def test_vjp_tape_batch(self, device_wires, phi, execute_and_derivatives, batch_obs):
+        """Test that results are correct when we execute and compute vjp for a batch of
+        tapes with and without dynamic wires."""
+        device = LightningDevice(wires=device_wires, batch_obs=batch_obs)
 
         ops = [
             qml.X(0),
