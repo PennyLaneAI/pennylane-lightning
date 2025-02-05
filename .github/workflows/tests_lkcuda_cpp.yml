@@ -40,9 +40,7 @@ jobs:
   builddeps:
     if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
     runs-on:
-      - self-hosted
-      - ubuntu-22.04
-      - gpu
+      - single-gpu-x64
 
     strategy:
       max-parallel: 1
@@ -119,9 +117,7 @@ jobs:
 
     name: C++ Tests (${{ matrix.pl_backend }}, kokkos-${{ matrix.kokkos_version }}, model-${{ matrix.exec_model }})
     runs-on:
-      - ${{ matrix.os }}
-      - self-hosted
-      - gpu
+      - single-gpu-x64
 
     steps:
       - name: Validate GPU version and installed compiler
