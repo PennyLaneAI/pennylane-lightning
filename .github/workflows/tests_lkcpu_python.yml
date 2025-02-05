@@ -245,7 +245,7 @@ jobs:
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Temporarily rename source files here to ensure pytest collect source coverage from wheel package
           # Rename as we want to restore them for editable install test
-          mv pennylane_lightning/ pennylane_lightning_tmp/
+          mv pennylane_lightning/ pennylane_lightning_src/
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
@@ -270,7 +270,7 @@ jobs:
         run: |
           pip uninstall pennylane-lightning pennylane-lightning-kokkos -y
           # Rename source files back to test editable installation
-          mv pennylane_lightning_tmp/ pennylane_lightning/
+          mv pennylane_lightning_src/ pennylane_lightning/
           python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
