@@ -340,9 +340,8 @@ class LightningQubit(LightningBase):
             self._statevector = self.LightningStateVector(
                 num_wires=circuit.num_wires, dtype=self._c_dtype
             )
-        circuit = (
-            circuit.map_to_standard_wires()
-        )  # Map to follow default.qubit wire order for dynamic wires
+        # Map to follow default.qubit wire order for dynamic wires
+        circuit = circuit.map_to_standard_wires()
         return circuit
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
