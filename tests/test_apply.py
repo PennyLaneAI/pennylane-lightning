@@ -754,7 +754,7 @@ class TestLightningDeviceIntegration:
         assert np.allclose(results, expected_state, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
+        device_name not in ("lightning.qubit", "lightning.kokkos"),
         reason="This device doesn't allow dynamic qubit allocation.",
     )
     @pytest.mark.parametrize(
