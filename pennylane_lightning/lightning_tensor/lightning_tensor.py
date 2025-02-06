@@ -292,7 +292,6 @@ class LightningTensor(Device):
     }
 
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
-    _new_API = True
 
     # TODO: Move supported ops/obs to TOML file
     operations = _operations

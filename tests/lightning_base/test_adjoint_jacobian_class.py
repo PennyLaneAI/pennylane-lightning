@@ -28,12 +28,6 @@ from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-if not LightningDevice._new_API:
-    pytest.skip(
-        "Exclusive tests for new API backends LightningAdjointJacobian class. Skipping.",
-        allow_module_level=True,
-    )
-
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 

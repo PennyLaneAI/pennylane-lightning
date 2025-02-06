@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Remove the old device API references in the Lightning repo and test suite.
+  [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
+  
 * Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
   [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
 
