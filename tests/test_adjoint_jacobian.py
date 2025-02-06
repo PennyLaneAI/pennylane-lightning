@@ -87,7 +87,7 @@ def Rz(theta):
 def get_tolerance_and_stepsize(device, step_size=False):
     """Helper function to get tolerance and finite diff step size for
     different device dtypes"""
-    tol = 1e-3 if device.dtype == np.complex64 else 1e-7
+    tol = 1e-3 if device.c_dtype == np.complex64 else 1e-7
     h = tol if step_size else None
     return tol, h
 
@@ -900,7 +900,7 @@ class TestAdjointJacobianQNode:
             qml.RY(tf.cos(params2), wires=[0])
             return qml.expval(qml.PauliZ(0))
 
-        tf_r_dtype = tf.float32 if dev.dtype == np.complex64 else tf.float64
+        tf_r_dtype = tf.float32 if dev.c_dtype == np.complex64 else tf.float64
         tol, h = get_tolerance_and_stepsize(dev, step_size=True)
 
         params1 = tf.Variable(0.3, dtype=tf_r_dtype)
@@ -960,7 +960,7 @@ class TestAdjointJacobianQNode:
         jax interface"""
 
         jax = pytest.importorskip("jax")
-        dtype = np.float32 if dev.dtype == np.complex64 else np.float64
+        dtype = np.float32 if dev.c_dtype == np.complex64 else np.float64
 
         if dtype == np.float64:
             from jax import config

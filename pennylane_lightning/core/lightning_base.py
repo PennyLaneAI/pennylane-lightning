@@ -85,8 +85,6 @@ class LightningBase(Device):
         """State vector complex data type."""
         return self._c_dtype
 
-    dtype = c_dtype
-
     @abstractmethod
     def _set_lightning_classes(self):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""

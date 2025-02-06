@@ -135,7 +135,7 @@ class TestVectorJacobianProduct:
             dev.compute_vjp(tape, dy)
 
     def test_hermitian_expectation(self, dev, tol):
-        obs = np.array([[1, 0], [0, -1]], dtype=dev.dtype, requires_grad=False)
+        obs = np.array([[1, 0], [0, -1]], dtype=dev.c_dtype, requires_grad=False)
         dy = np.array([0.8])
 
         for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):
@@ -148,7 +148,7 @@ class TestVectorJacobianProduct:
             assert np.allclose(vjp, -0.8 * np.sin(x), atol=tol)
 
     def test_hermitian_tensor_expectation(self, dev, tol):
-        obs = np.array([[1, 0], [0, -1]], dtype=dev.dtype, requires_grad=False)
+        obs = np.array([[1, 0], [0, -1]], dtype=dev.c_dtype, requires_grad=False)
         dy = np.array([0.8])
 
         for x in np.linspace(-2 * math.pi, 2 * math.pi, 7):

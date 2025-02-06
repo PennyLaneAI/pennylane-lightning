@@ -495,7 +495,7 @@ class TestExecution:
             if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
                 pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
 
-        if isinstance(mp.obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(mp.obs, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
@@ -703,7 +703,7 @@ class TestDerivatives:
         self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
-        if isinstance(obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(obs, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
@@ -761,7 +761,7 @@ class TestDerivatives:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
-        if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(obs2, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
@@ -1127,7 +1127,7 @@ class TestVJP:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the VJP is correct when a tape has multiple expectation values"""
-        if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(obs2, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
