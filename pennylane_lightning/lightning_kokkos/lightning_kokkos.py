@@ -242,14 +242,7 @@ class LightningKokkos(LightningBase):
         # Kokkos specific options
         self._kokkos_args = kokkos_args
 
-        # Creating the state vector
-        self._statevector = (
-            self.LightningStateVector(
-                num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args
-            )
-            if wires is not None
-            else None
-        )
+        self._statevector = None
 
         if not LightningKokkos.kokkos_config:
             LightningKokkos.kokkos_config = _kokkos_configuration()
@@ -293,7 +286,7 @@ class LightningKokkos(LightningBase):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wires_from_circuit(self, circuit):
-        """From a given circuit, determine the number of wires and allocate a statevector if applicable. Circuit wires will be mapped to Pennylane default.qubit standard wire order.
+        """From a given circuit, determine the number of wires and allocate a state-vector if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.

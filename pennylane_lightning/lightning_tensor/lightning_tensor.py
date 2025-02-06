@@ -414,7 +414,7 @@ class LightningTensor(Device):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wires_from_circuit(self, circuit):
-        """Map circuit wires to Pennylane default.qubit standard wire order.
+        """Map circuit wires to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
