@@ -100,7 +100,7 @@ class LightningBase(Device):
 
     @abstractmethod
     def dynamic_wires_from_circuit(self, circuit):
-        """From a given circuit, determine the number of wires and allocate the underlying quantum state if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+        """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
