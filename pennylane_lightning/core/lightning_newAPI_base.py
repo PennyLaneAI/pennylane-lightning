@@ -100,7 +100,7 @@ class LightningBase(Device):
 
     @abstractmethod
     def dynamic_wires_from_circuit(self, circuit):
-        """From a given circuit, determine the number of wires and allocate the underlying quantum state if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+        """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
@@ -326,7 +326,7 @@ class LightningBase(Device):
 
         return tuple(
             self.jacobian(
-                self.dynamic_wires_from_circuit(circuit) if self.wires is None else circuit,
+                self.dynamic_wires_from_circuit(circuit),
                 self._statevector,
                 batch_obs=batch_obs,
                 wire_map=self._wire_map,
@@ -351,7 +351,7 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_jacobian(
-                self.dynamic_wires_from_circuit(circuit) if self.wires is None else circuit,
+                self.dynamic_wires_from_circuit(circuit),
                 self._statevector,
                 batch_obs=batch_obs,
                 wire_map=self._wire_map,
@@ -411,7 +411,7 @@ class LightningBase(Device):
 
         return tuple(
             self.vjp(
-                self.dynamic_wires_from_circuit(circuit) if self.wires is None else circuit,
+                self.dynamic_wires_from_circuit(circuit),
                 cots,
                 self._statevector,
                 batch_obs=batch_obs,
@@ -440,7 +440,7 @@ class LightningBase(Device):
 
         results = (
             self.simulate_and_vjp(
-                self.dynamic_wires_from_circuit(circuit) if self.wires is None else circuit,
+                self.dynamic_wires_from_circuit(circuit),
                 cots,
                 self._statevector,
                 batch_obs=batch_obs,
@@ -488,6 +488,10 @@ class LightningBase(Device):
         """
         # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
 
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots
