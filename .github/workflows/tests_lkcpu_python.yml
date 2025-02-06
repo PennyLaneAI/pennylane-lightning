@@ -243,6 +243,9 @@ jobs:
           OMP_PROC_BIND: false
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          # Temporarily rename source files here to ensure pytest collect source coverage from wheel package
+          # Rename as we want to restore them for editable install test
+          mv pennylane_lightning/ pennylane_lightning_src/
           pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
           pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
 
@@ -266,12 +269,14 @@ jobs:
       - name: Test editable install
         run: |
           pip uninstall pennylane-lightning pennylane-lightning-kokkos -y
+          # Rename source files back to test editable installation
+          mv pennylane_lightning_src/ pennylane_lightning/
           python scripts/configure_pyproject_toml.py
           SKIP_COMPILATION=True python -m pip install -e . --config-settings editable_mode=compat
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           PL_BACKEND=${DEVICENAME} python scripts/configure_pyproject_toml.py
           python -m pip install -e . --config-settings editable_mode=compat -vv
-          PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS
+          PL_DEVICE=${DEVICENAME} python -m pytest tests/test_device.py $COVERAGE_FLAGS --cov-append
 
       - name: Upload test durations
         uses: actions/upload-artifact@v4
@@ -301,6 +306,11 @@ jobs:
     name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.10'
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -314,8 +324,16 @@ jobs:
 
       - name: Combine coverage files
         run: |
+          # Update .coveragerc to include sources for combining equivalent paths
+          wheelpath=$Python_ROOT_DIR/lib/python3.10/site-packages
+          echo "" >> .coveragerc
+          echo "[paths]" >> .coveragerc
+          echo "source =" >> .coveragerc
+          echo "    pennylane_lightning" >> .coveragerc
+          echo "    $wheelpath/pennylane_lightning" >> .coveragerc
+          echo "    /home/runner/work/pennylane-lightning/pennylane-lightning/pennylane_lightning" >> .coveragerc
           python -m pip install coverage
-          python -m coverage combine .coverage-*
+          python -m coverage combine --debug=pathmap .coverage-*
           # Added cov xml -i to ignore "No source for code" random errors
           # https://stackoverflow.com/questions/2386975/no-source-for-code-message-in-coverage-py
           python -m coverage xml -i -o coverage-${{ github.job }}.xml
