@@ -270,8 +270,10 @@ class LightningGPU(LightningBase):
 
         self._mpi = mpi
         self._mpi_buf_size = mpi_buf_size
-        # Creating the state vector
-        if wires is not None:
+        # Create the state vector only for MPI, otherwise created dynamically before execution
+        if self._mpi:
+            if wires is None:
+                raise qml.DeviceError("Lightning-GPU-MPI does not support dynamic wires allocation.")
             self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
             self._statevector = self.LightningStateVector(
                 num_wires=len(self.wires),
@@ -280,10 +282,6 @@ class LightningGPU(LightningBase):
                 use_async=self._use_async,
             )
         else:
-            if self._mpi:
-                raise qml.DeviceError(
-                    "Lightning-GPU-MPI does not support dynamic wires allocation."
-                )
             self._statevector = None
             self._mpi_handler = None
 
@@ -335,9 +333,6 @@ class LightningGPU(LightningBase):
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
         if (self._statevector is None) or (self._statevector.num_wires != circuit.num_wires):
-            self._mpi_handler = MPIHandler(
-                self._mpi, self._mpi_buf_size, circuit.num_wires, self._c_dtype
-            )
             self._statevector = self.LightningStateVector(
                 num_wires=circuit.num_wires,
                 dtype=self._c_dtype,

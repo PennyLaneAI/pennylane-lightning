@@ -118,7 +118,7 @@ runtime_code_generation = false
 # does not support mid-circuit measurements.
 supported_mcm_methods = [ "one-shot" ]
 # Whether the device supports dynamic qubit allocation/deallocation.
-dynamic_qubit_management = true
+dynamic_qubit_management = false
 # Whether simultaneous measurements of non-commuting observables is supported.
 non_commuting_observables = true
 # Whether the device supports initial state preparation.
