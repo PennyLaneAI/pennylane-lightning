@@ -242,14 +242,7 @@ class LightningKokkos(LightningBase):
         # Kokkos specific options
         self._kokkos_args = kokkos_args
 
-        # Creating the state vector
-        self._statevector = (
-            self.LightningStateVector(
-                num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args
-            )
-            if wires is not None
-            else None
-        )
+        self._statevector = None
 
         if not LightningKokkos.kokkos_config:
             LightningKokkos.kokkos_config = _kokkos_configuration()
