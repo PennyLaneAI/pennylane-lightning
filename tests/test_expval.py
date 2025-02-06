@@ -65,7 +65,7 @@ class TestExpval:
 
         assert np.allclose(
             res,
-            np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.dtype),
+            np.array([np.sin(theta) * np.sin(phi), np.sin(phi)], dtype=dev.c_dtype),
             tol * 10,
         )
 

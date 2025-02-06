@@ -20,12 +20,6 @@ from conftest import PHI, THETA, LightningDevice, device_name  # tested device
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig
 from pennylane.tape import QuantumScript
 
-if not LightningDevice._new_API:
-    pytest.skip(
-        "Exclusive tests for new API backends LightningAdjointJacobian class. Skipping.",
-        allow_module_level=True,
-    )
-
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
