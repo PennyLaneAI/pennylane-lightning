@@ -294,7 +294,7 @@ class LightningKokkos(LightningBase):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-        
+
         if self.wires is None:
             num_wires = circuit.num_wires
             # Map to follow default.qubit wire order for dynamic wires
@@ -303,7 +303,9 @@ class LightningKokkos(LightningBase):
             num_wires = len(self.wires)
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
-            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype, kokkos_args=self._kokkos_args)
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype, kokkos_args=self._kokkos_args
+            )
 
         return circuit
 

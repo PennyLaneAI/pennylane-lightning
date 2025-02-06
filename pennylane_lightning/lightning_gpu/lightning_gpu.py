@@ -273,7 +273,9 @@ class LightningGPU(LightningBase):
         # Create the state vector only for MPI, otherwise created dynamically before execution
         if self._mpi:
             if wires is None:
-                raise qml.DeviceError("Lightning-GPU-MPI does not support dynamic wires allocation.")
+                raise qml.DeviceError(
+                    "Lightning-GPU-MPI does not support dynamic wires allocation."
+                )
             self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
             self._statevector = self.LightningStateVector(
                 num_wires=len(self.wires),
