@@ -43,7 +43,7 @@ class LightningBase(Device):
     A class that serves as a base class for Lightning state-vector simulators.
 
     Args:
-        wires (int or list): number or list of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
+        wires (Optional[int, list]): number or list of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         sync (bool): immediately sync with host-sv after applying operations
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
@@ -60,7 +60,7 @@ class LightningBase(Device):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
@@ -100,7 +100,7 @@ class LightningBase(Device):
 
     @abstractmethod
     def dynamic_wires_from_circuit(self, circuit):
-        """From a given circuit, determine the number of wires and allocate a statevector if applicable. Circuit wires will be mapped to Pennylane default.qubit standard wire order.
+        """From a given circuit, determine the number of wires and allocate the underlying quantum state if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
