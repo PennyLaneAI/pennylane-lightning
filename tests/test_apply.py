@@ -730,10 +730,6 @@ class TestLightningDeviceIntegration:
         qnode = qml.QNode(circuit, dev, diff_method="best")
         assert isinstance(qnode.device, ld)
 
-    @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.kokkos"),
-        reason="This device doesn't allow dynamic qubit allocation.",
-    )
     @pytest.mark.parametrize(
         "wires, expected_state",
         [
@@ -753,10 +749,6 @@ class TestLightningDeviceIntegration:
         results = qml.qnode(dev)(circuit)()
         assert np.allclose(results, expected_state, atol=tol, rtol=0)
 
-    @pytest.mark.skipif(
-        device_name not in ("lightning.qubit", "lightning.kokkos"),
-        reason="This device doesn't allow dynamic qubit allocation.",
-    )
     @pytest.mark.parametrize(
         "wires, expected_state",
         [

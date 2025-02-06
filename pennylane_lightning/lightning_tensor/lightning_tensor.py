@@ -222,7 +222,7 @@ class LightningTensor(Device):
     Currently, the Matrix Product State (MPS) and the Exact Tensor Network methods are supported as implemented in the ``cutensornet`` backend.
 
     Args:
-        wires (int): The number of wires to initialize the device with.
+        wires (int): The number of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
             Defaults to ``None`` if not specified.
         shots (int):  Measurements are performed drawing ``shots`` times from a discrete random variable distribution associated with a state vector and an observable. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
@@ -322,17 +322,14 @@ class LightningTensor(Device):
         if c_dtype not in [np.complex64, np.complex128]:  # pragma: no cover
             raise TypeError(f"Unsupported complex type: {c_dtype}")
 
-        if wires is None:
-            raise ValueError("The number of wires must be specified.")
-
         super().__init__(wires=wires, shots=shots)
 
-        if isinstance(wires, int):
+        if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
 
-        self._num_wires = len(self.wires) if self.wires else 0
+        self._num_wires = len(self.wires) if self.wires else None
         self._method = method
         self._c_dtype = c_dtype
 
@@ -383,11 +380,11 @@ class LightningTensor(Device):
         """Tensor complex data type."""
         return self._c_dtype
 
-    def _tensornet(self):
+    def _tensornet(self, num_wires):
         """Return the tensornet object."""
         if self.method == "mps":
             return LightningTensorNet(
-                self._num_wires,
+                num_wires,
                 self._method,
                 self._c_dtype,
                 device_name=self.name,
@@ -395,9 +392,7 @@ class LightningTensor(Device):
                 cutoff=self._cutoff,
                 cutoff_mode=self._cutoff_mode,
             )
-        return LightningTensorNet(
-            self._num_wires, self._method, self._c_dtype, device_name=self.name
-        )
+        return LightningTensorNet(num_wires, self._method, self._c_dtype, device_name=self.name)
 
     dtype = c_dtype
 
@@ -419,7 +414,7 @@ class LightningTensor(Device):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wires_from_circuit(self, circuit):
-        """(DUMMY IMPLEMENTATION) Map circuit wires to Pennylane ``default.qubit`` standard wire order.
+        """Map circuit wires to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
@@ -427,7 +422,9 @@ class LightningTensor(Device):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-
+        circuit = (
+            circuit.map_to_standard_wires()
+        )  # Map to follow default.qubit wire order for dynamic wires
         return circuit
 
     def preprocess(
@@ -486,9 +483,19 @@ class LightningTensor(Device):
         results = []
 
         for circuit in circuits:
+            if self.num_wires is None:
+                circuit = self.dynamic_wires_from_circuit(circuit)
+
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
-            results.append(simulate(circuit, self._tensornet()))
+            results.append(
+                simulate(
+                    circuit,
+                    self._tensornet(
+                        self.num_wires if self.num_wires is not None else circuit.num_wires
+                    ),
+                )
+            )
 
         return tuple(results)
 
