@@ -40,15 +40,15 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 class LightningBase(Device):
     """PennyLane Lightning Base device.
 
-    A class that serves as a base class for Lightning state-vector simulators.
+    A class that serves as a base class for Lightning simulators.
 
     Args:
         wires (int or list): number or list of wires to initialize the device with
-        sync (bool): immediately sync with host-sv after applying operations
+        sync (bool): immediately sync with host after applying operations on the device
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         shots (int or list): How many times the circuit should be evaluated (or sampled) to estimate
-            the expectation values. Defaults to ``None`` if not specified. Setting
+            stochastic return values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
     """
@@ -126,7 +126,7 @@ class LightningBase(Device):
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
-            execution_config (ExecutionConfig): a datastructure with additional information required for execution
+            execution_config (ExecutionConfig): a data structure with additional information required for execution
 
         Returns:
             TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
@@ -143,7 +143,7 @@ class LightningBase(Device):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): handle to Lightning state vector
+            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
                 keep the same number of shots. Default is ``None``.
@@ -165,8 +165,8 @@ class LightningBase(Device):
         ``LightningGPU`` supports adjoint differentiation with analytic results.
 
         Args:
-            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
-            circuit (QuantumTape): An optional circuit to check derivatives support for.
+            execution_config (ExecutionConfig): An optional configuration of the desired derivative calculation. Default is ``None``.
+            circuit (QuantumTape): An optional circuit to check derivatives support for. Default is ``None``.
 
         Returns:
             Bool: Whether or not a derivative can be calculated provided the given information
@@ -184,10 +184,10 @@ class LightningBase(Device):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the jacobian. Default is False.
-            wire_map (Optional[dict]): a map from wire labels to simulation indices
+                computing the jacobian. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
 
         Returns:
             TensorLike: The Jacobian of the quantum script
@@ -212,10 +212,10 @@ class LightningBase(Device):
 
         Args:
             circuit (QuantumTape): The single circuit to simulate
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the jacobian. Default is False.
-            wire_map (Optional[dict]): a map from wire labels to simulation indices
+                computing the jacobian. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
@@ -244,10 +244,10 @@ class LightningBase(Device):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state: A handle to the underlying Lightning state
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the VJP.
-            wire_map (Optional[dict]): a map from wire labels to simulation indices
+                computing the VJP. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
 
         Returns:
             TensorLike: The VJP of the quantum script
@@ -276,10 +276,10 @@ class LightningBase(Device):
                 have shape matching the output shape of the corresponding circuit. If
                 the circuit has a single output, ``cotangents`` may be a single number,
                 not an iterable of numbers.
-            state (Lightning [Device] StateVector): handle to the Lightning state vector
+            state: A handle to the underlying Lightning state
             batch_obs (bool): Determine whether we process observables in parallel when
-                computing the jacobian.
-            wire_map (Optional[dict]): a map from wire labels to simulation indices
+                computing the jacobian. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
 
         Returns:
             Tuple[TensorLike]: The results of the simulation and the calculated VJP
@@ -298,12 +298,12 @@ class LightningBase(Device):
         self,
         circuits: QuantumTape_or_Batch,
         execution_config: ExecutionConfig = DefaultExecutionConfig,
-    ):
+    ) -> Tuple:
         """Calculate the jacobian of either a single or a batch of circuits on the device.
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
 
         Returns:
             Tuple: The jacobian for each trainable parameter
@@ -324,7 +324,7 @@ class LightningBase(Device):
 
         Args:
             circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
-            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
 
         Returns:
             Tuple: A numeric result of the computation and the gradient.
