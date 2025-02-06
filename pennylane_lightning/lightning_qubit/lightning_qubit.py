@@ -323,7 +323,7 @@ class LightningQubit(LightningBase):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wires_from_circuit(self, circuit):
-        """From a given circuit, determine the number of wires and allocate a state-vector if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+        """Allocate (if applicable) a state-vector from the pre-defined wires or a given circuit. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
@@ -331,12 +331,17 @@ class LightningQubit(LightningBase):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-        if (self._statevector is None) or (self._statevector.num_wires != circuit.num_wires):
-            self._statevector = self.LightningStateVector(
-                num_wires=circuit.num_wires, dtype=self._c_dtype
-            )
-        # Map to follow default.qubit wire order for dynamic wires
-        circuit = circuit.map_to_standard_wires()
+
+        if self.wires is None:
+            num_wires = circuit.num_wires
+            # Map to follow default.qubit wire order for dynamic wires
+            circuit = circuit.map_to_standard_wires()
+        else:
+            num_wires = len(self.wires)
+
+        if (self._statevector is None) or (self._statevector.num_wires != num_wires):
+            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype)
+
         return circuit
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
@@ -403,9 +408,7 @@ class LightningQubit(LightningBase):
         }
         results = []
         for circuit in circuits:
-            if self.wires is None:
-                circuit = self.dynamic_wires_from_circuit(circuit)
-
+            circuit = self.dynamic_wires_from_circuit(circuit)
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
