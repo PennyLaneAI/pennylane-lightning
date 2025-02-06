@@ -51,6 +51,8 @@ class LightningBase(Device):
             stochastic return values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian.
     """
 
     # pylint: disable=too-many-instance-attributes
@@ -90,9 +92,16 @@ class LightningBase(Device):
         """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
 
     @abstractmethod
-    def _setup_execution_config(self, config):
+    def _setup_execution_config(self, config: ExecutionConfig):
         """
         Update the execution config with choices for how the device should be used and the device options.
+
+        Args:
+            config (ExecutionConfig): A data structure describing the parameters needed to fully describe the execution.
+
+        Returns:
+            ExecutionConfig: An updated execution config with device options set.
+
         """
 
     @abstractmethod
@@ -161,8 +170,6 @@ class LightningBase(Device):
         circuit: Optional[qml.tape.QuantumTape] = None,
     ) -> bool:
         """Check whether or not derivatives are available for a given configuration and circuit.
-
-        ``LightningGPU`` supports adjoint differentiation with analytic results.
 
         Args:
             execution_config (ExecutionConfig): An optional configuration of the desired derivative calculation. Default is ``None``.
