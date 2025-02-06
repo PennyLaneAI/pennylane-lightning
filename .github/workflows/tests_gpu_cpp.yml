@@ -33,9 +33,7 @@ jobs:
   builddeps:
     if: ${{ github.event_name != 'pull_request' || (github.event.pull_request.draft == false && contains(github.event.pull_request.labels.*.name, 'ci:use-gpu-runner')) }}
     runs-on:
-      - self-hosted
-      - ubuntu-22.04
-      - gpu
+      - single-gpu-x64
 
     strategy:
       max-parallel: 1
@@ -64,9 +62,7 @@ jobs:
 
     name: C++ Tests (${{ matrix.pl_backend }}, cuda-${{ matrix.cuda_version }})
     runs-on:
-      - ubuntu-22.04
-      - self-hosted
-      - gpu
+      - single-gpu-x64
 
     steps:
       - name: Validate GPU version and installed compiler
