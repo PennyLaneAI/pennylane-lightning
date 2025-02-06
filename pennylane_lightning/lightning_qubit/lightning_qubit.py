@@ -323,7 +323,7 @@ class LightningQubit(LightningBase):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def dynamic_wires_from_circuit(self, circuit):
-        """Allocate (if applicable) a state-vector from the pre-defined wires or a given circuit. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+        """Allocate a state-vector from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
             circuit (QuantumTape): The circuit to execute.
