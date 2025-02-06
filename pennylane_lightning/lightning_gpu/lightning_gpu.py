@@ -346,7 +346,7 @@ class LightningGPU(LightningBase):
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
             self._statevector = self.LightningStateVector(
-                num_wires=circuit.num_wires,
+                num_wires=num_wires,
                 dtype=self._c_dtype,
                 mpi_handler=self._mpi_handler,
                 use_async=self._use_async,
