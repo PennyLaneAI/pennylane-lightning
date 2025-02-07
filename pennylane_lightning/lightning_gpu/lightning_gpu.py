@@ -268,10 +268,8 @@ class LightningGPU(LightningBase):
         self._dp = DevPool()
         self._use_async = use_async
 
-        self._mpi = mpi
-        self._mpi_buf_size = mpi_buf_size
         # Create the state vector only for MPI, otherwise created dynamically before execution
-        if self._mpi:
+        if mpi:
             if wires is None:
                 raise qml.DeviceError(
                     "Lightning-GPU-MPI does not support dynamic wires allocation."
@@ -334,7 +332,7 @@ class LightningGPU(LightningBase):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-        if self._mpi:
+        if self._mpi_handler and self._mpi_handler.use_mpi:
             return circuit
 
         if self.wires is None:
@@ -471,7 +469,7 @@ class LightningGPU(LightningBase):
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            if self._mpi:
+            if self._mpi_handler and self._mpi_handler.use_mpi:
                 raise qml.DeviceError(
                     "Lightning-GPU-MPI does not support Mid-circuit measurements."
                 )
