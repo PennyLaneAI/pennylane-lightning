@@ -421,10 +421,8 @@ class LightningTensor(Device):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-        circuit = (
-            circuit.map_to_standard_wires()
-        )  # Map to follow default.qubit wire order for dynamic wires
-        return circuit
+
+        return circuit.map_to_standard_wires() if self.num_wires is None else circuit
 
     def preprocess(
         self,
@@ -482,14 +480,11 @@ class LightningTensor(Device):
         results = []
 
         for circuit in circuits:
-            if self.num_wires is None:
-                circuit = self.dynamic_wires_from_circuit(circuit)
-
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 simulate(
-                    circuit,
+                    self.dynamic_wires_from_circuit(circuit),
                     self._tensornet(
                         self.num_wires if self.num_wires is not None else circuit.num_wires
                     ),

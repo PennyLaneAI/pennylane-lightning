@@ -368,12 +368,11 @@ class LightningKokkos(LightningBase):
         """
         results = []
         for circuit in circuits:
-            circuit = self.dynamic_wires_from_circuit(circuit)
             if self._wire_map is not None:
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    circuit,
+                    self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
