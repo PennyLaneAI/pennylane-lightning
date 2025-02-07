@@ -244,9 +244,6 @@ class LightningKokkos(LightningBase):
 
         self._statevector = None
 
-        if not LightningKokkos.kokkos_config:
-            LightningKokkos.kokkos_config = _kokkos_configuration()
-
     @property
     def name(self):
         """The name of the device."""
@@ -306,6 +303,7 @@ class LightningKokkos(LightningBase):
             self._statevector = self.LightningStateVector(
                 num_wires=num_wires, dtype=self._c_dtype, kokkos_args=self._kokkos_args
             )
+            LightningKokkos.kokkos_config = _kokkos_configuration()
 
         return circuit
 
