@@ -174,20 +174,20 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     @pytest.mark.parametrize("operation", [qml.PhaseShift, qml.RX, qml.RY, qml.RZ])
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
     @pytest.mark.parametrize("Wires", [0, numQubits - 1])
-    def test_apply_operation_1gatequbit_1param_gate_qnode_param(self, tol, operation, par, Wires):
-        apply_operation_gates_qnode_param(tol, self.dev_mpi, operation, par, Wires)
+    def test_apply_operation_1gatequbit_1param_gate_qnode_param(self, tol, operation, par, Wires, dev_mpi):
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
 
     @pytest.mark.parametrize("operation", [qml.Rot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize("Wires", [0, numQubits - 1])
-    def test_apply_operation_1gatequbit_3param_gate_qnode_param(self, tol, operation, par, Wires):
-        apply_operation_gates_qnode_param(tol, self.dev_mpi, operation, par, Wires)
+    def test_apply_operation_1gatequbit_3param_gate_qnode_param(self, tol, operation, par, Wires, dev_mpi):
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
 
     @pytest.mark.parametrize("operation", [qml.CRot])
     @pytest.mark.parametrize("par", [[0.1, 0.2, 0.3], [0.2, 0.3, 0.4]])
     @pytest.mark.parametrize("Wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
-    def test_apply_operation_1gatequbit_3param_cgate_qnode_param(self, tol, operation, par, Wires):
-        apply_operation_gates_qnode_param(tol, self.dev_mpi, operation, par, Wires)
+    def test_apply_operation_1gatequbit_3param_cgate_qnode_param(self, tol, operation, par, Wires, dev_mpi):
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
 
     @pytest.mark.parametrize(
         "operation",
@@ -206,8 +206,8 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
     )
     @pytest.mark.parametrize("par", [[0.1], [0.2], [0.3]])
     @pytest.mark.parametrize("Wires", [[0, numQubits - 1], [0, 1], [numQubits - 2, numQubits - 1]])
-    def test_apply_operation_2gatequbit_1param_gate_qnode_param(self, tol, operation, par, Wires):
-        apply_operation_gates_qnode_param(tol, self.dev_mpi, operation, par, Wires)
+    def test_apply_operation_2gatequbit_1param_gate_qnode_param(self, tol, operation, par, Wires, dev_mpi):
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
 
     @pytest.mark.parametrize(
         "operation",
@@ -222,24 +222,24 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             [numQubits - 4, numQubits - 3, numQubits - 2, numQubits - 1],
         ],
     )
-    def test_apply_operation_4gatequbit_1param_gate_qnode_param(self, tol, operation, par, Wires):
-        apply_operation_gates_qnode_param(tol, self.dev_mpi, operation, par, Wires)
+    def test_apply_operation_4gatequbit_1param_gate_qnode_param(self, tol, operation, par, Wires, dev_mpi):
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
 
     @pytest.mark.parametrize(
         "operation",
         [qml.GlobalPhase],
     )
     @pytest.mark.parametrize("par", [[0.13], [0.2], [0.3]])
-    def test_apply_global_phase(self, tol, operation, par):
+    def test_apply_global_phase(self, tol, operation, par, dev_mpi):
         """Test applying the GlobalPhase operation."""
         Wires = range(numQubits)
 
-        apply_operation_gates_qnode_param(tol, self.dev_mpi, operation, par, Wires)
+        apply_operation_gates_qnode_param(tol, dev_mpi, operation, par, Wires)
 
     # BasisState test
     @pytest.mark.parametrize("operation", [qml.BasisState])
     @pytest.mark.parametrize("index", range(numQubits))
-    def test_state_prep(self, tol, operation, index):
+    def test_state_prep(self, tol, operation, index, dev_mpi):
         par = np.zeros(numQubits, dtype=int)
         par[index] = 1
         num_wires = numQubits
@@ -248,7 +248,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         num_global_wires = commSize.bit_length() - 1
         num_local_wires = num_wires - num_global_wires
 
-        if self.dev_mpi.c_dtype == np.float32:
+        if dev_mpi.c_dtype == np.float32:
             c_dtype = np.complex64
         else:
             c_dtype = np.complex128
@@ -258,7 +258,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
         local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
-        state_vector = create_random_init_state(num_wires, self.dev_mpi.c_dtype)
+        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
 
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
@@ -268,7 +268,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             return qml.state()
 
         cpu_qnode = qml.QNode(circuit, dev_cpu)
-        mpi_qnode = qml.QNode(circuit, self.dev_mpi)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
 
         expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
@@ -303,14 +303,14 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             ),
         ],
     )
-    def test_qubit_state_prep(self, tol, par, Wires):
+    def test_qubit_state_prep(self, tol, par, Wires, dev_mpi):
         num_wires = numQubits
         comm = MPI.COMM_WORLD
         commSize = comm.Get_size()
         num_global_wires = commSize.bit_length() - 1
         num_local_wires = num_wires - num_global_wires
 
-        if self.dev_mpi.c_dtype == np.float32:
+        if dev_mpi.c_dtype == np.float32:
             c_dtype = np.complex64
         else:
             c_dtype = np.complex128
@@ -320,7 +320,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
         local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
-        state_vector = create_random_init_state(num_wires, self.dev_mpi.c_dtype)
+        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
 
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
@@ -330,7 +330,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
             return qml.state()
 
         cpu_qnode = qml.QNode(circuit, dev_cpu)
-        mpi_qnode = qml.QNode(circuit, self.dev_mpi)
+        mpi_qnode = qml.QNode(circuit, dev_mpi)
 
         expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
@@ -339,14 +339,14 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
-    def test_dev_reset(self, tol):
+    def test_dev_reset(self, tol, dev_mpi):
         num_wires = numQubits
         comm = MPI.COMM_WORLD
         commSize = comm.Get_size()
         num_global_wires = commSize.bit_length() - 1
         num_local_wires = num_wires - num_global_wires
 
-        if self.dev_mpi.c_dtype == np.float32:
+        if dev_mpi.c_dtype == np.float32:
             c_dtype = np.complex64
         else:
             c_dtype = np.complex128
@@ -356,7 +356,7 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         local_state_vector = np.zeros(2**num_local_wires).astype(c_dtype)
         local_expected_output_cpu = np.zeros(2**num_local_wires).astype(c_dtype)
 
-        state_vector = create_random_init_state(num_wires, self.dev_mpi.c_dtype)
+        state_vector = create_random_init_state(num_wires, dev_mpi.c_dtype)
 
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
@@ -371,10 +371,10 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
         expected_output_cpu = cpu_qnode().astype(c_dtype)
         comm.Scatter(expected_output_cpu, local_expected_output_cpu, root=0)
 
-        self.dev_mpi._statevector.reset_state()
+        dev_mpi._statevector.reset_state()
 
-        gpumpi_qnode = qml.QNode(circuit, self.dev_mpi)
-        self.dev_mpi._statevector.reset_state()
+        gpumpi_qnode = qml.QNode(circuit, dev_mpi)
+        dev_mpi._statevector.reset_state()
 
         local_state_vector = gpumpi_qnode()
         assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
