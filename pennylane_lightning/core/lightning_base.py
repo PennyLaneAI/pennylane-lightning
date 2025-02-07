@@ -101,7 +101,7 @@ class LightningBase(Device):
             ExecutionConfig: An updated execution config with device options set.
 
         """
-        
+
     @abstractmethod
     def dynamic_wires_from_circuit(self, circuit):
         """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
@@ -492,7 +492,7 @@ class LightningBase(Device):
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=self._c_dtype
         )
-        
+
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots
         )
