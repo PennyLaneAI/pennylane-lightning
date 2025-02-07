@@ -19,7 +19,16 @@ This module contains unit tests for new device API Lightning classes.
 import numpy as np
 import pennylane as qml
 import pytest
-from conftest import PHI, THETA, VARPHI, LightningDevice, device_name
+from conftest import (
+    PHI,
+    THETA,
+    VARPHI,
+    LightningAdjointJacobian,
+    LightningDevice,
+    LightningMeasurements,
+    LightningStateVector,
+    device_name,
+)
 from pennylane.devices import DefaultExecutionConfig, DefaultQubit, ExecutionConfig, MCMConfig
 from pennylane.devices.default_qubit import adjoint_ops
 from pennylane.measurements import ProbabilityMP
@@ -86,9 +95,6 @@ elif device_name == "lightning.tensor":
     )
 else:
     raise TypeError(f"The device name: {device_name} is not a valid name")
-
-if not LightningDevice._new_API:
-    pytest.skip("Exclusive tests for new device API. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -199,12 +205,40 @@ class TestHelpers:
         assert _supports_adjoint(circuit) == expected
 
 
+class TestInitialization:
+    """Unit tests for device initialization"""
+
+    @pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
+    def test_property_complex(self, c_dtype):
+        """Test that the property complex is set correctly"""
+        dev = LightningDevice(wires=2, c_dtype=c_dtype)
+        assert dev.c_dtype == c_dtype
+
+    def test_wires_mapping(self):
+        """Test that the wires mapping is set correctly"""
+        dev = LightningDevice(wires=2)
+        assert dev._wire_map == None
+
+        dev = LightningDevice(wires=["a", "b"])
+        assert dev._wire_map == {"a": 0, "b": 1}
+
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor is not a state-vector simulator"
+    )
+    def test_dummies_definition(self):
+        """Test that the dummies are defined correctly"""
+        dev = LightningDevice(wires=2)
+        assert dev.LightningStateVector == LightningStateVector
+        assert dev.LightningMeasurements == LightningMeasurements
+        assert dev.LightningAdjointJacobian == LightningAdjointJacobian
+
+
 @pytest.mark.skipif(
     device_name != "lightning.qubit",
     reason=f"The device {device_name} does not support mcmc",
 )
-class TestInitialization:
-    """Unit tests for device initialization"""
+class TestMCMCInitialization:
+    """Unit tests for device initialization for MCMC"""
 
     def test_invalid_num_burnin_error(self):
         """Test that an error is raised when num_burnin is more than number of shots"""
@@ -461,7 +495,7 @@ class TestExecution:
             if isinstance(mp.obs, qml.SparseHamiltonian) or isinstance(mp.obs, qml.Projector):
                 pytest.skip("SparseHamiltonian/Projector obs not supported in lightning.tensor")
 
-        if isinstance(mp.obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(mp.obs, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
@@ -669,7 +703,7 @@ class TestDerivatives:
         self, theta, phi, dev, obs, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has a single expectation value"""
-        if isinstance(obs, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(obs, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
@@ -727,7 +761,7 @@ class TestDerivatives:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the jacobian is correct when a tape has multiple expectation values"""
-        if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(obs2, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )
@@ -1093,7 +1127,7 @@ class TestVJP:
         self, theta, phi, omega, dev, obs1, obs2, execute_and_derivatives, batch_obs
     ):
         """Test that the VJP is correct when a tape has multiple expectation values"""
-        if isinstance(obs2, qml.SparseHamiltonian) and dev.dtype == np.complex64:
+        if isinstance(obs2, qml.SparseHamiltonian) and dev.c_dtype == np.complex64:
             pytest.skip(
                 reason="The conversion from qml.Hamiltonian to SparseHamiltonian is only possible with np.complex128"
             )

@@ -43,8 +43,7 @@ jobs:
     timeout-minutes: 45
     name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: 
-      - self-hosted
-      - ${{ matrix.os }}
+      - single-gpu-arm
 
     steps:
       - name: Checkout PennyLane-Lightning
