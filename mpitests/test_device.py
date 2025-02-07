@@ -42,7 +42,7 @@ def test_create_device():
 def test_unsupported_dynamic_wires():
     with pytest.raises(
         DeviceError,
-        match="Lightning-GPU-MPI does not support dynamic wires allocation.",
+        match="does not support dynamic wires allocation.",
     ):
         dev = qml.device(device_name, mpi=True)
 
