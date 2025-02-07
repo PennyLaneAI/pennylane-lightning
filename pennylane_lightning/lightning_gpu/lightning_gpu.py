@@ -346,7 +346,7 @@ class LightningGPU(LightningBase):
             self._statevector = self.LightningStateVector(
                 num_wires=num_wires,
                 dtype=self._c_dtype,
-                mpi_handler=self._mpi_handler,
+                mpi_handler=None,
                 use_async=self._use_async,
             )
 
