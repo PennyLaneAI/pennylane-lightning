@@ -119,7 +119,7 @@ def apply_operation_gates_qnode_nonparam(tol, dev_mpi, operation, Wires):
     assert np.allclose(local_state_vector, local_expected_output_cpu, atol=tol, rtol=0)
 
 
-class TestApply:  # pylint: disable=missing-function-docstring,too-many-arguments
+class TestApply:  # pylint: disable=missing-function-docstring,too-many-arguments,too-many-positional-arguments
     """Tests whether the device can apply supported quantum gates."""
 
     @pytest.fixture(params=fixture_params)
@@ -370,8 +370,6 @@ class TestApply:  # pylint: disable=missing-function-docstring,too-many-argument
 
         comm.Scatter(state_vector, local_state_vector, root=0)
         dev_cpu = qml.device("lightning.qubit", wires=num_wires, c_dtype=c_dtype)
-
-        dev_cpu._statevector.reset_state()
 
         def circuit():
             qml.PauliX(wires=[0])

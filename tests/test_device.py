@@ -27,30 +27,40 @@ if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-def test_create_device():
-    dev = qml.device(device_name, wires=1)
+@pytest.mark.parametrize("n_wires", [None, 1])
+def test_create_device(n_wires):
+    dev = qml.device(device_name, wires=n_wires)
 
 
+@pytest.mark.parametrize("n_wires", [None, 1])
 @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-def test_create_device_with_dtype(C):
-    dev = qml.device(device_name, wires=1, c_dtype=C)
+def test_create_device_with_dtype(n_wires, C):
+    dev = qml.device(device_name, wires=n_wires, c_dtype=C)
 
 
 @pytest.mark.skipif(
     not hasattr(np, "complex256"), reason="Numpy only defines complex256 in Linux-like system"
 )
-def test_create_device_with_unsupported_dtype():
+@pytest.mark.parametrize("n_wires", [None, 1])
+def test_create_device_with_unsupported_dtype(n_wires):
     with pytest.raises(TypeError, match="Unsupported complex type:"):
-        dev = qml.device(device_name, wires=1, c_dtype=np.complex256)
+        dev = qml.device(device_name, wires=n_wires, c_dtype=np.complex256)
+        tape = qml.tape.QuantumScript([], [])
+        # State-vector is only created when a tape is executed
+        dev.execute(tape)
 
 
 @pytest.mark.skipif(
     device_name != "lightning.kokkos",
     reason="Only lightning.kokkos has a kwarg kokkos_args.",
 )
-def test_create_device_with_unsupported_kokkos_args():
+@pytest.mark.parametrize("n_wires", [None, 1])
+def test_create_device_with_unsupported_kokkos_args(n_wires):
     with pytest.raises(TypeError, match="Argument kokkos_args must be of type .* but it is of .*."):
-        dev = qml.device(device_name, wires=1, kokkos_args=np.complex128)
+        dev = qml.device(device_name, wires=n_wires, kokkos_args=np.complex128)
+        tape = qml.tape.QuantumScript([], [])
+        # State-vector is only created when a tape is executed
+        dev.execute(tape)
 
 
 @pytest.mark.skipif(

@@ -184,7 +184,7 @@ class LightningKokkos(LightningBase):
     :doc:`/lightning_kokkos/installation` guide for more details.
 
     Args:
-        wires (int): the number of wires to initialize the device with
+        wires (Optional[int, list]): the number of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -214,7 +214,7 @@ class LightningKokkos(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
@@ -242,13 +242,7 @@ class LightningKokkos(LightningBase):
         # Kokkos specific options
         self._kokkos_args = kokkos_args
 
-        # Creating the state vector
-        self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args
-        )
-
-        if not LightningKokkos.kokkos_config:
-            LightningKokkos.kokkos_config = _kokkos_configuration()
+        self._statevector = None
 
     @property
     def name(self):
@@ -287,6 +281,31 @@ class LightningKokkos(LightningBase):
         new_device_options.update(mcmc_default)
 
         return replace(config, **updated_values, device_options=new_device_options)
+
+    def dynamic_wires_from_circuit(self, circuit):
+        """Allocate a state-vector from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+
+        Returns:
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
+        """
+
+        if self.wires is None:
+            num_wires = circuit.num_wires
+            # Map to follow default.qubit wire order for dynamic wires
+            circuit = circuit.map_to_standard_wires()
+        else:
+            num_wires = len(self.wires)
+
+        if (self._statevector is None) or (self._statevector.num_wires != num_wires):
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype, kokkos_args=self._kokkos_args
+            )
+            LightningKokkos.kokkos_config = _kokkos_configuration()
+
+        return circuit
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
@@ -351,7 +370,7 @@ class LightningKokkos(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    circuit,
+                    self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
