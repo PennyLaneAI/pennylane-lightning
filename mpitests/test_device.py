@@ -78,7 +78,7 @@ def test_unsupported_dynamic_wires():
         ),
     ],
 )
-def test_dynamic_wires_from_circuit_fixed_wires(self, circuit_in, n_wires, wires_list):
+def test_dynamic_wires_from_circuit_fixed_wires(circuit_in, n_wires, wires_list):
     """Test that dynamic_wires_from_circuit creates correct statevector and circuit."""
     dev = qml.device(device_name, mpi=True, wires=n_wires)
     circuit_out = dev.dynamic_wires_from_circuit(circuit_in)
@@ -92,8 +92,7 @@ def test_dynamic_wires_from_circuit_fixed_wires(self, circuit_in, n_wires, wires
     assert (
         dev._statevector._statevector._mpi_handler.num_local_wires
         + dev._statevector._statevector._mpi_handler.num_global_wires
-        == n_wires
-    )
+    ) == n_wires
 
 
 def test_unsupported_mpi_buf_size():
