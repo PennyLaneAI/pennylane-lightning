@@ -88,10 +88,10 @@ def test_dynamic_wires_from_circuit_fixed_wires(circuit_in, n_wires, wires_list)
     assert circuit_out.operations == circuit_in.operations
     assert circuit_out.measurements == circuit_in.measurements
 
-    assert dev._statevector._statevector._mpi_handler.use_mpi
+    assert dev._statevector._mpi_handler.use_mpi
     assert (
-        dev._statevector._statevector._mpi_handler.num_local_wires
-        + dev._statevector._statevector._mpi_handler.num_global_wires
+        dev._statevector._mpi_handler.num_local_wires
+        + dev._statevector._mpi_handler.num_global_wires
     ) == n_wires
 
 
