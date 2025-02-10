@@ -264,9 +264,11 @@ class TestVectorJacobianProduct:
 class TestBatchVectorJacobianProduct:
     """Tests for the batch_vjp function"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    fixture_params = itertools.product([np.complex64, np.complex128], [None, 2])
+
+    @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     def test_one_tape_no_trainable_parameters_1(self, dev):
         """A tape with no trainable parameters will simply return None"""

@@ -70,6 +70,9 @@ class LightningBase(Device):
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
 
+        # State-vector is dynamically allocated just before execution
+        self._statevector = None
+
         if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
@@ -488,6 +491,9 @@ class LightningBase(Device):
         """
         # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
+
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=self._c_dtype
