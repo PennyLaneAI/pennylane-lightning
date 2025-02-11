@@ -200,16 +200,16 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         for operation in operations:
             if isinstance(operation, qml.Identity):
                 continue
-            elif isinstance(operation, Conditional):
+            if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
                     self._apply_lightning([operation.base])
                 continue
-            elif isinstance(operation, MidMeasureMP):
+            if isinstance(operation, MidMeasureMP):
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
                 continue
-            elif isinstance(operation, Adjoint):
+            if isinstance(operation, Adjoint):
                 self._apply_lightning(
                     [operation.base], mid_measurements, postselect_mode, not adjoint
                 )
