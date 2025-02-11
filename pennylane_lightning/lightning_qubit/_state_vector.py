@@ -106,35 +106,40 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
         self._qubit_state.setStateVector(state, list(device_wires))
 
-    def _apply_lightning_controlled(self, operation):
+    def _apply_lightning_controlled(self, operation, adjoint):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
             operation (~pennylane.operation.Operation): controlled operation to apply
+            adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
             None
         """
-        state = self.state_vector
+        if isinstance(operation.base, Adjoint):
+            op = qml.ctrl(operation.base.base, control=operation.control_wires, control_values=operation.control_values)
+            self._apply_lightning_controlled(op, not adjoint)
+        
+        else:        
+            state = self.state_vector
 
-        basename = operation.base.name
-        method = getattr(state, f"{basename}", None)
-        control_wires = list(operation.control_wires)
-        control_values = operation.control_values
-        target_wires = list(operation.target_wires)
-        if method is not None:  # apply n-controlled specialized gate
-            inv = False
-            param = operation.parameters
-            method(control_wires, control_values, target_wires, inv, param)
-        else:  # apply gate as an n-controlled matrix
-            method = getattr(state, "applyControlledMatrix")
-            method(
-                qml.matrix(operation.base),
-                control_wires,
-                control_values,
-                target_wires,
-                False,
-            )
+            basename = operation.base.name
+            method = getattr(state, f"{basename}", None)
+            control_wires = list(operation.control_wires)
+            control_values = operation.control_values
+            target_wires = list(operation.target_wires)
+            if method is not None:  # apply n-controlled specialized gate
+                param = operation.parameters
+                method(control_wires, control_values, target_wires, adjoint, param)
+            else:  # apply gate as an n-controlled matrix
+                method = getattr(state, "applyControlledMatrix")
+                method(
+                    qml.matrix(operation.base),
+                    control_wires,
+                    control_values,
+                    target_wires,
+                    adjoint,
+                )
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -165,7 +170,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None, adjoint: bool = False
     ):  # pylint: disable=protected-access
         """Apply a list of operations to the state tensor.
 
@@ -175,6 +180,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
                 keep the same number of shots. Default is ``None``.
+            adjoint (bool): Apply the adjoint of the operation if True. Default is ``False``.
 
         Returns:
             None
@@ -186,41 +192,39 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         for operation in operations:
             if isinstance(operation, qml.Identity):
                 continue
-            if isinstance(operation, Adjoint):
-                name = operation.base.name
-                invert_param = True
-            else:
-                name = operation.name
-                invert_param = False
-            method = getattr(state, name, None)
-            wires = list(operation.wires)
-
-            if isinstance(operation, Conditional):
+            elif isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
                     self._apply_lightning([operation.base])
+                continue
             elif isinstance(operation, MidMeasureMP):
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
-            elif isinstance(operation, qml.PauliRot):
+                continue
+            elif isinstance(operation, Adjoint):
+                self._apply_lightning([operation.base], mid_measurements, postselect_mode, not adjoint)
+                continue
+                
+            method = getattr(state, operation.name, None)
+            wires = list(operation.wires)
+            
+            if isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
                 paulis = operation._hyperparameters[  # pylint: disable=protected-access
                     "pauli_word"
                 ]
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
                 word = "".join(p for p in paulis if p != "I")
-                method(wires, invert_param, operation.parameters, word)
+                method(wires, adjoint, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
-                method(wires, invert_param, param)
+                method(wires, adjoint, param)
             elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
-                self._apply_lightning_controlled(operation)
+                self._apply_lightning_controlled(operation, adjoint)
             else:  # apply gate as a matrix
-                # Inverse can be set to False since qml.matrix(operation) is already in
-                # inverted form
                 method = getattr(state, "applyMatrix")
                 try:
-                    method(qml.matrix(operation), wires, False)
+                    method(qml.matrix(operation), wires, adjoint)
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
-                    method(operation.matrix, wires, False)
+                    method(operation.matrix, wires, adjoint)
