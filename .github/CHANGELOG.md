@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
+  [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
+
 * Remove the old device API references in the Lightning repo and test suite.
   [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
   

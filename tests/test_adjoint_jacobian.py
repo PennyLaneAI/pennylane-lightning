@@ -46,8 +46,7 @@ if device_name == "lightning.kokkos":
     kokkos_args += [InitializationSettings().set_num_threads(2)]
 
 fixture_params = itertools.product(
-    [np.complex64, np.complex128],
-    kokkos_args,
+    [np.complex64, np.complex128], kokkos_args, [None, 3]  # c_dtype x kokkos_args x wires
 )
 
 
@@ -100,7 +99,7 @@ class TestAdjointJacobian:
         params = request.param
         if device_name == "lightning.kokkos":
             return qml.device(device_name, wires=3, c_dtype=params[0], kokkos_args=params[1])
-        return qml.device(device_name, wires=3, c_dtype=params[0])
+        return qml.device(device_name, wires=params[2], c_dtype=params[0])
 
     def test_not_expval(self, dev):
         """Test if a QuantumFunctionError is raised for a tape with measurements that are not
@@ -566,9 +565,9 @@ class TestAdjointJacobian:
 class TestAdjointJacobianQNode:
     """Test QNode integration with the adjoint_jacobian method"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.fixture(params=fixture_params)
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     def test_qnode(self, mocker, dev):
         """Test that specifying diff_method allows the adjoint method to be selected"""

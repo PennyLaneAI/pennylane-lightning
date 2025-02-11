@@ -43,7 +43,7 @@ class LightningBase(Device):
     A class that serves as a base class for Lightning simulators.
 
     Args:
-        wires (int or list): number or list of wires to initialize the device with
+        wires (Optional[int, list]): number or list of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         sync (bool): immediately sync with host after applying operations on the device
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
@@ -59,7 +59,7 @@ class LightningBase(Device):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex64, np.complex128],
         shots: Union[int, List],
@@ -70,7 +70,10 @@ class LightningBase(Device):
         self._c_dtype = c_dtype
         self._batch_obs = batch_obs
 
-        if isinstance(wires, int):
+        # State-vector is dynamically allocated just before execution
+        self._statevector = None
+
+        if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
             self._wire_map = {w: i for i, w in enumerate(self.wires)}
@@ -100,6 +103,17 @@ class LightningBase(Device):
         Returns:
             ExecutionConfig: An updated execution config with device options set.
 
+        """
+
+    @abstractmethod
+    def dynamic_wires_from_circuit(self, circuit):
+        """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+
+        Returns:
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
 
     @abstractmethod
@@ -316,7 +330,12 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
 
         return tuple(
-            self.jacobian(circuit, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            self.jacobian(
+                self.dynamic_wires_from_circuit(circuit),
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
+            )
             for circuit in circuits
         )
 
@@ -337,9 +356,12 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_jacobian(
-                c, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+                self.dynamic_wires_from_circuit(circuit),
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
-            for c in circuits
+            for circuit in circuits
         )
         return tuple(zip(*results))
 
@@ -392,7 +414,13 @@ class LightningBase(Device):
         """
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
-            self.vjp(circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map)
+            self.vjp(
+                self.dynamic_wires_from_circuit(circuit),
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
+            )
             for circuit, cots in zip(circuits, cotangents)
         )
 
@@ -415,7 +443,11 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_vjp(
-                circuit, cots, self._statevector, batch_obs=batch_obs, wire_map=self._wire_map
+                self.dynamic_wires_from_circuit(circuit),
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
             for circuit, cots in zip(circuits, cotangents)
         )
@@ -459,6 +491,13 @@ class LightningBase(Device):
         """
         # has jax dependency, so can't import up top
         from .lightning_interpreter import LightningInterpreter
+
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
 
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots

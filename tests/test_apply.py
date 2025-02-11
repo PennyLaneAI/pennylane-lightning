@@ -214,14 +214,44 @@ class TestLightningDeviceIntegration:
         assert not dev.shots
         assert len(dev.wires) == 2
 
-    @pytest.mark.xfail(
-        device_name == "lightning.tensor", reason="lightning.tensor raises different errors"
+    @pytest.mark.parametrize(
+        "wires, expected_state",
+        [
+            ([3, 0], [1 / np.sqrt(2), 1 / np.sqrt(2), 0, 0]),
+            ([1, 0], [1 / np.sqrt(2), 0, 1 / np.sqrt(2), 0]),
+        ],
     )
-    def test_args(self):
-        """Test that the plugin requires correct arguments"""
+    def test_dynamic_allocate_two_qubits(self, qubit_device, tol, wires, expected_state):
+        """Test the dynamic allocation of qubits in Lightning devices"""
 
-        with pytest.raises(TypeError, match="missing 1 required positional argument: 'wires'"):
-            qml.device(device_name)
+        def circuit():
+            qml.Identity(wires=wires[0])
+            qml.Hadamard(wires=wires[1])
+            return qml.state()
+
+        dev = qubit_device(None)
+        results = qml.qnode(dev)(circuit)()
+        assert np.allclose(results, expected_state, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize(
+        "wires, expected_state",
+        [
+            ([3, 1, 0], [1 / np.sqrt(2), 1 / np.sqrt(2), 0, 0, 0, 0, 0, 0]),
+            ([2, 1, 0], [1 / np.sqrt(2), 0, 0, 0, 1 / np.sqrt(2), 0, 0, 0]),
+        ],
+    )
+    def test_dynamic_allocate_three_qubits(self, qubit_device, tol, wires, expected_state):
+        """Test the dynamic allocation of qubits in Lightning devices"""
+
+        def circuit():
+            qml.Identity(wires=wires[0])
+            qml.Identity(wires=wires[1])
+            qml.Hadamard(wires=wires[2])
+            return qml.state()
+
+        dev = qubit_device(None)
+        results = qml.qnode(dev)(circuit)()
+        assert np.allclose(results, expected_state, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor requires num_wires > 1"
