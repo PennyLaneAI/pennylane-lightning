@@ -117,10 +117,14 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             None
         """
         if isinstance(operation.base, Adjoint):
-            op = qml.ctrl(operation.base.base, control=operation.control_wires, control_values=operation.control_values)
+            op = qml.ctrl(
+                operation.base.base,
+                control=operation.control_wires,
+                control_values=operation.control_values,
+            )
             self._apply_lightning_controlled(op, not adjoint)
-        
-        else:        
+
+        else:
             state = self.state_vector
 
             basename = operation.base.name
@@ -170,7 +174,11 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None, adjoint: bool = False
+        self,
+        operations,
+        mid_measurements: dict = None,
+        postselect_mode: str = None,
+        adjoint: bool = False,
     ):  # pylint: disable=protected-access
         """Apply a list of operations to the state tensor.
 
@@ -202,12 +210,14 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 )
                 continue
             elif isinstance(operation, Adjoint):
-                self._apply_lightning([operation.base], mid_measurements, postselect_mode, not adjoint)
+                self._apply_lightning(
+                    [operation.base], mid_measurements, postselect_mode, not adjoint
+                )
                 continue
-                
+
             method = getattr(state, operation.name, None)
             wires = list(operation.wires)
-            
+
             if isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
                 paulis = operation._hyperparameters[  # pylint: disable=protected-access
