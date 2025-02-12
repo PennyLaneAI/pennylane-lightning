@@ -79,6 +79,23 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
+    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim, const std::vector<std::size_t> &bondDims)
+        : BaseType(numQubits), maxBondDim_(maxBondDim),
+          bondDims_(bondDims), sitesModes_(setSitesModes_()),
+          sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()),
+          cublascaller_(make_shared_cublas_caller()),
+          gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
+              BaseType::getDevTag()))
+    {
+        initTensors_();
+        appendInitialMPSState_(
+            getSitesExtentsPtr()
+                .data()); // This API works for Exact Tensor Network as well,
+                          // given sitesExtents_ settings meet the requirement
+                          // of cutensornet.
+    }
+
     explicit TNCuda(const std::size_t numQubits, DevTag<int> dev_tag,
                     const std::size_t maxBondDim = 1)
         : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID()),
@@ -216,6 +233,14 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             "The site index should be less than the number of qubits.");
 
         const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
+        // const std::size_t idx = site_idx;
+        // print idx
+        // std::cout << "idx: " << idx << std::endl;
+        // // print host_data_size
+        // std::cout << "host_data_size: " << host_data_size << std::endl;
+        // std::cout << "device_data_size: "
+        //           << tensors_[idx].getDataBuffer().getLength() << std::endl;
+
         PL_ABORT_IF_NOT(
             host_data_size == tensors_[idx].getDataBuffer().getLength(),
             "The length of the host data should match its copy on the device.");
@@ -811,6 +836,32 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
      * @brief The tensors init helper function for ctor.
      */
     void initTensors_() {
+        // print bond dimensions, sites modes and extents
+        // std::cout << "bondDims_:" << std::endl;
+        // for (const auto &bondDim : bondDims_)
+        // {
+        //     std::cout << bondDim << " ";
+        // }
+        // std::cout << std::endl;
+        // std::cout << "sitesModes_:" << std::endl;
+        // for (const auto &sitesMode : sitesModes_)
+        // {
+        //     for (const auto &mode : sitesMode)
+        //     {
+        //         std::cout << mode << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+        // std::cout << "sitesExtents_:" << std::endl;
+        // for (const auto &sitesExtent : sitesExtents_)
+        // {
+        //     for (const auto &extent : sitesExtent)
+        //     {
+        //         std::cout << extent << " ";
+        //     }
+        //     std::cout << std::endl;
+        // }
+
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             // construct mps tensors reprensentation
             tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],

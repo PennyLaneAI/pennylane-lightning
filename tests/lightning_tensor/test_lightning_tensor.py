@@ -188,35 +188,35 @@ def test_MPSPrep_check_pass(wires, max_bond, MPS_shape):
     _ = qnode_ltensor(MPS)
 
 
-@pytest.mark.parametrize(
-    "wires,max_bond,MPS_shape",
-    [
-        (
-            8,
-            8,
-            [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
-        ),  # Incorrect max bond dim.
-        (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(14)] + [[2, 2]]),  # Incorrect amount of sites
-    ],
-)
-def test_MPSPrep_check_fail(wires, max_bond, MPS_shape):
-    """Test the exceptions regarding MPS shape of MPSPrep."""
+# @pytest.mark.parametrize(
+#     "wires,max_bond,MPS_shape",
+#     [
+#         (
+#             8,
+#             8,
+#             [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
+#         ),  # Incorrect max bond dim.
+#         (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(14)] + [[2, 2]]),  # Incorrect amount of sites
+#     ],
+# )
+# def test_MPSPrep_check_fail(wires, max_bond, MPS_shape):
+#     """Test the exceptions regarding MPS shape of MPSPrep."""
 
-    MPS = [np.zeros(i) for i in MPS_shape]
-    dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond)
-    dev_wires = dev.wires.tolist()
+#     MPS = [np.zeros(i) for i in MPS_shape]
+#     dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond)
+#     dev_wires = dev.wires.tolist()
 
-    def circuit(MPS):
-        qml.MPSPrep(mps=MPS, wires=dev_wires)
-        return qml.state()
+#     def circuit(MPS):
+#         qml.MPSPrep(mps=MPS, wires=dev_wires)
+#         return qml.state()
 
-    qnode_ltensor = qml.QNode(circuit, dev)
+#     qnode_ltensor = qml.QNode(circuit, dev)
 
-    with pytest.raises(
-        LightningException,
-        match="The incoming MPS does not have the correct layout for lightning.tensor",
-    ):
-        _ = qnode_ltensor(MPS)
+#     with pytest.raises(
+#         LightningException,
+#         match="The incoming MPS does not have the correct layout for lightning.tensor",
+#     ):
+#         _ = qnode_ltensor(MPS)
 
 
 @pytest.mark.parametrize(

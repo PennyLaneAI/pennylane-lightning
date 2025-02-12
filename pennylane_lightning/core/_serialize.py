@@ -208,7 +208,7 @@ class QuantumScriptSerializer:
 
     def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
         """Define the variables needed to access the modules from the C++ bindings for tensor network."""
-        if tensor_backend == "mps":
+        if tensor_backend == "mps" or tensor_backend == "custom_mps":
             self.tensornetwork_c64 = lightning_ops.mpsTensorNetC64
             self.tensornetwork_c128 = lightning_ops.mpsTensorNetC128
 

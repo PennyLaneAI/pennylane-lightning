@@ -64,7 +64,7 @@ PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 _backends = frozenset({"cutensornet"})
 # The set of supported backends.
 
-_methods = frozenset({"mps", "tn"})
+_methods = frozenset({"mps", "tn", "custom_mps"})
 # The set of supported methods.
 
 _operations = frozenset(
@@ -289,6 +289,7 @@ class LightningTensor(Device):
     _device_options = {
         "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
         "tn": ("backend"),
+        "custom_mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode", "bond_dim"),
     }
 
     _CPP_BINARY_AVAILABLE = LT_CPP_BINARY_AVAILABLE
@@ -357,6 +358,22 @@ class LightningTensor(Device):
                 raise ValueError("The cutoff must be a non-negative number.")
             if self._cutoff_mode not in ["rel", "abs"]:
                 raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
+            
+        elif self._method == "custom_mps":
+            self._max_bond_dim = kwargs.get("max_bond_dim", 128)
+            self._cutoff = kwargs.get("cutoff", 0)
+            self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
+            self._bond_dim = kwargs.get("bond_dim", None)
+
+            if not isinstance(self._max_bond_dim, int) or self._max_bond_dim < 1:
+                raise ValueError("The maximum bond dimension must be an integer greater than 0.")
+            if not isinstance(self._cutoff, (int, float)) or self._cutoff < 0:
+                raise ValueError("The cutoff must be a non-negative number.")
+            if self._cutoff_mode not in ["rel", "abs"]:
+                raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
+            if self._bond_dim is None:
+                raise ValueError("The bond dimension must be specified.")
+
 
     @property
     def name(self):
@@ -395,9 +412,25 @@ class LightningTensor(Device):
                 cutoff=self._cutoff,
                 cutoff_mode=self._cutoff_mode,
             )
-        return LightningTensorNet(
-            self._num_wires, self._method, self._c_dtype, device_name=self.name
-        )
+        elif self.method == "tn":
+            return LightningTensorNet(
+            self._num_wires, self._method, self._c_dtype, device_name=self.name,)
+        elif self.method == "custom_mps":
+            # reverse the bond dimension
+            # self._bond_dim = self._bond_dim[::-1]
+            
+            return LightningTensorNet(
+                self._num_wires,
+                self._method,
+                self._c_dtype,
+                device_name=self.name,
+                max_bond_dim=self._max_bond_dim,
+                cutoff=self._cutoff,
+                cutoff_mode=self._cutoff_mode,
+                bond_dim=self._bond_dim,
+            )
+        else:
+            raise ValueError(f"Unsupported method: {self.method}")
 
     dtype = c_dtype
 
