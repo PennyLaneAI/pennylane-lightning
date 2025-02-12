@@ -161,13 +161,10 @@ def check_canonical_form(mps, direction="left"):
         
     for sites in mps:
         
-        C = None
-        tensor_product_axes = [[-1,-2],[0,1]]
-        
         if direction == "left":
-            C = np.tensordot(sites.conj().T, sites, axes=tensor_product_axes)
+            C = np.tensordot(sites.conj().T, sites, axes=[[-1,-2],[0,1]])
         else: # direction == "right"
-            C = np.tensordot(sites, sites.conj().T, axes=tensor_product_axes)
+            C = np.tensordot(sites, sites.conj().T, axes=[[-1,-2],[0,1]])
         
         # Compare C with the identity matrix
         eye = np.eye(C.shape[0], dtype=C.dtype)
@@ -179,7 +176,7 @@ def check_canonical_form(mps, direction="left"):
     return all(canon_values)
 
 
-def expand_mps_top_onsite(state_MPS, max_bond_dim=128):    
+def expand_mps_top(state_MPS, max_bond_dim=128):    
     """Expand the only_state_MPS to match the ctrl_plus_state_MPS."""
     
     expanded_MPS = state_MPS.copy()
@@ -532,7 +529,7 @@ class LightningTensorNet:
         canon_right = check_canonical_form(new_mps, direction="right")
         
         # Expand the current MPS to match the size of the target wires
-        new_mps = expand_mps_top_onsite(new_mps, self._max_bond_dim)
+        new_mps = expand_mps_top(new_mps, self._max_bond_dim)
         
         if canon_left:
             new_mps = restore_left_canonical_form(new_mps, [2])
