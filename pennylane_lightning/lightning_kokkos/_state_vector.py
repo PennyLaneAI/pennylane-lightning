@@ -257,7 +257,11 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None, adjoint: bool = False
+        self,
+        operations,
+        mid_measurements: dict = None,
+        postselect_mode: str = None,
+        adjoint: bool = False,
     ):
         """Apply a list of operations to the state tensor.
 

@@ -298,7 +298,11 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
     # pylint: disable=unused-argument, too-many-branches
     def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None, adjoint: bool = False
+        self,
+        operations,
+        mid_measurements: dict = None,
+        postselect_mode: str = None,
+        adjoint: bool = False,
     ):
         """Apply a list of operations to the state vector.
 
@@ -350,7 +354,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, adjoint, param)
-            elif isinstance(operation, qml.ops.Controlled) and not self._mpi_handler.use_mpi: # MPI backend does not have native controlled gates support
+            elif (
+                isinstance(operation, qml.ops.Controlled) and not self._mpi_handler.use_mpi
+            ):  # MPI backend does not have native controlled gates support
                 self._apply_lightning_controlled(operation, adjoint)
             elif (
                 self._mpi_handler.use_mpi
