@@ -34,22 +34,6 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-def svd_split_ref(Mat, site_shape, max_bond_dim):
-    """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
-    # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
-    U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
-    U = U * S  # Append singular values to U
-    bonds = len(S)
-
-    Vd = Vd.reshape([bonds] + site_shape + [-1])
-    U = U.reshape([-1] + site_shape + [bonds])
-
-    # keep only chi bonds
-    chi = min([bonds, max_bond_dim])
-    U, Vd = U[..., :chi], Vd[:chi]
-    return U, Vd
-
-
 def svd_split(Mat, site_shape, max_bond_dim, direction="right"):
     """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
     # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
@@ -74,35 +58,6 @@ def svd_split(Mat, site_shape, max_bond_dim, direction="right"):
 
     return U, Vd
 
-
-
-def decompose_dense_ref(psi, n_wires, site_shape, max_bond_dim):
-    """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
-    Ms = [[] for _ in range(n_wires)]
-    site_len = np.prod(site_shape)
-    psi = np.reshape(psi, (site_len, -1))  # split psi [2, 2, 2, 2...] to psi [site_len, -1]
-
-    U, Vd = svd_split(
-        psi, site_shape, max_bond_dim
-    )  # psi [site_len, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
-
-    Ms[0] = U.reshape(site_shape + [-1])
-    bondL = Vd.shape[0]
-    psi = Vd
-
-    for i in range(1, n_wires - 1):
-        psi = np.reshape(psi, (site_len * bondL, -1))  # reshape psi[site_len*bondL, -1]
-        U, Vd = svd_split(
-            psi, site_shape, max_bond_dim
-        )  # psi [site_len*bondL, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
-        Ms[i] = U
-
-        psi = Vd
-        bondL = Vd.shape[0]
-
-    Ms[-1] = Vd.reshape([-1] + site_shape)
-
-    return Ms
 
 def decompose_dense(psi, n_wires, site_shape, max_bond_dim, direction="right"):
     """Decompose a dense state vector/gate matrix into MPS/MPO sites using Right-canonical matrix product state."""
@@ -238,12 +193,12 @@ def expand_mps_top_onsite(state_MPS, max_bond_dim=128):
         target_l,_, target_r = state_MPS[i+1].shape
 
         if len(state_MPS) % 2 == 1: # odd
-            target_r = target_l*2
+            target_r = target_l*2 if target_l*2 < max_bond_dim else max_bond_dim
             
         site_r = site_test.shape[-1]
 
         # Horizontal padding   
-        horizontal_pad = 2**i if i**2 < max_bond_dim else 0    
+        horizontal_pad = 2**i if 2**i < max_bond_dim else 0    
         site_test = np.pad(site_test, ((0,horizontal_pad),(0, 0),(0, 0)), mode="constant")
 
         # Vertical padding
