@@ -287,7 +287,7 @@ class LightningTensor(Device):
     # pylint: disable=too-many-instance-attributes
 
     _device_options = {
-        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode", "bond_dim"),
+        "mps": ("backend", "max_bond_dim", "cutoff", "cutoff_mode"),
         "tn": ("backend"),
     }
 
@@ -340,15 +340,12 @@ class LightningTensor(Device):
                     f"Unexpected argument: {arg} during initialization of the lightning.tensor device."
                 )
 
-        self._custom_MPS = False
-
         if not accepted_backends(self._backend):
             raise ValueError(f"Unsupported backend: {self._backend}")
         if self._method == "mps":
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
             self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
-            self._bond_dim = kwargs.get("bond_dim", None)
 
             if not isinstance(self._max_bond_dim, int) or self._max_bond_dim < 1:
                 raise ValueError("The maximum bond dimension must be an integer greater than 0.")
@@ -356,14 +353,6 @@ class LightningTensor(Device):
                 raise ValueError("The cutoff must be a non-negative number.")
             if self._cutoff_mode not in ["rel", "abs"]:
                 raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
-
-            if self._bond_dim is not None:
-                print(f"{self._bond_dim=}")
-                self._custom_MPS = True
-                if not isinstance(self._bond_dim, list):
-                    raise ValueError("The bond dimension must be specified as a list.")
-                if len(self._bond_dim) != self._num_wires - 1:
-                    raise ValueError("The bond dimension list must have length equal to the number of wires - 1.")
 
     @property
     def name(self):
@@ -393,17 +382,6 @@ class LightningTensor(Device):
     def _tensornet(self, num_wires):
         """Return the tensornet object."""
         if self.method == "mps":
-            if self._custom_MPS:
-                return LightningTensorNet(
-                    num_wires,
-                    self._method,
-                    self._c_dtype,
-                    device_name=self.name,
-                    max_bond_dim=self._max_bond_dim,
-                    cutoff=self._cutoff,
-                    cutoff_mode=self._cutoff_mode,
-                    bond_dim=self._bond_dim,
-                )
             return LightningTensorNet(
                 num_wires,
                 self._method,

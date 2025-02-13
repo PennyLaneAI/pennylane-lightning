@@ -122,9 +122,6 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
     pyclass
         .def(py::init<std::size_t, std::size_t>()) // num_qubits, max_bond_dim
         .def(py::init<std::size_t, std::size_t,
-                      std::vector<std::size_t>>()) // num_qubits, max_bond_dim,
-                                                   // list_bond_dim
-        .def(py::init<std::size_t, std::size_t,
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
         .def(
             "getState",
@@ -153,7 +150,6 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                 }
 
                 const auto &MPS_shape_dest = tensor_network.getSitesExtents();
-
                 MPSShapeCheck(MPS_shape_dest, MPS_shape_source);
 
                 for (std::size_t idx = 0; idx < tensors.size(); idx++) {
