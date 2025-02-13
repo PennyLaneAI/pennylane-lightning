@@ -364,19 +364,14 @@ class LightningTensorNet:
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
             self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
-            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+            self._bond_dim = kwargs.get("bond_dim", None)
+            
+            if self._bond_dim is not None:
+                self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim, self._bond_dim)
+            else:
+                self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
         elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
-        elif self._method == "custom_mps":
-            self._max_bond_dim = kwargs.get("max_bond_dim", 128)
-            self._cutoff = kwargs.get("cutoff", 0)
-            self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
-            self.bond_dim = kwargs.get("bond_dim", 0)
-            self._tensornet = self._tensornet_dtype()(
-                self._num_wires, self._max_bond_dim, self.bond_dim
-            )
-            self._method = "mps"
-
         else:
             raise DeviceError(f"The method {self._method} is not supported.")
 

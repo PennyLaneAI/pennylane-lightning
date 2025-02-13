@@ -232,14 +232,6 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
             "The site index should be less than the number of qubits.");
 
         const std::size_t idx = BaseType::getNumQubits() - site_idx - 1;
-        // const std::size_t idx = site_idx;
-        // print idx
-        // std::cout << "idx: " << idx << std::endl;
-        // // print host_data_size
-        // std::cout << "host_data_size: " << host_data_size << std::endl;
-        // std::cout << "device_data_size: "
-        //           << tensors_[idx].getDataBuffer().getLength() << std::endl;
-
         PL_ABORT_IF_NOT(
             host_data_size == tensors_[idx].getDataBuffer().getLength(),
             "The length of the host data should match its copy on the device.");
@@ -835,32 +827,6 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
      * @brief The tensors init helper function for ctor.
      */
     void initTensors_() {
-        // print bond dimensions, sites modes and extents
-        // std::cout << "bondDims_:" << std::endl;
-        // for (const auto &bondDim : bondDims_)
-        // {
-        //     std::cout << bondDim << " ";
-        // }
-        // std::cout << std::endl;
-        // std::cout << "sitesModes_:" << std::endl;
-        // for (const auto &sitesMode : sitesModes_)
-        // {
-        //     for (const auto &mode : sitesMode)
-        //     {
-        //         std::cout << mode << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-        // std::cout << "sitesExtents_:" << std::endl;
-        // for (const auto &sitesExtent : sitesExtents_)
-        // {
-        //     for (const auto &extent : sitesExtent)
-        //     {
-        //         std::cout << extent << " ";
-        //     }
-        //     std::cout << std::endl;
-        // }
-
         for (std::size_t i = 0; i < BaseType::getNumQubits(); i++) {
             // construct mps tensors reprensentation
             tensors_.emplace_back(sitesModes_[i].size(), sitesModes_[i],
