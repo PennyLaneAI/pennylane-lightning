@@ -60,11 +60,11 @@ def svd_split(Mat, site_shape, max_bond_dim, direction="right"):
 
 
 def decompose_dense(psi, n_wires, site_shape, max_bond_dim, direction="right"):
-    """Decompose a dense state vector/gate matrix into MPS/MPO sites using Right-canonical matrix product state."""
+    """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
     Ms = [[] for _ in range(n_wires)]
     site_len = np.prod(site_shape)
 
-    if direction == "right":
+    if direction == "right":  # Right canonical form
 
         psi = np.reshape(psi, (-1, site_len))
         U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
@@ -85,7 +85,7 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim, direction="right"):
 
         Ms.reverse()
 
-    elif direction == "left":
+    else:  # direction == "left",  Left canonical form
 
         psi = np.reshape(psi, (site_len, -1))
         U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
@@ -103,6 +103,7 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim, direction="right"):
 
         Ms[-1] = Vd
 
+    # Removing the virtual bond dimension of 1 from the first and last sites
     first_shape = Ms[0].shape[1:]
     Ms[0] = np.reshape(Ms[0], first_shape)
 
@@ -157,6 +158,9 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
 
 
 def check_canonical_form(mps, direction="left"):
+    """Check if the MPS is in the canonical form. Computation of expectation and matrix elements is simpler if the MPS is built from tensors
+    relating orthonormal spaces. The canonical form of the MPS is defined as the form where the tensors are orthonormal in the left or right direction.
+    """
 
     canon_values = []
 
@@ -178,57 +182,62 @@ def check_canonical_form(mps, direction="left"):
 
 
 def expand_mps_top(state_MPS, max_bond_dim=128):
-    """Expand the only_state_MPS to match the ctrl_plus_state_MPS."""
+    """Expand the MPS to match the size of the target wires. Note: The expansion works only for adding a single wire at the beginning of the MPS."""
 
     expanded_MPS = state_MPS.copy()
 
+    # Number of sites that should be changed from the first site
     n_sites_change = (len(expanded_MPS) + 1) // 2
 
-    for i in range(n_sites_change - 1):
-        # Create the next site for expanded_only_state_MPS
-        site_test = state_MPS[i]
+    # Check if the number of sites is odd
+    odd_n_sites = len(expanded_MPS) % 2 == 1
 
+    for i in range(n_sites_change - 1):
+        # Create the new site for expanded_MPS
+        new_site = expanded_MPS[i]
+
+        # Horizontal padding with zeros
+        horizontal_pad = 2**i if 2**i < max_bond_dim else 0
+        new_site = np.pad(new_site, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
+
+        # Vertical padding with zeros
         target_l, _, target_r = state_MPS[i + 1].shape
 
-        if len(state_MPS) % 2 == 1:  # odd
+        if odd_n_sites:  # odd sites need to double the bond dimension
             target_r = target_l * 2 if target_l * 2 < max_bond_dim else max_bond_dim
 
-        site_r = site_test.shape[-1]
+        site_r = new_site.shape[-1]
 
-        # Horizontal padding
-        horizontal_pad = 2**i if 2**i < max_bond_dim else 0
-        site_test = np.pad(site_test, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
-
-        # Vertical padding
-        site_test = site_test.reshape(target_l, 2, site_r)
-        site_test = np.pad(site_test, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
+        new_site = new_site.reshape(target_l, 2, site_r)
+        new_site = np.pad(new_site, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
 
         # Assign the new site
-        expanded_MPS[i] = site_test
+        expanded_MPS[i] = new_site
 
-    # Padding last site
-    site_test = state_MPS[n_sites_change - 1]
-
-    target_l, _, target_r = state_MPS[n_sites_change].shape
-
-    if len(state_MPS) % 2 == 1:  # odd
-        target_l = target_l * 2
-        target_r = target_r * 2
-    else:  # even
-        target_r = target_l
-
-    site_r = site_test.shape[-1]
+    # Padding mid site
+    new_site = expanded_MPS[n_sites_change - 1]
 
     # Horizontal padding
     horizontal_pad = 2 ** (n_sites_change - 1) if 2 ** (n_sites_change - 1) < max_bond_dim else 0
-    site_test = np.pad(site_test, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
+    new_site = np.pad(new_site, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
 
     # Vertical padding
-    site_test = site_test.reshape(target_l, 2, target_r)
-    site_test = np.pad(site_test, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
+    target_l, _, target_r = state_MPS[n_sites_change].shape
+
+    # if the mid + 1 site is odd, the bond dimension needs to be doubled
+    if odd_n_sites:
+        target_l *= 2
+        target_r *= 2
+    else:  # even
+        target_r = target_l
+
+    site_r = new_site.shape[-1]
+
+    new_site = new_site.reshape(target_l, 2, target_r)
+    new_site = np.pad(new_site, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
 
     # Assign the last new site
-    expanded_MPS[n_sites_change - 1] = site_test
+    expanded_MPS[n_sites_change - 1] = new_site
 
     # Add the initial site
     expanded_MPS.insert(0, np.eye(2, dtype=state_MPS[0].dtype).reshape(1, 2, 2))
@@ -237,6 +246,7 @@ def expand_mps_top(state_MPS, max_bond_dim=128):
 
 
 def restore_left_canonical_form(mps, site_shape):
+    """Restore the left canonical form of the MPS. The left canonical form is defined as the form where the tensors are orthonormal in the left direction."""
 
     new_mps = []
     Vd = np.eye(1, dtype=mps[0].dtype)
@@ -258,6 +268,7 @@ def restore_left_canonical_form(mps, site_shape):
 
 
 def restore_right_canonical_form(mps, site_shape):
+    """Restore the right canonical form of the MPS. The right canonical form is defined as the form where the tensors are orthonormal in the right direction."""
 
     mps.reverse()
 
@@ -281,35 +292,6 @@ def restore_right_canonical_form(mps, site_shape):
     mps.reverse()
 
     return new_mps
-
-
-def print_mps(mps, full=False, name=None):
-    """Print the MPOs."""
-    print("-" * 100)
-    if name is not None:
-        print("MPS name:", name)
-
-    max_bond_dim = 0
-    for i, site in enumerate(mps):
-        max_bond_dim = max(max_bond_dim, site.shape[-1])
-
-    print("Sites:", len(mps), "| Max bond dim:", max_bond_dim)
-    for i in range(len(mps)):
-        print(f"| {'site '+str(i):^12}", end="")
-
-    print()
-    for i, site in enumerate(mps):
-        print(f"| {str(site.shape):^12}", end="")
-    print()
-
-    if full:
-        print("~" * 100)
-        for i, site in enumerate(mps):
-            # print("Site", i, ":\n", site)
-            print("Site", i, " | Shape:", site.shape)
-            print(site)
-            print("~" * 100)
-    print("-" * 100)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -364,12 +346,7 @@ class LightningTensorNet:
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
             self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
-            self._bond_dim = kwargs.get("bond_dim", None)
-            
-            if self._bond_dim is not None:
-                self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim, self._bond_dim)
-            else:
-                self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
         elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:
@@ -537,8 +514,6 @@ class LightningTensorNet:
             new_mps = restore_left_canonical_form(new_mps, [2])
         elif canon_right:
             new_mps = restore_right_canonical_form(new_mps, [2])
-
-        print_mps(new_mps, full=False, name="new_mps")
 
         # Restore dimension of first and last sites
         new_mps[0] = new_mps[0].reshape(2, 2)
