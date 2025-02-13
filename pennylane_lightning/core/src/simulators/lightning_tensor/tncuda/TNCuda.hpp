@@ -79,15 +79,14 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
-    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim, const std::vector<std::size_t> &bondDims)
-        : BaseType(numQubits), maxBondDim_(maxBondDim),
-          bondDims_(bondDims), sitesModes_(setSitesModes_()),
-          sitesExtents_(setSitesExtents_()),
+    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim,
+                    const std::vector<std::size_t> &bondDims)
+        : BaseType(numQubits), maxBondDim_(maxBondDim), bondDims_(bondDims),
+          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
           sitesExtents_int64_(setSitesExtents_int64_()),
           cublascaller_(make_shared_cublas_caller()),
           gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
-              BaseType::getDevTag()))
-    {
+              BaseType::getDevTag())) {
         initTensors_();
         appendInitialMPSState_(
             getSitesExtentsPtr()

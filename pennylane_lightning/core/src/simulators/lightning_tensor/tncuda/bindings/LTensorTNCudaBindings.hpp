@@ -121,13 +121,14 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
 
     pyclass
         .def(py::init<std::size_t, std::size_t>()) // num_qubits, max_bond_dim
-        .def(py::init<std::size_t, std::size_t, std::vector<std::size_t>>()) // num_qubits, max_bond_dim, bond_dim
+        .def(py::init<std::size_t, std::size_t,
+                      std::vector<std::size_t>>()) // num_qubits, max_bond_dim,
+                                                   // bond_dim
         .def(py::init<std::size_t, std::size_t,
                       DevTag<int>>()) // num_qubits, max_bond_dim, dev-tag
         .def(
             "getState",
-            [](TensorNet &tensor_network, np_arr_c &state)
-            {
+            [](TensorNet &tensor_network, np_arr_c &state) {
                 py::buffer_info numpyArrayInfo = state.request();
                 auto *data_ptr =
                     static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
@@ -139,12 +140,10 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
              "Apply controlled operation")
         .def(
             "updateMPSSitesData",
-            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors)
-            {
+            [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors) {
                 // Extract the incoming MPS shape
                 std::vector<std::vector<std::size_t>> MPS_shape_source;
-                for (std::size_t idx = 0; idx < tensors.size(); idx++)
-                {
+                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
                     py::buffer_info numpyArrayInfo = tensors[idx].request();
                     auto MPS_site_source_shape = numpyArrayInfo.shape;
                     std::vector<std::size_t> MPS_site_source(
@@ -156,8 +155,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
                 const auto &MPS_shape_dest = tensor_network.getSitesExtents();
                 // MPSShapeCheck(MPS_shape_dest, MPS_shape_source);
 
-                for (std::size_t idx = 0; idx < tensors.size(); idx++)
-                {
+                for (std::size_t idx = 0; idx < tensors.size(); idx++) {
                     py::buffer_info numpyArrayInfo = tensors[idx].request();
                     auto *data_ptr = static_cast<std::complex<PrecisionT> *>(
                         numpyArrayInfo.ptr);
@@ -169,20 +167,17 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         .def(
             "setBasisState",
             [](TensorNet &tensor_network,
-               std::vector<std::size_t> &basisState)
-            {
+               std::vector<std::size_t> &basisState) {
                 tensor_network.setBasisState(basisState);
             },
             "Create Basis State on GPU.")
         .def(
             "applyMPOOperation",
             [](TensorNet &tensor_network, std::vector<np_arr_c> &tensors,
-               const std::vector<std::size_t> &wires, std::size_t MPOBondDims)
-            {
+               const std::vector<std::size_t> &wires, std::size_t MPOBondDims) {
                 using ComplexT = typename TensorNet::ComplexT;
                 std::vector<std::vector<ComplexT>> conv_tensors;
-                for (const auto &tensor : tensors)
-                {
+                for (const auto &tensor : tensors) {
                     py::buffer_info numpyArrayInfo = tensor.request();
                     auto *m_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
                     conv_tensors.push_back(
@@ -195,8 +190,7 @@ void registerBackendClassSpecificBindingsMPS(PyClass &pyclass) {
         .def(
             "appendMPSFinalState",
             [](TensorNet &tensor_network, double cutoff,
-               const std::string &cutoff_mode)
-            {
+               const std::string &cutoff_mode) {
                 tensor_network.append_mps_final_state(cutoff, cutoff_mode);
             },
             "Get the final state.")

@@ -354,7 +354,7 @@ class LightningTensor(Device):
                 raise ValueError("The cutoff must be a non-negative number.")
             if self._cutoff_mode not in ["rel", "abs"]:
                 raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
-            
+
         elif self._method == "custom_mps":
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
@@ -369,7 +369,6 @@ class LightningTensor(Device):
                 raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
             if self._bond_dim is None:
                 raise ValueError("The bond dimension must be specified.")
-
 
     @property
     def name(self):
@@ -410,11 +409,15 @@ class LightningTensor(Device):
             )
         elif self.method == "tn":
             return LightningTensorNet(
-            self._num_wires, self._method, self._c_dtype, device_name=self.name,)
+                self._num_wires,
+                self._method,
+                self._c_dtype,
+                device_name=self.name,
+            )
         elif self.method == "custom_mps":
             # reverse the bond dimension
             # self._bond_dim = self._bond_dim[::-1]
-            
+
             return LightningTensorNet(
                 self._num_wires,
                 self._method,
