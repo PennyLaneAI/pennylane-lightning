@@ -6,6 +6,15 @@
 
 ### Improvements
 
+* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
+  [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
+
+* Remove the old device API references in the Lightning repo and test suite.
+  [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
+  
+* Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
+  [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
+
 * Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
   [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
 
@@ -37,6 +46,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix CI to collect Python code coverage for Lightning-Qubit and Lightning-Kokkos CPU.
+  [(#1053)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1053)
 
 * Upgrade the version of QEMU image to fix AARCH64 wheel action.
   [(#1056)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1056)

@@ -1,4 +1,4 @@
-# Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+# Copyright 2018-2024 Xanadu Quantum Technologies Inc.
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,394 +13,493 @@
 # limitations under the License.
 
 r"""
-This module contains the base class for all PennyLane Lightning simulator devices,
-and interfaces with C++ for improved performance.
+This module contains the :class:`~.LightningBase` class, that serves as a base class for Lightning simulator devices that
+interfaces with C++ for fast linear algebra calculations.
 """
-from itertools import product
-from typing import List, Union
+from abc import abstractmethod
+from numbers import Number
+from typing import Callable, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, StatePrep
-from pennylane.devices import QubitDevice
-from pennylane.operation import Operation
-from pennylane.ops import Prod, Projector, SProd, Sum
-from pennylane.wires import Wires
+from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
+from pennylane.devices.modifiers import simulator_tracking, single_tape_support
+from pennylane.tape import QuantumScript, QuantumTape
+from pennylane.typing import Result, ResultBatch
 
-from ._serialize import QuantumScriptSerializer
-from ._version import __version__
+from ._measurements_base import LightningBaseMeasurements
+
+Result_or_ResultBatch = Union[Result, ResultBatch]
+QuantumTapeBatch = Sequence[QuantumTape]
+QuantumTape_or_Batch = Union[QuantumTape, QuantumTapeBatch]
+PostprocessingFn = Callable[[ResultBatch], Result_or_ResultBatch]
 
 
-class LightningBase(QubitDevice):
+@simulator_tracking
+@single_tape_support
+class LightningBase(Device):
     """PennyLane Lightning Base device.
 
-    This intermediate base class provides device-agnostic functionalities.
+    A class that serves as a base class for Lightning simulators.
 
     Args:
-        wires (int): the number of wires to initialize the device with
+        wires (Optional[int, list]): number or list of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
+        sync (bool): immediately sync with host after applying operations on the device
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
-        shots (int): How many times the circuit should be evaluated (or sampled) to estimate
+        shots (int or list): How many times the circuit should be evaluated (or sampled) to estimate
             stochastic return values. Defaults to ``None`` if not specified. Setting
             to ``None`` results in computing statistics like expectation values and
             variances analytically.
-        batch_obs (bool): Determine whether we process observables in parallel when computing
-            the jacobian. This value is only relevant when the lightning qubit is built with
-            OpenMP.
+        batch_obs (bool): Determine whether we process observables in parallel when
+            computing the jacobian.
     """
 
-    pennylane_requires = ">=0.40"
-    version = __version__
-    author = "Xanadu Inc."
-    short_name = "lightning.base"
-    _CPP_BINARY_AVAILABLE = True
-    _new_API = False
+    # pylint: disable=too-many-instance-attributes
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires,
+        wires: Union[int, List] = None,
         *,
-        c_dtype=np.complex128,
-        shots=None,
-        batch_obs=False,
+        c_dtype: Union[np.complex64, np.complex128],
+        shots: Union[int, List],
+        batch_obs: bool,
     ):
-        if not self._CPP_BINARY_AVAILABLE:
-            raise ImportError(
-                f"Pre-compiled binaries for {self.short_name} are not available. "
-                "To manually compile from source, follow the instructions at "
-                "https://docs.pennylane.ai/projects/lightning/en/stable/dev/installation.html."
-            )
-        if c_dtype is np.complex64:
-            r_dtype = np.float32
-            self.use_csingle = True
-        elif c_dtype is np.complex128:
-            r_dtype = np.float64
-            self.use_csingle = False
-        else:
-            raise TypeError(f"Unsupported complex type: {c_dtype}")
-        super().__init__(wires, shots=shots, r_dtype=r_dtype, c_dtype=c_dtype)
+        super().__init__(wires=wires, shots=shots)
+
+        self._c_dtype = c_dtype
         self._batch_obs = batch_obs
 
+        # State-vector is dynamically allocated just before execution
+        self._statevector = None
+
+        if isinstance(wires, int) or wires is None:
+            self._wire_map = None  # should just use wires as is
+        else:
+            self._wire_map = {w: i for i, w in enumerate(self.wires)}
+
+        # Dummy for LightningStateVector, LightningMeasurements, LightningAdjointJacobian
+        self.LightningStateVector: Callable = None
+        self.LightningMeasurements: type[LightningBaseMeasurements] = None
+        self.LightningAdjointJacobian: Callable = None
+
     @property
-    def dtype(self):
+    def c_dtype(self):
         """State vector complex data type."""
-        return self.C_DTYPE
+        return self._c_dtype
 
-    @property
-    def stopping_condition(self):
-        """.BooleanFn: Returns the stopping condition for the device. The returned
-        function accepts a queueable object (including a PennyLane operation
-        and observable) and returns ``True`` if supported by the device."""
+    @abstractmethod
+    def _set_lightning_classes(self):
+        """Load the LightningStateVector, LightningMeasurements, LightningAdjointJacobian as class attribute"""
 
-        def accepts_obj(obj):
-            is_not_tape = not isinstance(obj, qml.tape.QuantumTape)
-            is_supported = getattr(self, "supports_operation", lambda name: False)(obj.name)
-            return is_not_tape and is_supported
-
-        return qml.BooleanFn(accepts_obj)
-
-    # pylint: disable=missing-function-docstring
-    @classmethod
-    def capabilities(cls):
-        capabilities = super().capabilities().copy()
-        capabilities.update(
-            model="qubit",
-            supports_analytic_computation=True,
-            supports_broadcasting=False,
-            returns_state=True,
-        )
-        return capabilities
-
-    # To be able to validate the adjoint method [_validate_adjoint_method(device)],
-    #  the qnode requires the definition of:
-    # ["_apply_operation", "_apply_unitary", "adjoint_jacobian"]
-    # pylint: disable=missing-function-docstring
-    def _apply_operation(self):
-        pass
-
-    # pylint: disable=missing-function-docstring
-    def _apply_unitary(self):
-        pass
-
-    def _init_process_jacobian_tape(self, tape, starting_state, use_device_state):
-        """Generate an initial state vector for ``_process_jacobian_tape``."""
-
-    @property
-    def create_ops_list(self):
-        """Returns create_ops_list function of the matching precision."""
-
-    def probability_lightning(self, wires):
-        """Return the probability of each computational basis state."""
-
-    def vjp(self, measurements, grad_vec, starting_state=None, use_device_state=False):
-        """Generate the processing function required to compute the vector-Jacobian
-        products of a tape.
+    @abstractmethod
+    def _setup_execution_config(self, config: ExecutionConfig):
         """
-
-    def probability(self, wires=None, shot_range=None, bin_size=None):
-        """Return the probability of each computational basis state.
-
-        Devices that require a finite number of shots always return the
-        estimated probability.
+        Update the execution config with choices for how the device should be used and the device options.
 
         Args:
-            wires (Iterable[Number, str], Number, str, Wires): wires to return
-                marginal probabilities for. Wires not provided are traced out of the system.
-            shot_range (tuple[int]): 2-tuple of integers specifying the range of samples
-                to use. If not specified, all samples are used.
-            bin_size (int): Divides the shot range into bins of size ``bin_size``, and
-                returns the measurement statistic separately over each bin. If not
-                provided, the entire shot range is treated as a single bin.
+            config (ExecutionConfig): A data structure describing the parameters needed to fully describe the execution.
 
         Returns:
-            array[float]: list of the probabilities
+            ExecutionConfig: An updated execution config with device options set.
+
         """
-        if self.shots is not None:
-            return self.estimate_probability(wires=wires, shot_range=shot_range, bin_size=bin_size)
 
-        wires = wires or self.wires
-        wires = Wires(wires)
-
-        # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
-
-        if (
-            device_wires
-            and len(device_wires) > 1
-            and (not np.all(np.array(device_wires)[:-1] <= np.array(device_wires)[1:]))
-        ):
-            raise RuntimeError(
-                "Lightning does not currently support out-of-order indices for probabilities"
-            )
-        return self.probability_lightning(device_wires)
-
-    def _get_diagonalizing_gates(self, circuit: qml.tape.QuantumTape) -> List[Operation]:
-        # pylint: disable=no-member, protected-access
-        def skip_diagonalizing(obs):
-            return isinstance(obs, qml.ops.Sum) and obs._pauli_rep is not None
-
-        meas_filtered = list(
-            filter(lambda m: m.obs is None or not skip_diagonalizing(m.obs), circuit.measurements)
-        )
-        return super()._get_diagonalizing_gates(qml.tape.QuantumScript(measurements=meas_filtered))
-
-    def _preprocess_state_vector(self, state, device_wires):
-        """Initialize the internal state vector in a specified state.
+    @abstractmethod
+    def dynamic_wires_from_circuit(self, circuit):
+        """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-            device_wires (Wires): wires that get initialized in the state
+            circuit (QuantumTape): The circuit to execute.
 
         Returns:
-            array[complex]: normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
-            array[int]: indices for which the state is changed to input state vector elements
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
 
-        # translate to wire labels used by device
-        device_wires = self.map_wires(device_wires)
-
-        # special case for integral types
-        if state.dtype.kind == "i":
-            state = qml.numpy.array(state, dtype=self.C_DTYPE)
-        state = self._asarray(state, dtype=self.C_DTYPE)
-
-        if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
-            return None, state
-
-        # generate basis states on subset of qubits via the cartesian product
-        basis_states = np.array(list(product([0, 1], repeat=len(device_wires))))
-
-        # get basis states to alter on full set of qubits
-        unravelled_indices = np.zeros((2 ** len(device_wires), self.num_wires), dtype=int)
-        unravelled_indices[:, device_wires] = basis_states
-
-        # get indices for which the state is changed to input state vector elements
-        ravelled_indices = np.ravel_multi_index(unravelled_indices.T, [2] * self.num_wires)
-        return ravelled_indices, state
-
-    def _get_basis_state_index(self, state, wires):
-        """Returns the basis state index of a specified computational basis state.
+    @abstractmethod
+    def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
+        """This function defines the device transform program to be applied and an updated device configuration.
 
         Args:
-            state (array[int]): computational basis state of shape ``(wires,)``
-                consisting of 0s and 1s
-            wires (Wires): wires that the provided computational state should be initialized on
+            execution_config (Union[ExecutionConfig, Sequence[ExecutionConfig]]): A data structure describing the
+                parameters needed to fully describe the execution.
 
         Returns:
-            int: basis state index
+            TransformProgram, ExecutionConfig: A transform program that when called returns :class:`~.QuantumTape`'s that the
+            device can natively execute as well as a postprocessing function to be called after execution, and a configuration
+            with unset specifications filled in.
+
+        This device:
+
+        * Supports any qubit operations that provide a matrix
+        * Currently does not support finite shots
+        * Currently does not intrinsically support parameter broadcasting
+
         """
-        # translate to wire labels used by device
-        device_wires = self.map_wires(wires)
 
-        # length of basis state parameter
-        n_basis_state = len(state)
-
-        if not set(state.tolist()).issubset({0, 1}):
-            raise ValueError("BasisState parameter must consist of 0 or 1 integers.")
-
-        if n_basis_state != len(device_wires):
-            raise ValueError("BasisState parameter and wires must be of equal length.")
-
-        # get computational basis state number
-        basis_states = 2 ** (self.num_wires - 1 - np.array(device_wires))
-        basis_states = qml.math.convert_like(basis_states, state)
-        return int(qml.math.dot(state, basis_states))
-
-    # pylint: disable=too-many-function-args, assignment-from-no-return, too-many-arguments
-    # pylint: disable=too-many-positional-arguments
-    def _process_jacobian_tape(
+    @abstractmethod
+    def execute(
         self,
-        tape,
-        starting_state,
-        use_device_state,
-        use_mpi: bool = False,
-        split_obs: Union[bool, int] = False,
-    ):
-        state_vector = self._init_process_jacobian_tape(tape, starting_state, use_device_state)
-
-        obs_serialized, obs_indices = QuantumScriptSerializer(
-            self.short_name, self.use_csingle, use_mpi, split_obs
-        ).serialize_observables(tape, self.wire_map)
-
-        ops_serialized, use_sp = QuantumScriptSerializer(
-            self.short_name, self.use_csingle, use_mpi, split_obs
-        ).serialize_ops(tape, self.wire_map)
-
-        ops_serialized = self.create_ops_list(*ops_serialized)
-
-        # We need to filter out indices in trainable_params which do not
-        # correspond to operators.
-        trainable_params = sorted(tape.trainable_params)
-        if len(trainable_params) == 0:
-            return None
-
-        tp_shift = []
-        record_tp_rows = []
-        all_params = 0
-
-        for op_idx, trainable_param in enumerate(trainable_params):
-            # get op_idx-th operator among differentiable operators
-            operation, _, _ = tape.get_operation(op_idx)
-            if isinstance(operation, Operation) and not isinstance(
-                operation, (BasisState, StatePrep)
-            ):
-                # We now just ignore non-op or state preps
-                tp_shift.append(trainable_param)
-                record_tp_rows.append(all_params)
-            all_params += 1
-
-        if use_sp:
-            # When the first element of the tape is state preparation. Still, I am not sure
-            # whether there must be only one state preparation...
-            tp_shift = [i - 1 for i in tp_shift]
-
-        return {
-            "state_vector": state_vector,
-            "obs_serialized": obs_serialized,
-            "ops_serialized": ops_serialized,
-            "tp_shift": tp_shift,
-            "record_tp_rows": record_tp_rows,
-            "all_params": all_params,
-            "obs_indices": obs_indices,
-        }
-
-    @staticmethod
-    def _assert_adjdiff_no_projectors(observable):
-        """Helper function to validate that an observable is not or does not contain
-        Projectors
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Result_or_ResultBatch:
+        """Execute a circuit or a batch of circuits and turn it into results.
 
         Args:
-            observable (~pennylane.operation.Operator): Observable to check
-
-        Raises:
-            ~pennylane.QuantumFunctionError: if a ``Projector`` is found.
-        """
-        if isinstance(observable, Projector):
-            raise qml.QuantumFunctionError(
-                "Adjoint differentiation method does not support the Projector observable"
-            )
-
-        if isinstance(observable, SProd):
-            LightningBase._assert_adjdiff_no_projectors(observable.base)
-
-        elif isinstance(observable, (Sum, Prod)):
-            for obs in observable:
-                LightningBase._assert_adjdiff_no_projectors(obs)
-
-    @staticmethod
-    def _adjoint_jacobian_processing(jac):
-        """
-        Post-process the Jacobian matrix returned by ``adjoint_jacobian`` for
-        the new return type system.
-        """
-        jac = np.squeeze(jac)
-
-        if jac.ndim == 0:
-            return np.array(jac)
-
-        if jac.ndim == 1:
-            return tuple(np.array(j) for j in jac)
-
-        # must be 2-dimensional
-        return tuple(tuple(np.array(j_) for j_ in j) for j in jac)
-
-    # pylint: disable=too-many-arguments
-    def batch_vjp(
-        self, tapes, grad_vecs, reduction="append", starting_state=None, use_device_state=False
-    ):
-        """Generate the processing function required to compute the vector-Jacobian products
-        of a batch of tapes.
-
-        Args:
-            tapes (Sequence[.QuantumTape]): sequence of quantum tapes to differentiate
-            grad_vecs (Sequence[tensor_like]): Sequence of gradient-output vectors ``grad_vec``.
-                Must be the same length as ``tapes``. Each ``grad_vec`` tensor should have
-                shape matching the output shape of the corresponding tape.
-            reduction (str): Determines how the vector-Jacobian products are returned.
-                If ``append``, then the output of the function will be of the form
-                ``List[tensor_like]``, with each element corresponding to the VJP of each
-                input tape. If ``extend``, then the output VJPs will be concatenated.
-            starting_state (tensor_like): post-forward pass state to start execution with.
-                It should be complex-valued. Takes precedence over ``use_device_state``.
-            use_device_state (bool): use current device state to initialize. A forward pass of
-                the same circuit should be the last thing the device has executed.
-                If a ``starting_state`` is provided, that takes precedence.
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the quantum circuits to be executed
+            execution_config (ExecutionConfig): a data structure with additional information required for execution
 
         Returns:
-            The processing function required to compute the vector-Jacobian products
-            of a batch of tapes.
+            TensorLike, tuple[TensorLike], tuple[tuple[TensorLike]]: A numeric result of the computation.
         """
-        fns = []
 
-        # Loop through the tapes and grad_vecs vector
-        for tape, grad_vec in zip(tapes, grad_vecs):
-            fun = self.vjp(
-                tape.measurements,
-                grad_vec,
-                starting_state=starting_state,
-                use_device_state=use_device_state,
+    @abstractmethod
+    def simulate(
+        self,
+        circuit: QuantumScript,
+        state,  # Lightning [Device] StateVector
+        postselect_mode: str = None,
+    ) -> Result:
+        """Simulate a single quantum script.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
+            postselect_mode (str): Configuration for handling shots with mid-circuit measurement
+                postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
+                keep the same number of shots. Default is ``None``.
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+
+    @abstractmethod
+    def supports_derivatives(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[qml.tape.QuantumTape] = None,
+    ) -> bool:
+        """Check whether or not derivatives are available for a given configuration and circuit.
+
+        Args:
+            execution_config (ExecutionConfig): An optional configuration of the desired derivative calculation. Default is ``None``.
+            circuit (QuantumTape): An optional circuit to check derivatives support for. Default is ``None``.
+
+        Returns:
+            Bool: Whether or not a derivative can be calculated provided the given information
+
+        """
+
+    def jacobian(
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ):
+        """Compute the Jacobian for a single quantum script.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
+
+        Returns:
+            TensorLike: The Jacobian of the quantum script
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        state.reset_state()
+        final_state = state.get_final_state(circuit)
+        # pylint: disable=not-callable
+        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_jacobian(
+            circuit
+        )
+
+    def simulate_and_jacobian(
+        self,
+        circuit: QuantumTape,
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ) -> Tuple:
+        """Simulate a single quantum script and compute its Jacobian.
+
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            state (Lightning [Device] StateVector): A handle to the underlying Lightning state
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation and the calculated Jacobian
+
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        res = self.simulate(circuit, state)
+        # pylint: disable=not-callable
+        jac = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_jacobian(circuit)
+        return res, jac
+
+    def vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        circuit: QuantumTape,
+        cotangents: Tuple[Number],
+        state,  # Lightning [Device] StateVector
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ):
+        """Compute the Vector-Jacobian Product (VJP) for a single quantum script.
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
+                have shape matching the output shape of the corresponding circuit. If
+                the circuit has a single output, ``cotangents`` may be a single number,
+                not an iterable of numbers.
+            state: A handle to the underlying Lightning state
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the VJP. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
+
+        Returns:
+            TensorLike: The VJP of the quantum script
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        state.reset_state()
+        final_state = state.get_final_state(circuit)
+        # pylint: disable=not-callable
+        return self.LightningAdjointJacobian(final_state, batch_obs=batch_obs).calculate_vjp(
+            circuit, cotangents
+        )
+
+    def simulate_and_vjp(  # pylint: disable=too-many-arguments, too-many-positional-arguments
+        self,
+        circuit: QuantumTape,
+        cotangents: Tuple[Number],
+        state,
+        batch_obs: bool = False,
+        wire_map: dict = None,
+    ) -> Tuple:
+        """Simulate a single quantum script and compute its Vector-Jacobian Product (VJP).
+        Args:
+            circuit (QuantumTape): The single circuit to simulate
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must
+                have shape matching the output shape of the corresponding circuit. If
+                the circuit has a single output, ``cotangents`` may be a single number,
+                not an iterable of numbers.
+            state: A handle to the underlying Lightning state
+            batch_obs (bool): Determine whether we process observables in parallel when
+                computing the jacobian. Default is ``False``.
+            wire_map (Optional[dict]): an optional map from wire labels to simulation indices. Default is ``None``.
+
+        Returns:
+            Tuple[TensorLike]: The results of the simulation and the calculated VJP
+        Note that this function can return measurements for non-commuting observables simultaneously.
+        """
+        if wire_map is not None:
+            [circuit], _ = qml.map_wires(circuit, wire_map)
+        res = self.simulate(circuit, state)
+        # pylint: disable=not-callable
+        _vjp = self.LightningAdjointJacobian(state, batch_obs=batch_obs).calculate_vjp(
+            circuit, cotangents
+        )
+        return res, _vjp
+
+    def compute_derivatives(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Tuple:
+        """Calculate the jacobian of either a single or a batch of circuits on the device.
+
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits to calculate derivatives for
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
+
+        Returns:
+            Tuple: The jacobian for each trainable parameter
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+
+        return tuple(
+            self.jacobian(
+                self.dynamic_wires_from_circuit(circuit),
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
             )
-            fns.append(fun)
+            for circuit in circuits
+        )
 
-        def processing_fns(tapes):
-            vjps = []
-            for tape, fun in zip(tapes, fns):
-                vjp = fun(tape)
+    def execute_and_compute_derivatives(
+        self,
+        circuits: QuantumTape_or_Batch,
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Tuple:
+        """Compute the results and jacobians of circuits at the same time.
 
-                # make sure vjp is iterable if using extend reduction
-                if (
-                    not isinstance(vjp, tuple)
-                    and getattr(reduction, "__name__", reduction) == "extend"
-                ):
-                    vjp = (vjp,)
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuits or batch of circuits
+            execution_config (ExecutionConfig): a data structure with all additional information required for execution. Default is ``DefaultExecutionConfig``.
 
-                if isinstance(reduction, str):
-                    getattr(vjps, reduction)(vjp)
-                elif callable(reduction):
-                    reduction(vjps, vjp)
+        Returns:
+            Tuple: A numeric result of the computation and the gradient.
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        results = tuple(
+            self.simulate_and_jacobian(
+                self.dynamic_wires_from_circuit(circuit),
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
+            )
+            for circuit in circuits
+        )
+        return tuple(zip(*results))
 
-            return vjps
+    def supports_vjp(
+        self,
+        execution_config: Optional[ExecutionConfig] = None,
+        circuit: Optional[QuantumTape] = None,
+    ) -> bool:
+        """Whether or not this device defines a custom vector jacobian product.
+        ``Lightning[Device]`` will check if supports adjoint differentiation with analytic results.
+        Args:
+            execution_config (ExecutionConfig): The configuration of the desired derivative calculation
+            circuit (QuantumTape): An optional circuit to check derivatives support for.
+        Returns:
+            Bool: Whether or not a derivative can be calculated provided the given information
+        """
+        return self.supports_derivatives(execution_config, circuit)
 
-        return processing_fns
+    def compute_vjp(
+        self,
+        circuits: QuantumTape_or_Batch,
+        cotangents: Tuple[Number],
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Tuple:
+        r"""The vector jacobian product used in reverse-mode differentiation. ``Lightning[Device]`` uses the
+        adjoint differentiation method to compute the VJP.
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
+                corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
+                of numbers.
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+        Returns:
+            tensor-like: A numeric result of computing the vector jacobian product
+        **Definition of vjp:**
+        If we have a function with jacobian:
+        .. math::
+            \vec{y} = f(\vec{x}) \qquad J_{i,j} = \frac{\partial y_i}{\partial x_j}
+        The vector jacobian product is the inner product of the derivatives of the output ``y`` with the
+        Jacobian matrix. The derivatives of the output vector are sometimes called the **cotangents**.
+        .. math::
+            \text{d}x_i = \Sigma_{i} \text{d}y_i J_{i,j}
+        **Shape of cotangents:**
+        The value provided to ``cotangents`` should match the output of :meth:`~.execute`. For computing the full Jacobian,
+        the cotangents can be batched to vectorize the computation. In this case, the cotangents can have the following
+        shapes. ``batch_size`` below refers to the number of entries in the Jacobian:
+        * For a state measurement, the cotangents must have shape ``(batch_size, 2 ** n_wires)``
+        * For ``n`` expectation values, the cotangents must have shape ``(n, batch_size)``. If ``n = 1``,
+          then the shape must be ``(batch_size,)``.
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        return tuple(
+            self.vjp(
+                self.dynamic_wires_from_circuit(circuit),
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
+            )
+            for circuit, cots in zip(circuits, cotangents)
+        )
+
+    def execute_and_compute_vjp(
+        self,
+        circuits: QuantumTape_or_Batch,
+        cotangents: Tuple[Number],
+        execution_config: ExecutionConfig = DefaultExecutionConfig,
+    ) -> Tuple:
+        """Calculate both the results and the vector jacobian product used in reverse-mode differentiation.
+        Args:
+            circuits (Union[QuantumTape, Sequence[QuantumTape]]): the circuit or batch of circuits to be executed
+            cotangents (Tuple[Number, Tuple[Number]]): Gradient-output vector. Must have shape matching the output shape of the
+                corresponding circuit. If the circuit has a single output, ``cotangents`` may be a single number, not an iterable
+                of numbers.
+            execution_config (ExecutionConfig): a datastructure with all additional information required for execution
+        Returns:
+            Tuple, Tuple: the result of executing the scripts and the numeric result of computing the vector jacobian product
+        """
+        batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
+        results = tuple(
+            self.simulate_and_vjp(
+                self.dynamic_wires_from_circuit(circuit),
+                cots,
+                self._statevector,
+                batch_obs=batch_obs,
+                wire_map=self._wire_map,
+            )
+            for circuit, cots in zip(circuits, cotangents)
+        )
+        return tuple(zip(*results))
+
+    # pylint: disable=import-outside-toplevel
+    def eval_jaxpr(self, jaxpr, consts, *args):
+        """Execute pennylane variant jaxpr using C++ simulation tools.
+
+        Args:
+            jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
+            consts (list[TensorLike]): List of constants for the jaxpr closure variables
+            *args (TensorLike): The arguments to the jaxpr.
+
+        Returns:
+            list(TensorLike): the results of the execution
+
+        .. code-block:: python
+
+            import pennylane as qml
+            import jax
+            qml.capture.enable()
+
+            def f(x):
+                @qml.for_loop(3)
+                def loop(i, y):
+                    qml.RX(y, i)
+                    return y + 0.5
+                loop(x)
+                return [qml.expval(qml.Z(i)) for i in range(3)]
+
+            jaxpr = jax.make_jaxpr(f)(0.5)
+
+            dev = qml.device('lightning.qubit', wires=3)
+            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.0)
+
+        .. code-block::
+
+            [1.0, 0.8775825618903728, 0.5403023058681395]
+
+        """
+        # has jax dependency, so can't import up top
+        from .lightning_interpreter import LightningInterpreter
+
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
+
+        interpreter = LightningInterpreter(
+            self._statevector, self.LightningMeasurements, shots=self.shots
+        )
+        return interpreter.eval(jaxpr, consts, *args)
