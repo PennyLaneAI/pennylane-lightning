@@ -198,7 +198,6 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        inv = False  # TODO: update to use recursive _apply_lightning to handle nested adjoint/ctrl
         if isinstance(operation.base, Adjoint):
             op = qml.ctrl(
                 operation.base.base,
