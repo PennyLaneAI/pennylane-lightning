@@ -104,23 +104,15 @@ def create_MPS_with_custom_bondDims(numQubits,bondDims):
         MPS_site = np.random.rand(*(tuple(T_shape)))
         
         MPS_example.append(MPS_site)
-    
-    sitesExtents = sitesExtents.tolist()
-
-    sitesExtents[0] = sitesExtents[0][:-1]
-    sitesExtents[-1] = sitesExtents[-1][:-1]
-    
-    # flatten the list
-    sitesExtents = [item for sublist in sitesExtents for item in sublist]
-    
-    return MPS_example, sitesExtents
+        
+    return MPS_example
 
 if __name__ == "__main__":
     
     wires = 4
     bond_dims = [5,7,5]
     
-    MPS_example, siteExtents = create_MPS_with_custom_bondDims(wires, bond_dims)
+    MPS_example = create_MPS_with_custom_bondDims(wires, bond_dims)
     
     method = "mps"
     
