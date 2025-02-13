@@ -81,6 +81,11 @@ class MPSTNCuda final : public TNCuda<Precision, MPSTNCuda<Precision>> {
         : BaseType(numQubits, maxBondDim) {}
 
     explicit MPSTNCuda(const std::size_t numQubits,
+                       const std::size_t maxBondDim,
+                       const std::vector<std::size_t> &bondDims)
+        : BaseType(numQubits, maxBondDim, bondDims) {}
+
+    explicit MPSTNCuda(const std::size_t numQubits,
                        const std::size_t maxBondDim, DevTag<int> dev_tag)
         : BaseType(numQubits, dev_tag, maxBondDim) {}
 

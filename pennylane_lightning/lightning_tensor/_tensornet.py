@@ -175,7 +175,12 @@ class LightningTensorNet:
             self._max_bond_dim = kwargs.get("max_bond_dim", 128)
             self._cutoff = kwargs.get("cutoff", 0)
             self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
-            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+            self._bond_dim = kwargs.get("bond_dim", None)
+            
+            if self._bond_dim is not None:
+                self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim, self._bond_dim)
+            else:
+                self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
         elif self._method == "tn":
             self._tensornet = self._tensornet_dtype()(self._num_wires)
         else:

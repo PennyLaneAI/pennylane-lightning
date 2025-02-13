@@ -79,6 +79,23 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
+    // Constructor with bondDims for custom MPS
+    explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim,
+                    const std::vector<std::size_t> &bondDims)
+        : BaseType(numQubits), maxBondDim_(maxBondDim), bondDims_(bondDims),
+          sitesModes_(setSitesModes_()), sitesExtents_(setSitesExtents_()),
+          sitesExtents_int64_(setSitesExtents_int64_()),
+          cublascaller_(make_shared_cublas_caller()),
+          gate_cache_(std::make_shared<TNCudaGateCache<PrecisionT>>(
+              BaseType::getDevTag())) {
+        initTensors_();
+        appendInitialMPSState_(
+            getSitesExtentsPtr()
+                .data()); // This API works for Exact Tensor Network as well,
+                          // given sitesExtents_ settings meet the requirement
+                          // of cutensornet.
+    }
+
     explicit TNCuda(const std::size_t numQubits, DevTag<int> dev_tag,
                     const std::size_t maxBondDim = 1)
         : BaseType(numQubits, dev_tag.getDeviceID(), dev_tag.getStreamID()),
