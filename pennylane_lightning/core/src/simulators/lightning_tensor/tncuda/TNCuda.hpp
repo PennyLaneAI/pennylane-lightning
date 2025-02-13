@@ -79,6 +79,7 @@ class TNCuda : public TNCudaBase<PrecisionT, Derived> {
                           // of cutensornet.
     }
 
+    // Constructor with bondDims for custom MPS
     explicit TNCuda(std::size_t numQubits, std::size_t maxBondDim,
                     const std::vector<std::size_t> &bondDims)
         : BaseType(numQubits), maxBondDim_(maxBondDim), bondDims_(bondDims),

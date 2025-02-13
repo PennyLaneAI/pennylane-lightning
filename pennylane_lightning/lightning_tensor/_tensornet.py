@@ -34,80 +34,47 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-def svd_split(Mat, site_shape, max_bond_dim, direction="right"):
+def svd_split(Mat, site_shape, max_bond_dim):
     """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
     # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
-
     U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
-
+    U = U * S  # Append singular values to U
     bonds = len(S)
-    chi = min([bonds, max_bond_dim])
-
-    if direction == "right":
-        U = U * S  # Append singular values to U
-
-    if direction == "left":
-        Vd = S * Vd.T  # Append singular values to Vd
-        Vd = Vd.T
 
     Vd = Vd.reshape([bonds] + site_shape + [-1])
     U = U.reshape([-1] + site_shape + [bonds])
 
     # keep only chi bonds
+    chi = min([bonds, max_bond_dim])
     U, Vd = U[..., :chi], Vd[:chi]
-
     return U, Vd
 
 
-def decompose_dense(psi, n_wires, site_shape, max_bond_dim, direction="right"):
-    """Decompose a dense state vector/gate matrix into MPS/MPO sites using Right-canonical matrix product state."""
+def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
+    """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
     Ms = [[] for _ in range(n_wires)]
     site_len = np.prod(site_shape)
+    psi = np.reshape(psi, (site_len, -1))  # split psi [2, 2, 2, 2...] to psi [site_len, -1]
 
-    if direction == "right":
+    U, Vd = svd_split(
+        psi, site_shape, max_bond_dim
+    )  # psi [site_len, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
 
-        psi = np.reshape(psi, (-1, site_len))
-        U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
+    Ms[0] = U.reshape(site_shape + [-1])
+    bondL = Vd.shape[0]
+    psi = Vd
 
-        Ms[0] = Vd
-        bondL = U.shape[-1]
-        psi = U
+    for i in range(1, n_wires - 1):
+        psi = np.reshape(psi, (site_len * bondL, -1))  # reshape psi[site_len*bondL, -1]
+        U, Vd = svd_split(
+            psi, site_shape, max_bond_dim
+        )  # psi [site_len*bondL, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
+        Ms[i] = U
 
-        for i in range(1, n_wires - 1):
-            psi = np.reshape(psi, (-1, site_len * bondL))
-            U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
-            Ms[i] = Vd
-
-            psi = U
-            bondL = U.shape[-1]
-
-        Ms[-1] = U
-
-        Ms.reverse()
-
-    elif direction == "left":
-
-        psi = np.reshape(psi, (site_len, -1))
-        U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
-
-        Ms[0] = U
-        bondL = Vd.shape[0]
         psi = Vd
+        bondL = Vd.shape[0]
 
-        for i in range(1, n_wires - 1):
-            psi = np.reshape(psi, (site_len * bondL, -1))
-            U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
-            Ms[i] = U
-            psi = Vd
-            bondL = Vd.shape[0]
-
-        Ms[-1] = Vd
-
-    first_shape = Ms[0].shape[1:]
-    Ms[0] = np.reshape(Ms[0], first_shape)
-
-    last_shape = Ms[-1].shape[:-1]
-    Ms[-1] = np.reshape(Ms[-1], last_shape)
+    Ms[-1] = Vd.reshape([-1] + site_shape)
 
     return Ms
 
@@ -154,162 +121,6 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
             mpos.append(np.transpose(MPO, axes=(2, 3, 1, 0)))
 
     return mpos, sorted_wires
-
-
-def check_canonical_form(mps, direction="left"):
-
-    canon_values = []
-
-    for sites in mps:
-
-        if direction == "left":
-            C = np.tensordot(sites.conj().T, sites, axes=[[-1, -2], [0, 1]])
-        else:  # direction == "right"
-            C = np.tensordot(sites, sites.conj().T, axes=[[-1, -2], [0, 1]])
-
-        # Compare C with the identity matrix
-        eye = np.eye(C.shape[0], dtype=C.dtype)
-        close = np.allclose(C, eye, atol=1e-10)
-
-        canon_values.append(close)
-
-    # Return True if all the values of canon_values are True
-    return all(canon_values)
-
-
-def expand_mps_top(state_MPS, max_bond_dim=128):
-    """Expand the only_state_MPS to match the ctrl_plus_state_MPS."""
-
-    expanded_MPS = state_MPS.copy()
-
-    n_sites_change = (len(expanded_MPS) + 1) // 2
-
-    for i in range(n_sites_change - 1):
-        # Create the next site for expanded_only_state_MPS
-        site_test = state_MPS[i]
-
-        target_l, _, target_r = state_MPS[i + 1].shape
-
-        if len(state_MPS) % 2 == 1:  # odd
-            target_r = target_l * 2 if target_l * 2 < max_bond_dim else max_bond_dim
-
-        site_r = site_test.shape[-1]
-
-        # Horizontal padding
-        horizontal_pad = 2**i if 2**i < max_bond_dim else 0
-        site_test = np.pad(site_test, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
-
-        # Vertical padding
-        site_test = site_test.reshape(target_l, 2, site_r)
-        site_test = np.pad(site_test, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
-
-        # Assign the new site
-        expanded_MPS[i] = site_test
-
-    # Padding last site
-    site_test = state_MPS[n_sites_change - 1]
-
-    target_l, _, target_r = state_MPS[n_sites_change].shape
-
-    if len(state_MPS) % 2 == 1:  # odd
-        target_l = target_l * 2
-        target_r = target_r * 2
-    else:  # even
-        target_r = target_l
-
-    site_r = site_test.shape[-1]
-
-    # Horizontal padding
-    horizontal_pad = 2 ** (n_sites_change - 1) if 2 ** (n_sites_change - 1) < max_bond_dim else 0
-    site_test = np.pad(site_test, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
-
-    # Vertical padding
-    site_test = site_test.reshape(target_l, 2, target_r)
-    site_test = np.pad(site_test, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
-
-    # Assign the last new site
-    expanded_MPS[n_sites_change - 1] = site_test
-
-    # Add the initial site
-    expanded_MPS.insert(0, np.eye(2, dtype=state_MPS[0].dtype).reshape(1, 2, 2))
-
-    return expanded_MPS
-
-
-def restore_left_canonical_form(mps, site_shape):
-
-    new_mps = []
-    Vd = np.eye(1, dtype=mps[0].dtype)
-
-    for site in mps:
-        site_p = np.tensordot(Vd, site, axes=[[-1], [0]])
-        site_p = site_p.reshape(-1, site.shape[-1])
-
-        U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
-
-        bonds = len(S)
-
-        Vd = S * Vd
-        U = U.reshape([-1] + site_shape + [bonds])
-
-        new_mps.append(U)
-
-    return new_mps
-
-
-def restore_right_canonical_form(mps, site_shape):
-
-    mps.reverse()
-
-    new_mps = []
-    U = np.eye(1, dtype=mps[0].dtype)
-
-    for site in mps:
-        site_p = np.tensordot(site, U, axes=[[-1], [0]])
-        site_p = site_p.reshape(site.shape[0], -1)
-
-        U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
-
-        bonds = len(S)
-
-        U = U * S
-        Vd = Vd.reshape([bonds] + site_shape + [-1])
-
-        new_mps.append(Vd)
-
-    new_mps.reverse()
-    mps.reverse()
-
-    return new_mps
-
-
-def print_mps(mps, full=False, name=None):
-    """Print the MPOs."""
-    print("-" * 100)
-    if name is not None:
-        print("MPS name:", name)
-
-    max_bond_dim = 0
-    for i, site in enumerate(mps):
-        max_bond_dim = max(max_bond_dim, site.shape[-1])
-
-    print("Sites:", len(mps), "| Max bond dim:", max_bond_dim)
-    for i in range(len(mps)):
-        print(f"| {'site '+str(i):^12}", end="")
-
-    print()
-    for i, site in enumerate(mps):
-        print(f"| {str(site.shape):^12}", end="")
-    print()
-
-    if full:
-        print("~" * 100)
-        for i, site in enumerate(mps):
-            # print("Site", i, ":\n", site)
-            print("Site", i, " | Shape:", site.shape)
-            print(site)
-            print("~" * 100)
-    print("-" * 100)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -498,55 +309,6 @@ class LightningTensorNet:
             M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
             self._tensornet.updateMPSSitesData(M)
 
-    def _apply_mps_state(self, mps: tuple, target_wires: Wires) -> None:
-
-        if len(target_wires) == self._num_wires and Wires(sorted(target_wires)) == target_wires:
-            self._tensornet.updateMPSSitesData(mps)
-            return
-
-        trgt_wires = target_wires.tolist().copy()
-
-        # Sort wires in ascending order
-        trgt_wires.sort()
-
-        # check if 0 is prensent in trgt_wires
-        zero_trgt = 0 in trgt_wires
-        single_wire = self._num_wires - len(trgt_wires) > 1
-
-        if single_wire and not zero_trgt:
-            raise DeviceError(
-                "MPSPrep only support to append a single wire at the beginning of the MPS."
-            )
-
-        new_mps = list(mps)
-
-        if len(mps[0].shape) != 3:
-            new_mps[0] = new_mps[0].reshape(1, 2, 2)
-
-        if len(mps[-1].shape) != 3:
-            new_mps[-1] = new_mps[-1].reshape(2, 2, 1)
-
-        # Check the canonical form of the MPS
-        canon_left = check_canonical_form(new_mps, direction="left")
-        canon_right = check_canonical_form(new_mps, direction="right")
-
-        # Expand the current MPS to match the size of the target wires
-        new_mps = expand_mps_top(new_mps, self._max_bond_dim)
-
-        if canon_left:
-            new_mps = restore_left_canonical_form(new_mps, [2])
-        elif canon_right:
-            new_mps = restore_right_canonical_form(new_mps, [2])
-
-        print_mps(new_mps, full=False, name="new_mps")
-
-        # Restore dimension of first and last sites
-        new_mps[0] = new_mps[0].reshape(2, 2)
-        new_mps[-1] = new_mps[-1].reshape(2, 2)
-
-        # Update the MPS sites in the tensornet
-        self._tensornet.updateMPSSitesData(new_mps)
-
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
 
@@ -690,8 +452,8 @@ class LightningTensorNet:
                 operations = operations[1:]
             elif isinstance(operations[0], MPSPrep):
                 if self.method == "mps":
-                    self._apply_mps_state(operations[0].mps, operations[0].wires)
-
+                    mps = operations[0].mps
+                    self._tensornet.updateMPSSitesData(mps)
                     operations = operations[1:]
 
                 if self.method == "tn":

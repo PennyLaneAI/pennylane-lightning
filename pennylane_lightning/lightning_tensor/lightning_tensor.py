@@ -358,7 +358,6 @@ class LightningTensor(Device):
                 raise ValueError(f"Unsupported cutoff mode: {self._cutoff_mode}")
 
             if self._bond_dim is not None:
-                print(f"{self._bond_dim=}")
                 self._custom_MPS = True
                 if not isinstance(self._bond_dim, list):
                     raise ValueError("The bond dimension must be specified as a list.")
