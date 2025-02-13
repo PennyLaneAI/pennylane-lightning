@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* In Lightning Tensor. Allow `qml.MPSPrep` to accept an MPS with len(MPS) = n_wires-1.
+  [(#1064)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1064)
+
 * Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 
