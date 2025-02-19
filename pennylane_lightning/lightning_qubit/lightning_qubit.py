@@ -61,6 +61,7 @@ except ImportError as ex:
 from ._adjoint_jacobian import LightningAdjointJacobian
 from ._measurements import LightningMeasurements
 from ._state_vector import LightningStateVector
+import time
 
 _to_matrix_ops = {
     "BlockEncode": OperatorProperties(controllable=True),
@@ -470,6 +471,10 @@ class LightningQubit(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
+        start_time = time.time()
+        circuit = qml.simplify(circuit)[0][0]
+        end_time = time.time()
+        print(f"Simplification time: {(end_time - start_time) * 1000} ms")
         if mcmc is None:
             mcmc = {}
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
