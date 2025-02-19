@@ -470,6 +470,7 @@ class LightningQubit(LightningBase):
 
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
+        circuit = qml.simplify(circuit)[0][0]
         if mcmc is None:
             mcmc = {}
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
