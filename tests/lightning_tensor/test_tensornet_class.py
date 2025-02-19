@@ -237,9 +237,6 @@ def test_expand_mps_top():
 
     # check length of the MPS
     assert len(new_mps) == n_wires + 1
-    # print all the shapes
-    for i in range(len(new_mps)):
-        print(new_mps[i].shape)
 
     # check bond dimensions
     assert new_mps[0].shape == (1, 2, 2)

@@ -34,33 +34,63 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-def svd_split(Mat, site_shape, max_bond_dim, direction="right"):
-    """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
+def svd_split(
+    Mat: np.ndarray, site_shape: list, max_bond_dim: int, direction: str
+) -> tuple[np.ndarray, np.ndarray]:
+    """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer.
+
+    Args:
+        Mat (array): input matrix
+        site_shape (list): shape of the site tensor
+        max_bond_dim (int): maximum bond dimension
+        direction (str): direction of the SVD decomposition. Options: ["right", "left"]
+
+    Returns:
+        [array, array]: U and Vd matrices
+    """
     # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
 
     U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
 
+    # Removing noise from singular values
+    S[S < 1e-10] = 0.0
+
     bonds = len(S)
-    chi = min([bonds, max_bond_dim])
+    chi = min(bonds, max_bond_dim)
 
     if direction == "right":
         U = U * S  # Append singular values to U
 
     if direction == "left":
-        Vd = S * Vd.T  # Append singular values to Vd
-        Vd = Vd.T
+        Vd = (S * Vd.T).T  # Append singular values to Vd, equivalent operation to np.diag(S) @ Vd
 
-    Vd = Vd.reshape([bonds] + site_shape + [-1])
-    U = U.reshape([-1] + site_shape + [bonds])
-
-    # keep only chi bonds
-    U, Vd = U[..., :chi], Vd[:chi]
+    # keep only chi bonds and reshape to fit the bond dimension and site shape
+    Vd = Vd[:chi].reshape([chi] + site_shape + [-1])
+    U = U[:, :chi].reshape([-1] + site_shape + [chi])
 
     return U, Vd
 
 
-def decompose_dense(psi, n_wires, site_shape, max_bond_dim, direction="right"):
-    """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
+def decompose_dense(
+    psi: np.ndarray,
+    n_wires: int,
+    site_shape: list[int],
+    max_bond_dim: int,
+    direction: str = "right",
+) -> list[np.ndarray]:
+    """Decompose a dense state vector/gate matrix into MPS/MPO sites.
+
+    Args:
+        psi (array): input state vector or gate matrix
+        n_wires (int): number of wires
+        site_shape (list): shape of the site tensor
+        max_bond_dim (int): maximum bond dimension
+        direction (str): direction of the SVD decomposition. Options: ["right", "left"]
+
+    Returns:
+        list[array]: MPS/MPO sites
+    """
+
     Ms = [[] for _ in range(n_wires)]
     site_len = np.prod(site_shape)
 
@@ -113,8 +143,23 @@ def decompose_dense(psi, n_wires, site_shape, max_bond_dim, direction="right"):
     return Ms
 
 
-def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
-    """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention."""
+def gate_matrix_decompose(
+    gate_ops_matrix: np.ndarray,
+    wires: list[int],
+    max_mpo_bond_dim: int,
+    c_dtype: np.complex64 | np.complex128,
+) -> tuple[list[np.ndarray], list[int]]:
+    """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention.
+
+    Args:
+        gate_ops_matrix (array): input gate matrix
+        wires (list): list of wires
+        max_mpo_bond_dim (int): maximum bond dimension
+        c_dtype: complex dtype
+
+    Returns:
+        [list, list]: MPO sites and sorted wires
+    """
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
     original_axes, sorted_wires = zip(*sorted_indexed_wires)
@@ -157,9 +202,16 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
     return mpos, sorted_wires
 
 
-def check_canonical_form(mps, direction="left"):
-    """Check if the MPS is in the canonical form. Computation of expectation and matrix elements is simpler if the MPS is built from tensors
-    relating orthonormal spaces. The canonical form of the MPS is defined as the form where the tensors are orthonormal in the left or right direction.
+def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool:
+    """Check if the MPS is in the canonical form. The computation of expectation and matrix elements is simpler if the MPS is built from tensors relating orthonormal spaces. The canonical form of the MPS is defined as the form where the tensors are orthonormal in the left or right direction.
+
+
+    Args:
+        mps (list): MPS sites
+        direction (str): direction to check the canonical form. Options: ["left", "right"]
+
+    Returns:
+        bool: True if the MPS is in the canonical form specified by the direction
     """
 
     canon_values = []
@@ -175,22 +227,30 @@ def check_canonical_form(mps, direction="left"):
         eye = np.eye(C.shape[0], dtype=C.dtype)
         close = np.allclose(C, eye, atol=1e-10)
 
-        canon_values.append(close)
+        if not close:
+            return False
 
     # Return True if all the values of canon_values are True
-    return all(canon_values)
+    return True
 
 
-def expand_mps_top(state_MPS, max_bond_dim=128):
-    """Expand the MPS to match the size of the target wires. Note: The expansion works only for adding a single wire at the beginning of the MPS."""
+def expand_mps_top(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list[np.ndarray]:
+    """Expand the MPS to match the size of the target wires. Note: The expansion works only for adding a single wire at the beginning of the MPS.
 
-    expanded_MPS = state_MPS.copy()
+    Args:
+        state_MPS (list): MPS sites
+        max_bond_dim (int): maximum bond dimension
+
+    Returns:
+        list: expanded MPS sites
+    """
+
+    expanded_MPS = state_MPS
 
     # Number of sites that should be changed from the first site
-    n_sites_change = (len(expanded_MPS) + 1) // 2
-
-    # Check if the number of sites is odd
-    odd_n_sites = len(expanded_MPS) % 2 == 1
+    n_sites = len(state_MPS)
+    n_sites_change = (n_sites + 1) // 2
+    odd_n_sites = n_sites % 2 == 1
 
     for i in range(n_sites_change - 1):
         # Create the new site for expanded_MPS
@@ -208,8 +268,7 @@ def expand_mps_top(state_MPS, max_bond_dim=128):
 
         site_r = new_site.shape[-1]
 
-        new_site = new_site.reshape(target_l, 2, site_r)
-        new_site = np.pad(new_site, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
+        new_site = np.pad(new_site.reshape(target_l, 2, site_r), ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
 
         # Assign the new site
         expanded_MPS[i] = new_site
@@ -240,13 +299,21 @@ def expand_mps_top(state_MPS, max_bond_dim=128):
     expanded_MPS[n_sites_change - 1] = new_site
 
     # Add the initial site
-    expanded_MPS.insert(0, np.eye(2, dtype=state_MPS[0].dtype).reshape(1, 2, 2))
+    expanded_MPS = [np.eye(2, dtype=state_MPS[0].dtype).reshape(1, 2, 2)] + expanded_MPS
 
     return expanded_MPS
 
 
-def restore_left_canonical_form(mps, site_shape):
-    """Restore the left canonical form of the MPS. The left canonical form is defined as the form where the tensors are orthonormal in the left direction."""
+def restore_left_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
+    """Restore the left canonical form of the MPS. The left canonical form is defined as the form where the tensors are orthonormal in the left direction.
+
+    Args:
+        mps (list): MPS sites
+        site_shape (list): shape of the site tensor
+
+    Returns:
+        list: MPS sites in the left canonical form
+    """
 
     new_mps = []
     Vd = np.eye(1, dtype=mps[0].dtype)
@@ -256,6 +323,9 @@ def restore_left_canonical_form(mps, site_shape):
         site_p = site_p.reshape(-1, site.shape[-1])
 
         U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
+
+        # Removing noise from singular values
+        S[S < 1e-10] = 0.0
 
         bonds = len(S)
 
@@ -267,8 +337,16 @@ def restore_left_canonical_form(mps, site_shape):
     return new_mps
 
 
-def restore_right_canonical_form(mps, site_shape):
-    """Restore the right canonical form of the MPS. The right canonical form is defined as the form where the tensors are orthonormal in the right direction."""
+def restore_right_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
+    """Restore the right canonical form of the MPS. The right canonical form is defined as the form where the tensors are orthonormal in the right direction.
+
+    Args:
+        mps (list): MPS sites
+        site_shape (list): shape of the site tensor
+
+    Returns:
+        list: MPS sites in the right canonical form
+    """
 
     mps.reverse()
 
@@ -280,6 +358,9 @@ def restore_right_canonical_form(mps, site_shape):
         site_p = site_p.reshape(site.shape[0], -1)
 
         U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
+
+        # Removing noise from singular values
+        S[S < 1e-10] = 0.0
 
         bonds = len(S)
 

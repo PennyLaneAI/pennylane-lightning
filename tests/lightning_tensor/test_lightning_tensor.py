@@ -235,3 +235,55 @@ def test_MPSPrep_with_tn(wires, MPS_shape):
 
     with pytest.raises(qml.DeviceError, match="Exact Tensor Network does not support MPSPrep"):
         _ = qnode_ltensor(MPS)
+
+
+def test_MPSPrep_expansion():
+    """Test the expansion of MPSPrep with the method matrix product state (mps)."""
+
+    wires = 4
+    MPS = [
+        np.array(
+            [[-0.998685 + 0.0j, -0.051259 - 0.0j], [0.047547 - 0.01915j, -0.926375 + 0.373098j]]
+        ),
+        np.array(
+            [
+                [
+                    [-0.875169 - 0.456139j, 0.024624 - 0.060928j],
+                    [0.101259 + 0.029813j, 0.025706 + 0.39661j],
+                ],
+                [
+                    [-0.001059 + 0.027386j, 0.468536 + 0.018207j],
+                    [-0.042533 - 0.110968j, -0.653527 + 0.436766j],
+                ],
+            ]
+        ),
+        np.array(
+            [
+                [0.906668 + 0.0j, 0.041729 - 0.270393j],
+                [-0.092761 + 0.0j, 0.046885 - 0.303805j],
+            ]
+        ),
+    ]
+
+    dev = LightningTensor(wires=wires, method="mps", max_bond_dim=128)
+
+    def circuit():
+        qml.MPSPrep(MPS, wires=range(1, wires))
+        [qml.Hadamard(i) for i in range(wires)]
+        [qml.RX(0.1 * i, wires=i) for i in range(0, wires, 2)]
+        return qml.expval(qml.PauliZ(1))
+
+    qnode_ltensor = qml.QNode(circuit, dev)
+
+    assert np.allclose(qnode_ltensor(), -0.076030545078943, atol=1e-10)
+
+    # The reference value is obtained by running the same circuit on the default.qubit device.
+    # random_state = [ 0.797003+0.406192j,  0.175192-0.199816j, 
+    #                 -0.090436+0.016981j, -0.13741 +0.003751j, 
+    #                 -0.013131-0.042167j,  0.015507+0.156004j,  
+    #                  0.036284+0.136789j, -0.143301-0.186339j]
+    # def circuit():
+    #     qml.StatePrep(random_state, wires=range(1, wires))
+    #     [qml.Hadamard(i) for i in range(wires)]
+    #     [qml.RX(0.1 * i, wires=i) for i in range(0, wires, 2)]
+    #     return qml.expval(qml.PauliZ(1))
