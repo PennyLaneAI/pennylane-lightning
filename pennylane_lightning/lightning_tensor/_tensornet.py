@@ -214,8 +214,6 @@ def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool
         bool: True if the MPS is in the canonical form specified by the direction
     """
 
-    canon_values = []
-
     for sites in mps:
 
         if direction == "left":
