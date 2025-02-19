@@ -268,7 +268,11 @@ def expand_mps_top(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list
 
         site_r = new_site.shape[-1]
 
-        new_site = np.pad(new_site.reshape(target_l, 2, site_r), ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
+        new_site = np.pad(
+            new_site.reshape(target_l, 2, site_r),
+            ((0, 0), (0, 0), (0, target_r - site_r)),
+            mode="constant",
+        )
 
         # Assign the new site
         expanded_MPS[i] = new_site

@@ -278,9 +278,9 @@ def test_MPSPrep_expansion():
     assert np.allclose(qnode_ltensor(), -0.076030545078943, atol=1e-10)
 
     # The reference value is obtained by running the same circuit on the default.qubit device.
-    # random_state = [ 0.797003+0.406192j,  0.175192-0.199816j, 
-    #                 -0.090436+0.016981j, -0.13741 +0.003751j, 
-    #                 -0.013131-0.042167j,  0.015507+0.156004j,  
+    # random_state = [ 0.797003+0.406192j,  0.175192-0.199816j,
+    #                 -0.090436+0.016981j, -0.13741 +0.003751j,
+    #                 -0.013131-0.042167j,  0.015507+0.156004j,
     #                  0.036284+0.136789j, -0.143301-0.186339j]
     # def circuit():
     #     qml.StatePrep(random_state, wires=range(1, wires))
