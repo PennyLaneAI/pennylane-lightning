@@ -239,34 +239,30 @@ class LightningGPUStateVector(LightningBaseStateVector):
         Returns:
             None
         """
+        state = self.state_vector
+
         if isinstance(operation.base, Adjoint):
-            op = qml.ctrl(
-                operation.base.base,
-                control=operation.control_wires,
-                control_values=operation.control_values,
-            )
-            self._apply_lightning_controlled(op, not adjoint)
-
+            basename = operation.base.base.name
+            adjoint = not adjoint
         else:
-            state = self.state_vector
-
             basename = operation.base.name
-            method = getattr(state, f"{basename}", None)
-            control_wires = list(operation.control_wires)
-            control_values = operation.control_values
-            target_wires = list(operation.target_wires)
-            if method is not None:  # apply n-controlled specialized gate
-                param = operation.parameters
-                method(control_wires, control_values, target_wires, adjoint, param)
-            else:  # apply gate as an n-controlled matrix
-                method = getattr(state, "applyControlledMatrix")
-                method(
-                    qml.matrix(operation.base),
-                    control_wires,
-                    control_values,
-                    target_wires,
-                    adjoint,
-                )
+
+        method = getattr(state, f"{basename}", None)
+        control_wires = list(operation.control_wires)
+        control_values = operation.control_values
+        target_wires = list(operation.target_wires)
+        if method is not None:  # apply n-controlled specialized gate
+            param = operation.parameters
+            method(control_wires, control_values, target_wires, adjoint, param)
+        else:  # apply gate as an n-controlled matrix
+            method = getattr(state, "applyControlledMatrix")
+            method(
+                qml.matrix(operation.base),
+                control_wires,
+                control_values,
+                target_wires,
+                adjoint,
+            )
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -302,7 +298,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         operations,
         mid_measurements: dict = None,
         postselect_mode: str = None,
-        adjoint: bool = False,
     ):
         """Apply a list of operations to the state vector.
 
@@ -312,7 +307,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
             postselect_mode (str): Configuration for handling shots with mid-circuit measurement
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
                 keep the same number of shots. Default is ``None``.
-            adjoint (bool): Apply the adjoint of the operation if True. Default is ``False``.
 
 
         Returns:
@@ -325,39 +319,32 @@ class LightningGPUStateVector(LightningBaseStateVector):
         for operation in operations:
             if isinstance(operation, qml.Identity):
                 continue
+            if isinstance(operation, Adjoint):
+                name = operation.base.name
+                invert_param = True
+            else:
+                name = operation.name
+                invert_param = False
+            method = getattr(state, name, None)
+            wires = list(operation.wires)
+
             if isinstance(operation, Conditional):
                 if operation.meas_val.concretize(mid_measurements):
                     self._apply_lightning([operation.base])
-                continue
-            if isinstance(operation, MidMeasureMP):
+            elif isinstance(operation, MidMeasureMP):
                 self._apply_lightning_midmeasure(
                     operation, mid_measurements, postselect_mode=postselect_mode
                 )
-                continue
-            if isinstance(operation, Adjoint):
-                self._apply_lightning(
-                    [operation.base], mid_measurements, postselect_mode, not adjoint
-                )
-                continue
-
-            method = getattr(state, operation.name, None)
-            wires = list(operation.wires)
-
-            if isinstance(operation, qml.PauliRot):
-                method = getattr(state, "applyPauliRot")
-                paulis = operation._hyperparameters[  # pylint: disable=protected-access
-                    "pauli_word"
-                ]
-                wires = [i for i, w in zip(wires, paulis) if w != "I"]
-                word = "".join(p for p in paulis if p != "I")
-                method(wires, adjoint, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
-                method(wires, adjoint, param)
+                method(wires, invert_param, param)
             elif (
-                isinstance(operation, qml.ops.Controlled) and not self._mpi_handler.use_mpi
+                isinstance(operation.base if invert_param else operation, qml.ops.Controlled)
+                and not self._mpi_handler.use_mpi
             ):  # MPI backend does not have native controlled gates support
-                self._apply_lightning_controlled(operation, adjoint)
+                self._apply_lightning_controlled(
+                    operation.base if invert_param else operation, invert_param
+                )
             elif (
                 self._mpi_handler.use_mpi
                 and isinstance(operation, qml.ops.Controlled)
@@ -373,7 +360,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     mat = operation.matrix
-
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
                 param = (
                     [[r_dtype(operation.hash)]]
@@ -384,9 +370,9 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     raise ValueError("Unsupported operation")
 
                 self._qubit_state.apply(
-                    operation.name,
+                    name,
                     wires,
-                    adjoint,
+                    False,
                     param,
-                    mat.ravel(order="C"),
+                    mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                 )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
