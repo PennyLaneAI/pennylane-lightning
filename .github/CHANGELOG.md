@@ -6,7 +6,7 @@
 
 ### Improvements
 
-* Recursively eliminate adjoints when applying (control) operations in Lightning devices, e.g. `qml.adjoint(qml.ctrl())`
+* Apply controlled-adjoint and adjoint-controlled operators with native C++ implementation
   [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
 
 * Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
