@@ -190,7 +190,7 @@ class TestTensorNetMPS:
         """Test the correct behavior regarding MPS shape of MPSPrep."""
         MPS = [np.zeros(i, dtype=c_dtype) for i in MPS_shape]
         dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond, c_dtype=c_dtype)
-        
+
         dev_wires = dev.wires.tolist()
 
         def circuit(MPS):
@@ -355,7 +355,7 @@ class TestTensorNetMPS:
         wires = 4
 
         dev = LightningTensor(wires=wires, method="mps", max_bond_dim=128, c_dtype=c_dtype)
-        
+
         MPS = [np.array(i, dtype=c_dtype) for i in MPS]
 
         def circuit():

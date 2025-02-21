@@ -227,12 +227,12 @@ def expand_mps_first_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) 
     """Expand the MPS to match the size of the target wires.
 
     This function modifies the original MPS state by adding a single wire at the beginning of the MPS state. The algorithm to expand the input MPS state to fit into the device MPS state is based on the following steps:
-    
+
     - Set the device MPS state as $B$ and the input MPS state as $A$.
     - Padding with zeros the tensor $B_i$ to fit the tensor shape $A_{i+1}$ up to $i = N/2$ where $N$ is the total number of tensors in $B$.
     - Add the identity matrix with shape `(1,2,2)` at the beginning of $B$.
     - Restore the $B$ MPS into the initial canonical form to spread the new site information across the entire MPS $A$.
-    
+
     The details about how to create a MPS state can be found in the PennyLane tutorial: [Introducing matrix product states for quantum practitioners](https://pennylane.ai/qml/demos/tutorial_mps)
 
     Args:
