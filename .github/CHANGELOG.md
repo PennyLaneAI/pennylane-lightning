@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Apply controlled-adjoint and adjoint-controlled operators with native C++ implementation
+  [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
+
 * Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 

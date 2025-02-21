@@ -131,11 +131,12 @@ class LightningBaseStateVector(ABC):
         self._qubit_state.setBasisState(list(state), list(wires))
 
     @abstractmethod
-    def _apply_lightning_controlled(self, operation):
+    def _apply_lightning_controlled(self, operation, adjoint):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
             operation (~pennylane.operation.Operation): controlled operation to apply
+            adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
             None
@@ -160,7 +161,10 @@ class LightningBaseStateVector(ABC):
 
     @abstractmethod
     def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None
+        self,
+        operations,
+        mid_measurements: dict = None,
+        postselect_mode: str = None,
     ):
         """Apply a list of operations to the state tensor.
 
