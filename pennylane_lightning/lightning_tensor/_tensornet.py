@@ -57,6 +57,7 @@ def svd_split(
     U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
 
     # Removing noise from singular values
+    # Reference: https://scicomp.stackexchange.com/questions/350/what-should-be-the-criteria-for-accepting-rejecting-singular-values/355#355
     epsilon = np.finfo(Mat.dtype).eps * S[0] if S[0] > 1.0 else np.finfo(Mat.dtype).eps
     S[S < epsilon] = 0.0
 
@@ -106,7 +107,6 @@ def decompose_dense(
     Ms = []
     site_len = np.prod(site_shape)
 
-    # psi = np.reshape(psi, (-1, site_len)) if canonical_right else np.reshape(psi, (site_len, -1))
     psi = np.reshape(psi, (-1, site_len) if canonical_right else (site_len, -1))
     psi, A = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
 
@@ -208,23 +208,32 @@ def check_canonical_form(mps: list[np.ndarray], is_right: bool = True) -> bool:
 
     for sites in mps:
 
-        if is_right:  # check if the MPS state has a right canonical form
-            C = np.tensordot(sites, sites.conj().T, axes=[[-1, -2], [0, 1]])
-        else:  # check if the MPS state has a left canonical form
-            C = np.tensordot(sites.conj().T, sites, axes=[[-1, -2], [0, 1]])
+        sites_conj_t = sites.conj().T
+
+        if not is_right:
+            sites, sites_conj_t = sites_conj_t, sites
+
+        C = np.tensordot(sites, sites_conj_t, axes=[[-1, -2], [0, 1]])
 
         # Compare C with the identity matrix
-        if not np.allclose(C, np.eye(C.shape[0], dtype=C.dtype), atol=1e-10):
+        if not np.allclose(C, np.eye(C.shape[0], dtype=C.dtype), atol=np.finfo(C.dtype).eps * 1e4):
             return False
 
     # Return True if all the values of canon_values are True
     return True
 
 
-def expand_mps_fist_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list[np.ndarray]:
+def expand_mps_first_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list[np.ndarray]:
     """Expand the MPS to match the size of the target wires.
 
-    This function modifies the original MPS state by adding a single wire at the beginning of the MPS state.
+    This function modifies the original MPS state by adding a single wire at the beginning of the MPS state. The algorithm to expand the input MPS state to fit into the device MPS state is based on the following steps:
+    
+    - Set the device MPS state as $B$ and the input MPS state as $A$.
+    - Padding with zeros the tensor $B_i$ to fit the tensor shape $A_{i+1}$ up to $i = N/2$ where $N$ is the total number of tensors in $B$.
+    - Add the identity matrix with shape `(1,2,2)` at the beginning of $B$.
+    - Restore the $B$ MPS into the initial canonical form to spread the new site information across the entire MPS $A$.
+    
+    The details about how to create a MPS state can be found in the PennyLane tutorial: [Introducing matrix product states for quantum practitioners](https://pennylane.ai/qml/demos/tutorial_mps)
 
     Args:
         state_MPS (list[np.ndarray]): The MPS state to be expanded.
@@ -581,16 +590,16 @@ class LightningTensorNet:
         # Check the canonical form of the MPS
         if check_canonical_form(mps, is_right=False):
             # Expand and restore the canonical form for the current MPS to match the size of the target wires
-            new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
+            new_mps = expand_mps_first_site(mps, self._max_bond_dim)
             new_mps = restore_left_canonical_form(new_mps, [2])
 
         elif check_canonical_form(mps, is_right=True):
             # Expand and restore the canonical form for the current MPS to match the size of the target wires
-            new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
+            new_mps = expand_mps_first_site(mps, self._max_bond_dim)
             new_mps = restore_right_canonical_form(new_mps, [2])
 
         else:  # No canonical form
-            new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
+            new_mps = expand_mps_first_site(mps, self._max_bond_dim)
 
         # Restore dimension of first and last sites
         new_mps[0] = new_mps[0].reshape(2, 2)

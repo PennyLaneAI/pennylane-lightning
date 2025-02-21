@@ -27,7 +27,7 @@ else:
         LightningTensorNet,
         check_canonical_form,
         decompose_dense,
-        expand_mps_fist_site,
+        expand_mps_first_site,
         gate_matrix_decompose,
         restore_left_canonical_form,
         restore_right_canonical_form,
@@ -237,7 +237,7 @@ def test_expand_mps_first_site():
     mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # expand the MPS
-    new_mps = expand_mps_fist_site(mps, max_bond_dim)
+    new_mps = expand_mps_first_site(mps, max_bond_dim)
 
     # check length of the MPS
     assert len(new_mps) == n_wires + 1
@@ -266,7 +266,7 @@ def test_expand_mps_top_max_bond_dim():
     mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # expand the MPS
-    mps = expand_mps_fist_site(mps, max_bond_dim)
+    mps = expand_mps_first_site(mps, max_bond_dim)
 
     # check length of the MPS
     assert len(mps) == n_wires + 1

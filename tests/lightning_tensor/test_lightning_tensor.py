@@ -156,6 +156,7 @@ class TestTensorNet:
             dev.execute_and_compute_vjp(circuits=None, cotangents=None)
 
 
+@pytest.mark.parametrize("c_dtype", [np.complex64, np.complex128])
 class TestTensorNetMPS:
     """Test the MPS method of the LightningTensor class."""
 
@@ -185,10 +186,11 @@ class TestTensorNetMPS:
             (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(13)] + [[2, 2]]),
         ],
     )
-    def test_MPSPrep_check_pass(self, wires, max_bond, MPS_shape):
+    def test_MPSPrep_check_pass(self, wires, max_bond, MPS_shape, c_dtype):
         """Test the correct behavior regarding MPS shape of MPSPrep."""
-        MPS = [np.zeros(i) for i in MPS_shape]
-        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond)
+        MPS = [np.zeros(i, dtype=c_dtype) for i in MPS_shape]
+        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond, c_dtype=c_dtype)
+        
         dev_wires = dev.wires.tolist()
 
         def circuit(MPS):
@@ -223,11 +225,11 @@ class TestTensorNetMPS:
             ),  # Incorrect amount of sites
         ],
     )
-    def test_MPSPrep_check_fail(self, wires, max_bond, MPS_shape):
+    def test_MPSPrep_check_fail(self, wires, max_bond, MPS_shape, c_dtype):
         """Test the exceptions regarding MPS shape of MPSPrep."""
 
-        MPS = [np.zeros(i) for i in MPS_shape]
-        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond)
+        MPS = [np.zeros(i, dtype=c_dtype) for i in MPS_shape]
+        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond, c_dtype=c_dtype)
         dev_wires = dev.wires.tolist()
 
         def circuit(MPS):
@@ -248,11 +250,11 @@ class TestTensorNetMPS:
             (2, [[2, 2], [2, 2]]),
         ],
     )
-    def test_MPSPrep_with_tn(self, wires, MPS_shape):
+    def test_MPSPrep_with_tn(self, wires, MPS_shape, c_dtype):
         """Test the exception of MPSPrep with the method exact tensor network (tn)."""
 
-        MPS = [np.zeros(i) for i in MPS_shape]
-        dev = LightningTensor(wires=wires, method="tn")
+        MPS = [np.zeros(i, dtype=c_dtype) for i in MPS_shape]
+        dev = LightningTensor(wires=wires, method="tn", c_dtype=c_dtype)
         dev_wires = dev.wires.tolist()
 
         def circuit(MPS):
@@ -347,12 +349,14 @@ class TestTensorNetMPS:
             ],  # Non-canonical MPS
         ],
     )
-    def test_MPSPrep_expansion(self, MPS):
+    def test_MPSPrep_expansion(self, MPS, c_dtype, tol):
         """Test the expansion of MPSPrep with the method matrix product state (mps)."""
 
         wires = 4
 
-        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=128)
+        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=128, c_dtype=c_dtype)
+        
+        MPS = [np.array(i, dtype=c_dtype) for i in MPS]
 
         def circuit():
             qml.MPSPrep(MPS, wires=range(1, wires))
@@ -362,7 +366,7 @@ class TestTensorNetMPS:
 
         qnode_ltensor = qml.QNode(circuit, dev)
 
-        assert np.allclose(qnode_ltensor(), -0.076030545078943, atol=1e-10)
+        assert np.allclose(qnode_ltensor(), -0.076030545078943, atol=tol)
 
         # The reference value is obtained by running the same circuit on the default.qubit device.
         # random_state = [ 0.797003+0.406192j,  0.175192-0.199816j,
@@ -375,16 +379,16 @@ class TestTensorNetMPS:
         #     [qml.RX(0.1 * i, wires=i) for i in range(0, wires, 2)]
         #     return qml.expval(qml.PauliZ(1))
 
-    def test_MPSPrep_bad_expansion(self):
+    def test_MPSPrep_bad_expansion(self, c_dtype):
         """Test the exception of MPSPrep with the method matrix product state (mps) trying to append a single wire at the beginning of the MPS."""
 
         wires = 9
 
         MPS_shape = [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]
-        MPS = [np.zeros(i, dtype=complex) for i in MPS_shape]
+        MPS = [np.zeros(i, dtype=c_dtype) for i in MPS_shape]
         MPS_wires = len(MPS_shape)
 
-        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8)
+        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8, c_dtype=c_dtype)
 
         def circuit():
             qml.MPSPrep(MPS, wires=range(1, MPS_wires))
@@ -399,16 +403,16 @@ class TestTensorNetMPS:
         ):
             _ = qnode_ltensor()
 
-    def test_MPSPrep_bad_expansion_with_wrong_MPS(self):
+    def test_MPSPrep_bad_expansion_with_wrong_MPS(self, c_dtype):
         """Test the exception of MPSPrep with the method matrix product state (mps) trying to pass a wrong MPS."""
 
         MPS_shape = [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]
-        MPS = [np.zeros(i, dtype=complex) for i in MPS_shape]
+        MPS = [np.zeros(i, dtype=c_dtype) for i in MPS_shape]
         MPS_wires = len(MPS_shape)
 
         wires = MPS_wires + 1
 
-        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8)
+        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8, c_dtype=c_dtype)
 
         def circuit():
             qml.MPSPrep(MPS, wires=range(wires))
