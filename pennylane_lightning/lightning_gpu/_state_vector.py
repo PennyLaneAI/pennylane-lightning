@@ -242,12 +242,12 @@ class LightningGPUStateVector(LightningBaseStateVector):
         state = self.state_vector
 
         if isinstance(operation.base, Adjoint):
-            basename = operation.base.base.name
+            base_operation = operation.base.base
             adjoint = not adjoint
         else:
-            basename = operation.base.name
+            base_operation = operation.base
 
-        method = getattr(state, f"{basename}", None)
+        method = getattr(state, f"{base_operation.name}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
@@ -257,11 +257,11 @@ class LightningGPUStateVector(LightningBaseStateVector):
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
-                qml.matrix(operation.base),
+                qml.matrix(base_operation),
                 control_wires,
                 control_values,
                 target_wires,
-                False,
+                adjoint,
             )
 
     def _apply_lightning_midmeasure(
