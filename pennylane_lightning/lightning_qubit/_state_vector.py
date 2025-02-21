@@ -170,7 +170,10 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
     def _apply_lightning(
-        self, operations, mid_measurements: dict = None, postselect_mode: str = None,
+        self,
+        operations,
+        mid_measurements: dict = None,
+        postselect_mode: str = None,
     ):  # pylint: disable=protected-access
         """Apply a list of operations to the state tensor.
 
@@ -185,7 +188,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             None
         """
         state = self.state_vector
-        
+
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
