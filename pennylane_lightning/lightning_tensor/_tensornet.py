@@ -39,7 +39,7 @@ def svd_split(
 ) -> tuple[np.ndarray, np.ndarray]:
     """Perform SVD decomposition of a matrix using numpy linalg.
 
-    This function allows selecting which orthonormal singular vector to return. 
+    This function allows selecting which orthonormal singular vector to return.
     If `is_right` is True, it returns Vd; otherwise, it returns U.
     Note that this function is intended to be moved to the C++ layer.
 
@@ -61,15 +61,15 @@ def svd_split(
 
     bonds = len(S)
     chi = min(bonds, max_bond_dim)
-    
+
     # Crop the singular values and the corresponding singular vectors
     S = S[:chi]
     U = U[:, :chi]
     Vd = Vd[:chi]
 
-    if is_right: # Vd as orthonormal singular vectors 
+    if is_right:  # Vd as orthonormal singular vectors
         U = U * S  # Append singular values to U
-    else: # U as orthonormal singular vectors
+    else:  # U as orthonormal singular vectors
         Vd = (S * Vd.T).T  # Append singular values to Vd, equivalent operation to np.diag(S) @ Vd
 
     # keep only chi bonds and reshape to fit the bond dimension and site shape
@@ -158,7 +158,7 @@ def gate_matrix_decompose(
     c_dtype: np.complex64 | np.complex128,
 ) -> tuple[list[np.ndarray], list[int]]:
     """Permute and decompose a gate matrix into MPO sites.
-    
+
     This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention.
 
     Args:
@@ -213,9 +213,9 @@ def gate_matrix_decompose(
 
 
 def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool:
-    """Check if the MPS is in the canonical form. 
-    
-    The computation of expectation values and matrix elements is simpler if the MPS is built from orthonormal tensors, i.e. in canonical form (either in the left or right direction).  
+    """Check if the MPS is in the canonical form.
+
+    The computation of expectation values and matrix elements is simpler if the MPS is built from orthonormal tensors, i.e. in canonical form (either in the left or right direction).
 
     Args:
         mps (list[np.ndarray]): MPS state
@@ -231,8 +231,8 @@ def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool
             C = np.tensordot(sites.conj().T, sites, axes=[[-1, -2], [0, 1]])
         else:  # direction == "right"
             C = np.tensordot(sites, sites.conj().T, axes=[[-1, -2], [0, 1]])
-            
-        # Compare C with the identity matrix        
+
+        # Compare C with the identity matrix
         if not np.allclose(C, np.eye(C.shape[0], dtype=C.dtype), atol=1e-10):
             return False
 
@@ -242,7 +242,7 @@ def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool
 
 def expand_mps_fist_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list[np.ndarray]:
     """Expand the MPS to match the size of the target wires.
-    
+
     This function modifies the original MPS state by adding a single wire at the beginning of the MPS state.
 
     Args:
@@ -317,8 +317,8 @@ def expand_mps_fist_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -
 
 
 def restore_left_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
-    """Restore the left canonical form of the MPS. 
-    
+    """Restore the left canonical form of the MPS.
+
     The left canonical form is defined as the form where the tensors are orthonormal in the left direction.
 
     Args:
@@ -352,8 +352,8 @@ def restore_left_canonical_form(mps: list[np.ndarray], site_shape: list[int]) ->
 
 
 def restore_right_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
-    """Restore the right canonical form of the MPS. 
-    
+    """Restore the right canonical form of the MPS.
+
     The right canonical form is defined as the form where the tensors are orthonormal in the right direction.
 
     Args:
@@ -555,7 +555,7 @@ class LightningTensorNet:
 
     def _apply_state_vector(self, state, device_wires: Wires):
         """Convert a specified state to MPS state.
-        
+
         Args:
             state (array[complex]): normalized input state of length ``2**len(device_wires)``
                 or broadcasted state of shape ``(batch_size, 2**len(device_wires))``
@@ -586,7 +586,7 @@ class LightningTensorNet:
             raise DeviceError(
                 "MPSPrep only support to append a single wire at the beginning of the MPS."
             )
-        
+
         mps = list(mps)
 
         if len(mps[0].shape) != 3:
@@ -600,13 +600,13 @@ class LightningTensorNet:
             # Expand and restore the canonical form for the current MPS to match the size of the target wires
             new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
             new_mps = restore_left_canonical_form(new_mps, [2])
-            
+
         elif check_canonical_form(mps, direction="right"):
             # Expand and restore the canonical form for the current MPS to match the size of the target wires
             new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
             new_mps = restore_right_canonical_form(new_mps, [2])
-            
-        else: # No canonical form
+
+        else:  # No canonical form
             new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
 
         # Restore dimension of first and last sites

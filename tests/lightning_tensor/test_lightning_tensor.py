@@ -155,9 +155,10 @@ class TestTensorNet:
         ):
             dev.execute_and_compute_vjp(circuits=None, cotangents=None)
 
+
 class TestTensorNetMPS:
     """Test the MPS method of the LightningTensor class."""
-    
+
     @pytest.mark.parametrize(
         "wires,max_bond,MPS_shape",
         [
@@ -165,13 +166,26 @@ class TestTensorNetMPS:
             (
                 8,
                 128,
-                [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
+                [
+                    [2, 2],
+                    [2, 2, 4],
+                    [4, 2, 8],
+                    [8, 2, 16],
+                    [16, 2, 8],
+                    [8, 2, 4],
+                    [4, 2, 2],
+                    [2, 2],
+                ],
             ),
-            (8, 8, [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]),
+            (
+                8,
+                8,
+                [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 8], [8, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
+            ),
             (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(13)] + [[2, 2]]),
         ],
     )
-    def test_MPSPrep_check_pass(self,wires, max_bond, MPS_shape):
+    def test_MPSPrep_check_pass(self, wires, max_bond, MPS_shape):
         """Test the correct behavior regarding MPS shape of MPSPrep."""
         MPS = [np.zeros(i) for i in MPS_shape]
         dev = LightningTensor(wires=wires, method="mps", max_bond_dim=max_bond)
@@ -185,19 +199,31 @@ class TestTensorNetMPS:
 
         _ = qnode_ltensor(MPS)
 
-
     @pytest.mark.parametrize(
         "wires,max_bond,MPS_shape",
         [
             (
                 8,
                 8,
-                [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 16], [16, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]],
+                [
+                    [2, 2],
+                    [2, 2, 4],
+                    [4, 2, 8],
+                    [8, 2, 16],
+                    [16, 2, 8],
+                    [8, 2, 4],
+                    [4, 2, 2],
+                    [2, 2],
+                ],
             ),  # Incorrect max bond dim.
-            (15, 2, [[2, 2]] + [[2, 2, 2] for _ in range(14)] + [[2, 2]]),  # Incorrect amount of sites
+            (
+                15,
+                2,
+                [[2, 2]] + [[2, 2, 2] for _ in range(14)] + [[2, 2]],
+            ),  # Incorrect amount of sites
         ],
     )
-    def test_MPSPrep_check_fail(self,wires, max_bond, MPS_shape):
+    def test_MPSPrep_check_fail(self, wires, max_bond, MPS_shape):
         """Test the exceptions regarding MPS shape of MPSPrep."""
 
         MPS = [np.zeros(i) for i in MPS_shape]
@@ -216,14 +242,13 @@ class TestTensorNetMPS:
         ):
             _ = qnode_ltensor(MPS)
 
-
     @pytest.mark.parametrize(
         "wires, MPS_shape",
         [
             (2, [[2, 2], [2, 2]]),
         ],
     )
-    def test_MPSPrep_with_tn(self,wires, MPS_shape):
+    def test_MPSPrep_with_tn(self, wires, MPS_shape):
         """Test the exception of MPSPrep with the method exact tensor network (tn)."""
 
         MPS = [np.zeros(i) for i in MPS_shape]
@@ -239,64 +264,93 @@ class TestTensorNetMPS:
         with pytest.raises(qml.DeviceError, match="Exact Tensor Network does not support MPSPrep"):
             _ = qnode_ltensor(MPS)
 
-    @pytest.mark.parametrize("MPS",[
+    @pytest.mark.parametrize(
+        "MPS",
         [
-            np.array(
-                [[-0.998685414638+0.j            , -0.051258585512-0.j            ],
-                 [ 0.047547165413-0.019149664485j, -0.926374774705+0.37309829027j ]]
-            ),
-            np.array(
-                [[[-0.875169134426-0.456139031658j,  0.024624413522-0.060927908086j],
-                  [ 0.101258621842+0.029812759206j,  0.025706347132+0.396610276574j]],
-
-                 [[-0.001058833849+0.027386007154j,  0.468536435427+0.018207079448j],
-                  [-0.042532972535-0.110967979922j, -0.653527431685+0.436766422106j]]]
-            ),
-            np.array(
-                [[ 0.906667523774+0.j            , 0.041728590132-0.270392753796j],
-                 [-0.092760816556+0.j            , 0.046885022269-0.303805382427j]]
-            )
-        ], # Left canonical MPS
-        [
-            np.array(
-                [[-0.947588819432-0.j            , -0.016185864786+0.j            ],
-                  [ 0.045114469162-0.018169893838j, -0.292520300633+0.117812819407j]]
-            ),
-            np.array(
-                [[[ 0.873519624977+0.455279305677j, -0.008333069977+0.020618420868j],
-                  [-0.101067770672-0.029756568436j, -0.008699203711-0.134215630567j]],
-
-                 [[ 0.003175633836-0.082135578716j, -0.476435849301-0.018514046516j],
-                  [ 0.12756406197 +0.332813001859j,  0.664545750156-0.444130201043j]]]
-            ),
-            np.array(
-                [[-0.957361955779+0.j            ,-0.044061757604+0.285511203186j],
-                 [ 0.288891131099+0.j            ,-0.146017118194+0.946161146722j]]
-            ),
-        ], # Right canonical MPS
-        [
-            np.array(
-                 [[-0.99868541+0.j        , -0.05125858-0.j        ],
-                  [ 0.04754716-0.01914966j, -0.92637477+0.3730982j ]]
-            ),
-            np.array(
-                [[[-0.87516913-0.45613903j,  0.02462441-0.06092790j],
-                  [ 0.10125862+0.02981275j,  0.02570634+0.39661027j]],
-
-                 [[-0.00105883+0.02738600j,  0.46853643+0.01820707j],
-                  [-0.04253297-0.11096797j, -0.65352743+0.43676642j]]]
-            ),
-            np.array(
-                 [[ 0.90666752+0.j        ,  0.04172859-0.27039275j],
-                  [-0.09276081+0.j        ,  0.04688502-0.30380538j]]
-            )
-        ], # Non-canonical MPS
-    ])
-    def test_MPSPrep_expansion(self,MPS):
+            [
+                np.array(
+                    [
+                        [-0.998685414638 + 0.0j, -0.051258585512 - 0.0j],
+                        [0.047547165413 - 0.019149664485j, -0.926374774705 + 0.37309829027j],
+                    ]
+                ),
+                np.array(
+                    [
+                        [
+                            [-0.875169134426 - 0.456139031658j, 0.024624413522 - 0.060927908086j],
+                            [0.101258621842 + 0.029812759206j, 0.025706347132 + 0.396610276574j],
+                        ],
+                        [
+                            [-0.001058833849 + 0.027386007154j, 0.468536435427 + 0.018207079448j],
+                            [-0.042532972535 - 0.110967979922j, -0.653527431685 + 0.436766422106j],
+                        ],
+                    ]
+                ),
+                np.array(
+                    [
+                        [0.906667523774 + 0.0j, 0.041728590132 - 0.270392753796j],
+                        [-0.092760816556 + 0.0j, 0.046885022269 - 0.303805382427j],
+                    ]
+                ),
+            ],  # Left canonical MPS
+            [
+                np.array(
+                    [
+                        [-0.947588819432 - 0.0j, -0.016185864786 + 0.0j],
+                        [0.045114469162 - 0.018169893838j, -0.292520300633 + 0.117812819407j],
+                    ]
+                ),
+                np.array(
+                    [
+                        [
+                            [0.873519624977 + 0.455279305677j, -0.008333069977 + 0.020618420868j],
+                            [-0.101067770672 - 0.029756568436j, -0.008699203711 - 0.134215630567j],
+                        ],
+                        [
+                            [0.003175633836 - 0.082135578716j, -0.476435849301 - 0.018514046516j],
+                            [0.12756406197 + 0.332813001859j, 0.664545750156 - 0.444130201043j],
+                        ],
+                    ]
+                ),
+                np.array(
+                    [
+                        [-0.957361955779 + 0.0j, -0.044061757604 + 0.285511203186j],
+                        [0.288891131099 + 0.0j, -0.146017118194 + 0.946161146722j],
+                    ]
+                ),
+            ],  # Right canonical MPS
+            [
+                np.array(
+                    [
+                        [-0.99868541 + 0.0j, -0.05125858 - 0.0j],
+                        [0.04754716 - 0.01914966j, -0.92637477 + 0.3730982j],
+                    ]
+                ),
+                np.array(
+                    [
+                        [
+                            [-0.87516913 - 0.45613903j, 0.02462441 - 0.06092790j],
+                            [0.10125862 + 0.02981275j, 0.02570634 + 0.39661027j],
+                        ],
+                        [
+                            [-0.00105883 + 0.02738600j, 0.46853643 + 0.01820707j],
+                            [-0.04253297 - 0.11096797j, -0.65352743 + 0.43676642j],
+                        ],
+                    ]
+                ),
+                np.array(
+                    [
+                        [0.90666752 + 0.0j, 0.04172859 - 0.27039275j],
+                        [-0.09276081 + 0.0j, 0.04688502 - 0.30380538j],
+                    ]
+                ),
+            ],  # Non-canonical MPS
+        ],
+    )
+    def test_MPSPrep_expansion(self, MPS):
         """Test the expansion of MPSPrep with the method matrix product state (mps)."""
 
         wires = 4
-        
 
         dev = LightningTensor(wires=wires, method="mps", max_bond_dim=128)
 
@@ -325,11 +379,11 @@ class TestTensorNetMPS:
         """Test the exception of MPSPrep with the method matrix product state (mps)."""
 
         wires = 9
-        
+
         MPS_shape = [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]
         MPS = [np.zeros(i, dtype=complex) for i in MPS_shape]
         MPS_wires = len(MPS_shape)
-                
+
         dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8)
 
         def circuit():
@@ -341,7 +395,6 @@ class TestTensorNetMPS:
 
         with pytest.raises(
             DeviceError,
-            match=
-                "MPSPrep only support to append a single wire at the beginning of the MPS."
+            match="MPSPrep only support to append a single wire at the beginning of the MPS.",
         ):
             _ = qnode_ltensor()
