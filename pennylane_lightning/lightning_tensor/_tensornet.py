@@ -111,9 +111,7 @@ def decompose_dense(
         bondL = U.shape[-1]
         psi = U
 
-
-
-        for jj in range(1, n_wires - 1):
+        for _ in range(1, n_wires - 1):
             psi = np.reshape(psi, (-1, site_len * bondL))
             U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
             Ms.append(Vd)
