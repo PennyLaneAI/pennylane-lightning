@@ -35,6 +35,21 @@ def enable_disable_plxpr():
     qml.capture.disable()
 
 
+def test_accept_execution_config():
+    """Test that eval_jaxpr can accept an ExecutionConfig.
+
+    At this point, it does not do anything, so we do not need to test it's affect.
+    """
+
+    dev = qml.device(device_name, wires=1)
+
+    jaxpr = jax.make_jaxpr(lambda x: x + 1)(0.1)
+
+    execution_config = qml.devices.ExecutionConfig()
+
+    dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.1, execution_config=execution_config)
+
+
 def test_no_partitioned_shots():
     """Test that an error is raised if partitioned shots is requested."""
 
