@@ -43,6 +43,10 @@
 * `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
+* Adds an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
+  Device API change.
+  [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067/)
+
 ### Documentation
 
 ### Bug fixes

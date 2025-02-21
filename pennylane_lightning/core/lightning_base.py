@@ -453,8 +453,8 @@ class LightningBase(Device):
         )
         return tuple(zip(*results))
 
-    # pylint: disable=import-outside-toplevel
-    def eval_jaxpr(self, jaxpr, consts, *args):
+    # pylint: disable=import-outside-toplevel, unused-argument
+    def eval_jaxpr(self, jaxpr, consts, *args, execution_config: Optional[ExecutionConfig] = None):
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
         Args:
