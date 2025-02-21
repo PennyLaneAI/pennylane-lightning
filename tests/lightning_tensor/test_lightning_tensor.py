@@ -376,7 +376,7 @@ class TestTensorNetMPS:
         #     return qml.expval(qml.PauliZ(1))
 
     def test_MPSPrep_bad_expansion(self):
-        """Test the exception of MPSPrep with the method matrix product state (mps)."""
+        """Test the exception of MPSPrep with the method matrix product state (mps) trying to append a single wire at the beginning of the MPS."""
 
         wires = 9
 
@@ -396,5 +396,29 @@ class TestTensorNetMPS:
         with pytest.raises(
             DeviceError,
             match="MPSPrep only support to append a single wire at the beginning of the MPS.",
+        ):
+            _ = qnode_ltensor()
+
+    def test_MPSPrep_bad_expansion_with_wrong_MPS(self):
+        """Test the exception of MPSPrep with the method matrix product state (mps) trying to pass a wrong MPS."""
+
+        MPS_shape = [[2, 2], [2, 2, 4], [4, 2, 8], [8, 2, 4], [4, 2, 2], [2, 2]]
+        MPS = [np.zeros(i, dtype=complex) for i in MPS_shape]
+        MPS_wires = len(MPS_shape)
+
+        wires = MPS_wires + 1
+
+        dev = LightningTensor(wires=wires, method="mps", max_bond_dim=8)
+
+        def circuit():
+            qml.MPSPrep(MPS, wires=range(wires))
+            [qml.Hadamard(i) for i in range(wires)]
+            return qml.expval(qml.PauliZ(1))
+
+        qnode_ltensor = qml.QNode(circuit, dev)
+
+        with pytest.raises(
+            LightningException,
+            match="Error in PennyLane Lightning: The incoming MPS does not have the correct layout for lightning.tensor.",
         ):
             _ = qnode_ltensor()

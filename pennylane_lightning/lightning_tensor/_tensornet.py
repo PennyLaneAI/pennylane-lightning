@@ -47,7 +47,7 @@ def svd_split(
         Mat (np.ndarray): Input matrix.
         site_shape (list[int]): Shape of the site tensor.
         max_bond_dim (int): Maximum bond dimension.
-        is_right (bool): Direction of the SVD decomposition. Options: [True, False].
+        is_right (bool): Direction of the SVD decomposition. Default is True.
 
     Returns:
         tuple[np.ndarray, np.ndarray]: U and Vd matrices.
@@ -57,7 +57,8 @@ def svd_split(
     U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
 
     # Removing noise from singular values
-    S[S < 1e-10] = 0.0
+    epsilon = np.finfo(Mat.dtype).eps * S[0] if S[0] > 1.0 else np.finfo(Mat.dtype).eps
+    S[S < epsilon] = 0.0
 
     bonds = len(S)
     chi = min(bonds, max_bond_dim)
@@ -76,7 +77,10 @@ def svd_split(
     Vd = Vd.reshape([chi] + site_shape + [-1])
     U = U.reshape([-1] + site_shape + [chi])
 
-    return U, Vd
+    if is_right:
+        return U, Vd
+    else:
+        return Vd, U
 
 
 def decompose_dense(
@@ -93,7 +97,7 @@ def decompose_dense(
         n_wires (int): number of wires
         site_shape (list[int]): shape of the site tensor
         max_bond_dim (int): maximum bond dimension
-        canonical_right (bool): right-canonical form if True; left-canonical form if False
+        canonical_right (bool): right-canonical form if True; left-canonical form if False. Default is True.
 
     Returns:
         list[np.ndarray]: MPS/MPO sites
@@ -102,51 +106,28 @@ def decompose_dense(
     Ms = []
     site_len = np.prod(site_shape)
 
-    if canonical_right:  # Right canonical form
+    # psi = np.reshape(psi, (-1, site_len)) if canonical_right else np.reshape(psi, (site_len, -1))
+    psi = np.reshape(psi, (-1, site_len) if canonical_right else (site_len, -1))
+    psi, A = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
 
-        psi = np.reshape(psi, (-1, site_len))
-        U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
+    Ms.append(A)
+    bondL = psi.shape[-1 if canonical_right else 0]
 
-        Ms.append(Vd)
-        bondL = U.shape[-1]
-        psi = U
+    for _ in range(1, n_wires - 1):
+        psi = np.reshape(psi, (-1, site_len * bondL) if canonical_right else (site_len * bondL, -1))
+        psi, A = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
+        Ms.append(A)
 
-        for _ in range(1, n_wires - 1):
-            psi = np.reshape(psi, (-1, site_len * bondL))
-            U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
-            Ms.append(Vd)
+        bondL = psi.shape[-1 if canonical_right else 0]
 
-            psi = U
-            bondL = U.shape[-1]
+    Ms.append(psi)
 
-        Ms.append(U)
-
+    if canonical_right:
         Ms.reverse()
 
-    else:  # Left canonical form
-
-        psi = np.reshape(psi, (site_len, -1))
-        U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
-
-        Ms.append(U)
-        bondL = Vd.shape[0]
-        psi = Vd
-
-        for i in range(1, n_wires - 1):
-            psi = np.reshape(psi, (site_len * bondL, -1))
-            U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
-            Ms.append(U)
-            psi = Vd
-            bondL = Vd.shape[0]
-
-        Ms.append(Vd)
-
     # Removing the virtual bond dimension of 1 from the first and last sites
-    first_shape = Ms[0].shape[1:]
-    Ms[0] = np.reshape(Ms[0], first_shape)
-
-    last_shape = Ms[-1].shape[:-1]
-    Ms[-1] = np.reshape(Ms[-1], last_shape)
+    Ms[0] = np.reshape(Ms[0], Ms[0].shape[1:])
+    Ms[-1] = np.reshape(Ms[-1], Ms[-1].shape[:-1])
 
     return Ms
 
@@ -212,14 +193,14 @@ def gate_matrix_decompose(
     return mpos, sorted_wires
 
 
-def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool:
+def check_canonical_form(mps: list[np.ndarray], is_right: bool = True) -> bool:
     """Check if the MPS is in the canonical form.
 
     The computation of expectation values and matrix elements is simpler if the MPS is built from orthonormal tensors, i.e. in canonical form (either in the left or right direction).
 
     Args:
         mps (list[np.ndarray]): MPS state
-        direction (str): direction to check the canonical form. Options: ["left", "right"]
+        is_right (bool): True if the MPS is in the right canonical form; False if the MPS is in the left canonical form. Default is True.
 
     Returns:
         bool: True if the MPS is in the canonical form specified by the direction
@@ -227,10 +208,10 @@ def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool
 
     for sites in mps:
 
-        if direction == "left":
-            C = np.tensordot(sites.conj().T, sites, axes=[[-1, -2], [0, 1]])
-        else:  # direction == "right"
+        if is_right:  # check if the MPS state has a right canonical form
             C = np.tensordot(sites, sites.conj().T, axes=[[-1, -2], [0, 1]])
+        else:  # check if the MPS state has a left canonical form
+            C = np.tensordot(sites.conj().T, sites, axes=[[-1, -2], [0, 1]])
 
         # Compare C with the identity matrix
         if not np.allclose(C, np.eye(C.shape[0], dtype=C.dtype), atol=1e-10):
@@ -339,7 +320,8 @@ def restore_left_canonical_form(mps: list[np.ndarray], site_shape: list[int]) ->
         U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
 
         # Removing noise from singular values
-        S[S < 1e-10] = 0.0
+        epsilon = np.finfo(site.dtype).eps * S[0] if S[0] > 1.0 else np.finfo(site.dtype).eps
+        S[S < epsilon] = 0.0
 
         bonds = len(S)
 
@@ -374,7 +356,8 @@ def restore_right_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -
         U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
 
         # Removing noise from singular values
-        S[S < 1e-10] = 0.0
+        epsilon = np.finfo(site.dtype).eps * S[0] if S[0] > 1.0 else np.finfo(site.dtype).eps
+        S[S < epsilon] = 0.0
 
         bonds = len(S)
 
@@ -596,12 +579,12 @@ class LightningTensorNet:
             mps[-1] = mps[-1].reshape(2, 2, 1)
 
         # Check the canonical form of the MPS
-        if check_canonical_form(mps, direction="left"):
+        if check_canonical_form(mps, is_right=False):
             # Expand and restore the canonical form for the current MPS to match the size of the target wires
             new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
             new_mps = restore_left_canonical_form(new_mps, [2])
 
-        elif check_canonical_form(mps, direction="right"):
+        elif check_canonical_form(mps, is_right=True):
             # Expand and restore the canonical form for the current MPS to match the size of the target wires
             new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
             new_mps = restore_right_canonical_form(new_mps, [2])

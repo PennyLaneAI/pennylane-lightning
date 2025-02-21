@@ -202,9 +202,9 @@ def test_mps_canonical_form():
     mpos[-1] = np.reshape(mpos[-1], list(mpos[-1].shape) + [1])
 
     # check left canonical form
-    assert check_canonical_form(mpos, direction="left")
+    assert check_canonical_form(mpos, is_right=False)
     # check right canonical form
-    assert not check_canonical_form(mpos, direction="right")
+    assert not check_canonical_form(mpos, is_right=True)
 
     # decompose the gate into MPOs with left canonical form
     mpos = decompose_dense(
@@ -215,9 +215,9 @@ def test_mps_canonical_form():
     mpos[-1] = np.reshape(mpos[-1], list(mpos[-1].shape) + [1])
 
     # check left canonical form
-    assert not check_canonical_form(mpos, direction="left")
+    assert not check_canonical_form(mpos, is_right=False)
     # check right canonical form
-    assert check_canonical_form(mpos, direction="right")
+    assert check_canonical_form(mpos, is_right=True)
 
 
 def test_expand_mps_first_site():
@@ -294,15 +294,15 @@ def test_restore_left_canonical_form():
     mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # check left canonical form
-    assert not check_canonical_form(mps, direction="left")
+    assert not check_canonical_form(mps, is_right=False)
 
     # restore left canonical form
     mps = restore_left_canonical_form(mps, site_shape)
 
     # check left canonical form
-    assert check_canonical_form(mps, direction="left")
+    assert check_canonical_form(mps, is_right=False)
     # check right canonical form
-    assert not check_canonical_form(mps, direction="right")
+    assert not check_canonical_form(mps, is_right=True)
     # check bond dimensions
     assert mps[0].shape == (1, 2, 2)
     assert mps[1].shape == (2, 2, 4)
@@ -327,15 +327,15 @@ def test_restore_right_canonical_form():
     mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # check right canonical form
-    assert not check_canonical_form(mps, direction="right")
+    assert not check_canonical_form(mps, is_right=True)
 
     # restore right canonical form
     mps = restore_right_canonical_form(mps, site_shape)
 
     # check right canonical form
-    assert check_canonical_form(mps, direction="right")
+    assert check_canonical_form(mps, is_right=True)
     # check left canonical form
-    assert not check_canonical_form(mps, direction="left")
+    assert not check_canonical_form(mps, is_right=False)
 
     # check bond dimensions
     assert mps[0].shape == (1, 2, 2)
