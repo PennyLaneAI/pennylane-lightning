@@ -35,18 +35,22 @@ from pennylane.wires import Wires
 
 
 def svd_split(
-    Mat: np.ndarray, site_shape: list, max_bond_dim: int, direction: str
+    Mat: np.ndarray, site_shape: list[int], max_bond_dim: int, is_right: bool = True
 ) -> tuple[np.ndarray, np.ndarray]:
-    """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer.
+    """Perform SVD decomposition of a matrix using numpy linalg.
+
+    This function allows selecting which orthonormal singular vector to return. 
+    If `is_right` is True, it returns Vd; otherwise, it returns U.
+    Note that this function is intended to be moved to the C++ layer.
 
     Args:
-        Mat (array): input matrix
-        site_shape (list): shape of the site tensor
-        max_bond_dim (int): maximum bond dimension
-        direction (str): direction of the SVD decomposition. Options: ["right", "left"]
+        Mat (np.ndarray): Input matrix.
+        site_shape (list[int]): Shape of the site tensor.
+        max_bond_dim (int): Maximum bond dimension.
+        is_right (bool): Direction of the SVD decomposition. Options: [True, False].
 
     Returns:
-        [array, array]: U and Vd matrices
+        tuple[np.ndarray, np.ndarray]: U and Vd matrices.
     """
     # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
 
@@ -57,16 +61,20 @@ def svd_split(
 
     bonds = len(S)
     chi = min(bonds, max_bond_dim)
+    
+    # Crop the singular values and the corresponding singular vectors
+    S = S[:chi]
+    U = U[:, :chi]
+    Vd = Vd[:chi]
 
-    if direction == "right":
+    if is_right: # Vd as orthonormal singular vectors 
         U = U * S  # Append singular values to U
-
-    if direction == "left":
+    else: # U as orthonormal singular vectors
         Vd = (S * Vd.T).T  # Append singular values to Vd, equivalent operation to np.diag(S) @ Vd
 
     # keep only chi bonds and reshape to fit the bond dimension and site shape
-    Vd = Vd[:chi].reshape([chi] + site_shape + [-1])
-    U = U[:, :chi].reshape([-1] + site_shape + [chi])
+    Vd = Vd.reshape([chi] + site_shape + [-1])
+    U = U.reshape([-1] + site_shape + [chi])
 
     return U, Vd
 
@@ -76,62 +84,62 @@ def decompose_dense(
     n_wires: int,
     site_shape: list[int],
     max_bond_dim: int,
-    direction: str = "right",
+    canonical_right: bool = True,
 ) -> list[np.ndarray]:
     """Decompose a dense state vector/gate matrix into MPS/MPO sites.
 
     Args:
-        psi (array): input state vector or gate matrix
+        psi (np.ndarray): input state vector or gate matrix
         n_wires (int): number of wires
-        site_shape (list): shape of the site tensor
+        site_shape (list[int]): shape of the site tensor
         max_bond_dim (int): maximum bond dimension
-        direction (str): direction of the SVD decomposition. Options: ["right", "left"]
+        canonical_right (bool): right-canonical form if True; left-canonical form if False
 
     Returns:
-        list[array]: MPS/MPO sites
+        list[np.ndarray]: MPS/MPO sites
     """
 
-    Ms = [[] for _ in range(n_wires)]
+    Ms = []
     site_len = np.prod(site_shape)
 
-    if direction == "right":  # Right canonical form
+    if canonical_right:  # Right canonical form
 
         psi = np.reshape(psi, (-1, site_len))
-        U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
+        U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
 
-        Ms[0] = Vd
+        Ms.append(Vd)
         bondL = U.shape[-1]
         psi = U
 
         for i in range(1, n_wires - 1):
             psi = np.reshape(psi, (-1, site_len * bondL))
-            U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
-            Ms[i] = Vd
+            U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
+            Ms.append(Vd)
 
             psi = U
             bondL = U.shape[-1]
 
-        Ms[-1] = U
+        Ms.append(U)
 
         Ms.reverse()
 
-    else:  # direction == "left",  Left canonical form
+    else:  # Left canonical form
 
         psi = np.reshape(psi, (site_len, -1))
-        U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
+        U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
 
-        Ms[0] = U
+        Ms.append(U)
         bondL = Vd.shape[0]
         psi = Vd
 
         for i in range(1, n_wires - 1):
             psi = np.reshape(psi, (site_len * bondL, -1))
-            U, Vd = svd_split(psi, site_shape, max_bond_dim, direction=direction)
-            Ms[i] = U
+            U, Vd = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
+            Ms.append(U)
             psi = Vd
             bondL = Vd.shape[0]
 
-        Ms[-1] = Vd
+        Ms.append(Vd)
 
     # Removing the virtual bond dimension of 1 from the first and last sites
     first_shape = Ms[0].shape[1:]
@@ -149,16 +157,18 @@ def gate_matrix_decompose(
     max_mpo_bond_dim: int,
     c_dtype: np.complex64 | np.complex128,
 ) -> tuple[list[np.ndarray], list[int]]:
-    """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention.
+    """Permute and decompose a gate matrix into MPO sites.
+    
+    This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention.
 
     Args:
-        gate_ops_matrix (array): input gate matrix
+        gate_ops_matrix (np.ndarray): input gate matrix
         wires (list): list of wires
         max_mpo_bond_dim (int): maximum bond dimension
-        c_dtype: complex dtype
+        c_dtype (np.complex64 | np.complex128): complex dtype
 
     Returns:
-        [list, list]: MPO sites and sorted wires
+        [list[np.ndarray], list[int]]: MPO sites and sorted wires
     """
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
@@ -203,11 +213,12 @@ def gate_matrix_decompose(
 
 
 def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool:
-    """Check if the MPS is in the canonical form. The computation of expectation and matrix elements is simpler if the MPS is built from tensors relating orthonormal spaces. The canonical form of the MPS is defined as the form where the tensors are orthonormal in the left or right direction.
-
+    """Check if the MPS is in the canonical form. 
+    
+    The computation of expectation values and matrix elements is simpler if the MPS is built from orthonormal tensors, i.e. in canonical form (either in the left or right direction).  
 
     Args:
-        mps (list): MPS sites
+        mps (list[np.ndarray]): MPS state
         direction (str): direction to check the canonical form. Options: ["left", "right"]
 
     Returns:
@@ -220,27 +231,26 @@ def check_canonical_form(mps: list[np.ndarray], direction: str = "left") -> bool
             C = np.tensordot(sites.conj().T, sites, axes=[[-1, -2], [0, 1]])
         else:  # direction == "right"
             C = np.tensordot(sites, sites.conj().T, axes=[[-1, -2], [0, 1]])
-
-        # Compare C with the identity matrix
-        eye = np.eye(C.shape[0], dtype=C.dtype)
-        close = np.allclose(C, eye, atol=1e-10)
-
-        if not close:
+            
+        # Compare C with the identity matrix        
+        if not np.allclose(C, np.eye(C.shape[0], dtype=C.dtype), atol=1e-10):
             return False
 
     # Return True if all the values of canon_values are True
     return True
 
 
-def expand_mps_top(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list[np.ndarray]:
-    """Expand the MPS to match the size of the target wires. Note: The expansion works only for adding a single wire at the beginning of the MPS.
+def expand_mps_fist_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list[np.ndarray]:
+    """Expand the MPS to match the size of the target wires.
+    
+    This function modifies the original MPS state by adding a single wire at the beginning of the MPS state.
 
     Args:
-        state_MPS (list): MPS sites
-        max_bond_dim (int): maximum bond dimension
+        state_MPS (list[np.ndarray]): The MPS state to be expanded.
+        max_bond_dim (int): The maximum bond dimension.
 
     Returns:
-        list: expanded MPS sites
+        list[np.ndarray]: The expanded MPS state.
     """
 
     expanded_MPS = state_MPS
@@ -307,14 +317,16 @@ def expand_mps_top(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list
 
 
 def restore_left_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
-    """Restore the left canonical form of the MPS. The left canonical form is defined as the form where the tensors are orthonormal in the left direction.
+    """Restore the left canonical form of the MPS. 
+    
+    The left canonical form is defined as the form where the tensors are orthonormal in the left direction.
 
     Args:
-        mps (list): MPS sites
-        site_shape (list): shape of the site tensor
+        mps (list[np.ndarray]): MPS state
+        site_shape (list[int]): shape of the site tensor
 
     Returns:
-        list: MPS sites in the left canonical form
+        list[np.ndarray]: MPS state in the left canonical form
     """
 
     new_mps = []
@@ -340,22 +352,22 @@ def restore_left_canonical_form(mps: list[np.ndarray], site_shape: list[int]) ->
 
 
 def restore_right_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
-    """Restore the right canonical form of the MPS. The right canonical form is defined as the form where the tensors are orthonormal in the right direction.
+    """Restore the right canonical form of the MPS. 
+    
+    The right canonical form is defined as the form where the tensors are orthonormal in the right direction.
 
     Args:
-        mps (list): MPS sites
-        site_shape (list): shape of the site tensor
+        mps (list[np.ndarray]): MPS state
+        site_shape (list[int]): shape of the site tensor
 
     Returns:
-        list: MPS sites in the right canonical form
+        list[np.ndarray]: MPS state in the right canonical form
     """
-
-    mps.reverse()
 
     new_mps = []
     U = np.eye(1, dtype=mps[0].dtype)
 
-    for site in mps:
+    for site in reversed(mps):
         site_p = np.tensordot(site, U, axes=[[-1], [0]])
         site_p = site_p.reshape(site.shape[0], -1)
 
@@ -372,7 +384,6 @@ def restore_right_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -
         new_mps.append(Vd)
 
     new_mps.reverse()
-    mps.reverse()
 
     return new_mps
 
@@ -543,7 +554,8 @@ class LightningTensorNet:
         return np.reshape(full_state, output_shape).ravel(order="C")
 
     def _apply_state_vector(self, state, device_wires: Wires):
-        """Convert a specified state to MPS sites.
+        """Convert a specified state to MPS state.
+        
         Args:
             state (array[complex]): normalized input state of length ``2**len(device_wires)``
                 or broadcasted state of shape ``(batch_size, 2**len(device_wires))``
@@ -558,45 +570,44 @@ class LightningTensorNet:
             M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
             self._tensornet.updateMPSSitesData(M)
 
-    def _apply_mps_state(self, mps: tuple, target_wires: Wires) -> None:
+    def _apply_mps_state(self, mps: tuple[np.ndarray], target_wires: Wires) -> None:
 
         if len(target_wires) == self._num_wires and Wires(sorted(target_wires)) == target_wires:
             self._tensornet.updateMPSSitesData(mps)
             return
 
-        trgt_wires = target_wires.tolist().copy()
+        trgt_wires = target_wires.tolist()
 
         # Sort wires in ascending order
         trgt_wires.sort()
 
-        # check if 0 is prensent in trgt_wires
-        zero_trgt = 0 in trgt_wires
-        single_wire = self._num_wires - len(trgt_wires) > 1
-
-        if single_wire and not zero_trgt:
+        # check if 0 is present in trgt_wires and the number of wires to be appended is more than 1
+        if not 0 in trgt_wires and (self._num_wires - len(trgt_wires) > 1):
             raise DeviceError(
                 "MPSPrep only support to append a single wire at the beginning of the MPS."
             )
-
-        new_mps = list(mps)
+        
+        mps = list(mps)
 
         if len(mps[0].shape) != 3:
-            new_mps[0] = new_mps[0].reshape(1, 2, 2)
+            mps[0] = mps[0].reshape(1, 2, 2)
 
         if len(mps[-1].shape) != 3:
-            new_mps[-1] = new_mps[-1].reshape(2, 2, 1)
+            mps[-1] = mps[-1].reshape(2, 2, 1)
 
         # Check the canonical form of the MPS
-        canon_left = check_canonical_form(new_mps, direction="left")
-        canon_right = check_canonical_form(new_mps, direction="right")
-
-        # Expand the current MPS to match the size of the target wires
-        new_mps = expand_mps_top(new_mps, self._max_bond_dim)
-
-        if canon_left:
+        if check_canonical_form(mps, direction="left"):
+            # Expand and restore the canonical form for the current MPS to match the size of the target wires
+            new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
             new_mps = restore_left_canonical_form(new_mps, [2])
-        elif canon_right:
+            
+        elif check_canonical_form(mps, direction="right"):
+            # Expand and restore the canonical form for the current MPS to match the size of the target wires
+            new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
             new_mps = restore_right_canonical_form(new_mps, [2])
+            
+        else: # No canonical form
+            new_mps = expand_mps_fist_site(mps, self._max_bond_dim)
 
         # Restore dimension of first and last sites
         new_mps[0] = new_mps[0].reshape(2, 2)

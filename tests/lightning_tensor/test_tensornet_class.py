@@ -27,7 +27,7 @@ else:
         LightningTensorNet,
         check_canonical_form,
         decompose_dense,
-        expand_mps_top,
+        expand_mps_fist_site,
         gate_matrix_decompose,
         restore_left_canonical_form,
         restore_right_canonical_form,
@@ -105,7 +105,7 @@ def test_dense_decompose():
 
     # decompose the gate into MPOs with left canonical form
 
-    mpos = decompose_dense(gate, n_wires, site_shape, max_mpo_bond_dim, direction="left")
+    mpos = decompose_dense(gate, n_wires, site_shape, max_mpo_bond_dim, canonical_right=False)
 
     # recreate unitary
     unitary = np.tensordot(mpos[0], mpos[1], axes=([2], [0]))
@@ -116,7 +116,7 @@ def test_dense_decompose():
 
     # decompose the gate into MPOs with right canonical form
 
-    mpos = decompose_dense(gate, n_wires, site_shape, max_mpo_bond_dim, direction="right")
+    mpos = decompose_dense(gate, n_wires, site_shape, max_mpo_bond_dim, canonical_right=True)
 
     # recreate unitary
     unitary = np.tensordot(mpos[0], mpos[1], axes=([2], [0]))
@@ -193,7 +193,7 @@ def test_mps_canonical_form():
     random_state = random_state / np.linalg.norm(random_state)
 
     # decompose the gate into MPOs with left canonical form
-    mpos = decompose_dense(random_state, n_wires, site_shape, max_mpo_bond_dim, direction="left")
+    mpos = decompose_dense(random_state, n_wires, site_shape, max_mpo_bond_dim, canonical_right=False)
 
     # Add virtual bond dimension at the beginning and end
     mpos[0] = np.reshape(mpos[0], [1] + list(mpos[0].shape))
@@ -205,7 +205,7 @@ def test_mps_canonical_form():
     assert not check_canonical_form(mpos, direction="right")
 
     # decompose the gate into MPOs with left canonical form
-    mpos = decompose_dense(random_state, n_wires, site_shape, max_mpo_bond_dim, direction="right")
+    mpos = decompose_dense(random_state, n_wires, site_shape, max_mpo_bond_dim, canonical_right=True)
     # Add virtual bond dimension at the beginning and end
     mpos[0] = np.reshape(mpos[0], [1] + list(mpos[0].shape))
     mpos[-1] = np.reshape(mpos[-1], list(mpos[-1].shape) + [1])
@@ -216,8 +216,8 @@ def test_mps_canonical_form():
     assert check_canonical_form(mpos, direction="right")
 
 
-def test_expand_mps_top():
-    """Test the expand_mps_top function."""
+def test_expand_mps_first_site():
+    """Test the expand_mps_first_site function."""
     n_wires = 3
     site_shape = [2]
     max_bond_dim = 128
@@ -225,15 +225,15 @@ def test_expand_mps_top():
     random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
-    # decompose the gate into MPOs with left canonical form
-    mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, direction="left")
+    # decompose the gate into MPOs with right canonical form
+    mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, canonical_right=True)
 
     # Add virtual bond dimension at the beginning and end
     mps[0] = np.reshape(mps[0], [1] + list(mps[0].shape))
     mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # expand the MPS
-    new_mps = expand_mps_top(mps, max_bond_dim)
+    new_mps = expand_mps_fist_site(mps, max_bond_dim)
 
     # check length of the MPS
     assert len(new_mps) == n_wires + 1
@@ -262,7 +262,7 @@ def test_expand_mps_top_max_bond_dim():
     mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # expand the MPS
-    mps = expand_mps_top(mps, max_bond_dim)
+    mps = expand_mps_fist_site(mps, max_bond_dim)
 
     # check length of the MPS
     assert len(mps) == n_wires + 1
@@ -275,55 +275,67 @@ def test_expand_mps_top_max_bond_dim():
 
 def test_restore_left_canonical_form():
     """Test the restore_left_canonical_form function."""
-    n_wires = 3
+    n_wires = 4
     site_shape = [2]
     max_bond_dim = 128
 
     random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
-    # decompose the gate into MPOs with left canonical form
-    mpos = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, direction="right")
+    # decompose the gate into mps with right canonical form
+    mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, canonical_right=True)
 
     # Add virtual bond dimension at the beginning and end
-    mpos[0] = np.reshape(mpos[0], [1] + list(mpos[0].shape))
-    mpos[-1] = np.reshape(mpos[-1], list(mpos[-1].shape) + [1])
+    mps[0] = np.reshape(mps[0], [1] + list(mps[0].shape))
+    mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # check left canonical form
-    assert not check_canonical_form(mpos, direction="left")
+    assert not check_canonical_form(mps, direction="left")
 
     # restore left canonical form
-    mpos = restore_left_canonical_form(mpos, site_shape)
+    mps = restore_left_canonical_form(mps, site_shape)
 
     # check left canonical form
-    assert check_canonical_form(mpos, direction="left")
+    assert check_canonical_form(mps, direction="left")
     # check right canonical form
-    assert not check_canonical_form(mpos, direction="right")
+    assert not check_canonical_form(mps, direction="right")
+    # check bond dimensions
+    assert mps[0].shape == (1, 2, 2)
+    assert mps[1].shape == (2, 2, 4)
+    assert mps[2].shape == (4, 2, 2)
+    assert mps[3].shape == (2, 2, 1)
+
 
 
 def test_restore_right_canonical_form():
     """Test the restore_right_canonical_form function."""
-    n_wires = 3
+    n_wires = 4
     site_shape = [2]
     max_bond_dim = 128
 
     random_state = np.random.rand(2**n_wires) + 1j * np.random.rand(2**n_wires)
     random_state = random_state / np.linalg.norm(random_state)
 
-    # decompose the gate into MPOs with left canonical form
-    mpos = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, direction="left")
+    # decompose the gate into MPS with false canonical form
+    mps = decompose_dense(random_state, n_wires, site_shape, max_bond_dim, canonical_right=False)
 
     # Add virtual bond dimension at the beginning and end
-    mpos[0] = np.reshape(mpos[0], [1] + list(mpos[0].shape))
-    mpos[-1] = np.reshape(mpos[-1], list(mpos[-1].shape) + [1])
+    mps[0] = np.reshape(mps[0], [1] + list(mps[0].shape))
+    mps[-1] = np.reshape(mps[-1], list(mps[-1].shape) + [1])
 
     # check right canonical form
-    assert not check_canonical_form(mpos, direction="right")
+    assert not check_canonical_form(mps, direction="right")
 
     # restore right canonical form
-    mpos = restore_right_canonical_form(mpos, site_shape)
+    mps = restore_right_canonical_form(mps, site_shape)
 
     # check right canonical form
-    assert check_canonical_form(mpos, direction="right")
+    assert check_canonical_form(mps, direction="right")
     # check left canonical form
-    assert not check_canonical_form(mpos, direction="left")
+    assert not check_canonical_form(mps, direction="left")
+
+    # check bond dimensions
+    assert mps[0].shape == (1, 2, 2)
+    assert mps[1].shape == (2, 2, 4)
+    assert mps[2].shape == (4, 2, 2)
+    assert mps[3].shape == (2, 2, 1)
