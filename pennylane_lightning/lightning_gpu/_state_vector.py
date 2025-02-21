@@ -261,7 +261,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 control_wires,
                 control_values,
                 target_wires,
-                adjoint,
+                False,
             )
 
     def _apply_lightning_midmeasure(

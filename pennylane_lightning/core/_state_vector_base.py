@@ -161,10 +161,7 @@ class LightningBaseStateVector(ABC):
 
     @abstractmethod
     def _apply_lightning(
-        self,
-        operations,
-        mid_measurements: dict = None,
-        postselect_mode: str = None,
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None,
     ):
         """Apply a list of operations to the state tensor.
 

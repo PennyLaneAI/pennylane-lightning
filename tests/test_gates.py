@@ -710,14 +710,16 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
         qml.GlobalPhase,
     ],
 )
+@pytest.mark.parametrize("adjoint", [False, True])
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol):
+def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol, adjoint):
     """Test that adjoint of multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
+    operation = qml.adjoint(operation) if adjoint else operation
 
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
