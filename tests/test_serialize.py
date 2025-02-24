@@ -126,7 +126,7 @@ def test_wrong_device_name():
                     qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]
                 )
             ),
-            "SparseHamiltonianC",
+            "SparseHermitianObsC",
         ),
         (2.5 * qml.PauliZ(0), "HamiltonianC"),
     ],
