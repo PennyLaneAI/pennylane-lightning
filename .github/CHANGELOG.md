@@ -40,13 +40,11 @@
 * Reduce the number of shots in the PennyLane Python tests on CIs, from 20k to 10k.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 
-
 * Capture execution via `dev.eval_jaxpr` can now be used with `jax.jit` and `jax.vmap`.
   [(#1055)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1055)
 
 * `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
-
 
 ### Documentation
 

@@ -460,7 +460,8 @@ class TestClassicalComponents:
         assert qml.math.allclose(res, expected)
 
 
-def test_vmap_integration():
+@pytest.mark.parametrize("use_jit", (True, False))
+def test_vmap_integration(use_jit):
     """Test that the lightning devices can execute circuits with vmap applied."""
 
     @qml.qnode(qml.device("lightning.qubit", wires=1))
@@ -469,5 +470,6 @@ def test_vmap_integration():
         return qml.expval(qml.Z(0))
 
     x = jax.numpy.array([1.0, 2.0, 3.0])
+    f = jax.jit(jax.vmap(circuit)) if use_jit else jax.vmap
     results = jax.vmap(circuit)(x)
     assert qml.math.allclose(results, jax.numpy.cos(x))
