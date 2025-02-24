@@ -38,7 +38,7 @@ def enable_disable_plxpr():
 def test_accept_execution_config():
     """Test that eval_jaxpr can accept an ExecutionConfig.
 
-    At this point, it does not do anything, so we do not need to test it's affect.
+    At this point, it does not do anything, so we do not need to test its effect.
     """
 
     dev = qml.device(device_name, wires=1)
