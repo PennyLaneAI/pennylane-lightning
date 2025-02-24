@@ -270,11 +270,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                name = operation.base.name
+                op_adjoint_base = operation.base
                 invert_param = True
             else:
-                name = operation.name
+                op_adjoint_base = operation
                 invert_param = False
+            name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
@@ -296,12 +297,8 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(
-                operation.base if invert_param else operation, qml.ops.Controlled
-            ):  # apply n-controlled gate
-                self._apply_lightning_controlled(
-                    operation.base if invert_param else operation, invert_param
-                )
+            elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
+                self._apply_lightning_controlled(op_adjoint_base, invert_param)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
                 # inverted form

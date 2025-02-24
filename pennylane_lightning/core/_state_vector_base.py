@@ -21,6 +21,7 @@ from typing import Optional, Union
 import numpy as np
 from pennylane import BasisState, StatePrep
 from pennylane.measurements import MidMeasureMP
+from pennylane.ops import Controlled
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -131,7 +132,7 @@ class LightningBaseStateVector(ABC):
         self._qubit_state.setBasisState(list(state), list(wires))
 
     @abstractmethod
-    def _apply_lightning_controlled(self, operation, adjoint):
+    def _apply_lightning_controlled(self, operation: Controlled, adjoint: bool):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
@@ -161,10 +162,7 @@ class LightningBaseStateVector(ABC):
 
     @abstractmethod
     def _apply_lightning(
-        self,
-        operations,
-        mid_measurements: dict = None,
-        postselect_mode: str = None,
+        self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):
         """Apply a list of operations to the state tensor.
 

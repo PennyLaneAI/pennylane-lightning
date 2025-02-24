@@ -251,7 +251,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
-        if method is not None:  # apply n-controlled specialized gate
+        if method:  # apply n-controlled specialized gate
             param = operation.parameters
             method(control_wires, control_values, target_wires, adjoint, param)
         else:  # apply gate as an n-controlled matrix
@@ -320,11 +320,12 @@ class LightningGPUStateVector(LightningBaseStateVector):
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                name = operation.base.name
+                op_adjoint_base = operation.base
                 invert_param = True
             else:
-                name = operation.name
+                op_adjoint_base = operation
                 invert_param = False
+            name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
@@ -339,16 +340,13 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif (
-                isinstance(operation.base if invert_param else operation, qml.ops.Controlled)
-                and not self._mpi_handler.use_mpi
+                isinstance(op_adjoint_base, qml.ops.Controlled) and not self._mpi_handler.use_mpi
             ):  # MPI backend does not have native controlled gates support
-                self._apply_lightning_controlled(
-                    operation.base if invert_param else operation, invert_param
-                )
+                self._apply_lightning_controlled(op_adjoint_base, invert_param)
             elif (
                 self._mpi_handler.use_mpi
-                and isinstance(operation, qml.ops.Controlled)
-                and isinstance(operation.base, qml.GlobalPhase)
+                and isinstance(op_adjoint_base, qml.ops.Controlled)
+                and isinstance(op_adjoint_base.base, qml.GlobalPhase)
             ):
                 # TODO: To move this line to the _apply_lightning_controlled method once the MPI backend supports controlled gates natively
                 raise DeviceError(
