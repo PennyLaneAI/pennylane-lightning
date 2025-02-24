@@ -88,9 +88,9 @@ def test_simple_execution(use_jit, x64):
         jaxpr = jax.make_jaxpr(f)(0.5)
 
         if use_jit:
-            res = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts, 0.5)
+            [res] = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts, 0.5)
         else:
-            res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
+            [res] = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
         assert qml.math.allclose(res, jax.numpy.cos(0.5))
 
         if x64:
@@ -105,10 +105,10 @@ def test_simple_execution(use_jit, x64):
 def test_capture_remains_enabled_if_measurement_error():
     """Test that capture remains enabled if there is a measurement error."""
 
-    dev = qml.device(device_name, wires=1)
+    dev = qml.device(device_name, wires=1, shots=1)
 
     def g():
-        return qml.sample(wires=0)
+        return qml.state()
 
     jaxpr = jax.make_jaxpr(g)()
 
@@ -169,9 +169,9 @@ class TestSampling:
             jaxpr = jax.make_jaxpr(sampler)()
 
             if use_jit:
-                results = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+                [results] = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
             else:
-                results = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+                [results] = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
             expected0 = jax.numpy.ones((10,))  # zero wire
             expected1 = jax.numpy.zeros((10,))  # one wire
@@ -527,7 +527,7 @@ def test_vmap_in_axes(in_axis, out_axis):
     mats = jax.numpy.stack(
         [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()], axis=in_axis
     )
-    expval, state = jax.vmap(circuit, in_axes=in_axis, out_axis=(0, out_axis))(mats)
+    expval, state = jax.vmap(circuit, in_axes=in_axis, out_axes=(0, out_axis))(mats)
 
     assert expval.shape == (3,)
     assert qml.math.allclose(expval, jax.numpy.array([-1, -1, 1]))  # flip, flip, no flip
