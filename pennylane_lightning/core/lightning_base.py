@@ -508,6 +508,12 @@ class LightningBase(Device):
                 int: jax.numpy.int32,
                 complex: jax.numpy.complex64,
             }
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
 
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots
