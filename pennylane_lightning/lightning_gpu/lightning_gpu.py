@@ -48,7 +48,7 @@ from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
-from pennylane_lightning.core.lightning_newAPI_base import (
+from pennylane_lightning.core.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
@@ -203,7 +203,7 @@ class LightningGPU(LightningBase):
     :doc:`/lightning_gpu/installation` guide for more details.
 
     Args:
-        wires (int): the number of wires to initialize the device with
+        wires (Optional[int, list]): the number of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -235,7 +235,7 @@ class LightningGPU(LightningBase):
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
@@ -268,15 +268,22 @@ class LightningGPU(LightningBase):
         self._dp = DevPool()
         self._use_async = use_async
 
-        # Creating the state vector
-        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
-
-        self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires),
-            dtype=c_dtype,
-            mpi_handler=self._mpi_handler,
-            use_async=self._use_async,
-        )
+        # Create the state vector only for MPI, otherwise created dynamically before execution
+        if mpi:
+            if wires is None:
+                raise qml.DeviceError(
+                    "Lightning-GPU-MPI does not support dynamic wires allocation."
+                )
+            self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
+            self._statevector = self.LightningStateVector(
+                num_wires=len(self.wires),
+                dtype=c_dtype,
+                mpi_handler=self._mpi_handler,
+                use_async=self._use_async,
+            )
+        else:
+            self._statevector = None
+            self._mpi_handler = None
 
     @property
     def name(self):
@@ -315,6 +322,35 @@ class LightningGPU(LightningBase):
         new_device_options.update(mcmc_default)
 
         return replace(config, **updated_values, device_options=new_device_options)
+
+    def dynamic_wires_from_circuit(self, circuit):
+        """Allocate a state-vector from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
+
+        Args:
+            circuit (QuantumTape): The circuit to execute.
+
+        Returns:
+            QuantumTape: The updated circuit with the wires mapped to the standard wire order.
+        """
+        if self._mpi_handler and self._mpi_handler.use_mpi:
+            return circuit
+
+        if self.wires is None:
+            num_wires = circuit.num_wires
+            # Map to follow default.qubit wire order for dynamic wires
+            circuit = circuit.map_to_standard_wires()
+        else:
+            num_wires = len(self.wires)
+
+        if (self._statevector is None) or (self._statevector.num_wires != num_wires):
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires,
+                dtype=self._c_dtype,
+                mpi_handler=None,
+                use_async=self._use_async,
+            )
+
+        return circuit
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
@@ -379,7 +415,7 @@ class LightningGPU(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    circuit,
+                    self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
@@ -433,7 +469,7 @@ class LightningGPU(LightningBase):
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            if self._mpi_handler.use_mpi:
+            if self._mpi_handler and self._mpi_handler.use_mpi:
                 raise qml.DeviceError(
                     "Lightning-GPU-MPI does not support Mid-circuit measurements."
                 )

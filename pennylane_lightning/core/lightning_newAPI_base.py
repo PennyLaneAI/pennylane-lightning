@@ -457,9 +457,10 @@ class LightningBase(Device):
 
         """
         # has jax dependency, so can't import up top
-        from .lightning_interpreter import LightningInterpreter
-        from pennylane.capture.primitives import AbstractMeasurement
         import jax
+        from pennylane.capture.primitives import AbstractMeasurement
+
+        from .lightning_interpreter import LightningInterpreter
 
         if jax.config.jax_enable_x64:  # pylint: disable=no-member
             dtype_map = {

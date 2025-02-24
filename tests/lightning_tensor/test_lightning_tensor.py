@@ -85,11 +85,6 @@ class TestTensorNet:
             with pytest.raises(TypeError):
                 LightningTensor(wires=5, max_bond_dim=10, method="tn")
 
-    def test_invalid_wires_none(self, method):
-        """Test that an error is raised if wires are none."""
-        with pytest.raises(ValueError):
-            LightningTensor(wires=None, **method)
-
     def test_invalid_cutoff_mode(self, method):
         """Test that an error is raised if an invalid cutoff mode is provided."""
         if method["method"] == "mps":

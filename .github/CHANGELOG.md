@@ -6,6 +6,21 @@
 
 ### Improvements
 
+* Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
+  [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
+
+* Remove the old device API references in the Lightning repo and test suite.
+  [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
+  
+* Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
+  [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
+
+* Remove unnecessary adjoint pytest skip for Lightning-Kokkos.
+  [(#1048)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1048)
+
+* Update source code to use black formatter 25.1.0.
+  [(#1059)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1059)
+
 * Replace the type checking using the property `return_type` of `MeasurementProcess` with direct `isinstance` checks.
   [(#1044)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1044)
 
@@ -36,6 +51,13 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix CI to collect Python code coverage for Lightning-Qubit and Lightning-Kokkos CPU.
+  [(#1053)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1053)
+
+* Upgrade the version of QEMU image to fix AARCH64 wheel action.
+  [(#1056)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1056)
+
 * Patch `MultiControlledX` tests to fix stable/latest failures after the v0.40.0 release.
   [(#1046)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1046)
 

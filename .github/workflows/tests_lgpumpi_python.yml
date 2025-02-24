@@ -42,11 +42,8 @@ jobs:
   python_tests:
     if: ${{ github.event.pull_request.draft == false && (contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name)) }}
     runs-on:
-      - self-hosted
-      - linux
-      - x64
-      - ubuntu-22.04
-      - multi-gpu
+      - multi-gpu-x64
+
     strategy:
       max-parallel: 1
       matrix:
@@ -113,7 +110,7 @@ jobs:
         env:
           PL_BACKEND: lightning_qubit
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python -m pip install -r requirements-dev.txt
 
           python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
@@ -147,7 +144,7 @@ jobs:
           CUQUANTUM_SDK: $(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
           PL_BACKEND: lightning_gpu
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           python scripts/configure_pyproject_toml.py || true
           CMAKE_ARGS="-DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx -DENABLE_MPI=ON -DCMAKE_CUDA_COMPILER=$(which nvcc) -DCMAKE_CUDA_ARCHITECTURES=${{ env.CI_CUDA_ARCH }} -DPython_EXECUTABLE=${{ steps.python_path.outputs.python }}" \
           python -m pip install . -vv
@@ -156,7 +153,7 @@ jobs:
       # [here](https://github.com/pytest-dev/pytest-cov/issues/237#issuecomment-544824228)
       - name: Run unit tests for MPI-enabled lightning.gpu device
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           PL_DEVICE=lightning.gpu mpirun -np 2 \
           coverage run --rcfile=.coveragerc --source=pennylane_lightning -p -m mpi4py -m pytest ./mpitests --tb=native
           coverage combine

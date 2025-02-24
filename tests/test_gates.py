@@ -70,10 +70,18 @@ def op(op_name):
         "IsingYY": [qml.IsingYY, [], {"phi": 0.123, "wires": [0, 1]}],
         "IsingZZ": [qml.IsingZZ, [], {"phi": 0.123, "wires": [0, 1]}],
         "Identity": [qml.Identity, [], {"wires": [0]}],
-        "Rot": [qml.Rot, [], {"phi": 0.123, "theta": 0.456, "omega": 0.789, "wires": [0]}],
+        "Rot": [
+            qml.Rot,
+            [],
+            {"phi": 0.123, "theta": 0.456, "omega": 0.789, "wires": [0]},
+        ],
         "Toffoli": [qml.Toffoli, [], {"wires": [0, 1, 2]}],
         "PhaseShift": [qml.PhaseShift, [], {"phi": 2.133, "wires": [0]}],
-        "ControlledPhaseShift": [qml.ControlledPhaseShift, [], {"phi": 1.777, "wires": [0, 1]}],
+        "ControlledPhaseShift": [
+            qml.ControlledPhaseShift,
+            [],
+            {"phi": 1.777, "wires": [0, 1]},
+        ],
         "CPhase": [qml.CPhase, [], {"phi": 1.777, "wires": [0, 1]}],
         "MultiRZ": [qml.MultiRZ, [], {"theta": 0.112, "wires": [0, 1, 2]}],
         "GlobalPhase": [qml.GlobalPhase, [], {"phi": 0.112, "wires": [0, 1, 2]}],
@@ -84,8 +92,16 @@ def op(op_name):
         "PauliX": [qml.PauliX, [], {"wires": [0]}],
         "PauliY": [qml.PauliY, [], {"wires": [0]}],
         "PauliZ": [qml.PauliZ, [], {"wires": [0]}],
-        "CRot": [qml.CRot, [], {"phi": 0.123, "theta": 0.456, "omega": 0.789, "wires": [0, 1]}],
-        "DiagonalQubitUnitary": [qml.DiagonalQubitUnitary, [np.array([1.0, 1.0j])], {"wires": [0]}],
+        "CRot": [
+            qml.CRot,
+            [],
+            {"phi": 0.123, "theta": 0.456, "omega": 0.789, "wires": [0, 1]},
+        ],
+        "DiagonalQubitUnitary": [
+            qml.DiagonalQubitUnitary,
+            [np.array([1.0, 1.0j])],
+            {"wires": [0]},
+        ],
         "MultiControlledX": [
             qml.MultiControlledX,
             [],
@@ -93,15 +109,35 @@ def op(op_name):
         ],
         "SingleExcitation": [qml.SingleExcitation, [0.123], {"wires": [0, 1]}],
         "SingleExcitationPlus": [qml.SingleExcitationPlus, [0.123], {"wires": [0, 1]}],
-        "SingleExcitationMinus": [qml.SingleExcitationMinus, [0.123], {"wires": [0, 1]}],
+        "SingleExcitationMinus": [
+            qml.SingleExcitationMinus,
+            [0.123],
+            {"wires": [0, 1]},
+        ],
         "DoubleExcitation": [qml.DoubleExcitation, [0.123], {"wires": [0, 1, 2, 3]}],
-        "DoubleExcitationPlus": [qml.DoubleExcitationPlus, [0.123], {"wires": [0, 1, 2, 3]}],
-        "DoubleExcitationMinus": [qml.DoubleExcitationMinus, [0.123], {"wires": [0, 1, 2, 3]}],
+        "DoubleExcitationPlus": [
+            qml.DoubleExcitationPlus,
+            [0.123],
+            {"wires": [0, 1, 2, 3]},
+        ],
+        "DoubleExcitationMinus": [
+            qml.DoubleExcitationMinus,
+            [0.123],
+            {"wires": [0, 1, 2, 3]},
+        ],
         "QFT": [qml.QFT, [], {"wires": [0]}],
         "QubitSum": [qml.QubitSum, [], {"wires": [0, 1, 2]}],
         "QubitCarry": [qml.QubitCarry, [], {"wires": [0, 1, 2, 3]}],
-        "QubitUnitary": [qml.QubitUnitary, [], {"U": np.eye(16) * 1j, "wires": [0, 1, 2, 3]}],
-        "BlockEncode": [qml.BlockEncode, [[[0.2, 0, 0.2], [-0.2, 0.2, 0]]], {"wires": [0, 1, 2]}],
+        "QubitUnitary": [
+            qml.QubitUnitary,
+            [],
+            {"U": np.eye(16) * 1j, "wires": [0, 1, 2, 3]},
+        ],
+        "BlockEncode": [
+            qml.BlockEncode,
+            [[[0.2, 0, 0.2], [-0.2, 0.2, 0]]],
+            {"wires": [0, 1, 2]},
+        ],
     }
     return ops_list.get(op_name)
 
@@ -313,30 +349,6 @@ def test_arbitrary_inv_unitary_correct():
     assert np.allclose(unitary, random_unitary_inv)
 
 
-@pytest.mark.skipif(ld._new_API, reason="Old API required")
-@pytest.mark.parametrize(
-    "obs,has_rotation",
-    [
-        (qml.Hamiltonian([1], [qml.PauliY(0)]), False),
-        (qml.sum(qml.PauliZ(0), qml.PauliX(1)), False),
-        (qml.PauliX(0), True),
-        (qml.sum(qml.PauliZ(0), qml.Hermitian(qml.PauliX(1).matrix(), 1)), True),
-    ],
-)
-def test_get_diagonalizing_gates(obs, has_rotation):
-    """Tests that _get_diagonalizing_gates filters measurements as expected."""
-    dev = qml.device(device_name, wires=2)
-    qs = qml.tape.QuantumScript(measurements=[qml.expval(obs)])
-    actual = dev._get_diagonalizing_gates(qs)
-    if has_rotation:
-        expected = obs.diagonalizing_gates()
-        assert len(actual) == len(expected)
-        for rot_actual, rot_expected in zip(actual, expected):
-            assert qml.equal(rot_actual, rot_expected)
-    else:
-        assert len(actual) == 0
-
-
 @pytest.mark.parametrize("theta,phi", list(zip(THETA, PHI)))
 def test_qubit_RY(theta, phi, tol):
     """Test that Hadamard expectation value is correct"""
@@ -450,8 +462,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                     qml.StatePrep(init_state, wires=range(n_qubits))
                     qml.ControlledQubitUnitary(
                         U,
-                        control_wires=control_wires,
-                        wires=target_wires,
+                        wires=control_wires + target_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
                             if device_name != "lightning.tensor"
@@ -550,9 +561,7 @@ def test_controlled_qubit_unitary_from_op(tol):
     dev = qml.device(device_name, wires=n_qubits)
 
     def circuit(x):
-        qml.ControlledQubitUnitary(
-            qml.QubitUnitary(qml.RX.compute_matrix(x), wires=5), control_wires=range(5)
-        )
+        qml.ControlledQubitUnitary(qml.RX.compute_matrix(x), wires=range(6))
         return qml.expval(qml.PauliX(0))
 
     circ = qml.QNode(circuit, dev)
@@ -618,7 +627,7 @@ def test_cnot_controlled_qubit_unitary(control_wires, target_wires, tol):
 
     def circuit():
         qml.StatePrep(init_state, wires=range(n_qubits))
-        qml.ControlledQubitUnitary(U, control_wires=control_wires, wires=target_wires)
+        qml.ControlledQubitUnitary(U, wires=control_wires + target_wires)
         return qml.state()
 
     def cnot_circuit():

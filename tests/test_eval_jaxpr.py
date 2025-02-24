@@ -47,6 +47,16 @@ def test_no_partitioned_shots():
         dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.0)
 
 
+def test_no_wire():
+    """Test that an error is raised if the number of wires is not specified."""
+
+    dev = qml.device(device_name, wires=None)
+    jaxpr = jax.make_jaxpr(lambda x: x + 1)(0.1)
+
+    with pytest.raises(NotImplementedError, match="Wires must be specified"):
+        dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.0)
+
+
 @pytest.mark.parametrize("use_jit", (True, False))
 def test_simple_execution(use_jit):
     """Test the execution, jitting, and gradient of a simple quantum circuit."""
