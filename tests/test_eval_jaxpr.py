@@ -485,6 +485,6 @@ def test_vmap_integration(use_jit):
         return qml.expval(qml.Z(0))
 
     x = jax.numpy.array([1.0, 2.0, 3.0])
-    f = jax.jit(jax.vmap(circuit)) if use_jit else jax.vmap
-    results = jax.vmap(circuit)(x)
+    f = jax.jit(jax.vmap(circuit)) if use_jit else jax.vmap(circuit)
+    results = f(x)
     assert qml.math.allclose(results, jax.numpy.cos(x))
