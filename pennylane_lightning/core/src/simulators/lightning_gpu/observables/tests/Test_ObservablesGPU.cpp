@@ -154,17 +154,17 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian", "[Observables]",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian", "[Observables]",
+TEMPLATE_PRODUCT_TEST_CASE("SparseHermitianObs", "[Observables]",
                            (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
-    using SparseHamiltonianT = SparseHamiltonian<StateVectorT>;
+    using SparseHermitianObsT = SparseHermitianObs<StateVectorT>;
 
     SECTION("Copy constructibility") {
-        REQUIRE(std::is_copy_constructible_v<SparseHamiltonianT>);
+        REQUIRE(std::is_copy_constructible_v<SparseHermitianObsT>);
     }
 
     SECTION("Move constructibility") {
-        REQUIRE(std::is_move_constructible_v<SparseHamiltonianT>);
+        REQUIRE(std::is_move_constructible_v<SparseHermitianObsT>);
     }
 }
 
@@ -276,7 +276,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian::ApplyInPlace", "[Observables]",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
+TEMPLATE_PRODUCT_TEST_CASE("SparseHermitianObs::ApplyInPlace", "[Observables]",
                            (StateVectorCudaManaged), (float, double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -285,7 +285,7 @@ TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
     const std::size_t num_qubits = 3;
     std::mt19937 re{1337};
 
-    auto sparseH = SparseHamiltonian<StateVectorT>::create(
+    auto sparseH = SparseHermitianObs<StateVectorT>::create(
         {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
          ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
          ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},

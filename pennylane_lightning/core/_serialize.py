@@ -161,7 +161,7 @@ class QuantumScriptSerializer:
 
     @property
     def sparse_hamiltonian_obs(self):
-        """SparseHamiltonian observable matching ``use_csingle`` precision."""
+        """SparseHermitianObs observable matching ``use_csingle`` precision."""
         if self._use_mpi:
             return (
                 self.sparse_hamiltonian_mpi_c64
@@ -185,8 +185,9 @@ class QuantumScriptSerializer:
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
-        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
-        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
+        # Internally SparseHamiltonian is treated as a sparse Hermitian.
+        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHermitianObsC64
+        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHermitianObsC128
 
         if self._use_mpi:
             self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
@@ -201,8 +202,10 @@ class QuantumScriptSerializer:
             self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
             self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
 
-            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
-            self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
+            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHermitianObsMPIC64
+            self.sparse_hamiltonian_mpi_c128 = (
+                lightning_ops.observablesMPI.SparseHermitianObsMPIC128
+            )
 
             self._mpi_manager = lightning_ops.MPIManager
 
@@ -302,12 +305,12 @@ class QuantumScriptSerializer:
             wire_map (dict): a dictionary mapping input wires to the device's backend wires
 
         Returns:
-            sparse_hamiltonian_obs (SparseHamiltonianC64 or SparseHamiltonianC128): A Sparse Hamiltonian observable object compatible with the C++ backend
+            sparse_hamiltonian_obs (SparseHermitianObsC64 or SparseHermitianObsC128): A Sparse Hamiltonian observable object compatible with the C++ backend
         """
 
         if self._use_mpi:
             Hmat = Identity(0).sparse_matrix()
-            H_sparse = SparseHamiltonian(Hmat, wires=range(1))
+            H_sparse = SparseHermitianObs(Hmat, wires=range(1))
             spm = H_sparse.sparse_matrix()
             # Only root 0 needs the overall sparse matrix data
             if self._mpi_manager().getRank() == 0:
@@ -375,10 +378,10 @@ class QuantumScriptSerializer:
             return self._tensor_ob(observable, wires_map)
         if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
-        if isinstance(observable, SparseHamiltonian):
+        if isinstance(observable, SparseHermitianObs):
             if self.device_name == "lightning.tensor":
                 raise NotImplementedError(
-                    "SparseHamiltonian is not supported on the lightning.tensor device."
+                    "SparseHermitianObs is not supported on the lightning.tensor device."
                 )
             return self._sparse_hamiltonian(observable, wires_map)
         return self._hermitian_ob(observable, wires_map)

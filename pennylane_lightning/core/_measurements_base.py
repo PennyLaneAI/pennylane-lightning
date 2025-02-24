@@ -106,14 +106,15 @@ class LightningBaseMeasurements(ABC):
         """
 
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            # ensuring CSR sparse representation.
-            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+            # Internally this SparseHamiltonian will be treated as a sparse Hermitian operator.
+            # We first ensure the CSR sparse representation.
+            CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
             return self._measurement_lightning.expval(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
+                CSR_SparseHermitianObs.indptr,
+                CSR_SparseHermitianObs.indices,
+                CSR_SparseHermitianObs.data,
             )
 
         if (
@@ -165,14 +166,14 @@ class LightningBaseMeasurements(ABC):
         """
 
         if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            # ensuring CSR sparse representation.
-            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+            # Ensuring CSR sparse representation.
+            CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
             return self._measurement_lightning.var(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
+                CSR_SparseHermitianObs.indptr,
+                CSR_SparseHermitianObs.indices,
+                CSR_SparseHermitianObs.data,
             )
 
         if (

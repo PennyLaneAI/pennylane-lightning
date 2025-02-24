@@ -297,7 +297,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Observables::HermitianHasherMPI", "[Observables]",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
+TEMPLATE_PRODUCT_TEST_CASE("SparseHermitianObs::ApplyInPlace", "[Observables]",
                            (StateVectorCudaMPI), (float, double)) {
     using StateVectorT = TestType;
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -307,7 +307,7 @@ TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
     const std::size_t num_qubits = 3;
     std::mt19937 re{1337};
 
-    auto sparseH = SparseHamiltonianMPI<StateVectorT>::create(
+    auto sparseH = SparseHermitianObsMPI<StateVectorT>::create(
         {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
          ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
          ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
