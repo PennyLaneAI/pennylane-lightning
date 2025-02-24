@@ -25,7 +25,7 @@ import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.typing import Result, ResultBatch
+from pennylane.typing import Result, ResultBatch, TensorLike
 
 from ._measurements_base import LightningBaseMeasurements
 
@@ -454,13 +454,23 @@ class LightningBase(Device):
         return tuple(zip(*results))
 
     # pylint: disable=import-outside-toplevel, unused-argument
-    def eval_jaxpr(self, jaxpr, consts, *args, execution_config: Optional[ExecutionConfig] = None):
+    def eval_jaxpr(
+        self,
+        jaxpr: "jax.core.Jaxpr",
+        consts: list[TensorLike],
+        *args: TensorLike,
+        execution_config: Optional[ExecutionConfig] = None,
+    ) -> list[TensorLike]:
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
         Args:
             jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
             consts (list[TensorLike]): List of constants for the jaxpr closure variables
             *args (TensorLike): The arguments to the jaxpr.
+
+        Keyword Args:
+            execution_config (Optional[ExecutionConfig]): a datastructure with additional
+                information required for execution
 
         Returns:
             list(TensorLike): the results of the execution
