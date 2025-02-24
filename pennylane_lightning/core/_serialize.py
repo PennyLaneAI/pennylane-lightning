@@ -310,7 +310,7 @@ class QuantumScriptSerializer:
 
         if self._use_mpi:
             Hmat = Identity(0).sparse_matrix()
-            H_sparse = SparseHermitianObs(Hmat, wires=range(1))
+            H_sparse = SparseHamiltonian(Hmat, wires=range(1))
             spm = H_sparse.sparse_matrix()
             # Only root 0 needs the overall sparse matrix data
             if self._mpi_manager().getRank() == 0:
@@ -378,10 +378,10 @@ class QuantumScriptSerializer:
             return self._tensor_ob(observable, wires_map)
         if isinstance(observable, OP_MATH_OBS):
             return self._hamiltonian(observable, wires_map)
-        if isinstance(observable, SparseHermitianObs):
+        if isinstance(observable, SparseHamiltonian):
             if self.device_name == "lightning.tensor":
                 raise NotImplementedError(
-                    "SparseHermitianObs is not supported on the lightning.tensor device."
+                    "SparseHamiltonian is not supported on the lightning.tensor device."
                 )
             return self._sparse_hamiltonian(observable, wires_map)
         return self._hermitian_ob(observable, wires_map)
