@@ -479,7 +479,7 @@ class TestClassicalComponents:
 def test_vmap_integration(use_jit):
     """Test that the lightning devices can execute circuits with vmap applied."""
 
-    @qml.qnode(qml.device("lightning.qubit", wires=1))
+    @qml.qnode(qml.device(device_name, wires=1))
     def circuit(x):
         qml.RX(x, 0)
         return qml.expval(qml.Z(0))
