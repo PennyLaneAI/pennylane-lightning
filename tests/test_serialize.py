@@ -32,8 +32,8 @@ if device_name == "lightning.kokkos":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHamiltonianC64,
-        SparseHamiltonianC128,
+        SparseHermitianObsC64,
+        SparseHermitianObsC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -45,8 +45,8 @@ elif device_name == "lightning.gpu":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHamiltonianC64,
-        SparseHamiltonianC128,
+        SparseHermitianObsC64,
+        SparseHermitianObsC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -63,8 +63,8 @@ else:
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHamiltonianC64,
-        SparseHamiltonianC128,
+        SparseHermitianObsC64,
+        SparseHermitianObsC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
