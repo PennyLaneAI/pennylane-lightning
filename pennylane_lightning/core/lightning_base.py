@@ -490,7 +490,8 @@ class LightningBase(Device):
             [1.0, 0.8775825618903728, 0.5403023058681395]
 
         """
-        # has jax dependency, so can't import up top
+        # jax is still an optional dependency for pennylane, but mandatory for program capture
+        # jax imports cannot be placed in the standard import path
         import jax
         from pennylane.capture.primitives import AbstractMeasurement
 
