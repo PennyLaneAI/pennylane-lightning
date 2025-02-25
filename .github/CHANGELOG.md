@@ -9,6 +9,10 @@
 * In Lightning-Tensor, allow `qml.MPSPrep` to accept an MPS with `len(MPS) = n_wires-1`.
   [(#1064)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1064)
 
+* Adds an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
+  Device API change.
+  [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067/)
+
 * Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 
