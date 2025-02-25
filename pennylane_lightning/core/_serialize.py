@@ -443,7 +443,6 @@ class QuantumScriptSerializer:
         uses_stateprep = False
 
         def get_wires(operation, single_op):
-
             if isinstance(operation, qml.ops.op_math.Adjoint):
                 inverse = True
                 op_base = operation.base
