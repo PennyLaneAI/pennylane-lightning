@@ -158,12 +158,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             if self._use_mpi:
                 # Identity for CSR_SparseH to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
-                # TODO: The block below needs to be re-written following PennyLane support.
-                obs = qml.Identity(0)
-                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-
-                CSR_SparseH = H_sparse.sparse_matrix().tocsr()
+                CSR_SparseH = qml.Identity(0).sparse_matrix().tocsr()
                 # CSR_SparseH for rank == 0
                 if self._mpi_handler.mpi_manager.getRank() == 0:
                     CSR_SparseH = measurementprocess.obs.sparse_matrix().tocsr()

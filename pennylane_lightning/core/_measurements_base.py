@@ -118,7 +118,7 @@ class LightningBaseMeasurements(ABC):
         """
 
         if self._measurement_is_sparse(measurementprocess):
-            # Internally this SparseHamiltonian will be treated as a sparse Hermitian operator.
+            # Internally all sparse operators will be treated as a sparse Hermitian operator.
             # We first ensure the CSR sparse representation.
             CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
