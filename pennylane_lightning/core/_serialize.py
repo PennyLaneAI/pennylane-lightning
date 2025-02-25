@@ -442,7 +442,7 @@ class QuantumScriptSerializer:
 
         uses_stateprep = False
 
-        def get_wires(operation, single_op, inverse):
+        def get_wires(operation, single_op):
             if isinstance(operation, qml.ops.op_math.Controlled) and not isinstance(
                 operation,
                 (
@@ -457,11 +457,7 @@ class QuantumScriptSerializer:
                     qml.CSWAP,
                 ),
             ):
-                if isinstance(operation, qml.ops.op_math.Adjoint):
-                    inverse = not inverse
-                    name = operation.base.base.name
-                else:
-                    name = operation.base.name
+                name = operation.base.name
                 wires_list = list(operation.target_wires)
                 controlled_wires_list = list(operation.control_wires)
                 control_values_list = operation.control_values
@@ -473,7 +469,7 @@ class QuantumScriptSerializer:
                 wires_list = single_op.wires.tolist()
                 controlled_wires_list = []
                 control_values_list = []
-            return single_op, name, inverse, list(wires_list), controlled_wires_list, control_values_list
+            return single_op, name, list(wires_list), controlled_wires_list, control_values_list
 
         for operation in tape.operations:
             if isinstance(operation, (BasisState, StatePrep)):
@@ -487,26 +483,22 @@ class QuantumScriptSerializer:
             inverse = isinstance(operation, qml.ops.op_math.Adjoint)
 
             for single_op in op_list:
-                if inverse:
-                    single_op = operation.base
                 (
                     single_op,
                     name,
-                    inverse,
                     wires_list,
                     controlled_wires_list,
                     controlled_values_list,
-                ) = get_wires(operation, single_op, inverse)
-                
+                ) = get_wires(operation, single_op)
                 inverses.append(inverse)
-                names.append(name)
+                names.append(single_op.base.name if inverse else name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
                 if isinstance(single_op, qml.QubitUnitary):
                     params.append([0.0])
                     mats.append(matrix(single_op))
                 else:
-                    if hasattr(self.sv_type, name):
+                    if hasattr(self.sv_type, single_op.base.name if inverse else name):
                         params.append(single_op.parameters)
                         mats.append([])
                     else:
