@@ -650,7 +650,7 @@ class TestSerializeOps:
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_basic_circuit_not_implemented_ctrl_ops(self, wires_map):
-        """Test expected serialization for a simple circuit"""
+        """Test expected serialization for circuit with a controlled operation that is not implemented"""
         ops = qml.OrbitalRotation(0.1234, wires=range(4))
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
@@ -679,7 +679,7 @@ class TestSerializeOps:
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_multicontrolledx(self, wires_map):
-        """Test expected serialization for a simple circuit"""
+        """Test expected serialization for a circuit with MultiControlledX"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
@@ -757,6 +757,7 @@ class TestSerializeOps:
             qml.SingleExcitation(0.5, wires=["a", 3.2])
             qml.SingleExcitationPlus(0.4, wires=["a", 3.2])
             qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=False)
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=["a", 3.2]), lazy=True)
 
         s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_dict)
         s_expected = (
@@ -768,17 +769,141 @@ class TestSerializeOps:
                     "SingleExcitation",
                     "SingleExcitationPlus",
                     "SingleExcitationMinus",
+                    "SingleExcitationMinus",
                 ],
-                [[0.4], [0.6], [], [0.5], [0.4], [-0.5]],
-                [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1]],
-                [False, False, False, False, False, False],
-                [[], [], [], [], [], []],
-                [[], [], [], [], [], []],
-                [[], [], [], [], [], []],
+                [[0.4], [0.6], [], [0.5], [0.4], [-0.5], [0.5]],
+                [[0], [1], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1]],
+                [False, False, False, False, False, False, True],
+                [[], [], [], [], [], [], []],
+                [[], [], [], [], [], [], []],
+                [[], [], [], [], [], [], []],
             ),
             False,
         )
         assert s == s_expected
+
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_ctrl_inverse(self, wires_map):
+        """Test expected serialization for nested control adjoint operations"""
+        ops = qml.OrbitalRotation(0.1234, wires=range(4))
+        with qml.tape.QuantumTape() as tape:
+            qml.ctrl(qml.RX(0.4, wires=0), [2, 3])
+            qml.ctrl(qml.adjoint(qml.RX(0.4, wires=0), lazy=False), [2, 3])
+            qml.ctrl(qml.adjoint(qml.RX(0.4, wires=0), lazy=True), [2, 3])
+            qml.adjoint(qml.ctrl(qml.RX(0.4, wires=0), [2, 3]))
+            qml.adjoint(qml.ctrl(qml.adjoint(qml.RX(0.4, wires=0)), [2, 3]))
+            qml.ctrl(qml.adjoint(ops), [4, 5])
+            qml.adjoint(qml.ctrl(ops, [4, 5]))
+            qml.adjoint(qml.ctrl(qml.adjoint(ops), [4, 5]))
+
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
+        s_expected = (
+            (
+                ["RX", "RX", "RX", "RX", "RX", "QubitUnitary", "QubitUnitary", "QubitUnitary"],
+                [
+                    np.array([0.4]),
+                    np.array([-0.4]),
+                    np.array([0.4]),
+                    np.array([0.4]),
+                    np.array([0.4]),
+                    [0.0],
+                    [0.0],
+                    [0.0],
+                ],
+                [[0], [0], [0], [0], [0], list(ops.wires), list(ops.wires), list(ops.wires)],
+                [False, False, True, True, False, False, True, True],
+                [
+                    [],
+                    [],
+                    [],
+                    [],
+                    [],
+                    [qml.matrix(qml.adjoint(ops))],
+                    [qml.matrix(ops)],
+                    [qml.matrix(qml.adjoint(ops))],
+                ],
+                [[2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [4, 5], [4, 5], [4, 5]],
+            ),
+            False,
+        )
+        assert s[0][0] == s_expected[0][0]
+        assert s[0][1] == s_expected[0][1]
+        assert s[0][2] == s_expected[0][2]
+        assert s[0][3] == s_expected[0][3]
+        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
+        assert s[0][5] == s_expected[0][5]
+        assert s[1] == s_expected[1]
+
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_ctrl_qubitunitary_inverse(self, wires_map):
+        """Test expected serialization for controlled qubit unitary with and without inverse"""
+        mat = qml.matrix(qml.RX(0.1234, wires=[0]))
+        op = qml.QubitUnitary(mat, wires=[0])
+        with qml.tape.QuantumTape() as tape:
+            qml.ctrl(op, [4, 5])
+            qml.adjoint(qml.ctrl(op, [4, 5]))
+            qml.ctrl(qml.adjoint(op, lazy=True), [4, 5])
+            qml.adjoint(qml.ctrl(qml.adjoint(op, lazy=True), [4, 5]), lazy=True)
+
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
+        s_expected = (
+            (
+                ["QubitUnitary", "QubitUnitary", "QubitUnitary", "QubitUnitary"],
+                [[0.0], [0.0], [0.0], [0.0]],
+                [list(op.wires), list(op.wires), list(op.wires), list(op.wires)],
+                [False, True, False, True],
+                [
+                    [qml.matrix(op)],
+                    [qml.matrix(op)],
+                    [qml.matrix(qml.adjoint(op))],
+                    [qml.matrix(qml.adjoint(op))],
+                ],
+                [[4, 5], [4, 5], [4, 5], [4, 5]],
+            ),
+            False,
+        )
+        assert s[0][0] == s_expected[0][0]
+        assert s[0][1] == s_expected[0][1]
+        assert s[0][2] == s_expected[0][2]
+        assert s[0][3] == s_expected[0][3]
+        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
+        assert s[0][5] == s_expected[0][5]
+        assert s[1] == s_expected[1]
+
+    @pytest.mark.parametrize("wires_map", [wires_dict, None])
+    def test_inverse(self, wires_map):
+        """Test expected serialization for adjoint gates and qubitunitary"""
+        mat = qml.matrix(qml.OrbitalRotation(0.1234, wires=range(4)))
+        with qml.tape.QuantumTape() as tape:
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=False)
+            qml.adjoint(qml.SingleExcitationMinus(0.5, wires=[0, 1]), lazy=True)
+            qml.adjoint(qml.QubitUnitary(mat, wires=range(4)), lazy=True)
+
+        s = QuantumScriptSerializer(device_name).serialize_ops(tape, wires_map)
+        s_expected = (
+            (
+                [
+                    "SingleExcitationMinus",
+                    "SingleExcitationMinus",
+                    "QubitUnitary",
+                ],
+                [[-0.5], [0.5], [0.0]],
+                [[0, 1], [0, 1], list(range(4))],
+                [False, True, True],
+                [[], [], [mat]],
+                [[], [], []],
+                [[], [], []],
+            ),
+            False,
+        )
+
+        assert s[0][0] == s_expected[0][0]
+        assert s[0][1] == s_expected[0][1]
+        assert s[0][2] == s_expected[0][2]
+        assert s[0][3] == s_expected[0][3]
+        assert all(np.allclose(s0, s1) for s0, s1 in zip(s[0][4], s_expected[0][4]))
+        assert s[0][5] == s_expected[0][5]
+        assert s[1] == s_expected[1]
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     @pytest.mark.parametrize("C", [True, False])
