@@ -202,30 +202,58 @@ class TestSampling:
 class TestQuantumHOP:
     """Tests for the quantum higher order primitives: adjoint and ctrl."""
 
-    def test_adjoint_transform(self):
+    @pytest.mark.parametrize("lazy", [True, False])
+    def test_adjoint_transform(self, lazy):
         """Test that the adjoint_transform is not yet implemented."""
 
         def circuit(x):
-            qml.adjoint(qml.RX)(x, 0)
-            return 1
+
+            def adjoint_fn(y):
+                phi = y * jax.numpy.pi / 2
+                qml.RZ(phi, 0)
+                qml.RX(phi - jax.numpy.pi, 0)
+
+            qml.adjoint(adjoint_fn, lazy=lazy)(x)
+            return qml.state()
 
         dev = qml.device(device_name, wires=1)
-        jaxpr = jax.make_jaxpr(circuit)(0.5)
 
-        with pytest.raises(NotImplementedError):
-            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
+        rz_phi = -1.5 * jax.numpy.pi / 2
+        rx_phi = rz_phi + jax.numpy.pi
+        expected_state = jax.numpy.array(
+            [
+                jax.numpy.cos(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2),
+                -1j * jax.numpy.sin(rx_phi / 2) * jax.numpy.exp(rz_phi * 1j / 2),
+            ]
+        )
+        jaxpr = jax.make_jaxpr(circuit)(1.5)
+        result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.5)
+        assert qml.math.allclose(result, expected_state)
 
     def test_ctrl_transform(self):
         """Test that the ctrl_transform is not yet implemented."""
 
-        def circuit():
-            qml.ctrl(qml.X, control=1)(0)
+        def circuit(x):
+            qml.X(0)
 
-        dev = qml.device(device_name, wires=2)
-        jaxpr = jax.make_jaxpr(circuit)()
+            def ctrl_fn(y):
+                phi = y * jax.numpy.pi / 2
+                qml.RZ(phi, 2)
+                qml.RX(phi - jax.numpy.pi, 2)
 
-        with pytest.raises(NotImplementedError):
-            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+            qml.ctrl(ctrl_fn, control=[0, 1], control_values=[1, 0])(x)
+            return qml.state()
+
+        rz_phi = 1.5 * jax.numpy.pi / 2
+        rx_phi = rz_phi - jax.numpy.pi
+        expected_state = qml.math.zeros(8, dtype=complex)
+        expected_state[4] = jax.numpy.cos(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2)
+        expected_state[5] = -1j * jax.numpy.sin(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2)
+
+        jaxpr = jax.make_jaxpr(circuit)(1.5)
+        dev = qml.device(device_name, wires=3)
+        result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.5)
+        assert qml.math.allclose(result, expected_state)
 
 
 class TestClassicalComponents:
