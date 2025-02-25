@@ -650,7 +650,7 @@ class TestSerializeOps:
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_basic_circuit_not_implemented_ctrl_ops(self, wires_map):
-        """Test expected serialization for a simple circuit"""
+        """Test expected serialization for circuit with a controlled operation that is not implemented"""
         ops = qml.OrbitalRotation(0.1234, wires=range(4))
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
@@ -679,7 +679,7 @@ class TestSerializeOps:
 
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_multicontrolledx(self, wires_map):
-        """Test expected serialization for a simple circuit"""
+        """Test expected serialization for a circuit with MultiControlledX"""
         with qml.tape.QuantumTape() as tape:
             qml.RX(0.4, wires=0)
             qml.RY(0.6, wires=1)
