@@ -837,9 +837,8 @@ class TestSerializeOps:
     @pytest.mark.parametrize("wires_map", [wires_dict, None])
     def test_ctrl_qubitunitary_inverse(self, wires_map):
         """Test expected serialization for controlled qubit unitary with and without inverse"""
-        ops = qml.RX(0.1234, wires=range(1))
-        mat = qml.matrix(ops)
-        op = qml.QubitUnitary(mat, wires=range(1))
+        mat = qml.matrix(qml.RX(0.1234, wires=[0]))
+        op = qml.QubitUnitary(mat, wires=[0])
         with qml.tape.QuantumTape() as tape:
             qml.ctrl(op, [4, 5])
             qml.adjoint(qml.ctrl(op, [4, 5]))
