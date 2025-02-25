@@ -531,5 +531,4 @@ def test_vmap_in_axes(in_axis, out_axis):
 
     assert expval.shape == (3,)
     assert qml.math.allclose(expval, jax.numpy.array([-1, -1, 1]))  # flip, flip, no flip
-
-    assert state.shape == (3, 4) if out_axis == 0 else (4, 3)
+    assert state.shape == (3, 2) if out_axis == 0 else (2, 3)
