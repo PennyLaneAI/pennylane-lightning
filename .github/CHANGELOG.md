@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Capture execution via `dev.eval_jaxpr` can now be used with `jax.jit` and `jax.vmap`.
+  [(#1055)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1055)
+
 * Adds an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
   Device API change.
   [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067/)
