@@ -14,12 +14,14 @@
 """
 This module tests the eval_jaxpr method.
 """
+from functools import partial
+
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
 
 jax = pytest.importorskip("jax")
-
+jaxlib = pytest.importorskip("jaxlib")
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
@@ -70,31 +72,47 @@ def test_no_wire():
         dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.0)
 
 
-def test_simple_execution():
+@pytest.mark.parametrize("use_jit", (True, False))
+@pytest.mark.parametrize("x64", (True, False))
+def test_simple_execution(use_jit, x64):
     """Test the execution, jitting, and gradient of a simple quantum circuit."""
+    original_x64 = jax.config.jax_enable_x64
+    try:
+        jax.config.update("jax_enable_x64", x64)
 
-    def f(x):
-        qml.RX(x, 0)
-        return qml.expval(qml.Z(0))
+        def f(x):
+            qml.RX(x, 0)
+            return qml.expval(qml.Z(0))
 
-    dev = qml.device(device_name, wires=1)
-    jaxpr = jax.make_jaxpr(f)(0.5)
+        dev = qml.device(device_name, wires=1)
+        jaxpr = jax.make_jaxpr(f)(0.5)
 
-    res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
-    assert qml.math.allclose(res, jax.numpy.cos(0.5))
+        if use_jit:
+            [res] = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts, 0.5)
+        else:
+            [res] = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
+        assert qml.math.allclose(res, jax.numpy.cos(0.5))
+
+        if x64:
+            assert res.dtype == jax.numpy.float64
+        else:
+            assert res.dtype == jax.numpy.float32
+
+    finally:
+        jax.config.update("jax_enable_x64", original_x64)
 
 
 def test_capture_remains_enabled_if_measurement_error():
     """Test that capture remains enabled if there is a measurement error."""
 
-    dev = qml.device(device_name, wires=1)
+    dev = qml.device(device_name, wires=1, shots=1)
 
     def g():
-        return qml.sample(wires=0)  # sampling with analytic execution.
+        return qml.state()
 
     jaxpr = jax.make_jaxpr(g)()
 
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
         dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
     assert qml.capture.enabled()
@@ -134,22 +152,39 @@ def test_operator_arithmetic():
 class TestSampling:
     """Test cases for generating samples."""
 
-    def test_known_sampling(self):
+    @pytest.mark.parametrize("use_jit", (True, False))
+    @pytest.mark.parametrize("x64", (True, False))
+    def test_known_sampling(self, use_jit, x64):
         """Test sampling output with deterministic sampling output"""
 
-        def sampler():
-            qml.X(0)
-            return qml.sample(wires=(0, 1))
+        original_x64 = jax.config.jax_enable_x64
+        try:
+            jax.config.update("jax_enable_x64", x64)
 
-        dev = qml.device(device_name, wires=2, shots=10)
-        jaxpr = jax.make_jaxpr(sampler)()
-        results = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+            def sampler():
+                qml.X(0)
+                return qml.sample(wires=(0, 1))
 
-        expected0 = jax.numpy.ones((10,))  # zero wire
-        expected1 = jax.numpy.zeros((10,))  # one wire
-        expected = jax.numpy.vstack([expected0, expected1]).T
+            dev = qml.device(device_name, wires=2, shots=10)
+            jaxpr = jax.make_jaxpr(sampler)()
 
-        assert qml.math.allclose(results, expected)
+            if use_jit:
+                [results] = jax.jit(partial(dev.eval_jaxpr, jaxpr.jaxpr))(jaxpr.consts)
+            else:
+                [results] = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+
+            expected0 = jax.numpy.ones((10,))  # zero wire
+            expected1 = jax.numpy.zeros((10,))  # one wire
+            expected = jax.numpy.vstack([expected0, expected1]).T
+
+            assert qml.math.allclose(results, expected)
+            if x64:
+                assert results.dtype == jax.numpy.int64
+            else:
+                assert results.dtype == jax.numpy.int32
+
+        finally:
+            jax.config.update("jax_enable_x64", original_x64)
 
     @pytest.mark.parametrize("mcm_value", (0, 1))
     def test_return_mcm(self, mcm_value):
@@ -192,10 +227,10 @@ class TestSampling:
                 return mp_type(op=m0)
             return mp_type(m0)
 
-        dev = qml.device(device_name, wires=1)
+        dev = qml.device(device_name, wires=1, shots=2)
         jaxpr = jax.make_jaxpr(f)()
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
 
@@ -212,7 +247,7 @@ class TestQuantumHOP:
         dev = qml.device(device_name, wires=1)
         jaxpr = jax.make_jaxpr(circuit)(0.5)
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
 
     def test_ctrl_transform(self):
@@ -220,11 +255,12 @@ class TestQuantumHOP:
 
         def circuit():
             qml.ctrl(qml.X, control=1)(0)
+            return 2
 
         dev = qml.device(device_name, wires=2)
         jaxpr = jax.make_jaxpr(circuit)()
 
-        with pytest.raises(NotImplementedError):
+        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
             dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
 
@@ -461,3 +497,38 @@ class TestClassicalComponents:
         res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, x, n)
         expected = jax.numpy.cos(0 + 0.1 + 2 * x)
         assert qml.math.allclose(res, expected)
+
+
+@pytest.mark.parametrize("use_jit", (True, False))
+def test_vmap_integration(use_jit):
+    """Test that the lightning devices can execute circuits with vmap applied."""
+
+    @qml.qnode(qml.device(device_name, wires=1))
+    def circuit(x):
+        qml.RX(x, 0)
+        return qml.expval(qml.Z(0))
+
+    x = jax.numpy.array([1.0, 2.0, 3.0])
+    f = jax.jit(jax.vmap(circuit)) if use_jit else jax.vmap(circuit)
+    results = f(x)
+    assert qml.math.allclose(results, jax.numpy.cos(x))
+
+
+@pytest.mark.parametrize("in_axis", (0, 1, 2))
+@pytest.mark.parametrize("out_axis", (0, 1))
+def test_vmap_in_axes(in_axis, out_axis):
+    """Test that vmap works with specified in_axes and out_axes."""
+
+    @qml.qnode(qml.device(device_name, wires=1))
+    def circuit(mat):
+        qml.QubitUnitary(mat, 0)
+        return qml.expval(qml.Z(0)), qml.state()
+
+    mats = jax.numpy.stack(
+        [qml.X.compute_matrix(), qml.Y.compute_matrix(), qml.Z.compute_matrix()], axis=in_axis
+    )
+    expval, state = jax.vmap(circuit, in_axes=in_axis, out_axes=(0, out_axis))(mats)
+
+    assert expval.shape == (3,)
+    assert qml.math.allclose(expval, jax.numpy.array([-1, -1, 1]))  # flip, flip, no flip
+    assert state.shape == (3, 2) if out_axis == 0 else (2, 3)
