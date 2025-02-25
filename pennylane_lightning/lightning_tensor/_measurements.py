@@ -75,6 +75,16 @@ class LightningTensorMeasurements:
         """Returns the simulation data type."""
         return self._dtype
 
+    def _measurement_is_sparse(self, measurementprocess: MeasurementProcess):
+        """States if the required measurement is sparse.
+        Args:
+            measurementprocess (StateMeasurement): measurement to check sparsity.
+        Returns:
+            True if the measurement process will use the sparse data representation.
+        """
+
+        return isinstance(measurementprocess.obs, qml.SparseHamiltonian)
+
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
 
