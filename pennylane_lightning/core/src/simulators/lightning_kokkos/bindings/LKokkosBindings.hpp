@@ -287,9 +287,9 @@ void registerBackendSpecificObservables(py::module_ &m) {
 
     std::string class_name;
 
-    class_name = "SparseHamiltonianC" + bitsize;
-    py::class_<SparseHamiltonian<StateVectorT>,
-               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
+    class_name = "SparseHermitianObsC" + bitsize;
+    py::class_<SparseHermitianObs<StateVectorT>,
+               std::shared_ptr<SparseHermitianObs<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init([](const np_arr_c &data,
@@ -300,21 +300,22 @@ void registerBackendSpecificObservables(py::module_ &m) {
             const py::buffer_info buffer_data = data.request();
             const auto *data_ptr = static_cast<ComplexT *>(buffer_data.ptr);
 
-            return SparseHamiltonian<StateVectorT>{
+            return SparseHermitianObs<StateVectorT>{
                 std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
                 indices, indptr, wires};
         }))
-        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
+        .def("__repr__", &SparseHermitianObs<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHermitianObs<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
+            [](const SparseHermitianObs<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
+                if (!py::isinstance<SparseHermitianObs<StateVectorT>>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
+                auto other_cast =
+                    other.cast<SparseHermitianObs<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");

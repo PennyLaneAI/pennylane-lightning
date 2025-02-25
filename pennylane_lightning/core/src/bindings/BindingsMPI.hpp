@@ -196,10 +196,10 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
             },
             "Compare two observables");
 #ifdef _ENABLE_PLGPU
-    class_name = "SparseHamiltonianMPIC" + bitsize;
-    using SpIDX = typename SparseHamiltonianMPI<StateVectorT>::IdxT;
-    py::class_<SparseHamiltonianMPI<StateVectorT>,
-               std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>,
+    class_name = "SparseHermitianObsMPIC" + bitsize;
+    using SpIDX = typename SparseHermitianObsMPI<StateVectorT>::IdxT;
+    py::class_<SparseHermitianObsMPI<StateVectorT>,
+               std::shared_ptr<SparseHermitianObsMPI<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
@@ -214,25 +214,25 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
             const py::buffer_info buffer_offsets = offsets.request();
             const auto *offsets_ptr = static_cast<SpIDX *>(buffer_offsets.ptr);
 
-            return SparseHamiltonianMPI<StateVectorT>{
+            return SparseHermitianObsMPI<StateVectorT>{
                 std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
                 std::vector<SpIDX>({indices_ptr, indices_ptr + indices.size()}),
                 std::vector<SpIDX>({offsets_ptr, offsets_ptr + offsets.size()}),
                 wires};
         }))
-        .def("__repr__", &SparseHamiltonianMPI<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHamiltonianMPI<StateVectorT>::getWires,
+        .def("__repr__", &SparseHermitianObsMPI<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHermitianObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const SparseHamiltonianMPI<StateVectorT> &self,
+            [](const SparseHermitianObsMPI<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<SparseHamiltonianMPI<StateVectorT>>(
+                if (!py::isinstance<SparseHermitianObsMPI<StateVectorT>>(
                         other)) {
                     return false;
                 }
                 auto other_cast =
-                    other.cast<SparseHamiltonianMPI<StateVectorT>>();
+                    other.cast<SparseHermitianObsMPI<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
