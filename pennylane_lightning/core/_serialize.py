@@ -443,6 +443,7 @@ class QuantumScriptSerializer:
         uses_stateprep = False
 
         def get_wires(operation, single_op):
+            # Serialize adjoint(op) and adjoint(ctrl(op))
             if isinstance(operation, qml.ops.op_math.Adjoint):
                 inverse = True
                 op_base = operation.base
@@ -469,22 +470,24 @@ class QuantumScriptSerializer:
                 wires_list = list(op_base.target_wires)
                 controlled_wires_list = list(op_base.control_wires)
                 control_values_list = op_base.control_values
-
-                if isinstance(op_base.base, qml.ops.op_math.Adjoint):
-                    ctrl_inverse = True
+                # Serialize ctrl(adjoint(op))
+                    ctrl_adjoint = True
                     name = op_base.base.base.name
                 else:
-                    ctrl_inverse = False
+                    ctrl_adjoint = False
                     name = op_base.base.name
 
-                # Inside the controlled operation, if the base operation (of the adjoint) is supported natively, we apply the the base operation and invert the inverse flag; otherwise we apply the QubitUnitary of a matrix which contains the inverse and leave the inverse flag as is.
+                # Inside the controlled operation, if the base operation (of the adjoint)  
+                # is supported natively, we apply the the base operation and invert the  
+                # inverse flag; otherwise we apply the QubitUnitary of a matrix which  
+                # contains the inverse and leave the inverse flag as is.  
                 if not hasattr(self.sv_type, name):
                     single_op_base = QubitUnitary(
                         matrix(single_op_base.base), single_op_base.base.wires
                     )
                     name = single_op_base.name
                 else:
-                    inverse ^= ctrl_inverse
+                    inverse ^= ctrl_adjoint
             else:
                 name = single_op_base.name
                 wires_list = single_op_base.wires.tolist()

@@ -6,7 +6,7 @@
 
 ### Improvements
 
-* Apply controlled-adjoint and adjoint-controlled operators with native C++ implementation
+* Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
   [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
 
 * Capture execution via `dev.eval_jaxpr` can now be used with `jax.jit` and `jax.vmap`.
