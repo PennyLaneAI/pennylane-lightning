@@ -20,7 +20,6 @@ from typing import Any, Callable, List, Union
 
 import numpy as np
 import pennylane as qml
-from pennylane.devices.qubit.measure import state_diagonalizing_gates
 from pennylane.devices.qubit.sampling import _group_measurements
 from pennylane.measurements import (
     ClassicalShadowMP,

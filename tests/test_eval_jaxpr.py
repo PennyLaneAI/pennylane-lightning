@@ -18,8 +18,8 @@ from functools import partial
 
 import pennylane as qml
 import pytest
-from pennylane.transforms.defer_measurements import DeferMeasurementsInterpreter
 from conftest import LightningDevice, device_name
+from pennylane.transforms.defer_measurements import DeferMeasurementsInterpreter
 
 jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
