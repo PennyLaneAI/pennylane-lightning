@@ -70,17 +70,18 @@ class LightningBaseMeasurements(ABC):
         """Returns the simulation data type."""
         return self._qubit_state.dtype
 
-    def _measurement_is_sparse(self, measurementprocess: MeasurementProcess):
-        """States if the required measurement is sparse.
+    def _observable_is_sparse(self, obs):
+        """States if the required observable is sparse.
 
         Args:
-            measurementprocess (StateMeasurement): measurement to check sparsity.
+            obs: PennyLane observable to check sparsity.
 
         Returns:
             True if the measurement process will use the sparse data representation.
         """
-
-        return isinstance(measurementprocess.obs, qml.SparseHamiltonian)
+        return isinstance(obs, qml.SparseHamiltonian) or (
+            obs.has_sparse_matrix and not obs.has_matrix
+        )
 
     @abstractmethod
     def _measurement_dtype(self):
@@ -91,7 +92,7 @@ class LightningBaseMeasurements(ABC):
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
-            This method is bypassing the measurement process to default.qubit implementation.
+           This method is bypassing the measurement process to default.qubit implementation.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state
@@ -116,8 +117,7 @@ class LightningBaseMeasurements(ABC):
         Returns:
             Expectation value of the observable
         """
-
-        if self._measurement_is_sparse(measurementprocess):
+        if self._observable_is_sparse(measurementprocess.obs):
             # Internally all sparse operators will be treated as a sparse Hermitian operator.
             # We first ensure the CSR sparse representation.
             CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
@@ -177,7 +177,7 @@ class LightningBaseMeasurements(ABC):
             Variance of the observable
         """
 
-        if self._measurement_is_sparse(measurementprocess):
+        if self._observable_is_sparse(measurementprocess.obs):
             # Ensuring CSR sparse representation.
             CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
@@ -314,11 +314,11 @@ class LightningBaseMeasurements(ABC):
 
         all_res = []
         for group in groups:
-            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
-                group[0].obs, SparseHamiltonian
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and self._observable_is_sparse(
+                group[0].obs
             ):
                 raise TypeError(
-                    "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
+                    "ExpectationMP/VarianceMP of sparse operators cannot be computed with samples."
                 )
             if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, Sum):
                 raise TypeError("VarianceMP(Sum) cannot be computed with samples.")
