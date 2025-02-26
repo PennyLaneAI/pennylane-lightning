@@ -79,7 +79,7 @@ class LightningBaseMeasurements(ABC):
         Returns:
             True if the measurement process will use the sparse data representation.
         """
-        return isinstance(obs, qml.SparseHamiltonian) or (
+        return isinstance(obs, SparseHamiltonian) or (
             obs.has_sparse_matrix and not obs.has_matrix
         )
 
