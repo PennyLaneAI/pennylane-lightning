@@ -152,7 +152,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             Expectation value of the observable
         """
 
-        if self._measurement_is_sparse(measurementprocess):
+        if self._observable_is_sparse(measurementprocess.obs):
             # ensuring CSR sparse representation.
 
             if self._use_mpi:
