@@ -31,6 +31,7 @@ from typing import Union
 
 import numpy as np
 import pennylane as qml
+import scipy.sparse as sp
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint

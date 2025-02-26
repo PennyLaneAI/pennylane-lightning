@@ -79,9 +79,7 @@ class LightningBaseMeasurements(ABC):
         Returns:
             True if the measurement process will use the sparse data representation.
         """
-        return isinstance(obs, SparseHamiltonian) or (
-            obs.has_sparse_matrix and not obs.has_matrix
-        )
+        return isinstance(obs, SparseHamiltonian) or (obs.has_sparse_matrix and not obs.has_matrix)
 
     @abstractmethod
     def _measurement_dtype(self):
