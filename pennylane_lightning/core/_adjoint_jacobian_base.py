@@ -184,7 +184,7 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements
                 return True
 
-            if tape_return_type is "state":
+            if tape_return_type == "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support measurement StateMP."
                 )
@@ -194,7 +194,7 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements or the gradient is 0.0
                 return True
 
-            if tape_return_type is "state":
+            if tape_return_type == "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation does not support State measurements."
                 )
