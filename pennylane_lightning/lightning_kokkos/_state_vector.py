@@ -166,6 +166,9 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             device_wires (Wires): wires that get initialized in the state
         """
 
+        if sp.sparse.issparse(state):
+            state = state.toarray().flatten()
+
         if isinstance(state, self._qubit_state.__class__):
             state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
             state.DeviceToHost(state_data)

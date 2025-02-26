@@ -213,7 +213,11 @@ class LightningGPUStateVector(LightningBaseStateVector):
             # state.getState(state_data)
             # state = state_data
 
-        state = self._asarray(state, dtype=self.dtype)  # this operation on host
+        if sp.sparse.issparse(state):
+            state = state.toarray().flatten()  # this operation is on host
+        else:
+            state = self._asarray(state, dtype=self.dtype)  # this operation is on host
+
         output_shape = [2] * self._num_local_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
