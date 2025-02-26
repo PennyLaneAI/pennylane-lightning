@@ -57,7 +57,7 @@
 
 ### Bug fixes
 
-* Fix SyntaxWarning from `is` with a literal
+* Fix `SyntaxWarning` from `is` with a literal in Python tests.
   [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
 
 * Fix CI to collect Python code coverage for Lightning-Qubit and Lightning-Kokkos CPU.
