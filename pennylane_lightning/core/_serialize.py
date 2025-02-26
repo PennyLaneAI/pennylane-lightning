@@ -471,16 +471,17 @@ class QuantumScriptSerializer:
                 controlled_wires_list = list(op_base.control_wires)
                 control_values_list = op_base.control_values
                 # Serialize ctrl(adjoint(op))
+                if isinstance(op_base.base, qml.ops.op_math.Adjoint):
                     ctrl_adjoint = True
                     name = op_base.base.base.name
                 else:
                     ctrl_adjoint = False
                     name = op_base.base.name
 
-                # Inside the controlled operation, if the base operation (of the adjoint)  
-                # is supported natively, we apply the the base operation and invert the  
-                # inverse flag; otherwise we apply the QubitUnitary of a matrix which  
-                # contains the inverse and leave the inverse flag as is.  
+                # Inside the controlled operation, if the base operation (of the adjoint)
+                # is supported natively, we apply the the base operation and invert the
+                # inverse flag; otherwise we apply the QubitUnitary of a matrix which
+                # contains the inverse and leave the inverse flag as is.
                 if not hasattr(self.sv_type, name):
                     single_op_base = QubitUnitary(
                         matrix(single_op_base.base), single_op_base.base.wires
