@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
+  [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
+
 * In Lightning-Tensor, allow `qml.MPSPrep` to accept an MPS with `len(MPS) = n_wires-1`.
   [(#1064)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1064)
 
