@@ -35,7 +35,7 @@ from typing import Union
 
 import numpy as np
 import pennylane as qml
-import scipy.sparse as sp
+import scipy as sp
 from pennylane import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
