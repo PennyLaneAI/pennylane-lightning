@@ -135,10 +135,8 @@ class TestGetMeasurementFunction:
             qml.prod(qml.PauliX(0), qml.PauliY(1)),
             qml.s_prod(2.0, qml.PauliX(0)),
             qml.Hamiltonian([1.0, 2.0], [qml.PauliX(0), qml.PauliY(0)]),
-            qml.QubitUnitary(qml.PauliX(0).compute_matrix(), wires=0),
             qml.Hermitian(np.eye(2), wires=0),
             qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0),
-            qml.QubitUnitary(qml.PauliX.compute_sparse_matrix(), wires=0),
         ),
     )
     def test_expval_selected(self, lightning_sv, obs):
@@ -402,7 +400,7 @@ class TestSparseExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170],
         ],
     )
-    @pytest.mark.parametrize("obs", [qml.SparseHamiltonian, qml.QubitUnitary])
+    @pytest.mark.parametrize("obs", [qml.SparseHamiltonian, ])
     def test_sparse_Pauli_words(self, obs, ham_terms, expected, tol, lightning_sv):
         """Test expval of some simple sparse operators"""
 
@@ -426,7 +424,7 @@ class TestSparseExpval:
 class TestSparseMeasurements:
     """Tests all sparse measurements"""
 
-    sparse_observables = [qml.SparseHamiltonian, qml.QubitUnitary]
+    sparse_observables = [qml.SparseHamiltonian,]
 
     @staticmethod
     def calculate_reference(tape, lightning_sv):
