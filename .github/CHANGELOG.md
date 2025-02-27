@@ -6,6 +6,19 @@
 
 ### Improvements
 
+* Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
+  [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
+
+* In Lightning-Tensor, allow `qml.MPSPrep` to accept an MPS with `len(MPS) = n_wires-1`.
+  [(#1064)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1064)
+
+* Capture execution via `dev.eval_jaxpr` can now be used with `jax.jit` and `jax.vmap`.
+  [(#1055)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1055)
+
+* Adds an `execution_config` keyword argument to `LightningBase.eval_jaxpr` to accomodate a
+  Device API change.
+  [(#1067)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1067/)
+
 * Lightning devices support dynamically allocated wires (e.g. `qml.device("lightning.qubit")`)
   [(#1043)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1043)
 
@@ -46,6 +59,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix `SyntaxWarning` from `is` with a literal in Python tests.
+  [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
 
 * Fix CI to collect Python code coverage for Lightning-Qubit and Lightning-Kokkos CPU.
   [(#1053)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1053)
