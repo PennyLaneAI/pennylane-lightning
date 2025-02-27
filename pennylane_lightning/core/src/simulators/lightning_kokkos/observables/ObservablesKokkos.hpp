@@ -203,13 +203,13 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
 };
 
 /**
- * @brief Sparse representation of Hamiltonian<StateVectorT>
+ * @brief Sparse representation of Hermitian operator.
  *
  */
 template <class StateVectorT>
-class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
+class SparseHermitianObs final : public SparseHermitianObsBase<StateVectorT> {
   private:
-    using BaseType = SparseHamiltonianBase<StateVectorT>;
+    using BaseType = SparseHermitianObsBase<StateVectorT>;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -217,7 +217,7 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
     using IdxT = typename BaseType::IdxT;
 
     /**
-     * @brief Create a SparseHamiltonian from data, indices and offsets in CSR
+     * @brief Create a SparseHermitianObs from data, indices and offsets in CSR
      * format.
      *
      * @param data Arguments to construct data
@@ -226,8 +226,8 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
      * @param wires Arguments to construct wires
      */
     template <typename T1, typename T2, typename T3 = T2, typename T4>
-    explicit SparseHamiltonian(T1 &&data, T2 &&indices, T3 &&offsets,
-                               T4 &&wires)
+    explicit SparseHermitianObs(T1 &&data, T2 &&indices, T3 &&offsets,
+                                T4 &&wires)
         : BaseType{data, indices, offsets, wires} {}
 
     /**
@@ -246,9 +246,9 @@ class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
                        std::initializer_list<IdxT> indices,
                        std::initializer_list<IdxT> offsets,
                        std::initializer_list<std::size_t> wires)
-        -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
-        return std::shared_ptr<SparseHamiltonian<StateVectorT>>(
-            new SparseHamiltonian<StateVectorT>{
+        -> std::shared_ptr<SparseHermitianObs<StateVectorT>> {
+        return std::shared_ptr<SparseHermitianObs<StateVectorT>>(
+            new SparseHermitianObs<StateVectorT>{
                 std::move(data), std::move(indices), std::move(offsets),
                 std::move(wires)});
     }
