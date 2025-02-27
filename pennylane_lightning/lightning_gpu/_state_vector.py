@@ -34,7 +34,6 @@ except ImportError as ex:
 from typing import Union
 
 import numpy as np
-import nvtx
 import pennylane as qml
 from pennylane import DeviceError
 from pennylane.measurements import MidMeasureMP
@@ -97,13 +96,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         self._mpi_handler = mpi_handler
         self._use_async = use_async
 
-        # fdx_3 = np.zeros(2**(self.num_wires+1), dtype=np.complex128)
-        # fdx_3[:2**(int(self.num_wires*0.9))] += 1j
-        # del fdx_3
-
-        # print("FDX")
-        # print("-"*100)
-
         # Initialize the state vector
         if self._mpi_handler.use_mpi:  # using MPI
             self._qubit_state = self._state_dtype()(
@@ -115,13 +107,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
             )
         else:  # without MPI
             self._qubit_state = self._state_dtype()(self.num_wires)
-
-        # fdx_2 = np.zeros(2**(self.num_wires+1), dtype=np.complex128)
-        # fdx_2[:2**(int(self.num_wires*0.9))] += 1j
-        # del fdx_2
-
-        # print("FDX")
-        # print("-"*100)
 
     def _state_dtype(self):
         """Binding to Lightning Managed state vector C++ class.
@@ -198,9 +183,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
     def _asarray(arr, dtype=None):
 
         if isinstance(arr, np.ndarray) and arr.dtype in [np.complex64, np.complex128]:
-            print("-" * 100)
-            print("FDX")
-            print("-" * 100)
             return arr
 
         arr = np.asarray(arr)  # arr is not copied
@@ -235,8 +217,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
             # state.getState(state_data)
             # state = state_data
 
-        rng = nvtx.start_range(message="state_vector", color="yellow")
-
         state = self._asarray(state, dtype=self.dtype)  # this operation on host
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
@@ -250,13 +230,8 @@ class LightningGPUStateVector(LightningBaseStateVector):
             self.syncH2D(np.reshape(local_state, output_shape))
             return
 
-        # fdx = np.zeros(2**(self.num_wires+1), dtype=np.complex128)
-        # fdx[:2**(self.num_wires//2)] += 1j
-        # del fdx
-
         # set the state vector on GPU with provided state and their corresponding wires
         self._qubit_state.setStateVector(state, list(device_wires), use_async)
-        nvtx.end_range(rng)
 
     def _apply_lightning_controlled(self, operation, adjoint):
         """Apply an arbitrary controlled operation to the state tensor.
@@ -340,8 +315,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
         """
         state = self.state_vector
 
-        rng = nvtx.start_range(message="applying_operation", color="yellow")
-
         # Skip over identity operations instead of performing
         # matrix multiplication with it.
         for operation in operations:
@@ -402,5 +375,3 @@ class LightningGPUStateVector(LightningBaseStateVector):
                     param,
                     mat.ravel(order="C"),  # inv = False: Matrix already in correct form;
                 )  # Parameters can be ignored for explicit matrices; F-order for cuQuantum
-
-        nvtx.end_range(rng)
