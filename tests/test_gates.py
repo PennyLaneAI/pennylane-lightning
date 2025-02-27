@@ -506,14 +506,16 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.GlobalPhase,
     ],
 )
+@pytest.mark.parametrize("adjoint", [False, True])
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-def test_controlled_qubit_gates(operation, n_qubits, control_value, tol):
+def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol):
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
     dev = qml.device(device_name, wires=n_qubits)
     threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
+    operation = qml.adjoint(operation) if adjoint else operation
 
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -676,3 +678,161 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
             circ = qml.QNode(circuit, dev)
             circ_def = qml.QNode(circuit, dev_def)
             assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize(
+    "operation",
+    [
+        qml.PauliX,
+        qml.PauliY,
+        qml.PauliZ,
+        qml.Hadamard,
+        qml.S,
+        qml.SX,
+        qml.T,
+        qml.PhaseShift,
+        qml.RX,
+        qml.RY,
+        qml.RZ,
+        qml.Rot,
+        qml.SWAP,
+        qml.IsingXX,
+        qml.IsingXY,
+        qml.IsingYY,
+        qml.IsingZZ,
+        qml.SingleExcitation,
+        qml.SingleExcitationMinus,
+        qml.SingleExcitationPlus,
+        qml.DoubleExcitation,
+        qml.DoubleExcitationMinus,
+        qml.DoubleExcitationPlus,
+        qml.MultiRZ,
+        qml.GlobalPhase,
+    ],
+)
+@pytest.mark.parametrize("adjoint", [False, True])
+@pytest.mark.parametrize("control_value", [False, True])
+@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol, adjoint):
+    """Test that adjoint of multi-controlled gates are correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    threshold = 5 if device_name == "lightning.tensor" else 250
+    num_wires = max(operation.num_wires, 1)
+    operation = qml.adjoint(operation) if adjoint else operation
+
+    for n_wires in range(num_wires + 1, num_wires + 4):
+        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+        n_perms = len(wire_lists) * n_wires
+        if n_perms > threshold:
+            wire_lists = wire_lists[0 :: (n_perms // threshold)]
+        for all_wires in wire_lists:
+            target_wires = all_wires[0:num_wires]
+            control_wires = all_wires[num_wires:]
+            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state /= np.linalg.norm(init_state)
+
+            def circuit():
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.adjoint(
+                    qml.ctrl(
+                        (
+                            operation(target_wires)
+                            if operation.num_params == 0
+                            else operation(*tuple([0.1234] * operation.num_params), target_wires)
+                        ),
+                        control_wires,
+                        control_values=(
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                            if device_name != "lightning.tensor"
+                            else [control_value for _ in control_wires]
+                        ),
+                    )
+                )
+                return qml.state()
+
+            circ = qml.QNode(circuit, dev)
+            circ_def = qml.QNode(circuit, dev_def)
+            assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize("control_value", [False, True])
+@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+def test_adjoint_controlled_qubit_unitary(n_qubits, control_value, tol):
+    """Test that Adjoint of ControlledQubitUnitary is correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    threshold = 500
+    for n_wires in range(1, 5):
+        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+        n_perms = len(wire_lists) * (n_wires) ** 2
+        if n_perms > threshold:
+            wire_lists = wire_lists[0 :: (n_perms // threshold)]
+        for all_wires in wire_lists:
+            for i in range(1, len(all_wires)):
+                control_wires = all_wires[0:i]
+                target_wires = all_wires[i:]
+                m = 2 ** len(target_wires)
+                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+                U, _ = np.linalg.qr(U)
+                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state /= np.linalg.norm(init_state)
+
+                def circuit():
+                    qml.StatePrep(init_state, wires=range(n_qubits))
+                    qml.adjoint(
+                        qml.ControlledQubitUnitary(
+                            U,
+                            wires=control_wires + target_wires,
+                            control_values=(
+                                [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                                if device_name != "lightning.tensor"
+                                else [control_value for _ in control_wires]
+                            ),
+                        )
+                    )
+                    return qml.state()
+
+                circ = qml.QNode(circuit, dev)
+                circ_def = qml.QNode(circuit, dev_def)
+                assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize("control_value", [False, True])
+@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+def test_controlled_adjoint_qubit_unitary(n_qubits, control_value, tol):
+    """Test that controlled adjoint(QubitUnitary) is correctly applied to a state"""
+    dev_def = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device(device_name, wires=n_qubits)
+    threshold = 500
+    for n_wires in range(1, 5):
+        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+        n_perms = len(wire_lists) * (n_wires) ** 2
+        if n_perms > threshold:
+            wire_lists = wire_lists[0 :: (n_perms // threshold)]
+        for all_wires in wire_lists:
+            for i in range(1, len(all_wires)):
+                control_wires = all_wires[0:i]
+                target_wires = all_wires[i:]
+                m = 2 ** len(target_wires)
+                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+                U, _ = np.linalg.qr(U)
+                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state /= np.linalg.norm(init_state)
+
+                def circuit():
+                    qml.StatePrep(init_state, wires=range(n_qubits))
+                    qml.ctrl(
+                        qml.adjoint(qml.QubitUnitary(U, wires=target_wires)),
+                        control=control_wires,
+                        control_values=(
+                            [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+                            if device_name != "lightning.tensor"
+                            else [control_value for _ in control_wires]
+                        ),
+                    )
+                    return qml.state()
+
+                circ = qml.QNode(circuit, dev)
+                circ_def = qml.QNode(circuit, dev_def)
+                assert np.allclose(circ(), circ_def(), tol)
