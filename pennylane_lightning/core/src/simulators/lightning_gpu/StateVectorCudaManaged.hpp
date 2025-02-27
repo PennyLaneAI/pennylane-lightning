@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -159,8 +160,8 @@ class StateVectorCudaManaged
      */
     void resetStateVector(bool use_async = false) {
         BaseType::getDataBuffer().zeroInit();
-        std::size_t index = 0;
-        ComplexT value(1.0, 0.0);
+        constexpr std::size_t index = 0;
+        constexpr ComplexT value(1.0, 0.0);
         setBasisState_(value, index, use_async);
     };
 
@@ -222,21 +223,45 @@ class StateVectorCudaManaged
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
-        // Calculate the indices of the state-vector to be set.
-        // TODO: Could move to GPU calculation if the state size is large.
-        std::vector<index_type> indices(num_states);
-        const std::size_t num_wires = wires.size();
-        constexpr std::size_t one{1U};
-        for (std::size_t i = 0; i < num_states; i++) {
-            std::size_t index{0U};
-            for (std::size_t j = 0; j < num_wires; j++) {
-                const std::size_t bit = (i & (one << j)) >> j;
-                index |= bit << (num_qubits - 1 - wires[num_wires - 1 - j]);
-            }
-            indices[i] = static_cast<index_type>(index);
+
+        bool is_wires_sorted = std::is_sorted(wires.begin(), wires.end());
+        bool is_wires_contiguous = false;
+        if (is_wires_sorted) {
+            is_wires_contiguous =
+                wires.front() + wires.size() - 1 == wires.back();
         }
-        setStateVector_<index_type>(num_states, state_ptr, indices.data(),
-                                    use_async);
+
+        if (is_wires_sorted && is_wires_contiguous) {
+            bool is_left_significant = wires.front() == 0;
+            setStateVector_<index_type>(num_states, state_ptr, wires,
+                                        is_left_significant, use_async);
+        } else {
+
+            // # use openMP  and collaps
+            std::vector<index_type> indices(num_states);
+
+            // Calculate the indices of the state-vector to be set.
+            // TODO: Could move to GPU calculation if the state size is large.
+#pragma omp parallel shared(num_states, num_qubits, indices, wires)
+            {
+                const std::size_t num_wires = wires.size();
+
+#pragma omp for
+                for (std::size_t i = 0; i < num_states; i++) {
+                    constexpr std::size_t one{1U};
+                    std::size_t index{0U};
+                    for (std::size_t j = 0; j < num_wires; j++) {
+                        const std::size_t bit = (i & (one << j)) >> j;
+                        index |= bit
+                                 << (num_qubits - 1 - wires[num_wires - 1 - j]);
+                    }
+                    indices[i] = static_cast<index_type>(index);
+                }
+            }
+            // set the state-vector
+            setStateVector_<index_type>(num_states, state_ptr, indices.data(),
+                                        use_async);
+        }
     }
 
     /**
@@ -2140,7 +2165,35 @@ class StateVectorCudaManaged
      */
     template <class index_type, std::size_t thread_per_block = 256>
     void setStateVector_(const index_type num_indices,
-                         const std::complex<Precision> *values,
+                         const std::complex<PrecisionT> *values,
+                         const std::vector<std::size_t> &wires,
+                         const bool is_left_significant = false,
+                         const bool async = false) {
+        BaseType::getDataBuffer().zeroInit();
+
+        if (is_left_significant) {
+            size_t stride = std::size_t(1) << (BaseType::getNumQubits() - wires.size());
+            BaseType::getDataBuffer().CopyHostDataToGpuWithStride(values, num_indices,stride, async);
+        } else {
+            BaseType::getDataBuffer().CopyHostDataToGpu(values, num_indices,
+                                                        std::size_t(0), async);
+        }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector. This
+     * method is implemented by the customized CUDA kernel defined in the
+     * DataBuffer class.
+     *
+     * @param num_indices Number of elements to be passed to the state vector.
+     * @param values Pointer to values to be set for the target elements.
+     * @param indices Pointer to indices of the target elements.
+     * @param async Use an asynchronous memory copy.
+     */
+    template <class index_type, std::size_t thread_per_block = 256>
+    void setStateVector_(const index_type num_indices,
+                         const std::complex<PrecisionT> *values,
                          const index_type *indices, const bool async = false) {
         BaseType::getDataBuffer().zeroInit();
 
