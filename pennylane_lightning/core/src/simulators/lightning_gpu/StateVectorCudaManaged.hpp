@@ -223,16 +223,12 @@ class StateVectorCudaManaged
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
-        bool is_wires_sorted = std::is_sorted(wires.begin(), wires.end());
-        bool is_wires_contiguous = false;
-        if (is_wires_sorted) {
-            is_wires_contiguous =
-                wires.front() + wires.size() - 1 == wires.back();
-        }
+        const bool is_wires_sorted = std::is_sorted(wires.begin(), wires.end());
+        const bool is_wires_contiguous = wires.front() + wires.size() - 1 == wires.back();
 
         if (is_wires_sorted && is_wires_contiguous) {
             // Set most common case: contiguous wires
-            bool is_left_significant = wires.front() == 0;
+            const bool is_left_significant = wires.front() == 0;
             setStateVector_<index_type>(num_states, state_ptr, wires,
                                         is_left_significant, use_async);
         } else {
@@ -2159,10 +2155,12 @@ class StateVectorCudaManaged
      *
      * @param num_indices Number of elements to be passed to the state vector.
      * @param values Pointer to values to be set for the target elements.
-     * @param indices Pointer to indices of the target elements.
+     * @param wires Wires of the target elements.
+     * @param is_left_significant If true, the most significant wire is on the
+     * left. Otherwise, it is on the right.
      * @param async Use an asynchronous memory copy.
      */
-    template <class index_type, std::size_t thread_per_block = 256>
+    template <class index_type>
     void setStateVector_(const index_type num_indices,
                          const std::complex<PrecisionT> *values,
                          const std::vector<std::size_t> &wires,
