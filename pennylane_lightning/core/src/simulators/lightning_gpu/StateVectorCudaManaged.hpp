@@ -224,7 +224,8 @@ class StateVectorCudaManaged
                                       int32_t, int64_t>::type;
 
         const bool is_wires_sorted = std::is_sorted(wires.begin(), wires.end());
-        const bool is_wires_contiguous = wires.front() + wires.size() - 1 == wires.back();
+        const bool is_wires_contiguous =
+            wires.front() + wires.size() - 1 == wires.back();
 
         if (is_wires_sorted && is_wires_contiguous) {
             // Set most common case: contiguous wires
