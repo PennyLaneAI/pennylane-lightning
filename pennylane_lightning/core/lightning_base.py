@@ -17,6 +17,7 @@ This module contains the :class:`~.LightningBase` class, that serves as a base c
 interfaces with C++ for fast linear algebra calculations.
 """
 from abc import abstractmethod
+from functools import partial
 from numbers import Number
 from typing import Callable, List, Optional, Sequence, Tuple, Union
 
@@ -25,7 +26,7 @@ import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, Device, ExecutionConfig
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.tape import QuantumScript, QuantumTape
-from pennylane.typing import Result, ResultBatch
+from pennylane.typing import Result, ResultBatch, TensorLike
 
 from ._measurements_base import LightningBaseMeasurements
 
@@ -453,14 +454,24 @@ class LightningBase(Device):
         )
         return tuple(zip(*results))
 
-    # pylint: disable=import-outside-toplevel
-    def eval_jaxpr(self, jaxpr, consts, *args):
+    # pylint: disable=import-outside-toplevel, unused-argument
+    def eval_jaxpr(
+        self,
+        jaxpr: "jax.core.Jaxpr",
+        consts: list[TensorLike],
+        *args: TensorLike,
+        execution_config: Optional[ExecutionConfig] = None,
+    ) -> list[TensorLike]:
         """Execute pennylane variant jaxpr using C++ simulation tools.
 
         Args:
             jaxpr (jax.core.Jaxpr): jaxpr containing quantum operations
             consts (list[TensorLike]): List of constants for the jaxpr closure variables
             *args (TensorLike): The arguments to the jaxpr.
+
+        Keyword Args:
+            execution_config (Optional[ExecutionConfig]): a datastructure with additional
+                information required for execution
 
         Returns:
             list(TensorLike): the results of the execution
@@ -489,9 +500,25 @@ class LightningBase(Device):
             [1.0, 0.8775825618903728, 0.5403023058681395]
 
         """
-        # has jax dependency, so can't import up top
+        # jax is still an optional dependency for pennylane, but mandatory for program capture
+        # jax imports cannot be placed in the standard import path
+        import jax
+        from pennylane.capture.primitives import AbstractMeasurement
+
         from .lightning_interpreter import LightningInterpreter
 
+        if jax.config.jax_enable_x64:  # pylint: disable=no-member
+            dtype_map = {
+                float: jax.numpy.float64,
+                int: jax.numpy.int64,
+                complex: jax.numpy.complex128,
+            }
+        else:
+            dtype_map = {
+                float: jax.numpy.float32,
+                int: jax.numpy.int32,
+                complex: jax.numpy.complex64,
+            }
         if self.wires is None:
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
@@ -502,4 +529,14 @@ class LightningBase(Device):
         interpreter = LightningInterpreter(
             self._statevector, self.LightningMeasurements, shots=self.shots
         )
-        return interpreter.eval(jaxpr, consts, *args)
+        evaluator = partial(interpreter.eval, jaxpr)
+
+        def shape(var):
+            if isinstance(var.aval, AbstractMeasurement):
+                shots = self.shots.total_shots
+                s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
+                return jax.core.ShapedArray(s, dtype_map[dtype])
+            return var.aval
+
+        shapes = [shape(var) for var in jaxpr.outvars]
+        return jax.pure_callback(evaluator, shapes, consts, *args, vectorized=False)
