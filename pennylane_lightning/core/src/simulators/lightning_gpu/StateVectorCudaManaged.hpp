@@ -231,12 +231,12 @@ class StateVectorCudaManaged
         }
 
         if (is_wires_sorted && is_wires_contiguous) {
+            // Set most common case: contiguous wires
             bool is_left_significant = wires.front() == 0;
             setStateVector_<index_type>(num_states, state_ptr, wires,
                                         is_left_significant, use_async);
         } else {
-
-            // # use openMP  and collaps
+            // Set the state-vector for non-contiguous wires
             std::vector<index_type> indices(num_states);
 
             // Calculate the indices of the state-vector to be set.

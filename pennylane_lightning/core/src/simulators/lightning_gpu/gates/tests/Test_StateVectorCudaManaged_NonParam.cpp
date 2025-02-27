@@ -1124,6 +1124,29 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
                           std::vector<std::size_t>{0, 1, 2});
         CHECK(init_state == Pennylane::Util::approx(sv.getDataVector()));
     }
+
+    SECTION("Set state vector with values and their corresponding indices on "
+            "the host for a subset of wires left significant") {
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits-1);
+        std::vector<std::complex<PrecisionT>> expected_state(init_state.size(),
+                                                             {0, 0});
+
+        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
+             i++)
+        {
+            std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
+        }
+
+        StateVectorCudaManaged<TestType> sv{num_qubits};
+
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
+
+        sv.setStateVector(values.data(), values.size(),
+                          std::vector<std::size_t>{0, 1, 2});
+        CHECK(init_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
 }
 
 TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetIthStates",
