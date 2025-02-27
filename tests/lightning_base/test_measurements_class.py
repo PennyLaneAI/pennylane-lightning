@@ -400,7 +400,12 @@ class TestSparseExpval:
             [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170],
         ],
     )
-    @pytest.mark.parametrize("obs", [qml.SparseHamiltonian, ])
+    @pytest.mark.parametrize(
+        "obs",
+        [
+            qml.SparseHamiltonian,
+        ],
+    )
     def test_sparse_Pauli_words(self, obs, ham_terms, expected, tol, lightning_sv):
         """Test expval of some simple sparse operators"""
 
@@ -424,7 +429,9 @@ class TestSparseExpval:
 class TestSparseMeasurements:
     """Tests all sparse measurements"""
 
-    sparse_observables = [qml.SparseHamiltonian,]
+    sparse_observables = [
+        qml.SparseHamiltonian,
+    ]
 
     @staticmethod
     def calculate_reference(tape, lightning_sv):
@@ -613,9 +620,7 @@ class TestMeasurements:
         statevector = get_final_state(statevector, tape)
         m = LightningMeasurements(statevector)
 
-        skip_list = (
-            qml.ops.Sum,
-        )
+        skip_list = (qml.ops.Sum,)
         do_skip = measurement is qml.var and isinstance(observable, skip_list)
         do_skip = do_skip and shots is not None
         if do_skip:
