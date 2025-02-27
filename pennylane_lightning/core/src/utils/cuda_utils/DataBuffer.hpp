@@ -214,7 +214,8 @@ template <class GPUDataT, class DevTagT = int> class DataBuffer {
     }
 
     /**
-     * @brief Explicitly copy data from host memory to GPU device with an offset.
+     * @brief Explicitly copy data from host memory to GPU device with an
+     * offset.
      *
      */
     template <class HostDataT = GPUDataT>
@@ -237,40 +238,31 @@ template <class GPUDataT, class DevTagT = int> class DataBuffer {
         }
     }
 
-        /**
+    /**
      * @brief Explicitly copy data from host memory to GPU device with a stride.
      *
      */
     template <class HostDataT = GPUDataT>
-    void CopyHostDataToGpuWithStride(const HostDataT *host_in, 
-                           std::size_t length,
-                           std::size_t stride, 
-                           bool async = false) {
+    void CopyHostDataToGpuWithStride(const HostDataT *host_in,
+                                     std::size_t length, std::size_t stride,
+                                     bool async = false) {
         PL_ABORT_IF(
             (getLength() * sizeof(GPUDataT)) <
                 ((stride * length) * sizeof(HostDataT)),
             "Sizes do not match for host & GPU data. Please ensure the source "
-            "buffer is out of bounds of the destination buffer or the stride is too large");
+            "buffer is out of bounds of the destination buffer or the stride "
+            "is too large");
 
         if (async) {
             PL_CUDA_IS_SUCCESS(
-                cudaMemcpy2DAsync(getData(),
-                                  sizeof(GPUDataT) * stride,
-                                  host_in,
-                                  sizeof(HostDataT),
-                                  sizeof(HostDataT),
-                                  length,
-                                  cudaMemcpyHostToDevice,
-                                  getStream()));
+                cudaMemcpy2DAsync(getData(), sizeof(GPUDataT) * stride, host_in,
+                                  sizeof(HostDataT), sizeof(HostDataT), length,
+                                  cudaMemcpyHostToDevice, getStream()));
         } else {
             PL_CUDA_IS_SUCCESS(
-                cudaMemcpy2D(getData(),
-                                  sizeof(GPUDataT) * stride,
-                                  host_in,
-                                  sizeof(HostDataT),
-                                  sizeof(HostDataT),
-                                  length,
-                                  cudaMemcpyDefault));
+                cudaMemcpy2D(getData(), sizeof(GPUDataT) * stride, host_in,
+                             sizeof(HostDataT), sizeof(HostDataT), length,
+                             cudaMemcpyDefault));
         }
     }
 

@@ -223,7 +223,6 @@ class StateVectorCudaManaged
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
-
         bool is_wires_sorted = std::is_sorted(wires.begin(), wires.end());
         bool is_wires_contiguous = false;
         if (is_wires_sorted) {
@@ -2172,8 +2171,10 @@ class StateVectorCudaManaged
         BaseType::getDataBuffer().zeroInit();
 
         if (is_left_significant) {
-            size_t stride = std::size_t(1) << (BaseType::getNumQubits() - wires.size());
-            BaseType::getDataBuffer().CopyHostDataToGpuWithStride(values, num_indices,stride, async);
+            size_t stride = std::size_t(1)
+                            << (BaseType::getNumQubits() - wires.size());
+            BaseType::getDataBuffer().CopyHostDataToGpuWithStride(
+                values, num_indices, stride, async);
         } else {
             BaseType::getDataBuffer().CopyHostDataToGpu(values, num_indices,
                                                         std::size_t(0), async);
