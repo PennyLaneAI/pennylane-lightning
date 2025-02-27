@@ -70,6 +70,17 @@ class LightningBaseMeasurements(ABC):
         """Returns the simulation data type."""
         return self._qubit_state.dtype
 
+    def _observable_is_sparse(self, obs):
+        """States if the required observable is sparse.
+
+        Args:
+            obs: PennyLane observable to check sparsity.
+
+        Returns:
+            True if the measurement process will use the sparse data representation.
+        """
+        return isinstance(obs, SparseHamiltonian) or (obs.has_sparse_matrix and not obs.has_matrix)
+
     @abstractmethod
     def _measurement_dtype(self):
         """Binding to Lightning [Device] Measurements C++ class.
@@ -79,7 +90,7 @@ class LightningBaseMeasurements(ABC):
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
-            This method is bypassing the measurement process to default.qubit implementation.
+           This method is bypassing the measurement process to default.qubit implementation.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state
@@ -104,16 +115,16 @@ class LightningBaseMeasurements(ABC):
         Returns:
             Expectation value of the observable
         """
-
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            # ensuring CSR sparse representation.
-            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+        if self._observable_is_sparse(measurementprocess.obs):
+            # Internally all sparse operators will be treated as a sparse Hermitian operator.
+            # We first ensure the CSR sparse representation.
+            CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
             return self._measurement_lightning.expval(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
+                CSR_SparseHermitianObs.indptr,
+                CSR_SparseHermitianObs.indices,
+                CSR_SparseHermitianObs.data,
             )
 
         if (
@@ -164,15 +175,15 @@ class LightningBaseMeasurements(ABC):
             Variance of the observable
         """
 
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            # ensuring CSR sparse representation.
-            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
+        if self._observable_is_sparse(measurementprocess.obs):
+            # Ensuring CSR sparse representation.
+            CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
             return self._measurement_lightning.var(
-                CSR_SparseHamiltonian.indptr,
-                CSR_SparseHamiltonian.indices,
-                CSR_SparseHamiltonian.data,
+                CSR_SparseHermitianObs.indptr,
+                CSR_SparseHermitianObs.indices,
+                CSR_SparseHermitianObs.data,
             )
 
         if (
@@ -301,11 +312,11 @@ class LightningBaseMeasurements(ABC):
 
         all_res = []
         for group in groups:
-            if isinstance(group[0], (ExpectationMP, VarianceMP)) and isinstance(
-                group[0].obs, SparseHamiltonian
+            if isinstance(group[0], (ExpectationMP, VarianceMP)) and self._observable_is_sparse(
+                group[0].obs
             ):
                 raise TypeError(
-                    "ExpectationMP/VarianceMP(SparseHamiltonian) cannot be computed with samples."
+                    "ExpectationMP/VarianceMP of sparse operators cannot be computed with samples."
                 )
             if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, Sum):
                 raise TypeError("VarianceMP(Sum) cannot be computed with samples.")

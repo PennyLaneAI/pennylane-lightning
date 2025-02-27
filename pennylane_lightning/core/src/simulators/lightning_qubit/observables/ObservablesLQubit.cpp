@@ -42,8 +42,9 @@ template class Observables::Hamiltonian<StateVectorLQubitRaw<double>>;
 template class Observables::Hamiltonian<StateVectorLQubitManaged<float>>;
 template class Observables::Hamiltonian<StateVectorLQubitManaged<double>>;
 
-template class Observables::SparseHamiltonian<StateVectorLQubitRaw<float>>;
-template class Observables::SparseHamiltonian<StateVectorLQubitRaw<double>>;
+template class Observables::SparseHermitianObs<StateVectorLQubitRaw<float>>;
+template class Observables::SparseHermitianObs<StateVectorLQubitRaw<double>>;
 
-template class Observables::SparseHamiltonian<StateVectorLQubitManaged<float>>;
-template class Observables::SparseHamiltonian<StateVectorLQubitManaged<double>>;
+template class Observables::SparseHermitianObs<StateVectorLQubitManaged<float>>;
+template class Observables::SparseHermitianObs<
+    StateVectorLQubitManaged<double>>;

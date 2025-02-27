@@ -75,6 +75,18 @@ class LightningTensorMeasurements:
         """Returns the simulation data type."""
         return self._dtype
 
+    def _observable_is_sparse(self, obs):
+        """States if the required observable is sparse.
+
+        Args:
+            obs: PennyLane observable to check sparsity.
+
+        Returns:
+            True if the measurement process will use the sparse data representation.
+        """
+
+        return isinstance(obs, qml.SparseHamiltonian)
+
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
 
@@ -115,8 +127,8 @@ class LightningTensorMeasurements:
         Returns:
             Expectation value of the observable
         """
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError("Sparse Hamiltonians are not supported.")
+        if self._observable_is_sparse(measurementprocess.obs):
+            raise NotImplementedError("Sparse Observables are not supported.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
@@ -159,10 +171,8 @@ class LightningTensorMeasurements:
         Returns:
             Variance of the observable
         """
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError(
-                "The var measurement does not support sparse Hamiltonian observables."
-            )
+        if self._observable_is_sparse(measurementprocess.obs):
+            raise NotImplementedError("The var measurement does not support sparse observables.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:

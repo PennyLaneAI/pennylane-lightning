@@ -218,11 +218,12 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
 };
 
 /**
- * @brief Sparse representation of Hamiltonian<StateVectorT>
+ * @brief Sparse representation of a Hermitian operator.
  *
  */
 template <class StateVectorT>
-class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
+class SparseHermitianObsMPI final
+    : public SparseHermitianObsBase<StateVectorT> {
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -232,11 +233,11 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
                                   int32_t, int64_t>::type;
 
   private:
-    using BaseType = SparseHamiltonianBase<StateVectorT>;
+    using BaseType = SparseHermitianObsBase<StateVectorT>;
 
   public:
     /**
-     * @brief Create a SparseHamiltonianMPI from data, indices and offsets in
+     * @brief Create a SparseHermitianObsMPI from data, indices and offsets in
      * CSR format.
      *
      * @param data Arguments to construct data
@@ -245,8 +246,8 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
      * @param wires Arguments to construct wires
      */
     template <typename T1, typename T2, typename T3 = T2, typename T4>
-    explicit SparseHamiltonianMPI(T1 &&data, T2 &&indices, T3 &&offsets,
-                                  T4 &&wires)
+    explicit SparseHermitianObsMPI(T1 &&data, T2 &&indices, T3 &&offsets,
+                                   T4 &&wires)
         : BaseType{data, indices, offsets, wires} {}
 
     /**
@@ -265,9 +266,9 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
                        std::initializer_list<IdxT> indices,
                        std::initializer_list<IdxT> offsets,
                        std::initializer_list<std::size_t> wires)
-        -> std::shared_ptr<SparseHamiltonianMPI<StateVectorT>> {
-        return std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>(
-            new SparseHamiltonianMPI<StateVectorT>{
+        -> std::shared_ptr<SparseHermitianObsMPI<StateVectorT>> {
+        return std::shared_ptr<SparseHermitianObsMPI<StateVectorT>>(
+            new SparseHermitianObsMPI<StateVectorT>{
                 std::move(data), std::move(indices), std::move(offsets),
                 std::move(wires)});
     }

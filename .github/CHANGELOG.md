@@ -6,6 +6,12 @@
 
 ### Improvements
 
+* Added support for sparse `qml.QubitUnitary` gates for `LQubit`, `LGPU`, and `LKokkos` backends.
+  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+
+* Introduced a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse gates.
+  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+
 * Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
   [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
 
@@ -24,7 +30,7 @@
 
 * Remove the old device API references in the Lightning repo and test suite.
   [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
-  
+
 * Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
   [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
 
