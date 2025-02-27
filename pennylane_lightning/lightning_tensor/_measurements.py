@@ -128,7 +128,7 @@ class LightningTensorMeasurements:
             Expectation value of the observable
         """
         if self._observable_is_sparse(measurementprocess.obs):
-            raise NotImplementedError("Sparse Hamiltonians are not supported.")
+            raise NotImplementedError("Sparse Observables are not supported.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
@@ -173,7 +173,7 @@ class LightningTensorMeasurements:
         """
         if self._observable_is_sparse(measurementprocess.obs):
             raise NotImplementedError(
-                "The var measurement does not support sparse Hamiltonian observables."
+                "The var measurement does not support sparse observables."
             )
 
         if isinstance(measurementprocess.obs, qml.Hermitian):

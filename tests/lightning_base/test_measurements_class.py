@@ -617,7 +617,6 @@ class TestMeasurements:
 
         skip_list = (
             qml.ops.Sum,
-            qml.SparseHamiltonian,
         )
         do_skip = measurement is qml.var and isinstance(observable, skip_list)
         do_skip = do_skip and shots is not None
