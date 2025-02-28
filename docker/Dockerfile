@@ -104,7 +104,7 @@ RUN pip install --force-reinstall --no-cache-dir pennylane_lightning*.whl && rm 
 RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
 
 # Install CUDA-12 in build venv image
-FROM base-build-python as base-build-cuda
+FROM base-build-python AS base-build-cuda
 WORKDIR /opt/cuda-build
 RUN curl -o cuda-install.run ${CUDA_INSTALLER}
 RUN chmod a+x cuda-install.run
@@ -176,7 +176,7 @@ RUN pip install --no-cache-dir --force-reinstall pennylane_lightning*.whl && rm 
 RUN pip install --no-cache-dir git+https://github.com/PennyLaneAI/pennylane.git@${PENNYLANE_VERSION}
 
 # Install ROCm in build venv image
-FROM base-build-python as base-build-rocm
+FROM base-build-python AS base-build-rocm
 RUN wget --progress=dot:giga ${ROCM_INSTALLER}
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
