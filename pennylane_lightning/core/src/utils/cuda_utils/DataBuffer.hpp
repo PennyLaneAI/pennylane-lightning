@@ -262,7 +262,7 @@ template <class GPUDataT, class DevTagT = int> class DataBuffer {
             PL_CUDA_IS_SUCCESS(
                 cudaMemcpy2D(getData(), sizeof(GPUDataT) * stride, host_in,
                              sizeof(HostDataT), sizeof(HostDataT), length,
-                             cudaMemcpyDefault));
+                             cudaMemcpyHostToDevice));
         }
     }
 

@@ -1127,10 +1127,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
         std::vector<std::complex<PrecisionT>> expected_state(
             Pennylane::Util::exp2(num_qubits), {0, 0});
 
-        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
-             i++) {
-            expected_state[i] = init_state[i];
-        }
+        std::copy(init_state.begin(), init_state.end(), expected_state.begin());
 
         StateVectorCudaManaged<TestType> sv{num_qubits};
 
