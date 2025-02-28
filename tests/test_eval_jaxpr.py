@@ -570,7 +570,7 @@ class TestDeferMeasurements:
 
         dev = qml.device(device_name, wires=5)
 
-        @DeferMeasurementsInterpreter(aux_wires=list(range(2, 5)))
+        @DeferMeasurementsInterpreter(num_wires=5)
         def f():
             qml.Hadamard(0)
             qml.measure(0)
@@ -586,7 +586,7 @@ class TestDeferMeasurements:
 
         dev = qml.device(device_name, wires=5)
 
-        @DeferMeasurementsInterpreter(aux_wires=list(range(2, 5)))
+        @DeferMeasurementsInterpreter(num_wires=5)
         def f():
             qml.PauliX(0)
             qml.measure(0, reset=True)
@@ -601,7 +601,7 @@ class TestDeferMeasurements:
 
         dev = qml.device(device_name, wires=5)
 
-        @DeferMeasurementsInterpreter(aux_wires=list(range(2, 5)))
+        @DeferMeasurementsInterpreter(num_wires=5)
         def f():
             qml.Hadamard(0)
             m = qml.measure(0)
@@ -619,7 +619,7 @@ class TestDeferMeasurements:
 
         dev = qml.device(device_name, wires=5)
 
-        @DeferMeasurementsInterpreter(aux_wires=list(range(2, 5)))
+        @DeferMeasurementsInterpreter(num_wires=5)
         def f(x):
             qml.Hadamard(0)
             qml.Hadamard(1)
@@ -653,7 +653,7 @@ class TestDeferMeasurements:
 
         dev = qml.device(device_name, wires=5)
 
-        @DeferMeasurementsInterpreter(aux_wires=list(range(2, 5)))
+        @DeferMeasurementsInterpreter(num_wires=5)
         def f(x):
             qml.Hadamard(0)
             m0 = qml.measure(0)
@@ -726,7 +726,7 @@ class TestDeferMeasurements:
 
             return outs
 
-        transformed_f = DeferMeasurementsInterpreter(aux_wires=list(range(2, 5)))(f)
+        transformed_f = DeferMeasurementsInterpreter(num_wires=5)(f)
         qnode_f = qml.QNode(f, dev, mcm_method="deferred")
 
         jaxpr = jax.make_jaxpr(transformed_f)()
