@@ -142,6 +142,13 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
+          pip cache purge
+
   upload-pypi:
     needs: [set_wheel_build_matrix, linux-wheels-aarch64]
     strategy:
@@ -168,3 +175,10 @@ jobs:
         with:
           verbose: true
           repository-url: https://test.pypi.org/legacy/
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf ${{ steps.setup_venv.outputs.venv_name }}
+          rm -rf * .git .gitignore .github
+          pip cache purge
