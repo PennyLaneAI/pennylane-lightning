@@ -60,6 +60,9 @@
 
 ### Bug fixes
 
+* Increase maximum time for aarch64-CUDA Github CI action .
+  [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
+
 * Fix `SyntaxWarning` from `is` with a literal in Python tests.
   [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
 
