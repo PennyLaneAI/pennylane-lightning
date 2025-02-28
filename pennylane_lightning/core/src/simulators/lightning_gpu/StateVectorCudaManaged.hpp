@@ -2155,11 +2155,12 @@ class StateVectorCudaManaged
      * DataBuffer class.
      *
      * @tparam index_type Integer value type.
-     * 
+     *
      * @param num_indices Number of elements to be passed to the state vector.
      * @param values Pointer to values to be set for the target elements.
      * @param wires Wires of the target elements.
-     * @param is_left_significant If true, the target wires start from zero. Otherwise, the last target wire matches the last qubit.
+     * @param is_left_significant If true, the target wires start from zero.
+     * Otherwise, the last target wire matches the last qubit.
      * @param async Use an asynchronous memory copy.
      */
     template <class index_type>
