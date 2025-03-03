@@ -60,6 +60,9 @@
 
 ### Bug fixes
 
+* Fix Github CI for aarch64 cuda to clean up after runs.
+  [(#1074)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1074)
+
 * Increase maximum time for aarch64-CUDA Github CI action .
   [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
 
