@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
+  [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
+
 * Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
   [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
 
@@ -95,6 +98,7 @@ Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
+Alex Preciado,
 Shuli Shu
 
 ---
