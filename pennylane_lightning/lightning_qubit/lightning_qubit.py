@@ -341,6 +341,8 @@ class LightningQubit(LightningBase):
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
             self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype)
+        else:
+            self._statevector.reset_state()
 
         return circuit
 
@@ -493,7 +495,6 @@ class LightningQubit(LightningBase):
                 )
             return tuple(results)
 
-        state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
