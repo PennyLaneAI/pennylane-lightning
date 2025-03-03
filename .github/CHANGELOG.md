@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
+  [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
+
 * Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
   [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
 

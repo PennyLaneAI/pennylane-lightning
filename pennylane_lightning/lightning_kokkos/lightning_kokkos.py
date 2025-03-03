@@ -304,6 +304,8 @@ class LightningKokkos(LightningBase):
                 num_wires=num_wires, dtype=self._c_dtype, kokkos_args=self._kokkos_args
             )
             LightningKokkos.kokkos_config = _kokkos_configuration()
+        else:
+            self._statevector.reset_state()
 
         return circuit
 
@@ -444,7 +446,6 @@ class LightningKokkos(LightningBase):
                 )
             return tuple(results)
 
-        state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state).measure_final_state(circuit)
 

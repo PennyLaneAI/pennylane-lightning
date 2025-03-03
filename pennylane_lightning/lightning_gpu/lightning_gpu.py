@@ -349,6 +349,8 @@ class LightningGPU(LightningBase):
                 mpi_handler=None,
                 use_async=self._use_async,
             )
+        else:
+            self._statevector.reset_state()
 
         return circuit
 
@@ -494,7 +496,6 @@ class LightningGPU(LightningBase):
                 )
             return tuple(results)
 
-        state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state).measure_final_state(circuit)
 
