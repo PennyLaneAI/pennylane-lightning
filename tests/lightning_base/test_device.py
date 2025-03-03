@@ -343,7 +343,7 @@ class TestHelpers:
     def test_dynamic_wires_from_circuit_reset_state(
         self, circuit_0, n_wires_0, circuit_1, n_wires_1
     ):
-        """Test that dynamic_wires_from_circuit resets state when reusing state vector"""
+        """Test that dynamic_wires_from_circuit resets state when reusing or initializing new state vector"""
         device = LightningDevice(wires=None)
 
         # Initialize statevector and apply a state
