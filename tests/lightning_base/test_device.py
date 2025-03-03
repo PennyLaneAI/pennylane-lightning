@@ -323,6 +323,41 @@ class TestHelpers:
             assert device._statevector._num_wires == n_wires
             assert device._statevector._wires == qml.wires.Wires(range(n_wires))
 
+    @pytest.mark.parametrize(
+        "circuit_0, n_wires_0",
+        [
+            (QuantumScript([qml.RX(0.1, 0)], [qml.expval(qml.Z(1))]), 2),
+            (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 1)], [qml.expval(qml.Z(2))]), 3),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "circuit_1, n_wires_1",
+        [
+            (QuantumScript([qml.RX(0.1, 0)], [qml.expval(qml.Z(1))]), 2),
+            (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 1)], [qml.expval(qml.Z(2))]), 3),
+        ],
+    )
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor does not have state vector"
+    )
+    def test_dynamic_wires_from_circuit_reset_state(
+        self, circuit_0, n_wires_0, circuit_1, n_wires_1
+    ):
+        """Test that dynamic_wires_from_circuit resets state when reusing state vector"""
+        device = LightningDevice(wires=None)
+
+        # Initialize statevector and apply a state
+        device.dynamic_wires_from_circuit(circuit_0)
+        state = np.zeros(2**n_wires_0)
+        state[-1] = 1.0
+        device._statevector._apply_state_vector(state, range(n_wires_0))
+
+        # Dynamic wires again will reset the state
+        device.dynamic_wires_from_circuit(circuit_1)
+        expected_state = np.zeros(2**n_wires_1)
+        expected_state[0] = 1.0
+        assert np.allclose(device._statevector.state, expected_state)
+
 
 class TestInitialization:
     """Unit tests for device initialization"""
