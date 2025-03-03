@@ -223,15 +223,18 @@ class StateVectorCudaManaged
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
-        const bool is_wires_sorted = std::is_sorted(wires.begin(), wires.end());
-        const bool is_wires_contiguous =
+        const bool is_wires_sorted_contiguous =
+            std::is_sorted(wires.begin(), wires.end()) &&
             wires.front() + wires.size() - 1 == wires.back();
 
-        if (is_wires_sorted && is_wires_contiguous) {
+        const bool is_left_significant = wires.front() == 0;
+        const bool is_side_significant =
+            is_left_significant || wires.back() == num_qubits - 1;
+
+        if (is_wires_sorted_contiguous && is_side_significant) {
             // Set most common case: contiguous wires
-            const bool is_left_significant = wires.front() == 0;
-            setStateVector_<index_type>(num_states, state_ptr, wires,
-                                        is_left_significant, use_async);
+            setSortedContiguousStateVector_<index_type>(
+                num_states, state_ptr, wires, is_left_significant, use_async);
         } else {
             // Set the state-vector for non-contiguous wires
             std::vector<index_type> indices(num_states);
@@ -2164,11 +2167,11 @@ class StateVectorCudaManaged
      * @param async Use an asynchronous memory copy.
      */
     template <class index_type>
-    void setStateVector_(const index_type num_indices,
-                         const std::complex<PrecisionT> *values,
-                         const std::vector<std::size_t> &wires,
-                         const bool is_left_significant = false,
-                         const bool async = false) {
+    void setSortedContiguousStateVector_(const index_type num_indices,
+                                         const std::complex<PrecisionT> *values,
+                                         const std::vector<std::size_t> &wires,
+                                         const bool is_left_significant = false,
+                                         const bool async = false) {
         BaseType::getDataBuffer().zeroInit();
 
         if (is_left_significant) {
