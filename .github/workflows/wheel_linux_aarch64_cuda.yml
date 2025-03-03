@@ -40,7 +40,7 @@ jobs:
         cuda_version: ["12"]
         cibw_build: ${{ fromJson(needs.set_wheel_build_matrix.outputs.python_version) }}
         container_img: ["quay.io/pypa/manylinux_2_28_aarch64"]
-    timeout-minutes: 90
+    timeout-minutes: 60
     name: ${{ matrix.os }}::${{ matrix.arch }} - ${{ matrix.pl_backend }} (Python ${{ fromJson('{ "cp310-*":"3.10","cp311-*":"3.11", "cp312-*":"3.12" }')[matrix.cibw_build] }})
     runs-on: 
       - single-gpu-arm
