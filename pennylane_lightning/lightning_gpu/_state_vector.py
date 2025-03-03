@@ -181,6 +181,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
     @staticmethod
     def _asarray(arr, dtype=None):
+
+        if isinstance(arr, np.ndarray) and arr.dtype in [np.complex64, np.complex128]:
+            return arr
+
         arr = np.asarray(arr)  # arr is not copied
 
         if arr.dtype.kind not in ["f", "c"]:
@@ -214,10 +218,10 @@ class LightningGPUStateVector(LightningBaseStateVector):
             # state = state_data
 
         state = self._asarray(state, dtype=self.dtype)  # this operation on host
-        output_shape = [2] * self._num_local_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
+            output_shape = [2] * self._num_local_wires
             if self.num_wires == self._num_local_wires:
                 self.syncH2D(np.reshape(state, output_shape))
                 return
