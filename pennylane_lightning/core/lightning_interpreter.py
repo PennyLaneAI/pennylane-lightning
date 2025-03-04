@@ -68,7 +68,7 @@ class LightningInterpreter(PlxprInterpreter):
         self,
         state: LightningBaseStateVector,
         measurement_class: type[LightningBaseMeasurements],
-        shots: Shots = Shots(None),
+        shots: Shots = Shots(),
     ):
         self.state = state
         self.measurement_class = measurement_class

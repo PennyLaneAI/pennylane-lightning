@@ -737,3 +737,30 @@ class TestDeferMeasurements:
 
         for r, e in zip(res, expected, strict=True):
             assert qml.math.allclose(r, e)
+
+    def test_shots(self):
+        """Tests that defer measurements executes correctly with shots."""
+
+        dev = qml.device(device_name, wires=5, shots=100)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f(x):
+            qml.Hadamard(0)
+            m = qml.measure(0)
+
+            @qml.cond(m == 0)
+            def cond_fn(y):
+                qml.RY(y, 0)
+
+            @cond_fn.otherwise
+            def _(y):
+                qml.RY(3 * y, 0)
+
+            cond_fn(x)
+
+            return qml.sample(wires=0)
+
+        phi = jax.numpy.pi / 2
+        jaxpr = jax.make_jaxpr(f)(phi)
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, phi)
+        assert qml.math.shape(res) == (1, 100)
