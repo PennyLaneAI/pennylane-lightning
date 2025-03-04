@@ -205,10 +205,11 @@ class StateVectorCudaManaged
      * @param wires Wires.
      * @param use_async Use an asynchronous memory copy. Default is false.
      */
-    void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
+    void setStateVector(const ComplexT *state_ptr, const std::size_t state_size,
                         const std::vector<std::size_t> &wires,
-                        bool use_async = false) {
-        PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
+                        bool use_async = false)
+    {
+        PL_ABORT_IF_NOT(state_size == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
         const auto num_qubits = BaseType::getNumQubits();
@@ -234,31 +235,32 @@ class StateVectorCudaManaged
         if (is_wires_sorted_contiguous && is_side_significant) {
             // Set most common case: contiguous wires
             setSortedContiguousStateVector_<index_type>(
-                num_states, state_ptr, wires, is_left_significant, use_async);
+                state_size, state_ptr, wires, is_left_significant, use_async);
         } else {
             // Set the state-vector for non-contiguous wires
-            std::vector<index_type> indices(num_states);
+            std::vector<index_type> indices(state_size);
 
             // Calculate the indices of the state-vector to be set.
             // TODO: Could move to GPU calculation if the state size is large.
-#pragma omp parallel shared(num_states, num_qubits, indices, wires)
+#pragma omp parallel shared(state_size, num_qubits, indices, wires)
             {
                 const std::size_t num_wires = wires.size();
+                auto local_wires = wires;
 
 #pragma omp for
-                for (std::size_t i = 0; i < num_states; i++) {
+                for (std::size_t i = 0; i < state_size; i++) {
                     constexpr std::size_t one{1U};
                     std::size_t index{0U};
                     for (std::size_t j = 0; j < num_wires; j++) {
                         const std::size_t bit = (i & (one << j)) >> j;
                         index |= bit
-                                 << (num_qubits - 1 - wires[num_wires - 1 - j]);
+                                 << (num_qubits - 1 - local_wires[num_wires - 1 - j]);
                     }
                     indices[i] = static_cast<index_type>(index);
                 }
             }
             // set the state-vector
-            setStateVector_<index_type>(num_states, state_ptr, indices.data(),
+            setStateVector_<index_type>(state_size, state_ptr, indices.data(),
                                         use_async);
         }
     }
