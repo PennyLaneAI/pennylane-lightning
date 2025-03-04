@@ -554,3 +554,4 @@ PennyLane Lightning makes use of the following libraries and tools, which are un
 - **Xanadu JET:** https://github.com/XanaduAI/jet
 
 .. acknowledgements-end-inclusion-marker-do-not-remove
+
