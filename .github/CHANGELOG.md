@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
+  [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
+
 * Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
   [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
 
@@ -63,6 +66,12 @@
 
 ### Bug fixes
 
+* Fix Github CI for aarch64 cuda to clean up after runs.
+  [(#1074)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1074)
+
+* Increase maximum time for aarch64-CUDA Github CI action .
+  [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
+
 * Fix `SyntaxWarning` from `is` with a literal in Python tests.
   [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
 
@@ -93,6 +102,7 @@ Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
+Alex Preciado,
 Shuli Shu
 
 ---
