@@ -73,7 +73,7 @@ class LightningBase(Device):
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
-
+        self.sv_init_kwargs = None
         if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
@@ -106,8 +106,7 @@ class LightningBase(Device):
 
         """
 
-    @abstractmethod
-    def dynamic_wires_from_circuit(self, circuit):
+    def dynamic_wires_from_circuit(self, circuit, **sv_init_kwargs):
         """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
         Args:
@@ -116,6 +115,23 @@ class LightningBase(Device):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
+
+        if self._mpi_handler and self._mpi_handler.use_mpi:
+            return circuit
+
+        if self.wires is None:
+            num_wires = circuit.num_wires
+            # Map to follow default.qubit wire order for dynamic wires
+            circuit = circuit.map_to_standard_wires()
+        else:
+            num_wires = len(self.wires)
+
+        if (self._statevector is None) or (self._statevector.num_wires != num_wires):
+            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype, **sv_init_kwargs)
+        else:
+            self._statevector.reset_state()
+
+        return circuit
 
     @abstractmethod
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
@@ -332,7 +348,7 @@ class LightningBase(Device):
 
         return tuple(
             self.jacobian(
-                self.dynamic_wires_from_circuit(circuit),
+                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
                 self._statevector,
                 batch_obs=batch_obs,
                 wire_map=self._wire_map,
@@ -357,7 +373,7 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_jacobian(
-                self.dynamic_wires_from_circuit(circuit),
+                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
                 self._statevector,
                 batch_obs=batch_obs,
                 wire_map=self._wire_map,
@@ -416,7 +432,7 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
             self.vjp(
-                self.dynamic_wires_from_circuit(circuit),
+                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
                 cots,
                 self._statevector,
                 batch_obs=batch_obs,
@@ -444,7 +460,7 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_vjp(
-                self.dynamic_wires_from_circuit(circuit),
+                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
                 cots,
                 self._statevector,
                 batch_obs=batch_obs,
