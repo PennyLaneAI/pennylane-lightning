@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Modify expval of named operators in LightningQubit for in-place computation of expectation value, to avoid creating an intermediate statevector
+  [(##565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
+  
 * Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
   [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
 
