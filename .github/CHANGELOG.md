@@ -9,6 +9,9 @@
 * Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
+* Optimize the copy of a input state-vector into the LGPU #1071 
+  [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
+
 * Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
   [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
 
