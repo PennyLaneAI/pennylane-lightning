@@ -267,7 +267,11 @@ class TestHelpers:
     def test_dynamic_wires_from_circuit(self, circuit_in, n_wires, expected_circuit_out):
         """Test that dynamic_wires_from_circuit returns correct circuit and creates state-vectors properly"""
         device = LightningDevice(wires=None)
-        circuit_out = device.dynamic_wires_from_circuit(circuit_in)
+
+        if device_name == "lightning.tensor":
+            circuit_out = device.dynamic_wires_from_circuit(circuit_in)
+        else:
+            circuit_out = device.dynamic_wires_from_circuit(circuit_in, **device._sv_init_kwargs)
 
         assert circuit_out.num_wires == n_wires
         assert circuit_out.wires == qml.wires.Wires(range(n_wires))
@@ -312,7 +316,11 @@ class TestHelpers:
     def test_dynamic_wires_from_circuit_fixed_wires(self, circuit_in, n_wires, wires_list):
         """Test that dynamic_wires_from_circuit does not alter the circuit if wires are fixed and state-vector is created properly"""
         device = LightningDevice(wires=n_wires)
-        circuit_out = device.dynamic_wires_from_circuit(circuit_in)
+
+        if device_name == "lightning.tensor":
+            circuit_out = device.dynamic_wires_from_circuit(circuit_in)
+        else:
+            circuit_out = device.dynamic_wires_from_circuit(circuit_in, **device._sv_init_kwargs)
 
         assert circuit_out.num_wires == circuit_in.num_wires
         assert circuit_out.wires == qml.wires.Wires(wires_list)
@@ -347,13 +355,19 @@ class TestHelpers:
         device = LightningDevice(wires=None)
 
         # Initialize statevector and apply a state
-        device.dynamic_wires_from_circuit(circuit_0)
+        if device_name == "lightning.tensor":
+            device.dynamic_wires_from_circuit(circuit_0)
+        else:
+            device.dynamic_wires_from_circuit(circuit_0, **device._sv_init_kwargs)
         state = np.zeros(2**n_wires_0)
         state[-1] = 1.0
         device._statevector._apply_state_vector(state, range(n_wires_0))
 
         # Dynamic wires again will reset the state
-        device.dynamic_wires_from_circuit(circuit_1)
+        if device_name == "lightning.tensor":
+            device.dynamic_wires_from_circuit(circuit_1)
+        else:
+            device.dynamic_wires_from_circuit(circuit_1, **device._sv_init_kwargs)
         expected_state = np.zeros(2**n_wires_1)
         expected_state[0] = 1.0
         assert np.allclose(device._statevector.state, expected_state)
