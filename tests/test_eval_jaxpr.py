@@ -745,22 +745,30 @@ class TestDeferMeasurements:
 
         @DeferMeasurementsInterpreter(num_wires=5)
         def f(x):
-            qml.Hadamard(0)
+
+            @qml.cond(x)
+            def x_cond():
+                qml.PauliX(0)
+
+            x_cond()
             m = qml.measure(0)
 
             @qml.cond(m == 0)
-            def cond_fn(y):
-                qml.RY(y, 0)
+            def cond_fn():
+                # State after this cond will be |1>
+                qml.PauliX(0)
 
             @cond_fn.otherwise
-            def _(y):
-                qml.RY(3 * y, 0)
+            def _():
+                # State after this will be (|0>-|1>)/sqrt(2)
+                qml.Hadamard(0)
 
-            cond_fn(x)
-
+            cond_fn()
             return qml.sample(wires=0)
 
-        phi = jax.numpy.pi / 2
-        jaxpr = jax.make_jaxpr(f)(phi)
-        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, phi)
-        assert qml.math.shape(res) == (1, 100)
+        jaxpr = jax.make_jaxpr(f)(True)
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, False)
+        assert qml.math.allclose(res, 1)
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, True)
+        # Assert that the result is a mix of 0s and 1s
+        assert not qml.math.allclose(res, 0) and not qml.math.allclose(res, 1)
