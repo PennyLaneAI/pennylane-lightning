@@ -74,7 +74,7 @@ class LightningBase(Device):
         # State-vector is dynamically allocated just before execution
         self._statevector = None
         self._sv_init_kwargs = {}
-        
+
         if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
