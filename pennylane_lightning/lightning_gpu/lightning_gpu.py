@@ -218,6 +218,8 @@ class LightningGPU(LightningBase):
         use_async (bool): is host-device data copy asynchronized or not.
     """
 
+    # pylint: disable=too-many-instance-attributes
+    
     # General device options
     _device_options = ("c_dtype", "batch_obs")
 
