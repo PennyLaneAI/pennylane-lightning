@@ -49,9 +49,9 @@ TEMPLATE_TEST_CASE("Linear Algebra::SparseMV", "[Linear Algebra]", float,
         {0.2, -0.1}, {-0.1, 0.2}, {0.2, 0.1}, {0.1, 0.2},
         {0.7, -0.2}, {-0.1, 0.6}, {0.6, 0.1}, {0.2, 0.7}};
 
-    std::vector<size_t> indptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
-    std::vector<size_t> indices = {0, 3, 1, 2, 1, 2, 0, 3,
-                                   4, 7, 5, 6, 5, 6, 4, 7};
+    std::vector<std::size_t> indptr = {0, 2, 4, 6, 8, 10, 12, 14, 16};
+    std::vector<std::size_t> indices = {0, 3, 1, 2, 1, 2, 0, 3,
+                                        4, 7, 5, 6, 5, 6, 4, 7};
     std::vector<ComplexT> values = {
         {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
         {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0},

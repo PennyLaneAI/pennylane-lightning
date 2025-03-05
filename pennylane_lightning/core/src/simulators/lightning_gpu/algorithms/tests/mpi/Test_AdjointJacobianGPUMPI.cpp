@@ -61,14 +61,14 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
 
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0};
+    std::vector<std::size_t> tp{0};
 
-    const size_t num_qubits = 2;
-    const size_t num_obs = 2;
+    const std::size_t num_qubits = 2;
+    const std::size_t num_obs = 2;
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -84,12 +84,11 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{0});
+            "PauliZ", std::vector<std::size_t>{0});
         const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ops = OpsData<StateVectorT>({"RX"}, {{param[0]}}, {{0}}, {false});
 
@@ -108,11 +107,10 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=RX, Obs=[Z,Z]",
     }
 }
 
-TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
+TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=["
           "StatePrep, BasisState], Obs=[Z,Z]",
           "[AdjointJacobianGPUMPI]") {
-    const std::string test_ops =
-        GENERATE("QubitStateVector", "StatePrep", "BasisState");
+    const std::string test_ops = GENERATE("StatePrep", "BasisState");
     using StateVectorT = StateVectorCudaMPI<double>;
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
@@ -120,15 +118,15 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
 
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0};
+    std::vector<std::size_t> tp{0};
 
-    const size_t num_qubits = 4;
-    const size_t num_obs = 2;
+    const std::size_t num_qubits = 4;
+    const std::size_t num_obs = 2;
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
     std::vector<double> jacobian_ref(num_obs * tp.size(), 0);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -144,12 +142,11 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobianMPI Op=[QubitStateVector, "
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{0});
+            "PauliZ", std::vector<std::size_t>{0});
         const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ops =
             OpsData<StateVectorT>({test_ops}, {{param[0]}}, {{0}}, {false});
@@ -174,17 +171,17 @@ TEST_CASE(
     using StateVectorT = StateVectorCudaMPI<double>;
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0, 1, 2};
+    std::vector<std::size_t> tp{0, 1, 2};
 
-    const size_t num_qubits = 3;
-    const size_t num_obs = 3;
+    const std::size_t num_qubits = 3;
+    const std::size_t num_obs = 3;
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -200,14 +197,13 @@ TEST_CASE(
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{0});
+            "PauliZ", std::vector<std::size_t>{0});
         const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
         const auto obs3 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{2});
+            "PauliZ", std::vector<std::size_t>{2});
 
         auto ops = OpsData<StateVectorT>(
             {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
@@ -243,17 +239,17 @@ TEST_CASE(
     using StateVectorT = StateVectorCudaMPI<double>;
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0, 2};
+    std::vector<std::size_t> tp{0, 2};
 
-    const size_t num_qubits = 3;
-    const size_t num_obs = 3;
+    const std::size_t num_qubits = 3;
+    const std::size_t num_obs = 3;
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -269,14 +265,13 @@ TEST_CASE(
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
 
         const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{0});
+            "PauliZ", std::vector<std::size_t>{0});
         const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
         const auto obs3 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{2});
+            "PauliZ", std::vector<std::size_t>{2});
         auto ops = OpsData<StateVectorT>(
             {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
             {{0}, {1}, {2}}, {false, false, false});
@@ -308,17 +303,17 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     using StateVectorT = StateVectorCudaMPI<double>;
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0, 1, 2};
+    std::vector<std::size_t> tp{0, 1, 2};
 
-    const size_t num_qubits = 3;
-    const size_t num_obs = 1;
+    const std::size_t num_qubits = 3;
+    const std::size_t num_obs = 1;
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -334,15 +329,14 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=[RX,RX,RX], Obs=[ZZZ]",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
-            std::make_shared<NamedObsMPI<StateVectorT>>("PauliZ",
-                                                        std::vector<size_t>{0}),
-            std::make_shared<NamedObsMPI<StateVectorT>>("PauliZ",
-                                                        std::vector<size_t>{1}),
             std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{2}));
+                "PauliZ", std::vector<std::size_t>{0}),
+            std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<std::size_t>{1}),
+            std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<std::size_t>{2}));
         auto ops = OpsData<StateVectorT>(
             {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
             {{0}, {1}, {2}}, {false, false, false});
@@ -371,17 +365,17 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
     using StateVectorT = StateVectorCudaMPI<double>;
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
+    std::vector<std::size_t> tp{0, 1, 2, 3, 4, 5};
 
-    const size_t num_qubits = 3;
-    const size_t num_obs = 1;
+    const std::size_t num_qubits = 3;
+    const std::size_t num_obs = 1;
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -397,15 +391,14 @@ TEST_CASE("AdjointJacobianGPUMPI::adjointJacobian Op=Mixed, Obs=[XXX]",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
 
         const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
-            std::make_shared<NamedObsMPI<StateVectorT>>("PauliX",
-                                                        std::vector<size_t>{0}),
-            std::make_shared<NamedObsMPI<StateVectorT>>("PauliX",
-                                                        std::vector<size_t>{1}),
             std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliX", std::vector<size_t>{2}));
+                "PauliX", std::vector<std::size_t>{0}),
+            std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<std::size_t>{1}),
+            std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliX", std::vector<std::size_t>{2}));
         auto ops = OpsData<StateVectorT>(
             {"RZ", "RY", "RZ", "CNOT", "CNOT", "RZ", "RY", "RZ"},
             {{param[0]},
@@ -451,17 +444,17 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
     using StateVectorT = StateVectorCudaMPI<double>;
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0, 2};
+    std::vector<std::size_t> tp{0, 2};
 
-    const size_t num_qubits = 3;
-    const size_t num_obs = 1;
+    const std::size_t num_qubits = 3;
+    const std::size_t num_obs = 1;
     std::vector<double> jacobian(num_obs * tp.size(), 0);
     std::vector<double> jacobian_serial(num_obs * tp.size(), 0);
 
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -478,14 +471,12 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPUMPI Op=[RX,RX,RX], "
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
-
         auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{0});
+            "PauliZ", std::vector<std::size_t>{0});
         auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
         auto obs3 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{2});
+            "PauliZ", std::vector<std::size_t>{2});
 
         auto ham = HamiltonianMPI<StateVectorT>::create({0.47, 0.32, 0.96},
                                                         {obs1, obs2, obs3});
@@ -517,10 +508,10 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     using StateVectorT = StateVectorCudaMPI<double>;
     AdjointJacobianMPI<StateVectorT> adj;
     std::vector<double> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> tp{0, 2};
+    std::vector<std::size_t> tp{0, 2};
 
-    const size_t num_qubits = 3;
-    const size_t num_obs = 1;
+    const std::size_t num_qubits = 3;
+    const std::size_t num_obs = 1;
 
     std::vector<double> jacobian1(num_obs * tp.size(), 0);
     std::vector<double> jacobian2(num_obs * tp.size(), 0);
@@ -531,7 +522,7 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
     int nGlobalIndexBits =
         std::bit_width(static_cast<unsigned int>(mpi_manager.getSize())) - 1;
@@ -548,17 +539,16 @@ TEST_CASE("AdjointJacobianGPU::AdjointJacobianGPU Test HermitianObs",
     {
         StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                          nGlobalIndexBits, nLocalIndexBits);
-        psi.initSV();
 
         auto obs1 = std::make_shared<TensorProdObsMPI<StateVectorT>>(
-            std::make_shared<NamedObsMPI<StateVectorT>>("PauliZ",
-                                                        std::vector<size_t>{0}),
             std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1}));
+                "PauliZ", std::vector<std::size_t>{0}),
+            std::make_shared<NamedObsMPI<StateVectorT>>(
+                "PauliZ", std::vector<std::size_t>{1}));
         auto obs2 = std::make_shared<HermitianObsMPI<StateVectorT>>(
             std::vector<std::complex<double>>{1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1,
                                               0, 0, 0, 0, 1},
-            std::vector<size_t>{0, 1});
+            std::vector<std::size_t>{0, 1});
 
         auto ops = OpsData<StateVectorT>(
             {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},

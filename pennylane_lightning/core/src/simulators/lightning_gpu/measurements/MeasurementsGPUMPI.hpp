@@ -39,6 +39,7 @@
 #include "ObservablesGPUMPI.hpp"
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
+#include "cuStateVecError.hpp"
 #include "cuda_helpers.hpp"
 
 /// @cond DEV
@@ -97,7 +98,8 @@ class MeasurementsMPI final
      * order.
      * @return std::vector<PrecisionT>
      */
-    auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
+    auto probs(const std::vector<std::size_t> &wires)
+        -> std::vector<PrecisionT> {
         // Data return type fixed as double in custatevec function call
         std::vector<double> subgroup_probabilities;
 
@@ -128,6 +130,8 @@ class MeasurementsMPI final
             }
         }
 
+        std::reverse(wires_local.begin(), wires_local.end());
+
         std::vector<double> local_probabilities(
             Pennylane::Util::exp2(wires_local.size()));
 
@@ -144,11 +148,11 @@ class MeasurementsMPI final
             /* const uint32_t */ maskLen));
 
         // create new MPI communicator groups
-        size_t subCommGroupId = 0;
-        for (size_t i = 0; i < wires_global.size(); i++) {
-            size_t mask =
+        std::size_t subCommGroupId = 0;
+        for (std::size_t i = 0; i < wires_global.size(); i++) {
+            std::size_t mask =
                 1 << (wires_global[i] - this->_statevector.getNumLocalQubits());
-            size_t bitValue = mpi_manager_.getRank() & mask;
+            std::size_t bitValue = mpi_manager_.getRank() & mask;
             subCommGroupId += bitValue
                               << (wires_global[i] -
                                   this->_statevector.getNumLocalQubits());
@@ -202,11 +206,52 @@ class MeasurementsMPI final
      * @return std::vector<PrecisionT>
      */
     auto probs() -> std::vector<PrecisionT> {
-        std::vector<size_t> wires;
-        for (size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
+        std::vector<std::size_t> wires;
+        for (std::size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
             wires.push_back(i);
         }
         return this->probs(wires);
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots(Optional).  If specified with a non-zero
+     * number, shot-noise will be added to return probabilities
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
+                                  std::size_t num_shots = 0) {
+        return BaseType::probs(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    std::vector<PrecisionT> probs(std::size_t num_shots) {
+        return BaseType::probs(num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise for a subset of the full system.
+     *
+     * @param num_shots Number of shots.
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+
+    std::vector<PrecisionT> probs(const std::vector<std::size_t> &wires,
+                                  std::size_t num_shots) {
+        return BaseType::probs(wires, num_shots);
     }
 
     /**
@@ -214,24 +259,24 @@ class MeasurementsMPI final
      *
      * @param num_samples Number of Samples
      *
-     * @return std::vector<size_t> A 1-d array storing the samples.
+     * @return std::vector<std::size_t> A 1-d array storing the samples.
      * Each sample has a length equal to the number of qubits. Each sample can
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         double epsilon = 1e-15;
-        size_t nSubSvs = 1UL << (this->_statevector.getNumGlobalQubits());
+        std::size_t nSubSvs = 1UL << (this->_statevector.getNumGlobalQubits());
         std::vector<double> rand_nums(num_samples);
-        std::vector<size_t> samples(
+        std::vector<std::size_t> samples(
             num_samples * this->_statevector.getTotalNumQubits(), 0);
 
-        size_t bitStringLen = this->_statevector.getNumGlobalQubits() +
-                              this->_statevector.getNumLocalQubits();
+        std::size_t bitStringLen = this->_statevector.getNumGlobalQubits() +
+                                   this->_statevector.getNumLocalQubits();
 
         std::vector<int> bitOrdering(bitStringLen);
 
-        for (size_t i = 0; i < bitOrdering.size(); i++) {
+        for (std::size_t i = 0; i < bitOrdering.size(); i++) {
             bitOrdering[i] = i;
         }
 
@@ -239,7 +284,7 @@ class MeasurementsMPI final
         std::vector<custatevecIndex_t> globalBitStrings(num_samples);
 
         if (mpi_manager_.getRank() == 0) {
-            for (size_t n = 0; n < num_samples; n++) {
+            for (std::size_t n = 0; n < num_samples; n++) {
                 rand_nums[n] = (n + 1.0) / (num_samples + 2.0);
             }
         }
@@ -249,7 +294,7 @@ class MeasurementsMPI final
         custatevecSamplerDescriptor_t sampler;
 
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
 
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerCreate(
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
@@ -258,7 +303,7 @@ class MeasurementsMPI final
             /* const uint32_t */ this->_statevector.getNumLocalQubits(),
             /* custatevecSamplerDescriptor_t * */ &sampler,
             /* uint32_t */ num_samples,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
+            /* std::size_t* */ &extraWorkspaceSizeInBytes));
 
         if (extraWorkspaceSizeInBytes > 0)
             PL_CUDA_IS_SUCCESS(
@@ -268,7 +313,7 @@ class MeasurementsMPI final
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
             /* custatevecSamplerDescriptor_t */ sampler,
             /* void* */ extraWorkspace,
-            /* const size_t */ extraWorkspaceSizeInBytes));
+            /* const std::size_t */ extraWorkspaceSizeInBytes));
 
         double subNorm = 0;
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerGetSquaredNorm(
@@ -350,8 +395,8 @@ class MeasurementsMPI final
         mpi_manager_.Allreduce<custatevecIndex_t>(localBitStrings,
                                                   globalBitStrings, "sum");
 
-        for (size_t i = 0; i < num_samples; i++) {
-            for (size_t j = 0; j < bitStringLen; j++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
+            for (std::size_t j = 0; j < bitStringLen; j++) {
                 samples[i * bitStringLen + (bitStringLen - 1 - j)] =
                     (globalBitStrings[i] >> j) & 1U;
             }
@@ -380,8 +425,8 @@ class MeasurementsMPI final
                 const int64_t numNNZ) -> PrecisionT {
         if (mpi_manager_.getRank() == 0) {
             PL_ABORT_IF_NOT(
-                static_cast<size_t>(csrOffsets_size - 1) ==
-                    (size_t{1} << this->_statevector.getTotalNumQubits()),
+                static_cast<std::size_t>(csrOffsets_size - 1) ==
+                    (std::size_t{1} << this->_statevector.getTotalNumQubits()),
                 "Incorrect size of CSR Offsets.");
             PL_ABORT_IF_NOT(numNNZ > 0, "Empty CSR matrix.");
         }
@@ -393,8 +438,8 @@ class MeasurementsMPI final
         auto stream_id =
             this->_statevector.getDataBuffer().getDevTag().getStreamID();
 
-        const size_t length_local = size_t{1}
-                                    << this->_statevector.getNumLocalQubits();
+        const std::size_t length_local =
+            std::size_t{1} << this->_statevector.getNumLocalQubits();
         DataBuffer<CFP_t, int> d_res_per_rowblock{length_local, device_id,
                                                   stream_id, true};
         d_res_per_rowblock.zeroInit();
@@ -428,8 +473,8 @@ class MeasurementsMPI final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    auto expval(const std::string &operation, const std::vector<size_t> &wires)
-        -> PrecisionT {
+    auto expval(const std::string &operation,
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         std::vector<PrecisionT> params = {0.0};
         std::vector<CFP_t> gate_matrix = {};
         auto expect =
@@ -449,14 +494,14 @@ class MeasurementsMPI final
      */
     template <typename op_type>
     auto expval(const std::vector<op_type> &operations_list,
-                const std::vector<std::vector<size_t>> &wires_list)
+                const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
             PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
@@ -503,8 +548,9 @@ class MeasurementsMPI final
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range) -> PrecisionT {
         mpi_manager_.Barrier();
         PrecisionT result = BaseType::expval(obs, num_shots, shot_range);
         mpi_manager_.Barrier();
@@ -519,7 +565,7 @@ class MeasurementsMPI final
      * @return Floating point expected value of the observable.
      */
     auto expval(const std::vector<ComplexT> &matrix,
-                const std::vector<size_t> &wires) -> PrecisionT {
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         auto expect = this->_statevector.expval(wires, matrix);
         return static_cast<PrecisionT>(expect);
     }
@@ -578,8 +624,8 @@ class MeasurementsMPI final
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observable.
      */
-    auto var(const std::string &operation, const std::vector<size_t> &wires)
-        -> PrecisionT {
+    auto var(const std::string &operation,
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv(this->_statevector);
         ob_sv.applyOperation(operation, wires);
 
@@ -613,7 +659,7 @@ class MeasurementsMPI final
      * @return Floating point with the variance of the observable.
      */
     auto var(const std::vector<ComplexT> &matrix,
-             const std::vector<size_t> &wires) -> PrecisionT {
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv(this->_statevector);
         ob_sv.applyMatrix(matrix, wires);
 
@@ -651,7 +697,7 @@ class MeasurementsMPI final
      */
     template <typename op_type>
     auto var(const std::vector<op_type> &operations_list,
-             const std::vector<std::vector<size_t>> &wires_list)
+             const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
@@ -659,7 +705,7 @@ class MeasurementsMPI final
 
         std::vector<PrecisionT> var_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             var_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -689,8 +735,8 @@ class MeasurementsMPI final
                    const int64_t numNNZ) {
         if (mpi_manager_.getRank() == 0) {
             PL_ABORT_IF_NOT(
-                static_cast<size_t>(csrOffsets_size - 1) ==
-                    (size_t{1} << this->_statevector.getTotalNumQubits()),
+                static_cast<std::size_t>(csrOffsets_size - 1) ==
+                    (std::size_t{1} << this->_statevector.getTotalNumQubits()),
                 "Incorrect size of CSR Offsets.");
             PL_ABORT_IF_NOT(numNNZ > 0, "Empty CSR matrix.");
         }
@@ -699,8 +745,8 @@ class MeasurementsMPI final
             this->_statevector.getDataBuffer().getDevTag().getDeviceID();
         auto stream_id =
             this->_statevector.getDataBuffer().getDevTag().getStreamID();
-        const size_t length_local = size_t{1}
-                                    << this->_statevector.getNumLocalQubits();
+        const std::size_t length_local =
+            std::size_t{1} << this->_statevector.getNumLocalQubits();
 
         DataBuffer<CFP_t, int> d_res_per_rowblock{length_local, device_id,
                                                   stream_id, true};
@@ -734,5 +780,19 @@ class MeasurementsMPI final
 
         return mean_square - squared_mean * squared_mean;
     };
+
+    /**
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
 }; // class Measurements
 } // namespace Pennylane::LightningGPU::Measures

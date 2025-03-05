@@ -11,7 +11,7 @@ target_link_libraries(lightning_measurements INTERFACE  lightning_compile_option
                                                         lightning_utils
                                                         )
 
-if (BUILD_TESTS)
+if (BUILD_TESTS AND NOT DEFINED PL_TENSOR)
     enable_testing()
     add_subdirectory("tests")
 endif()

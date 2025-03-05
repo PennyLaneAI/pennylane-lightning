@@ -64,13 +64,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
         DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[Z,Z,Z] - "
                         << StateVectorMPIToName<StateVectorT>::name) {
-            std::vector<size_t> tp{0, 1, 2};
-            const size_t num_qubits = 3;
-            const size_t num_params = 3;
-            const size_t num_obs = 3;
+            std::vector<std::size_t> tp{0, 1, 2};
+            const std::size_t num_qubits = 3;
+            const std::size_t num_params = 3;
+            const std::size_t num_obs = 3;
             std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-            size_t mpi_buffersize = 1;
+            std::size_t mpi_buffersize = 1;
 
             int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                        mpi_manager.getSize())) -
@@ -87,14 +87,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV();
 
             const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{0});
+                "PauliZ", std::vector<std::size_t>{0});
             const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             const auto obs3 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{2});
+                "PauliZ", std::vector<std::size_t>{2});
 
             auto ops = OpsData<StateVectorT>(
                 {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
@@ -115,13 +114,13 @@ template <typename TypeList> void testAdjointJacobian() {
         DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[Z,Z,Z], TParams=[0,2] - "
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-            std::vector<size_t> t_params{0, 2};
-            const size_t num_qubits = 3;
-            const size_t num_params = 3;
-            const size_t num_obs = 3;
+            std::vector<std::size_t> t_params{0, 2};
+            const std::size_t num_qubits = 3;
+            const std::size_t num_params = 3;
+            const std::size_t num_obs = 3;
             std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
 
-            size_t mpi_buffersize = 1;
+            std::size_t mpi_buffersize = 1;
 
             int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                        mpi_manager.getSize())) -
@@ -138,14 +137,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV();
 
             const auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{0});
+                "PauliZ", std::vector<std::size_t>{0});
             const auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             const auto obs3 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{2});
+                "PauliZ", std::vector<std::size_t>{2});
 
             auto ops = OpsData<StateVectorT>(
                 {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
@@ -166,13 +164,13 @@ template <typename TypeList> void testAdjointJacobian() {
         DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=[ZZZ] - "
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-            std::vector<size_t> tp{0, 1, 2};
-            const size_t num_qubits = 3;
-            const size_t num_params = 3;
-            const size_t num_obs = 1;
+            std::vector<std::size_t> tp{0, 1, 2};
+            const std::size_t num_qubits = 3;
+            const std::size_t num_params = 3;
+            const std::size_t num_obs = 1;
             std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-            size_t mpi_buffersize = 1;
+            std::size_t mpi_buffersize = 1;
 
             int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                        mpi_manager.getSize())) -
@@ -189,15 +187,14 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV();
 
             const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliZ", std::vector<size_t>{0}),
+                    "PauliZ", std::vector<std::size_t>{0}),
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliZ", std::vector<size_t>{1}),
+                    "PauliZ", std::vector<std::size_t>{1}),
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliZ", std::vector<size_t>{2}));
+                    "PauliZ", std::vector<std::size_t>{2}));
             auto ops = OpsData<StateVectorT>(
                 {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},
                 {{0}, {1}, {2}}, {false, false, false});
@@ -217,13 +214,13 @@ template <typename TypeList> void testAdjointJacobian() {
         DYNAMIC_SECTION("Op=Mixed, Obs=[XXX] - "
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-            std::vector<size_t> tp{0, 1, 2, 3, 4, 5};
-            const size_t num_qubits = 3;
-            const size_t num_params = 6;
-            const size_t num_obs = 1;
+            std::vector<std::size_t> tp{0, 1, 2, 3, 4, 5};
+            const std::size_t num_qubits = 3;
+            const std::size_t num_params = 6;
+            const std::size_t num_obs = 1;
             std::vector<PrecisionT> jacobian(num_obs * tp.size(), 0);
 
-            size_t mpi_buffersize = 1;
+            std::size_t mpi_buffersize = 1;
 
             int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                        mpi_manager.getSize())) -
@@ -240,15 +237,14 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV();
 
             const auto obs = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliX", std::vector<size_t>{0}),
+                    "PauliX", std::vector<std::size_t>{0}),
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliX", std::vector<size_t>{1}),
+                    "PauliX", std::vector<std::size_t>{1}),
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliX", std::vector<size_t>{2}));
+                    "PauliX", std::vector<std::size_t>{2}));
             std::vector<ComplexT> cnot{1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0,
                                        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0};
             auto ops = OpsData<StateVectorT>(
@@ -264,7 +260,10 @@ template <typename TypeList> void testAdjointJacobian() {
                 {{0}, {0}, {0}, {0, 1}, {1, 2}, {1}, {1}, {1}},
                 {false, false, false, false, false, false, false, false},
                 std::vector<std::vector<ComplexT>>{
-                    {}, {}, {}, cnot, {}, {}, {}, {}});
+                    {}, {}, {}, cnot, {}, {}, {}, {}},
+                std::vector<std::vector<std::size_t>>{
+                    {}, {}, {}, {}, {}, {}, {}, {}},
+                std::vector<std::vector<bool>>{{}, {}, {}, {}, {}, {}, {}, {}});
 
             JacobianDataMPI<StateVectorT> tape{num_params, psi, {obs}, ops, tp};
 
@@ -284,13 +283,13 @@ template <typename TypeList> void testAdjointJacobian() {
         DYNAMIC_SECTION("Op=[RX,RX,RX], Obs=Ham[Z0+Z1+Z2], TParams=[0,2] - "
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-            std::vector<size_t> t_params{0, 2};
-            const size_t num_qubits = 3;
-            const size_t num_params = 3;
-            const size_t num_obs = 1;
+            std::vector<std::size_t> t_params{0, 2};
+            const std::size_t num_qubits = 3;
+            const std::size_t num_params = 3;
+            const std::size_t num_obs = 1;
             std::vector<PrecisionT> jacobian(num_obs * t_params.size(), 0);
 
-            size_t mpi_buffersize = 1;
+            std::size_t mpi_buffersize = 1;
 
             int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                        mpi_manager.getSize())) -
@@ -307,14 +306,13 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV();
 
             auto obs1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{0});
+                "PauliZ", std::vector<std::size_t>{0});
             auto obs2 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{1});
+                "PauliZ", std::vector<std::size_t>{1});
             auto obs3 = std::make_shared<NamedObsMPI<StateVectorT>>(
-                "PauliZ", std::vector<size_t>{2});
+                "PauliZ", std::vector<std::size_t>{2});
 
             auto ham = HamiltonianMPI<StateVectorT>::create({0.47, 0.32, 0.96},
                                                             {obs1, obs2, obs3});
@@ -335,14 +333,14 @@ template <typename TypeList> void testAdjointJacobian() {
         DYNAMIC_SECTION("HermitianObs - "
                         << StateVectorMPIToName<StateVectorT>::name) {
             std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-            std::vector<size_t> t_params{0, 2};
-            const size_t num_qubits = 3;
-            const size_t num_params = 3;
-            const size_t num_obs = 1;
+            std::vector<std::size_t> t_params{0, 2};
+            const std::size_t num_qubits = 3;
+            const std::size_t num_params = 3;
+            const std::size_t num_obs = 1;
             std::vector<PrecisionT> jacobian1(num_obs * t_params.size(), 0);
             std::vector<PrecisionT> jacobian2(num_obs * t_params.size(), 0);
 
-            size_t mpi_buffersize = 1;
+            std::size_t mpi_buffersize = 1;
 
             int nGlobalIndexBits = std::bit_width(static_cast<unsigned int>(
                                        mpi_manager.getSize())) -
@@ -359,17 +357,16 @@ template <typename TypeList> void testAdjointJacobian() {
 
             StateVectorT psi(mpi_manager, dt_local, mpi_buffersize,
                              nGlobalIndexBits, nLocalIndexBits);
-            psi.initSV();
 
             auto obs1 = std::make_shared<TensorProdObsMPI<StateVectorT>>(
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliZ", std::vector<size_t>{0}),
+                    "PauliZ", std::vector<std::size_t>{0}),
                 std::make_shared<NamedObsMPI<StateVectorT>>(
-                    "PauliZ", std::vector<size_t>{1}));
+                    "PauliZ", std::vector<std::size_t>{1}));
             auto obs2 = std::make_shared<HermitianObsMPI<StateVectorT>>(
                 std::vector<ComplexT>{1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1, 0, 0,
                                       0, 0, 1},
-                std::vector<size_t>{0, 1});
+                std::vector<std::size_t>{0, 1});
 
             auto ops = OpsData<StateVectorT>(
                 {"RX", "RX", "RX"}, {{param[0]}, {param[1]}, {param[2]}},

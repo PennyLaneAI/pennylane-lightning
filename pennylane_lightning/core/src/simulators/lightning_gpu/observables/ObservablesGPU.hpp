@@ -56,7 +56,7 @@ class NamedObs final : public NamedObsBase<StateVectorT> {
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObs(std::string obs_name, std::vector<size_t> wires,
+    NamedObs(std::string obs_name, std::vector<std::size_t> wires,
              std::vector<PrecisionT> params = {})
         : BaseType{obs_name, wires, params} {
         using Pennylane::Gates::Constant::gate_names;
@@ -92,7 +92,7 @@ class HermitianObs final : public HermitianObsBase<StateVectorT> {
      * @param matrix Matrix in row major format.
      * @param wires Wires the observable applies to.
      */
-    HermitianObs(MatrixT matrix, std::vector<size_t> wires)
+    HermitianObs(MatrixT matrix, std::vector<std::size_t> wires)
         : BaseType{matrix, wires} {}
 
     auto getObsName() const -> std::string final {
@@ -194,9 +194,11 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
             std::make_unique<DataBuffer<CFP_t>>(sv.getDataBuffer().getLength(),
                                                 sv.getDataBuffer().getDevTag());
         buffer->zeroInit();
+        StateVectorT tmp(sv);
 
-        for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
-            StateVectorT tmp(sv);
+        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
+             term_idx++) {
+            tmp.updateData(sv);
             this->obs_[term_idx]->applyInPlace(tmp);
             scaleAndAddC_CUDA(
                 std::complex<PrecisionT>{this->coeffs_[term_idx], 0.0},
@@ -206,16 +208,6 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
                 tmp.getCublasCaller());
         }
         sv.updateData(std::move(buffer));
-    }
-
-    // to work with
-    void applyInPlaceShots(StateVectorT &sv,
-                           std::vector<size_t> &identity_wires,
-                           std::vector<size_t> &ob_wires,
-                           size_t term_idx) const override {
-        ob_wires.clear();
-        this->obs_[term_idx]->applyInPlaceShots(sv, identity_wires, ob_wires,
-                                                term_idx);
     }
 };
 

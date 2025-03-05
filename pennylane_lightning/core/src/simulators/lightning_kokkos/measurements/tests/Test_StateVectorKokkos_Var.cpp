@@ -127,9 +127,9 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorKokkos_Var]",
         kokkos_sv.applyOperation("RY", {1}, false, {0.2});
 
         auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = TensorProdObs<StateVectorKokkos<TestType>>::create({X0, Z1});
         auto res = m.var(*ob);
@@ -149,9 +149,9 @@ TEMPLATE_TEST_CASE("Test variance of HamiltonianObs", "[StateVectorKokkos_Var]",
         auto m = Measurements<StateVectorKokkos<TestType>>(kokkos_sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorKokkos<TestType>>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = Hamiltonian<StateVectorKokkos<TestType>>::create({0.3, 0.5},
                                                                    {X0, Z1});

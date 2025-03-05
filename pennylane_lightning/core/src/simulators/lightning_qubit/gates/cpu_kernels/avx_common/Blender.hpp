@@ -23,8 +23,8 @@
 #include "Macros.hpp"
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size> struct CompileMask {
-    static_assert(sizeof(PrecisionT) == std::numeric_limits<size_t>::max(),
+template <typename PrecisionT, std::size_t packed_size> struct CompileMask {
+    static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
                   "Unsupported type and/or packed size.");
 };
 
@@ -79,7 +79,7 @@ constexpr __mmask16 negate(__mmask16 m) {
     return 0B1111'1111'1111'1111 ^ m; // NOLINT
 }
 
-template <typename PrecisionT, size_t packed_size>
+template <typename PrecisionT, std::size_t packed_size>
 constexpr static auto compileMask(const std::array<bool, packed_size> &mask) {
     return CompileMask<PrecisionT, packed_size>::create(mask);
 }

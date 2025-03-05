@@ -64,7 +64,7 @@ class StateVectorLQubitRaw final
         StateVectorLQubit<PrecisionT, StateVectorLQubitRaw<PrecisionT>>;
 
     ComplexT *data_;
-    size_t length_;
+    std::size_t length_;
 
   public:
     /**
@@ -76,7 +76,7 @@ class StateVectorLQubitRaw final
      * @param length The size of the data, i.e. 2^(number of qubits).
      * @param threading Threading option the statevector to use
      */
-    StateVectorLQubitRaw(ComplexT *data, size_t length,
+    StateVectorLQubitRaw(ComplexT *data, std::size_t length,
                          Threading threading = Threading::SingleThread)
         : BaseType{log2PerfectPower(length), threading,
                    getMemoryModel(static_cast<void *>(data))},
@@ -122,7 +122,7 @@ class StateVectorLQubitRaw final
      * @param new_data data pointer to new data.
      * @param new_size size of underlying data storage.
      */
-    void updateData(const ComplexT *new_data, size_t new_size) {
+    void updateData(const ComplexT *new_data, std::size_t new_size) {
         PL_ASSERT(length_ == new_size);
         std::copy(new_data, new_data + new_size, data_);
     }

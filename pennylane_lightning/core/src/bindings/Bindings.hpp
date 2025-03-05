@@ -86,6 +86,22 @@ using namespace Pennylane::LightningGPU::Measures;
 } // namespace
   /// @endcond
 
+#elif _ENABLE_PLTENSOR == 1
+
+#include "LTensorTNCudaBindings.hpp"
+#include "MeasurementsTNCuda.hpp"
+#include "ObservablesTNCuda.hpp"
+#include "Util.hpp"
+
+namespace py = pybind11;
+
+/// @cond DEV
+namespace {
+using namespace Pennylane::LightningTensor::TNCuda;
+using namespace Pennylane::LightningTensor::TNCuda::Observables;
+using namespace Pennylane::LightningTensor::TNCuda::Measures;
+} // namespace
+  /// @endcond
 #else
 
 static_assert(false, "Backend not found.");
@@ -126,7 +142,7 @@ auto createStateVectorFromNumpyData(
     }
     auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
     return StateVectorT(
-        {data_ptr, static_cast<size_t>(numpyArrayInfo.shape[0])});
+        {data_ptr, static_cast<std::size_t>(numpyArrayInfo.shape[0])});
 }
 
 /**
@@ -149,11 +165,12 @@ auto getNumpyArrayAlignment(const py::array &numpyArray) -> CPUMemoryModel {
  * @return Numpy array
  */
 template <typename T>
-auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size) -> py::array {
+auto alignedNumpyArray(CPUMemoryModel memory_model, std::size_t size,
+                       bool zeroInit = false) -> py::array {
     using Pennylane::Util::alignedAlloc;
     if (getAlignment<T>(memory_model) > alignof(std::max_align_t)) {
-        void *ptr =
-            alignedAlloc(getAlignment<T>(memory_model), sizeof(T) * size);
+        void *ptr = alignedAlloc(getAlignment<T>(memory_model),
+                                 sizeof(T) * size, zeroInit);
         auto capsule = py::capsule(ptr, &Util::alignedFree);
         return py::array{py::dtype::of<T>(), {size}, {sizeof(T)}, ptr, capsule};
     }
@@ -172,20 +189,24 @@ auto alignedNumpyArray(CPUMemoryModel memory_model, size_t size) -> py::array {
  * @param size Size of the array to create
  * @param dt Pybind11's datatype object
  */
-auto allocateAlignedArray(size_t size, const py::dtype &dt) -> py::array {
+auto allocateAlignedArray(std::size_t size, const py::dtype &dt,
+                          bool zeroInit = false) -> py::array {
+    // TODO: Move memset operations to here to reduce zeroInit pass-throughs.
     auto memory_model = bestCPUMemoryModel();
 
     if (dt.is(py::dtype::of<float>())) {
-        return alignedNumpyArray<float>(memory_model, size);
+        return alignedNumpyArray<float>(memory_model, size, zeroInit);
     }
     if (dt.is(py::dtype::of<double>())) {
-        return alignedNumpyArray<double>(memory_model, size);
+        return alignedNumpyArray<double>(memory_model, size, zeroInit);
     }
     if (dt.is(py::dtype::of<std::complex<float>>())) {
-        return alignedNumpyArray<std::complex<float>>(memory_model, size);
+        return alignedNumpyArray<std::complex<float>>(memory_model, size,
+                                                      zeroInit);
     }
     if (dt.is(py::dtype::of<std::complex<double>>())) {
-        return alignedNumpyArray<std::complex<double>>(memory_model, size);
+        return alignedNumpyArray<std::complex<double>>(memory_model, size,
+                                                       zeroInit);
     }
     throw py::type_error("Unsupported datatype.");
 }
@@ -284,16 +305,18 @@ void registerInfo(py::module_ &m) {
 /**
  * @brief Register observable classes.
  *
- * @tparam StateVectorT
+ * @tparam LightningBackendT
  * @param m Pybind module
  */
-template <class StateVectorT>
+template <class LightningBackendT>
 void registerBackendAgnosticObservables(py::module_ &m) {
     using PrecisionT =
-        typename StateVectorT::PrecisionT; // Statevector's precision.
+        typename LightningBackendT::PrecisionT; // LightningBackendT's's
+                                                // precision.
     using ComplexT =
-        typename StateVectorT::ComplexT; // Statevector's complex type.
-    using ParamT = PrecisionT;           // Parameter's data precision
+        typename LightningBackendT::ComplexT; // LightningBackendT's
+                                              // complex type.
+    using ParamT = PrecisionT;                // Parameter's data precision
 
     const std::string bitsize =
         std::to_string(sizeof(std::complex<PrecisionT>) * 8);
@@ -301,114 +324,119 @@ void registerBackendAgnosticObservables(py::module_ &m) {
     using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
     using np_arr_r = py::array_t<ParamT, py::array::c_style>;
 
+#ifdef _ENABLE_PLTENSOR
+    using ObservableT = ObservableTNCuda<LightningBackendT>;
+    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
+    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
+    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
+    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
+#else
+    using ObservableT = Observable<LightningBackendT>;
+    using NamedObsT = NamedObs<LightningBackendT>;
+    using HermitianObsT = HermitianObs<LightningBackendT>;
+    using TensorProdObsT = TensorProdObs<LightningBackendT>;
+    using HamiltonianT = Hamiltonian<LightningBackendT>;
+#endif
+
     std::string class_name;
 
     class_name = "ObservableC" + bitsize;
-    py::class_<Observable<StateVectorT>,
-               std::shared_ptr<Observable<StateVectorT>>>(m, class_name.c_str(),
+    py::class_<ObservableT, std::shared_ptr<ObservableT>>(m, class_name.c_str(),
                                                           py::module_local());
 
     class_name = "NamedObsC" + bitsize;
-    py::class_<NamedObs<StateVectorT>, std::shared_ptr<NamedObs<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str(),
-                                         py::module_local())
+    py::class_<NamedObsT, std::shared_ptr<NamedObsT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
         .def(py::init(
-            [](const std::string &name, const std::vector<size_t> &wires) {
-                return NamedObs<StateVectorT>(name, wires);
+            [](const std::string &name, const std::vector<std::size_t> &wires) {
+                return NamedObsT(name, wires);
             }))
-        .def("__repr__", &NamedObs<StateVectorT>::getObsName)
-        .def("get_wires", &NamedObs<StateVectorT>::getWires,
-             "Get wires of observables")
+        .def("__repr__", &NamedObsT::getObsName)
+        .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
         .def(
             "__eq__",
-            [](const NamedObs<StateVectorT> &self, py::handle other) -> bool {
-                if (!py::isinstance<NamedObs<StateVectorT>>(other)) {
+            [](const NamedObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<NamedObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<NamedObs<StateVectorT>>();
+                auto other_cast = other.cast<NamedObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "HermitianObsC" + bitsize;
-    py::class_<HermitianObs<StateVectorT>,
-               std::shared_ptr<HermitianObs<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str(),
-                                         py::module_local())
-        .def(py::init(
-            [](const np_arr_c &matrix, const std::vector<size_t> &wires) {
-                auto buffer = matrix.request();
-                const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
-                return HermitianObs<StateVectorT>(
-                    std::vector<ComplexT>(ptr, ptr + buffer.size), wires);
-            }))
-        .def("__repr__", &HermitianObs<StateVectorT>::getObsName)
-        .def("get_wires", &HermitianObs<StateVectorT>::getWires,
-             "Get wires of observables")
+    py::class_<HermitianObsT, std::shared_ptr<HermitianObsT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init([](const np_arr_c &matrix,
+                         const std::vector<std::size_t> &wires) {
+            auto buffer = matrix.request();
+            const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
+            return HermitianObsT(std::vector<ComplexT>(ptr, ptr + buffer.size),
+                                 wires);
+        }))
+        .def("__repr__", &HermitianObsT::getObsName)
+        .def("get_wires", &HermitianObsT::getWires, "Get wires of observables")
+        .def("get_matrix", &HermitianObsT::getMatrix,
+             "Get matrix representation of Hermitian operator")
         .def(
             "__eq__",
-            [](const HermitianObs<StateVectorT> &self,
-               py::handle other) -> bool {
-                if (!py::isinstance<HermitianObs<StateVectorT>>(other)) {
+            [](const HermitianObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<HermitianObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<HermitianObs<StateVectorT>>();
+                auto other_cast = other.cast<HermitianObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "TensorProdObsC" + bitsize;
-    py::class_<TensorProdObs<StateVectorT>,
-               std::shared_ptr<TensorProdObs<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str(),
-                                         py::module_local())
-        .def(py::init(
-            [](const std::vector<std::shared_ptr<Observable<StateVectorT>>>
-                   &obs) { return TensorProdObs<StateVectorT>(obs); }))
-        .def("__repr__", &TensorProdObs<StateVectorT>::getObsName)
-        .def("get_wires", &TensorProdObs<StateVectorT>::getWires,
-             "Get wires of observables")
+    py::class_<TensorProdObsT, std::shared_ptr<TensorProdObsT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init([](const std::vector<std::shared_ptr<ObservableT>> &obs) {
+            return TensorProdObsT(obs);
+        }))
+        .def("__repr__", &TensorProdObsT::getObsName)
+        .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
+        .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
         .def(
             "__eq__",
-            [](const TensorProdObs<StateVectorT> &self,
-               py::handle other) -> bool {
-                if (!py::isinstance<TensorProdObs<StateVectorT>>(other)) {
+            [](const TensorProdObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<TensorProdObsT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<TensorProdObs<StateVectorT>>();
+                auto other_cast = other.cast<TensorProdObsT>();
                 return self == other_cast;
             },
             "Compare two observables");
 
     class_name = "HamiltonianC" + bitsize;
-    using ObsPtr = std::shared_ptr<Observable<StateVectorT>>;
-    py::class_<Hamiltonian<StateVectorT>,
-               std::shared_ptr<Hamiltonian<StateVectorT>>,
-               Observable<StateVectorT>>(m, class_name.c_str(),
-                                         py::module_local())
+    using ObsPtr = std::shared_ptr<ObservableT>;
+    py::class_<HamiltonianT, std::shared_ptr<HamiltonianT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
         .def(py::init(
             [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
                 auto buffer = coeffs.request();
                 const auto ptr = static_cast<const ParamT *>(buffer.ptr);
-                return Hamiltonian<StateVectorT>{
-                    std::vector(ptr, ptr + buffer.size), obs};
+                return HamiltonianT{std::vector(ptr, ptr + buffer.size), obs};
             }))
-        .def("__repr__", &Hamiltonian<StateVectorT>::getObsName)
-        .def("get_wires", &Hamiltonian<StateVectorT>::getWires,
-             "Get wires of observables")
+        .def("__repr__", &HamiltonianT::getObsName)
+        .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
+        .def("get_ops", &HamiltonianT::getObs,
+             "Get operations contained by Hamiltonian")
+        .def("get_coeffs", &HamiltonianT::getCoeffs,
+             "Get Hamiltonian coefficients")
         .def(
             "__eq__",
-            [](const Hamiltonian<StateVectorT> &self,
-               py::handle other) -> bool {
-                if (!py::isinstance<Hamiltonian<StateVectorT>>(other)) {
+            [](const HamiltonianT &self, py::handle other) -> bool {
+                if (!py::isinstance<HamiltonianT>(other)) {
                     return false;
                 }
-                auto other_cast = other.cast<Hamiltonian<StateVectorT>>();
+                auto other_cast = other.cast<HamiltonianT>();
                 return self == other_cast;
             },
             "Compare two observables");
 }
-
+#ifndef _ENABLE_PLTENSOR
 /**
  * @brief Register agnostic measurements class functionalities.
  *
@@ -425,7 +453,7 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
     pyclass
         .def("probs",
              [](Measurements<StateVectorT> &M,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
@@ -447,17 +475,18 @@ void registerBackendAgnosticMeasurements(PyClass &pyclass) {
             },
             "Variance of an observable object.")
         .def("generate_samples", [](Measurements<StateVectorT> &M,
-                                    size_t num_wires, size_t num_shots) {
+                                    std::size_t num_wires,
+                                    std::size_t num_shots) {
             auto &&result = M.generate_samples(num_shots);
-            const size_t ndim = 2;
-            const std::vector<size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(size_t);
-            const std::vector<size_t> strides{sz * num_wires, sz};
+            const std::size_t ndim = 2;
+            const std::vector<std::size_t> shape{num_shots, num_wires};
+            constexpr auto sz = sizeof(std::size_t);
+            const std::vector<std::size_t> strides{sz * num_wires, sz};
             // return 2-D NumPy array
             return py::array(py::buffer_info(
                 result.data(), /* data as contiguous array  */
                 sz,            /* size of one scalar        */
-                py::format_descriptor<size_t>::format(), /* data type */
+                py::format_descriptor<std::size_t>::format(), /* data type */
                 ndim,   /* number of dimensions      */
                 shape,  /* shape of the matrix       */
                 strides /* strides for each axis     */
@@ -473,7 +502,7 @@ auto registerAdjointJacobian(
     AdjointJacobian<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
     const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
     const OpsData<StateVectorT> &operations,
-    const std::vector<size_t> &trainableParams)
+    const std::vector<std::size_t> &trainableParams)
     -> py::array_t<typename StateVectorT::PrecisionT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
@@ -517,16 +546,28 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
     py::class_<OpsData<StateVectorT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<const std::vector<std::string> &,
                       const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<std::vector<std::size_t>> &,
                       const std::vector<bool> &,
                       const std::vector<std::vector<ComplexT>> &>())
+        .def(py::init<const std::vector<std::string> &,
+                      const std::vector<std::vector<ParamT>> &,
+                      const std::vector<std::vector<std::size_t>> &,
+                      const std::vector<bool> &,
+                      const std::vector<std::vector<ComplexT>> &,
+                      const std::vector<std::vector<std::size_t>> &,
+                      const std::vector<std::vector<bool>> &>())
         .def("__repr__", [](const OpsData<StateVectorT> &ops) {
             using namespace Pennylane::Util;
             std::ostringstream ops_stream;
-            for (size_t op = 0; op < ops.getSize(); op++) {
+            for (std::size_t op = 0; op < ops.getSize(); op++) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
                 ops_stream << ", 'params': " << ops.getOpsParams()[op];
                 ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
+                ops_stream << ", 'controlled_wires': "
+                           << ops.getOpsControlledWires()[op];
+                ops_stream << ", 'controlled_values': "
+                           << ops.getOpsControlledValues()[op];
+                ops_stream << ", 'wires': " << ops.getOpsWires()[op];
                 ops_stream << "}";
                 if (op < ops.getSize() - 1) {
                     ops_stream << ",";
@@ -543,12 +584,14 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
         function_name.c_str(),
         [](const std::vector<std::string> &ops_name,
            const std::vector<std::vector<PrecisionT>> &ops_params,
-           const std::vector<std::vector<size_t>> &ops_wires,
+           const std::vector<std::vector<std::size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<np_arr_c> &ops_matrices) {
+           const std::vector<np_arr_c> &ops_matrices,
+           const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
+           const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
-            for (size_t op = 0; op < ops_name.size(); op++) {
+            for (std::size_t op = 0; op < ops_name.size(); op++) {
                 const auto m_buffer = ops_matrices[op].request();
                 if (m_buffer.size) {
                     const auto m_ptr =
@@ -557,8 +600,13 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                         std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
                 }
             }
-            return OpsData<StateVectorT>{ops_name, ops_params, ops_wires,
-                                         ops_inverses, conv_matrices};
+            return OpsData<StateVectorT>{ops_name,
+                                         ops_params,
+                                         ops_wires,
+                                         ops_inverses,
+                                         conv_matrices,
+                                         ops_controlled_wires,
+                                         ops_controlled_values};
         },
         "Create a list of operations from data.");
 
@@ -577,7 +625,7 @@ void registerBackendAgnosticAlgorithms(py::module_ &m) {
                const std::vector<std::shared_ptr<Observable<StateVectorT>>>
                    &observables,
                const OpsData<StateVectorT> &operations,
-               const std::vector<size_t> &trainableParams) {
+               const std::vector<std::size_t> &trainableParams) {
                 using PrecisionT = typename StateVectorT::PrecisionT;
                 std::vector<PrecisionT> jac(observables.size() *
                                                 trainableParams.size(),
@@ -662,6 +710,248 @@ void registerLightningClassBindings(py::module_ &m) {
         using StateVectorT = typename TypeList::Type;
         lightningClassBindings<StateVectorT>(m);
         registerLightningClassBindings<typename TypeList::Next>(m);
+        py::register_local_exception<Pennylane::Util::LightningException>(
+            m, "LightningException");
     }
 }
+
+#elif _ENABLE_PLTENSOR == 1
+/**
+ * @brief Register lightning.tensor measurements class functionalities.
+ *
+ * @tparam TensorNetT
+ * @tparam PyClass
+ * @param pyclass Pybind11's measurements class to bind methods.
+ */
+template <class TensorNetT, class PyClass>
+void registerLightningTensorBackendAgnosticMeasurements(PyClass &pyclass) {
+    using MeasurementsT = MeasurementsTNCuda<TensorNetT>;
+    using ObservableT = ObservableTNCuda<TensorNetT>;
+    pyclass
+        .def(
+            "expval",
+            [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+                return M.expval(*ob);
+            },
+            "Expected value of an observable object.")
+        .def(
+            "probs",
+            [](MeasurementsT &M, const std::vector<std::size_t> &wires) {
+                return py::array_t<typename TensorNetT::PrecisionT>(
+                    py::cast(M.probs(wires)));
+            },
+            "Probabilities of a set of wires.")
+        .def(
+            "var",
+            [](MeasurementsT &M, const std::shared_ptr<ObservableT> &ob) {
+                return M.var(*ob);
+            },
+            "Variance of an observable object.")
+        .def("generate_samples", [](MeasurementsT &M,
+                                    const std::vector<std::size_t> &wires,
+                                    std::size_t num_shots) {
+            constexpr auto sz = sizeof(std::size_t);
+            const std::size_t num_wires = wires.size();
+            const std::size_t ndim = 2;
+            const std::vector<std::size_t> shape{num_shots, num_wires};
+            auto &&result = M.generate_samples(wires, num_shots);
+
+            const std::vector<std::size_t> strides{sz * num_wires, sz};
+            // return 2-D NumPy array
+            return py::array(py::buffer_info(
+                result.data(), /* data as contiguous array  */
+                sz,            /* size of one scalar        */
+                py::format_descriptor<std::size_t>::format(), /* data type */
+                ndim,   /* number of dimensions      */
+                shape,  /* shape of the matrix       */
+                strides /* strides for each axis     */
+                ));
+        });
+}
+
+/**
+ * @brief Register observable classes for TensorNetwork.
+ *
+ * @tparam LightningBackendT
+ * @param m Pybind module
+ * @param name backend name of TN (mps, tn)
+ */
+template <class LightningBackendT>
+void registerBackendAgnosticObservablesTensor(py::module_ &m,
+                                              const std::string &name) {
+    using PrecisionT =
+        typename LightningBackendT::PrecisionT; // LightningBackendT's's
+                                                // precision.
+    using ComplexT =
+        typename LightningBackendT::ComplexT; // LightningBackendT's
+                                              // complex type.
+    using ParamT = PrecisionT;                // Parameter's data precision
+
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    using np_arr_c = py::array_t<std::complex<ParamT>, py::array::c_style>;
+    using np_arr_r = py::array_t<ParamT, py::array::c_style>;
+
+    using ObservableT = ObservableTNCuda<LightningBackendT>;
+    using NamedObsT = NamedObsTNCuda<LightningBackendT>;
+    using HermitianObsT = HermitianObsTNCuda<LightningBackendT>;
+    using TensorProdObsT = TensorProdObsTNCuda<LightningBackendT>;
+    using HamiltonianT = HamiltonianTNCuda<LightningBackendT>;
+
+    std::string class_name;
+
+    class_name = std::string(name) + "ObservableC" + bitsize;
+    py::class_<ObservableT, std::shared_ptr<ObservableT>>(m, class_name.c_str(),
+                                                          py::module_local());
+
+    class_name = std::string(name) + "NamedObsC" + bitsize;
+    py::class_<NamedObsT, std::shared_ptr<NamedObsT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init(
+            [](const std::string &name, const std::vector<std::size_t> &wires) {
+                return NamedObsT(name, wires);
+            }))
+        .def("__repr__", &NamedObsT::getObsName)
+        .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
+        .def(
+            "__eq__",
+            [](const NamedObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<NamedObsT>(other)) {
+                    return false;
+                }
+                auto &&other_cast = other.cast<NamedObsT>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    class_name = std::string(name) + "HermitianObsC" + bitsize;
+    py::class_<HermitianObsT, std::shared_ptr<HermitianObsT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init([](const np_arr_c &matrix,
+                         const std::vector<std::size_t> &wires) {
+            auto const &buffer = matrix.request();
+            const auto ptr = static_cast<ComplexT *>(buffer.ptr);
+            return HermitianObsT(std::vector<ComplexT>(ptr, ptr + buffer.size),
+                                 wires);
+        }))
+        .def("__repr__", &HermitianObsT::getObsName)
+        .def("get_wires", &HermitianObsT::getWires, "Get wires of observables")
+        .def("get_matrix", &HermitianObsT::getMatrix,
+             "Get matrix representation of Hermitian operator")
+        .def(
+            "__eq__",
+            [](const HermitianObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<HermitianObsT>(other)) {
+                    return false;
+                }
+                auto &&other_cast = other.cast<HermitianObsT>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    class_name = std::string(name) + "TensorProdObsC" + bitsize;
+    py::class_<TensorProdObsT, std::shared_ptr<TensorProdObsT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init([](const std::vector<std::shared_ptr<ObservableT>> &obs) {
+            return TensorProdObsT(obs);
+        }))
+        .def("__repr__", &TensorProdObsT::getObsName)
+        .def("get_wires", &TensorProdObsT::getWires, "Get wires of observables")
+        .def("get_ops", &TensorProdObsT::getObs, "Get operations list")
+        .def(
+            "__eq__",
+            [](const TensorProdObsT &self, py::handle other) -> bool {
+                if (!py::isinstance<TensorProdObsT>(other)) {
+                    return false;
+                }
+                auto &&other_cast = other.cast<TensorProdObsT>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+
+    class_name = std::string(name) + "HamiltonianC" + bitsize;
+    using ObsPtr = std::shared_ptr<ObservableT>;
+    py::class_<HamiltonianT, std::shared_ptr<HamiltonianT>, ObservableT>(
+        m, class_name.c_str(), py::module_local())
+        .def(py::init(
+            [](const np_arr_r &coeffs, const std::vector<ObsPtr> &obs) {
+                auto const &buffer = coeffs.request();
+                const auto ptr = static_cast<ParamT *>(buffer.ptr);
+                return HamiltonianT{std::vector<ParamT>(ptr, ptr + buffer.size),
+                                    obs};
+            }))
+        .def("__repr__", &HamiltonianT::getObsName)
+        .def("get_wires", &HamiltonianT::getWires, "Get wires of observables")
+        .def("get_ops", &HamiltonianT::getObs,
+             "Get operations contained by Hamiltonian")
+        .def("get_coeffs", &HamiltonianT::getCoeffs,
+             "Get Hamiltonian coefficients")
+        .def(
+            "__eq__",
+            [](const HamiltonianT &self, py::handle other) -> bool {
+                if (!py::isinstance<HamiltonianT>(other)) {
+                    return false;
+                }
+                auto &&other_cast = other.cast<HamiltonianT>();
+                return self == other_cast;
+            },
+            "Compare two observables");
+}
+
+/**
+ * @brief Templated class to build lightning.tensor class bindings.
+ *
+ * @tparam TensorNetT Tensor network type.
+ * @param m Pybind11 module.
+ */
+template <class TensorNetT> void lightningTensorClassBindings(py::module_ &m) {
+    using PrecisionT =
+        typename TensorNetT::PrecisionT; // TensorNet's precision.
+    // Enable module name to be based on size of complex datatype
+    auto name = TensorNetT::method; // TensorNet's backend name [mps, exact].
+    const std::string bitsize =
+        std::to_string(sizeof(std::complex<PrecisionT>) * 8);
+
+    //***********************************************************************//
+    //                              TensorNet
+    //***********************************************************************//
+    std::string class_name = std::string(name) + "TensorNetC" + bitsize;
+    auto pyclass =
+        py::class_<TensorNetT>(m, class_name.c_str(), py::module_local());
+
+    registerBackendClassSpecificBindings<TensorNetT>(pyclass);
+
+    //***********************************************************************//
+    //                              Observables
+    //***********************************************************************//
+    /* Observables submodule */
+    py::module_ obs_submodule =
+        m.def_submodule("observables", "Submodule for observables classes.");
+    registerBackendAgnosticObservablesTensor<TensorNetT>(obs_submodule, name);
+
+    //***********************************************************************//
+    //                             Measurements
+    //***********************************************************************//
+    class_name = std::string(name) + "MeasurementsC" + bitsize;
+    auto pyclass_measurements = py::class_<MeasurementsTNCuda<TensorNetT>>(
+        m, class_name.c_str(), py::module_local());
+
+    pyclass_measurements.def(py::init<const TensorNetT &>());
+    registerLightningTensorBackendAgnosticMeasurements<TensorNetT>(
+        pyclass_measurements);
+}
+
+template <typename TypeList>
+void registerLightningTensorClassBindings(py::module_ &m) {
+    if constexpr (!std::is_same_v<TypeList, void>) {
+        using TensorNetT = typename TypeList::Type;
+        lightningTensorClassBindings<TensorNetT>(m);
+        registerLightningTensorClassBindings<typename TypeList::Next>(m);
+        py::register_local_exception<Pennylane::Util::LightningException>(
+            m, "LightningException");
+    }
+}
+#endif
+
 } // namespace Pennylane

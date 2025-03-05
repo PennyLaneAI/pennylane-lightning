@@ -127,6 +127,6 @@ RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() {
     }
 }
 #else
-RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo(){};
+RuntimeInfo::InternalRuntimeInfo::InternalRuntimeInfo() = default;
 #endif
 } // namespace Pennylane::Util

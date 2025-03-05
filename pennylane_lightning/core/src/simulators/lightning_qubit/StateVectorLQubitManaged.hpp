@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <algorithm> // fill
 #include <complex>
 #include <vector>
 
@@ -56,6 +57,7 @@ class StateVectorLQubitManaged final
     using ComplexT = std::complex<PrecisionT>;
     using CFP_t = ComplexT;
     using MemoryStorageT = Pennylane::Util::MemoryStorageLocation::Internal;
+    using StateVectorT = StateVectorLQubitManaged<PrecisionT>;
 
   private:
     using BaseType =
@@ -71,12 +73,12 @@ class StateVectorLQubitManaged final
      * @param memory_model Memory model the statevector will use
      */
     explicit StateVectorLQubitManaged(
-        size_t num_qubits, Threading threading = Threading::SingleThread,
+        std::size_t num_qubits, Threading threading = Threading::SingleThread,
         CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType{num_qubits, threading, memory_model},
           data_{exp2(num_qubits), ComplexT{0.0, 0.0},
                 getAllocator<ComplexT>(this->memory_model_)} {
-        data_[0] = {1, 0};
+        data_[0U] = {1.0, 0.0};
     }
 
     /**
@@ -102,7 +104,7 @@ class StateVectorLQubitManaged final
      * @param threading Threading option the statevector to use
      * @param memory_model Memory model the statevector will use
      */
-    StateVectorLQubitManaged(const ComplexT *other_data, size_t other_size,
+    StateVectorLQubitManaged(const ComplexT *other_data, std::size_t other_size,
                              Threading threading = Threading::SingleThread,
                              CPUMemoryModel memory_model = bestCPUMemoryModel())
         : BaseType(log2PerfectPower(other_size), threading, memory_model),
@@ -164,7 +166,7 @@ class StateVectorLQubitManaged final
      * @param new_data data pointer to new data.
      * @param new_size size of underlying data storage.
      */
-    void updateData(const ComplexT *new_data, size_t new_size) {
+    void updateData(const ComplexT *new_data, std::size_t new_size) {
         PL_ASSERT(data_.size() == new_size);
         std::copy(new_data, new_data + new_size, data_.data());
     }

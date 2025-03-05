@@ -11,9 +11,9 @@ A ``lightning.gpu`` device can be loaded using:
     import pennylane as qml
     dev = qml.device("lightning.gpu", wires=2)
 
-If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. If the libraries are not correctly installed, or available on path, the device will fall-back to ``lightning.qubit`` and perform all simulation on the CPU.
+If the NVIDIA cuQuantum libraries are available, the above device will allow all operations to be performed on a CUDA capable GPU of generation SM 7.0 (Volta) and greater. If the libraries are not correctly installed, or available on path, the device will raise an error.
 
-The ``lightning.gpu`` device also directly supports quantum circuit gradients using the adjoint differentiation method. This can be enabled at the PennyLane QNode level with:
+The ``lightning.gpu`` device supports quantum circuit gradients using the adjoint differentiation method by default. This can be enabled at the PennyLane QNode level with:
 
 .. code-block:: python
 
@@ -39,7 +39,6 @@ Supported operations and observables
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
-    ~pennylane.CPhase
     ~pennylane.CRot
     ~pennylane.CRX
     ~pennylane.CRY
@@ -67,9 +66,7 @@ Supported operations and observables
     ~pennylane.PauliZ
     ~pennylane.PhaseShift
     ~pennylane.PSWAP
-    ~pennylane.QFT
     ~pennylane.QubitCarry
-    ~pennylane.QubitStateVector
     ~pennylane.QubitSum
     ~pennylane.QubitUnitary
     ~pennylane.Rot
@@ -100,17 +97,17 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
-    ~pennylane.ops.op_math.Exp
-    ~pennylane.Hadamard
-    ~pennylane.Hamiltonian
-    ~pennylane.Hermitian
     ~pennylane.Identity
+    ~pennylane.Hadamard
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
-    ~pennylane.ops.op_math.Prod
     ~pennylane.Projector
+    ~pennylane.Hermitian
+    ~pennylane.Hamiltonian
     ~pennylane.SparseHamiltonian
+    ~pennylane.ops.op_math.Exp
+    ~pennylane.ops.op_math.Prod
     ~pennylane.ops.op_math.SProd
     ~pennylane.ops.op_math.Sum
 
@@ -144,7 +141,7 @@ Each problem is unique, so it can often be best to choose the default behaviour 
  
 **Multi-GPU/multi-node support:**
 
-The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs sitting on separate nodes for running large-scale simulations. 
+The ``lightning.gpu`` device allows users to leverage the computational power of many GPUs distributed across multiple nodes for running large-scale simulations. 
 Provided that NVIDIA ``cuQuantum`` libraries, a ``CUDA-aware MPI`` library and ``mpi4py`` are properly installed and the path to the ``libmpi.so`` is 
 added to the ``LD_LIBRARY_PATH`` environment variable, the following requirements should be met to enable multi-node and multi-GPU simulations:
 
@@ -282,3 +279,6 @@ To enable the memory-optimized adjoint method with MPI support, ``batch_obs`` sh
     dev = qml.device('lightning.gpu', wires= n_wires, mpi=True, batch_obs=True)
 
 For the adjoint method, each MPI process will provide the overall simulation results.
+
+.. note::
+    The observable ``Projector`` does not have support with the multi-GPU backend.

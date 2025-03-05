@@ -18,10 +18,10 @@ Pytest configuration file for PennyLane-Lightning-GPU test suite.
 
 import itertools
 import os
-import pytest
 
-from pennylane import numpy as np
 import pennylane as qml
+import pytest
+from pennylane import numpy as np
 
 # Tuple passed to distributed device ctor
 # np.complex for data type and True or False
@@ -98,6 +98,13 @@ if device_name not in qml.plugin_devices:
 # Device specification
 if device_name == "lightning.gpu":
     from pennylane_lightning.lightning_gpu import LightningGPU as LightningDevice
+    from pennylane_lightning.lightning_gpu._measurements import (
+        LightningGPUMeasurements as LightningMeasurements,
+    )
+    from pennylane_lightning.lightning_gpu._state_vector import (
+        LightningGPUStateVector as LightningStateVector,
+    )
+
 else:
     raise qml.DeviceError(f"The MPI tests do not apply to the {device_name} device.")
 

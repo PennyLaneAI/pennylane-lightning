@@ -53,7 +53,7 @@ class AdjointJacobian final
      */
     inline void updateJacobian(StateVectorT &sv1, StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
-                               PrecisionT scaling_coeff, size_t idx) {
+                               PrecisionT scaling_coeff, std::size_t idx) {
         jac[idx] = -2 * scaling_coeff *
                    getImagOfComplexInnerProduct<PrecisionT>(sv1.getView(),
                                                             sv2.getView());
@@ -76,6 +76,10 @@ class AdjointJacobian final
      * jd.getObservables().size()`. OpenMP is used to enable independent
      * operations to be offloaded to threads.
      *
+     * @note Only gates with pre-defined generators can be differentiated.
+     * For example, `QubitUnitary` is not differentiable as there is no
+     * generator defined for this gate.
+     *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate.
      * @param apply_operations Indicate whether to apply operations to tape.psi
@@ -89,12 +93,12 @@ class AdjointJacobian final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         const auto &obs = jd.getObservables();
-        const size_t num_observables = obs.size();
+        const std::size_t num_observables = obs.size();
 
         // We can assume the trainable params are sorted (from Python)
-        const std::vector<size_t> &tp = jd.getTrainableParams();
-        const size_t tp_size = tp.size();
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::vector<std::size_t> &tp = jd.getTrainableParams();
+        const std::size_t tp_size = tp.size();
+        const std::size_t num_param_ops = ops.getNumParOps();
 
         if (!jd.hasTrainableParams()) {
             return;
@@ -107,8 +111,8 @@ class AdjointJacobian final
             "observables provided.");
 
         // Track positions within par and non-par operations
-        size_t trainableParamNumber = tp_size - 1;
-        size_t current_param_idx =
+        std::size_t trainableParamNumber = tp_size - 1;
+        std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
         auto tp_it = tp.rbegin();
         const auto tp_rend = tp.rend();
@@ -118,13 +122,13 @@ class AdjointJacobian final
 
         // Apply given operations to statevector if requested
         if (apply_operations) {
-            this->applyOperations(lambda, ops);
+            BaseType::applyOperations(lambda, ops);
         }
 
         // Create observable-applied state-vectors
         std::vector<StateVectorT> H_lambda(num_observables,
                                            StateVectorT(lambda.getNumQubits()));
-        this->applyObservables(H_lambda, lambda, obs);
+        BaseType::applyObservables(H_lambda, lambda, obs);
 
         StateVectorT mu{lambda.getNumQubits()};
 
@@ -133,8 +137,7 @@ class AdjointJacobian final
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops_name[op_idx] == "QubitStateVector") ||
-                (ops_name[op_idx] == "StatePrep") ||
+            if ((ops_name[op_idx] == "StatePrep") ||
                 (ops_name[op_idx] == "BasisState")) {
                 continue;
             }
@@ -142,18 +145,27 @@ class AdjointJacobian final
                 break; // All done
             }
             mu.updateData(lambda);
-            this->applyOperationAdj(lambda, ops, op_idx);
+            BaseType::applyOperationAdj(lambda, ops, op_idx);
 
             if (ops.hasParams(op_idx)) {
                 if (current_param_idx == *tp_it) {
                     const PrecisionT scalingFactor =
-                        this->applyGenerator(mu, ops.getOpsName()[op_idx],
-                                             ops.getOpsWires()[op_idx],
-                                             !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
-                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? BaseType::applyGenerator(
+                                  mu, ops.getOpsName()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : BaseType::applyGenerator(
+                                  mu, ops.getOpsName()[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                    for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
-                        const size_t idx =
+                        const std::size_t idx =
                             trainableParamNumber + obs_idx * tp_size;
                         updateJacobian(H_lambda[obs_idx], mu, jac,
                                        scalingFactor, idx);
@@ -163,8 +175,8 @@ class AdjointJacobian final
                 }
                 current_param_idx--;
             }
-            this->applyOperationsAdj(H_lambda, ops,
-                                     static_cast<size_t>(op_idx));
+            BaseType::applyOperationsAdj(H_lambda, ops,
+                                         static_cast<std::size_t>(op_idx));
         }
     }
 };

@@ -38,13 +38,13 @@ TEMPLATE_PRODUCT_TEST_CASE("NamedObsMPI", "[Observables]", (StateVectorCudaMPI),
 
     SECTION("Constructibility") {
         REQUIRE(std::is_constructible_v<NamedObsT, std::string,
-                                        std::vector<size_t>>);
+                                        std::vector<std::size_t>>);
     }
 
     SECTION("Constructibility - optional parameters") {
-        REQUIRE(
-            std::is_constructible_v<NamedObsT, std::string, std::vector<size_t>,
-                                    std::vector<PrecisionT>>);
+        REQUIRE(std::is_constructible_v<NamedObsT, std::string,
+                                        std::vector<std::size_t>,
+                                        std::vector<PrecisionT>>);
     }
 
     SECTION("Copy constructibility") {
@@ -82,7 +82,7 @@ TEMPLATE_PRODUCT_TEST_CASE("HermitianObsMPI", "[Observables]",
 
     SECTION("Constructibility") {
         REQUIRE(std::is_constructible_v<HermitianObsT, MatrixT,
-                                        std::vector<size_t>>);
+                                        std::vector<std::size_t>>);
     }
 
     SECTION("Copy constructibility") {
@@ -173,13 +173,13 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t num_qubits = 8;
-    size_t mpi_buffersize = 1;
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-    size_t subSvLength = 1 << nLocalIndexBits;
-    size_t svLength = 1 << num_qubits;
+    std::size_t num_qubits = 8;
+    std::size_t mpi_buffersize = 1;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t subSvLength = 1 << nLocalIndexBits;
+    std::size_t svLength = 1 << num_qubits;
 
     mpi_manager.Barrier();
     std::vector<ComplexT> expected_sv(svLength);
@@ -201,18 +201,22 @@ TEMPLATE_PRODUCT_TEST_CASE("HamiltonianMPI::ApplyInPlace", "[Observables]",
     const auto h = PrecisionT{0.809}; // half of the golden ratio
 
     auto zz = std::make_shared<TensorProdObsT>(
-        std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{0}),
-        std::make_shared<NamedObsT>("PauliZ", std::vector<size_t>{1}));
+        std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{0}),
+        std::make_shared<NamedObsT>("PauliZ", std::vector<std::size_t>{1}));
 
-    auto x1 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{0});
-    auto x2 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{1});
+    auto x1 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{0});
+    auto x2 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{1});
 
     auto zz0 = std::make_shared<TensorProdObs>(
-        std::make_shared<NamedObs>("PauliZ", std::vector<size_t>{0}),
-        std::make_shared<NamedObs>("PauliZ", std::vector<size_t>{1}));
+        std::make_shared<NamedObs>("PauliZ", std::vector<std::size_t>{0}),
+        std::make_shared<NamedObs>("PauliZ", std::vector<std::size_t>{1}));
 
-    auto x10 = std::make_shared<NamedObs>("PauliX", std::vector<size_t>{0});
-    auto x20 = std::make_shared<NamedObs>("PauliX", std::vector<size_t>{1});
+    auto x10 =
+        std::make_shared<NamedObs>("PauliX", std::vector<std::size_t>{0});
+    auto x20 =
+        std::make_shared<NamedObs>("PauliX", std::vector<std::size_t>{1});
 
     auto ham = HamiltonianT::create({PrecisionT{1.0}, h, h}, {zz, x1, x2});
     auto ham0 = Hamiltonian::create({PrecisionT{1.0}, h, h}, {zz0, x10, x20});
@@ -265,9 +269,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Observables::HermitianHasherMPI", "[Observables]",
                                       {-0.7071067811865475, 0}};
 
     auto obs1 =
-        std::make_shared<HermitianT>(hermitian_h, std::vector<size_t>{0});
-    auto obs2 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{2});
-    auto obs3 = std::make_shared<NamedObsT>("PauliX", std::vector<size_t>{3});
+        std::make_shared<HermitianT>(hermitian_h, std::vector<std::size_t>{0});
+    auto obs2 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{2});
+    auto obs3 =
+        std::make_shared<NamedObsT>("PauliX", std::vector<std::size_t>{3});
 
     auto tp_obs1 = std::make_shared<TensorProdObsT>(obs1, obs2);
     auto tp_obs2 = std::make_shared<TensorProdObsT>(obs2, obs3);
@@ -307,11 +313,11 @@ TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian::ApplyInPlace", "[Observables]",
          ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
         {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
 
-    size_t mpi_buffersize = 1;
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
-    size_t subSvLength = 1 << nLocalIndexBits;
+    std::size_t mpi_buffersize = 1;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t subSvLength = 1 << nLocalIndexBits;
 
     mpi_manager.Barrier();
     std::vector<ComplexT> expected_sv(subSvLength);

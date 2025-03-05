@@ -100,7 +100,7 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
-            [](const std::string &name, const std::vector<size_t> &wires) {
+            [](const std::string &name, const std::vector<std::size_t> &wires) {
                 return NamedObsMPI<StateVectorT>(name, wires);
             }))
         .def("__repr__", &NamedObsMPI<StateVectorT>::getObsName)
@@ -124,7 +124,7 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init(
-            [](const np_arr_c &matrix, const std::vector<size_t> &wires) {
+            [](const np_arr_c &matrix, const std::vector<std::size_t> &wires) {
                 auto buffer = matrix.request();
                 const auto *ptr = static_cast<ComplexT *>(buffer.ptr);
                 return HermitianObsMPI<StateVectorT>(
@@ -255,7 +255,7 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
     pyclass
         .def("probs",
              [](MeasurementsMPI<StateVectorT> &M,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return py::array_t<ParamT>(py::cast(M.probs(wires)));
              })
         .def("probs",
@@ -277,17 +277,18 @@ void registerBackendAgnosticMeasurementsMPI(PyClass &pyclass) {
             },
             "Variance of an observable object.")
         .def("generate_samples", [](MeasurementsMPI<StateVectorT> &M,
-                                    size_t num_wires, size_t num_shots) {
+                                    std::size_t num_wires,
+                                    std::size_t num_shots) {
             auto &&result = M.generate_samples(num_shots);
-            const size_t ndim = 2;
-            const std::vector<size_t> shape{num_shots, num_wires};
-            constexpr auto sz = sizeof(size_t);
-            const std::vector<size_t> strides{sz * num_wires, sz};
+            const std::size_t ndim = 2;
+            const std::vector<std::size_t> shape{num_shots, num_wires};
+            constexpr auto sz = sizeof(std::size_t);
+            const std::vector<std::size_t> strides{sz * num_wires, sz};
             // return 2-D NumPy array
             return py::array(py::buffer_info(
                 result.data(), /* data as contiguous array  */
                 sz,            /* size of one scalar        */
-                py::format_descriptor<size_t>::format(), /* data type */
+                py::format_descriptor<std::size_t>::format(), /* data type */
                 ndim,   /* number of dimensions      */
                 shape,  /* shape of the matrix       */
                 strides /* strides for each axis     */
@@ -303,7 +304,7 @@ auto registerAdjointJacobianMPI(
     AdjointJacobianMPI<StateVectorT> &adjoint_jacobian, const StateVectorT &sv,
     const std::vector<std::shared_ptr<Observable<StateVectorT>>> &observables,
     const OpsData<StateVectorT> &operations,
-    const std::vector<size_t> &trainableParams)
+    const std::vector<std::size_t> &trainableParams)
     -> py::array_t<typename StateVectorT::PrecisionT> {
     using PrecisionT = typename StateVectorT::PrecisionT;
     std::vector<PrecisionT> jac(observables.size() * trainableParams.size(),
@@ -344,13 +345,13 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
     py::class_<OpsData<StateVectorT>>(m, class_name.c_str(), py::module_local())
         .def(py::init<const std::vector<std::string> &,
                       const std::vector<std::vector<ParamT>> &,
-                      const std::vector<std::vector<size_t>> &,
+                      const std::vector<std::vector<std::size_t>> &,
                       const std::vector<bool> &,
                       const std::vector<std::vector<ComplexT>> &>())
         .def("__repr__", [](const OpsData<StateVectorT> &ops) {
             using namespace Pennylane::Util;
             std::ostringstream ops_stream;
-            for (size_t op = 0; op < ops.getSize(); op++) {
+            for (std::size_t op = 0; op < ops.getSize(); op++) {
                 ops_stream << "{'name': " << ops.getOpsName()[op];
                 ops_stream << ", 'params': " << ops.getOpsParams()[op];
                 ops_stream << ", 'inv': " << ops.getOpsInverses()[op];
@@ -370,12 +371,14 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
         function_name.c_str(),
         [](const std::vector<std::string> &ops_name,
            const std::vector<std::vector<PrecisionT>> &ops_params,
-           const std::vector<std::vector<size_t>> &ops_wires,
+           const std::vector<std::vector<std::size_t>> &ops_wires,
            const std::vector<bool> &ops_inverses,
-           const std::vector<np_arr_c> &ops_matrices) {
+           const std::vector<np_arr_c> &ops_matrices,
+           const std::vector<std::vector<std::size_t>> &ops_controlled_wires,
+           const std::vector<std::vector<bool>> &ops_controlled_values) {
             std::vector<std::vector<ComplexT>> conv_matrices(
                 ops_matrices.size());
-            for (size_t op = 0; op < ops_name.size(); op++) {
+            for (std::size_t op = 0; op < ops_name.size(); op++) {
                 const auto m_buffer = ops_matrices[op].request();
                 if (m_buffer.size) {
                     const auto m_ptr =
@@ -384,8 +387,13 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
                         std::vector<ComplexT>{m_ptr, m_ptr + m_buffer.size};
                 }
             }
-            return OpsData<StateVectorT>{ops_name, ops_params, ops_wires,
-                                         ops_inverses, conv_matrices};
+            return OpsData<StateVectorT>{ops_name,
+                                         ops_params,
+                                         ops_wires,
+                                         ops_inverses,
+                                         conv_matrices,
+                                         ops_controlled_wires,
+                                         ops_controlled_values};
         },
         "Create a list of operations from data.");
 
@@ -403,7 +411,7 @@ void registerBackendAgnosticAlgorithmsMPI(py::module_ &m) {
                const std::vector<std::shared_ptr<Observable<StateVectorT>>>
                    &observables,
                const OpsData<StateVectorT> &operations,
-               const std::vector<size_t> &trainableParams) {
+               const std::vector<std::size_t> &trainableParams) {
                 using PrecisionT = typename StateVectorT::PrecisionT;
                 std::vector<PrecisionT> jac(observables.size() *
                                                 trainableParams.size(),
@@ -478,6 +486,8 @@ void registerLightningClassBindingsMPI(py::module_ &m) {
         using StateVectorT = typename TypeList::Type;
         lightningClassBindingsMPI<StateVectorT>(m);
         registerLightningClassBindingsMPI<typename TypeList::Next>(m);
+        py::register_local_exception<Pennylane::Util::LightningException>(
+            m, "LightningExceptionMPI");
     }
 }
 } // namespace Pennylane

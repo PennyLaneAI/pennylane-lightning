@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #pragma once
+#include <chrono>
+#include <cstdint>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -27,11 +29,14 @@
 
 /// @cond DEV
 namespace {
+using namespace Pennylane::LightningKokkos::Functors;
 using namespace Pennylane::Measures;
 using namespace Pennylane::Observables;
 using Pennylane::LightningKokkos::StateVectorKokkos;
 using Pennylane::LightningKokkos::Util::getRealOfComplexInnerProduct;
 using Pennylane::LightningKokkos::Util::SparseMV_Kokkos;
+using Pennylane::LightningKokkos::Util::vector2view;
+using Pennylane::LightningKokkos::Util::view2vector;
 using Pennylane::Util::exp2;
 enum class ExpValFunc : uint32_t {
     BEGIN = 1,
@@ -53,8 +58,8 @@ class Measurements final
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
     using BaseType = MeasurementsBase<StateVectorT, Measurements<StateVectorT>>;
-
     using KokkosExecSpace = typename StateVectorT::KokkosExecSpace;
+    using HostExecSpace = typename StateVectorT::HostExecSpace;
     using KokkosVector = typename StateVectorT::KokkosVector;
     using KokkosSizeTVector = typename StateVectorT::KokkosSizeTVector;
     using UnmanagedSizeTHostView =
@@ -63,8 +68,6 @@ class Measurements final
         typename StateVectorT::UnmanagedConstComplexHostView;
     using UnmanagedConstSizeTHostView =
         typename StateVectorT::UnmanagedConstSizeTHostView;
-    using UnmanagedPrecisionHostView =
-        typename StateVectorT::UnmanagedPrecisionHostView;
     using ScratchViewComplex = typename StateVectorT::ScratchViewComplex;
     using TeamPolicy = typename StateVectorT::TeamPolicy;
 
@@ -79,15 +82,16 @@ class Measurements final
      * observables.
      *
      * @tparam functor_t Expectation value functor class for Kokkos dispatcher.
-     * @tparam nqubits Number of wires.
+     * @tparam num_wires Number of wires.
      * @param wires Wires to apply the observable to.
      */
     template <template <class> class functor_t, int num_wires>
-    PrecisionT applyExpValNamedFunctor(const std::vector<size_t> &wires) {
+    auto applyExpValNamedFunctor(const std::vector<std::size_t> &wires)
+        -> PrecisionT {
         if constexpr (num_wires > 0)
             PL_ASSERT(wires.size() == num_wires);
 
-        const size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
         Kokkos::parallel_reduce(exp2(num_qubits - num_wires),
@@ -100,15 +104,16 @@ class Measurements final
      * matrix-valued operator.
      *
      * @tparam functor_t Expectation value functor class for Kokkos dispatcher.
-     * @tparam nqubits Number of wires.
+     * @tparam num_wires Number of wires.
      * @param matrix Matrix (linearized into a KokkosVector).
      * @param wires Wires to apply the observable to.
      */
     template <template <class> class functor_t, int num_wires>
-    PrecisionT applyExpValFunctor(const KokkosVector &matrix,
-                                  const std::vector<size_t> &wires) {
+    auto applyExpValFunctor(const KokkosVector matrix,
+                            const std::vector<std::size_t> &wires)
+        -> PrecisionT {
         PL_ASSERT(wires.size() == num_wires);
-        const size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
         Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
         Kokkos::parallel_reduce(
@@ -127,11 +132,11 @@ class Measurements final
      * @return Expectation value with respect to observable applied to specified
      * wires.
      */
-    auto getExpValMatrix(const KokkosVector &matrix,
+    auto getExpValMatrix(const KokkosVector matrix,
                          const std::vector<std::size_t> &wires) -> PrecisionT {
-        std::size_t num_qubits = this->_statevector.getNumQubits();
-        std::size_t two2N = std::exp2(num_qubits - wires.size());
-        std::size_t dim = std::exp2(wires.size());
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t two2N = exp2(num_qubits - wires.size());
+        const std::size_t dim = exp2(wires.size());
         const KokkosVector arr_data = this->_statevector.getView();
 
         PrecisionT expval = 0.0;
@@ -177,12 +182,12 @@ class Measurements final
     /**
      * @brief Calculate expectation value for a general Observable.
      *
-     * @param ob Observable.
+     * @param obs An Observable object.
      * @return Expectation value with respect to the given observable.
      */
-    PrecisionT expval(const Observable<StateVectorT> &ob) {
+    auto expval(const Observable<StateVectorT> &obs) -> PrecisionT {
         StateVectorT ob_sv{this->_statevector};
-        ob.applyInPlace(ob_sv);
+        obs.applyInPlace(ob_sv);
         return getRealOfComplexInnerProduct(this->_statevector.getView(),
                                             ob_sv.getView());
     }
@@ -190,13 +195,12 @@ class Measurements final
     /**
      * @brief Calculate expectation value for a HermitianObs.
      *
-     * @param ob HermitianObs.
+     * @param obs A HermitianObs object.
      * @return Expectation value with respect to the given observable.
      */
-    PrecisionT
-    expval(const Pennylane::LightningKokkos::Observables::HermitianObs<
-           StateVectorT> &ob) {
-        return expval(ob.getMatrix(), ob.getWires());
+    auto expval(const Pennylane::LightningKokkos::Observables::HermitianObs<
+                StateVectorT> &obs) -> PrecisionT {
+        return expval(obs.getMatrix(), obs.getWires());
     }
 
     /**
@@ -206,15 +210,12 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    PrecisionT expval(const std::vector<ComplexT> &matrix_,
-                      const std::vector<size_t> &wires) {
+    auto expval(const std::vector<ComplexT> &matrix_,
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         PL_ABORT_IF(matrix_.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
-        KokkosVector matrix("matrix_", matrix_.size());
-        Kokkos::deep_copy(matrix, UnmanagedConstComplexHostView(
-                                      matrix_.data(), matrix_.size()));
-        return getExpValMatrix(matrix, wires);
+        return getExpValMatrix(vector2view(matrix_), wires);
     };
 
     /**
@@ -224,8 +225,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    PrecisionT expval(const std::string &operation,
-                      const std::vector<size_t> &wires) {
+    auto expval(const std::string &operation,
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
             return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
@@ -259,15 +260,15 @@ class Measurements final
      * observables.
      */
     template <typename op_type>
-    std::vector<PrecisionT>
-    expval(const std::vector<op_type> &operations_list,
-           const std::vector<std::vector<size_t>> &wires_list) {
+    auto expval(const std::vector<op_type> &operations_list,
+                const std::vector<std::vector<std::size_t>> &wires_list)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
         }
@@ -278,14 +279,15 @@ class Measurements final
     /**
      * @brief Expectation value for a Observable with shots
      *
-     * @param obs Observable.
+     * @param obs An Observable object.
      * @param num_shots Number of shots.
-     * @param shots_range Vector of shot number to measurement.
+     * @param shot_range Vector of shot number to measurement.
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range) -> PrecisionT {
         return BaseType::expval(obs, num_shots, shot_range);
     }
 
@@ -333,12 +335,12 @@ class Measurements final
     /**
      * @brief Calculate variance of a general Observable.
      *
-     * @param ob Observable.
+     * @param obs An Observable object.
      * @return Variance with respect to the given observable.
      */
-    auto var(const Observable<StateVectorT> &ob) -> PrecisionT {
+    auto var(const Observable<StateVectorT> &obs) -> PrecisionT {
         StateVectorT ob_sv{this->_statevector};
-        ob.applyInPlace(ob_sv);
+        obs.applyInPlace(ob_sv);
 
         const PrecisionT mean_square =
             getRealOfComplexInnerProduct(ob_sv.getView(), ob_sv.getView());
@@ -356,8 +358,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observable.
      */
-    PrecisionT var(const std::string &operation,
-                   const std::vector<size_t> &wires) {
+    auto var(const std::string &operation,
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyOperation(operation, wires);
 
@@ -371,14 +373,14 @@ class Measurements final
     };
 
     /**
-     * @brief Variance of an observable.
+     * @brief Variance of a Hermitian matrix.
      *
      * @param matrix Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observable.
      */
-    PrecisionT var(const std::vector<ComplexT> &matrix,
-                   const std::vector<size_t> &wires) {
+    auto var(const std::vector<ComplexT> &matrix,
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv{this->_statevector};
         ob_sv.applyMatrix(matrix, wires);
 
@@ -402,16 +404,16 @@ class Measurements final
      observables.
      */
     template <typename op_type>
-    std::vector<PrecisionT>
-    var(const std::vector<op_type> &operations_list,
-        const std::vector<std::vector<size_t>> &wires_list) {
+    auto var(const std::vector<op_type> &operations_list,
+             const std::vector<std::vector<std::size_t>> &wires_list)
+        -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
 
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -435,11 +437,11 @@ class Measurements final
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
     template <class index_type>
-    PrecisionT var(const index_type *row_map_ptr, const index_type row_map_size,
-                   const index_type *entries_ptr, const ComplexT *values_ptr,
-                   const index_type numNNZ) {
+    auto var(const index_type *row_map_ptr, const index_type row_map_size,
+             const index_type *entries_ptr, const ComplexT *values_ptr,
+             const index_type numNNZ) -> PrecisionT {
         PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(row_map_size) - 1)),
+            (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
 
         StateVectorT ob_sv{this->_statevector};
@@ -458,28 +460,47 @@ class Measurements final
     };
 
     /**
-     * @brief Probabilities of each computational basis state.
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @return Kokkos::View with probabilities
+     * in lexicographic order.
+     */
+    auto probs_core() -> Kokkos::View<PrecisionT *> {
+        const std::size_t N = this->_statevector.getLength();
+        auto sv = this->_statevector.getView();
+        Kokkos::View<PrecisionT *> d_probs("d_probs", N);
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<KokkosExecSpace>(0, N),
+            KOKKOS_LAMBDA(const std::size_t k) {
+                const PrecisionT rsv = sv(k).real();
+                const PrecisionT isv = sv(k).imag();
+                d_probs(k) = rsv * rsv + isv * isv;
+            });
+        return d_probs;
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
      *
      * @return Floating point std::vector with probabilities
      * in lexicographic order.
      */
     auto probs() -> std::vector<PrecisionT> {
-        const size_t N = this->_statevector.getLength();
-
-        Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        Kokkos::View<PrecisionT *> d_probability("d_probability", N);
-
-        // Compute probability distribution from StateVector
-        Kokkos::parallel_for(
-            Kokkos::RangePolicy<KokkosExecSpace>(0, N),
-            getProbFunctor<PrecisionT>(arr_data, d_probability));
-
-        std::vector<PrecisionT> probabilities(N, 0);
-
-        Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                     probabilities.size()),
-                          d_probability);
-        return probabilities;
+        return view2vector(probs_core());
     }
 
     /**
@@ -490,106 +511,137 @@ class Measurements final
      * @return Floating point std::vector with probabilities.
      * The basis columns are rearranged according to wires.
      */
-    std::vector<PrecisionT> probs(const std::vector<size_t> &wires) {
-        using MDPolicyType_2D =
-            Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
-
-        //  Determining probabilities for the sorted wires.
-        const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        const size_t num_qubits = this->_statevector.getNumQubits();
-
-        std::vector<size_t> sorted_ind_wires(wires);
-        const bool is_sorted_wires =
-            std::is_sorted(sorted_ind_wires.begin(), sorted_ind_wires.end());
-        std::vector<size_t> sorted_wires(wires);
-
-        if (!is_sorted_wires) {
-            sorted_ind_wires = Pennylane::Util::sorting_indices(wires);
-            for (size_t pos = 0; pos < wires.size(); pos++)
-                sorted_wires[pos] = wires[sorted_ind_wires[pos]];
+    auto
+    probs(const std::vector<std::size_t> &wires,
+          [[maybe_unused]] const std::vector<std::size_t> &device_wires = {})
+        -> std::vector<PrecisionT> {
+        // GPU_SHARED_NWIRES_MAX is an upper bound for the size of the GPU array
+        // used to reduce the probs (max size = 2 ** 7)
+        constexpr std::size_t GPU_SHARED_NWIRES_MAX = 7;
+        // BITSHIFT_FREE_WIRES_MIN is a lower bound for the size of the loop
+        // over which the probs computation is parallelized in
+        // `probs_bitshift_generic` The free wires are the wires which are
+        // summed over.
+        constexpr std::size_t BITSHIFT_FREE_WIRES_MIN = 10;
+        // BITSHIFT_NWIRES_MAX is an upper bound for using
+        // `probs_bitshift_generic`, beyond that size the other implementation
+        // si more efficient
+        constexpr std::size_t BITSHIFT_NWIRES_MAX = 9;
+        // MDRANGE_NWIRES_MAX is an upper bound for using `MDRangePolicy` to
+        // parallelize the probs computation. Beyond that size, parallelizing
+        // over the probs elements is more efficient.
+        constexpr std::size_t MDRANGE_NWIRES_MAX = 20;
+        const std::size_t n_wires = wires.size();
+        if (n_wires == 0) {
+            return {1.0};
         }
-
-        std::vector<size_t> all_indices =
-            Pennylane::Util::generateBitsPatterns(sorted_wires, num_qubits);
-
-        std::vector<size_t> all_offsets = Pennylane::Util::generateBitsPatterns(
-            Pennylane::Util::getIndicesAfterExclusion(sorted_wires, num_qubits),
-            num_qubits);
-
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        // is_equal_to_all_wires is True if `wires` includes all wires in order
+        // and false otherwise
+        bool is_equal_to_all_wires = n_wires == num_qubits;
+        for (std::size_t k = 0; k < n_wires; k++) {
+            if (!is_equal_to_all_wires) {
+                break;
+            }
+            is_equal_to_all_wires = wires[k] == k;
+        }
+        if (is_equal_to_all_wires) {
+            return probs();
+        }
+        const bool is_gpu_scratch_limited =
+            n_wires > GPU_SHARED_NWIRES_MAX &&
+            !std::is_same_v<KokkosExecSpace, HostExecSpace>;
+        if (num_qubits - n_wires > BITSHIFT_FREE_WIRES_MIN &&
+            n_wires < BITSHIFT_NWIRES_MAX && !is_gpu_scratch_limited) {
+            return probs_bitshift_generic<KokkosExecSpace>(
+                this->_statevector.getView(), num_qubits, wires);
+        }
+        std::vector<std::size_t> all_indices =
+            Pennylane::Util::generateBitsPatterns(wires, num_qubits);
+        Kokkos::View<std::size_t *> d_all_indices = vector2view(all_indices);
+        std::vector<std::size_t> all_offsets =
+            Pennylane::Util::generateBitsPatterns(
+                Pennylane::Util::getIndicesAfterExclusion(wires, num_qubits),
+                num_qubits);
+        Kokkos::View<std::size_t *> d_all_offsets = vector2view(all_offsets);
         Kokkos::View<PrecisionT *> d_probabilities("d_probabilities",
                                                    all_indices.size());
+        Kokkos::View<ComplexT *> sv = this->_statevector.getView();
 
-        Kokkos::View<size_t *> d_sorted_ind_wires("d_sorted_ind_wires",
-                                                  sorted_ind_wires.size());
-        Kokkos::View<size_t *> d_all_indices("d_all_indices",
-                                             all_indices.size());
-        Kokkos::View<size_t *> d_all_offsets("d_all_offsets",
-                                             all_offsets.size());
-
-        Kokkos::deep_copy(
-            d_all_indices,
-            UnmanagedSizeTHostView(all_indices.data(), all_indices.size()));
-        Kokkos::deep_copy(
-            d_all_offsets,
-            UnmanagedSizeTHostView(all_offsets.data(), all_offsets.size()));
-        Kokkos::deep_copy(d_sorted_ind_wires,
-                          UnmanagedSizeTHostView(sorted_ind_wires.data(),
-                                                 sorted_ind_wires.size()));
-
-        const int num_all_indices =
-            all_indices.size(); // int is required by Kokkos::MDRangePolicy
-        const int num_all_offsets = all_offsets.size();
-
-        MDPolicyType_2D mdpolicy_2d0({{0, 0}},
-                                     {{num_all_indices, num_all_offsets}});
-
-        Kokkos::parallel_for(
-            "Set_Prob", mdpolicy_2d0,
-            KOKKOS_LAMBDA(const size_t i, const size_t j) {
-                const size_t index = d_all_indices(i) + d_all_offsets(j);
-                const PrecisionT REAL = arr_data(index).real();
-                const PrecisionT IMAG = arr_data(index).imag();
-                const PrecisionT value = REAL * REAL + IMAG * IMAG;
-                Kokkos::atomic_add(&d_probabilities(i), value);
-            });
-
-        std::vector<PrecisionT> probabilities(all_indices.size(), 0);
-
-        if (is_sorted_wires) {
-            Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                         probabilities.size()),
-                              d_probabilities);
-            return probabilities;
+        // Reducing over `d_probabilities` requires too much L0 scratch memory
+        // on GPUs. If n_wires >= 20, this also requires quite a bit of memory
+        // on CPUs, so we fallback to the next implementation
+        if (n_wires < MDRANGE_NWIRES_MAX && !is_gpu_scratch_limited) {
+            using MDPolicyType_2D =
+                Kokkos::MDRangePolicy<Kokkos::Rank<2, Kokkos::Iterate::Left>>;
+            auto md_policy = MDPolicyType_2D(
+                {{0, 0}}, {{static_cast<int64_t>(all_indices.size()),
+                            static_cast<int64_t>(all_offsets.size())}});
+            Kokkos::parallel_reduce(
+                md_policy,
+                getProbsFunctor<PrecisionT, KokkosExecSpace>(
+                    sv, wires, d_all_indices, d_all_offsets),
+                d_probabilities);
         } else {
-            Kokkos::View<PrecisionT *> transposed_tensor("transposed_tensor",
-                                                         all_indices.size());
-
-            Kokkos::View<size_t *> d_trans_index("d_trans_index",
-                                                 all_indices.size());
-
-            const int num_trans_tensor = transposed_tensor.size();
-            const int num_sorted_ind_wires = sorted_ind_wires.size();
-
-            MDPolicyType_2D mdpolicy_2d1(
-                {{0, 0}}, {{num_trans_tensor, num_sorted_ind_wires}});
-
             Kokkos::parallel_for(
-                "TransIndex", mdpolicy_2d1,
-                getTransposedIndexFunctor(d_sorted_ind_wires, d_trans_index,
-                                          num_sorted_ind_wires));
-
-            Kokkos::parallel_for(
-                "Transpose",
-                Kokkos::RangePolicy<KokkosExecSpace>(0, num_trans_tensor),
-                getTransposedFunctor<PrecisionT>(
-                    transposed_tensor, d_probabilities, d_trans_index));
-
-            Kokkos::deep_copy(UnmanagedPrecisionHostView(probabilities.data(),
-                                                         probabilities.size()),
-                              transposed_tensor);
-
-            return probabilities;
+                all_indices.size(), KOKKOS_LAMBDA(const std::size_t i) {
+                    for (std::size_t j = 0; j < d_all_offsets.size(); j++) {
+                        const std::size_t index =
+                            d_all_indices(i) + d_all_offsets(j);
+                        const PrecisionT rsv = sv(index).real();
+                        const PrecisionT isv = sv(index).imag();
+                        d_probabilities(i) += rsv * rsv + isv * isv;
+                    }
+                });
         }
+
+        return view2vector(d_probabilities);
+    }
+
+    /**
+     * @brief Probabilities of each computational basis state for an observable.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots. If specified with a non-zero number,
+     * shot-noise will be added to return probabilities
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    auto probs(const Observable<StateVectorT> &obs, std::size_t num_shots = 0)
+        -> std::vector<PrecisionT> {
+        return BaseType::probs(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    auto probs(std::size_t num_shots) -> std::vector<PrecisionT> {
+        return BaseType::probs(num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise for a subset of the full system.
+     *
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+
+    auto probs(const std::vector<std::size_t> &wires, std::size_t num_shots)
+        -> std::vector<PrecisionT> {
+        PL_ABORT_IF_NOT(
+            std::is_sorted(wires.cbegin(), wires.cend()),
+            "LightningKokkos does not currently support out-of-order wire "
+            "indices with probability calculations");
+
+        return BaseType::probs(wires, num_shots);
     }
 
     /**
@@ -598,27 +650,22 @@ class Measurements final
      *
      * @param num_samples Number of Samples
      *
-     * @return std::vector<size_t> to the samples.
+     * @return std::vector<std::size_t> to the samples.
      * Each sample has a length equal to the number of qubits. Each sample can
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
-        const size_t num_qubits = this->_statevector.getNumQubits();
-        const size_t N = this->_statevector.getLength();
-
-        Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
-        Kokkos::View<PrecisionT *> probability("probability", N);
-        Kokkos::View<size_t *> samples("num_samples", num_samples * num_qubits);
-
-        // Compute probability distribution from StateVector
-        Kokkos::parallel_for(Kokkos::RangePolicy<KokkosExecSpace>(0, N),
-                             getProbFunctor<PrecisionT>(arr_data, probability));
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t N = this->_statevector.getLength();
+        Kokkos::View<std::size_t *> samples("num_samples",
+                                            num_samples * num_qubits);
 
         // Convert probability distribution to cumulative distribution
+        auto probability = probs_core();
         Kokkos::parallel_scan(
             Kokkos::RangePolicy<KokkosExecSpace>(0, N),
-            KOKKOS_LAMBDA(const size_t k, PrecisionT &update_value,
+            KOKKOS_LAMBDA(const std::size_t k, PrecisionT &update_value,
                           const bool is_final) {
                 const PrecisionT val_k = probability(k);
                 if (is_final)
@@ -627,24 +674,20 @@ class Measurements final
             });
 
         // Sampling using Random_XorShift64_Pool
-        Kokkos::Random_XorShift64_Pool<> rand_pool(5374857);
+        auto rand_pool =
+            this->_deviceseed.has_value()
+                ? Kokkos::Random_XorShift64_Pool<>(this->_deviceseed.value())
+                : Kokkos::Random_XorShift64_Pool<>(
+                      std::chrono::high_resolution_clock::now()
+                          .time_since_epoch()
+                          .count());
 
         Kokkos::parallel_for(
             Kokkos::RangePolicy<KokkosExecSpace>(0, num_samples),
             Sampler<PrecisionT, Kokkos::Random_XorShift64_Pool>(
                 samples, probability, rand_pool, num_qubits, N));
 
-        std::vector<size_t> samples_h(num_samples * num_qubits);
-
-        using UnmanagedSize_tHostView =
-            Kokkos::View<size_t *, Kokkos::HostSpace,
-                         Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
-
-        Kokkos::deep_copy(
-            UnmanagedSize_tHostView(samples_h.data(), samples_h.size()),
-            samples);
-
-        return samples_h;
+        return view2vector(samples);
     }
 
   private:

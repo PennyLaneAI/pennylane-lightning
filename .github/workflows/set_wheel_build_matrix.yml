@@ -1,8 +1,8 @@
 name: Set wheel build matrix
 
 env:
-  PYTHON3_MIN_VERSION: "9"
-  PYTHON3_MAX_VERSION: "11"
+  PYTHON3_MIN_VERSION: "10"
+  PYTHON3_MAX_VERSION: "12"
 
 on:
   workflow_call:
@@ -31,7 +31,7 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Python version
         id: pyver
@@ -52,7 +52,7 @@ jobs:
 
       - name: Kokkos version
         id: kokkos_version
-        run: echo "kokkos_version=[\"4.0.01\"]" >> $GITHUB_OUTPUT
+        run: echo "kokkos_version=[\"4.5.00\"]" >> $GITHUB_OUTPUT
 
     outputs:
       python_version: ${{ steps.pyver.outputs.python_version }}

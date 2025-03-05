@@ -23,6 +23,13 @@
 #include <cstdint>
 #include <memory>
 
+namespace {
+struct BitWidth {
+    static constexpr uint32_t b64 = 64U;
+    static constexpr uint32_t b32 = 32U;
+};
+} // namespace
+
 // LCOV_EXCL_START
 namespace Pennylane::Util {
 /**
@@ -43,13 +50,15 @@ enum class CPUMemoryModel : uint8_t {
  * @return CPUMemoryModel
  */
 inline auto getMemoryModel(const void *ptr) -> CPUMemoryModel {
-    if ((reinterpret_cast<uintptr_t>(ptr) % 64) == 0) {
+    // NOLINTBEGIN(cppcoreguidelines-pro-type-reinterpret-cast)
+    if ((reinterpret_cast<uintptr_t>(ptr) % BitWidth::b64) == 0) {
         return CPUMemoryModel::Aligned512;
     }
 
-    if ((reinterpret_cast<uintptr_t>(ptr) % 32) == 0) {
+    if ((reinterpret_cast<uintptr_t>(ptr) % BitWidth::b32) == 0) {
         return CPUMemoryModel::Aligned256;
     }
+    // NOLINTEND(cppcoreguidelines-pro-type-reinterpret-cast)
 
     return CPUMemoryModel::Unaligned;
 }
@@ -86,9 +95,9 @@ template <class T>
 constexpr inline auto getAlignment(CPUMemoryModel memory_model) -> uint32_t {
     switch (memory_model) {
     case CPUMemoryModel::Aligned256:
-        return 32U;
+        return BitWidth::b32;
     case CPUMemoryModel::Aligned512:
-        return 64U;
+        return BitWidth::b64;
     default:
         return alignof(T);
     }

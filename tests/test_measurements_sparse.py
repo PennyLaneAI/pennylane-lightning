@@ -14,17 +14,21 @@
 """
 Unit tests for Sparse Measurements Lightning devices.
 """
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
 from pennylane import qchem
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
+@pytest.mark.skipif(
+    device_name == "lightning.tensor",
+    reason="lightning.tensor does not support Sparse Hamiltonians",
+)
 class TestSparseExpval:
     """Tests for the expval function"""
 

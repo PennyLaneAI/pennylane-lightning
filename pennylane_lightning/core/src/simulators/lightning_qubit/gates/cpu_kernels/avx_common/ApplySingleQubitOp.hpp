@@ -25,24 +25,25 @@
 #include <complex>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
+template <typename PrecisionT, std::size_t packed_size>
+struct ApplySingleQubitOp {
     using PrecisionAVXConcept =
         typename AVXConcept<PrecisionT, packed_size>::Type;
 
-    template <size_t rev_wire>
+    template <std::size_t rev_wire>
     static void applyInternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits,
+                              const std::size_t num_qubits,
                               const std::complex<PrecisionT> *matrix,
                               bool inverse = false) {
         using namespace Permutation;
 
         const AVXIntrinsicType<PrecisionT, packed_size> diag_real =
-            setValueOneTwo<PrecisionT, packed_size>([=](size_t idx) {
+            setValueOneTwo<PrecisionT, packed_size>([=](std::size_t idx) {
                 return (((idx >> rev_wire) & 1U) == 0) ? real(matrix[0])
                                                        : real(matrix[3]);
             });
         const AVXIntrinsicType<PrecisionT, packed_size> diag_imag =
-            setValueOneTwo<PrecisionT, packed_size>([=](size_t idx) {
+            setValueOneTwo<PrecisionT, packed_size>([=](std::size_t idx) {
                 if (inverse) {
                     return (((idx >> rev_wire) & 1U) == 0) ? -imag(matrix[0])
                                                            : -imag(matrix[3]);
@@ -52,7 +53,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
             }) *
             imagFactor<PrecisionT, packed_size>();
         const AVXIntrinsicType<PrecisionT, packed_size> offdiag_real =
-            setValueOneTwo<PrecisionT, packed_size>([=](size_t idx) {
+            setValueOneTwo<PrecisionT, packed_size>([=](std::size_t idx) {
                 if (inverse) {
                     return (((idx >> rev_wire) & 1U) == 0) ? real(matrix[2])
                                                            : real(matrix[1]);
@@ -61,7 +62,7 @@ template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
                                                        : real(matrix[2]);
             });
         const AVXIntrinsicType<PrecisionT, packed_size> offdiag_imag =
-            setValueOneTwo<PrecisionT, packed_size>([=](size_t idx) {
+            setValueOneTwo<PrecisionT, packed_size>([=](std::size_t idx) {
                 if (inverse) {
                     return (((idx >> rev_wire) & 1U) == 0) ? -imag(matrix[2])
                                                            : -imag(matrix[1]);
@@ -79,8 +80,8 @@ template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
         constexpr static auto flip_swap_real_imag =
             compilePermutation<PrecisionT>(
                 swapRealImag(flip(identity<packed_size>(), rev_wire)));
-
-        for (size_t k = 0; k < exp2(num_qubits); k += packed_size / 2) {
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t k = 0; k < exp2(num_qubits); k += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + k);
             const auto w_diag =
                 diag_real * v + diag_imag * permute<swap_real_imag>(v);
@@ -96,13 +97,15 @@ template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
     }
 
     static void applyExternal(std::complex<PrecisionT> *arr,
-                              const size_t num_qubits, const size_t rev_wire,
+                              const std::size_t num_qubits,
+                              const std::size_t rev_wire,
                               const std::complex<PrecisionT> *matrix,
                               bool inverse = false) {
         using namespace Permutation;
-        const size_t rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
-        const size_t wire_parity = fillTrailingOnes(rev_wire);
-        const size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
+        const std::size_t rev_wire_shift =
+            (static_cast<std::size_t>(1U) << rev_wire);
+        const std::size_t wire_parity = fillTrailingOnes(rev_wire);
+        const std::size_t wire_parity_inv = fillLeadingOnes(rev_wire + 1);
 
         std::complex<PrecisionT> u00;
         std::complex<PrecisionT> u01;
@@ -139,10 +142,12 @@ template <typename PrecisionT, size_t packed_size> struct ApplySingleQubitOp {
 
         constexpr static auto swap_real_imag = compilePermutation<PrecisionT>(
             swapRealImag(identity<packed_size>()));
-
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
-            const size_t i0 = ((k << 1U) & wire_parity_inv) | (wire_parity & k);
-            const size_t i1 = i0 | rev_wire_shift;
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
+            const std::size_t i0 =
+                ((k << 1U) & wire_parity_inv) | (wire_parity & k);
+            const std::size_t i1 = i0 | rev_wire_shift;
 
             const auto v0 = PrecisionAVXConcept::load(arr + i0);
             const auto v1 = PrecisionAVXConcept::load(arr + i1);

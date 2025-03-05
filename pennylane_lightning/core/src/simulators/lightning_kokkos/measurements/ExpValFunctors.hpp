@@ -15,12 +15,14 @@
 #include <Kokkos_Core.hpp>
 
 #include "BitUtil.hpp"
-#include "BitUtilKokkos.hpp"
+#include "Error.hpp"
+#include "UtilKokkos.hpp"
 
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
 using Pennylane::LightningKokkos::Util::one;
+using Pennylane::LightningKokkos::Util::vector2view;
 using Pennylane::LightningKokkos::Util::wires2Parity;
 } // namespace
 /// @endcond
@@ -33,7 +35,7 @@ template <class PrecisionT> struct getExpectationValueIdentityFunctor {
     getExpectationValueIdentityFunctor(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
         [[maybe_unused]] std::size_t num_qubits,
-        [[maybe_unused]] const std::vector<size_t> &wires) {
+        [[maybe_unused]] const std::vector<std::size_t> &wires) {
         arr = arr_;
     }
 
@@ -53,10 +55,10 @@ template <class PrecisionT> struct getExpectationValuePauliXFunctor {
 
     getExpectationValuePauliXFunctor(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-        std::size_t num_qubits, const std::vector<size_t> &wires) {
+        std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -82,10 +84,10 @@ template <class PrecisionT> struct getExpectationValuePauliYFunctor {
 
     getExpectationValuePauliYFunctor(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-        std::size_t num_qubits, const std::vector<size_t> &wires) {
+        std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -115,10 +117,10 @@ template <class PrecisionT> struct getExpectationValuePauliZFunctor {
 
     getExpectationValuePauliZFunctor(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-        std::size_t num_qubits, const std::vector<size_t> &wires) {
+        std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -143,10 +145,10 @@ template <class PrecisionT> struct getExpectationValueHadamardFunctor {
 
     getExpectationValueHadamardFunctor(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-        std::size_t num_qubits, const std::vector<size_t> &wires) {
+        std::size_t num_qubits, const std::vector<std::size_t> &wires) {
         arr = arr_;
         rev_wire = num_qubits - wires[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -186,12 +188,7 @@ template <class PrecisionT> struct getExpValMultiQubitOpFunctor {
                                  std::size_t num_qubits_,
                                  const KokkosComplexVector &matrix_,
                                  const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
-
+        wires = vector2view(wires_);
         dim = one << wires_.size();
         num_qubits = num_qubits_;
         arr = arr_;
@@ -267,7 +264,7 @@ template <class PrecisionT> struct getExpectationValueSparseFunctor {
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const std::size_t row, PrecisionT &expval) const {
-        for (size_t j = indptr[row]; j < indptr[row + 1]; j++) {
+        for (std::size_t j = indptr[row]; j < indptr[row + 1]; j++) {
             expval += real(conj(arr[row]) * data[j] * arr[indices[j]]);
         }
     }
@@ -289,15 +286,15 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     std::size_t wire_parity;
     std::size_t wire_parity_inv;
 
-    getExpVal1QubitOpFunctor(
-        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
-        const KokkosComplexVector &matrix_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+    getExpVal1QubitOpFunctor(const KokkosComplexVector &arr_,
+                             const std::size_t num_qubits_,
+                             const KokkosComplexVector &matrix_,
+                             const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
         rev_wire = num_qubits - wires_[0] - 1;
-        rev_wire_shift = (static_cast<size_t>(1U) << rev_wire);
+        rev_wire_shift = (static_cast<std::size_t>(1U) << rev_wire);
         wire_parity = fillTrailingOnes(rev_wire);
         wire_parity_inv = fillLeadingOnes(rev_wire + 1);
     }
@@ -343,18 +340,18 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     std::size_t parity_high;
     std::size_t parity_middle;
 
-    getExpVal2QubitOpFunctor(
-        const KokkosComplexVector &arr_, const std::size_t num_qubits_,
-        const KokkosComplexVector &matrix_,
-        [[maybe_unused]] const std::vector<std::size_t> &wires_) {
+    getExpVal2QubitOpFunctor(const KokkosComplexVector &arr_,
+                             const std::size_t num_qubits_,
+                             const KokkosComplexVector &matrix_,
+                             const std::vector<std::size_t> &wires_) {
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
 
         rev_wire0 = num_qubits - wires_[1] - 1;
         rev_wire1 = num_qubits - wires_[0] - 1;
-        rev_wire0_shift = static_cast<size_t>(1U) << rev_wire0;
-        rev_wire1_shift = static_cast<size_t>(1U) << rev_wire1;
+        rev_wire0_shift = static_cast<std::size_t>(1U) << rev_wire0;
+        rev_wire1_shift = static_cast<std::size_t>(1U) << rev_wire1;
         rev_wire_min = std::min(rev_wire0, rev_wire1);
         rev_wire_max = std::max(rev_wire0, rev_wire1);
         parity_low = fillTrailingOnes(rev_wire_min);
@@ -407,12 +404,7 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
-
+        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -478,11 +470,7 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
+        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;
@@ -577,11 +565,7 @@ template <class PrecisionT> struct getExpVal5QubitOpFunctor {
                              const std::size_t num_qubits_,
                              const KokkosComplexVector &matrix_,
                              const std::vector<std::size_t> &wires_) {
-        Kokkos::View<const std::size_t *, Kokkos::HostSpace,
-                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>
-            wires_host(wires_.data(), wires_.size());
-        Kokkos::resize(wires, wires_.size());
-        Kokkos::deep_copy(wires, wires_host);
+        wires = vector2view(wires_);
         arr = arr_;
         matrix = matrix_;
         num_qubits = num_qubits_;

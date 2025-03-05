@@ -32,6 +32,7 @@ set(TEST_SOURCES    Test_BitUtil.cpp
                     Test_RuntimeInfo.cpp
                     Test_TypeTraits.cpp
                     Test_Util.cpp
+                    Test_UtilLinearAlg.cpp
                     )
 
 add_executable(utils_test_runner ${TEST_SOURCES})

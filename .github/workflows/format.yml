@@ -10,23 +10,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  black:
+  format-python:
+    name: Format (Python)
     runs-on: ubuntu-22.04
     steps:
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
+
+      - name: Checkout PennyLane-Lightning
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         run:
-            python -m pip install click==8.0.4 black==23.7.0
+            python -m pip install -r requirements.txt
 
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-
-      - name: Run Black
-        run: black -l 100 pennylane_lightning/ tests/ --check
+      - name: Run isort & black --check
+        run: make format-python check=1 verbose=1
 
   format-cpp:
     name: Format (C++)
@@ -34,45 +35,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt -y install python3 python3-pip && python3 -m pip install -r requirements-dev.txt
+        run: sudo apt update && sudo apt -y install python3 python3-pip python-is-python3 && python -m pip install -r requirements.txt
 
       - name: Run formatter
-        run: PATH=$PATH:$(dirname $(which python3)) ./bin/format --check ./pennylane_lightning/core/src
-
-  tidy-cpp:
-    strategy:
-      matrix:
-        os: [ubuntu-22.04]
-        pl_backend: ["lightning_qubit"]
-
-    name: Tidy (C++)
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install dependencies
-        run: sudo apt update && sudo apt -y install cmake gcc-11 g++-11 ninja-build libomp-14-dev && python -m pip install -r requirements-dev.txt
-        env:
-          DEBIAN_FRONTEND: noninteractive
-
-      - name: Run clang-tidy compilation
-        run: |
-          cmake -BBuild -G Ninja . \
-            -DENABLE_CLANG_TIDY=ON \
-            -DCLANG_TIDY_BINARY=$(dirname $(which python))/clang-tidy \
-            -DBUILD_TESTS=ON \
-            -DENABLE_WARNINGS=ON \
-            -DPL_BACKEND=${{ matrix.pl_backend }} \
-            -DCMAKE_CXX_COMPILER="$(which g++-11)" \
-            -DCMAKE_C_COMPILER="$(which gcc-11)"
-          cmake --build ./Build
+        run: PATH=$PATH:/home/ubuntu/.local/bin/:$(dirname $(which python3))/ ./bin/format --check ./pennylane_lightning/core/src

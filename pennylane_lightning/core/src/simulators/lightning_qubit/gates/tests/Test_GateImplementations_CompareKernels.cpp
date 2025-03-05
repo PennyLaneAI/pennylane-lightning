@@ -84,7 +84,8 @@ auto kernelsImplementingMatrix(MatrixOperation mat_op)
  * the results.
  */
 template <typename PrecisionT, class RandomEngine>
-void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
+void testApplyGate(RandomEngine &re, GateOperation gate_op,
+                   std::size_t num_qubits) {
     using Pennylane::Gates::Constant::gate_names;
 
     const auto implementing_kernels =
@@ -104,50 +105,27 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
     const auto params = createParams<PrecisionT>(gate_op);
     const auto all_wires = createAllWires(num_qubits, gate_op, true);
 
+    const bool inverse = GENERATE(true, false);
     for (const auto &wires : all_wires) {
         std::ostringstream ss;
         ss << wires;
         auto wires_str = ss.str();
         INFO(wires_str);
 
-        // Test with inverse = false
-        {
-            std::vector<TestVector<std::complex<PrecisionT>>> res;
+        std::vector<TestVector<std::complex<PrecisionT>>> res;
 
-            // Collect results from all implementing kernels
-            for (auto kernel : implementing_kernels) {
-                auto st = ini;
-                dispatcher.applyOperation(kernel, st.data(), num_qubits,
-                                          gate_op, wires, false, params);
-                res.emplace_back(std::move(st));
-            }
-
-            // And compare them
-            for (size_t i = 0; i < res.size() - 1; i++) {
-                REQUIRE(
-                    res[i] ==
-                    approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
-            }
+        // Collect results from all implementing kernels
+        for (auto kernel : implementing_kernels) {
+            auto st = ini;
+            dispatcher.applyOperation(kernel, st.data(), num_qubits, gate_op,
+                                      wires, inverse, params);
+            res.emplace_back(std::move(st));
         }
 
-        // Test with inverse = true
-        {
-            std::vector<TestVector<std::complex<PrecisionT>>> res;
-
-            // Collect results from all implementing kernels
-            for (auto kernel : implementing_kernels) {
-                auto st = ini;
-                dispatcher.applyOperation(kernel, st.data(), num_qubits,
-                                          gate_op, wires, true, params);
-                res.emplace_back(std::move(st));
-            }
-
-            // And compare them
-            for (size_t i = 0; i < res.size() - 1; i++) {
-                REQUIRE(
-                    res[i] ==
+        // And compare them
+        for (std::size_t i = 0; i < res.size() - 1; i++) {
+            REQUIRE(res[i] ==
                     approx(res[i + 1]).margin(static_cast<PrecisionT>(1e-5)));
-            }
         }
     }
 }
@@ -155,26 +133,26 @@ void testApplyGate(RandomEngine &re, GateOperation gate_op, size_t num_qubits) {
 TEMPLATE_TEST_CASE("Test all kernels give the same results for gates",
                    "[GateImplementations_CompareKernels]", float, double) {
     /* We test all gate operations up to the number of qubits we give */
-    constexpr size_t max_num_qubits = 5;
+    constexpr std::size_t max_num_qubits = 5;
     std::mt19937 re{1337};
     for_each_enum<GateOperation>([&](GateOperation gate_op) {
-        const size_t min_num_qubits = [=] {
+        const std::size_t min_num_qubits = [=] {
             if (array_has_elem(Pennylane::Gates::Constant::multi_qubit_gates,
                                gate_op)) {
-                return size_t{1};
+                return std::size_t{1};
             }
             return lookup(Pennylane::Gates::Constant::gate_wires, gate_op);
         }();
-        for (size_t num_qubits = min_num_qubits; num_qubits <= max_num_qubits;
-             num_qubits++) {
+        for (std::size_t num_qubits = min_num_qubits;
+             num_qubits <= max_num_qubits; num_qubits++) {
             testApplyGate<TestType>(re, gate_op, num_qubits);
         }
     });
 }
 
 template <typename PrecisionT, class RandomEngine>
-void testMatrixOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
-                  bool inverse) {
+void testMatrixOp(RandomEngine &re, std::size_t num_qubits,
+                  std::size_t num_wires, bool inverse) {
     using Pennylane::Gates::Constant::matrix_names;
     PL_ASSERT(num_wires > 0);
 
@@ -220,7 +198,8 @@ void testMatrixOp(RandomEngine &re, size_t num_qubits, size_t num_wires,
             }
 
             // And compare them
-            for (size_t idx = 0; idx < implementing_kernels.size() - 1; idx++) {
+            for (std::size_t idx = 0; idx < implementing_kernels.size() - 1;
+                 idx++) {
                 REQUIRE(res[idx] == approx(res[idx + 1]).margin(1e-7));
             }
         }
@@ -231,10 +210,10 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for matrices",
                    "[Test_GateImplementations_CompareKernels]", float, double) {
     std::mt19937 re{1337};
 
-    const size_t num_qubits = 5;
+    const std::size_t num_qubits = 5;
 
     for (bool inverse : {true, false}) {
-        for (size_t num_wires = 1; num_wires <= 5; num_wires++) {
+        for (std::size_t num_wires = 1; num_wires <= 5; num_wires++) {
             testMatrixOp<TestType>(re, num_qubits, num_wires, inverse);
         }
     }

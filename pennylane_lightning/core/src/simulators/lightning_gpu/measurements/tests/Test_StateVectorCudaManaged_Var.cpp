@@ -38,7 +38,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
     const std::size_t num_qubits = 2;
     SECTION("var(PauliX[0])") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -53,7 +52,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
 
     SECTION("var(PauliY[0])") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -68,7 +66,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaManaged_Var]",
 
     SECTION("var(PauliZ[1])") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -89,7 +86,6 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs",
     using ComplexT = typename StateVectorT::ComplexT;
     SECTION("Using var") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -122,7 +118,6 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
     const std::size_t num_qubits = 3;
     SECTION("Using var") {
         StateVectorT sv{num_qubits};
-        sv.initSV();
         auto m = Measurements<StateVectorT>(sv);
 
         sv.applyOperations(
@@ -130,9 +125,9 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs",
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = TensorProdObs<StateVectorT>::create({X0, Z1});
         auto res = m.var(*ob);
@@ -152,9 +147,9 @@ TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
         auto m = Measurements<StateVectorT>(sv);
 
         auto X0 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObs<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = Hamiltonian<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
         auto res = m.var(*ob);

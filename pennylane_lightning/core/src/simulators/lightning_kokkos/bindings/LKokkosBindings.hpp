@@ -47,6 +47,52 @@ namespace Pennylane::LightningKokkos {
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
+/**
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
+
+/**
+ * @brief Register controlled gates.
+ */
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using ParamT = typename StateVectorT::PrecisionT;
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
 
 /**
  * @brief Get a gate kernel map for a statevector.
@@ -61,7 +107,15 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
-
+    registerControlledGate<StateVectorT>(pyclass);
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<ParamT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
     pyclass
         .def(py::init([](std::size_t num_qubits) {
             return new StateVectorT(num_qubits);
@@ -73,27 +127,20 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def("resetStateVector", &StateVectorT::resetStateVector)
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const size_t index) {
-                sv.setBasisState(index);
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires) {
+                sv.setBasisState(state, wires);
             },
-            "Create Basis State on Device.")
+            "Set the state vector to a basis state.")
         .def(
             "setStateVector",
-            [](StateVectorT &sv, const std::vector<std::size_t> &indices,
-               const np_arr_c &state) {
+            [](StateVectorT &sv, const np_arr_c &state,
+               const std::vector<std::size_t> &wires) {
                 const auto buffer = state.request();
-                std::vector<Kokkos::complex<ParamT>> state_kok;
-                if (buffer.size) {
-                    const auto ptr =
-                        static_cast<const Kokkos::complex<ParamT> *>(
-                            buffer.ptr);
-                    state_kok = std::vector<Kokkos::complex<ParamT>>{
-                        ptr, ptr + buffer.size};
-                }
-                sv.setStateVector(indices, state_kok);
+                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
+                                  wires);
             },
-            "Set State Vector on device with values and their corresponding "
-            "indices for the state vector on device")
+            "Set the state vector to the data contained in `state`.")
         .def(
             "DeviceToHost",
             [](StateVectorT &device_sv, np_arr_c &host_sv) {
@@ -105,7 +152,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Synchronize data from the GPU device to host.")
         .def("HostToDevice",
-             py::overload_cast<ComplexT *, size_t>(&StateVectorT::HostToDevice),
+             py::overload_cast<ComplexT *, std::size_t>(
+                 &StateVectorT::HostToDevice),
              "Synchronize data from the host device to GPU.")
         .def(
             "HostToDevice",
@@ -113,7 +161,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 const py::buffer_info numpyArrayInfo = host_sv.request();
                 auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
                 const auto length =
-                    static_cast<size_t>(numpyArrayInfo.shape[0]);
+                    static_cast<std::size_t>(numpyArrayInfo.shape[0]);
                 if (length) {
                     device_sv.HostToDevice(data_ptr, length);
                 }
@@ -122,7 +170,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
-               const std::vector<size_t> &wires, bool inv,
+               const std::vector<std::size_t> &wires, bool inv,
                [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
                [[maybe_unused]] const np_arr_c &gate_matrix) {
                 const auto m_buffer = gate_matrix.request();
@@ -137,7 +185,11 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
                                   conv_matrix);
             },
-            "Apply operation via the gate matrix");
+            "Apply operation via the gate matrix")
+        .def("collapse", &StateVectorT::collapse,
+             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+             "Apply controlled operation");
 }
 
 /**
@@ -165,13 +217,13 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     pyclass
         .def("expval",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::expval),
              "Expected value of an operation by name.")
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
-               const std::vector<size_t> &wires) {
+               const std::vector<std::size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
                     static_cast<ComplexT *>(matrix.request().ptr);
@@ -194,12 +246,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a sparse Hamiltonian.")
         .def("var",
              [](Measurements<StateVectorT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::var),
              "Variance of an operation by name.")
         .def(

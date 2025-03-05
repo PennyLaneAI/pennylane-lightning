@@ -11,7 +11,7 @@ target_link_libraries(lightning_observables INTERFACE   lightning_compile_option
                                                         )
 set_property(TARGET lightning_observables PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-if (BUILD_TESTS)
+if (BUILD_TESTS AND NOT DEFINED PL_TENSOR)
     enable_testing()
     add_subdirectory("tests")
 endif()

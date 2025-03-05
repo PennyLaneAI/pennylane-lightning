@@ -49,7 +49,7 @@ template <typename... Ts> using TypeList = TypeNode<Ts...>;
  * @tparam TypeList Type list
  * @tparam n The position of a type to extract
  */
-template <typename TypeList, size_t n> struct getNth {
+template <typename TypeList, std::size_t n> struct getNth {
     using Type = typename getNth<typename TypeList::Next, n - 1>::Type;
 };
 
@@ -64,13 +64,13 @@ template <typename TypeList> struct getNth<TypeList, 0> {
 /**
  * @brief Convenient of alias of getNth
  */
-template <typename TypeList, size_t n>
+template <typename TypeList, std::size_t n>
 using getNthType = typename getNth<TypeList, n>::Type;
 
 /**
  * @brief Get the size of a type list
  */
-template <typename TypeList> constexpr size_t length() {
+template <typename TypeList> constexpr std::size_t length() {
     if constexpr (std::is_same_v<TypeList, void>) {
         return 0;
     } else {

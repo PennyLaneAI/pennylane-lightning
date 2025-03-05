@@ -30,13 +30,14 @@
 #include "KernelType.hpp"
 #include "StateVectorBase.hpp"
 #include "Threading.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
 
 /// @cond DEV
 namespace {
 using Pennylane::LightningQubit::Util::Threading;
 using Pennylane::Util::CPUMemoryModel;
 using Pennylane::Util::exp2;
-
+using Pennylane::Util::squaredNorm;
 using namespace Pennylane::LightningQubit::Gates;
 } // namespace
 /// @endcond
@@ -69,10 +70,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     using GeneratorKernelMap =
         std::unordered_map<GeneratorOperation, KernelType>;
     using MatrixKernelMap = std::unordered_map<MatrixOperation, KernelType>;
+    using ControlledGateKernelMap =
+        std::unordered_map<ControlledGateOperation, KernelType>;
+    using ControlledGeneratorKernelMap =
+        std::unordered_map<ControlledGeneratorOperation, KernelType>;
+    using ControlledMatrixKernelMap =
+        std::unordered_map<ControlledMatrixOperation, KernelType>;
 
     GateKernelMap kernel_for_gates_;
     GeneratorKernelMap kernel_for_generators_;
     MatrixKernelMap kernel_for_matrices_;
+    ControlledGateKernelMap kernel_for_controlled_gates_;
+    ControlledGeneratorKernelMap kernel_for_controlled_generators_;
+    ControlledMatrixKernelMap kernel_for_controlled_matrices_;
 
     /**
      * @brief Internal function to set kernels for all operations depending on
@@ -82,7 +92,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param threading Threading option
      * @param memory_model Memory model
      */
-    void setKernels(size_t num_qubits, Threading threading,
+    void setKernels(std::size_t num_qubits, Threading threading,
                     CPUMemoryModel memory_model) {
         using KernelMap::OperationKernelMap;
         kernel_for_gates_ =
@@ -94,6 +104,15 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         kernel_for_matrices_ =
             OperationKernelMap<MatrixOperation>::getInstance().getKernelMap(
                 num_qubits, threading, memory_model);
+        kernel_for_controlled_gates_ =
+            OperationKernelMap<ControlledGateOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_controlled_generators_ =
+            OperationKernelMap<ControlledGeneratorOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_controlled_matrices_ =
+            OperationKernelMap<ControlledMatrixOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
     }
 
     /**
@@ -108,6 +127,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get a kernel for a controlled gate operation.
+     *
+     * @param gate_op Gate operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto
+    getKernelForControlledGate(ControlledGateOperation gate_op) const
+        -> KernelType {
+        return kernel_for_controlled_gates_.at(gate_op);
+    }
+
+    /**
      * @brief Get a kernel for a generator operation.
      *
      * @param gen_op Generator operation
@@ -119,6 +150,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get a kernel for a controlled generator operation.
+     *
+     * @param gen_op Generator operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto
+    getKernelForControlledGenerator(ControlledGeneratorOperation gen_op) const
+        -> KernelType {
+        return kernel_for_controlled_generators_.at(gen_op);
+    }
+
+    /**
      * @brief Get a kernel for a matrix operation.
      *
      * @param mat_op Matrix operation
@@ -127,6 +170,18 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline auto getKernelForMatrix(MatrixOperation mat_op) const
         -> KernelType {
         return kernel_for_matrices_.at(mat_op);
+    }
+
+    /**
+     * @brief Get a kernel for a controlled matrix operation.
+     *
+     * @param mat_op Controlled matrix operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto
+    getKernelForControlledMatrix(ControlledMatrixOperation mat_op) const
+        -> KernelType {
+        return kernel_for_controlled_matrices_.at(mat_op);
     }
 
     /**
@@ -142,6 +197,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
+     * @brief Get kernels for all controlled gate operations.
+     */
+    [[nodiscard]] inline auto
+    getControlledGateKernelMap() const & -> const ControlledGateKernelMap & {
+        return kernel_for_controlled_gates_;
+    }
+
+    [[nodiscard]] inline auto
+    getControlledGateKernelMap() && -> ControlledGateKernelMap {
+        return kernel_for_controlled_gates_;
+    }
+
+    /**
      * @brief Get kernels for all generator operations.
      */
     [[nodiscard]] inline auto
@@ -151,6 +219,19 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
 
     [[nodiscard]] inline auto getGeneratorKernelMap() && -> GeneratorKernelMap {
         return kernel_for_generators_;
+    }
+
+    /**
+     * @brief Get kernels for all controlled generator operations.
+     */
+    [[nodiscard]] inline auto getControlledGeneratorKernelMap() const & -> const
+        ControlledGeneratorKernelMap & {
+        return kernel_for_controlled_generators_;
+    }
+
+    [[nodiscard]] inline auto
+    getControlledGeneratorKernelMap() && -> ControlledGeneratorKernelMap {
+        return kernel_for_controlled_generators_;
     }
 
     /**
@@ -165,8 +246,21 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         return kernel_for_matrices_;
     }
 
+    /**
+     * @brief Get kernels for all controlled matrix operations.
+     */
+    [[nodiscard]] inline auto getControlledMatrixKernelMap() const & -> const
+        ControlledMatrixKernelMap & {
+        return kernel_for_controlled_matrices_;
+    }
+
+    [[nodiscard]] inline auto
+    getControlledMatrixKernelMap() && -> ControlledMatrixKernelMap {
+        return kernel_for_controlled_matrices_;
+    }
+
   protected:
-    explicit StateVectorLQubit(size_t num_qubits, Threading threading,
+    explicit StateVectorLQubit(std::size_t num_qubits, Threading threading,
                                CPUMemoryModel memory_model)
         : BaseType(num_qubits), threading_{threading},
           memory_model_{memory_model} {
@@ -187,20 +281,36 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     [[nodiscard]] inline Threading threading() const { return threading_; }
 
     /**
-     *  @brief Returns a tuple containing the gate, generator, and matrix kernel
-     * maps respectively.
+     *  @brief Returns a tuple containing the gate, generator, and controlled
+     * matrix kernel maps respectively.
      */
-    [[nodiscard]] auto getSupportedKernels()
-        const & -> std::tuple<const GateKernelMap &, const GeneratorKernelMap &,
-                              const MatrixKernelMap &> {
-        return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap()};
+    [[nodiscard]] auto getSupportedKernels() const & -> std::tuple<
+        const GateKernelMap &, const GeneratorKernelMap &,
+        const MatrixKernelMap &, const ControlledGateKernelMap &,
+        const ControlledGeneratorKernelMap &,
+        const ControlledMatrixKernelMap &> {
+        return {
+            getGateKernelMap(),
+            getGeneratorKernelMap(),
+            getMatrixKernelMap(),
+            getControlledGateKernelMap(),
+            getControlledGeneratorKernelMap(),
+            getControlledMatrixKernelMap(),
+        };
     }
 
     [[nodiscard]] auto getSupportedKernels() && -> std::tuple<
-        GateKernelMap &&, GeneratorKernelMap &&, MatrixKernelMap &&> {
-        return {getGateKernelMap(), getGeneratorKernelMap(),
-                getMatrixKernelMap()};
+        GateKernelMap &&, GeneratorKernelMap &&, MatrixKernelMap &&,
+        ControlledGateKernelMap &&, ControlledGeneratorKernelMap &&,
+        ControlledMatrixKernelMap &&> {
+        return {
+            getGateKernelMap(),
+            getGeneratorKernelMap(),
+            getMatrixKernelMap(),
+            getControlledGateKernelMap(),
+            getControlledGeneratorKernelMap(),
+            getControlledMatrixKernelMap(),
+        };
     }
 
     /**
@@ -214,11 +324,13 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     void applyOperation(Pennylane::Gates::KernelType kernel,
                         const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         DynamicDispatcher<PrecisionT>::getInstance().applyOperation(
-            kernel, arr, this->getNumQubits(), opName, wires, inverse, params);
+            kernel, arr, BaseType::getNumQubits(), opName, wires, inverse,
+            params);
     }
 
     /**
@@ -230,16 +342,48 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param params Optional parameter list for parametric gates.
      */
     void applyOperation(const std::string &opName,
-                        const std::vector<size_t> &wires, bool inverse = false,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
                         const std::vector<PrecisionT> &params = {}) {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gate_op = dispatcher.strToGateOp(opName);
         dispatcher.applyOperation(getKernelForGate(gate_op), arr,
-                                  this->getNumQubits(), gate_op, wires, inverse,
-                                  params);
+                                  BaseType::getNumQubits(), gate_op, wires,
+                                  inverse, params);
     }
 
+    /**
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     */
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires,
+                        bool inverse = false,
+                        const std::vector<PrecisionT> &params = {}) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        auto *arr = BaseType::getData();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto gate_op = dispatcher.strToControlledGateOp(opName);
+        const auto kernel = getKernelForControlledGate(gate_op);
+        dispatcher.applyControlledGate(
+            kernel, arr, BaseType::getNumQubits(), opName, controlled_wires,
+            controlled_values, wires, inverse, params);
+    }
     /**
      * @brief Apply a single gate to the state-vector.
      *
@@ -250,11 +394,10 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param matrix Matrix data (in row-major format).
      */
     template <typename Alloc>
-    void applyOperation(
-        [[maybe_unused]] const std::string &opName,
-        const std::vector<size_t> &wires, bool inverse,
-        const std::vector<PrecisionT> &params,
-        [[maybe_unused]] const std::vector<ComplexT, Alloc> &matrix) {
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &wires, bool inverse,
+                        const std::vector<PrecisionT> &params,
+                        const std::vector<ComplexT, Alloc> &matrix) {
         auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         if (dispatcher.hasGateOp(opName)) {
             applyOperation(opName, wires, inverse, params);
@@ -264,20 +407,77 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     }
 
     /**
-     * @brief Apply a single generator to the state-vector using a given kernel.
+     * @brief Apply a single gate to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Optional parameter list for parametric gates.
+     * @param matrix Matrix data (in row-major format).
+     */
+    template <typename Alloc>
+    void applyOperation(const std::string &opName,
+                        const std::vector<std::size_t> &controlled_wires,
+                        const std::vector<bool> &controlled_values,
+                        const std::vector<std::size_t> &wires, bool inverse,
+                        const std::vector<PrecisionT> &params,
+                        const std::vector<ComplexT, Alloc> &matrix) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        if (!controlled_wires.empty()) {
+            applyOperation(opName, controlled_wires, controlled_values, wires,
+                           inverse, params);
+            return;
+        }
+        auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        if (dispatcher.hasGateOp(opName)) {
+            applyOperation(opName, wires, inverse, params);
+        } else {
+            applyMatrix(matrix, wires, inverse);
+        }
+    }
+
+    /**
+     * @brief Apply a PauliRot gate to the state-vector.
+     *
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicates whether to use inverse of gate.
+     * @param params Rotation angle.
+     * @param word A Pauli word (e.g. "XYYX").
+     */
+    void applyPauliRot(const std::vector<std::size_t> &wires,
+                       const bool inverse,
+                       const std::vector<PrecisionT> &params,
+                       const std::string &word) {
+        PL_ABORT_IF_NOT(wires.size() == word.size(),
+                        "wires and word have incompatible dimensions.");
+        GateImplementationsLM::applyPauliRot<PrecisionT>(
+            BaseType::getData(), BaseType::getNumQubits(), wires, inverse,
+            params[0], word);
+    }
+
+    /**
+     * @brief Apply a single generator to the state-vector using a given
+     * kernel.
      *
      * @param kernel Kernel to run the operation.
      * @param opName Name of gate to apply.
      * @param wires Wires to apply gate to.
      * @param adj Indicates whether to use adjoint of operator.
      */
-    [[nodiscard]] inline auto
-    applyGenerator(Pennylane::Gates::KernelType kernel,
-                   const std::string &opName, const std::vector<size_t> &wires,
-                   bool adj = false) -> PrecisionT {
-        auto *arr = this->getData();
+    [[nodiscard]] inline auto applyGenerator(
+        Pennylane::Gates::KernelType kernel, const std::string &opName,
+        const std::vector<std::size_t> &wires, bool adj = false) -> PrecisionT {
+        auto *arr = BaseType::getData();
         return DynamicDispatcher<PrecisionT>::getInstance().applyGenerator(
-            kernel, arr, this->getNumQubits(), opName, wires, adj);
+            kernel, arr, BaseType::getNumQubits(), opName, wires, adj);
     }
 
     /**
@@ -288,14 +488,100 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param adj Indicates whether to use adjoint of operator.
      */
     [[nodiscard]] auto applyGenerator(const std::string &opName,
-                                      const std::vector<size_t> &wires,
+                                      const std::vector<std::size_t> &wires,
                                       bool adj = false) -> PrecisionT {
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
         const auto gen_op = dispatcher.strToGeneratorOp(opName);
         return dispatcher.applyGenerator(getKernelForGenerator(gen_op), arr,
-                                         this->getNumQubits(), opName, wires,
-                                         adj);
+                                         BaseType::getNumQubits(), opName,
+                                         wires, adj);
+    }
+
+    /**
+     * @brief Apply a single generator to the state-vector.
+     *
+     * @param opName Name of gate to apply.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires the gate applies to.
+     * @param adj Indicates whether to use adjoint of operator.
+     */
+    [[nodiscard]] auto
+    applyGenerator(const std::string &opName,
+                   const std::vector<std::size_t> &controlled_wires,
+                   const std::vector<bool> &controlled_values,
+                   const std::vector<std::size_t> &wires, bool adj = false)
+        -> PrecisionT {
+        auto *arr = BaseType::getData();
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        const auto generator_op = dispatcher.strToControlledGeneratorOp(opName);
+        const auto kernel = getKernelForControlledGenerator(generator_op);
+        return dispatcher.applyControlledGenerator(
+            kernel, arr, BaseType::getNumQubits(), opName, controlled_wires,
+            controlled_values, wires, adj);
+    }
+
+    /**
+     * @brief Apply a given controlled-matrix directly to the statevector.
+     *
+     * @param matrix Pointer to the array data (in row-major format).
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void
+    applyControlledMatrix(const ComplexT *matrix,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          bool inverse = false) {
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = BaseType::getData();
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        const auto kernel = [n_wires = wires.size(), this]() {
+            switch (n_wires) {
+            case 1:
+                return getKernelForControlledMatrix(
+                    ControlledMatrixOperation::NCSingleQubitOp);
+            case 2:
+                return getKernelForControlledMatrix(
+                    ControlledMatrixOperation::NCTwoQubitOp);
+            default:
+                return getKernelForControlledMatrix(
+                    ControlledMatrixOperation::NCMultiQubitOp);
+            }
+        }();
+        dispatcher.applyControlledMatrix(kernel, arr, BaseType::getNumQubits(),
+                                         matrix, controlled_wires,
+                                         controlled_values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given controlled-matrix directly to the statevector.
+     *
+     * @param matrix Vector containing the statevector data (in row-major
+     * format).
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    inline void
+    applyControlledMatrix(const std::vector<ComplexT> matrix,
+                          const std::vector<std::size_t> &controlled_wires,
+                          const std::vector<bool> &controlled_values,
+                          const std::vector<std::size_t> &wires,
+                          bool inverse = false) {
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        applyControlledMatrix(matrix.data(), controlled_wires,
+                              controlled_values, wires, inverse);
     }
 
     /**
@@ -309,15 +595,15 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     inline void applyMatrix(Pennylane::Gates::KernelType kernel,
                             const ComplexT *matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
-        auto *arr = this->getData();
+        auto *arr = BaseType::getData();
 
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
-        dispatcher.applyMatrix(kernel, arr, this->getNumQubits(), matrix, wires,
-                               inverse);
+        dispatcher.applyMatrix(kernel, arr, BaseType::getNumQubits(), matrix,
+                               wires, inverse);
     }
 
     /**
@@ -331,7 +617,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     inline void applyMatrix(Pennylane::Gates::KernelType kernel,
                             const std::vector<ComplexT> &matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
@@ -349,7 +635,7 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * @param inverse Indicate whether inverse should be taken.
      */
     inline void applyMatrix(const ComplexT *matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         using Pennylane::Gates::MatrixOperation;
 
@@ -377,13 +663,177 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      */
     template <typename Alloc>
     inline void applyMatrix(const std::vector<ComplexT, Alloc> &matrix,
-                            const std::vector<size_t> &wires,
+                            const std::vector<std::size_t> &wires,
                             bool inverse = false) {
         PL_ABORT_IF(matrix.size() != exp2(2 * wires.size()),
                     "The size of matrix does not match with the given "
                     "number of wires");
 
         applyMatrix(matrix.data(), wires, inverse);
+    }
+
+    /**
+     * @brief Collapse the state vector as after having measured one of the
+     * qubits.
+     *
+     * The branch parameter imposes the measurement result on the given wire.
+     *
+     * @param wire Wire to collapse.
+     * @param branch Branch 0 or 1.
+     */
+    void collapse(const std::size_t wire, const bool branch) {
+        auto *arr = BaseType::getData();
+        const std::size_t stride =
+            pow(2, BaseType::getNumQubits() - (1 + wire));
+        const std::size_t vec_size = pow(2, BaseType::getNumQubits());
+        const auto section_size = vec_size / stride;
+        const auto half_section_size = section_size / 2;
+
+        // zero half the entries
+        // the "half" entries depend on the stride
+        // *_*_*_*_ for stride 1
+        // **__**__ for stride 2
+        // ****____ for stride 4
+        const std::size_t k = branch ? 0 : 1;
+        for (std::size_t idx = 0; idx < half_section_size; idx++) {
+            const std::size_t offset = stride * (k + 2 * idx);
+            for (std::size_t ids = 0; ids < stride; ids++) {
+                arr[offset + ids] = {0., 0.};
+            }
+        }
+
+        normalize();
+    }
+
+    /**
+     * @brief Normalize vector (to have norm 1).
+     */
+    void normalize() {
+        auto *arr = BaseType::getData();
+        PrecisionT norm = std::sqrt(squaredNorm(arr, BaseType::getLength()));
+
+        PL_ABORT_IF(norm < std::numeric_limits<PrecisionT>::epsilon() * 1e2,
+                    "vector has norm close to zero and can't be normalized");
+
+        ComplexT inv_norm = 1. / norm;
+        for (std::size_t k = 0; k < BaseType::getLength(); k++) {
+            arr[k] *= inv_norm;
+        }
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param index Index of the target element.
+     */
+    void setBasisState(const std::size_t index) {
+        auto length = BaseType::getLength();
+        PL_ABORT_IF(index > length - 1, "Invalid index");
+
+        auto *arr = BaseType::getData();
+        std::fill(arr, arr + length, 0.0);
+        arr[index] = {1.0, 0.0};
+    }
+
+    /**
+     * @brief Prepares a single computational basis state.
+     *
+     * @param state Binary number representing the index
+     * @param wires Wires.
+     */
+    void setBasisState(const std::vector<std::size_t> &state,
+                       const std::vector<std::size_t> &wires) {
+        const auto n_wires = wires.size();
+        const auto num_qubits = BaseType::getNumQubits();
+        std::size_t index{0U};
+        for (std::size_t k = 0; k < n_wires; k++) {
+            const auto bit = static_cast<std::size_t>(state[k]);
+            index |= bit << (num_qubits - 1 - wires[k]);
+        }
+        setBasisState(index);
+    }
+
+    /**
+     * @brief Reset the data back to the \f$\ket{0}\f$ state.
+     *
+     */
+    void resetStateVector() {
+        if (BaseType::getLength() > 0) {
+            setBasisState(0U);
+        }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param values Values to be set for the target elements.
+     * @param indices Indices of the target elements.
+     */
+    void setStateVector(const std::vector<std::size_t> &indices,
+                        const std::vector<ComplexT> &values) {
+        const auto num_indices = indices.size();
+        PL_ABORT_IF(num_indices != values.size(),
+                    "Indices and values length must match");
+
+        auto *arr = BaseType::getData();
+        const auto length = BaseType::getLength();
+        std::fill(arr, arr + length, 0.0);
+        for (std::size_t i = 0; i < num_indices; i++) {
+            PL_ABORT_IF(i >= length, "Invalid index");
+            arr[indices[i]] = values[i];
+        }
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const std::vector<ComplexT> &state,
+                        const std::vector<std::size_t> &wires) {
+        PL_ABORT_IF_NOT(state.size() == exp2(wires.size()),
+                        "Inconsistent state and wires dimensions.")
+        setStateVector(state.data(), wires);
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector.
+     *
+     * @param state State.
+     * @param wires Wires.
+     */
+    void setStateVector(const ComplexT *state,
+                        const std::vector<std::size_t> &wires) {
+        const std::size_t num_state = exp2(wires.size());
+        const auto total_wire_count = BaseType::getNumQubits();
+
+        std::vector<std::size_t> reversed_sorted_wires(wires);
+        std::sort(reversed_sorted_wires.begin(), reversed_sorted_wires.end());
+        std::reverse(reversed_sorted_wires.begin(),
+                     reversed_sorted_wires.end());
+        std::vector<std::size_t> controlled_wires(total_wire_count);
+        std::iota(std::begin(controlled_wires), std::end(controlled_wires), 0);
+        for (auto wire : reversed_sorted_wires) {
+            // Reverse guarantees that we start erasing at the end of the array.
+            // Maybe this can be optimized.
+            controlled_wires.erase(controlled_wires.begin() + wire);
+        }
+
+        const std::vector<bool> controlled_values(controlled_wires.size(),
+                                                  false);
+        auto core_function = [num_state,
+                              &state](ComplexT *arr,
+                                      const std::vector<std::size_t> &indices,
+                                      const std::size_t offset) {
+            for (std::size_t i = 0; i < num_state; i++) {
+                const std::size_t index = indices[i] + offset;
+                arr[index] = state[i];
+            }
+        };
+        GateImplementationsLM::applyNCN(BaseType::getData(), total_wire_count,
+                                        controlled_wires, controlled_values,
+                                        wires, core_function);
     }
 };
 } // namespace Pennylane::LightningQubit

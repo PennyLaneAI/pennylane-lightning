@@ -42,15 +42,50 @@ template <class StateVectorT> class OpsData {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    size_t num_par_ops_;
-    size_t num_nonpar_ops_;
+    std::size_t num_par_ops_;
+    std::size_t num_nonpar_ops_;
     const std::vector<std::string> ops_name_;
     const std::vector<std::vector<PrecisionT>> ops_params_;
-    const std::vector<std::vector<size_t>> ops_wires_;
+    const std::vector<std::vector<std::size_t>> ops_wires_;
     const std::vector<bool> ops_inverses_;
     const std::vector<std::vector<ComplexT>> ops_matrices_;
+    const std::vector<std::vector<std::size_t>> ops_controlled_wires_;
+    const std::vector<std::vector<bool>> ops_controlled_values_;
 
   public:
+    /**
+     * @brief Construct an OpsData object, representing the serialized
+     * operations to apply upon the `%StateVector`.
+     *
+     * @param ops_name Name of each operation to apply.
+     * @param ops_params Parameters for a given operation ({} if optional).
+     * @param ops_wires Wires upon which to apply operation.
+     * @param ops_inverses Value to represent whether given operation is
+     * adjoint.
+     * @param ops_matrices Numerical representation of given matrix if not
+     * supported.
+     * @param ops_controlled_wires Control wires
+     * @param ops_controlled_wires Control values
+     */
+    OpsData(std::vector<std::string> ops_name,
+            const std::vector<std::vector<PrecisionT>> &ops_params,
+            std::vector<std::vector<std::size_t>> ops_wires,
+            std::vector<bool> ops_inverses,
+            std::vector<std::vector<ComplexT>> ops_matrices,
+            std::vector<std::vector<std::size_t>> ops_controlled_wires,
+            std::vector<std::vector<bool>> ops_controlled_values)
+        : num_par_ops_{0}, ops_name_{std::move(ops_name)},
+          ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
+          ops_inverses_{std::move(ops_inverses)},
+          ops_matrices_{std::move(ops_matrices)},
+          ops_controlled_wires_{std::move(ops_controlled_wires)},
+          ops_controlled_values_{std::move(ops_controlled_values)} {
+        for (const auto &p : ops_params) {
+            num_par_ops_ += static_cast<std::size_t>(!p.empty());
+        }
+        num_nonpar_ops_ = ops_params.size() - num_par_ops_;
+    };
+
     /**
      * @brief Construct an OpsData object, representing the serialized
      * operations to apply upon the `%StateVector`.
@@ -65,17 +100,17 @@ template <class StateVectorT> class OpsData {
      */
     OpsData(std::vector<std::string> ops_name,
             const std::vector<std::vector<PrecisionT>> &ops_params,
-            std::vector<std::vector<size_t>> ops_wires,
+            std::vector<std::vector<std::size_t>> ops_wires,
             std::vector<bool> ops_inverses,
             std::vector<std::vector<ComplexT>> ops_matrices)
         : num_par_ops_{0}, ops_name_{std::move(ops_name)},
           ops_params_{ops_params}, ops_wires_{std::move(ops_wires)},
           ops_inverses_{std::move(ops_inverses)},
-          ops_matrices_{std::move(ops_matrices)} {
+          ops_matrices_{std::move(ops_matrices)},
+          ops_controlled_wires_(ops_name.size()),
+          ops_controlled_values_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (!p.empty()) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<std::size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -86,22 +121,22 @@ template <class StateVectorT> class OpsData {
      *
      * @see  OpsData(const std::vector<std::string> &ops_name,
             const std::vector<std::vector<PrecisionT>> &ops_params,
-            const std::vector<std::vector<size_t>> &ops_wires,
+            const std::vector<std::vector<std::size_t>> &ops_wires,
             const std::vector<bool> &ops_inverses,
             const std::vector<std::vector<ComplexT>> &ops_matrices)
      */
     OpsData(const std::vector<std::string> &ops_name,
             const std::vector<std::vector<PrecisionT>> &ops_params,
-            std::vector<std::vector<size_t>> ops_wires,
+            std::vector<std::vector<std::size_t>> ops_wires,
             std::vector<bool> ops_inverses)
         : num_par_ops_{0}, ops_name_{ops_name}, ops_params_{ops_params},
           ops_wires_{std::move(ops_wires)},
           ops_inverses_{std::move(ops_inverses)},
-          ops_matrices_(ops_name.size()) {
+          ops_matrices_(ops_name.size()),
+          ops_controlled_wires_(ops_name.size()),
+          ops_controlled_values_(ops_name.size()) {
         for (const auto &p : ops_params) {
-            if (p.size() > 0) {
-                num_par_ops_++;
-            }
+            num_par_ops_ += static_cast<std::size_t>(!p.empty());
         }
         num_nonpar_ops_ = ops_params.size() - num_par_ops_;
     };
@@ -109,9 +144,11 @@ template <class StateVectorT> class OpsData {
     /**
      * @brief Get the number of operations to be applied.
      *
-     * @return size_t Number of operations.
+     * @return std::size_t Number of operations.
      */
-    [[nodiscard]] auto getSize() const -> size_t { return ops_name_.size(); }
+    [[nodiscard]] auto getSize() const -> std::size_t {
+        return ops_name_.size();
+    }
 
     /**
      * @brief Get the names of the operations to be applied.
@@ -134,11 +171,29 @@ template <class StateVectorT> class OpsData {
     /**
      * @brief Get the wires for each operation.
      *
-     * @return const std::vector<std::vector<size_t>>&
+     * @return const std::vector<std::vector<std::size_t>>&
      */
     [[nodiscard]] auto getOpsWires() const
-        -> const std::vector<std::vector<size_t>> & {
+        -> const std::vector<std::vector<std::size_t>> & {
         return ops_wires_;
+    }
+    /**
+     * @brief Get the controlled wires for each operation.
+     *
+     * @return const std::vector<std::vector<std::size_t>>&
+     */
+    [[nodiscard]] auto getOpsControlledWires() const
+        -> const std::vector<std::vector<std::size_t>> & {
+        return ops_controlled_wires_;
+    }
+    /**
+     * @brief Get the controlled values for each operation.
+     *
+     * @return const std::vector<std::vector<std::size_t>>&
+     */
+    [[nodiscard]] auto getOpsControlledValues() const
+        -> const std::vector<std::vector<bool>> & {
+        return ops_controlled_values_;
     }
     /**
      * @brief Get the adjoint flag for each operation.
@@ -166,33 +221,35 @@ template <class StateVectorT> class OpsData {
      * @return true Gate is parametric (has parameters).
      * @return false Gate in non-parametric.
      */
-    [[nodiscard]] inline auto hasParams(size_t index) const -> bool {
+    [[nodiscard]] inline auto hasParams(std::size_t index) const -> bool {
         return !ops_params_[index].empty();
     }
 
     /**
      * @brief Get the number of parametric operations.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    [[nodiscard]] auto getNumParOps() const -> size_t { return num_par_ops_; }
+    [[nodiscard]] auto getNumParOps() const -> std::size_t {
+        return num_par_ops_;
+    }
 
     /**
      * @brief Get the number of non-parametric ops.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    [[nodiscard]] auto getNumNonParOps() const -> size_t {
+    [[nodiscard]] auto getNumNonParOps() const -> std::size_t {
         return num_nonpar_ops_;
     }
 
     /**
      * @brief Get total number of parameters.
      */
-    [[nodiscard]] auto getTotalNumParams() const -> size_t {
+    [[nodiscard]] auto getTotalNumParams() const -> std::size_t {
         return std::accumulate(
-            ops_params_.begin(), ops_params_.end(), size_t{0U},
-            [](size_t acc, auto &params) { return acc + params.size(); });
+            ops_params_.begin(), ops_params_.end(), std::size_t{0U},
+            [](std::size_t acc, auto &params) { return acc + params.size(); });
     }
 };
 
@@ -204,9 +261,9 @@ template <class StateVectorT> class OpsData {
 template <class StateVectorT> class JacobianData {
   private:
     using CFP_t = typename StateVectorT::CFP_t;
-    size_t num_parameters; /**< Number of parameters in the tape */
-    size_t num_elements;   /**< Length of the statevector data */
-    const CFP_t *psi;      /**< Pointer to the statevector data */
+    std::size_t num_parameters; /**< Number of parameters in the tape */
+    std::size_t num_elements;   /**< Length of the statevector data */
+    const CFP_t *psi;           /**< Pointer to the statevector data */
 
     /**
      * @var observables
@@ -221,7 +278,7 @@ template <class StateVectorT> class JacobianData {
     const OpsData<StateVectorT> operations;
 
     /* @var trainableParams      */
-    const std::vector<size_t> trainableParams;
+    const std::vector<std::size_t> trainableParams;
 
   public:
     JacobianData(const JacobianData &) = default;
@@ -249,9 +306,10 @@ template <class StateVectorT> class JacobianData {
      * (e.g. StatePrep) or Hamiltonian coefficients.
      * @endrst
      */
-    JacobianData(size_t num_params, size_t num_elem, const CFP_t *sv_ptr,
+    JacobianData(std::size_t num_params, std::size_t num_elem,
+                 const CFP_t *sv_ptr,
                  std::vector<std::shared_ptr<Observable<StateVectorT>>> obs,
-                 OpsData<StateVectorT> ops, std::vector<size_t> trainP)
+                 OpsData<StateVectorT> ops, std::vector<std::size_t> trainP)
         : num_parameters(num_params), num_elements(num_elem), psi(sv_ptr),
           observables(std::move(obs)), operations(std::move(ops)),
           trainableParams(std::move(trainP)) {
@@ -262,16 +320,18 @@ template <class StateVectorT> class JacobianData {
     /**
      * @brief Get Number of parameters in the Tape.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    [[nodiscard]] auto getNumParams() const -> size_t { return num_parameters; }
+    [[nodiscard]] auto getNumParams() const -> std::size_t {
+        return num_parameters;
+    }
 
     /**
      * @brief Get the length of the statevector data.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    [[nodiscard]] auto getSizeStateVec() const -> size_t {
+    [[nodiscard]] auto getSizeStateVec() const -> std::size_t {
         return num_elements;
     }
 
@@ -296,9 +356,9 @@ template <class StateVectorT> class JacobianData {
      * @brief Get the number of observables for which to calculate
      * Jacobian.
      *
-     * @return size_t
+     * @return std::size_t
      */
-    [[nodiscard]] auto getNumObservables() const -> size_t {
+    [[nodiscard]] auto getNumObservables() const -> std::size_t {
         return observables.size();
     }
 
@@ -315,10 +375,10 @@ template <class StateVectorT> class JacobianData {
      * @brief Get list of parameters participating in Jacobian
      * calculation.
      *
-     * @return std::vector<size_t>&
+     * @return std::vector<std::size_t>&
      */
     [[nodiscard]] auto getTrainableParams() const
-        -> const std::vector<size_t> & {
+        -> const std::vector<std::size_t> & {
         return trainableParams;
     }
 

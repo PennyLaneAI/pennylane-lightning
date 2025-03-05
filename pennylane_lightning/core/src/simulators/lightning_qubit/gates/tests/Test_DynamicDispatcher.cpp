@@ -29,7 +29,6 @@
 
 /* Kernels */
 #include "cpu_kernels/GateImplementationsLM.hpp"
-#include "cpu_kernels/GateImplementationsPI.hpp"
 
 #include "TestHelpers.hpp" // createProductState, createRandomStateVectorData
 #include "TestHelpersWires.hpp"
@@ -73,7 +72,7 @@ TEMPLATE_TEST_CASE("Print registered kernels", "[DynamicDispatcher]", float,
 
     std::ostringstream ss;
     ss << "Registered kernels: ";
-    for (size_t n = 0; n < kernels.size(); n++) {
+    for (std::size_t n = 0; n < kernels.size(); n++) {
         ss << dispatcher.getKernelName(kernels[n]);
         if (n != kernels.size() - 1) {
             ss << ", ";
@@ -90,7 +89,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
     auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
 
     SECTION("Throw an exception for a kernel not registered") {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         auto st = createProductState<PrecisionT>("000");
 
         REQUIRE_THROWS_WITH(dispatcher.applyOperation(
@@ -108,7 +107,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
     SECTION("Test some gate operations") {
         std::mt19937 re{1337U};
         SECTION("PauliX") {
-            const size_t num_qubits = 3;
+            const std::size_t num_qubits = 3;
             const auto ini =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
             auto st1 = ini;
@@ -124,7 +123,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyOperation", "[DynamicDispatcher]",
         }
 
         SECTION("IsingXY") {
-            const size_t num_qubits = 3;
+            const std::size_t num_qubits = 3;
             const auto angle = TestType{0.4312};
             const auto ini =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -148,7 +147,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyGenerator", "[DynamicDispatcher]",
     std::mt19937_64 re{1337};
 
     SECTION("Throw an exception for a kernel not registered") {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         auto st = createProductState<PrecisionT>("000");
 
         auto &dispatcher = DynamicDispatcher<TestType>::getInstance();
@@ -172,7 +171,7 @@ TEMPLATE_TEST_CASE("DynamicDispatcher::applyMatrix", "[DynamicDispatcher]",
     std::mt19937_64 re{1337};
 
     SECTION("Throw an exception for a kernel not registered") {
-        const size_t num_qubits = 3;
+        const std::size_t num_qubits = 3;
         auto st = createProductState<PrecisionT>("000");
 
         auto &dispatcher = DynamicDispatcher<TestType>::getInstance();

@@ -15,7 +15,7 @@
 /**
  * @file
  * Defines a class for the measurement of observables in quantum states
- * represented by a Lightning Qubit StateVector class.
+ * represented by a Lightning GPU StateVector class.
  */
 
 #pragma once
@@ -34,6 +34,8 @@
 #include "Observables.hpp"
 #include "ObservablesGPU.hpp"
 #include "StateVectorCudaManaged.hpp"
+#include "cuStateVecError.hpp"
+#include "cuStateVec_helpers.hpp"
 #include "cuda_helpers.hpp"
 
 /// @cond DEV
@@ -89,12 +91,12 @@ class Measurements final
      * order.
      * @return std::vector<PrecisionT>
      */
-    auto probs(const std::vector<size_t> &wires) -> std::vector<PrecisionT> {
+    auto probs(const std::vector<std::size_t> &wires)
+        -> std::vector<PrecisionT> {
         // Data return type fixed as double in custatevec function call
         std::vector<double> probabilities(Pennylane::Util::exp2(wires.size()));
         // this should be built upon by the wires not participating
-        int maskLen =
-            0; // static_cast<int>(BaseType::getNumQubits() - wires.size());
+        int maskLen = 0;
         int *maskBitString = nullptr; //
         int *maskOrdering = nullptr;
 
@@ -116,6 +118,8 @@ class Measurements final
                                this->_statevector.getNumQubits() - 1 - x);
                        });
 
+        std::reverse(wires_int.begin(), wires_int.end());
+
         PL_CUSTATEVEC_IS_SUCCESS(custatevecAbs2SumArray(
             /* custatevecHandle_t */ this->_statevector.getCusvHandle(),
             /* const void* */ this->_statevector.getData(),
@@ -127,6 +131,8 @@ class Measurements final
             /* const int32_t* */ maskBitString,
             /* const int32_t* */ maskOrdering,
             /* const uint32_t */ maskLen));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
                       std::is_same_v<CFP_t, double2>) {
@@ -146,11 +152,56 @@ class Measurements final
      * @return std::vector<PrecisionT>
      */
     auto probs() -> std::vector<PrecisionT> {
-        std::vector<size_t> wires;
-        for (size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
+        std::vector<std::size_t> wires;
+        for (std::size_t i = 0; i < this->_statevector.getNumQubits(); i++) {
             wires.push_back(i);
         }
         return this->probs(wires);
+    }
+
+    /**
+     * @brief Probabilities to measure rotated basis states.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots(Optional).If specified with a non-zero
+     * number, shot-noise will be added to return probabilities
+     *
+     * @return Floating point std::vector with probabilities
+     * in lexicographic order.
+     */
+    std::vector<PrecisionT> probs(const Observable<StateVectorT> &obs,
+                                  std::size_t num_shots = 0) {
+        return BaseType::probs(obs, num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise.
+     *
+     * @param num_shots Number of shots.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+    std::vector<PrecisionT> probs(std::size_t num_shots) {
+        return BaseType::probs(num_shots);
+    }
+
+    /**
+     * @brief Probabilities with shot-noise for a subset of the full system.
+     *
+     * @param num_shots Number of shots.
+     * @param wires Wires will restrict probabilities to a subset
+     * of the full system.
+     *
+     * @return Floating point std::vector with probabilities.
+     */
+
+    std::vector<PrecisionT> probs(const std::vector<std::size_t> &wires,
+                                  std::size_t num_shots) {
+        PL_ABORT_IF_NOT(std::is_sorted(wires.cbegin(), wires.cend()),
+                        "LightningGPU does not currently support out-of-order "
+                        "wire indices with probability calculations");
+
+        return BaseType::probs(wires, num_shots);
     }
 
     /**
@@ -158,16 +209,16 @@ class Measurements final
      *
      * @param num_samples Number of Samples
      *
-     * @return std::vector<size_t> A 1-d array storing the samples.
+     * @return std::vector<std::size_t> A 1-d array storing the samples.
      * Each sample has a length equal to the number of qubits. Each sample can
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(size_t num_samples) -> std::vector<size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
-        const size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
         const int bitStringLen = this->_statevector.getNumQubits();
 
         std::vector<int> bitOrdering(num_qubits);
@@ -182,23 +233,25 @@ class Measurements final
         } else {
             data_type = CUDA_C_32F;
         }
+        this->setSeed(this->_deviceseed);
 
-        std::mt19937 gen(std::random_device{}());
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
-        for (size_t n = 0; n < num_samples; n++) {
-            rand_nums[n] = dis(gen);
+        for (std::size_t n = 0; n < num_samples; n++) {
+            rand_nums[n] = dis(this->_rng);
         }
-        std::vector<size_t> samples(num_samples * num_qubits, 0);
-        std::unordered_map<size_t, size_t> cache;
+        std::vector<std::size_t> samples(num_samples * num_qubits, 0);
+        std::unordered_map<std::size_t, std::size_t> cache;
         std::vector<custatevecIndex_t> bitStrings(num_samples);
 
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
         // create sampler and check the size of external workspace
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerCreate(
             this->_statevector.getCusvHandle(), this->_statevector.getData(),
             data_type, num_qubits, &sampler, num_samples,
             &extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // allocate external workspace if necessary
         if (extraWorkspaceSizeInBytes > 0)
@@ -209,29 +262,33 @@ class Measurements final
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerPreprocess(
             this->_statevector.getCusvHandle(), sampler, extraWorkspace,
             extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // sample bit strings
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerSample(
             this->_statevector.getCusvHandle(), sampler, bitStrings.data(),
             bitOrdering.data(), bitStringLen, rand_nums.data(), num_samples,
-            CUSTATEVEC_SAMPLER_OUTPUT_ASCENDING_ORDER));
+            CUSTATEVEC_SAMPLER_OUTPUT_RANDNUM_ORDER));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // destroy descriptor and handle
         PL_CUSTATEVEC_IS_SUCCESS(custatevecSamplerDestroy(sampler));
 
         // Pick samples
-        for (size_t i = 0; i < num_samples; i++) {
+        for (std::size_t i = 0; i < num_samples; i++) {
             auto idx = bitStrings[i];
             // If cached, retrieve sample from cache
             if (cache.count(idx) != 0) {
-                size_t cache_id = cache[idx];
+                std::size_t cache_id = cache[idx];
                 auto it_temp = samples.begin() + cache_id * num_qubits;
                 std::copy(it_temp, it_temp + num_qubits,
                           samples.begin() + i * num_qubits);
             }
             // If not cached, compute
             else {
-                for (size_t j = 0; j < num_qubits; j++) {
+                for (std::size_t j = 0; j < num_qubits; j++) {
                     samples[i * num_qubits + (num_qubits - 1 - j)] =
                         (idx >> j) & 1U;
                 }
@@ -296,8 +353,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point expected value of the observable.
      */
-    auto expval(const std::string &operation, const std::vector<size_t> &wires)
-        -> PrecisionT {
+    auto expval(const std::string &operation,
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         std::vector<PrecisionT> params = {0.0};
         std::vector<ComplexT> gate_matrix = {};
         return this->expval_(operation, wires, params, gate_matrix);
@@ -314,14 +371,14 @@ class Measurements final
      */
     template <typename op_type>
     auto expval(const std::vector<op_type> &operations_list,
-                const std::vector<std::vector<size_t>> &wires_list)
+                const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
             "The lengths of the list of operations and wires do not match.");
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 expval(operations_list[index], wires_list[index]));
         }
@@ -360,8 +417,9 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
 
-    auto expval(const Observable<StateVectorT> &obs, const size_t &num_shots,
-                const std::vector<size_t> &shot_range) -> PrecisionT {
+    auto expval(const Observable<StateVectorT> &obs,
+                const std::size_t &num_shots,
+                const std::vector<std::size_t> &shot_range) -> PrecisionT {
         return BaseType::expval(obs, num_shots, shot_range);
     }
 
@@ -373,7 +431,7 @@ class Measurements final
      * @return Floating point expected value of the observable.
      */
     auto expval(const std::vector<ComplexT> &matrix,
-                const std::vector<size_t> &wires) -> PrecisionT {
+                const std::vector<std::size_t> &wires) -> PrecisionT {
         return this->expval_(wires, matrix);
     }
 
@@ -443,6 +501,9 @@ class Measurements final
             const_cast<const int32_t **>(basisBits_ptr.data()),
             /* const uint32_t */ n_basisBits.data()));
 
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
+
         std::complex<PrecisionT> result{0, 0};
 
         if constexpr (std::is_same_v<PrecisionT, double>) {
@@ -464,9 +525,9 @@ class Measurements final
     }
 
     /**
-     * @brief Calculate variance of a general Observable.
+     * @brief Calculate variance of a general observable.
      *
-     * @param ob Observable.
+     * @param ob An observable object.
      * @return Variance with respect to the given observable.
      */
     auto var(const Observable<StateVectorT> &ob) -> PrecisionT {
@@ -498,8 +559,8 @@ class Measurements final
      * @param wires Wires where to apply the operator.
      * @return Floating point with the variance of the observable.
      */
-    auto var(const std::string &operation, const std::vector<size_t> &wires)
-        -> PrecisionT {
+    auto var(const std::string &operation,
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv(this->_statevector.getData(),
                            this->_statevector.getLength());
         ob_sv.applyOperation(operation, wires);
@@ -529,7 +590,7 @@ class Measurements final
      * @return Floating point with the variance of the observable.
      */
     auto var(const std::vector<ComplexT> &matrix,
-             const std::vector<size_t> &wires) -> PrecisionT {
+             const std::vector<std::size_t> &wires) -> PrecisionT {
         StateVectorT ob_sv(this->_statevector.getData(),
                            this->_statevector.getLength());
         ob_sv.applyMatrix(matrix, wires);
@@ -563,7 +624,7 @@ class Measurements final
      */
     template <typename op_type>
     auto var(const std::vector<op_type> &operations_list,
-             const std::vector<std::vector<size_t>> &wires_list)
+             const std::vector<std::vector<std::size_t>> &wires_list)
         -> std::vector<PrecisionT> {
         PL_ABORT_IF(
             (operations_list.size() != wires_list.size()),
@@ -571,7 +632,7 @@ class Measurements final
 
         std::vector<PrecisionT> expected_value_list;
 
-        for (size_t index = 0; index < operations_list.size(); index++) {
+        for (std::size_t index = 0; index < operations_list.size(); index++) {
             expected_value_list.emplace_back(
                 var(operations_list[index], wires_list[index]));
         }
@@ -599,9 +660,9 @@ class Measurements final
                    const int64_t csrOffsets_size, const index_type *columns_ptr,
                    const std::complex<PrecisionT> *values_ptr,
                    const int64_t numNNZ) {
-        PL_ABORT_IF(
-            (this->_statevector.getLength() != (size_t(csrOffsets_size) - 1)),
-            "Statevector and Hamiltonian have incompatible sizes.");
+        PL_ABORT_IF((this->_statevector.getLength() !=
+                     (std::size_t(csrOffsets_size) - 1)),
+                    "Statevector and Hamiltonian have incompatible sizes.");
 
         StateVectorT ob_sv(this->_statevector.getData(),
                            this->_statevector.getLength());
@@ -631,6 +692,20 @@ class Measurements final
         return (mean_square - squared_mean);
     };
 
+    /**
+     * @brief Calculate the variance for an observable with the number of shots.
+     *
+     * @param obs An observable object.
+     * @param num_shots Number of shots.
+     *
+     * @return Variance of the given observable.
+     */
+
+    auto var(const Observable<StateVectorT> &obs, const std::size_t &num_shots)
+        -> PrecisionT {
+        return BaseType::var(obs, num_shots);
+    }
+
   private:
     /**
      * @brief Utility method for expectation value calculations.
@@ -644,7 +719,8 @@ class Measurements final
      * if does not exist.
      * @return auto Expectation value.
      */
-    auto expval_(const std::string &obsName, const std::vector<size_t> &wires,
+    auto expval_(const std::string &obsName,
+                 const std::vector<std::size_t> &wires,
                  const std::vector<PrecisionT> &params = {0.0},
                  const std::vector<std::complex<PrecisionT>> &gate_matrix = {})
         -> PrecisionT {
@@ -664,7 +740,7 @@ class Measurements final
     /**
      * @brief See `expval(std::vector<CFP_t> &gate_matrix = {})`
      */
-    auto expval_(const std::vector<size_t> &wires,
+    auto expval_(const std::vector<std::size_t> &wires,
                  const std::vector<std::complex<PrecisionT>> &gate_matrix)
         -> PrecisionT {
         std::vector<CFP_t> matrix_cu(gate_matrix.size());
@@ -681,7 +757,8 @@ class Measurements final
 
         // Wire order reversed to match expected custatevec wire ordering for
         // tensor observables.
-        auto &&local_wires = std::vector<size_t>{wires.rbegin(), wires.rend()};
+        auto &&local_wires =
+            std::vector<std::size_t>{wires.rbegin(), wires.rend()};
 
         auto expect_val = this->getExpectationValueDeviceMatrix_(
             matrix_cu.data(), local_wires);
@@ -699,7 +776,7 @@ class Measurements final
     getExpectationValueDeviceMatrix_(const CFP_t *matrix,
                                      const std::vector<std::size_t> &tgts) {
         void *extraWorkspace = nullptr;
-        size_t extraWorkspaceSizeInBytes = 0;
+        std::size_t extraWorkspaceSizeInBytes = 0;
 
         std::vector<int> tgtsInt(tgts.size());
         std::transform(tgts.begin(), tgts.end(), tgtsInt.begin(),
@@ -708,7 +785,7 @@ class Measurements final
                                this->_statevector.getNumQubits() - 1 - x);
                        });
 
-        size_t nIndexBits = this->_statevector.getNumQubits();
+        std::size_t nIndexBits = this->_statevector.getNumQubits();
         cudaDataType_t data_type;
         cudaDataType_t expectationDataType =
             CUDA_C_64F; // Requested by the custatevecComputeExpectation API
@@ -733,7 +810,9 @@ class Measurements final
             /* custatevecMatrixLayout_t */ CUSTATEVEC_MATRIX_LAYOUT_ROW,
             /* const uint32_t */ tgtsInt.size(),
             /* custatevecComputeType_t */ compute_type,
-            /* size_t* */ &extraWorkspaceSizeInBytes));
+            /* std::size_t* */ &extraWorkspaceSizeInBytes));
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes > 0) {
@@ -760,7 +839,10 @@ class Measurements final
             /* const uint32_t */ tgtsInt.size(),
             /* custatevecComputeType_t */ compute_type,
             /* void* */ extraWorkspace,
-            /* size_t */ extraWorkspaceSizeInBytes));
+            /* std::size_t */ extraWorkspaceSizeInBytes));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            this->_statevector.getDataBuffer().getDevTag().getStreamID()));
 
         // LCOV_EXCL_START
         if (extraWorkspaceSizeInBytes)

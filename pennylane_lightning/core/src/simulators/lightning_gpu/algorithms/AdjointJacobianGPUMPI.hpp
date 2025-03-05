@@ -79,8 +79,8 @@ class AdjointJacobianMPI final
      */
     inline void updateJacobian(const StateVectorT &sv1, const StateVectorT &sv2,
                                std::span<PrecisionT> &jac,
-                               PrecisionT scaling_coeff, size_t obs_idx,
-                               size_t param_index, size_t tp_size) {
+                               PrecisionT scaling_coeff, std::size_t obs_idx,
+                               std::size_t param_index, std::size_t tp_size) {
         PL_ABORT_IF_NOT(sv1.getDataBuffer().getDevTag().getDeviceID() ==
                             sv2.getDataBuffer().getDevTag().getDeviceID(),
                         "Data exists on different GPUs. Aborting.");
@@ -92,7 +92,7 @@ class AdjointJacobianMPI final
         auto jac_single_param =
             sv2.getMPIManager().template allreduce<CFP_t>(result, "sum");
 
-        size_t idx = param_index + obs_idx * tp_size;
+        std::size_t idx = param_index + obs_idx * tp_size;
         jac[idx] = -2 * scaling_coeff * jac_single_param.y;
     }
 
@@ -120,11 +120,12 @@ class AdjointJacobianMPI final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         const auto &obs = jd.getObservables();
-        const size_t num_observables = obs.size();
+        const std::size_t num_observables = obs.size();
 
-        const std::vector<size_t> &trainableParams = jd.getTrainableParams();
-        const size_t tp_size = trainableParams.size();
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::vector<std::size_t> &trainableParams =
+            jd.getTrainableParams();
+        const std::size_t tp_size = trainableParams.size();
+        const std::size_t num_param_ops = ops.getNumParOps();
 
         PL_ABORT_IF_NOT(
             jac.size() == tp_size * num_observables,
@@ -150,7 +151,7 @@ class AdjointJacobianMPI final
                             lambda_ref.getNumLocalQubits(),
                             lambda_ref.getData());
 
-        for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+        for (std::size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
             lambda.updateData(lambda_ref);
 
             // Create observable-applied state-vectors
@@ -158,9 +159,9 @@ class AdjointJacobianMPI final
 
             BaseType::applyObservable(H_lambda, *obs[obs_idx]);
 
-            size_t trainableParamNumber = tp_size - 1;
+            std::size_t trainableParamNumber = tp_size - 1;
             // Track positions within par and non-par operations
-            size_t current_param_idx =
+            std::size_t current_param_idx =
                 num_param_ops - 1; // total number of parametric ops
             auto tp_it = trainableParams.rbegin();
             const auto tp_rend = trainableParams.rend();
@@ -170,8 +171,7 @@ class AdjointJacobianMPI final
                 PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                             "The operation is not supported using the adjoint "
                             "differentiation method");
-                if ((ops_name[op_idx] == "QubitStateVector") ||
-                    (ops_name[op_idx] == "StatePrep") ||
+                if ((ops_name[op_idx] == "StatePrep") ||
                     (ops_name[op_idx] == "BasisState")) {
                     continue;
                 }
@@ -185,7 +185,7 @@ class AdjointJacobianMPI final
                 if (ops.hasParams(op_idx)) {
                     if (current_param_idx == *tp_it) {
                         const PrecisionT scalingFactor =
-                            BaseType::applyGenerator(
+                            this->applyGenerator(
                                 mu, ops.getOpsName()[op_idx],
                                 ops.getOpsWires()[op_idx],
                                 !ops.getOpsInverses()[op_idx]) *
@@ -198,7 +198,7 @@ class AdjointJacobianMPI final
                     current_param_idx--;
                 }
                 BaseType::applyOperationAdj(H_lambda, ops,
-                                            static_cast<size_t>(op_idx));
+                                            static_cast<std::size_t>(op_idx));
             }
         }
     }
@@ -218,6 +218,10 @@ class AdjointJacobianMPI final
      * OpenMP is used to enable independent operations to be offloaded to
      * threads.
      *
+     * @note Only gates with pre-defined generators can be differentiated.
+     * For example, `QubitUnitary` is not differentiable as there is no
+     * generator defined for this gate.
+     *
      * @param jac Preallocated vector for Jacobian data results.
      * @param jd JacobianData represents the QuantumTape to differentiate.
      * @param ref_data Reference to a `%StateVectorT` object.
@@ -236,11 +240,12 @@ class AdjointJacobianMPI final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         const auto &obs = jd.getObservables();
-        const size_t num_observables = obs.size();
+        const std::size_t num_observables = obs.size();
 
-        const std::vector<size_t> &trainableParams = jd.getTrainableParams();
-        const size_t tp_size = trainableParams.size();
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::vector<std::size_t> &trainableParams =
+            jd.getTrainableParams();
+        const std::size_t tp_size = trainableParams.size();
+        const std::size_t num_param_ops = ops.getNumParOps();
 
         PL_ABORT_IF_NOT(
             jac.size() == tp_size * num_observables,
@@ -249,8 +254,8 @@ class AdjointJacobianMPI final
             "observables provided.");
 
         // Track positions within par and non-par operations
-        size_t trainableParamNumber = tp_size - 1;
-        size_t current_param_idx =
+        std::size_t trainableParamNumber = tp_size - 1;
+        std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
         auto tp_it = trainableParams.rbegin();
         const auto tp_rend = trainableParams.rend();
@@ -275,7 +280,7 @@ class AdjointJacobianMPI final
         using SVTypePtr = std::unique_ptr<StateVectorT>;
         std::unique_ptr<SVTypePtr[]> H_lambda(new SVTypePtr[num_observables]);
 
-        for (size_t h_i = 0; h_i < num_observables; h_i++) {
+        for (std::size_t h_i = 0; h_i < num_observables; h_i++) {
             H_lambda[h_i] = std::make_unique<StateVectorT>(
                 dt_local, lambda.getNumGlobalQubits(),
                 lambda.getNumLocalQubits(), lambda.getData());
@@ -290,8 +295,7 @@ class AdjointJacobianMPI final
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops_name[op_idx] == "QubitStateVector") ||
-                (ops_name[op_idx] == "StatePrep") ||
+            if ((ops_name[op_idx] == "StatePrep") ||
                 (ops_name[op_idx] == "BasisState")) {
                 continue;
             }
@@ -311,7 +315,7 @@ class AdjointJacobianMPI final
                             !ops.getOpsInverses()[op_idx]) *
                         (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
-                    for (size_t obs_idx = 0; obs_idx < num_observables;
+                    for (std::size_t obs_idx = 0; obs_idx < num_observables;
                          obs_idx++) {
                         updateJacobian(*H_lambda[obs_idx], mu, jac,
                                        scalingFactor, obs_idx,
@@ -324,7 +328,8 @@ class AdjointJacobianMPI final
                 current_param_idx--;
             }
 
-            for (size_t obs_idx = 0; obs_idx < num_observables; obs_idx++) {
+            for (std::size_t obs_idx = 0; obs_idx < num_observables;
+                 obs_idx++) {
                 BaseType::applyOperationAdj(*H_lambda[obs_idx], ops, op_idx);
             }
         }

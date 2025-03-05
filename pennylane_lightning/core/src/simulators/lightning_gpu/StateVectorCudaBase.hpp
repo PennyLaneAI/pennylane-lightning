@@ -27,6 +27,7 @@
 #include "DevTag.hpp"
 #include "Error.hpp"
 #include "StateVectorBase.hpp"
+#include "cuStateVecError.hpp"
 #include "cuda_helpers.hpp"
 
 /// @cond DEV
@@ -152,7 +153,8 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
      * @param sv Complex data pointer to receive data from device.
      */
     inline void CopyGpuDataToHost(std::complex<Precision> *host_sv,
-                                  size_t length, bool async = false) const {
+                                  std::size_t length,
+                                  bool async = false) const {
         PL_ABORT_IF_NOT(BaseType::getLength() == length,
                         "Sizes do not match for Host and GPU data");
         data_buffer_->CopyGpuDataToHost(host_sv, length, async);
@@ -196,29 +198,20 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
         data_buffer_ = std::move(other);
     }
 
-    /**
-     * @brief Initialize the statevector data to the |0...0> state
-     *
-     */
-    void initSV(bool async = false) {
-        size_t index = 0;
-        const std::complex<Precision> value(1, 0);
-        static_cast<Derived *>(this)->setBasisState(value, index, async);
-    };
-
   protected:
-    using ParFunc = std::function<void(const std::vector<size_t> &, bool,
+    using ParFunc = std::function<void(const std::vector<std::size_t> &, bool,
                                        const std::vector<Precision> &)>;
     using FMap = std::unordered_map<std::string, ParFunc>;
 
-    StateVectorCudaBase(size_t num_qubits, int device_id = 0,
+    StateVectorCudaBase(std::size_t num_qubits, int device_id = 0,
                         cudaStream_t stream_id = 0, bool device_alloc = true)
         : StateVectorBase<Precision, Derived>(num_qubits),
           data_buffer_{std::make_unique<LightningGPU::DataBuffer<CFP_t>>(
               Pennylane::Util::exp2(num_qubits), device_id, stream_id,
               device_alloc)} {}
 
-    StateVectorCudaBase(size_t num_qubits, LightningGPU::DevTag<int> dev_tag,
+    StateVectorCudaBase(std::size_t num_qubits,
+                        LightningGPU::DevTag<int> dev_tag,
                         bool device_alloc = true)
         : StateVectorBase<Precision, Derived>(num_qubits),
           data_buffer_{std::make_unique<LightningGPU::DataBuffer<CFP_t>>(
@@ -251,8 +244,9 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
   private:
     std::unique_ptr<LightningGPU::DataBuffer<CFP_t>> data_buffer_;
     const std::unordered_set<std::string> const_gates_{
-        "Identity", "PauliX", "PauliY", "PauliZ", "Hadamard", "T",      "S",
-        "CNOT",     "SWAP",   "CY",     "CZ",     "CSWAP",    "Toffoli"};
+        "Identity", "PauliX", "PauliY", "PauliZ", "Hadamard",
+        "T",        "S",      "SX",     "CNOT",   "SWAP",
+        "CY",       "CZ",     "CSWAP",  "Toffoli"};
     const std::unordered_map<std::string, std::size_t> ctrl_map_{
         // Add mapping from function name to required wires.
         {"Identity", 0},

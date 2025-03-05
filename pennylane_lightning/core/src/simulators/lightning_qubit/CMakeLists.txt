@@ -20,6 +20,8 @@ add_library(lightning_qubit STATIC ${LQUBIT_FILES})
 
 option(ENABLE_BLAS "Enable BLAS" OFF)
 option(ENABLE_GATE_DISPATCHER "Enable gate kernel dispatching on AVX/AVX2/AVX512" ON)
+option(LQ_ENABLE_KERNEL_OMP "Enable OpenMP pragmas for gate kernels" OFF)
+option(LQ_ENABLE_KERNEL_AVX_STREAMING "Enable AVX2/512 streaming operations for gate kernels" OFF)
 
 # Inform the compiler that this device is enabled.
 target_compile_options(lightning_compile_options INTERFACE "-D_ENABLE_PLQUBIT=1")
@@ -46,6 +48,24 @@ else()
     message(STATUS "ENABLE_BLAS is OFF.")
 endif()
 
+if(LQ_ENABLE_KERNEL_OMP)
+    message(STATUS "OpenMP-parallelized kernels: ON.")
+    add_definitions("-DPL_LQ_KERNEL_OMP")
+    target_compile_definitions(lightning_qubit PUBLIC -DPL_LQ_KERNEL_OMP)
+else()
+    message(STATUS "OpenMP-parallelized kernels: OFF.")
+endif()
+
+if(LQ_ENABLE_KERNEL_AVX_STREAMING)
+    if(NOT LQ_ENABLE_KERNEL_OMP)
+        message(WARNING "AVX streaming operations require `LQ_ENABLE_KERNEL_OMP` to be enabled.")
+    endif()
+    message(STATUS "AVX streaming operations: ON.")
+    add_definitions("-DPL_LQ_KERNEL_AVX_STREAMING")
+else()
+    message(STATUS "AVX streaming operations: OFF.")
+endif()
+
 target_link_libraries(lightning_qubit PUBLIC    lightning_compile_options
                                                 lightning_external_libs
                                                 lightning_base
@@ -68,6 +88,13 @@ set(COMPONENT_SUBDIRS   algorithms
                         observables
                         utils
                         )
+
+# Do not build the LQ plugin for Windows
+if (NOT WIN32)
+    set(COMPONENT_SUBDIRS   ${COMPONENT_SUBDIRS}
+                            catalyst
+                            )
+endif()
 
 foreach(COMP ${COMPONENT_SUBDIRS})
     add_subdirectory(${COMP})

@@ -15,13 +15,17 @@
 Integration tests that compare the output states of the
 compiled Lightning device with the ``default.qubit``.
 """
-import pytest
-from conftest import device_name, LightningDevice as ld
-
 import itertools
-import numpy as np
 import os
+
+import numpy as np
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
+
+if not ld._CPP_BINARY_AVAILABLE:
+    pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
 def lightning_backend_dev(wires):
@@ -59,12 +63,15 @@ class TestComparison:
     """A test that compares the output states of the lightning device and ``default.qubit`` for a
     variety of different circuits. This uses ``default.qubit`` as a reference."""
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support one-qubit circuits",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 1))
     @pytest.mark.parametrize("wires", [1])
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     @pytest.mark.parametrize("num_threads", [1, 2])
     def test_one_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
@@ -87,24 +94,29 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
+        # pylint: disable=protected-access
 
         default_state = default(qml.state)
 
-        assert np.allclose(lightning_state, default_state)
+        assert np.allclose(dev_l._statevector.state, default_state)
         assert os.getenv("OMP_NUM_THREADS") == str(num_threads)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support direct access to the state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 2))
     @pytest.mark.parametrize("wires", [2])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
+        "lightning_dev_version",
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_two_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a two-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -131,23 +143,28 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
 
         default_state = default(qml.state)
 
-        assert np.allclose(lightning_state, default_state)
+        # pylint: disable=protected-access
+        assert np.allclose(dev_l._statevector.state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support the direct access to state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 3))
     @pytest.mark.parametrize("wires", [3])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
+        "lightning_dev_version",
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_three_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a three-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -182,23 +199,28 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
 
         default_state = default(qml.state)
 
-        assert np.allclose(lightning_state, default_state)
+        # pylint: disable=protected-access
+        assert np.allclose(dev_l._statevector.state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support the direct access to state",
+    )
     @pytest.mark.parametrize("basis_state", itertools.product(*[(0, 1)] * 4))
     @pytest.mark.parametrize("wires", [4])
     @pytest.mark.parametrize(
-        "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
+        "lightning_dev_version",
+        ([lightning_backend_dev, lightning_backend_batch_obs_dev]),
     )
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
     def test_four_qubit_circuit(
         self, monkeypatch, wires, lightning_dev_version, basis_state, num_threads
     ):
         """Test a four-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         def circuit(measurement):
@@ -238,23 +260,24 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
 
         default_state = default(qml.state)
 
-        assert np.allclose(lightning_state, default_state)
+        # pylint: disable=protected-access
+        assert np.allclose(dev_l._statevector.state, default_state)
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device does not support does not support the direct access to state",
+    )
     @pytest.mark.parametrize(
         "lightning_dev_version", [lightning_backend_dev, lightning_backend_batch_obs_dev]
     )
     @pytest.mark.parametrize("wires", range(1, 17))
     @pytest.mark.parametrize("num_threads", [1, 2])
-    @pytest.mark.skipif(not ld._CPP_BINARY_AVAILABLE, reason="Lightning binary required")
-    @pytest.mark.parametrize("stateprep", [qml.QubitStateVector, qml.StatePrep])
-    def test_n_qubit_circuit(
-        self, monkeypatch, stateprep, wires, lightning_dev_version, num_threads
-    ):
+    def test_n_qubit_circuit(self, monkeypatch, wires, lightning_dev_version, num_threads):
         """Test an n-qubit circuit"""
+
         monkeypatch.setenv("OMP_NUM_THREADS", str(num_threads))
 
         vec = np.array([1] * (2**wires)) / np.sqrt(2**wires)
@@ -264,7 +287,7 @@ class TestComparison:
         def circuit(measurement):
             """Prepares the equal superposition state and then applies StronglyEntanglingLayers
             and concludes with a simple PauliZ measurement"""
-            stateprep(vec, wires=range(wires))
+            qml.StatePrep(vec, wires=range(wires))
             qml.StronglyEntanglingLayers(w, wires=range(wires))
             return measurement() if callable(measurement) else measurement
 
@@ -275,8 +298,8 @@ class TestComparison:
         default = qml.QNode(circuit, dev_d)
 
         lightning(qml.expval(qml.PauliZ(0)))
-        lightning_state = dev_l.state
+        # pylint: disable=protected-access
 
         default_state = default(qml.state)
 
-        assert np.allclose(lightning_state, default_state)
+        assert np.allclose(dev_l._statevector.state, default_state)

@@ -29,7 +29,6 @@ Supported operations and observables
     ~pennylane.CNOT
     ~pennylane.ControlledPhaseShift
     ~pennylane.ControlledQubitUnitary
-    ~pennylane.CPhase
     ~pennylane.CRot
     ~pennylane.CRX
     ~pennylane.CRY
@@ -57,9 +56,7 @@ Supported operations and observables
     ~pennylane.PauliZ
     ~pennylane.PhaseShift
     ~pennylane.PSWAP
-    ~pennylane.QFT
     ~pennylane.QubitCarry
-    ~pennylane.QubitStateVector
     ~pennylane.QubitSum
     ~pennylane.QubitUnitary
     ~pennylane.Rot
@@ -90,17 +87,17 @@ Supported operations and observables
 .. autosummary::
     :nosignatures:
 
-    ~pennylane.ops.op_math.Exp
-    ~pennylane.Hadamard
-    ~pennylane.Hamiltonian
-    ~pennylane.Hermitian
     ~pennylane.Identity
+    ~pennylane.Hadamard
     ~pennylane.PauliX
     ~pennylane.PauliY
     ~pennylane.PauliZ
-    ~pennylane.ops.op_math.Prod
     ~pennylane.Projector
+    ~pennylane.Hermitian
+    ~pennylane.Hamiltonian
     ~pennylane.SparseHamiltonian
+    ~pennylane.ops.op_math.Exp
+    ~pennylane.ops.op_math.Prod
     ~pennylane.ops.op_math.SProd
     ~pennylane.ops.op_math.Sum
 

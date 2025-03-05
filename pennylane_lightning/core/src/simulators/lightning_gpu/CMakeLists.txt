@@ -13,7 +13,7 @@ project(${PL_BACKEND}
 
 # Include macro and functions supporting Nvidia and cuQuantum libraries.
 include("${pennylane_lightning_SOURCE_DIR}/cmake/support_pllgpu.cmake")
-findCUDA(lightning_external_libs)
+findCUDATK(lightning_external_libs)
 findCustatevec(lightning_external_libs)
 
 if(ENABLE_MPI)
@@ -63,7 +63,7 @@ set_property(TARGET ${PL_BACKEND} PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 # To avoid DSO errors on platforms preferring static linkage, uncomment the following line:
 # string(REPLACE "libcudart_static.a" "libcudart.so" CUDA_SHARED_RT "${CUDA_LIBRARIES}")
-set_target_properties(${PL_BACKEND} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/")
+set_target_properties(${PL_BACKEND} PROPERTIES INSTALL_RPATH "$ORIGIN/../cuquantum/lib:$ORIGIN/../cuquantum/lib64:$ORIGIN/../nvidia/cublas/lib:$ORIGIN/../nvidia/cusparse/lib:$ORIGIN/../nvidia/nvjitlink/lib:$ORIGIN/../nvidia/cuda_runtime/lib:$ORIGIN/")
 
 if(PL_DISABLE_CUDA_SAFETY)
     target_compile_options(${PL_BACKEND} INTERFACE $<$<COMPILE_LANGUAGE:CXX>:-DCUDA_UNSAFE>)
@@ -74,6 +74,7 @@ endif()
 ###############################################################################
 set(COMPONENT_SUBDIRS      algorithms
                            bindings
+                           catalyst
                            measurements
                            gates
                            observables

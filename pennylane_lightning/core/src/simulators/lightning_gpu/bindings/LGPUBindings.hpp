@@ -20,6 +20,7 @@
 #include "cuda.h"
 
 #include "BindingsBase.hpp"
+#include "BindingsCudaUtils.hpp"
 #include "Constant.hpp"
 #include "ConstantUtil.hpp" // lookup
 #include "DevTag.hpp"
@@ -50,9 +51,54 @@ using StateVectorBackends =
                               StateVectorCudaManaged<double>, void>;
 
 /**
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
+
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
+
+/**
  * @brief Get a gate kernel map for a statevector.
  */
-
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using PrecisionT =
@@ -62,12 +108,9 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
     using ParamT = PrecisionT;        // Parameter's data precision
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using np_arr_sparse_ind = typename std::conditional<
-        std::is_same<ParamT, float>::value,
-        py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
-        py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
+    registerControlledGate<StateVectorT>(pyclass);
 
     pyclass
         .def(py::init<std::size_t>())              // qubits, device
@@ -82,27 +125,25 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
         }))
         .def(
             "setBasisState",
-            [](StateVectorT &sv, const size_t index, const bool use_async) {
-                const std::complex<PrecisionT> value(1, 0);
-                sv.setBasisState(value, index, use_async);
-            },
-            "Create Basis State on GPU.")
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires,
+               const bool async) { sv.setBasisState(state, wires, async); },
+            py::arg("state") = nullptr, py::arg("wires") = nullptr,
+            py::arg("async") = false,
+            "Set the state vector to a basis state on GPU.")
         .def(
             "setStateVector",
-            [](StateVectorT &sv, const np_arr_sparse_ind &indices,
-               const np_arr_c &state, const bool use_async) {
-                using index_type = typename std::conditional<
-                    std::is_same<ParamT, float>::value, int32_t, int64_t>::type;
-
-                sv.template setStateVector<index_type>(
-                    static_cast<index_type>(indices.request().size),
-                    static_cast<std::complex<PrecisionT> *>(
-                        state.request().ptr),
-                    static_cast<index_type *>(indices.request().ptr),
-                    use_async);
+            [](StateVectorT &sv, const np_arr_c &state,
+               const std::vector<std::size_t> &wires, const bool async) {
+                const auto state_buffer = state.request();
+                const auto state_ptr =
+                    static_cast<const std::complex<ParamT> *>(state_buffer.ptr);
+                sv.setStateVector(state_ptr, state_buffer.size, wires, async);
             },
-            "Set State Vector on GPU with values and their corresponding "
-            "indices for the state vector on device")
+            "Set State Vector on GPU with values for the state vector and "
+            "wires on the host memory.")
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+             "Apply controlled operation")
         .def(
             "DeviceToDevice",
             [](StateVectorT &sv, const StateVectorT &other, bool async) {
@@ -110,7 +151,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Synchronize data from another GPU device to current device.")
         .def("DeviceToHost",
-             py::overload_cast<std::complex<PrecisionT> *, size_t, bool>(
+             py::overload_cast<std::complex<PrecisionT> *, std::size_t, bool>(
                  &StateVectorT::CopyGpuDataToHost, py::const_),
              "Synchronize data from the GPU device to host.")
         .def(
@@ -125,8 +166,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             },
             "Synchronize data from the GPU device to host.")
         .def("HostToDevice",
-             py::overload_cast<const std::complex<PrecisionT> *, size_t, bool>(
-                 &StateVectorT::CopyHostDataToGpu),
+             py::overload_cast<const std::complex<PrecisionT> *, std::size_t,
+                               bool>(&StateVectorT::CopyHostDataToGpu),
              "Synchronize data from the host device to GPU.")
         .def("HostToDevice",
              py::overload_cast<const std::vector<std::complex<PrecisionT>> &,
@@ -139,7 +180,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                 const auto *data_ptr =
                     static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
                 const auto length =
-                    static_cast<size_t>(numpyArrayInfo.shape[0]);
+                    static_cast<std::size_t>(numpyArrayInfo.shape[0]);
                 if (length) {
                     gpu_sv.CopyHostDataToGpu(data_ptr, length, async);
                 }
@@ -150,13 +191,32 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
              "Get the GPU index for the statevector data.")
         .def("numQubits", &StateVectorT::getNumQubits)
         .def("dataLength", &StateVectorT::getLength)
-        .def("resetGPU", &StateVectorT::initSV)
+        .def(
+            "resetStateVector",
+            [](StateVectorT &gpu_sv, bool async) {
+                gpu_sv.resetStateVector(async);
+            },
+            py::arg("async") = false,
+            "Initialize the statevector data to the |0...0> state")
+        .def("collapse", &StateVectorT::collapse,
+             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
+        .def(
+            "apply",
+            [](StateVectorT &sv, const std::string &gate_name,
+               const std::vector<std::size_t> &controlled_wires,
+               const std::vector<bool> &controlled_values,
+               const std::vector<std::size_t> &wires, bool inverse,
+               const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            },
+            "Apply operation via the gate matrix")
         .def(
             "apply",
             [](StateVectorT &sv, const std::string &str,
-               const std::vector<size_t> &wires, bool inv,
-               [[maybe_unused]] const std::vector<std::vector<ParamT>> &params,
-               [[maybe_unused]] const np_arr_c &gate_matrix) {
+               const std::vector<std::size_t> &wires, bool inv,
+               const std::vector<std::vector<ParamT>> &params,
+               const np_arr_c &gate_matrix) {
                 const auto m_buffer = gate_matrix.request();
                 std::vector<CFP_t> matrix_cu;
                 if (m_buffer.size) {
@@ -164,9 +224,14 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                     matrix_cu =
                         std::vector<CFP_t>{m_ptr, m_ptr + m_buffer.size};
                 }
-
-                sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
-                                  matrix_cu);
+                if (params.empty()) {
+                    sv.applyOperation(str, wires, inv, std::vector<ParamT>{},
+                                      matrix_cu);
+                } else {
+                    PL_ABORT_IF(params.size() != 1,
+                                "params should be a List[List[float]].")
+                    sv.applyOperation(str, wires, inv, params[0], matrix_cu);
+                }
             },
             "Apply operation via the gate matrix");
 }
@@ -199,7 +264,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     pyclass
         .def("expval",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::expval),
              "Expected value of an operation by name.")
         .def(
@@ -222,7 +287,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "expval",
             [](Measurements<StateVectorT> &M,
                const std::vector<std::string> &pauli_words,
-               const std::vector<std::vector<size_t>> &target_wires,
+               const std::vector<std::vector<std::size_t>> &target_wires,
                const np_arr_c &coeffs) {
                 return M.expval(pauli_words, target_wires,
                                 static_cast<ComplexT *>(coeffs.request().ptr));
@@ -231,7 +296,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
-               const std::vector<size_t> &wires) {
+               const std::vector<std::size_t> &wires) {
                 const std::size_t matrix_size = exp2(2 * wires.size());
                 auto matrix_data =
                     static_cast<ComplexT *>(matrix.request().ptr);
@@ -242,12 +307,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a Hermitian observable.")
         .def("var",
              [](Measurements<StateVectorT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::var),
              "Variance of an operation by name.")
         .def(
@@ -320,7 +385,7 @@ void registerBackendSpecificObservables(py::module_ &m) {
              "Get wires of observables")
         .def(
             "__eq__",
-            [](const SparseHamiltonian<StateVectorT> &self,
+            []([[maybe_unused]] const SparseHamiltonian<StateVectorT> &self,
                py::handle other) -> bool {
                 if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
                     return false;
@@ -356,51 +421,7 @@ auto getBackendInfo() -> py::dict {
  */
 void registerBackendSpecificInfo(py::module_ &m) {
     m.def("backend_info", &getBackendInfo, "Backend-specific information.");
-    m.def("device_reset", &deviceReset, "Reset all GPU devices and contexts.");
-    m.def("allToAllAccess", []() {
-        for (int i = 0; i < static_cast<int>(getGPUCount()); i++) {
-            cudaDeviceEnablePeerAccess(i, 0);
-        }
-    });
-
-    m.def("is_gpu_supported", &isCuQuantumSupported,
-          py::arg("device_number") = 0,
-          "Checks if the given GPU device meets the minimum architecture "
-          "support for the PennyLane-Lightning-GPU device.");
-
-    m.def("get_gpu_arch", &getGPUArch, py::arg("device_number") = 0,
-          "Returns the given GPU major and minor GPU support.");
-    py::class_<DevicePool<int>>(m, "DevPool")
-        .def(py::init<>())
-        .def("getActiveDevices", &DevicePool<int>::getActiveDevices)
-        .def("isActive", &DevicePool<int>::isActive)
-        .def("isInactive", &DevicePool<int>::isInactive)
-        .def("acquireDevice", &DevicePool<int>::acquireDevice)
-        .def("releaseDevice", &DevicePool<int>::releaseDevice)
-        .def("syncDevice", &DevicePool<int>::syncDevice)
-        .def_static("getTotalDevices", &DevicePool<int>::getTotalDevices)
-        .def_static("getDeviceUIDs", &DevicePool<int>::getDeviceUIDs)
-        .def_static("setDeviceID", &DevicePool<int>::setDeviceIdx);
-
-    py::class_<DevTag<int>>(m, "DevTag")
-        .def(py::init<>())
-        .def(py::init<int>())
-        .def(py::init([](int device_id, void *stream_id) {
-            // Note, streams must be handled externally for now.
-            // Binding support provided through void* conversion to cudaStream_t
-            return new DevTag<int>(device_id,
-                                   static_cast<cudaStream_t>(stream_id));
-        }))
-        .def(py::init<const DevTag<int> &>())
-        .def("getDeviceID", &DevTag<int>::getDeviceID)
-        .def("getStreamID",
-             [](DevTag<int> &dev_tag) {
-                 // default stream points to nullptr, so just return void* as
-                 // type
-                 return static_cast<void *>(dev_tag.getStreamID());
-             })
-        .def("refresh", &DevTag<int>::refresh);
+    registerCudaUtils(m);
 }
 
 } // namespace Pennylane::LightningGPU
-  /// @endcond

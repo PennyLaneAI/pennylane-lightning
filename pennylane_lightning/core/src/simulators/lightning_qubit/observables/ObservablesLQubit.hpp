@@ -63,7 +63,7 @@ class NamedObs final : public NamedObsBase<StateVectorT> {
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObs(std::string obs_name, std::vector<size_t> wires,
+    NamedObs(std::string obs_name, std::vector<std::size_t> wires,
              std::vector<PrecisionT> params = {})
         : BaseType{obs_name, wires, params} {
         using Pennylane::Gates::Constant::gate_names;
@@ -98,7 +98,7 @@ class HermitianObs final : public HermitianObsBase<StateVectorT> {
      * @param matrix Matrix in row major format.
      * @param wires Wires the observable applies to.
      */
-    HermitianObs(MatrixT matrix, std::vector<size_t> wires)
+    HermitianObs(MatrixT matrix, std::vector<std::size_t> wires)
         : BaseType{matrix, wires} {}
 };
 
@@ -165,8 +165,10 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
             auto allocator = sv.allocator();
             std::vector<ComplexT, decltype(allocator)> res(
                 sv.getLength(), ComplexT{0.0, 0.0}, allocator);
-            for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
-                StateVectorT tmp(sv);
+            StateVectorT tmp(sv);
+            for (std::size_t term_idx = 0; term_idx < coeffs.size();
+                 term_idx++) {
+                tmp.updateData(sv.getDataVector());
                 terms[term_idx]->applyInPlace(tmp);
                 scaleAndAdd(tmp.getLength(), ComplexT{coeffs[term_idx], 0.0},
                             tmp.getData(), res.data());
@@ -176,7 +178,8 @@ template <class StateVectorT, bool use_openmp> struct HamiltonianApplyInPlace {
                                  typename StateVectorT::MemoryStorageT,
                                  MemoryStorageLocation::External>) {
             std::vector<ComplexT> res(sv.getLength(), ComplexT{0.0, 0.0});
-            for (size_t term_idx = 0; term_idx < coeffs.size(); term_idx++) {
+            for (std::size_t term_idx = 0; term_idx < coeffs.size();
+                 term_idx++) {
                 std::vector<ComplexT> tmp_data_storage(
                     sv.getData(), sv.getData() + sv.getLength());
                 StateVectorT tmp(tmp_data_storage.data(),
@@ -205,7 +208,7 @@ struct HamiltonianApplyInPlace<StateVectorLQubitManaged<PrecisionT>, true> {
             &terms,
         StateVectorLQubitManaged<PrecisionT> &sv) {
         std::exception_ptr ex = nullptr;
-        const size_t length = sv.getLength();
+        const std::size_t length = sv.getLength();
         auto allocator = sv.allocator();
 
         std::vector<ComplexT, decltype(allocator)> sum(length, ComplexT{},
@@ -220,7 +223,8 @@ struct HamiltonianApplyInPlace<StateVectorLQubitManaged<PrecisionT>, true> {
                 length, ComplexT{}, allocator);
 
 #pragma omp for
-            for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
+            for (std::size_t term_idx = 0; term_idx < terms.size();
+                 term_idx++) {
                 try {
                     tmp.updateData(sv.getDataVector());
                     terms[term_idx]->applyInPlace(tmp);
@@ -254,7 +258,7 @@ struct HamiltonianApplyInPlace<StateVectorLQubitRaw<PrecisionT>, true> {
                         Observable<StateVectorLQubitRaw<PrecisionT>>>> &terms,
                     StateVectorLQubitRaw<PrecisionT> &sv) {
         std::exception_ptr ex = nullptr;
-        const size_t length = sv.getLength();
+        const std::size_t length = sv.getLength();
         std::vector<ComplexT> sum(length, ComplexT{});
 
 #pragma omp parallel default(none) firstprivate(length)                        \
@@ -280,7 +284,8 @@ struct HamiltonianApplyInPlace<StateVectorLQubitRaw<PrecisionT>, true> {
             }
 
 #pragma omp for
-            for (size_t term_idx = 0; term_idx < terms.size(); term_idx++) {
+            for (std::size_t term_idx = 0; term_idx < terms.size();
+                 term_idx++) {
                 std::copy(sv.getData(), sv.getData() + sv.getLength(),
                           tmp_data_storage->data());
                 try {
@@ -357,16 +362,6 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
         detail::HamiltonianApplyInPlace<
             StateVectorT, Pennylane::Util::use_openmp>::run(this->coeffs_,
                                                             this->obs_, sv);
-    }
-
-    // to work with
-    void applyInPlaceShots(StateVectorT &sv,
-                           std::vector<size_t> &identity_wires,
-                           std::vector<size_t> &ob_wires,
-                           size_t term_idx) const override {
-        ob_wires.clear();
-        this->obs_[term_idx]->applyInPlaceShots(sv, identity_wires, ob_wires,
-                                                term_idx);
     }
 };
 

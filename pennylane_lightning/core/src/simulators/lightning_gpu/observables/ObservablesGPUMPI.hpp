@@ -57,7 +57,7 @@ class NamedObsMPI final : public NamedObsBase<StateVectorT> {
      * @param wires Argument to construct wires.
      * @param params Argument to construct parameters
      */
-    NamedObsMPI(std::string obs_name, std::vector<size_t> wires,
+    NamedObsMPI(std::string obs_name, std::vector<std::size_t> wires,
                 std::vector<PrecisionT> params = {})
         : BaseType{obs_name, wires, params} {
         using Pennylane::Gates::Constant::gate_names;
@@ -93,7 +93,7 @@ class HermitianObsMPI final : public HermitianObsBase<StateVectorT> {
      * @param matrix Matrix in row major format.
      * @param wires Wires the observable applies to.
      */
-    HermitianObsMPI(MatrixT matrix, std::vector<size_t> wires)
+    HermitianObsMPI(MatrixT matrix, std::vector<std::size_t> wires)
         : BaseType{matrix, wires} {}
 
     auto getObsName() const -> std::string final {
@@ -197,7 +197,8 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
                                       sv.getDataBuffer().getDevTag());
         buffer.zeroInit();
 
-        for (size_t term_idx = 0; term_idx < this->coeffs_.size(); term_idx++) {
+        for (std::size_t term_idx = 0; term_idx < this->coeffs_.size();
+             term_idx++) {
             DevTag<int> dt_local(sv.getDataBuffer().getDevTag());
             dt_local.refresh();
             StateVectorT tmp(dt_local, sv.getNumGlobalQubits(),
@@ -213,16 +214,6 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
         sv.CopyGpuDataToGpuIn(buffer.getData(), buffer.getLength());
         PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
         mpi_manager.Barrier();
-    }
-
-    // to work with
-    void applyInPlaceShots(StateVectorT &sv,
-                           std::vector<size_t> &identity_wires,
-                           std::vector<size_t> &ob_wires,
-                           size_t term_idx) const override {
-        ob_wires.clear();
-        this->obs_[term_idx]->applyInPlaceShots(sv, identity_wires, ob_wires,
-                                                term_idx);
     }
 };
 
@@ -298,7 +289,8 @@ class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
         auto device_id = sv.getDataBuffer().getDevTag().getDeviceID();
         auto stream_id = sv.getDataBuffer().getDevTag().getStreamID();
 
-        const size_t length_local = size_t{1} << sv.getNumLocalQubits();
+        const std::size_t length_local = std::size_t{1}
+                                         << sv.getNumLocalQubits();
 
         std::unique_ptr<DataBuffer<CFP_t>> d_sv_prime =
             std::make_unique<DataBuffer<CFP_t>>(length_local, device_id,

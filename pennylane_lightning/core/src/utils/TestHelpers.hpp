@@ -48,7 +48,7 @@ template <class T, class Alloc = std::allocator<T>> struct PLApprox {
             return false;
         }
 
-        for (size_t i = 0; i < lhs.size(); i++) {
+        for (std::size_t i = 0; i < lhs.size(); i++) {
             if constexpr (Util::is_complex_v<T>) {
                 if (lhs[i].real() != Approx(comp_[i].real())
                                          .epsilon(epsilon_)
@@ -168,6 +168,7 @@ std::ostream &operator<<(std::ostream &os, const PLApproxComplex<T> &approx) {
  * @tparam Data_t Floating point data-type.
  * @param data1 StateVector data 1.
  * @param data2 StateVector data 2.
+ * @param eps The absolute tolerance parameter.
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
@@ -187,6 +188,7 @@ isApproxEqual(const std::vector<Data_t, AllocA> &data1,
  * @tparam Data_t Floating point data-type.
  * @param data1 StateVector data 1.
  * @param data2 StateVector data 2.
+ * @param eps The absolute tolerance parameter.
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
@@ -208,16 +210,18 @@ isApproxEqual(const Data_t &data1, const Data_t &data2,
  * @param length1 StateVector data array pointer 1.
  * @param data2 StateVector data array pointer 2.
  * @param length2 StateVector data array pointer 1.
+ * @param eps The absolute tolerance parameter.
  * @return true Data are approximately equal.
  * @return false Data are not approximately equal.
  */
 template <class Data_t>
 inline bool
-isApproxEqual(const Data_t *data1, const size_t length1, const Data_t *data2,
-              const size_t length2,
+isApproxEqual(const Data_t *data1, const std::size_t length1,
+              const Data_t *data2, const std::size_t length2,
               typename Data_t::value_type eps =
                   std::numeric_limits<typename Data_t::value_type>::epsilon() *
                   100) {
+
     if (data1 == data2) {
         return true;
     }
@@ -226,11 +230,45 @@ isApproxEqual(const Data_t *data1, const size_t length1, const Data_t *data2,
         return false;
     }
 
-    for (size_t idx = 0; idx < length1; idx++) {
+    for (std::size_t idx = 0; idx < length1; idx++) {
         if (!isApproxEqual(data1[idx], data2[idx], eps)) {
             return false;
         }
     }
+
+    return true;
+}
+
+/**
+ * @brief Utility function to compare `std::vector` of complex statevector data.
+ *
+ * @note This utility function is mainly used in Lightning-Kokkos C++ unit tests
+ * when the `data1` and `data2` allocators are identical.
+ *
+ * @tparam Data_t Floating point data-type.
+ * @param data1 StateVector data array pointer 1.
+ * @param data2 StateVector data array pointer 2.
+ * @param eps The absolute tolerance parameter.
+ * @return true Data are approximately equal.
+ * @return false Data are not approximately equal.
+ */
+template <class Data_t, class Alloc>
+inline bool
+isApproxEqual(const std::vector<Data_t, Alloc> &data1,
+              const std::vector<Data_t, Alloc> &data2,
+              typename Data_t::value_type eps =
+                  std::numeric_limits<typename Data_t::value_type>::epsilon() *
+                  100) {
+    if (data1.size() != data2.size()) {
+        return false;
+    }
+
+    for (std::size_t idx = 0; idx < data1.size(); idx++) {
+        if (!isApproxEqual(data1[idx], data2[idx], eps)) {
+            return false;
+        }
+    }
+
     return true;
 }
 
@@ -281,8 +319,8 @@ void scaleVector(std::vector<std::complex<Data_t>, Alloc> &data,
  * @brief create |0>^N
  */
 template <typename ComplexT>
-auto createZeroState(size_t num_qubits) -> TestVector<ComplexT> {
-    TestVector<ComplexT> res(size_t{1U} << num_qubits, {0.0, 0.0},
+auto createZeroState(std::size_t num_qubits) -> TestVector<ComplexT> {
+    TestVector<ComplexT> res(std::size_t{1U} << num_qubits, {0.0, 0.0},
                              getBestAllocator<ComplexT>());
     res[0] = ComplexT{1.0, 0.0};
     return res;
@@ -291,11 +329,24 @@ auto createZeroState(size_t num_qubits) -> TestVector<ComplexT> {
 /**
  * @brief create |+>^N
  */
+template <typename ComplexT>
+auto createPlusState_(std::size_t num_qubits) -> TestVector<ComplexT> {
+    TestVector<ComplexT> res(std::size_t{1U} << num_qubits, 1.0,
+                             getBestAllocator<ComplexT>());
+    for (auto &elem : res) {
+        elem /= std::sqrt(1U << num_qubits);
+    }
+    return res;
+}
+
+/**
+ * @brief create |+>^N
+ */
 template <typename PrecisionT>
-auto createPlusState(size_t num_qubits)
+auto createPlusState(std::size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
-        size_t{1U} << num_qubits, 1.0,
+        std::size_t{1U} << num_qubits, 1.0,
         getBestAllocator<std::complex<PrecisionT>>());
     for (auto &elem : res) {
         elem /= std::sqrt(1U << num_qubits);
@@ -307,13 +358,13 @@ auto createPlusState(size_t num_qubits)
  * @brief create a random state
  */
 template <typename PrecisionT, class RandomEngine>
-auto createRandomStateVectorData(RandomEngine &re, size_t num_qubits)
+auto createRandomStateVectorData(RandomEngine &re, std::size_t num_qubits)
     -> TestVector<std::complex<PrecisionT>> {
     TestVector<std::complex<PrecisionT>> res(
-        size_t{1U} << num_qubits, 0.0,
+        std::size_t{1U} << num_qubits, 0.0,
         getBestAllocator<std::complex<PrecisionT>>());
     std::uniform_real_distribution<PrecisionT> dist;
-    for (size_t idx = 0; idx < (size_t{1U} << num_qubits); idx++) {
+    for (std::size_t idx = 0; idx < (std::size_t{1U} << num_qubits); idx++) {
         res[idx] = {dist(re), dist(re)};
     }
 
@@ -342,11 +393,11 @@ auto createProductState(std::string_view str) -> TestVector<ComplexT> {
     std::vector<PrecisionT> minus{INVSQRT2<PrecisionT>(),
                                   -INVSQRT2<PrecisionT>()};
 
-    for (size_t k = 0; k < (size_t{1U} << str.length()); k++) {
+    for (std::size_t k = 0; k < (std::size_t{1U} << str.length()); k++) {
         PrecisionT elem = 1.0;
-        for (size_t n = 0; n < str.length(); n++) {
+        for (std::size_t n = 0; n < str.length(); n++) {
             char c = str[n];
-            const size_t wire = str.length() - 1 - n;
+            const std::size_t wire = str.length() - 1 - n;
             switch (c) {
             case '0':
                 elem *= zero[(k >> wire) & 1U];
@@ -377,23 +428,23 @@ auto createProductState(std::string_view str) -> TestVector<ComplexT> {
  * @return std::vector<typename StateVectorT::ComplexT>>
  */
 template <class StateVectorT>
-auto createNonTrivialState(size_t num_qubits = 3) {
+auto createNonTrivialState(std::size_t num_qubits = 3) {
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
 
-    size_t data_size = Util::exp2(num_qubits);
+    std::size_t data_size = Util::exp2(num_qubits);
 
     std::vector<ComplexT> arr(data_size, ComplexT{0, 0});
     arr[0] = ComplexT{1, 0};
     StateVectorT Measured_StateVector(arr.data(), data_size);
 
     std::vector<std::string> gates;
-    std::vector<std::vector<size_t>> wires;
+    std::vector<std::vector<std::size_t>> wires;
     std::vector<bool> inv_op(num_qubits * 2, false);
     std::vector<std::vector<PrecisionT>> phase;
 
     PrecisionT initial_phase = 0.7;
-    for (size_t n_qubit = 0; n_qubit < num_qubits; n_qubit++) {
+    for (std::size_t n_qubit = 0; n_qubit < num_qubits; n_qubit++) {
         gates.emplace_back("RX");
         gates.emplace_back("RY");
 
@@ -438,7 +489,7 @@ void write_CSR_vectors(std::vector<IndexT> &row_map,
     entries.resize(numNNZ);
     values.resize(numNNZ);
     for (IndexT rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-        size_t idx = row_map[rowIdx];
+        std::size_t idx = row_map[rowIdx];
         if (rowIdx == 0) {
             entries[0] = rowIdx;
             entries[1] = rowIdx + 1;
@@ -485,7 +536,7 @@ bool operator==(const std::vector<T, AllocA> &lhs,
     if (lhs.size() != rhs.size()) {
         return false;
     }
-    for (size_t idx = 0; idx < lhs.size(); idx++) {
+    for (std::size_t idx = 0; idx < lhs.size(); idx++) {
         if (lhs[idx] != rhs[idx]) {
             return false;
         }
@@ -503,23 +554,23 @@ bool operator==(const std::vector<T, AllocA> &lhs,
  * @return std::vector<T>
  */
 template <class T>
-auto linspace(T start, T end, size_t num_points) -> std::vector<T> {
+auto linspace(T start, T end, std::size_t num_points) -> std::vector<T> {
     std::vector<T> data(num_points);
     T step = (end - start) / (num_points - 1);
-    for (size_t i = 0; i < num_points; i++) {
+    for (std::size_t i = 0; i < num_points; i++) {
         data[i] = start + (step * i);
     }
     return data;
 }
 
 template <typename RandomEngine>
-std::vector<int> randomIntVector(RandomEngine &re, size_t size, int min,
+std::vector<int> randomIntVector(RandomEngine &re, std::size_t size, int min,
                                  int max) {
     std::uniform_int_distribution<int> dist(min, max);
     std::vector<int> res;
 
     res.reserve(size);
-    for (size_t i = 0; i < size; i++) {
+    for (std::size_t i = 0; i < size; i++) {
         res.emplace_back(dist(re));
     }
     return res;
@@ -535,10 +586,10 @@ std::vector<int> randomIntVector(RandomEngine &re, size_t size, int min,
  * @return Generated unitary matrix in row-major format
  */
 template <typename PrecisionT, class RandomEngine>
-auto randomUnitary(RandomEngine &re, size_t num_qubits)
+auto randomUnitary(RandomEngine &re, std::size_t num_qubits)
     -> std::vector<std::complex<PrecisionT>> {
     using ComplexT = std::complex<PrecisionT>;
-    const size_t dim = (1U << num_qubits);
+    const std::size_t dim = (1U << num_qubits);
     std::vector<ComplexT> res(dim * dim, ComplexT{});
 
     std::normal_distribution<PrecisionT> dist;
@@ -553,9 +604,9 @@ auto randomUnitary(RandomEngine &re, size_t num_qubits)
     // This algorithm is unstable but works for a small matrix.
     // Use QR decomposition when we have LAPACK support.
 
-    for (size_t row2 = 0; row2 < dim; row2++) {
+    for (std::size_t row2 = 0; row2 < dim; row2++) {
         ComplexT *row2_p = res.data() + row2 * dim;
-        for (size_t row1 = 0; row1 < row2; row1++) {
+        for (std::size_t row1 = 0; row1 < row2; row1++) {
             const ComplexT *row1_p = res.data() + row1 * dim;
             ComplexT dot12 = std::inner_product(
                 row1_p, row1_p + dim, row2_p, std::complex<PrecisionT>(),
@@ -573,7 +624,7 @@ auto randomUnitary(RandomEngine &re, size_t num_qubits)
     }
 
     // Normalize each row
-    for (size_t row = 0; row < dim; row++) {
+    for (std::size_t row = 0; row < dim; row++) {
         ComplexT *row_p = res.data() + row * dim;
         PrecisionT norm2 = std::sqrt(squaredNorm(row_p, dim));
 
@@ -583,6 +634,35 @@ auto randomUnitary(RandomEngine &re, size_t num_qubits)
         });
     }
     return res;
+}
+
+inline auto samples_to_decimal(const std::vector<std::size_t> &samples,
+                               const std::size_t num_qubits,
+                               const std::size_t num_samples)
+    -> std::vector<std::size_t> {
+    constexpr uint32_t twos[] = {
+        1U << 0U,  1U << 1U,  1U << 2U,  1U << 3U,  1U << 4U,  1U << 5U,
+        1U << 6U,  1U << 7U,  1U << 8U,  1U << 9U,  1U << 10U, 1U << 11U,
+        1U << 12U, 1U << 13U, 1U << 14U, 1U << 15U, 1U << 16U, 1U << 17U,
+        1U << 18U, 1U << 19U, 1U << 20U, 1U << 21U, 1U << 22U, 1U << 23U,
+        1U << 24U, 1U << 25U, 1U << 26U, 1U << 27U, 1U << 28U, 1U << 29U,
+        1U << 30U, 1U << 31U};
+
+    std::size_t N = std::pow(2, num_qubits);
+    std::vector<std::size_t> counts(N, 0);
+    std::vector<std::size_t> samples_decimal(num_samples, 0);
+
+    // convert samples to decimal and then bin them in counts
+    for (std::size_t i = 0; i < num_samples; i++) {
+        for (std::size_t j = 0; j < num_qubits; j++) {
+            if (samples[i * num_qubits + j] != 0) {
+                samples_decimal[i] += twos[num_qubits - 1 - j];
+            }
+        }
+        counts[samples_decimal[i]] += 1;
+    }
+
+    return counts;
 }
 
 #define PL_REQUIRE_THROWS_MATCHES(expr, type, message_match)                   \

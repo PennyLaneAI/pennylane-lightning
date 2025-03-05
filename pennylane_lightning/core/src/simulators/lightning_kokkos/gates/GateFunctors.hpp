@@ -13,6 +13,6 @@
 // limitations under the License.
 #pragma once
 
-#include "GateFunctorsGenerator.hpp"
-#include "GateFunctorsNonparam.hpp"
-#include "GateFunctorsParam.hpp"
+#include "BasicGateFunctors.hpp"
+#include "BasicGeneratorFunctors.hpp"
+#include "MatrixGateFunctors.hpp"

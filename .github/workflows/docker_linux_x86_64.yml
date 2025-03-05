@@ -1,0 +1,93 @@
+name: Docker::Linux::x86_64
+
+# **What it does**: Builds Docker images for Linux (ubuntu-22.04) architecture x86_64 and store it as artifacts.
+# **Why we have it**: To build Docker images to be uploaded to Docker Hub.
+# **Who does it impact**: Docker images uploaded to Docker Hub provide yet another way to install and use PennyLane + Lightning. It is especially useful on HPC platforms where environments can be difficult to set up.
+
+on:
+  workflow_dispatch:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. This should be a valid git tag, e.g. v0.36.0.
+      pennylane-version:
+        type: string
+        required: false
+        default: master
+        description: The version of PennyLane to use. This should be a valid git tag, e.g. v0.36.0.
+      push-to-dockerhub:
+        type: boolean
+        required: true
+        description: Push to Docker Hub when done.
+  workflow_call:
+    inputs:
+      lightning-version:
+        type: string
+        required: true
+        description: The version of Lightning to use. This should be a valid git tag, e.g. v0.36.0.
+      pennylane-version:
+        type: string
+        required: false
+        default: master
+        description: The version of PennyLane to use. This should be a valid git tag, e.g. v0.36.0.
+      push-to-dockerhub:
+        type: boolean
+        required: true
+        description: Push to Docker Hub when done.
+
+jobs:
+
+  docker:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        pl_backend: ["lightning-qubit", "lightning-gpu", "lightning-kokkos-openmp", "lightning-kokkos-cuda", "lightning-kokkos-rocm"]
+    timeout-minutes: 180
+    name: docker::${{ matrix.os }}::${{ matrix.pl_backend }}::${{ inputs.lightning-version }}
+    runs-on:
+      group: 'PL Additional Runners'
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and export to Docker
+        uses: docker/build-push-action@v6
+        with:
+          load: true
+          push: false
+          context: .
+          file: docker/Dockerfile
+          tags: test:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
+          target: wheel-${{ matrix.pl_backend }}
+          build-args: |
+            LIGHTNING_VERSION=${{ inputs.lightning-version }}
+            PENNYLANE_VERSION=${{ inputs.pennylane-version }}
+
+      - name: Test
+        run: |
+          docker run --rm test:${{ inputs.lightning-version }}-${{ matrix.pl_backend }}
+
+      - name: Build and push version
+        uses: docker/build-push-action@v6
+        if: ${{ inputs.push-to-dockerhub }}
+        with:
+          push: ${{ inputs.push-to-dockerhub }}
+          context: .
+          file: docker/Dockerfile
+          tags: pennylaneai/pennylane:${{ inputs.lightning-version }}-${{ matrix.pl_backend }},pennylaneai/pennylane:latest-${{ matrix.pl_backend }}
+          target: wheel-${{ matrix.pl_backend }}
+          build-args: |
+            LIGHTNING_VERSION=${{ inputs.lightning-version }}
+            PENNYLANE_VERSION=${{ inputs.pennylane-version }}

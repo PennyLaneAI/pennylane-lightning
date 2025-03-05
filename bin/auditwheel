@@ -9,17 +9,32 @@ from auditwheel.policy import _POLICIES as POLICIES
 
 # Do not include licensed dynamic libraries
 libs = [
-    "libcudart.so.11.0",
+    "libcudart.so",
+    "libcudart.so.11",
+    "libcudart.so.12",
+    "libcublasLt.so",
     "libcublasLt.so.11",
+    "libcublasLt.so.12",
+    "libcublas.so",
     "libcublas.so.11",
+    "libcublas.so.12",
+    "libcusolver.so.11",
+    "libcusolver.so.12",
+    "libcusparse.so",
     "libcusparse.so.11",
+    "libcusparse.so.12",
+    "libcustatevec.so",
+    "libcustatevec.so.0",
     "libcustatevec.so.1",
+    "libcutensor.so.2",
+    "libcutensornet.so.2",
+    "libnvJitLink.so.12",
 ]
 
 print(f"Excluding {libs}")
 
-for p in POLICIES:
-    p["lib_whitelist"].extend(libs)
+for pol in POLICIES:
+    pol["lib_whitelist"].extend(libs)
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <new>
@@ -22,6 +23,9 @@
 #include "TypeList.hpp"
 
 namespace Pennylane::Util {
+// NOLINTBEGIN(cppcoreguidelines-owning-memory, cppcoreguidelines-no-malloc,
+// hicpp-no-malloc)
+
 /**
  * @brief Custom aligned allocate function.
  *
@@ -32,23 +36,28 @@ namespace Pennylane::Util {
  * @param bytes Number of bytes to allocate
  * @return Pointer to the allocated memory
  */
-inline auto alignedAlloc(uint32_t alignment, size_t bytes) -> void * {
+inline auto alignedAlloc(uint32_t alignment, std::size_t bytes,
+                         bool zero_init = false) -> void * {
     if (bytes % alignment != 0) {
         bytes = alignment * (bytes / alignment + 1);
     }
+    void *p = nullptr;
+
 #if defined(__clang__) && defined(__APPLE__)
     /*
      * We use `posix_memalign` for MacOS as Mac does not support
      * `std::aligned_alloc` properly yet (even in MacOS 10.15).
      */
-    void *p;
     posix_memalign(&p, alignment, bytes);
-    return p;
 #elif defined(_MSC_VER)
-    return _aligned_malloc(bytes, alignment);
+    p = _aligned_malloc(bytes, alignment);
 #else
-    return std::aligned_alloc(alignment, bytes);
+    p = std::aligned_alloc(alignment, bytes);
 #endif
+    if (zero_init) {
+        std::memset(p, 0, bytes);
+    }
+    return p;
 }
 
 /**
@@ -62,7 +71,7 @@ inline void alignedFree(void *p) {
 #elif defined(_MSC_VER)
     return _aligned_free(p);
 #else
-    return std::free(p); // NOLINT(hicpp-no-malloc)
+    return std::free(p);
 #endif
 }
 
@@ -76,6 +85,7 @@ inline void alignedFree(void *p) {
  */
 template <class T> class AlignedAllocator {
   private:
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-const-or-ref-data-members)
     const uint32_t alignment_;
 
   public:
@@ -114,7 +124,7 @@ template <class T> class AlignedAllocator {
         if (size == 0) {
             return nullptr;
         }
-        void *p;
+        void *p = nullptr;
         if (alignment_ > alignof(std::max_align_t)) {
             p = alignedAlloc(alignment_, sizeof(T) * size);
         } else {
@@ -149,6 +159,8 @@ template <class T> class AlignedAllocator {
         ptr->~U();
     }
 };
+// NOLINTEND(cppcoreguidelines-owning-memory, cppcoreguidelines-no-malloc,
+// hicpp-no-malloc)
 
 /**
  * @brief Compare two allocators
@@ -197,12 +209,12 @@ struct Undefined {};
 
 ///@cond DEV
 template <class PrecisionT, class TypeList> struct commonAlignmentHelper {
-    constexpr static size_t value = std::max(
+    constexpr static std::size_t value = std::max(
         TypeList::Type::template required_alignment<PrecisionT>,
         commonAlignmentHelper<PrecisionT, typename TypeList::Next>::value);
 };
 template <class PrecisionT> struct commonAlignmentHelper<PrecisionT, void> {
-    constexpr static size_t value = 1;
+    constexpr static std::size_t value = 1;
 };
 /// @endcond
 } // namespace Pennylane::Util

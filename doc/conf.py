@@ -21,6 +21,7 @@ import json
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath(""))
+sys.path.insert(0, os.path.abspath("."))
 sys.path.insert(0, os.path.abspath("_ext"))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath("doc")), "doc"))
 
@@ -92,7 +93,20 @@ extensions = [
     "sphinx.ext.viewcode",
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
+    "sphinxext.opengraph",
 ]
+
+# Open Graph metadata
+ogp_social_cards = {
+    "image": "_static/logo.png",
+    "enable": True,
+    "site_url": "https://docs.pennylane.ai/projects/lightning/",
+    "line_color": "#03b2ff",
+}
+ogp_image = "_static/pennylane_lightning.png"
+
+# The base URL with a proper language and version.
+html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
 
 intersphinx_mapping = {"https://docs.pennylane.ai/en/stable/": None}
 
@@ -175,6 +189,8 @@ today_fmt = "%Y-%m-%d"
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+
+nbsphinx_execute = "never"
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.

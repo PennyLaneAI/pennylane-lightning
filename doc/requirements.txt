@@ -1,3 +1,5 @@
+tomlkit
+build
 breathe
 docutils==0.16
 exhale>=0.3.3
@@ -5,6 +7,15 @@ graphviz
 pybind11
 sphinx
 sphinx-automodapi
+sphinxcontrib-applehelp==1.0.4
+sphinxcontrib-devhelp==1.0.2
+sphinxcontrib-qthelp==1.0.3
+sphinxcontrib-htmlhelp==2.0.1
+sphinxcontrib-serializinghtml==1.1.5
 pennylane-sphinx-theme
-custatevec-cu11
+custatevec-cu12
+cutensornet-cu12
 wheel
+sphinxext-opengraph
+matplotlib
+git+https://github.com/PennyLaneAI/pennylane.git@master

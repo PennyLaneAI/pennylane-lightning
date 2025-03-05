@@ -31,14 +31,37 @@
 #include "Macros.hpp"
 
 namespace Pennylane::Util {
-inline auto createWires(Pennylane::Gates::GateOperation op, size_t num_qubits)
-    -> std::vector<size_t> {
+inline auto createWires(Pennylane::Gates::GateOperation op,
+                        std::size_t num_qubits) -> std::vector<std::size_t> {
     if (array_has_elem(Pennylane::Gates::Constant::multi_qubit_gates, op)) {
-        std::vector<size_t> wires(num_qubits);
+        std::vector<std::size_t> wires(num_qubits);
         std::iota(wires.begin(), wires.end(), 0);
         return wires;
     }
     switch (lookup(Pennylane::Gates::Constant::gate_wires, op)) {
+    case 1:
+        return {0};
+    case 2:
+        return {0, 1};
+    case 3:
+        return {0, 1, 2};
+    case 4:
+        return {0, 1, 2, 3};
+    default:
+        PL_ABORT("The number of wires for a given gate is unknown.");
+    }
+    return {};
+}
+
+inline auto createWires(Pennylane::Gates::ControlledGateOperation op,
+                        std::size_t num_qubits) -> std::vector<std::size_t> {
+    if (array_has_elem(Pennylane::Gates::Constant::controlled_multi_qubit_gates,
+                       op)) {
+        std::vector<std::size_t> wires(num_qubits - 2);
+        std::iota(wires.begin(), wires.end(), 0);
+        return wires;
+    }
+    switch (lookup(Pennylane::Gates::Constant::controlled_gate_wires, op)) {
     case 1:
         return {0};
     case 2:
@@ -73,7 +96,7 @@ auto createParams(Pennylane::Gates::GateOperation op)
 class WiresGenerator {
   public:
     [[nodiscard]] virtual auto all_perms() const
-        -> const std::vector<std::vector<size_t>> & = 0;
+        -> const std::vector<std::vector<std::size_t>> & = 0;
 };
 
 /**
@@ -87,11 +110,11 @@ class WiresGenerator {
  */
 class CombinationGenerator : public WiresGenerator {
   private:
-    std::vector<size_t> v_;
-    std::vector<std::vector<size_t>> all_perms_;
+    std::vector<std::size_t> v_;
+    std::vector<std::vector<std::size_t>> all_perms_;
 
   public:
-    void comb(size_t n, size_t r) {
+    void comb(std::size_t n, std::size_t r) {
         if (r == 0) {
             all_perms_.push_back(v_);
             return;
@@ -106,13 +129,13 @@ class CombinationGenerator : public WiresGenerator {
         comb(n - 1, r);
     }
 
-    CombinationGenerator(size_t n, size_t r) {
+    CombinationGenerator(std::size_t n, std::size_t r) {
         v_.resize(r);
         comb(n, r);
     }
 
     [[nodiscard]] auto all_perms() const
-        -> const std::vector<std::vector<size_t>> & override {
+        -> const std::vector<std::vector<std::size_t>> & override {
         return all_perms_;
     }
 };
@@ -128,17 +151,17 @@ class CombinationGenerator : public WiresGenerator {
  */
 class PermutationGenerator : public WiresGenerator {
   private:
-    std::vector<std::vector<size_t>> all_perms_;
-    std::vector<size_t> available_elems_;
-    std::vector<size_t> v;
+    std::vector<std::vector<std::size_t>> all_perms_;
+    std::vector<std::size_t> available_elems_;
+    std::vector<std::size_t> v;
 
   public:
-    void perm(size_t n, size_t r) {
+    void perm(std::size_t n, std::size_t r) {
         if (r == 0) {
             all_perms_.push_back(v);
             return;
         }
-        for (size_t i = 0; i < n; i++) {
+        for (std::size_t i = 0; i < n; i++) {
             v[r - 1] = available_elems_[i];
             std::swap(available_elems_[n - 1], available_elems_[i]);
             perm(n - 1, r - 1);
@@ -146,7 +169,7 @@ class PermutationGenerator : public WiresGenerator {
         }
     }
 
-    PermutationGenerator(size_t n, size_t r) {
+    PermutationGenerator(std::size_t n, std::size_t r) {
         v.resize(r);
 
         available_elems_.resize(n);
@@ -155,7 +178,7 @@ class PermutationGenerator : public WiresGenerator {
     }
 
     [[nodiscard]] auto all_perms() const
-        -> const std::vector<std::vector<size_t>> & override {
+        -> const std::vector<std::vector<std::size_t>> & override {
         return all_perms_;
     }
 };
@@ -168,19 +191,20 @@ class PermutationGenerator : public WiresGenerator {
  * @param gate_op Gate operation
  * @param order Whether the ordering matters (if true, permutation is used)
  */
-auto inline createAllWires(size_t n_qubits,
+auto inline createAllWires(std::size_t n_qubits,
                            Pennylane::Gates::GateOperation gate_op, bool order)
-    -> std::vector<std::vector<size_t>> {
+    -> std::vector<std::vector<std::size_t>> {
     if (array_has_elem(Pennylane::Gates::Constant::multi_qubit_gates,
                        gate_op)) {
         // make all possible 2^N permutations
-        std::vector<std::vector<size_t>> res;
+        std::vector<std::vector<std::size_t>> res;
         res.reserve((1U << n_qubits) - 1);
-        for (size_t k = 1; k < (static_cast<size_t>(1U) << n_qubits); k++) {
-            std::vector<size_t> wires;
+        for (std::size_t k = 1; k < (static_cast<std::size_t>(1U) << n_qubits);
+             k++) {
+            std::vector<std::size_t> wires;
             wires.reserve(std::popcount(k));
 
-            for (size_t i = 0; i < n_qubits; i++) {
+            for (std::size_t i = 0; i < n_qubits; i++) {
                 if (((k >> i) & 1U) == 1U) {
                     wires.emplace_back(i);
                 }
@@ -190,7 +214,7 @@ auto inline createAllWires(size_t n_qubits,
         }
         return res;
     } // else
-    const size_t n_wires =
+    const std::size_t n_wires =
         lookup(Pennylane::Gates::Constant::gate_wires, gate_op);
     if (order) {
         return PermutationGenerator(n_qubits, n_wires).all_perms();

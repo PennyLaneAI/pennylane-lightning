@@ -10,12 +10,12 @@ jobs:
 
     steps:
       - name: Checkout PennyLane-Lightning
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
@@ -29,11 +29,11 @@ jobs:
           --changelog_path "./.github/CHANGELOG.md" --post_release
 
       - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
+        uses: peter-evans/create-pull-request@v7
         with:
           commit-message: post release version bump
           title: Version Bump
           body: updated changelog and _version.py
           branch: post-release-version-bump
-          reviewers: mlxd
+          reviewers: tomlqc, maliasadi
           base: master

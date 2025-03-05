@@ -29,7 +29,7 @@
 #include <utility>
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
-template <typename PrecisionT, size_t packed_size> struct ApplyCY {
+template <typename PrecisionT, std::size_t packed_size> struct ApplyCY {
     using Precision = PrecisionT;
     using PrecisionAVXConcept = AVXConceptType<PrecisionT, packed_size>;
 
@@ -40,11 +40,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * @brief Permutation for multiplying `i` and flip the target bit if control
      * is 1
      */
-    template <size_t control, size_t target>
+    template <std::size_t control, std::size_t target>
     static consteval auto applyInternalInternalPermuation() {
         std::array<uint8_t, packed_size> perm{};
-
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 perm[2 * k + 0] = 2 * (k ^ (1U << target)) + 1;
                 perm[2 * k + 1] = 2 * (k ^ (1U << target)) + 0;
@@ -59,11 +58,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     /**
      * @brief Factor to applying `-i` and `i`
      */
-    template <size_t control, size_t target>
+    template <std::size_t control, std::size_t target>
     static consteval auto applyInternalInternalFactor() {
         std::array<PrecisionT, packed_size> signs{};
-        // positions are after permutations
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {    // if control bit is 1
                 if ((k >> target) & 1U) { // if target bit is 1 (was 0) == -> i
                     signs[2 * k + 0] = Precision{-1.0};
@@ -80,16 +78,16 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         return setValue(signs);
     }
 
-    template <size_t control, size_t target>
+    template <std::size_t control, std::size_t target>
     static void applyInternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits,
+                                      std::size_t num_qubits,
                                       [[maybe_unused]] bool inverse) {
         constexpr static auto perm =
             applyInternalInternalPermuation<control, target>();
         constexpr static auto factor =
             applyInternalInternalFactor<control, target>();
-
-        for (size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t n = 0; n < exp2(num_qubits); n += packed_size / 2) {
             const auto v = PrecisionAVXConcept::load(arr + n);
             PrecisionAVXConcept::store(arr + n,
                                        factor * Permutation::permute<perm>(v));
@@ -100,10 +98,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * @brief Mask for blending. Using this mask, blending v0 and v1 will output
      * v0 if the control bit is 0 v1 otherwise.
      */
-    template <size_t control>
+    template <std::size_t control>
     static consteval auto applyInternalExternalMask() {
         std::array<bool, packed_size> mask{};
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 mask[2 * k + 0] = true;
                 mask[2 * k + 1] = true;
@@ -115,10 +113,10 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     /**
      * @brief Permutation when the target bit is 1
      */
-    template <size_t control>
+    template <std::size_t control>
     static consteval auto applyInternalExternalPermutation() {
         std::array<uint8_t, packed_size> permutation{};
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) { // if control bit is 1
                 permutation[2 * k + 0] = 2 * k + 1;
                 permutation[2 * k + 1] = 2 * k + 0;
@@ -133,13 +131,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     /**
      * @brief Sign factor when the target bit is 0
      */
-    template <size_t control>
+    template <std::size_t control>
     static consteval auto applyInternalExternalSign_target0() {
         // Signs when the target is 0
         std::array<Precision, packed_size> signs = {
             1.0,
         };
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 signs[2 * k + 0] = 1.0;
                 signs[2 * k + 1] = -1.0;
@@ -154,13 +152,13 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     /**
      * @brief Sign factor when the target bit is 1
      */
-    template <size_t control>
+    template <std::size_t control>
     static consteval auto applyInternalExternalSign_target1() {
         // Signs when the target is 1
         std::array<Precision, packed_size> signs = {
             1.0,
         };
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> control) & 1U) {
                 signs[2 * k + 0] = -1.0;
                 signs[2 * k + 1] = 1.0;
@@ -177,17 +175,17 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
      * on internal wires (inside of packed bytes) but the target acts on
      * external wires.
      */
-    template <size_t control>
-    static void applyInternalExternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t target,
-                                      [[maybe_unused]] bool inverse) {
+    template <std::size_t control>
+    static void
+    applyInternalExternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          std::size_t target, [[maybe_unused]] bool inverse) {
         // control qubit is internal but target qubit is external
         using namespace Permutation;
 
-        const size_t target_rev_wire_shift =
-            (static_cast<size_t>(1U) << target);
-        const size_t target_wire_parity = fillTrailingOnes(target);
-        const size_t target_wire_parity_inv = fillLeadingOnes(target + 1);
+        const std::size_t target_rev_wire_shift =
+            (static_cast<std::size_t>(1U) << target);
+        const std::size_t target_wire_parity = fillTrailingOnes(target);
+        const std::size_t target_wire_parity_inv = fillLeadingOnes(target + 1);
 
         constexpr static auto mask = applyInternalExternalMask<control>();
         constexpr static auto perm =
@@ -197,11 +195,12 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
             applyInternalExternalSign_target0<control>();
         constexpr static auto sign1 =
             applyInternalExternalSign_target1<control>();
-
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
-            const size_t i0 =
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
+            const std::size_t i0 =
                 ((k << 1U) & target_wire_parity_inv) | (target_wire_parity & k);
-            const size_t i1 = i0 | target_rev_wire_shift;
+            const std::size_t i1 = i0 | target_rev_wire_shift;
 
             const auto v0 = PrecisionAVXConcept::load(arr + i0); // target is 0
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // target is 1
@@ -217,11 +216,12 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     /**
      * @brief Sign factor when the control bit is 1.
      */
-    template <size_t target> static consteval auto applyExternalInternalSign() {
+    template <std::size_t target>
+    static consteval auto applyExternalInternalSign() {
         std::array<Precision, packed_size> signs = {
             1.0,
         };
-        for (size_t k = 0; k < packed_size / 2; k++) {
+        for (std::size_t k = 0; k < packed_size / 2; k++) {
             if ((k >> target) & 1U) { // target is 1 (was 0)
                 signs[2 * k + 0] = -1.0;
                 signs[2 * k + 1] = 1.0;
@@ -233,25 +233,27 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
         return setValue(signs);
     }
 
-    template <size_t target>
-    static void applyExternalInternal(std::complex<PrecisionT> *arr,
-                                      size_t num_qubits, size_t control,
-                                      [[maybe_unused]] bool inverse) {
+    template <std::size_t target>
+    static void
+    applyExternalInternal(std::complex<PrecisionT> *arr, std::size_t num_qubits,
+                          std::size_t control, [[maybe_unused]] bool inverse) {
         // control qubit is external but target qubit is external
         using namespace Permutation;
 
-        const size_t control_shift = (static_cast<size_t>(1U) << control);
-        const size_t max_wire_parity = fillTrailingOnes(control);
-        const size_t max_wire_parity_inv = fillLeadingOnes(control + 1);
+        const std::size_t control_shift =
+            (static_cast<std::size_t>(1U) << control);
+        const std::size_t max_wire_parity = fillTrailingOnes(control);
+        const std::size_t max_wire_parity_inv = fillLeadingOnes(control + 1);
 
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(flip(identity<packed_size>(), target)));
         constexpr static auto factor = applyExternalInternalSign<target>();
-
-        for (size_t k = 0; k < exp2(num_qubits - 1); k += packed_size / 2) {
-            const size_t i0 =
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t k = 0; k < exp2(num_qubits - 1);
+             k += packed_size / 2) {
+            const std::size_t i0 =
                 ((k << 1U) & max_wire_parity_inv) | (max_wire_parity & k);
-            const size_t i1 = i0 | control_shift;
+            const std::size_t i1 = i0 | control_shift;
 
             const auto v1 = PrecisionAVXConcept::load(arr + i1); // control is 1
             const auto w1 = Permutation::permute<perm>(v1);
@@ -260,30 +262,34 @@ template <typename PrecisionT, size_t packed_size> struct ApplyCY {
     }
 
     static void applyExternalExternal(std::complex<PrecisionT> *arr,
-                                      const size_t num_qubits,
-                                      const size_t control, const size_t target,
+                                      const std::size_t num_qubits,
+                                      const std::size_t control,
+                                      const std::size_t target,
                                       [[maybe_unused]] bool inverse) {
         using namespace Permutation;
-        const size_t control_shift = static_cast<size_t>(1U) << control;
-        const size_t target_shift = static_cast<size_t>(1U) << target;
+        const std::size_t control_shift = static_cast<std::size_t>(1U)
+                                          << control;
+        const std::size_t target_shift = static_cast<std::size_t>(1U) << target;
 
-        const size_t rev_wire_min = std::min(control, target);
-        const size_t rev_wire_max = std::max(control, target);
+        const std::size_t rev_wire_min = std::min(control, target);
+        const std::size_t rev_wire_max = std::max(control, target);
 
-        const size_t parity_low = fillTrailingOnes(rev_wire_min);
-        const size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
-        const size_t parity_middle =
+        const std::size_t parity_low = fillTrailingOnes(rev_wire_min);
+        const std::size_t parity_high = fillLeadingOnes(rev_wire_max + 1);
+        const std::size_t parity_middle =
             fillLeadingOnes(rev_wire_min + 1) & fillTrailingOnes(rev_wire_max);
 
         constexpr static auto perm = compilePermutation<Precision>(
             swapRealImag(identity<packed_size>()));
         constexpr static auto factor = imagFactor<PrecisionT, packed_size>();
-
-        for (size_t k = 0; k < exp2(num_qubits - 2); k += packed_size / 2) {
-            const size_t i00 = ((k << 2U) & parity_high) |
-                               ((k << 1U) & parity_middle) | (k & parity_low);
-            const size_t i10 = i00 | control_shift;
-            const size_t i11 = i00 | control_shift | target_shift;
+        PL_LOOP_PARALLEL(1)
+        for (std::size_t k = 0; k < exp2(num_qubits - 2);
+             k += packed_size / 2) {
+            const std::size_t i00 = ((k << 2U) & parity_high) |
+                                    ((k << 1U) & parity_middle) |
+                                    (k & parity_low);
+            const std::size_t i10 = i00 | control_shift;
+            const std::size_t i11 = i00 | control_shift | target_shift;
 
             const auto v10 = PrecisionAVXConcept::load(arr + i10); // 10
             const auto v11 = PrecisionAVXConcept::load(arr + i11); // 11

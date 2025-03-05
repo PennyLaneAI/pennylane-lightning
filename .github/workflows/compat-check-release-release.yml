@@ -1,38 +1,51 @@
 name: Compat Check w/PL - release/release
 
 on:
-  schedule:
-    - cron: "0 4 * * 1-5"  # Run daily at 0am Mon-Fri
   workflow_dispatch:
+  schedule:
+    - cron: "0 5 * * 0-6"  # Run daily at 5am UTC everyday
 
 jobs:
-  tests_linux:
-    name: Lightning Compatibility test (tests_linux) - release/release
-    uses: ./.github/workflows/tests_linux.yml
+  tests_gpu_python:
+    name: Lightning Compatibility test (tests_gpu_python) - release/release
+    uses: ./.github/workflows/tests_gpu_python.yml
     with:
       lightning-version: release
       pennylane-version: release
-  tests_lkokkos_gpu:
-    name: Lightning Compatibility test (tests_lkokkos_gpu) - release/release
-    uses: ./.github/workflows/tests_gpu_kokkos.yml
+    secrets: inherit
+  tests_lgpumpi_python:
+    name: Lightning Compatibility test (tests_lgpumpi_python) - release/release
+    uses: ./.github/workflows/tests_lgpumpi_python.yml
     with:
       lightning-version: release
       pennylane-version: release
-  tests_lgpu_gpu:
-    name: Lightning Compatibility test (tests_lgpu_gpu) - release/release
-    uses: ./.github/workflows/tests_gpu_cu11.yml
+    secrets: inherit
+  tests_lqcpu_python:
+    name: Lightning Compatibility test (tests_lqcpu_python) - release/release
+    uses: ./.github/workflows/tests_lqcpu_python.yml
     with:
       lightning-version: release
       pennylane-version: release
-  tests_lgpu_gpu_mpi:
-    name: Lightning Compatibility test (tests_lgpu_gpu_mpi) - release/release
-    uses: ./.github/workflows/tests_linux_x86_mpi_gpu.yml
+    secrets: inherit
+  tests_lkcpu_python:
+    name: Lightning Compatibility test (tests_lkcpu_python) - release/release
+    uses: ./.github/workflows/tests_lkcpu_python.yml
     with:
       lightning-version: release
       pennylane-version: release
+    secrets: inherit
+  tests_lkcuda_python:
+    name: Lightning Compatibility test (tests_lkcuda_python) - release/release
+    uses: ./.github/workflows/tests_lkcuda_python.yml
+    with:
+      lightning-version: release
+      pennylane-version: release
+    secrets: inherit
   tests_without_binary:
     name: Lightning Compatibility test (tests_without_binary) - release/release
     uses: ./.github/workflows/tests_without_binary.yml
     with:
       lightning-version: release
       pennylane-version: release
+    secrets: inherit
+

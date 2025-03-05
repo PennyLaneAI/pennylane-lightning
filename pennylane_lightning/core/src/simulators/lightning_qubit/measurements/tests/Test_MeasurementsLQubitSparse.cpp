@@ -55,11 +55,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values - Sparse Hamiltonian",
     Measurements<StateVectorT> Measurer(statevector);
 
     SECTION("Testing Sparse Hamiltonian:") {
-        size_t num_qubits = 3;
-        size_t data_size = Pennylane::Util::exp2(num_qubits);
+        std::size_t num_qubits = 3;
+        std::size_t data_size = Pennylane::Util::exp2(num_qubits);
 
-        std::vector<size_t> row_map;
-        std::vector<size_t> entries;
+        std::vector<std::size_t> row_map;
+        std::vector<std::size_t> entries;
         std::vector<ComplexT> values;
         write_CSR_vectors(row_map, entries, values, data_size);
 
@@ -77,11 +77,11 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values - Sparse Hamiltonian",
     }
 
     SECTION("Testing Sparse Hamiltonian (incompatible sizes):") {
-        size_t num_qubits = 4;
-        size_t data_size = Pennylane::Util::exp2(num_qubits);
+        std::size_t num_qubits = 4;
+        std::size_t data_size = Pennylane::Util::exp2(num_qubits);
 
-        std::vector<size_t> row_map;
-        std::vector<size_t> entries;
+        std::vector<std::size_t> row_map;
+        std::vector<std::size_t> entries;
         std::vector<ComplexT> values;
         write_CSR_vectors(row_map, entries, values, data_size);
 

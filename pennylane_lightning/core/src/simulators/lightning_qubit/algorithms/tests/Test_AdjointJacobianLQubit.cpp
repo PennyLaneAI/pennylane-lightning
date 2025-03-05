@@ -51,11 +51,11 @@ TEMPLATE_PRODUCT_TEST_CASE(
         HamiltonianApplyInPlace;
 
     std::vector<PrecisionT> param{-M_PI / 7, M_PI / 5, 2 * M_PI / 3};
-    std::vector<size_t> t_params{0, 2};
+    std::vector<std::size_t> t_params{0, 2};
 
     std::mt19937 re{1337};
-    const size_t num_qubits = 8;
-    const size_t n_terms = 1024;
+    const std::size_t num_qubits = 8;
+    const std::size_t n_terms = 1024;
 
     std::array<std::string_view, 4> pauli_strs = {""sv, "PauliX"sv, "PauliY"sv,
                                                   "PauliZ"sv};
@@ -65,15 +65,15 @@ TEMPLATE_PRODUCT_TEST_CASE(
 
     std::uniform_real_distribution<PrecisionT> dist(-1.0, 1.0);
 
-    for (size_t k = 0; k < n_terms; k++) {
+    for (std::size_t k = 0; k < n_terms; k++) {
         auto term_pauli = randomIntVector(re, num_qubits, 0, 3);
 
         std::vector<std::shared_ptr<Observable<StateVectorT>>> term_comp;
-        for (size_t i = 0; i < num_qubits; i++) {
+        for (std::size_t i = 0; i < num_qubits; i++) {
             if (term_pauli[i] == 0) {
                 continue;
             }
-            auto wires = std::vector<size_t>();
+            auto wires = std::vector<std::size_t>();
             wires.emplace_back(i);
             auto ob = std::make_shared<NamedObs<StateVectorT>>(
                 std::string{pauli_strs[term_pauli[i]]}, wires);
@@ -83,7 +83,7 @@ TEMPLATE_PRODUCT_TEST_CASE(
         coeffs.emplace_back(dist(re));
         terms.emplace_back(TensorProdObs<StateVectorT>::create(term_comp));
     }
-    std::vector<ComplexT> psi(size_t{1} << num_qubits);
+    std::vector<ComplexT> psi(std::size_t{1} << num_qubits);
     std::normal_distribution<PrecisionT> ndist;
     for (auto &e : psi) {
         e = ndist(re);

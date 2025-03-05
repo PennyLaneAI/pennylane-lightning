@@ -16,12 +16,12 @@ Unit tests for Sparse Measurements Lightning devices.
 """
 # pylint: disable=protected-access,too-few-public-methods,unused-import,missing-function-docstring,too-many-arguments
 
-import pytest
-from conftest import device_name, LightningDevice as ld
-from mpi4py import MPI
-
 import numpy as np
 import pennylane as qml
+import pytest
+from conftest import LightningDevice as ld
+from conftest import device_name
+from mpi4py import MPI
 from pennylane import qchem
 
 if not ld._CPP_BINARY_AVAILABLE:

@@ -14,7 +14,7 @@ You can also check the Lightning-plugins documentation:
 ## Download & install
 
 Each image contains PennyLane and one of several high-performance plugins.
-Choose a version (e.g. `0.32.0`) and append a device (plugin) name among the following:
+Choose a version (e.g. `v0.34.0`) and append a device (plugin) name among the following:
 
 - `lightning-qubit`: [pennylane-lightning](https://github.com/PennyLaneAI/pennylane-lightning) provides a fast state-vector simulator written in C++.
 - `lightning-gpu`: [pennylane-lightning-gpu](https://github.com/PennyLaneAI/pennylane-lightning-gpu) is a plugin based on the NVIDIA [cuQuantum SDK](https://developer.nvidia.com/cuquantum-sdk).
@@ -25,7 +25,7 @@ Choose a version (e.g. `0.32.0`) and append a device (plugin) name among the fol
 If you have Docker installed, download and spawn a container with `pennylane-lightning` as follows
 
 ```shell
-docker run -v pwd:/io -it pennylaneai/pennylane:0.32.0-lightning-qubit bash
+docker run -v pwd:/io -it pennylaneai/pennylane:v0.34.0-lightning-qubit bash
 ```
 
 On certain systems, there may be other solutions supporting Docker containers.
@@ -33,8 +33,8 @@ For instance, NERSC computers (e.g. Perlmutter) have [Shifter](https://docs.ners
 In this case, spawning a container is simple as
 
 ```shell
-shifterimg pull pennylaneai/pennylane:0.32.0-lightning-qubit
-shifter --image=pennylaneai/pennylane:0.32.0-lightning-qubit /bin/bash
+shifterimg pull pennylaneai/pennylane:v0.34.0-lightning-qubit
+shifter --image=pennylaneai/pennylane:v0.34.0-lightning-qubit /bin/bash
 ```
 
 where the first command downloads the image and the second spawns a container.
@@ -66,6 +66,12 @@ Then the following command will build the target
 
 ```shell
 docker build -f docker/Dockerfile --tag=${TARGET} --target ${TARGET} .
+```
+
+You may also feed a git tag or version as follows
+
+```shell
+docker build -f docker/Dockerfile --tag=${TARGET} --target ${TARGET} --build-arg="LIGHTNING_VERSION=${VERSION}" .
 ```
 
 To start a container with a `bash` shell use

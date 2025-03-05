@@ -14,6 +14,12 @@
 #include "cuError.hpp"
 #include <cuComplex.h>
 
+#include "cuda_helpers.hpp"
+namespace {
+using Pennylane::LightningGPU::Util::Cmul;
+using Pennylane::LightningGPU::Util::Conj;
+} // namespace
+
 namespace Pennylane::LightningGPU {
 
 /**
@@ -29,11 +35,11 @@ namespace Pennylane::LightningGPU {
  * @param stream_id Stream id of CUDA calls
  */
 void setStateVector_CUDA(cuComplex *sv, int &num_indices, cuComplex *value,
-                         int *indices, size_t thread_per_block,
+                         int *indices, std::size_t thread_per_block,
                          cudaStream_t stream_id);
 void setStateVector_CUDA(cuDoubleComplex *sv, long &num_indices,
                          cuDoubleComplex *value, long *indices,
-                         size_t thread_per_block, cudaStream_t stream_id);
+                         std::size_t thread_per_block, cudaStream_t stream_id);
 
 /**
  * @brief Explicitly set basis state data on GPU device from the input values
@@ -45,13 +51,15 @@ void setStateVector_CUDA(cuDoubleComplex *sv, long &num_indices,
  * @param async Use an asynchronous memory copy.
  * @param stream_id Stream id of CUDA calls
  */
-void setBasisState_CUDA(cuComplex *sv, cuComplex &value, const size_t index,
-                        bool async, cudaStream_t stream_id);
+void setBasisState_CUDA(cuComplex *sv, cuComplex &value,
+                        const std::size_t index, bool async,
+                        cudaStream_t stream_id);
 void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
-                        const size_t index, bool async, cudaStream_t stream_id);
+                        const std::size_t index, bool async,
+                        cudaStream_t stream_id);
 
 /**
- * @brief The CUDA kernel that setS state vector data on GPU device from the
+ * @brief The CUDA kernel that sets state vector data on GPU device from the
  * input values (on device) and their corresponding indices (on device)
  * information.
  *
@@ -69,6 +77,7 @@ __global__ void setStateVectorkernel(GPUDataT *sv, index_type num_indices,
         sv[indices[i]] = value[i];
     }
 }
+
 /**
  * @brief The CUDA kernel call wrapper.
  *
@@ -83,10 +92,11 @@ __global__ void setStateVectorkernel(GPUDataT *sv, index_type num_indices,
 template <class GPUDataT, class index_type>
 void setStateVector_CUDA_call(GPUDataT *sv, index_type &num_indices,
                               GPUDataT *value, index_type *indices,
-                              size_t thread_per_block, cudaStream_t stream_id) {
+                              std::size_t thread_per_block,
+                              cudaStream_t stream_id) {
     auto dv = std::div(num_indices, thread_per_block);
-    size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
-    const size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
+    std::size_t num_blocks = dv.quot + (dv.rem == 0 ? 0 : 1);
+    const std::size_t block_per_grid = (num_blocks == 0 ? 1 : num_blocks);
     dim3 blockSize(thread_per_block, 1, 1);
     dim3 gridSize(block_per_grid, 1);
 
@@ -95,6 +105,7 @@ void setStateVector_CUDA_call(GPUDataT *sv, index_type &num_indices,
                                                 indices);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
 }
+
 /**
  * @brief CUDA runtime API call wrapper.
  *
@@ -105,8 +116,9 @@ void setStateVector_CUDA_call(GPUDataT *sv, index_type &num_indices,
  * @param stream_id Stream id of CUDA calls
  */
 template <class GPUDataT>
-void setBasisState_CUDA_call(GPUDataT *sv, GPUDataT &value, const size_t index,
-                             bool async, cudaStream_t stream_id) {
+void setBasisState_CUDA_call(GPUDataT *sv, GPUDataT &value,
+                             const std::size_t index, bool async,
+                             cudaStream_t stream_id) {
     if (!async) {
         PL_CUDA_IS_SUCCESS(cudaMemcpy(&sv[index], &value, sizeof(GPUDataT),
                                       cudaMemcpyHostToDevice));
@@ -118,26 +130,26 @@ void setBasisState_CUDA_call(GPUDataT *sv, GPUDataT &value, const size_t index,
 
 // Definitions
 void setStateVector_CUDA(cuComplex *sv, int &num_indices, cuComplex *value,
-                         int *indices, size_t thread_per_block,
+                         int *indices, std::size_t thread_per_block,
                          cudaStream_t stream_id) {
     setStateVector_CUDA_call(sv, num_indices, value, indices, thread_per_block,
                              stream_id);
 }
 void setStateVector_CUDA(cuDoubleComplex *sv, long &num_indices,
                          cuDoubleComplex *value, long *indices,
-                         size_t thread_per_block, cudaStream_t stream_id) {
+                         std::size_t thread_per_block, cudaStream_t stream_id) {
     setStateVector_CUDA_call(sv, num_indices, value, indices, thread_per_block,
                              stream_id);
 }
 
-void setBasisState_CUDA(cuComplex *sv, cuComplex &value, const size_t index,
-                        bool async, cudaStream_t stream_id) {
-    setBasisState_CUDA_call(sv, value, index, async, stream_id);
-}
-void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
-                        const size_t index, bool async,
+void setBasisState_CUDA(cuComplex *sv, cuComplex &value,
+                        const std::size_t index, bool async,
                         cudaStream_t stream_id) {
     setBasisState_CUDA_call(sv, value, index, async, stream_id);
 }
-
+void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
+                        const std::size_t index, bool async,
+                        cudaStream_t stream_id) {
+    setBasisState_CUDA_call(sv, value, index, async, stream_id);
+}
 } // namespace Pennylane::LightningGPU

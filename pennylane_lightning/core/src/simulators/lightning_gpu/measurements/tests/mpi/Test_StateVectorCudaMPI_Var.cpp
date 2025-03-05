@@ -43,11 +43,11 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -60,7 +60,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliX[0])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -77,7 +76,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliY[0])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -94,7 +92,6 @@ TEMPLATE_TEST_CASE("Test variance of NamedObs", "[StateVectorCudaMPI_Var]",
     SECTION("var(PauliZ[1])") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -118,11 +115,11 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -135,7 +132,6 @@ TEMPLATE_TEST_CASE("Test variance of HermitianObs", "[StateVectorCudaMPI_Var]",
     SECTION("Using var") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -171,11 +167,11 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -188,7 +184,6 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
     SECTION("Using var") {
         StateVectorT sv(mpi_manager, dt_local, mpi_buffersize, nGlobalIndexBits,
                         nLocalIndexBits);
-        sv.initSV();
 
         auto m = MeasurementsMPI(sv);
 
@@ -197,9 +192,9 @@ TEMPLATE_TEST_CASE("Test variance of TensorProdObs", "[StateVectorCudaMPI_Var]",
             {{false}, {false}, {false}, {false}}, {{0.5}, {0.5}, {0.2}, {0.2}});
 
         auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = TensorProdObsMPI<StateVectorT>::create({X0, Z1});
         auto res = m.var(*ob);
@@ -216,11 +211,11 @@ TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
     MPIManager mpi_manager(MPI_COMM_WORLD);
     REQUIRE(mpi_manager.getSize() == 2);
 
-    size_t mpi_buffersize = 1;
+    std::size_t mpi_buffersize = 1;
 
-    size_t nGlobalIndexBits =
-        std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;
-    size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
+    std::size_t nGlobalIndexBits =
+        std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) - 1;
+    std::size_t nLocalIndexBits = num_qubits - nGlobalIndexBits;
 
     int nDevices = 0;
     cudaGetDeviceCount(&nDevices);
@@ -245,9 +240,9 @@ TEMPLATE_TEST_CASE("Test variance of HamiltonianObs",
         auto m = MeasurementsMPI(sv);
 
         auto X0 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliX", std::vector<size_t>{0});
+            "PauliX", std::vector<std::size_t>{0});
         auto Z1 = std::make_shared<NamedObsMPI<StateVectorT>>(
-            "PauliZ", std::vector<size_t>{1});
+            "PauliZ", std::vector<std::size_t>{1});
 
         auto ob = HamiltonianMPI<StateVectorT>::create({0.3, 0.5}, {X0, Z1});
         auto res = m.var(*ob);

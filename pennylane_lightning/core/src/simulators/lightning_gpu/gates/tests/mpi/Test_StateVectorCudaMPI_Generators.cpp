@@ -65,12 +65,13 @@ using namespace Pennylane::LightningGPU::MPI;
         using PrecisionT = TestType;                                           \
         MPIManager mpi_manager(MPI_COMM_WORLD);                                \
         REQUIRE(mpi_manager.getSize() == 2);                                   \
-        size_t mpi_buffersize = 1;                                             \
-        size_t nGlobalIndexBits =                                              \
-            std::bit_width(static_cast<size_t>(mpi_manager.getSize())) - 1;    \
-        size_t nLocalIndexBits = (NUM_QUBITS)-nGlobalIndexBits;                \
-        size_t subSvLength = 1 << nLocalIndexBits;                             \
-        size_t svLength = 1 << (NUM_QUBITS);                                   \
+        std::size_t mpi_buffersize = 1;                                        \
+        std::size_t nGlobalIndexBits =                                         \
+            std::bit_width(static_cast<std::size_t>(mpi_manager.getSize())) -  \
+            1;                                                                 \
+        std::size_t nLocalIndexBits = (NUM_QUBITS)-nGlobalIndexBits;           \
+        std::size_t subSvLength = 1 << nLocalIndexBits;                        \
+        std::size_t svLength = 1 << (NUM_QUBITS);                              \
         mpi_manager.Barrier();                                                 \
         std::vector<cp_t> expected_sv(svLength);                               \
         std::vector<cp_t> local_state(subSvLength);                            \

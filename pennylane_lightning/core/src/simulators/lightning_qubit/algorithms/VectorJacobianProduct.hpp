@@ -90,7 +90,7 @@ class VectorJacobianProduct final
         const std::vector<std::string> &ops_name = ops.getOpsName();
 
         // We can assume the trainable params are sorted (from Python)
-        const size_t num_param_ops = ops.getNumParOps();
+        const std::size_t num_param_ops = ops.getNumParOps();
         const auto &trainable_params = jd.getTrainableParams();
 
         PL_ABORT_IF_NOT(jac.size() == trainable_params.size(),
@@ -111,17 +111,16 @@ class VectorJacobianProduct final
 
         const auto tp_rend = trainable_params.rend();
         auto tp_it = trainable_params.rbegin();
-        size_t current_param_idx =
+        std::size_t current_param_idx =
             num_param_ops - 1; // total number of parametric ops
-        size_t trainable_param_idx = trainable_params.size() - 1;
+        std::size_t trainable_param_idx = trainable_params.size() - 1;
 
         for (int op_idx = static_cast<int>(ops_name.size() - 1); op_idx >= 0;
              op_idx--) {
             PL_ABORT_IF(ops.getOpsParams()[op_idx].size() > 1,
                         "The operation is not supported using the adjoint "
                         "differentiation method");
-            if ((ops_name[op_idx] == "QubitStateVector") ||
-                (ops_name[op_idx] == "StatePrep") ||
+            if ((ops_name[op_idx] == "StatePrep") ||
                 (ops_name[op_idx] == "BasisState")) {
                 continue; // ignore them
             }
@@ -135,10 +134,18 @@ class VectorJacobianProduct final
                     // if current parameter is a trainable parameter
                     mu_d.updateData(mu.getDataVector());
                     const auto scalingFactor =
-                        mu_d.applyGenerator(ops_name[op_idx],
-                                            ops.getOpsWires()[op_idx],
-                                            !ops.getOpsInverses()[op_idx]) *
-                        (ops.getOpsInverses()[op_idx] ? -1 : 1);
+                        (ops.getOpsControlledWires()[op_idx].empty())
+                            ? mu_d.applyGenerator(
+                                  ops_name[op_idx], ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1)
+                            : mu_d.applyGenerator(
+                                  ops_name[op_idx],
+                                  ops.getOpsControlledWires()[op_idx],
+                                  ops.getOpsControlledValues()[op_idx],
+                                  ops.getOpsWires()[op_idx],
+                                  !ops.getOpsInverses()[op_idx]) *
+                                  (ops.getOpsInverses()[op_idx] ? -1 : 1);
 
                     jac[trainable_param_idx] =
                         ComplexT{0.0, scalingFactor} *
@@ -149,8 +156,9 @@ class VectorJacobianProduct final
                 }
                 --current_param_idx;
             }
-            this->applyOperationAdj(lambda, ops, static_cast<size_t>(op_idx));
-            this->applyOperationAdj(mu, ops, static_cast<size_t>(op_idx));
+            this->applyOperationAdj(lambda, ops,
+                                    static_cast<std::size_t>(op_idx));
+            this->applyOperationAdj(mu, ops, static_cast<std::size_t>(op_idx));
         }
     }
 };

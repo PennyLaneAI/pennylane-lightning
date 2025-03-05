@@ -26,7 +26,7 @@
 #include "GateOperation.hpp"
 #include "MeasurementsLQubit.hpp"
 #include "ObservablesLQubit.hpp"
-#include "StateVectorLQubitRaw.hpp"
+#include "StateVectorLQubitManaged.hpp"
 #include "TypeList.hpp"
 #include "VectorJacobianProduct.hpp"
 
@@ -36,7 +36,7 @@ using namespace Pennylane::Bindings;
 using namespace Pennylane::LightningQubit::Algorithms;
 using namespace Pennylane::LightningQubit::Measures;
 using namespace Pennylane::LightningQubit::Observables;
-using Pennylane::LightningQubit::StateVectorLQubitRaw;
+using Pennylane::LightningQubit::StateVectorLQubitManaged;
 } // namespace
 /// @endcond
 
@@ -44,8 +44,8 @@ namespace py = pybind11;
 
 namespace Pennylane::LightningQubit {
 using StateVectorBackends =
-    Pennylane::Util::TypeList<StateVectorLQubitRaw<float>,
-                              StateVectorLQubitRaw<double>, void>;
+    Pennylane::Util::TypeList<StateVectorLQubitManaged<float>,
+                              StateVectorLQubitManaged<double>, void>;
 
 /**
  * @brief Get a gate kernel map for a statevector.
@@ -60,8 +60,9 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
     const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
 
-    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap] =
-        sv.getSupportedKernels();
+    auto [GateKernelMap, GeneratorKernelMap, MatrixKernelMap,
+          ControlledGateKernelMap, ControlledGeneratorKernelMap,
+          ControlledMatrixKernelMap] = sv.getSupportedKernels();
 
     for (const auto &[gate_op, kernel] : GateKernelMap) {
         const auto key = std::string(lookup(Constant::gate_names, gate_op));
@@ -83,18 +84,154 @@ auto svKernelMap(const StateVectorT &sv) -> py::dict {
 
         res_map[key.c_str()] = value;
     }
+
+    for (const auto &[mat_op, kernel] : ControlledGateKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_gate_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledGeneratorKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_generator_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
+    for (const auto &[mat_op, kernel] : ControlledMatrixKernelMap) {
+        const auto key =
+            std::string(lookup(Constant::controlled_matrix_names, mat_op));
+        const auto value = dispatcher.getKernelName(kernel);
+
+        res_map[key.c_str()] = value;
+    }
+
     return res_map;
 }
 
 /**
- * @brief Get a gate kernel map for a statevector.
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
+
+/**
+ * @brief Get a controlled matrix and kernel map for a statevector.
  */
 template <class StateVectorT, class PyClass>
 void registerBackendClassSpecificBindings(PyClass &pyclass) {
-    registerGatesForStateVector<StateVectorT>(pyclass);
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ComplexT = typename StateVectorT::ComplexT;
+    using ParamT = PrecisionT; // Parameter's data precision
+    using np_arr_c = py::array_t<std::complex<ParamT>,
+                                 py::array::c_style | py::array::forcecast>;
 
-    pyclass.def("kernel_map", &svKernelMap<StateVectorT>,
-                "Get internal kernels for operations");
+    registerGatesForStateVector<StateVectorT>(pyclass);
+    registerControlledGate<StateVectorT>(pyclass);
+    pyclass.def(
+        "applyPauliRot",
+        [](StateVectorT &sv, const std::vector<std::size_t> &wires,
+           const bool inverse, const std::vector<ParamT> &params,
+           const std::string &word) {
+            sv.applyPauliRot(wires, inverse, params, word);
+        },
+        "Apply a Pauli rotation.");
+    pyclass
+        .def(py::init([](std::size_t num_qubits) {
+            return new StateVectorT(num_qubits);
+        }))
+        .def("resetStateVector", &StateVectorT::resetStateVector)
+        .def(
+            "setBasisState",
+            [](StateVectorT &sv, const std::vector<std::size_t> &state,
+               const std::vector<std::size_t> &wires) {
+                sv.setBasisState(state, wires);
+            },
+            "Set the state vector to a basis state.")
+        .def(
+            "setStateVector",
+            [](StateVectorT &sv, const np_arr_c &state,
+               const std::vector<std::size_t> &wires) {
+                const auto buffer = state.request();
+                sv.setStateVector(static_cast<const ComplexT *>(buffer.ptr),
+                                  wires);
+            },
+            "Set the state vector to the data contained in `state`.")
+        .def(
+            "getState",
+            [](const StateVectorT &sv, np_arr_c &state) {
+                py::buffer_info numpyArrayInfo = state.request();
+                auto *data_ptr =
+                    static_cast<std::complex<PrecisionT> *>(numpyArrayInfo.ptr);
+                if (state.size()) {
+                    std::copy(sv.getData(), sv.getData() + sv.getLength(),
+                              data_ptr);
+                }
+            },
+            "Copy StateVector data into a Numpy array.")
+        .def(
+            "UpdateData",
+            [](StateVectorT &device_sv, const np_arr_c &state) {
+                const py::buffer_info numpyArrayInfo = state.request();
+                auto *data_ptr = static_cast<ComplexT *>(numpyArrayInfo.ptr);
+                const auto length =
+                    static_cast<std::size_t>(numpyArrayInfo.shape[0]);
+                if (length) {
+                    device_sv.updateData(data_ptr, length);
+                }
+            },
+            "Copy StateVector data into a Numpy array.")
+        .def("collapse", &StateVectorT::collapse,
+             "Collapse the statevector onto the 0 or 1 branch of a given wire.")
+        .def("normalize", &StateVectorT::normalize,
+             "Normalizes the statevector to norm 1.")
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+             "Apply controlled operation")
+        .def("kernel_map", &svKernelMap<StateVectorT>,
+             "Get internal kernels for operations");
 }
 
 /**
@@ -112,7 +249,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using sparse_index_type = size_t;
+    using sparse_index_type = std::size_t;
     using np_arr_sparse_ind =
         py::array_t<sparse_index_type,
                     py::array::c_style | py::array::forcecast>;
@@ -120,7 +257,7 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
     pyclass
         .def("expval",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::expval),
              "Expected value of an operation by name.")
         .def(
@@ -138,12 +275,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "Expected value of a sparse Hamiltonian.")
         .def("var",
              [](Measurements<StateVectorT> &M, const std::string &operation,
-                const std::vector<size_t> &wires) {
+                const std::vector<std::size_t> &wires) {
                  return M.var(operation, wires);
              })
         .def("var",
              static_cast<PrecisionT (Measurements<StateVectorT>::*)(
-                 const std::string &, const std::vector<size_t> &)>(
+                 const std::string &, const std::vector<std::size_t> &)>(
                  &Measurements<StateVectorT>::var),
              "Variance of an operation by name.")
         .def(
@@ -159,27 +296,49 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
                     static_cast<sparse_index_type>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.")
-        .def("generate_mcmc_samples",
-             [](Measurements<StateVectorT> &M, size_t num_wires,
-                const std::string &kernelname, size_t num_burnin,
-                size_t num_shots) {
-                 std::vector<size_t> &&result = M.generate_samples_metropolis(
-                     kernelname, num_burnin, num_shots);
-
-                 const size_t ndim = 2;
-                 const std::vector<size_t> shape{num_shots, num_wires};
-                 constexpr auto sz = sizeof(size_t);
-                 const std::vector<size_t> strides{sz * num_wires, sz};
+        .def("generate_samples",
+             [](Measurements<StateVectorT> &M,
+                const std::vector<std::size_t> &wires,
+                const std::size_t num_shots) {
+                 const std::size_t num_wires = wires.size();
+                 auto &&result = M.generate_samples(wires, num_shots);
+                 const std::size_t ndim = 2;
+                 const std::vector<std::size_t> shape{num_shots, num_wires};
+                 constexpr auto sz = sizeof(std::size_t);
+                 const std::vector<std::size_t> strides{sz * num_wires, sz};
                  // return 2-D NumPy array
                  return py::array(py::buffer_info(
                      result.data(), /* data as contiguous array  */
                      sz,            /* size of one scalar        */
-                     py::format_descriptor<size_t>::format(), /* data type */
+                     py::format_descriptor<std::size_t>::format(), /* data type
+                                                                    */
                      ndim,   /* number of dimensions      */
                      shape,  /* shape of the matrix       */
                      strides /* strides for each axis     */
                      ));
-             });
+             })
+        .def("generate_mcmc_samples", [](Measurements<StateVectorT> &M,
+                                         std::size_t num_wires,
+                                         const std::string &kernelname,
+                                         std::size_t num_burnin,
+                                         std::size_t num_shots) {
+            std::vector<std::size_t> &&result = M.generate_samples_metropolis(
+                kernelname, num_burnin, num_shots);
+
+            const std::size_t ndim = 2;
+            const std::vector<std::size_t> shape{num_shots, num_wires};
+            constexpr auto sz = sizeof(std::size_t);
+            const std::vector<std::size_t> strides{sz * num_wires, sz};
+            // return 2-D NumPy array
+            return py::array(py::buffer_info(
+                result.data(), /* data as contiguous array  */
+                sz,            /* size of one scalar        */
+                py::format_descriptor<std::size_t>::format(), /* data type */
+                ndim,   /* number of dimensions      */
+                shape,  /* shape of the matrix       */
+                strides /* strides for each axis     */
+                ));
+        });
 }
 
 /**
@@ -241,7 +400,7 @@ template <class StateVectorT, class np_arr_c>
 auto registerVJP(VectorJacobianProduct<StateVectorT> &calculate_vjp,
                  const StateVectorT &sv,
                  const OpsData<StateVectorT> &operations, const np_arr_c &dy,
-                 const std::vector<size_t> &trainableParams)
+                 const std::vector<std::size_t> &trainableParams)
     -> py::array_t<std::complex<typename StateVectorT::PrecisionT>> {
     /* Do not cast non-conforming array. Argument trainableParams
      * should only contain indices for operations.
@@ -262,7 +421,7 @@ auto registerVJP(VectorJacobianProduct<StateVectorT> &calculate_vjp,
     calculate_vjp(
         std::span{vjp}, jd,
         std::span{static_cast<const std::complex<PrecisionT> *>(buffer.ptr),
-                  static_cast<size_t>(buffer.size)});
+                  static_cast<std::size_t>(buffer.size)});
 
     return py::array_t<std::complex<PrecisionT>>(py::cast(vjp));
 }
