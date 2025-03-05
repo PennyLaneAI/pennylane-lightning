@@ -243,7 +243,7 @@ class LightningKokkos(LightningBase):
         self._kokkos_args = kokkos_args
 
         self._statevector = None
-        self.sv_init_kwargs = {"kokkos_args": self._kokkos_args}
+        self._sv_init_kwargs = {"kokkos_args": self._kokkos_args}
 
     @property
     def name(self):
@@ -346,7 +346,7 @@ class LightningKokkos(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
+                    self.dynamic_wires_from_circuit(circuit, **self._sv_init_kwargs),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )

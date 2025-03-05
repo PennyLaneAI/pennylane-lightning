@@ -284,10 +284,10 @@ class LightningGPU(LightningBase):
         else:
             self._statevector = None
             self._mpi_handler = None
+            self._sv_init_kwargs = {
+                    "mpi_handler":None,
+                    "use_async":self._use_async}
         
-        self.sv_init_kwargs = {
-                "mpi_handler"=None,
-                "use_async"=self._use_async}
 
     @property
     def name(self):
@@ -390,7 +390,7 @@ class LightningGPU(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    self.dynamic_wires_from_circuit(circuit),
+                    self.dynamic_wires_from_circuit(circuit, **self._sv_init_kwargs),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )

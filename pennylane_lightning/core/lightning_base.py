@@ -73,7 +73,7 @@ class LightningBase(Device):
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
-        self.sv_init_kwargs = None
+        self._sv_init_kwargs = None
         if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
         else:
@@ -115,9 +115,6 @@ class LightningBase(Device):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
-
-        if self._mpi_handler and self._mpi_handler.use_mpi:
-            return circuit
 
         if self.wires is None:
             num_wires = circuit.num_wires
@@ -348,7 +345,7 @@ class LightningBase(Device):
 
         return tuple(
             self.jacobian(
-                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
+                self.dynamic_wires_from_circuit(circuit, **self._sv_init_kwargs),
                 self._statevector,
                 batch_obs=batch_obs,
                 wire_map=self._wire_map,
@@ -373,7 +370,7 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_jacobian(
-                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
+                self.dynamic_wires_from_circuit(circuit, **self._sv_init_kwargs),
                 self._statevector,
                 batch_obs=batch_obs,
                 wire_map=self._wire_map,
@@ -432,7 +429,7 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         return tuple(
             self.vjp(
-                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
+                self.dynamic_wires_from_circuit(circuit, **self._sv_init_kwargs),
                 cots,
                 self._statevector,
                 batch_obs=batch_obs,
@@ -460,7 +457,7 @@ class LightningBase(Device):
         batch_obs = execution_config.device_options.get("batch_obs", self._batch_obs)
         results = tuple(
             self.simulate_and_vjp(
-                self.dynamic_wires_from_circuit(circuit, **self.sv_init_kwargs),
+                self.dynamic_wires_from_circuit(circuit, **self._sv_init_kwargs),
                 cots,
                 self._statevector,
                 batch_obs=batch_obs,
