@@ -218,12 +218,12 @@ template <class GPUDataT, class DevTagT = int> class DataBuffer {
      * offset.
      *
      * @tparam HostDataT Host data type.
-     * 
+     *
      * @param host_in Host data buffer.
      * @param length Number of elements to copy.
      * @param offset Offset in the GPU buffer.
      * @param async Asynchronous copy flag.
-     * 
+     *
      */
     template <class HostDataT = GPUDataT>
     void CopyHostDataToGpu(const HostDataT *host_in, std::size_t length,
@@ -247,9 +247,9 @@ template <class GPUDataT, class DevTagT = int> class DataBuffer {
 
     /**
      * @brief Explicitly copy data from host memory to GPU device with a stride.
-     * 
+     *
      * @tparam HostDataT Host data type.
-     * 
+     *
      * @param host_in Host data buffer.
      * @param length Number of elements to copy.
      * @param stride Stride in the GPU buffer.

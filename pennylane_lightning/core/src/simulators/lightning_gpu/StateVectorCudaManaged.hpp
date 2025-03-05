@@ -207,8 +207,7 @@ class StateVectorCudaManaged
      */
     void setStateVector(const ComplexT *state_ptr, const std::size_t state_size,
                         const std::vector<std::size_t> &wires,
-                        bool use_async = false)
-    {
+                        bool use_async = false) {
         PL_ABORT_IF_NOT(state_size == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
@@ -253,8 +252,8 @@ class StateVectorCudaManaged
                     std::size_t index{0U};
                     for (std::size_t j = 0; j < num_wires; j++) {
                         const std::size_t bit = (i & (one << j)) >> j;
-                        index |= bit
-                                 << (num_qubits - 1 - local_wires[num_wires - 1 - j]);
+                        index |= bit << (num_qubits - 1 -
+                                         local_wires[num_wires - 1 - j]);
                     }
                     indices[i] = static_cast<index_type>(index);
                 }
