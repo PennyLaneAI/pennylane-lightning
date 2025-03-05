@@ -219,7 +219,7 @@ class LightningGPU(LightningBase):
     """
 
     # pylint: disable=too-many-instance-attributes
-    
+
     # General device options
     _device_options = ("c_dtype", "batch_obs")
 
