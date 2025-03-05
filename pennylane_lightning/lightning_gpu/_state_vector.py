@@ -181,10 +181,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
     @staticmethod
     def _asarray(arr, dtype=None):
-
-        if isinstance(arr, np.ndarray) and arr.dtype in [np.complex64, np.complex128]:
-            return arr
-
         arr = np.asarray(arr)  # arr is not copied
 
         if arr.dtype.kind not in ["f", "c"]:

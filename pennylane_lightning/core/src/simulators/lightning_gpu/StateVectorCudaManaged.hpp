@@ -201,7 +201,7 @@ class StateVectorCudaManaged
      * @brief Set values for a batch of elements of the state-vector.
      *
      * @param state_ptr Pointer to the initial state data.
-     * @param num_states Length of the initial state data.
+     * @param state_size Length of the initial state data.
      * @param wires Wires.
      * @param use_async Use an asynchronous memory copy. Default is false.
      */
