@@ -267,7 +267,7 @@ class TestHelpers:
     def test_dynamic_wires_from_circuit(self, circuit_in, n_wires, expected_circuit_out):
         """Test that dynamic_wires_from_circuit returns correct circuit and creates state-vectors properly"""
         device = LightningDevice(wires=None)
-        
+
         if device_name == "lightning.tensor":
             circuit_out = device.dynamic_wires_from_circuit(circuit_in)
         else:
@@ -316,7 +316,7 @@ class TestHelpers:
     def test_dynamic_wires_from_circuit_fixed_wires(self, circuit_in, n_wires, wires_list):
         """Test that dynamic_wires_from_circuit does not alter the circuit if wires are fixed and state-vector is created properly"""
         device = LightningDevice(wires=n_wires)
-        
+
         if device_name == "lightning.tensor":
             circuit_out = device.dynamic_wires_from_circuit(circuit_in)
         else:
@@ -355,7 +355,6 @@ class TestHelpers:
         device = LightningDevice(wires=None)
 
         # Initialize statevector and apply a state
-        
         if device_name == "lightning.tensor":
             device.dynamic_wires_from_circuit(circuit_0)
         else:
@@ -365,7 +364,6 @@ class TestHelpers:
         device._statevector._apply_state_vector(state, range(n_wires_0))
 
         # Dynamic wires again will reset the state
-        
         if device_name == "lightning.tensor":
             device.dynamic_wires_from_circuit(circuit_1)
         else:

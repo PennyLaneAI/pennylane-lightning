@@ -124,7 +124,9 @@ class LightningBase(Device):
             num_wires = len(self.wires)
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
-            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype, **sv_init_kwargs)
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype, **sv_init_kwargs
+            )
         else:
             self._statevector.reset_state()
 

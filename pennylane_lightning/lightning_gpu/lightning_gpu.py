@@ -284,10 +284,7 @@ class LightningGPU(LightningBase):
         else:
             self._statevector = None
             self._mpi_handler = None
-            self._sv_init_kwargs = {
-                    "mpi_handler":None,
-                    "use_async":self._use_async}
-        
+            self._sv_init_kwargs = {"mpi_handler": None, "use_async": self._use_async}
 
     @property
     def name(self):

@@ -323,7 +323,6 @@ class LightningQubit(LightningBase):
 
         return replace(config, **updated_values, device_options=new_device_options)
 
-
         return circuit
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
