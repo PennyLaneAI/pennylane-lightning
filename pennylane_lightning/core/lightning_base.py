@@ -111,6 +111,7 @@ class LightningBase(Device):
 
         Args:
             circuit (QuantumTape): The circuit to execute.
+            sv_init_kwargs: Additional keyword arguments to pass to the statevector initialization.
 
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
