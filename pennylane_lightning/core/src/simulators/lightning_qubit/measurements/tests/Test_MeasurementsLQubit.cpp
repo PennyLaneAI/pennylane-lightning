@@ -48,7 +48,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
     using ComplexT = typename StateVectorT::ComplexT;
 
     // Defining the statevector that will be measured.
-    auto statevector_data = createNonTrivialState<StateVectorT>();
+    const std::size_t num_qubits = 6;
+    auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
     StateVectorT statevector(statevector_data.data(), statevector_data.size());
 
     // Initializing the Measurements class.
@@ -105,7 +106,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         operations_list = {"Identity", "Identity", "Identity"};
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {1.0, 1.0, 1.0};
-        REQUIRE_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+        CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
 
         operations_list = {"PauliX", "PauliX", "PauliX"};
         exp_values = Measurer.expval(operations_list, wires_list);
@@ -126,6 +127,39 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         exp_values = Measurer.expval(operations_list, wires_list);
         exp_values_ref = {0.7620549436, 0.8420840225, 0.8449848566};
         CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expval of matrix for one wire:") {
+        //auto INVSQRT2 = PrecisionT(0.707106781186547524401);
+
+        const PrecisionT theta = M_PI / 2;
+        const PrecisionT c = std::cos(theta / 2);
+        const PrecisionT js = std::sin(-theta / 2);
+        std::vector<ComplexT> matrix{c, {0, js}, {0, js}, c};
+        
+        std::vector<std::size_t> wires = {0};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        PrecisionT exp_values_ref = M_SQRT1_2;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expval of matrix for two wires:") {
+        //auto INVSQRT2 = PrecisionT(0.707106781186547524401);
+
+        const PrecisionT theta = M_PI / 2;
+        const PrecisionT c = std::cos(theta / 2);
+        const PrecisionT js = std::sin(-theta / 2);
+        std::vector<ComplexT> matrix(16);
+        matrix[0] = c;
+        matrix[1] = ComplexT{0, js};
+        matrix[4] = ComplexT{0, js};
+        matrix[5] = c;
+        matrix[10] = ComplexT{1, 0};
+        matrix[15] = ComplexT{1, 0};        
+        std::vector<std::size_t> wires = {0, 1};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        PrecisionT exp_values_ref = M_SQRT1_2;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 }
 

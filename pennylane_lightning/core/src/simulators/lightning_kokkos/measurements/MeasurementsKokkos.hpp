@@ -229,8 +229,7 @@ class Measurements final
                 const std::vector<std::size_t> &wires) -> PrecisionT {
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
-            return applyExpValNamedFunctor<getExpectationValueIdentityFunctor,
-                                           0>(wires);
+            return 1.0;
         case ExpValFunc::PauliX:
             return applyExpValNamedFunctor<getExpectationValuePauliXFunctor, 1>(
                 wires);
