@@ -185,7 +185,6 @@ class QuantumScriptSerializer:
         self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
-        # Internally SparseHamiltonian is treated as a sparse Hermitian.
         self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
         self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
