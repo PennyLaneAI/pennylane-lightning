@@ -584,7 +584,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
 };
 
 /**
- * @brief Sparse representation of a Hermitian operator.
+ * @brief Sparse representation of SparseHamiltonian<T>
  *
  * @tparam T Floating-point precision.
  */
