@@ -366,7 +366,7 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
 };
 
 /**
- * @brief Sparse representation of Hermitian operator.
+ * @brief Sparse representation of Hamiltonian<StateVectorT>
  *
  */
 template <class StateVectorT>
