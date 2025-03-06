@@ -308,10 +308,9 @@ class LightningBaseMeasurements(ABC):
                 # is provided for the measurement (e.g. qml.probs() or qml.counts() or
                 # qml.samples()). In the case where number of wires is provided for the statevector,
                 # the same operation is performed in validate_device_wires during preprocess.
+
                 # pylint:disable=protected-access
-                measurement._wires = Wires(
-                    range(self._qubit_state.num_wires)
-                )  
+                measurement._wires = Wires(range(self._qubit_state.num_wires))
 
         groups, indices = _group_measurements(mps)
 
