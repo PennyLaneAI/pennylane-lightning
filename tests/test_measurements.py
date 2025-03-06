@@ -507,7 +507,7 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
     if measure_f in (qml.counts, qml.sample) and shots is None:
         pytest.skip("qml.counts, qml.sample do not work with shots = None.")
 
-    if obs is None and measure_f in (qml.expval, qml.var):
+    if measure_f in (qml.expval, qml.var) and obs is None:
         pytest.skip("qml.expval, qml.var requires observable.")
 
     if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
