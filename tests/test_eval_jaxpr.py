@@ -291,6 +291,31 @@ class TestQuantumHOP:
         result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.5)
         assert qml.math.allclose(result, expected_state)
 
+    def test_nested_ctrl_and_adjoint(self):
+        """Tests nesting ctrl and adjoint."""
+
+        def circuit(x):
+            qml.X(0)
+
+            def ctrl_fn(y):
+                phi = y * jax.numpy.pi / 2
+                qml.RZ(phi, 2)
+                qml.RX(phi - jax.numpy.pi, 2)
+
+            qml.adjoint(qml.ctrl(ctrl_fn, control=[0, 1], control_values=[1, 0]))(x)
+            return qml.state()
+
+        rz_phi = 1.5 * jax.numpy.pi / 2
+        rx_phi = rz_phi - jax.numpy.pi
+        expected_state = qml.math.zeros(8, dtype=complex)
+        expected_state[4] = jax.numpy.cos(rx_phi / 2) * jax.numpy.exp(rz_phi * 1j / 2)
+        expected_state[5] = 1j * jax.numpy.sin(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2)
+
+        jaxpr = jax.make_jaxpr(circuit)(1.5)
+        dev = qml.device(device_name, wires=3)
+        result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.5)
+        assert qml.math.allclose(result, expected_state)
+
 
 class TestClassicalComponents:
     """Test execution of classical components."""

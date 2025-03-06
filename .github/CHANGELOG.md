@@ -62,6 +62,9 @@
 * Programs transformed by `qml.defer_measurements` can be executed on `lightning.qubit`.
   [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
 
+* `lightning.qubit` supports `ctrl` and `adjoint` with program capture.
+  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
+
 ### Documentation
 
 ### Bug fixes
