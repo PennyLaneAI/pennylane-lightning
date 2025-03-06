@@ -81,7 +81,7 @@ def test_unsupported_dynamic_wires():
 def test_dynamic_wires_from_circuit_fixed_wires(circuit_in, n_wires, wires_list):
     """Test that dynamic_wires_from_circuit creates correct statevector and circuit."""
     dev = qml.device(device_name, mpi=True, wires=n_wires)
-    circuit_out = dev.dynamic_wires_from_circuit(circuit_in, **dev._sv_init_kwargs)
+    circuit_out = dev.dynamic_wires_from_circuit(circuit_in)
 
     assert circuit_out.num_wires == circuit_in.num_wires
     assert circuit_out.wires == qml.wires.Wires(wires_list)

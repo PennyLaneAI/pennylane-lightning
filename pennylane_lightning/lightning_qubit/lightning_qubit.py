@@ -391,7 +391,7 @@ class LightningQubit(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    self.dynamic_wires_from_circuit(circuit, **self._sv_init_kwargs),
+                    self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     mcmc=mcmc,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
