@@ -141,11 +141,14 @@ class LightningBaseMeasurements(ABC):
             Probabilities of the supplied observable or wires.
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
-
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
 
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+        if measurementprocess.wires == Wires([]):
+            measurewires = self._qubit_state.wires
+        else:
+            measurewires = measurementprocess.wires.tolist()
+        results = self._measurement_lightning.probs(measurewires)
 
         if diagonalizing_gates:
             self._qubit_state.apply_operations(
@@ -297,6 +300,16 @@ class LightningBaseMeasurements(ABC):
         """
         # last N measurements are sampling MCMs in ``dynamic_one_shot`` execution mode
         mps = measurements[0 : -len(mid_measurements)] if mid_measurements else measurements
+
+        for measurement in mps:
+            if not measurement.wires:
+                # This is required for the case where no wires is specific for the statevector
+                # (i.e. dynamically determined from circuit), and no wires (and no observable)
+                # is provided for the measurement (e.g. qml.probs() or qml.counts() or
+                # qml.samples()). In the case where number of wires is provided for the statevector,
+                # the same operation is performed in validate_device_wires during preprocess.
+                measurement._wires = Wires(range(self._qubit_state.num_wires))
+
         groups, indices = _group_measurements(mps)
 
         all_res = []

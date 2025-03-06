@@ -14,6 +14,7 @@
 """
 Unit tests for Measurements in Lightning devices.
 """
+import itertools
 import math
 from typing import Sequence
 
@@ -46,9 +47,9 @@ def test_no_measure():
 class TestProbs:
     """Test Probs in Lightning devices"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.fixture(params=itertools.product([np.complex64, np.complex128], [None, 2]))
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     def test_probs_H(self, tol, dev):
         """Test probs with Hadamard"""
@@ -60,27 +61,37 @@ class TestProbs:
 
         assert np.allclose(circuit(), [0.5, 0.5, 0.0, 0.0], atol=tol, rtol=0)
 
-    @pytest.mark.parametrize(
-        "cases",
-        [
-            [None, [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
-            [[], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
-        ],
-    )
-    @pytest.mark.xfail
-    def test_probs_tape_nowires(self, cases, tol, dev):
-        """Test probs with a circuit on wires=[0]"""
+    def test_probs_tape_none_wires(self, tol, dev):
+        """Test probs with a circuit with wires=None"""
 
         x, y, z = [0.5, 0.3, -0.7]
+        expected = [0.903281826, 0.00909338007, 0.0867514634, 0.000873331009]
+        wires = None
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[1])
+            return qml.probs(wires=wires)
+
+        assert np.allclose(circuit(), expected, atol=tol, rtol=0)
+
+    def test_probs_tape_emptywires(self, dev):
+        """Test that probs with empty list for wires raises an error"""
+
+        x, y, z = [0.5, 0.3, -0.7]
+        wires = []
 
         @qml.qnode(dev)
         def circuit():
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
-            return qml.probs(wires=cases[0])
+            return qml.probs(wires=wires)
 
-        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        with pytest.raises(ValueError, match="Cannot set an empty list of wires"):
+            circuit()
 
     @pytest.mark.parametrize(
         "cases",
@@ -157,27 +168,21 @@ class TestProbs:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
-
-class TestExpval:
-    """Tests for the expval function"""
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
-
     @pytest.mark.parametrize(
         "cases",
         [
-            [qml.PauliX(0), -0.041892271271228736],
-            [qml.PauliX(1), 0.0],
-            [qml.PauliY(0), -0.5516350865364075],
-            [qml.PauliY(1), 0.0],
-            [qml.PauliZ(0), 0.8330328980789793],
-            [qml.PauliZ(1), 1.0],
+            [qml.PauliZ(0), [0.91651645, 0.08348355]],
+            [qml.PauliZ(1), [1.0, 0.0]],
+            [qml.PauliY(0), [0.22418248, 0.77581752]],
+            [qml.PauliY(1), [0.5, 0.5]],
+            [qml.PauliX(0), [0.47905386, 0.52094614]],
+            [qml.PauliX(1), [0.5, 0.5]],
+            [qml.Hadamard(0), [0.77971045, 0.22028955]],
+            [qml.Hadamard(1), [0.85355339, 0.14644661]],
         ],
     )
-    def test_expval_qml_tape_wire0(self, cases, tol, dev):
-        """Test expval with a circuit on wires=[0]"""
+    def test_probs_named_op(self, cases, tol, dev):
+        """Test probs with a named observable"""
 
         x, y, z = [0.5, 0.3, -0.7]
 
@@ -186,9 +191,32 @@ class TestExpval:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
-            return qml.expval(cases[0])
+            return qml.probs(op=cases[0])
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+
+    def test_probs_named_op_with_wires(self, dev):
+        """Test probs with a circuit on wires=[0]"""
+
+        x, y, z = [0.5, 0.3, -0.7]
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[0])
+            return qml.probs(op=qml.PauliZ(0), wires=[0])
+
+        with pytest.raises(qml.QuantumFunctionError, match="Cannot specify the wires to probs"):
+            circuit()
+
+
+class TestExpval:
+    """Tests for the expval function"""
+
+    @pytest.fixture(params=itertools.product([np.complex64, np.complex128], [None, 2]))
+    def dev(self, request):
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     @pytest.mark.parametrize(
         "cases",
@@ -292,9 +320,9 @@ class TestExpval:
 class TestVar:
     """Tests for the var function"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.fixture(params=itertools.product([np.complex64, np.complex128], [None, 2]))
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     @pytest.mark.parametrize(
         "cases",
@@ -381,24 +409,6 @@ class TestVar:
         circuit()
 
 
-@pytest.mark.parametrize("stat_func", [qml.expval, qml.var])
-class TestBetaStatisticsError:
-    """Tests for errors arising for the beta statistics functions"""
-
-    def test_not_an_observable(self, stat_func):
-        """Test that a qml.QuantumFunctionError is raised if the provided
-        argument is not an observable"""
-        dev = qml.device(device_name, wires=2)
-
-        @qml.qnode(dev)
-        def circuit():
-            qml.RX(0.52, wires=0)
-            return qml.var(qml.RX(0.742, wires=[0]))
-
-        with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
-            circuit()
-
-
 class TestSample:
     """Tests that samples are properly calculated."""
 
@@ -471,6 +481,7 @@ class TestSample:
 @pytest.mark.parametrize(
     "obs",
     [
+        None,
         [0],
         [0, 1],
         qml.PauliZ(0),
@@ -480,10 +491,10 @@ class TestSample:
     ],
 )
 @pytest.mark.parametrize("mcmc", [False, True])
+@pytest.mark.parametrize("n_wires", [None, 3])
 @pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
-def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
+def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_name):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
-    n_qubits = 3
 
     if (
         shots is None or device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor")
@@ -496,13 +507,16 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     if measure_f in (qml.counts, qml.sample) and shots is None:
         pytest.skip("qml.counts, qml.sample do not work with shots = None.")
 
+    if obs is None and measure_f in (qml.expval, qml.var):
+        pytest.skip("qml.expval, qml.var requires observable.")
+
     if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
-        dev = qml.device(device_name, wires=n_qubits, shots=shots)
+        dev = qml.device(device_name, wires=n_wires, shots=shots)
     else:
         dev = qml.device(
-            device_name, wires=n_qubits, shots=shots, mcmc=mcmc, kernel_name=kernel_name
+            device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name
         )
-    dq = qml.device("default.qubit", wires=n_qubits, shots=shots)
+    dq = qml.device("default.qubit", wires=n_wires, shots=shots)
     params = [np.pi / 4, -np.pi / 4]
 
     def func(x, y):
