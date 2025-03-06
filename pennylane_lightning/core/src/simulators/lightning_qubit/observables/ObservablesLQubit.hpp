@@ -370,9 +370,9 @@ class Hamiltonian final : public HamiltonianBase<StateVectorT> {
  *
  */
 template <class StateVectorT>
-class SparseHermitianObs final : public SparseHermitianObsBase<StateVectorT> {
+class SparseHamiltonian final : public SparseHamiltonianBase<StateVectorT> {
   private:
-    using BaseType = SparseHermitianObsBase<StateVectorT>;
+    using BaseType = SparseHamiltonianBase<StateVectorT>;
 
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
@@ -380,7 +380,7 @@ class SparseHermitianObs final : public SparseHermitianObsBase<StateVectorT> {
     using IdxT = typename BaseType::IdxT;
 
     /**
-     * @brief Create a SparseHermitianObs from data, indices and offsets in CSR
+     * @brief Create a SparseHamiltonian from data, indices and offsets in CSR
      * format.
      *
      * @param data Arguments to construct data
@@ -389,8 +389,8 @@ class SparseHermitianObs final : public SparseHermitianObsBase<StateVectorT> {
      * @param wires Arguments to construct wires
      */
     template <typename T1, typename T2, typename T3 = T2, typename T4>
-    explicit SparseHermitianObs(T1 &&data, T2 &&indices, T3 &&offsets,
-                                T4 &&wires)
+    explicit SparseHamiltonian(T1 &&data, T2 &&indices, T3 &&offsets,
+                               T4 &&wires)
         : BaseType{data, indices, offsets, wires} {}
 
     /**
@@ -409,10 +409,10 @@ class SparseHermitianObs final : public SparseHermitianObsBase<StateVectorT> {
                        std::initializer_list<IdxT> indices,
                        std::initializer_list<IdxT> offsets,
                        std::initializer_list<std::size_t> wires)
-        -> std::shared_ptr<SparseHermitianObs<StateVectorT>> {
+        -> std::shared_ptr<SparseHamiltonian<StateVectorT>> {
         // NOLINTBEGIN(*-move-const-arg)
-        return std::shared_ptr<SparseHermitianObs<StateVectorT>>(
-            new SparseHermitianObs<StateVectorT>{
+        return std::shared_ptr<SparseHamiltonian<StateVectorT>>(
+            new SparseHamiltonian<StateVectorT>{
                 std::move(data), std::move(indices), std::move(offsets),
                 std::move(wires)});
         // NOLINTEND(*-move-const-arg)

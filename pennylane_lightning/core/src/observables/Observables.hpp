@@ -589,7 +589,7 @@ class HamiltonianBase : public Observable<StateVectorT> {
  * @tparam T Floating-point precision.
  */
 template <class StateVectorT>
-class SparseHermitianObsBase : public Observable<StateVectorT> {
+class SparseHamiltonianBase : public Observable<StateVectorT> {
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -611,14 +611,14 @@ class SparseHermitianObsBase : public Observable<StateVectorT> {
     [[nodiscard]] bool
     isEqual(const Observable<StateVectorT> &other) const override {
         const auto &other_cast =
-            static_cast<const SparseHermitianObsBase<StateVectorT> &>(other);
+            static_cast<const SparseHamiltonianBase<StateVectorT> &>(other);
         return data_ == other_cast.data_ && indices_ == other_cast.indices_ &&
                offsets_ == other_cast.offsets_ && (wires_ == other_cast.wires_);
     }
 
   public:
     /**
-     * @brief Create a SparseHermitianObsBase from data, indices and offsets in
+     * @brief Create a SparseHamiltonianBase from data, indices and offsets in
      * CSR format.
      *
      * @param data Arguments to construct data
@@ -628,7 +628,7 @@ class SparseHermitianObsBase : public Observable<StateVectorT> {
      */
     template <typename T1, typename T2, typename T3 = T2,
               typename T4 = std::vector<std::size_t>>
-    SparseHermitianObsBase(T1 &&data, T2 &&indices, T3 &&offsets, T4 &&wires)
+    SparseHamiltonianBase(T1 &&data, T2 &&indices, T3 &&offsets, T4 &&wires)
         : data_{std::forward<T1>(data)}, indices_{std::forward<T2>(indices)},
           offsets_{std::forward<T3>(offsets)}, wires_{std::forward<T4>(wires)} {
         PL_ASSERT(data_.size() == indices_.size());
@@ -650,17 +650,17 @@ class SparseHermitianObsBase : public Observable<StateVectorT> {
                        std::initializer_list<IdxT> indices,
                        std::initializer_list<IdxT> offsets,
                        std::initializer_list<std::size_t> wires)
-        -> std::shared_ptr<SparseHermitianObsBase<StateVectorT>> {
+        -> std::shared_ptr<SparseHamiltonianBase<StateVectorT>> {
         // NOLINTBEGIN(*-move-const-arg)
-        return std::shared_ptr<SparseHermitianObsBase<StateVectorT>>(
-            new SparseHermitianObsBase<StateVectorT>{
+        return std::shared_ptr<SparseHamiltonianBase<StateVectorT>>(
+            new SparseHamiltonianBase<StateVectorT>{
                 std::move(data), std::move(indices), std::move(offsets),
                 std::move(wires)});
         // NOLINTEND(*-move-const-arg)
     }
 
     void applyInPlace([[maybe_unused]] StateVectorT &sv) const override {
-        PL_ABORT("For SparseHermitianObs Observables, the applyInPlace method "
+        PL_ABORT("For SparseHamiltonian Observables, the applyInPlace method "
                  "must be defined at the backend level.");
     }
 
@@ -669,13 +669,13 @@ class SparseHermitianObsBase : public Observable<StateVectorT> {
         [[maybe_unused]] std::vector<std::vector<PrecisionT>> &eigenValues,
         [[maybe_unused]] std::vector<std::size_t> &ob_wires) const override {
         PL_ABORT(
-            "SparseHermitianObs observables do not support shot measurement.");
+            "SparseHamiltonian observables do not support shot measurement.");
     }
 
     [[nodiscard]] auto getObsName() const -> std::string override {
         using Pennylane::Util::operator<<;
         std::ostringstream ss;
-        ss << "SparseHermitianObs: {\n'data' : \n";
+        ss << "SparseHamiltonian: {\n'data' : \n";
         for (const auto &d : data_) {
             ss << "{" << d.real() << ", " << d.imag() << "}, ";
         }

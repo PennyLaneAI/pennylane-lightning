@@ -1675,7 +1675,7 @@ template <typename TypeList> void testSparseHObsMeasureShot() {
         // This object attaches to the statevector allowing several measures.
         Measurements<StateVectorT> Measurer(statevector);
 
-        auto sparseH = SparseHermitianObs<StateVectorT>::create(
+        auto sparseH = SparseHamiltonian<StateVectorT>::create(
             {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
@@ -1687,7 +1687,7 @@ template <typename TypeList> void testSparseHObsMeasureShot() {
             std::vector<std::size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.expval(*sparseH, num_shots, shots_range),
-                Catch::Matchers::Contains("SparseHermitianObs observables do "
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
                                           "not support shot measurement."));
         }
 
@@ -1697,7 +1697,7 @@ template <typename TypeList> void testSparseHObsMeasureShot() {
             std::vector<std::size_t> shots_range = {};
             REQUIRE_THROWS_WITH(
                 Measurer.var(*sparseH, num_shots),
-                Catch::Matchers::Contains("SparseHermitianObs observables do "
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
                                           "not support shot measurement."));
         }
 

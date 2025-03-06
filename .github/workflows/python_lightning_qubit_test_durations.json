@@ -9114,7 +9114,7 @@
     "tests/test_serialize.py::test_obs_returns_expected_type[obs10-HermitianObsC128]": 0.00041760600288398564,
     "tests/test_serialize.py::test_obs_returns_expected_type[obs11-NamedObsC128]": 0.00040928396629169583,
     "tests/test_serialize.py::test_obs_returns_expected_type[obs12-HamiltonianC128]": 0.0005267369851935655,
-    "tests/test_serialize.py::test_obs_returns_expected_type[obs13-SparseHermitianObsC128]": 0.0004780770104844123,
+    "tests/test_serialize.py::test_obs_returns_expected_type[obs13-SparseHamiltonianC128]": 0.0004780770104844123,
     "tests/test_serialize.py::test_obs_returns_expected_type[obs14-HamiltonianC128]": 0.00041880799108184874,
     "tests/test_serialize.py::test_obs_returns_expected_type[obs2-NamedObsC128]": 0.00040599898784421384,
     "tests/test_serialize.py::test_obs_returns_expected_type[obs3-HermitianObsC128]": 0.0006076200515963137,

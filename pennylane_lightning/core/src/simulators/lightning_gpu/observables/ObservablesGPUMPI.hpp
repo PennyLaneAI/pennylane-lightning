@@ -222,8 +222,7 @@ class HamiltonianMPI final : public HamiltonianBase<StateVectorT> {
  *
  */
 template <class StateVectorT>
-class SparseHermitianObsMPI final
-    : public SparseHermitianObsBase<StateVectorT> {
+class SparseHamiltonianMPI final : public SparseHamiltonianBase<StateVectorT> {
   public:
     using PrecisionT = typename StateVectorT::PrecisionT;
     using ComplexT = typename StateVectorT::ComplexT;
@@ -233,11 +232,11 @@ class SparseHermitianObsMPI final
                                   int32_t, int64_t>::type;
 
   private:
-    using BaseType = SparseHermitianObsBase<StateVectorT>;
+    using BaseType = SparseHamiltonianBase<StateVectorT>;
 
   public:
     /**
-     * @brief Create a SparseHermitianObsMPI from data, indices and offsets in
+     * @brief Create a SparseHamiltonianMPI from data, indices and offsets in
      * CSR format.
      *
      * @param data Arguments to construct data
@@ -246,8 +245,8 @@ class SparseHermitianObsMPI final
      * @param wires Arguments to construct wires
      */
     template <typename T1, typename T2, typename T3 = T2, typename T4>
-    explicit SparseHermitianObsMPI(T1 &&data, T2 &&indices, T3 &&offsets,
-                                   T4 &&wires)
+    explicit SparseHamiltonianMPI(T1 &&data, T2 &&indices, T3 &&offsets,
+                                  T4 &&wires)
         : BaseType{data, indices, offsets, wires} {}
 
     /**
@@ -266,9 +265,9 @@ class SparseHermitianObsMPI final
                        std::initializer_list<IdxT> indices,
                        std::initializer_list<IdxT> offsets,
                        std::initializer_list<std::size_t> wires)
-        -> std::shared_ptr<SparseHermitianObsMPI<StateVectorT>> {
-        return std::shared_ptr<SparseHermitianObsMPI<StateVectorT>>(
-            new SparseHermitianObsMPI<StateVectorT>{
+        -> std::shared_ptr<SparseHamiltonianMPI<StateVectorT>> {
+        return std::shared_ptr<SparseHamiltonianMPI<StateVectorT>>(
+            new SparseHamiltonianMPI<StateVectorT>{
                 std::move(data), std::move(indices), std::move(offsets),
                 std::move(wires)});
     }

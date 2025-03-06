@@ -6,10 +6,10 @@
 
 ### Improvements
 
-* Added support for sparse `qml.QubitUnitary` gates for `LQubit`, `LGPU`, and `LKokkos` backends.
+* Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
   [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
-* Introduced a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse gates.
+* Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
   [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Optimize the copy of a input state-vector into the LGPU #1071 

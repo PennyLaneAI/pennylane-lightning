@@ -32,6 +32,7 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
+from pennylane.operation import Observable
 from pennylane.ops import SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
@@ -70,16 +71,16 @@ class LightningBaseMeasurements(ABC):
         """Returns the simulation data type."""
         return self._qubit_state.dtype
 
-    def _observable_is_sparse(self, obs):
+    def _observable_is_sparse(self, obs: Observable) -> bool:
         """States if the required observable is sparse.
 
         Args:
-            obs: PennyLane observable to check sparsity.
+            obs (Observable): PennyLane observable to check sparsity.
 
         Returns:
-            True if the measurement process will use the sparse data representation.
+            True if the measurement process only uses the sparse data representation.
         """
-        return isinstance(obs, SparseHamiltonian) or (obs.has_sparse_matrix and not obs.has_matrix)
+        return isinstance(obs, SparseHamiltonian)
 
     @abstractmethod
     def _measurement_dtype(self):
@@ -118,13 +119,13 @@ class LightningBaseMeasurements(ABC):
         if self._observable_is_sparse(measurementprocess.obs):
             # Internally all sparse operators will be treated as a sparse Hermitian operator.
             # We first ensure the CSR sparse representation.
-            CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
+            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
             return self._measurement_lightning.expval(
-                CSR_SparseHermitianObs.indptr,
-                CSR_SparseHermitianObs.indices,
-                CSR_SparseHermitianObs.data,
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
             )
 
         if (
@@ -177,13 +178,13 @@ class LightningBaseMeasurements(ABC):
 
         if self._observable_is_sparse(measurementprocess.obs):
             # Ensuring CSR sparse representation.
-            CSR_SparseHermitianObs = measurementprocess.obs.sparse_matrix(
+            CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
             ).tocsr(copy=False)
             return self._measurement_lightning.var(
-                CSR_SparseHermitianObs.indptr,
-                CSR_SparseHermitianObs.indices,
-                CSR_SparseHermitianObs.data,
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
             )
 
         if (

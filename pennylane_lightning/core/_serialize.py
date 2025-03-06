@@ -161,7 +161,7 @@ class QuantumScriptSerializer:
 
     @property
     def sparse_hamiltonian_obs(self):
-        """SparseHermitianObs observable matching ``use_csingle`` precision."""
+        """SparseHamiltonian observable matching ``use_csingle`` precision."""
         if self._use_mpi:
             return (
                 self.sparse_hamiltonian_mpi_c64
@@ -186,8 +186,8 @@ class QuantumScriptSerializer:
         self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
 
         # Internally SparseHamiltonian is treated as a sparse Hermitian.
-        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHermitianObsC64
-        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHermitianObsC128
+        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
+        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
 
         if self._use_mpi:
             self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
@@ -202,10 +202,8 @@ class QuantumScriptSerializer:
             self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
             self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
 
-            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHermitianObsMPIC64
-            self.sparse_hamiltonian_mpi_c128 = (
-                lightning_ops.observablesMPI.SparseHermitianObsMPIC128
-            )
+            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
+            self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
 
             self._mpi_manager = lightning_ops.MPIManager
 
@@ -305,7 +303,7 @@ class QuantumScriptSerializer:
             wire_map (dict): a dictionary mapping input wires to the device's backend wires
 
         Returns:
-            sparse_hamiltonian_obs (SparseHermitianObsC64 or SparseHermitianObsC128): A Sparse Hamiltonian observable object compatible with the C++ backend
+            sparse_hamiltonian_obs (SparseHamiltonianC64 or SparseHamiltonianC128): A Sparse Hamiltonian observable object compatible with the C++ backend
         """
 
         if self._use_mpi:

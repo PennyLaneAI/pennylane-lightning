@@ -159,18 +159,18 @@ TEMPLATE_PRODUCT_TEST_CASE("Hamiltonian", "[Observables]",
     }
 }
 
-TEMPLATE_PRODUCT_TEST_CASE("SparseHermitianObs", "[Observables]",
+TEMPLATE_PRODUCT_TEST_CASE("SparseHamiltonian", "[Observables]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),
                            (float, double)) {
     using StateVectorT = TestType;
-    using SparseHermitianObsT = SparseHermitianObs<StateVectorT>;
+    using SparseHamiltonianT = SparseHamiltonian<StateVectorT>;
 
     SECTION("Copy constructibility") {
-        REQUIRE(std::is_copy_constructible_v<SparseHermitianObsT>);
+        REQUIRE(std::is_copy_constructible_v<SparseHamiltonianT>);
     }
 
     SECTION("Move constructibility") {
-        REQUIRE(std::is_move_constructible_v<SparseHermitianObsT>);
+        REQUIRE(std::is_move_constructible_v<SparseHamiltonianT>);
     }
 }
 

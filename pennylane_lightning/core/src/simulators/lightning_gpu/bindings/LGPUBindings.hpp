@@ -350,14 +350,14 @@ void registerBackendSpecificObservables(py::module_ &m) {
 
     std::string class_name;
 
-    class_name = "SparseHermitianObsC" + bitsize;
+    class_name = "SparseHamiltonianC" + bitsize;
     using np_arr_sparse_ind = typename std::conditional<
         std::is_same<ParamT, float>::value,
         py::array_t<int32_t, py::array::c_style | py::array::forcecast>,
         py::array_t<int64_t, py::array::c_style | py::array::forcecast>>::type;
-    using IdxT = typename SparseHermitianObs<StateVectorT>::IdxT;
-    py::class_<SparseHermitianObs<StateVectorT>,
-               std::shared_ptr<SparseHermitianObs<StateVectorT>>,
+    using IdxT = typename SparseHamiltonian<StateVectorT>::IdxT;
+    py::class_<SparseHamiltonian<StateVectorT>,
+               std::shared_ptr<SparseHamiltonian<StateVectorT>>,
                Observable<StateVectorT>>(m, class_name.c_str(),
                                          py::module_local())
         .def(py::init([](const np_arr_c &data, const np_arr_sparse_ind &indices,
@@ -374,24 +374,23 @@ void registerBackendSpecificObservables(py::module_ &m) {
             const auto *offsets_ptr =
                 static_cast<std::size_t *>(buffer_offsets.ptr);
 
-            return SparseHermitianObs<StateVectorT>{
+            return SparseHamiltonian<StateVectorT>{
                 std::vector<ComplexT>({data_ptr, data_ptr + data.size()}),
                 std::vector<IdxT>({indices_ptr, indices_ptr + indices.size()}),
                 std::vector<IdxT>({offsets_ptr, offsets_ptr + offsets.size()}),
                 wires};
         }))
-        .def("__repr__", &SparseHermitianObs<StateVectorT>::getObsName)
-        .def("get_wires", &SparseHermitianObs<StateVectorT>::getWires,
+        .def("__repr__", &SparseHamiltonian<StateVectorT>::getObsName)
+        .def("get_wires", &SparseHamiltonian<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
             "__eq__",
-            []([[maybe_unused]] const SparseHermitianObs<StateVectorT> &self,
+            []([[maybe_unused]] const SparseHamiltonian<StateVectorT> &self,
                py::handle other) -> bool {
-                if (!py::isinstance<SparseHermitianObs<StateVectorT>>(other)) {
+                if (!py::isinstance<SparseHamiltonian<StateVectorT>>(other)) {
                     return false;
                 }
-                auto other_cast =
-                    other.cast<SparseHermitianObs<StateVectorT>>();
+                auto other_cast = other.cast<SparseHamiltonian<StateVectorT>>();
                 return self == other_cast;
             },
             "Compare two observables");
