@@ -223,6 +223,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
+            output_shape = [2] * self._num_local_wires
             if self.num_wires == self._num_local_wires:
                 self.syncH2D(np.reshape(state, output_shape))
                 return
