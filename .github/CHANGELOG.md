@@ -6,6 +6,8 @@
 
 ### Improvements
 
+* Add PSWAP gate implementation to lightning-qubit. [(#1082)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1082)
+
 * Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
   [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
 
