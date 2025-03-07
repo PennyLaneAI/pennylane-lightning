@@ -512,10 +512,10 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs bench",
     using PrecisionT = StateVectorT::PrecisionT;
 
     std::mt19937 re{1337};
-    std::size_t num_qubits = 20;
+    std::size_t num_qubits = 24;
     auto values = createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
-    std::size_t n_target = GENERATE(2, 5, 7, 13, 15, 19);
+    std::size_t n_target = GENERATE(2, 5, 7, 13, 15, 19, 21);
     std::cout << "num_qubits: " << num_qubits << std::endl;
     std::cout << "n_target: " << n_target << std::endl;
     // std::size_t n_target = GENERATE(15);
