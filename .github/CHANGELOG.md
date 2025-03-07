@@ -101,7 +101,8 @@ Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Alex Preciado,
-Shuli Shu
+Shuli Shu,
+Jake Zaia
 
 ---
 
