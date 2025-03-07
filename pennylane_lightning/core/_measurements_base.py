@@ -71,7 +71,8 @@ class LightningBaseMeasurements(ABC):
         """Returns the simulation data type."""
         return self._qubit_state.dtype
 
-    def _observable_is_sparse(self, obs: Observable) -> bool:
+    @staticmethod
+    def _observable_is_sparse(obs: Observable) -> bool:
         """States if the required observable is sparse.
 
         Args:

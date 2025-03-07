@@ -76,7 +76,8 @@ class LightningTensorMeasurements:
         """Returns the simulation data type."""
         return self._dtype
 
-    def _observable_is_sparse(self, obs: Observable):
+    @staticmethod
+    def _observable_is_sparse(obs: Observable) -> bool:
         """States if the required observable is sparse.
 
         Args:
