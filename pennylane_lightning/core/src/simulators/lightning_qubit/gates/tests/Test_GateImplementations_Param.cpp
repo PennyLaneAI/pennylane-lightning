@@ -1914,10 +1914,6 @@ PENNYLANE_RUN_TEST(SingleExcitationPlus);
 
 template <typename PrecisionT, typename ParamT, class GateImplementation>
 void testApplyPSWAP() {
-
-    // auto test_state = createProductState<PrecisionT>("0+");
-
-    // TODO: Write this set of unit tests
     using ComplexT = std::complex<PrecisionT>;
 
     const std::size_t num_qubits = 3;
@@ -1969,6 +1965,22 @@ void testApplyPSWAP() {
         CAPTURE(st);
         CHECK(st == approx(expected[i]));
     }
+
+    // Do a single test with controlled PSWAP
+    expected = {
+        {ps_data[1][0], -ps_data[1][0], ps_data[1][0], -ps_data[1][0],
+         ps_data[1][0], ps_data[1][3], -ps_data[1][3], -ps_data[1][0]},
+    };
+
+    scaleVector(expected[0], coef);
+
+    auto st = ini_st;
+
+    GateImplementation::applyNCPSWAP(st.data(), num_qubits, {0}, {true}, 
+                                    {1, 2}, false,
+                                    angles[1]);
+    CAPTURE(st);
+    CHECK(st == approx(expected[0]));
 }
 PENNYLANE_RUN_TEST(PSWAP);
 
