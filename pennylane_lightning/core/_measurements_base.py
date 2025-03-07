@@ -141,9 +141,13 @@ class LightningBaseMeasurements(ABC):
             Probabilities of the supplied observable or wires.
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
+
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
+
         if measurementprocess.wires == Wires([]):
+            # For the case where no wires is specified for statevector
+            # and measurement process, wires are determined here
             measurewires = self._qubit_state.wires
         else:
             measurewires = measurementprocess.wires.tolist()

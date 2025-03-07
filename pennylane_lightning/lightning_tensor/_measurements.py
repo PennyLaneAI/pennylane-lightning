@@ -137,10 +137,14 @@ class LightningTensorMeasurements:
             Probabilities of the supplied observable or wires
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
+
         if diagonalizing_gates:
             self._tensornet.apply_operations(diagonalizing_gates)
             self._tensornet.appendFinalState()
+
         if measurementprocess.wires == Wires([]):
+            # For the case where no wires is specified for tensornet
+            # and measurement process, wires are determined here
             measurewires = self._tensornet._wires
         else:
             measurewires = measurementprocess.wires.tolist()
