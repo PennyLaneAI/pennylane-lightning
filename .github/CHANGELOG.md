@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Add `PSWAP` gate implementation to Lightning-Qubit. 
+  [(#1082)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1082)
+
 * Optimize the copy of a input state-vector into the LGPU #1071 
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
 
@@ -109,7 +112,8 @@ Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Alex Preciado,
-Shuli Shu
+Shuli Shu,
+Jake Zaia
 
 ---
 
