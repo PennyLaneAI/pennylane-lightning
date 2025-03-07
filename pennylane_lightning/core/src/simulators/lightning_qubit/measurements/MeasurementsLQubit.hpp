@@ -246,21 +246,21 @@ class Measurements final
 
         PrecisionT expected_value = 0.0;
         switch (wires.size()) {
-            case 1: {
-                auto core_function = [&expected_value,
-                                      &matrix](const std::complex<PrecisionT> *arr,
-                                               const std::size_t i0,
-                                               const std::size_t i1) {
-                    expected_value += real(matrix[0B00] * conj(arr[i0]) * arr[i0] +
-                                           matrix[0B01] * conj(arr[i0]) * arr[i1] +
-                                           matrix[0B10] * conj(arr[i1]) * arr[i0] +
-                                           matrix[0B11] * conj(arr[i1]) * arr[i1]);
-                };
-    
-                applyExpVal1<PrecisionT, decltype(core_function)>(
-                    arr_data, num_qubits, wires, core_function, expected_value);
-                break;
-            }
+        case 1: {
+            applyExpValMat1<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
+        case 2: {
+            applyExpValMat2<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
+        case 3: {
+            applyExpValMat3<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
         default:
             PL_ABORT("Not yet implemented");
             break;
@@ -336,26 +336,6 @@ class Measurements final
             arr_data, num_qubits, wires, core_function, expected_value);
         return expected_value;
     };
-
-    template <class ParamT = PrecisionT, class FuncT>
-    void applyExpVal1(const std::complex<ParamT> *arr,
-                      const std::size_t num_qubits,
-                      const std::vector<size_t> &wires, FuncT &core_function,
-                      [[maybe_unused]] ParamT &expected_value) {
-        const std::size_t rev_wire = num_qubits - wires[0] - 1;
-        const std::size_t rev_wire_shift =
-            (static_cast<std::size_t>(1) << rev_wire);
-        const auto parities =
-            PUtil::revWireParity(std::array<std::size_t, 1>{rev_wire});
-        const auto parity_high = parities[1];
-        const auto parity_low = parities[0];
-        PL_LOOP_PARALLEL_VA(1, reduction(+ : expected_value))
-        for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 1); k++) {
-            const std::size_t i0 = ((k << 1U) & parity_high) | (parity_low & k);
-            const std::size_t i1 = i0 | rev_wire_shift;
-            core_function(arr, i0, i1);
-        }
-    }
 
     /**
      * @brief Expected value of a Sparse Hamiltonian.
