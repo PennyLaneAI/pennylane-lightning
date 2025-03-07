@@ -19,8 +19,6 @@ from __future__ import annotations
 
 from warnings import warn
 
-from pennylane.operation import Observable
-
 try:
     from pennylane_lightning.lightning_gpu_ops import MeasurementsC64, MeasurementsC128
 
