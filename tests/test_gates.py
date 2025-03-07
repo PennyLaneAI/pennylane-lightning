@@ -144,6 +144,7 @@ def op(op_name):
 
 
 @pytest.mark.parametrize("op_name", ld_operations)
+@pytest.mark.skipif(device_name != "lightning.qubit" and op_name == "PSWAP", reason="Skipping PSWAP test for non-lightning.qubit device.")
 def test_gate_unitary_correct(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
@@ -152,7 +153,7 @@ def test_gate_unitary_correct(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
-
+    
     wires = len(op[2]["wires"])
 
     if wires == 1 and device_name == "lightning.tensor":
@@ -210,6 +211,7 @@ def test_gate_unitary_correct(op, op_name):
 
 
 @pytest.mark.parametrize("op_name", ld_operations)
+@pytest.mark.skipif(device_name != "lightning.qubit" and op_name == "PSWAP", reason="Skipping PSWAP test for non-lightning.qubit device.")
 def test_gate_unitary_correct_lt(op, op_name):
     """Test if lightning device correctly applies gates by reconstructing the unitary matrix and
     comparing to the expected version"""
@@ -244,6 +246,7 @@ def test_gate_unitary_correct_lt(op, op_name):
 
 
 @pytest.mark.parametrize("op_name", ld_operations)
+@pytest.mark.skipif(device_name != "lightning.qubit" and op_name == "PSWAP", reason="Skipping PSWAP test for non-lightning.qubit device.")
 def test_inverse_unitary_correct(op, op_name):
     """Test if lightning device correctly applies inverse gates by reconstructing the unitary matrix
     and comparing to the expected version"""
@@ -252,7 +255,7 @@ def test_inverse_unitary_correct(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
-
+    
     wires = len(op[2]["wires"])
 
     if wires == 1 and device_name == "lightning.tensor":
@@ -511,6 +514,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
 @pytest.mark.parametrize("adjoint", [False, True])
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+@pytest.mark.skipif(device_name != "lightning.qubit" and operation == qml.PSWAP, reason="Skipping PSWAP test for non-lightning.qubit device.")
 def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol):
     """Test that multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
@@ -716,6 +720,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
 @pytest.mark.parametrize("adjoint", [False, True])
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+@pytest.mark.skipif(device_name != "lightning.qubit" and operation == qml.PSWAP, reason="Skipping PSWAP test for non-lightning.qubit device.")
 def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol, adjoint):
     """Test that adjoint of multi-controlled gates are correctly applied to a state"""
     dev_def = qml.device("default.qubit", wires=n_qubits)
