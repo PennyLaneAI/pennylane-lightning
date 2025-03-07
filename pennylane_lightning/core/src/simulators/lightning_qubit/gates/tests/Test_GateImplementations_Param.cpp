@@ -1976,9 +1976,8 @@ void testApplyPSWAP() {
 
     auto st = ini_st;
 
-    GateImplementation::applyNCPSWAP(st.data(), num_qubits, {0}, {true}, 
-                                    {1, 2}, false,
-                                    angles[1]);
+    GateImplementation::applyNCPSWAP(st.data(), num_qubits, {0}, {true}, {1, 2},
+                                     false, angles[1]);
     CAPTURE(st);
     CHECK(st == approx(expected[0]));
 }
