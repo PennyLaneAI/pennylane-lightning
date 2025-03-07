@@ -300,6 +300,27 @@ class StateVectorCudaManaged
                 BaseType::getDataBuffer().getDevTag().getDeviceID(),
                 BaseType::getDataBuffer().getDevTag().getStreamID(),
                 getCublasCaller());
+        } else if (opName.substr(0, 4) == "tmp_") {
+            // Special case for tensor products of Pauli gates
+            std::string pauli_str = opName.substr(4);
+
+            // pauli_str has shape of PauliX_PauliY_PauliZ_...
+            // Split it into a vector of strings without delete pauli_str
+            std::vector<std::string> pauli_words{};
+
+            std::string delimiter = "_";
+            std::size_t start;
+            std::size_t end = 0;
+
+            while ((start = pauli_str.find_first_not_of(delimiter, end)) !=
+                   std::string::npos) {
+                end = pauli_str.find(delimiter, start);
+                pauli_words.push_back(pauli_str.substr(start, end - start));
+            }
+
+            applyParametricPauliGate_test(pauli_words, ctrls, tgts, params.front(),
+                                      adjoint);
+
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
@@ -1915,6 +1936,11 @@ class StateVectorCudaManaged
         {"CRY", CUSTATEVEC_PAULI_Y},      {"CRZ", CUSTATEVEC_PAULI_Z},
         {"Identity", CUSTATEVEC_PAULI_I}, {"I", CUSTATEVEC_PAULI_I}};
 
+    const std::unordered_map<std::string, custatevecPauli_t> native_gates_tmp_{
+        {"PauliX", CUSTATEVEC_PAULI_X}, {"PauliY", CUSTATEVEC_PAULI_Y},
+        {"PauliZ", CUSTATEVEC_PAULI_Z}, {"RX", CUSTATEVEC_PAULI_X},
+        {"I", CUSTATEVEC_PAULI_I}};
+
     // Holds the mapping from gate labels to associated generator functions.
     const GMap generator_map_{
         {"GlobalPhase",
@@ -2233,6 +2259,77 @@ class StateVectorCudaManaged
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
             BaseType::getDataBuffer().getDevTag().getStreamID()));
     }
+    void applyParametricPauliGate_test(const std::vector<std::string> &pauli_words,
+                                   std::vector<std::size_t> ctrls,
+                                   std::vector<std::size_t> tgts,
+                                   Precision param, bool use_adjoint = false)
+    {
+        // Transform indices between PL & cuQuantum ordering
+        auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
+            ctrls, BaseType::getNumQubits());
+        auto tgtsInt = NormalizeCastIndices<std::size_t, int>(
+            tgts, BaseType::getNumQubits());
+
+        const std::vector<int> ctrls_valuesInt(ctrls.size(), 1);
+
+        applyParametricPauliGeneralGate_test(pauli_words, ctrlsInt, ctrls_valuesInt,
+                                         tgtsInt, param, use_adjoint);
+    }
+
+    /**
+     * @brief Apply a parametric Pauli gate using custateVec calls.
+     *
+     * @param pauli_words List of Pauli words representing operation.
+     * @param ctrlsInt Control wires
+     * @param ctrls_valuesInt Control values
+     * @param tgtsInt target wires.
+     * @param param Rotation angle.
+     * @param use_adjoint Take adjoint of operation.
+     */
+    void applyParametricPauliGeneralGate_test(
+        const std::vector<std::string> &pauli_words,
+        const std::vector<int> &ctrlsInt,
+        const std::vector<int> &ctrls_valuesInt, const std::vector<int> tgtsInt,
+        Precision param, bool use_adjoint = false)
+    {
+        int nIndexBits = BaseType::getNumQubits();
+
+        cudaDataType_t data_type;
+
+        if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
+                      std::is_same_v<CFP_t, double2>)
+        {
+            data_type = CUDA_C_64F;
+        }
+        else
+        {
+            data_type = CUDA_C_32F;
+        }
+        std::vector<custatevecPauli_t> pauli_enums;
+        pauli_enums.reserve(pauli_words.size());
+        for (const auto &pauli_str : pauli_words)
+        {
+            pauli_enums.push_back(native_gates_tmp_.at(pauli_str));
+        }
+
+        const auto local_angle = (use_adjoint) ? -param / 2 : param / 2;
+
+        PL_CUSTATEVEC_IS_SUCCESS(custatevecApplyPauliRotation(
+            /* custatevecHandle_t */ handle_.get(),
+            /* void* */ BaseType::getData(),
+            /* cudaDataType_t */ data_type,
+            /* const uint32_t */ nIndexBits,
+            /* double */ local_angle,
+            /* const custatevecPauli_t* */ pauli_enums.data(),
+            /* const int32_t* */ tgtsInt.data(),
+            /* const uint32_t */ tgtsInt.size(),
+            /* const int32_t* */ ctrlsInt.data(),
+            /* const int32_t* */ ctrls_valuesInt.data(),
+            /* const uint32_t */ ctrlsInt.size()));
+
+        PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
+            BaseType::getDataBuffer().getDevTag().getStreamID()));
+    }
 
     /**
      * @brief Apply a given host or device-stored array representing the gate
@@ -2277,6 +2374,7 @@ class StateVectorCudaManaged
                                  std::vector<int> &tgts,
                                  std::vector<int> &ctrls_values,
                                  bool use_adjoint = false) {
+
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();

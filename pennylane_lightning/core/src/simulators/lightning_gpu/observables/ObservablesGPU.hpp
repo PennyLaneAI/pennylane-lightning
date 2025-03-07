@@ -145,6 +145,85 @@ class TensorProdObs final : public TensorProdObsBase<StateVectorT> {
         return std::shared_ptr<TensorProdObs<StateVectorT>>{
             new TensorProdObs(std::move(obs))};
     }
+
+    void applyInPlace(StateVectorT &sv) const override {
+        // This should change
+
+        for (const auto &ob : this->obs_) {
+            ob->applyInPlace(sv);
+        }
+    }
+
+};
+
+/**
+ * @brief Class models Tensor product observables
+ */
+template <class StateVectorT>
+class TensorProdObs_test final : public TensorProdObsBase<StateVectorT> {
+  private:
+    using BaseType = TensorProdObsBase<StateVectorT>;
+
+  public:
+    using PrecisionT = typename StateVectorT::PrecisionT;
+    /**
+     * @brief Create a tensor product of observables
+     *
+     * @param arg Arguments perfect forwarded to vector of observables.
+     */
+    template <typename... Ts>
+    explicit TensorProdObs_test(Ts &&...arg) : BaseType{arg...} {}
+
+    /**
+     * @brief Convenient wrapper for the constructor as the constructor does not
+     * convert the std::shared_ptr with a derived class correctly.
+     *
+     * This function is useful as std::make_shared does not handle
+     * brace-enclosed initializer list correctly.
+     *
+     * @param obs List of observables
+     */
+    static auto
+    create(std::initializer_list<std::shared_ptr<Observable<StateVectorT>>> obs)
+        -> std::shared_ptr<TensorProdObs_test<StateVectorT>> {
+        return std::shared_ptr<TensorProdObs_test<StateVectorT>>{
+            new TensorProdObs_test(std::move(obs))};
+    }
+
+    static auto
+    create(std::vector<std::shared_ptr<Observable<StateVectorT>>> obs)
+        -> std::shared_ptr<TensorProdObs_test<StateVectorT>> {
+        return std::shared_ptr<TensorProdObs_test<StateVectorT>>{
+            new TensorProdObs_test(std::move(obs))};
+    }
+
+    void applyInPlace(StateVectorT &sv) const override {
+        // This should change
+
+        // for (const auto &ob : this->obs_) {
+        //     ob->applyInPlace(sv);
+        // }
+
+        // Special string to trigger the custom tensor product function
+        std::string obs_name_ = "tmp";
+        for (const auto &ob : this->obs_) {
+            obs_name_ += "_" + ob->getObsName().substr(0, 6);
+        }
+
+        std::vector<std::size_t> target_wires;
+        for (const auto &ob : this->obs_) {
+            const auto ob_wires = ob->getWires();
+            target_wires.push_back(ob_wires[0]);
+        }
+
+        // Apply the custom tensor product function using theta = pi
+        // because the function applies the exponential of the tensor product
+        // of the Pauli rotations
+        // exp(-i*theta*P1*P2*...*Pn)|psi> = cos(theta)|psi> + i*sin(theta)P1*P2*...*Pn|psi>
+        //                                 = cos(pi)|psi> + i*sin(pi)P1*P2*...*Pn|psi>
+        //                                 = iP1*P2*...*Pn|psi>
+        sv.applyOperation(obs_name_, target_wires, false, {M_PI});
+    }
 };
 
 /**
