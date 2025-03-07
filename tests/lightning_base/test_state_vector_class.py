@@ -23,6 +23,7 @@ import pytest
 from conftest import LightningDevice, LightningStateVector, device_name  # tested device
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
+from scipy.sparse import coo_matrix, csc_matrix, csr_matrix
 
 if device_name == "lightning.kokkos":
     try:
@@ -96,6 +97,34 @@ def test_apply_state_vector_with_lightning_handle(tol):
         state_vector_2._apply_state_vector(state_vector_1.state_vector, Wires([0, 1]))
 
         assert np.allclose(state_vector_1.state, state_vector_2.state, atol=tol, rtol=0)
+
+
+@pytest.mark.parametrize(
+    "state",
+    [
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
+        [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
+        [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
+    ],
+)
+@pytest.mark.parametrize(
+    "sparse_rep",
+    [
+        coo_matrix,
+        csr_matrix,
+        csc_matrix,
+    ],
+)
+def test_apply_operation_sparse_state_preparation(tol, sparse_rep, state):
+    """Tests that applying an StatePrep operation works with sparse data representation."""
+
+    wires = 2
+    state_vector = LightningStateVector(wires)
+    sparse_state = sparse_rep(state)
+    state_vector.apply_operations([qml.StatePrep(sparse_state, Wires(range(wires)))])
+
+    assert np.allclose(state_vector.state, np.array(state), atol=tol, rtol=0)
 
 
 @pytest.mark.parametrize(

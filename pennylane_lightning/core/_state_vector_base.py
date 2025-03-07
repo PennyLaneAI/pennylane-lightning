@@ -105,8 +105,7 @@ class LightningBaseStateVector(ABC):
     def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
         """Initialize the internal state vector in a specified state.
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
             device_wires (Wires): wires that get initialized in the state
         """
 

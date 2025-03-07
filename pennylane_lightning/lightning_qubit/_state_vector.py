@@ -29,6 +29,7 @@ from typing import Union
 
 import numpy as np
 import pennylane as qml
+import scipy as sp
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
@@ -87,12 +88,13 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
             device_wires (Wires): wires that get initialized in the state
         """
 
-        if isinstance(state, self._qubit_state.__class__):
+        if sp.sparse.issparse(state):
+            state = state.toarray().flatten()
+        elif isinstance(state, self._qubit_state.__class__):
             state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
             state.getState(state_data)
             state = state_data
