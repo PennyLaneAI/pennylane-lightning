@@ -215,7 +215,7 @@ class LightningBaseMeasurements(ABC):
             Callable: function that returns the measurement result
         """
         if isinstance(measurementprocess, StateMeasurement):
-            if isinstance(measurementprocess, ExpectationMP):
+            if isinstance(measurementprocess, ExpectationMP) and measurementprocess.obs is not None:
                 if self._use_mpi:
                     if isinstance(measurementprocess.obs, (qml.Projector)):
                         return self.state_diagonalizing_gates
@@ -227,7 +227,7 @@ class LightningBaseMeasurements(ABC):
             if isinstance(measurementprocess, ProbabilityMP):
                 return self.probs
 
-            if isinstance(measurementprocess, VarianceMP):
+            if isinstance(measurementprocess, VarianceMP) and measurementprocess.obs is not None:
                 if self._use_mpi:
                     if isinstance(measurementprocess.obs, (qml.Projector)):
                         return self.state_diagonalizing_gates
@@ -235,6 +235,7 @@ class LightningBaseMeasurements(ABC):
                     if isinstance(measurementprocess.obs, (qml.Identity, qml.Projector)):
                         return self.state_diagonalizing_gates
                 return self.var
+
             if measurementprocess.obs is None or measurementprocess.obs.has_diagonalizing_gates:
                 return self.state_diagonalizing_gates
 
