@@ -382,10 +382,10 @@ class TestExpvalHamiltonian:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support sparse operators.",
+    reason="lightning.tensor does not support sparse observables.",
 )
 class TestSparseExpval:
-    """Tests for the expval function with sparse operators."""
+    """Tests for the expval function with sparse observables."""
 
     wires = 2
 
@@ -407,7 +407,7 @@ class TestSparseExpval:
         ],
     )
     def test_sparse_Pauli_words(self, obs, ham_terms, expected, tol, lightning_sv):
-        """Test expval of some simple sparse operators"""
+        """Test expval of some simple sparse observables"""
 
         ops = [qml.RX(0.4, wires=[0]), qml.RY(-0.2, wires=[1])]
         sparse_matrix = qml.Hamiltonian([1], [ham_terms]).sparse_matrix()
@@ -424,7 +424,7 @@ class TestSparseExpval:
 
 @pytest.mark.skipif(
     device_name == "lightning.tensor",
-    reason="lightning.tensor does not support sparse operators.",
+    reason="lightning.tensor does not support sparse observables.",
 )
 class TestSparseMeasurements:
     """Tests all sparse measurements"""
