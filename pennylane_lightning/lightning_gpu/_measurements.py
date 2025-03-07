@@ -158,7 +158,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             if self._use_mpi:
                 # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
-                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix().tocsr()
+                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
                 # CSR_SparseHamiltonian for rank == 0
                 if self._mpi_handler.mpi_manager.getRank() == 0:
                     CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
