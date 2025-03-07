@@ -84,7 +84,7 @@ class LightningTensorMeasurements:
             obs(Observable): PennyLane observable to check sparsity.
 
         Returns:
-            True if the measurement process will use the sparse data representation.
+            True if the measurement process only uses the sparse data representation.
         """
 
         return isinstance(obs, qml.SparseHamiltonian)
