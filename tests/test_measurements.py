@@ -26,6 +26,8 @@ from conftest import device_name, lightning_ops, validate_measurements
 from flaky import flaky
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
 
+from pennylane_lightning.lightning_tensor_ops import LightningException
+
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
@@ -51,15 +53,25 @@ class TestProbs:
     def dev(self, request):
         return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
-    def test_probs_H(self, tol, dev):
+    @pytest.mark.parametrize(
+        "wire, expected", [(0, [0.5, 0.0, 0.5, 0.0]), (1, [0.5, 0.5, 0.0, 0.0])]
+    )
+    def test_probs_H(self, wire, expected, tol, dev):
         """Test probs with Hadamard"""
 
         @qml.qnode(dev)
         def circuit():
-            qml.Hadamard(wires=1)
+            qml.Hadamard(wires=wire)
             return qml.probs(wires=[0, 1])
 
-        assert np.allclose(circuit(), [0.5, 0.5, 0.0, 0.0], atol=tol, rtol=0)
+        if device_name == "lightning.tensor" and wire == 1 and dev.num_wires is None:
+            with pytest.raises(LightningException, match="Invalid wire indices order"):
+                # With dynamic wires, in this case since wires appear in this order 1, 0
+                # The wires will map 1 -> 0 and 0 -> 1. Therefore the wires in the probs
+                # measurement will be [1, 0] which is out of order and invalid for LT.
+                circuit()
+        else:
+            assert np.allclose(circuit(), expected, atol=tol, rtol=0)
 
     def test_probs_tape_none_wires(self, tol, dev):
         """Test probs with a circuit with wires=None"""
@@ -113,7 +125,15 @@ class TestProbs:
             qml.RY(-0.2, wires=[0])
             return qml.probs(wires=cases[0])
 
-        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        if (
+            device_name == "lightning.tensor"
+            and (isinstance(cases[0], int) or len(cases[0]) < 2)
+            and dev.num_wires is None
+        ):
+            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
+                circuit()
+        else:
+            assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
     @pytest.mark.skipif(
         device_name in ("lightning.tensor"),
@@ -171,14 +191,14 @@ class TestProbs:
     @pytest.mark.parametrize(
         "cases",
         [
-            [qml.PauliZ(0), [0.91651645, 0.08348355]],
-            [qml.PauliZ(1), [1.0, 0.0]],
+            [qml.PauliZ(0), [0.91237521, 0.08762479]],
+            [qml.PauliZ(1), [0.99003329, 0.00996671]],
             [qml.PauliY(0), [0.22418248, 0.77581752]],
             [qml.PauliY(1), [0.5, 0.5]],
-            [qml.PauliX(0), [0.47905386, 0.52094614]],
-            [qml.PauliX(1), [0.5, 0.5]],
-            [qml.Hadamard(0), [0.77971045, 0.22028955]],
-            [qml.Hadamard(1), [0.85355339, 0.14644661]],
+            [qml.PauliX(0), [0.56222044, 0.43777956]],
+            [qml.PauliX(1), [0.40066533, 0.59933467]],
+            [qml.Hadamard(0), [0.8355898, 0.1644102]],
+            [qml.Hadamard(1), [0.77626565, 0.22373435]],
         ],
     )
     def test_probs_named_op(self, cases, tol, dev):
@@ -190,7 +210,7 @@ class TestProbs:
         def circuit():
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
+            qml.RY(-0.2, wires=[1])
             return qml.probs(op=cases[0])
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
@@ -285,12 +305,12 @@ class TestExpval:
         @qml.qnode(dev)
         def circuit(x):
             qml.RX(x, wires=0)
+            qml.RX(x, wires=1)
             return qml.expval(qml.PauliY(0))
 
         x = 0.54
         res = circuit(x)
         expected = -np.sin(x)
-
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
     def test_not_an_observable(self, dev):
@@ -310,7 +330,8 @@ class TestExpval:
 
         @qml.qnode(dev)
         def circuit():
-            res = qml.expval(qml.PauliZ(0))
+            qml.PauliX(0)
+            res = qml.expval(qml.PauliZ(1))
             assert isinstance(res, ExpectationMP)
             return res
 
@@ -347,7 +368,15 @@ class TestVar:
             qml.RY(-0.2, wires=[0])
             return qml.var(cases[0])
 
-        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        if (
+            device_name == "lightning.tensor"
+            and cases[0].wires.tolist() == [0]
+            and dev.num_wires is None
+        ):
+            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
+                circuit()
+        else:
+            assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
         "cases",
@@ -377,6 +406,7 @@ class TestVar:
         @qml.qnode(dev)
         def circuit(x):
             qml.RX(x, wires=0)
+            qml.RY(x, wires=1)
             return qml.var(qml.PauliZ(0))
 
         x = 0.54
@@ -402,6 +432,7 @@ class TestVar:
 
         @qml.qnode(dev)
         def circuit():
+            qml.PauliX(1)
             res = qml.var(qml.PauliZ(0))
             assert isinstance(res, VarianceMP)
             return res

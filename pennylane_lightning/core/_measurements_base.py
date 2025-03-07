@@ -143,7 +143,6 @@ class LightningBaseMeasurements(ABC):
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         if diagonalizing_gates:
             self._qubit_state.apply_operations(diagonalizing_gates)
-
         if measurementprocess.wires == Wires([]):
             measurewires = self._qubit_state.wires
         else:
