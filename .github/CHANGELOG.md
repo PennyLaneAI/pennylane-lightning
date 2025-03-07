@@ -6,7 +6,11 @@
 
 ### Improvements
 
-* Add PSWAP gate implementation to lightning-qubit. [(#1082)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1082)
+* Add PSWAP gate implementation to lightning-qubit. 
+  [(#1082)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1082)
+
+* Optimize the copy of a input state-vector into the LGPU #1071 
+  [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
 
 * Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
   [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
@@ -61,6 +65,12 @@
 * `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
+* Programs transformed by `qml.defer_measurements` can be executed on `lightning.qubit`.
+  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
+
+* `lightning.qubit` supports `ctrl` and `adjoint` with program capture.
+  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
+
 ### Documentation
 
 ### Bug fixes
@@ -94,6 +104,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Astral Cai,
 Yushao Chen,
 Amintor Dusko,
 Christina Lee,
