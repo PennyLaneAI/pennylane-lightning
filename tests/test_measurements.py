@@ -22,7 +22,7 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name, lightning_ops, validate_measurements, LightningException
+from conftest import LightningException, device_name, lightning_ops, validate_measurements
 from flaky import flaky
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
 
