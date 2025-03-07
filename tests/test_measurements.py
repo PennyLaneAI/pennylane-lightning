@@ -22,11 +22,9 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name, lightning_ops, validate_measurements
+from conftest import device_name, lightning_ops, validate_measurements, LightningException
 from flaky import flaky
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
-
-from pennylane_lightning.lightning_tensor_ops import LightningException
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
