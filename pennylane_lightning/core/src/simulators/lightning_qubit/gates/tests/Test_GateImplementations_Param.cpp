@@ -1912,6 +1912,66 @@ void testApplySingleExcitationPlus() {
 }
 PENNYLANE_RUN_TEST(SingleExcitationPlus);
 
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyPSWAP() {
+
+    // auto test_state = createProductState<PrecisionT>("0+");
+
+    // TODO: Write this set of unit tests
+    using ComplexT = std::complex<PrecisionT>;
+
+    const std::size_t num_qubits = 3;
+
+    // Test using |++-> state
+    auto ini_st = createProductState<PrecisionT>("++-");
+
+    const auto isqrt2 = INVSQRT2<PrecisionT>();
+
+    const std::vector<PrecisionT> angles{0, 0.3, 2.4, -2.4};
+    const ComplexT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
+
+    std::vector<std::vector<ComplexT>> ps_data;
+    ps_data.reserve(angles.size());
+    for (auto &a : angles) {
+        ps_data.push_back(getPhaseShift<std::complex, PrecisionT>(a));
+    }
+
+    std::vector<std::vector<size_t>> wires = {
+        {1, 2},
+        {1, 2},
+        {0, 1},
+        {0, 1},
+    };
+
+    std::vector<std::vector<ComplexT>> expected = {
+        {ps_data[0][0], ps_data[0][3], -ps_data[0][3], -ps_data[0][0],
+         ps_data[0][0], ps_data[0][3], -ps_data[0][3], -ps_data[0][0]},
+
+        {ps_data[1][0], ps_data[1][3], -ps_data[1][3], -ps_data[1][0],
+         ps_data[1][0], ps_data[1][3], -ps_data[1][3], -ps_data[1][0]},
+
+        {ps_data[2][0], -ps_data[2][0], ps_data[2][3], -ps_data[2][3],
+         ps_data[2][3], -ps_data[2][3], ps_data[2][0], -ps_data[2][0]},
+
+        {ps_data[3][0], -ps_data[3][0], ps_data[3][3], -ps_data[3][3],
+         ps_data[3][3], -ps_data[3][3], ps_data[3][0], -ps_data[3][0]},
+    };
+
+    for (auto &vec : expected) {
+        scaleVector(vec, coef);
+    }
+
+    for (std::size_t i = 0; i < angles.size(); ++i) {
+        auto st = ini_st;
+
+        GateImplementation::applyPSWAP(st.data(), num_qubits, wires[i], false,
+                                       angles[i]);
+        CAPTURE(st);
+        CHECK(st == approx(expected[i]));
+    }
+}
+PENNYLANE_RUN_TEST(PSWAP);
+
 /*******************************************************************************
  * Four-qubit gates
  ******************************************************************************/
