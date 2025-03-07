@@ -167,7 +167,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         std::vector<std::size_t> wires = {0, 1, 2};
         PrecisionT exp_value = Measurer.expval(matrix, wires);
         // reference value obtained from Pennylane default qubit
-        PrecisionT exp_values_ref = 1.9454623061510465;
+        PrecisionT exp_values_ref = 1.945462;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 }
