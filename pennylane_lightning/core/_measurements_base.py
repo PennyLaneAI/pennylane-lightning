@@ -117,7 +117,6 @@ class LightningBaseMeasurements(ABC):
             Expectation value of the observable
         """
         if self._observable_is_sparse(measurementprocess.obs):
-            # Internally all sparse operators will be treated as a sparse Hermitian operator.
             # We first ensure the CSR sparse representation.
             CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                 wire_order=list(range(self._qubit_state.num_wires))
@@ -317,7 +316,7 @@ class LightningBaseMeasurements(ABC):
                 group[0].obs
             ):
                 raise TypeError(
-                    "ExpectationMP/VarianceMP of sparse operators cannot be computed with samples."
+                    "ExpectationMP/VarianceMP of sparse observables cannot be computed with samples."
                 )
             if isinstance(group[0], VarianceMP) and isinstance(group[0].obs, Sum):
                 raise TypeError("VarianceMP(Sum) cannot be computed with samples.")
