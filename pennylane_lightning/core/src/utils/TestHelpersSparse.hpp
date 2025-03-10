@@ -181,7 +181,7 @@ struct SparseMatrixCSR {
                 if (std::get<0>(a) < std::get<0>(b)) {
                     return true;
                 }
-                if (std::get<0>(a) > std::get<0>(b)){
+                if (std::get<0>(a) > std::get<0>(b)) {
                     return false;
                 }
                 return std::get<1>(a) <
