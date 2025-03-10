@@ -19,8 +19,9 @@
 #include <catch2/catch.hpp>
 
 #include "SparseLinAlg.hpp"
-#include "TestHelpers.hpp" // write_CSR_vectors
-#include "Util.hpp"        // exp2
+#include "TestHelpers.hpp"       // approx
+#include "TestHelpersSparse.hpp" // write_CSR_vectors
+#include "Util.hpp"              // exp2
 
 #if defined(_MSC_VER)
 #pragma warning(disable : 4305)

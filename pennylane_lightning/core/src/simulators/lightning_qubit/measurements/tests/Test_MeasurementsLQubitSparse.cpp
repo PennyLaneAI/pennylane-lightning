@@ -19,9 +19,10 @@
 #include "SparseLinAlg.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
+#include "TestHelpers.hpp"
+#include "TestHelpersSparse.hpp" // write_CSR_vectors
 #include "Util.hpp"
 
-#include "TestHelpers.hpp"
 #include <catch2/catch.hpp>
 
 #if defined(_MSC_VER)
@@ -58,20 +59,24 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values - Sparse Hamiltonian",
         std::size_t num_qubits = 3;
         std::size_t data_size = Pennylane::Util::exp2(num_qubits);
 
-        std::vector<std::size_t> row_map;
-        std::vector<std::size_t> entries;
-        std::vector<ComplexT> values;
-        write_CSR_vectors(row_map, entries, values, data_size);
+        SparseMatrixCSR<ComplexT> sparse_hamiltonian;
+        write_CSR_vectors(sparse_hamiltonian, data_size);
 
-        PrecisionT exp_values =
-            Measurer.expval(row_map.data(), row_map.size(), entries.data(),
-                            values.data(), values.size());
+        PrecisionT exp_values = Measurer.expval(
+            sparse_hamiltonian.row_map.data(),
+            sparse_hamiltonian.row_map.size(),
+            sparse_hamiltonian.col_idx.data(), sparse_hamiltonian.values.data(),
+            sparse_hamiltonian.values.size());
+
         PrecisionT exp_values_ref = 0.5930885;
         REQUIRE(exp_values == Approx(exp_values_ref).margin(1e-6));
 
-        PrecisionT var_values =
-            Measurer.var(row_map.data(), row_map.size(), entries.data(),
-                         values.data(), values.size());
+        PrecisionT var_values = Measurer.var(sparse_hamiltonian.row_map.data(),
+                                             sparse_hamiltonian.row_map.size(),
+                                             sparse_hamiltonian.col_idx.data(),
+                                             sparse_hamiltonian.values.data(),
+                                             sparse_hamiltonian.values.size());
+
         PrecisionT var_values_ref = 2.4624654;
         REQUIRE(var_values == Approx(var_values_ref).margin(1e-6));
     }
@@ -80,14 +85,15 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values - Sparse Hamiltonian",
         std::size_t num_qubits = 4;
         std::size_t data_size = Pennylane::Util::exp2(num_qubits);
 
-        std::vector<std::size_t> row_map;
-        std::vector<std::size_t> entries;
-        std::vector<ComplexT> values;
-        write_CSR_vectors(row_map, entries, values, data_size);
+        SparseMatrixCSR<ComplexT> sparse_hamiltonian;
+        write_CSR_vectors(sparse_hamiltonian, data_size);
 
         PL_CHECK_THROWS_MATCHES(
-            Measurer.expval(row_map.data(), row_map.size(), entries.data(),
-                            values.data(), values.size()),
+            Measurer.expval(sparse_hamiltonian.row_map.data(),
+                            sparse_hamiltonian.row_map.size(),
+                            sparse_hamiltonian.col_idx.data(),
+                            sparse_hamiltonian.values.data(),
+                            sparse_hamiltonian.values.size()),
             LightningException,
             "Statevector and Hamiltonian have incompatible sizes.");
     }
