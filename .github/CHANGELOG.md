@@ -65,6 +65,12 @@
 * `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
+* Programs transformed by `qml.defer_measurements` can be executed on `lightning.qubit`.
+  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
+
+* `lightning.qubit` supports `ctrl` and `adjoint` with program capture.
+  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
+
 ### Documentation
 
 ### Bug fixes
@@ -98,6 +104,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Astral Cai,
 Yushao Chen,
 Amintor Dusko,
 Christina Lee,
