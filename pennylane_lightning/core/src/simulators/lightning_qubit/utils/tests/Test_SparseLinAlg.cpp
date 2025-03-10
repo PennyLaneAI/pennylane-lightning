@@ -19,7 +19,7 @@
 #include <catch2/catch.hpp>
 
 #include "SparseLinAlg.hpp"
-#include "Util.hpp"              // exp2
+#include "Util.hpp" // exp2
 
 #include "TestHelpers.hpp"       // approx
 #include "TestHelpersSparse.hpp" // write_CSR_vectors
