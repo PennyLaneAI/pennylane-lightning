@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2025 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the License);
 // you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@
 #include "TestHelpersWires.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp"
-// #include "cpu_kernels/GateImplementationsLM.hpp"
+#include "cpu_kernels/GateImplementationsLM.hpp"
 
 /// @cond DEV
 namespace {
@@ -60,10 +60,8 @@ void applySparseNCMultiQubitOpRun(StateVectorT &ref_st,
                                   const std::vector<std::size_t> &target_wires,
                                   const bool inverse,
                                   const float margin = 1e-5) {
-
     SparseMatrixCSR<ComplexT> sparse_matrix_from_dense(
         dense_matrix, std::sqrt(dense_matrix.size()));
-
     auto row_map_ptr = sparse_matrix_from_dense.row_map.data();
     auto col_idx_ptr = sparse_matrix_from_dense.col_idx.data();
     auto values_ptr = sparse_matrix_from_dense.values.data();
@@ -146,14 +144,12 @@ void applySparseMultiQubitOpRunPauli(StateVectorT &ref_st,
                                      const std::vector<std::size_t> &wires,
                                      const bool inverse,
                                      const float margin = 1e-5) {
-
     SparseMatrixCSR<ComplexT> sparse_matrix_from_dense(
         dense_matrix, std::sqrt(dense_matrix.size()));
 
     auto row_map_ptr = sparse_matrix_from_dense.row_map.data();
     auto col_idx_ptr = sparse_matrix_from_dense.col_idx.data();
     auto values_ptr = sparse_matrix_from_dense.values.data();
-
     GateImplementationsLM::applyMultiQubitSparseOp(st.data(), num_qubits,
                                                    row_map_ptr, col_idx_ptr,
                                                    values_ptr, wires, inverse);

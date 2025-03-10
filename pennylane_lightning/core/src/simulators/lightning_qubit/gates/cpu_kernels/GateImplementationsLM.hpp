@@ -424,7 +424,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             core_function(arr, indices, offset);
         }
     }
-    // HERE
+
     /**
      * @brief Apply a matrix with controls to the statevector.
      *
