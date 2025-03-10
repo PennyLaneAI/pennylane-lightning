@@ -87,7 +87,7 @@ class TestProbs:
 
         assert np.allclose(circuit(), expected, atol=tol, rtol=0)
 
-    def test_probs_tape_emptywires(self, dev):
+    def test_probs_tape_empty_wires(self, dev):
         """Test that probs with empty list for wires raises an error"""
 
         x, y, z = [0.5, 0.3, -0.7]
