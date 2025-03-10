@@ -221,9 +221,8 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
     SECTION("Random Unitary - Full Dense Matrix") {
         const std::size_t num_qubits = 4;
         auto matrix = randomUnitary<PrecisionT>(re, num_qubits);
-        const std::size_t size_operator = 1 << num_qubits;
 
-        SparseMatrixCSR<ComplexT> sparse_unitary(matrix, size_operator);
+        SparseMatrixCSR<ComplexT> sparse_unitary(matrix, 1U << num_qubits);
 
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
@@ -242,13 +241,12 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
         const PrecisionT sparsity = GENERATE(0.1, 0.5, 0.9);
         const std::size_t num_qubits = 4;
         const std::size_t unitary_num_qubits = 4;
-        const std::size_t size_operator = 1 << num_qubits;
 
         std::vector<std::size_t> unitary_wires(unitary_num_qubits);
         std::iota(unitary_wires.begin(), unitary_wires.end(), 0);
 
         SparseMatrixCSR<ComplexT> sparse_unitary;
-        sparse_unitary.makeSparseUnitary(re, size_operator, sparsity);
+        sparse_unitary.makeSparseUnitary(re, 1U << num_qubits, sparsity);
 
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
@@ -265,7 +263,8 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
         std::iota(unitary_wires.begin(), unitary_wires.end(), 0);
 
         SparseMatrixCSR<ComplexT> sparse_unitary;
-        sparse_unitary.makeSparseUnitary(re, 1 << unitary_num_qubits, sparsity);
+        sparse_unitary.makeSparseUnitary(re, 1U << unitary_num_qubits,
+                                         sparsity);
 
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
@@ -282,7 +281,8 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
             createRandomWiresSubset(re, num_qubits, unitary_num_qubits);
 
         SparseMatrixCSR<ComplexT> sparse_unitary;
-        sparse_unitary.makeSparseUnitary(re, 1 << unitary_num_qubits, sparsity);
+        sparse_unitary.makeSparseUnitary(re, 1U << unitary_num_qubits,
+                                         sparsity);
 
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
@@ -298,7 +298,8 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
         std::iota(unitary_wires.begin(), unitary_wires.end(), 0);
 
         SparseMatrixCSR<ComplexT> sparse_unitary;
-        sparse_unitary.makeSparseUnitary(re, 1 << unitary_num_qubits, sparsity);
+        sparse_unitary.makeSparseUnitary(re, 1U << unitary_num_qubits,
+                                         sparsity);
 
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
