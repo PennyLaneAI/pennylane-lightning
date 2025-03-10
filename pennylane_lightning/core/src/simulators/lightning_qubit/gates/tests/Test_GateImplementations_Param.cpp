@@ -977,7 +977,7 @@ void testApplyControlledPhaseShift() {
         ps_data.push_back(getPhaseShift<std::complex, PrecisionT>(a));
     }
 
-    std::vector<std::vector<size_t>> wires = {{0, 1}, {1, 2}};
+    const std::vector<std::vector<size_t>> wires = {{0, 1}, {1, 2}};
 
     std::vector<std::vector<ComplexT>> expected = {
         {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
