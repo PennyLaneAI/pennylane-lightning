@@ -240,7 +240,7 @@ struct SparseMatrixCSR {
      * @return std::vector<ComplexT> the matrix dense row-major representation.
      * @note Only for testing purposes.
      */
-    [[nodiscard]] auto toDenseMatrix() const -> const std::vector<ComplexT> {
+    [[nodiscard]] auto toDenseMatrix() const -> std::vector<ComplexT> {
         std::vector<ComplexT> dense_matrix(num_rows * num_cols, 0.0);
         for (IndexT i = 0; i < num_rows; ++i) {
             for (IndexT j = row_map[i]; j < row_map[i + 1]; ++j) {
