@@ -12,10 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "TestHelpers.hpp"
-#include "TestHelpersSparse.hpp"
 #include <catch2/catch.hpp>
 #include <random>
+
+#include "TestHelpers.hpp"
+#include "TestHelpersSparse.hpp"
 
 using namespace Pennylane::Util;
 

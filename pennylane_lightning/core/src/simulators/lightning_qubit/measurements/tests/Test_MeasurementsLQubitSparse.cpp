@@ -19,9 +19,10 @@
 #include "SparseLinAlg.hpp"
 #include "StateVectorLQubitManaged.hpp"
 #include "StateVectorLQubitRaw.hpp"
+#include "Util.hpp"
+
 #include "TestHelpers.hpp"
 #include "TestHelpersSparse.hpp" // write_CSR_vectors
-#include "Util.hpp"
 
 #include <catch2/catch.hpp>
 
