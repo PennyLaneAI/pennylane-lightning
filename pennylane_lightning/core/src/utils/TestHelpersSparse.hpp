@@ -171,17 +171,19 @@ struct SparseMatrixCSR {
 
         std::uniform_real_distribution<PrecisionT> dist(0.0, 1.0);
 
-        IndexT num_nonzero =
+        auto num_nonzero =
             static_cast<IndexT>((1 - sparsity) * dimension * dimension);
 
         // Custom comparator for the set
         auto tuple_comparator =
             [](const std::tuple<IndexT, IndexT, ComplexT> &a,
                const std::tuple<IndexT, IndexT, ComplexT> &b) {
-                if (std::get<0>(a) < std::get<0>(b))
+                if (std::get<0>(a) < std::get<0>(b)) {
                     return true;
-                if (std::get<0>(a) > std::get<0>(b))
+                }
+                if (std::get<0>(a) > std::get<0>(b)){
                     return false;
+                }
                 return std::get<1>(a) <
                        std::get<1>(b); // Compare columns if rows are equal
             };
@@ -191,8 +193,8 @@ struct SparseMatrixCSR {
             nonzeros;
 
         while (nonzeros.size() < num_nonzero) {
-            IndexT row = static_cast<IndexT>(dist(gen) * dimension);
-            IndexT col = static_cast<IndexT>(dist(gen) * dimension);
+            auto row = static_cast<IndexT>(dist(gen) * dimension);
+            auto col = static_cast<IndexT>(dist(gen) * dimension);
             ComplexT val = ComplexT{dist(gen), dist(gen)};
 
             if (row == col) {
@@ -238,7 +240,7 @@ struct SparseMatrixCSR {
      * @return std::vector<ComplexT> the matrix dense row-major representation.
      * @note Only for testing purposes.
      */
-    std::vector<ComplexT> toDenseMatrix() const {
+    [[nodiscard]] std::vector<ComplexT> toDenseMatrix() const {
         std::vector<ComplexT> dense_matrix(num_rows * num_cols, 0.0);
         for (IndexT i = 0; i < num_rows; ++i) {
             for (IndexT j = row_map[i]; j < row_map[i + 1]; ++j) {
