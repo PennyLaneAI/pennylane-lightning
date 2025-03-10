@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* `LightningQubit.preprocess` can be used with program capture enabled.
+  [(#)]()
+
 * Optimize the copy of a input state-vector into the LGPU #1071 
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
 
@@ -284,6 +287,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
 Raul Torres,
