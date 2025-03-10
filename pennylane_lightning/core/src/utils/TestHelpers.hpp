@@ -461,64 +461,6 @@ auto createNonTrivialState(std::size_t num_qubits = 3) {
 }
 
 /**
- * @brief Fills the empty vectors with the CSR (Compressed Sparse Row) sparse
- * matrix representation for a tri-diagonal + periodic boundary conditions
- * Hamiltonian.
- *
- * @tparam PrecisionT data float point precision.
- * @tparam IndexT integer type used as indices of the sparse matrix.
- * @param row_map the j element encodes the total number of non-zeros above
- * row j.
- * @param entries column indices.
- * @param values  matrix non-zero elements.
- * @param numRows matrix number of rows.
- */
-template <class ComplexT, class IndexT>
-void write_CSR_vectors(std::vector<IndexT> &row_map,
-                       std::vector<IndexT> &entries,
-                       std::vector<ComplexT> &values, IndexT numRows) {
-    const ComplexT SC_ONE = 1.0;
-
-    row_map.resize(numRows + 1);
-    for (IndexT rowIdx = 1; rowIdx < static_cast<IndexT>(row_map.size());
-         ++rowIdx) {
-        row_map[rowIdx] = row_map[rowIdx - 1] + 3;
-    };
-    const IndexT numNNZ = row_map[numRows];
-
-    entries.resize(numNNZ);
-    values.resize(numNNZ);
-    for (IndexT rowIdx = 0; rowIdx < numRows; ++rowIdx) {
-        std::size_t idx = row_map[rowIdx];
-        if (rowIdx == 0) {
-            entries[0] = rowIdx;
-            entries[1] = rowIdx + 1;
-            entries[2] = numRows - 1;
-
-            values[0] = SC_ONE;
-            values[1] = -SC_ONE;
-            values[2] = -SC_ONE;
-        } else if (rowIdx == numRows - 1) {
-            entries[idx] = 0;
-            entries[idx + 1] = rowIdx - 1;
-            entries[idx + 2] = rowIdx;
-
-            values[idx] = -SC_ONE;
-            values[idx + 1] = -SC_ONE;
-            values[idx + 2] = SC_ONE;
-        } else {
-            entries[idx] = rowIdx - 1;
-            entries[idx + 1] = rowIdx;
-            entries[idx + 2] = rowIdx + 1;
-
-            values[idx] = -SC_ONE;
-            values[idx + 1] = SC_ONE;
-            values[idx + 2] = -SC_ONE;
-        }
-    }
-};
-
-/**
  * @brief Compare std::vectors with same elements data type but different
  * allocators.
  *
