@@ -9,6 +9,12 @@
 * Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
+* Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
+  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+
+* Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
+  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+
 * Optimize the copy of a input state-vector into the LGPU #1071 
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
 
@@ -33,7 +39,7 @@
 
 * Remove the old device API references in the Lightning repo and test suite.
   [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
-  
+
 * Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
   [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
 
