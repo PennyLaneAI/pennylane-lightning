@@ -22,6 +22,7 @@
 #include <numeric>
 #include <random>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <catch2/catch.hpp>
@@ -458,6 +459,30 @@ auto createNonTrivialState(std::size_t num_qubits = 3) {
     Measured_StateVector.applyOperations(gates, wires, inv_op, phase);
 
     return Measured_StateVector.getDataVector();
+}
+
+/**
+ * @brief Create a random subset of wires for a unitary operation.
+ * @tparam IndexT Index type.
+ * @tparam RandomEngine Random engine type.
+ * @param re Random engine instance.
+ * @param sv_num_qubits Number of qubits in the state vector.
+ * @param unitary_num_qubits Number of qubits in the unitary operation.
+ * @return Random subset of wires.
+ *
+ */
+template <typename IndexT, class RandomEngine>
+inline auto createRandomWiresSubset(RandomEngine &re, IndexT sv_num_qubits,
+                                    IndexT unitary_num_qubits)
+    -> std::vector<IndexT> {
+    // creating a vector with a subset of unique random wires
+    std::uniform_int_distribution<> dis(0, sv_num_qubits - 1);
+    std::unordered_set<std::size_t> unitary_wires_set;
+    while (unitary_wires_set.size() < unitary_num_qubits) {
+        unitary_wires_set.insert(dis(re));
+    }
+    return std::move(
+        std::vector(unitary_wires_set.begin(), unitary_wires_set.end()));
 }
 
 /**
