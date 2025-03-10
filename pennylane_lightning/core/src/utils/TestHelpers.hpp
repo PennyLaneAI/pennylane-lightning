@@ -481,8 +481,7 @@ inline auto createRandomWiresSubset(RandomEngine &re, IndexT sv_num_qubits,
     while (unitary_wires_set.size() < unitary_num_qubits) {
         unitary_wires_set.insert(dis(re));
     }
-    return std::move(
-        std::vector(unitary_wires_set.begin(), unitary_wires_set.end()));
+    return std::vector(unitary_wires_set.begin(), unitary_wires_set.end());
 }
 
 /**
