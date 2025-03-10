@@ -1,4 +1,4 @@
-// Copyright 2018-2023 Xanadu Quantum Technologies Inc.
+// Copyright 2018-2025 Xanadu Quantum Technologies Inc.
 
 // Licensed under the Apache License, Version 2.0 (the License);
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
 
 /**
  * @file ExpValFunctorsQubit.hpp
- * Define functors for in-place computation of expectation value of
- * Identity, PauliX, PauliY, PauliZ, and Hadamard operators.
+ * Define functions and fuctor for in-place computation of expectation value of
+ * general matrix, and named Identity, PauliX, PauliY, PauliZ, and Hadamard
+ * operators.
  */
 
 #pragma once
@@ -183,4 +184,217 @@ void applyExpValMat3(const std::complex<ParamT> *arr,
     }
 };
 
+#define EXPVALENTRY4(xx, yy) xx << 4 | yy
+#define EXPVALTERM4(xx, yy, iyy) matrix[EXPVALENTRY4(xx, yy)] * arr[iyy]
+#define EXPVAL4(ixx, xx)                                                       \
+    std::conj(arr[ixx]) *                                                      \
+        (EXPVALTERM4(xx, 0B0000, i0000) + EXPVALTERM4(xx, 0B0001, i0001) +     \
+         EXPVALTERM4(xx, 0B0010, i0010) + EXPVALTERM4(xx, 0B0011, i0011) +     \
+         EXPVALTERM4(xx, 0B0100, i0100) + EXPVALTERM4(xx, 0B0101, i0101) +     \
+         EXPVALTERM4(xx, 0B0110, i0110) + EXPVALTERM4(xx, 0B0111, i0111) +     \
+         EXPVALTERM4(xx, 0B1000, i1000) + EXPVALTERM4(xx, 0B1001, i1001) +     \
+         EXPVALTERM4(xx, 0B1010, i1010) + EXPVALTERM4(xx, 0B1011, i1011) +     \
+         EXPVALTERM4(xx, 0B1100, i1100) + EXPVALTERM4(xx, 0B1101, i1101) +     \
+         EXPVALTERM4(xx, 0B1110, i1110) + EXPVALTERM4(xx, 0B1111, i1111))
+
+template <class ParamT>
+void applyExpValMat4(const std::complex<ParamT> *arr,
+                     const std::size_t num_qubits,
+                     const std::vector<size_t> &wires,
+                     const std::vector<std::complex<ParamT>> &matrix,
+                     [[maybe_unused]] ParamT &expected_value) {
+    std::vector<std::size_t> parity;
+    std::vector<std::size_t> rev_wire_shifts;
+    std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits, wires);
+
+#pragma omp parallel for collapse(1) reduction(+ : expected_value)
+    for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 4); k++) {
+        std::size_t i0000 = (k & parity[0]);
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            i0000 |= ((k << i) & parity[i]);
+        }
+
+        std::size_t i0001 = i0000 | rev_wire_shifts[0];
+        std::size_t i0010 = i0000 | rev_wire_shifts[1];
+        std::size_t i0011 = i0000 | rev_wire_shifts[0] | rev_wire_shifts[1];
+        std::size_t i0100 = i0000 | rev_wire_shifts[2];
+        std::size_t i0101 = i0000 | rev_wire_shifts[0] | rev_wire_shifts[2];
+        std::size_t i0110 = i0000 | rev_wire_shifts[1] | rev_wire_shifts[2];
+        std::size_t i0111 = i0000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                            rev_wire_shifts[2];
+        std::size_t i1000 = i0000 | rev_wire_shifts[3];
+        std::size_t i1001 = i0000 | rev_wire_shifts[0] | rev_wire_shifts[3];
+        std::size_t i1010 = i0000 | rev_wire_shifts[1] | rev_wire_shifts[3];
+        std::size_t i1011 = i0000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                            rev_wire_shifts[3];
+        std::size_t i1100 = i0000 | rev_wire_shifts[2] | rev_wire_shifts[3];
+        std::size_t i1101 = i0000 | rev_wire_shifts[0] | rev_wire_shifts[2] |
+                            rev_wire_shifts[3];
+        std::size_t i1110 = i0000 | rev_wire_shifts[1] | rev_wire_shifts[2] |
+                            rev_wire_shifts[3];
+        std::size_t i1111 = i0000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                            rev_wire_shifts[2] | rev_wire_shifts[3];
+        expected_value += real(EXPVAL4(i0000, 0B0000));
+        expected_value += real(EXPVAL4(i0001, 0B0001));
+        expected_value += real(EXPVAL4(i0010, 0B0010));
+        expected_value += real(EXPVAL4(i0011, 0B0011));
+        expected_value += real(EXPVAL4(i0100, 0B0100));
+        expected_value += real(EXPVAL4(i0101, 0B0101));
+        expected_value += real(EXPVAL4(i0110, 0B0110));
+        expected_value += real(EXPVAL4(i0111, 0B0111));
+        expected_value += real(EXPVAL4(i1000, 0B1000));
+        expected_value += real(EXPVAL4(i1001, 0B1001));
+        expected_value += real(EXPVAL4(i1010, 0B1010));
+        expected_value += real(EXPVAL4(i1011, 0B1011));
+        expected_value += real(EXPVAL4(i1100, 0B1100));
+        expected_value += real(EXPVAL4(i1101, 0B1101));
+        expected_value += real(EXPVAL4(i1110, 0B1110));
+        expected_value += real(EXPVAL4(i1111, 0B1111));
+    };
+};
+
+#define EXPVALENTRY5(xx, yy) xx << 5 | yy
+#define EXPVALTERM5(xx, yy, iyy) matrix[EXPVALENTRY5(xx, yy)] * arr[iyy]
+#define EXPVAL5(ixx, xx)                                                       \
+    std::conj(arr[ixx]) *                                                      \
+        (EXPVALTERM5(xx, 0B00000, i00000) + EXPVALTERM5(xx, 0B00001, i00001) + \
+         EXPVALTERM5(xx, 0B00010, i00010) + EXPVALTERM5(xx, 0B00011, i00011) + \
+         EXPVALTERM5(xx, 0B00100, i00100) + EXPVALTERM5(xx, 0B00101, i00101) + \
+         EXPVALTERM5(xx, 0B00110, i00110) + EXPVALTERM5(xx, 0B00111, i00111) + \
+         EXPVALTERM5(xx, 0B01000, i01000) + EXPVALTERM5(xx, 0B01001, i01001) + \
+         EXPVALTERM5(xx, 0B01010, i01010) + EXPVALTERM5(xx, 0B01011, i01011) + \
+         EXPVALTERM5(xx, 0B01100, i01100) + EXPVALTERM5(xx, 0B01101, i01101) + \
+         EXPVALTERM5(xx, 0B01110, i01110) + EXPVALTERM5(xx, 0B01111, i01111) + \
+         EXPVALTERM5(xx, 0B10000, i10000) + EXPVALTERM5(xx, 0B10001, i10001) + \
+         EXPVALTERM5(xx, 0B10010, i10010) + EXPVALTERM5(xx, 0B10011, i10011) + \
+         EXPVALTERM5(xx, 0B10100, i10100) + EXPVALTERM5(xx, 0B10101, i10101) + \
+         EXPVALTERM5(xx, 0B10110, i10110) + EXPVALTERM5(xx, 0B10111, i10111) + \
+         EXPVALTERM5(xx, 0B11000, i11000) + EXPVALTERM5(xx, 0B11001, i11001) + \
+         EXPVALTERM5(xx, 0B11010, i11010) + EXPVALTERM5(xx, 0B11011, i11011) + \
+         EXPVALTERM5(xx, 0B11100, i11100) + EXPVALTERM5(xx, 0B11101, i11101) + \
+         EXPVALTERM5(xx, 0B11110, i11110) + EXPVALTERM5(xx, 0B11111, i11111))
+
+template <class ParamT>
+void applyExpValMat5(const std::complex<ParamT> *arr,
+                     const std::size_t num_qubits,
+                     const std::vector<size_t> &wires,
+                     const std::vector<std::complex<ParamT>> &matrix,
+                     [[maybe_unused]] ParamT &expected_value) {
+    std::vector<std::size_t> parity;
+    std::vector<std::size_t> rev_wire_shifts;
+    std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits, wires);
+
+#pragma omp parallel for collapse(1) reduction(+ : expected_value)
+    for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 5); k++) {
+        std::size_t i00000 = (k & parity[0]);
+        for (std::size_t i = 1; i < parity.size(); i++) {
+            i00000 |= ((k << i) & parity[i]);
+        }
+
+        std::size_t i00001 = i00000 | rev_wire_shifts[0];
+        std::size_t i00010 = i00000 | rev_wire_shifts[1];
+        std::size_t i00011 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1];
+        std::size_t i00100 = i00000 | rev_wire_shifts[2];
+        std::size_t i00101 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[2];
+        std::size_t i00110 = i00000 | rev_wire_shifts[1] | rev_wire_shifts[2];
+        std::size_t i00111 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                             rev_wire_shifts[2];
+        std::size_t i01000 = i00000 | rev_wire_shifts[3];
+        std::size_t i01001 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[3];
+        std::size_t i01010 = i00000 | rev_wire_shifts[1] | rev_wire_shifts[3];
+        std::size_t i01011 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                             rev_wire_shifts[3];
+        std::size_t i01100 = i00000 | rev_wire_shifts[2] | rev_wire_shifts[3];
+        std::size_t i01101 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[2] |
+                             rev_wire_shifts[3];
+        std::size_t i01110 = i00000 | rev_wire_shifts[1] | rev_wire_shifts[2] |
+                             rev_wire_shifts[3];
+        std::size_t i01111 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                             rev_wire_shifts[2] | rev_wire_shifts[3];
+        std::size_t i10000 = i00000 | rev_wire_shifts[4];
+        std::size_t i10001 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[4];
+        std::size_t i10010 = i00000 | rev_wire_shifts[1] | rev_wire_shifts[4];
+        std::size_t i10011 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                             rev_wire_shifts[4];
+        std::size_t i10100 = i00000 | rev_wire_shifts[2] | rev_wire_shifts[4];
+        std::size_t i10101 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[2] |
+                             rev_wire_shifts[4];
+        std::size_t i10110 = i00000 | rev_wire_shifts[1] | rev_wire_shifts[2] |
+                             rev_wire_shifts[4];
+        std::size_t i10111 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                             rev_wire_shifts[2] | rev_wire_shifts[4];
+        std::size_t i11000 = i00000 | rev_wire_shifts[3] | rev_wire_shifts[4];
+        std::size_t i11001 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[3] |
+                             rev_wire_shifts[4];
+        std::size_t i11010 = i00000 | rev_wire_shifts[1] | rev_wire_shifts[3] |
+                             rev_wire_shifts[4];
+        std::size_t i11011 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                             rev_wire_shifts[3] | rev_wire_shifts[4];
+        std::size_t i11100 = i00000 | rev_wire_shifts[2] | rev_wire_shifts[3] |
+                             rev_wire_shifts[4];
+        std::size_t i11101 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[2] |
+                             rev_wire_shifts[3] | rev_wire_shifts[4];
+        std::size_t i11110 = i00000 | rev_wire_shifts[1] | rev_wire_shifts[2] |
+                             rev_wire_shifts[3] | rev_wire_shifts[4];
+        std::size_t i11111 = i00000 | rev_wire_shifts[0] | rev_wire_shifts[1] |
+                             rev_wire_shifts[2] | rev_wire_shifts[3] |
+                             rev_wire_shifts[4];
+
+        expected_value += real(EXPVAL5(i00000, 0B00000));
+        expected_value += real(EXPVAL5(i00001, 0B00001));
+        expected_value += real(EXPVAL5(i00010, 0B00010));
+        expected_value += real(EXPVAL5(i00011, 0B00011));
+        expected_value += real(EXPVAL5(i00100, 0B00100));
+        expected_value += real(EXPVAL5(i00101, 0B00101));
+        expected_value += real(EXPVAL5(i00110, 0B00110));
+        expected_value += real(EXPVAL5(i00111, 0B00111));
+        expected_value += real(EXPVAL5(i01000, 0B01000));
+        expected_value += real(EXPVAL5(i01001, 0B01001));
+        expected_value += real(EXPVAL5(i01010, 0B01010));
+        expected_value += real(EXPVAL5(i01011, 0B01011));
+        expected_value += real(EXPVAL5(i01100, 0B01100));
+        expected_value += real(EXPVAL5(i01101, 0B01101));
+        expected_value += real(EXPVAL5(i01110, 0B01110));
+        expected_value += real(EXPVAL5(i01111, 0B01111));
+        expected_value += real(EXPVAL5(i10000, 0B10000));
+        expected_value += real(EXPVAL5(i10001, 0B10001));
+        expected_value += real(EXPVAL5(i10010, 0B10010));
+        expected_value += real(EXPVAL5(i10011, 0B10011));
+        expected_value += real(EXPVAL5(i10100, 0B10100));
+        expected_value += real(EXPVAL5(i10101, 0B10101));
+        expected_value += real(EXPVAL5(i10110, 0B10110));
+        expected_value += real(EXPVAL5(i10111, 0B10111));
+        expected_value += real(EXPVAL5(i11000, 0B11000));
+        expected_value += real(EXPVAL5(i11001, 0B11001));
+        expected_value += real(EXPVAL5(i11010, 0B11010));
+        expected_value += real(EXPVAL5(i11011, 0B11011));
+        expected_value += real(EXPVAL5(i11100, 0B11100));
+        expected_value += real(EXPVAL5(i11101, 0B11101));
+        expected_value += real(EXPVAL5(i11110, 0B11110));
+        expected_value += real(EXPVAL5(i11111, 0B11111));
+    };
+};
+
+
+template <class ParamT>
+void applyExpValMat(const std::complex<ParamT> *arr,
+                     const std::size_t num_qubits,
+                     const std::vector<size_t> &wires,
+                     const std::vector<std::complex<ParamT>> &matrix,
+                     [[maybe_unused]] ParamT &expected_value) {
+    std::vector<std::size_t> parity;
+    std::vector<std::size_t> rev_wire_shifts;
+    std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits, wires);
+
+
+    dim = PUtil::exp2(wires.size());
+
+#pragma omp parallel for collapse(2) reduction(+ : expected_value)
+for (std::size_t k = 0; k < PUtil::exp2(num_qubits - wires.size()); k++) {
+    for(std::size_t i = 0; i < dim; i++) {        
+        expected_value += real(matrix[i] * arr[base_idx + offset[i]]);
+
+
+    }
+}
 } // namespace Pennylane::LightningQubit::Measures

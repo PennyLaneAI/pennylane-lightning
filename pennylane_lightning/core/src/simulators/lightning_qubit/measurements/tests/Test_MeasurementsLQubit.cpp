@@ -170,6 +170,34 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         PrecisionT exp_values_ref = 1.945462;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
+
+    SECTION("Testing expval of matrix for four wires:") {
+        std::vector<ComplexT> matrix(256);
+        for (std::size_t i = 0; i < 256; i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {0, 1, 2, 3};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        // reference value obtained from Pennylane default qubit
+        PrecisionT exp_values_ref = 6.7299245;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expval of matrix for four wires:") {
+        std::vector<ComplexT> matrix(1024);
+        for (std::size_t i = 0; i < 1024; i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {0, 1, 2, 3, 4};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        // reference value obtained from Pennylane default qubit
+        PrecisionT exp_values_ref = 20.840557;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
 }
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
