@@ -586,7 +586,7 @@ TEST_CASE("Methods implemented in the HamiltonianBase class",
     }
 }
 
-template <typename TypeList> void testSparseHermitianObsBase() {
+template <typename TypeList> void testSparseHamiltonianBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -595,27 +595,27 @@ template <typename TypeList> void testSparseHermitianObsBase() {
         const std::size_t num_qubits = 3;
         std::mt19937 re{1337};
 
-        auto sparseH = SparseHermitianObsBase<StateVectorT>::create(
+        auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
             {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
              ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
             {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8}, {0, 1, 2});
 
-        DYNAMIC_SECTION("SparseHermitianObsBase - isEqual - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - isEqual - "
                         << StateVectorToName<StateVectorT>::name) {
-            auto sparseH0 = SparseHermitianObsBase<StateVectorT>::create(
+            auto sparseH0 = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
                 {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
                 {0, 1, 2});
-            auto sparseH1 = SparseHermitianObsBase<StateVectorT>::create(
+            auto sparseH1 = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
                 {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
                 {0, 1, 2});
-            auto sparseH2 = SparseHermitianObsBase<StateVectorT>::create(
+            auto sparseH2 = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
@@ -626,15 +626,15 @@ template <typename TypeList> void testSparseHermitianObsBase() {
             REQUIRE(*sparseH0 != *sparseH2);
         }
 
-        DYNAMIC_SECTION("SparseHermitianObsBase - getWires - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - getWires - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE(sparseH->getWires() == std::vector<std::size_t>{0, 1, 2});
         }
 
-        DYNAMIC_SECTION("SparseHermitianObsBase - getObsName - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - getObsName - "
                         << StateVectorToName<StateVectorT>::name) {
             REQUIRE(sparseH->getObsName() ==
-                    "SparseHermitianObs: {\n"
+                    "SparseHamiltonian: {\n"
                     "'data' : \n"
                     "{1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, "
                     "{1, 0}, ,\n"
@@ -645,7 +645,7 @@ template <typename TypeList> void testSparseHermitianObsBase() {
                     "}");
         }
 
-        DYNAMIC_SECTION("SparseHermitianObsBase - applyInPlace must fail - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - applyInPlace must fail - "
                         << StateVectorToName<StateVectorT>::name) {
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
@@ -656,9 +656,8 @@ template <typename TypeList> void testSparseHermitianObsBase() {
                               LightningException);
         }
 
-        DYNAMIC_SECTION(
-            "SparseHermitianObsBase - applyInPlaceShots must fail - "
-            << StateVectorToName<StateVectorT>::name) {
+        DYNAMIC_SECTION("SparseHamiltonianBase - applyInPlaceShots must fail - "
+                        << StateVectorToName<StateVectorT>::name) {
             auto init_state =
                 createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
@@ -669,17 +668,17 @@ template <typename TypeList> void testSparseHermitianObsBase() {
 
             REQUIRE_THROWS_WITH(
                 sparseH->applyInPlaceShots(state_vector, eigenValues, ob_wires),
-                Catch::Matchers::Contains("SparseHermitianObs observables do "
+                Catch::Matchers::Contains("SparseHamiltonian observables do "
                                           "not support shot measurement."));
         }
 
-        testSparseHermitianObsBase<typename TypeList::Next>();
+        testSparseHamiltonianBase<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("Methods implemented in the SparseHermitianObsBase class",
-          "[SparseHermitianObsBase]") {
+TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
+          "[SparseHamiltonianBase]") {
     if constexpr (BACKEND_FOUND) {
-        testSparseHermitianObsBase<TestStateVectorBackends>();
+        testSparseHamiltonianBase<TestStateVectorBackends>();
     }
 }

@@ -538,7 +538,7 @@ TEST_CASE("Methods implemented in the HamiltonianBase class",
     }
 }
 
-template <typename TypeList> void testSparseHermitianObsBase() {
+template <typename TypeList> void testSparseHamiltonianBase() {
     if constexpr (!std::is_same_v<TypeList, void>) {
         using StateVectorT = typename TypeList::Type;
         using PrecisionT = typename StateVectorT::PrecisionT;
@@ -574,7 +574,7 @@ template <typename TypeList> void testSparseHermitianObsBase() {
 
         DYNAMIC_SECTION("applyInPlace must fail - "
                         << StateVectorMPIToName<StateVectorT>::name) {
-            auto sparseH = SparseHermitianObsBase<StateVectorT>::create(
+            auto sparseH = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
@@ -590,21 +590,21 @@ template <typename TypeList> void testSparseHermitianObsBase() {
                               LightningException);
         }
 
-        DYNAMIC_SECTION("SparseHermitianObsBase - isEqual - "
+        DYNAMIC_SECTION("SparseHamiltonianBase - isEqual - "
                         << StateVectorMPIToName<StateVectorT>::name) {
-            auto sparseH0 = SparseHermitianObsBase<StateVectorT>::create(
+            auto sparseH0 = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
                 {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
                 {0, 1, 2});
-            auto sparseH1 = SparseHermitianObsBase<StateVectorT>::create(
+            auto sparseH1 = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
                 {7, 6, 5, 4, 3, 2, 1, 0}, {0, 1, 2, 3, 4, 5, 6, 7, 8},
                 {0, 1, 2});
-            auto sparseH2 = SparseHermitianObsBase<StateVectorT>::create(
+            auto sparseH2 = SparseHamiltonianBase<StateVectorT>::create(
                 {ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0},
                  ComplexT{1.0, 0.0}, ComplexT{1.0, 0.0}},
@@ -615,13 +615,13 @@ template <typename TypeList> void testSparseHermitianObsBase() {
             REQUIRE(*sparseH0 != *sparseH2);
         }
 
-        testSparseHermitianObsBase<typename TypeList::Next>();
+        testSparseHamiltonianBase<typename TypeList::Next>();
     }
 }
 
-TEST_CASE("Methods implemented in the SparseHermitianObsBase class",
-          "[SparseHermitianObsBase]") {
+TEST_CASE("Methods implemented in the SparseHamiltonianBase class",
+          "[SparseHamiltonianBase]") {
     if constexpr (BACKEND_FOUND) {
-        testSparseHermitianObsBase<TestStateVectorMPIBackends>();
+        testSparseHamiltonianBase<TestStateVectorMPIBackends>();
     }
 }

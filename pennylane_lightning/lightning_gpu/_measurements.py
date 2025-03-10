@@ -156,19 +156,21 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             # ensuring CSR sparse representation.
 
             if self._use_mpi:
-                # Identity for CSR_SparseH to pass to processes with rank != 0 to reduce
+                # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
-                CSR_SparseH = qml.Identity(0).sparse_matrix().tocsr()
-                # CSR_SparseH for rank == 0
+                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
+                # CSR_SparseHamiltonian for rank == 0
                 if self._mpi_handler.mpi_manager.getRank() == 0:
-                    CSR_SparseH = measurementprocess.obs.sparse_matrix().tocsr()
+                    CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()
             else:
-                CSR_SparseH = measurementprocess.obs.sparse_matrix(
+                CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix(
                     wire_order=list(range(self._qubit_state.num_wires))
                 ).tocsr(copy=False)
 
             return self._measurement_lightning.expval(
-                CSR_SparseH.indptr, CSR_SparseH.indices, CSR_SparseH.data
+                CSR_SparseHamiltonian.indptr,
+                CSR_SparseHamiltonian.indices,
+                CSR_SparseHamiltonian.data,
             )
 
         # use specialized functors to compute expval(Hermitian)

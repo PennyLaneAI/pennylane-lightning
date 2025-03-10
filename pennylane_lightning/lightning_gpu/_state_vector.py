@@ -196,8 +196,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
         Args:
-        state (array[complex]): normalized input state (on host) of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+        state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
         device_wires (Wires): wires that get initialized in the state
         use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.

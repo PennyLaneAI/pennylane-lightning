@@ -19,6 +19,7 @@ from functools import partial
 import pennylane as qml
 import pytest
 from conftest import LightningDevice, device_name
+from pennylane.transforms.defer_measurements import DeferMeasurementsInterpreter
 
 jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
@@ -237,31 +238,83 @@ class TestSampling:
 class TestQuantumHOP:
     """Tests for the quantum higher order primitives: adjoint and ctrl."""
 
-    def test_adjoint_transform(self):
+    @pytest.mark.parametrize("lazy", [True, False])
+    def test_adjoint_transform(self, lazy):
         """Test that the adjoint_transform is not yet implemented."""
 
         def circuit(x):
-            qml.adjoint(qml.RX)(x, 0)
-            return 1
+
+            def adjoint_fn(y):
+                phi = y * jax.numpy.pi / 2
+                qml.RZ(phi, 0)
+                qml.RX(phi - jax.numpy.pi, 0)
+
+            qml.adjoint(adjoint_fn, lazy=lazy)(x)
+            return qml.state()
 
         dev = qml.device(device_name, wires=1)
-        jaxpr = jax.make_jaxpr(circuit)(0.5)
 
-        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
-            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 0.5)
+        rz_phi = -1.5 * jax.numpy.pi / 2
+        rx_phi = rz_phi + jax.numpy.pi
+        expected_state = jax.numpy.array(
+            [
+                jax.numpy.cos(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2),
+                -1j * jax.numpy.sin(rx_phi / 2) * jax.numpy.exp(rz_phi * 1j / 2),
+            ]
+        )
+        jaxpr = jax.make_jaxpr(circuit)(1.5)
+        result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.5)
+        assert qml.math.allclose(result, expected_state)
 
     def test_ctrl_transform(self):
         """Test that the ctrl_transform is not yet implemented."""
 
-        def circuit():
-            qml.ctrl(qml.X, control=1)(0)
-            return 2
+        def circuit(x):
+            qml.X(0)
 
-        dev = qml.device(device_name, wires=2)
-        jaxpr = jax.make_jaxpr(circuit)()
+            def ctrl_fn(y):
+                phi = y * jax.numpy.pi / 2
+                qml.RZ(phi, 2)
+                qml.RX(phi - jax.numpy.pi, 2)
 
-        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
-            dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+            qml.ctrl(ctrl_fn, control=[0, 1], control_values=[1, 0])(x)
+            return qml.state()
+
+        rz_phi = 1.5 * jax.numpy.pi / 2
+        rx_phi = rz_phi - jax.numpy.pi
+        expected_state = qml.math.zeros(8, dtype=complex)
+        expected_state[4] = jax.numpy.cos(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2)
+        expected_state[5] = -1j * jax.numpy.sin(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2)
+
+        jaxpr = jax.make_jaxpr(circuit)(1.5)
+        dev = qml.device(device_name, wires=3)
+        result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.5)
+        assert qml.math.allclose(result, expected_state)
+
+    def test_nested_ctrl_and_adjoint(self):
+        """Tests nesting ctrl and adjoint."""
+
+        def circuit(x):
+            qml.X(0)
+
+            def ctrl_fn(y):
+                phi = y * jax.numpy.pi / 2
+                qml.RZ(phi, 2)
+                qml.RX(phi - jax.numpy.pi, 2)
+
+            qml.adjoint(qml.ctrl(ctrl_fn, control=[0, 1], control_values=[1, 0]))(x)
+            return qml.state()
+
+        rz_phi = 1.5 * jax.numpy.pi / 2
+        rx_phi = rz_phi - jax.numpy.pi
+        expected_state = qml.math.zeros(8, dtype=complex)
+        expected_state[4] = jax.numpy.cos(rx_phi / 2) * jax.numpy.exp(rz_phi * 1j / 2)
+        expected_state[5] = 1j * jax.numpy.sin(rx_phi / 2) * jax.numpy.exp(-rz_phi * 1j / 2)
+
+        jaxpr = jax.make_jaxpr(circuit)(1.5)
+        dev = qml.device(device_name, wires=3)
+        result = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, 1.5)
+        assert qml.math.allclose(result, expected_state)
 
 
 class TestClassicalComponents:
@@ -532,3 +585,215 @@ def test_vmap_in_axes(in_axis, out_axis):
     assert expval.shape == (3,)
     assert qml.math.allclose(expval, jax.numpy.array([-1, -1, 1]))  # flip, flip, no flip
     assert state.shape == (3, 2) if out_axis == 0 else (2, 3)
+
+
+class TestDeferMeasurements:
+    """Tests that Lightning devices can execute circuits transformed by defer_measurements."""
+
+    def test_single_mcm(self):
+        """Test that applying a single MCM works."""
+
+        dev = qml.device(device_name, wires=5)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f():
+            qml.Hadamard(0)
+            qml.measure(0)
+            qml.Hadamard(0)
+            return qml.expval(qml.PauliX(0))
+
+        jaxpr = jax.make_jaxpr(f)()
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+        assert qml.math.allclose(res, 0)
+
+    def test_qubit_reset(self):
+        """Test that resetting a qubit works as expected."""
+
+        dev = qml.device(device_name, wires=5)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f():
+            qml.PauliX(0)
+            qml.measure(0, reset=True)
+            return qml.expval(qml.PauliZ(0))
+
+        jaxpr = jax.make_jaxpr(f)()
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+        assert qml.math.allclose(res, 1)
+
+    def test_mcms_as_gate_parameters(self):
+        """Test that using MCMs as gate parameters works as expected."""
+
+        dev = qml.device(device_name, wires=5)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f():
+            qml.Hadamard(0)
+            m = qml.measure(0)
+            qml.RX(m * jax.numpy.pi, 0)
+            return qml.expval(qml.PauliZ(0))
+
+        jaxpr = jax.make_jaxpr(f)()
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+        # If 0 measured, RX does nothing, so state is |0>. If 1 measured, RX(pi)
+        # makes state |1> -> |0>, so <Z> will always be 1
+        assert qml.math.allclose(res, 1)
+
+    def test_cond(self):
+        """Test that using qml.cond with MCM predicates works as expected."""
+
+        dev = qml.device(device_name, wires=5)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f(x):
+            qml.Hadamard(0)
+            qml.Hadamard(1)
+            m0 = qml.measure(0)
+            m1 = qml.measure(1)
+
+            @qml.cond(m0 == 0)
+            def cond_fn(y):
+                qml.RY(y, 0)
+
+            @cond_fn.else_if(m1 == 0)
+            def _(y):
+                qml.RY(2 * y, 0)
+
+            @cond_fn.otherwise
+            def _(y):
+                qml.RY(3 * y, 0)
+
+            cond_fn(x)
+
+            return qml.expval(qml.PauliZ(0))
+
+        phi = jax.numpy.pi / 3
+        jaxpr = jax.make_jaxpr(f)(phi)
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, phi)
+        expected = 0.5 * (jax.numpy.cos(phi) + jax.numpy.sin(phi) ** 2)
+        assert qml.math.allclose(res, expected)
+
+    def test_cond_non_mcm(self):
+        """Test that using qml.cond with non-MCM predicates works as expected."""
+
+        dev = qml.device(device_name, wires=5)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f(x):
+            qml.Hadamard(0)
+            m0 = qml.measure(0)
+
+            @qml.cond(x > 2.5)
+            def cond_fn():
+                qml.RX(m0 * jax.numpy.pi, 0)
+                # Final state |0>
+
+            @cond_fn.else_if(x > 1.5)
+            def _():
+                qml.PauliZ(0)
+                # Equal prob of |0> and |1>
+
+            @cond_fn.otherwise
+            def _():
+                qml.Hadamard(0)
+                m1 = qml.measure(0)
+                qml.RX(m1 * jax.numpy.pi, 0)
+                qml.X(0)
+                # Final state |1>
+
+            cond_fn()
+
+            return qml.expval(qml.PauliZ(0))
+
+        jaxpr = jax.make_jaxpr(f)(0.5)
+
+        arg_true = 3.0
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, arg_true)
+        assert qml.math.allclose(res, 1)  # Final state |0>; <Z> = 1
+
+        arg_elif = 2.0
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, arg_elif)
+        assert qml.math.allclose(res, 0)  # Equal prob of |0>, |1>; <Z> = 1
+
+        arg_true = 1.0
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, arg_true)
+        assert qml.math.allclose(res, -1)  # Final state |1>, <Z> = -1
+
+    @pytest.mark.parametrize(
+        "mp_fn",
+        [
+            qml.expval,
+            qml.var,
+            qml.probs,
+        ],
+    )
+    def test_mcm_statistics(self, mp_fn):
+        """Test that collecting statistics on MCMs is handled correctly."""
+
+        dev = qml.device(device_name, wires=5)
+
+        def processing_fn(m1, m2):
+            return 2.5 * m1 - m2
+
+        def f():
+            qml.Hadamard(0)
+            m0 = qml.measure(0)
+            qml.Hadamard(0)
+            m1 = qml.measure(0)
+            qml.Hadamard(0)
+            m2 = qml.measure(0)
+
+            outs = (mp_fn(op=m0),)
+            if mp_fn is qml.probs:
+                outs += (mp_fn(op=[m0, m1, m2]),)
+            else:
+                outs += (mp_fn(op=processing_fn(m1, m2)),)
+
+            return outs
+
+        transformed_f = DeferMeasurementsInterpreter(num_wires=5)(f)
+        qnode_f = qml.QNode(f, dev, mcm_method="deferred")
+
+        jaxpr = jax.make_jaxpr(transformed_f)()
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+
+        with qml.capture.pause():
+            expected = qnode_f()
+
+        for r, e in zip(res, expected, strict=True):
+            assert qml.math.allclose(r, e)
+
+    def test_shots(self):
+        """Tests that defer measurements executes correctly with shots."""
+
+        dev = qml.device(device_name, wires=5, shots=100)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f(x):
+
+            @qml.cond(x)
+            def x_cond():
+                qml.PauliX(0)
+
+            x_cond()
+            m = qml.measure(0)
+
+            @qml.cond(m == 0)
+            def cond_fn():
+                # State after this cond will be |1>
+                qml.PauliX(0)
+
+            @cond_fn.otherwise
+            def _():
+                # State after this will be (|0>-|1>)/sqrt(2)
+                qml.Hadamard(0)
+
+            cond_fn()
+            return qml.sample(wires=0)
+
+        jaxpr = jax.make_jaxpr(f)(True)
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, False)
+        assert qml.math.allclose(res, 1)
+        res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts, True)
+        # Assert that the result is a mix of 0s and 1s
+        assert not qml.math.allclose(res, 0) and not qml.math.allclose(res, 1)

@@ -32,8 +32,8 @@ if device_name == "lightning.kokkos":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHermitianObsC64,
-        SparseHermitianObsC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -45,8 +45,8 @@ elif device_name == "lightning.gpu":
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHermitianObsC64,
-        SparseHermitianObsC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -63,8 +63,8 @@ else:
         HermitianObsC128,
         NamedObsC64,
         NamedObsC128,
-        SparseHermitianObsC64,
-        SparseHermitianObsC128,
+        SparseHamiltonianC64,
+        SparseHamiltonianC128,
         TensorProdObsC64,
         TensorProdObsC128,
     )
@@ -126,7 +126,7 @@ def test_wrong_device_name():
                     qml.Hamiltonian([1], [qml.PauliZ(0)]).sparse_matrix(), wires=[0]
                 )
             ),
-            "SparseHermitianObsC",
+            "SparseHamiltonianC",
         ),
         (2.5 * qml.PauliZ(0), "HamiltonianC"),
     ],
