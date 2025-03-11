@@ -248,7 +248,7 @@ class TestSparseHExpval:
 
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
+        with pytest.raises(NotImplementedError, match="Sparse Observables are not supported."):
             m.expval(q.queue[0])
 
     def test_var_sparseH_not_supported(self, method):
@@ -262,7 +262,7 @@ class TestSparseHExpval:
 
         with pytest.raises(
             NotImplementedError,
-            match="The var measurement does not support sparse Hamiltonian observables.",
+            match="The var measurement does not support sparse observables.",
         ):
             m.var(q.queue[0])
 
