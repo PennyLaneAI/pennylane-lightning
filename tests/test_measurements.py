@@ -511,7 +511,8 @@ class TestSample:
 @pytest.mark.parametrize(
     "obs",
     [
-        None, [], 
+        None,
+        [],
         [0],
         [0, 1],
         qml.PauliZ(0),
@@ -556,13 +557,17 @@ def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_n
         qml.RX(x, 2)
         return measure_f(wires=obs) if isinstance(obs, Sequence) else measure_f(op=obs)
 
-    func1 = qml.QNode(func, dev)
-    results1 = func1(*params)
+    if obs == []:
+        with pytest.raises(ValueError, match="Cannot set an empty list of wires"):
+            qml.QNode(func, dev)(*params)
+    else:
+        func1 = qml.QNode(func, dev)
+        results1 = func1(*params)
 
-    func2 = qml.QNode(func, dq)
-    results2 = func2(*params)
+        func2 = qml.QNode(func, dq)
+        results2 = func2(*params)
 
-    validate_measurements(measure_f, shots, results1, results2)
+        validate_measurements(measure_f, shots, results1, results2)
 
 
 # TODO: Add LT after extending the support for shots_vector
