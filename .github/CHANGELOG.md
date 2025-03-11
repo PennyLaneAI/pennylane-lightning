@@ -83,6 +83,9 @@
 
 ### Bug fixes
 
+* Fix unit tests that were being skipped in `testApplyControlledPhaseShift`.
+  [(#1083)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1083)
+
 * Fix Github CI for aarch64 cuda to clean up after runs.
   [(#1074)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1074)
 
