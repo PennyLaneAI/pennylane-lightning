@@ -240,7 +240,7 @@ class Measurements final
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
@@ -252,16 +252,16 @@ class Measurements final
      * @param numNNZ        number of non-zero elements.
      * @return Floating point expected value of the observable.
      */
-    template <class index_type>
-    auto expval(const index_type *row_map_ptr, const index_type row_map_size,
-                const index_type *entries_ptr, const ComplexT *values_ptr,
-                const index_type numNNZ) -> PrecisionT {
+    template <class IndexT>
+    auto expval(const IndexT *row_map_ptr, const IndexT row_map_size,
+                const IndexT *entries_ptr, const ComplexT *values_ptr,
+                const IndexT numNNZ) -> PrecisionT {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
-            static_cast<index_type>(this->_statevector.getLength()),
+            static_cast<IndexT>(this->_statevector.getLength()),
             row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
         ComplexT expected_value =
@@ -533,7 +533,7 @@ class Measurements final
     /**
      * @brief Variance of a sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
@@ -545,16 +545,16 @@ class Measurements final
      * @param numNNZ        number of non-zero elements.
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
-    template <class index_type>
-    PrecisionT var(const index_type *row_map_ptr, const index_type row_map_size,
-                   const index_type *entries_ptr, const ComplexT *values_ptr,
-                   const index_type numNNZ) {
+    template <class IndexT>
+    PrecisionT var(const IndexT *row_map_ptr, const IndexT row_map_size,
+                   const IndexT *entries_ptr, const ComplexT *values_ptr,
+                   const IndexT numNNZ) {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
-            static_cast<index_type>(this->_statevector.getLength()),
+            static_cast<IndexT>(this->_statevector.getLength()),
             row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
 
         const PrecisionT mean_square =

@@ -408,7 +408,7 @@ class MeasurementsMPI final
     /**
      * @brief expval(H) calculation with cuSparseSpMV.
      *
-     * @tparam index_type Integer type used as indices of the sparse matrix.
+     * @tparam IndexT Integer type used as indices of the sparse matrix.
      * @param csr_Offsets_ptr Pointer to the array of row offsets of the sparse
      * matrix. Array of size csrOffsets_size.
      * @param csrOffsets_size Number of Row offsets of the sparse matrix.
@@ -418,9 +418,9 @@ class MeasurementsMPI final
      * @param numNNZ Number of non-zero elements.
      * @return auto Expectation value.
      */
-    template <class index_type>
-    auto expval(const index_type *csrOffsets_ptr, const int64_t csrOffsets_size,
-                const index_type *columns_ptr,
+    template <class IndexT>
+    auto expval(const IndexT *csrOffsets_ptr, const int64_t csrOffsets_size,
+                const IndexT *columns_ptr,
                 const std::complex<PrecisionT> *values_ptr,
                 const int64_t numNNZ) -> PrecisionT {
         if (mpi_manager_.getRank() == 0) {
@@ -445,7 +445,7 @@ class MeasurementsMPI final
         d_res_per_rowblock.zeroInit();
 
         // with new wrapper
-        cuUtil::SparseMV_cuSparseMPI<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparseMPI<IndexT, PrecisionT, CFP_t>(
             mpi_manager_, length_local, csrOffsets_ptr, csrOffsets_size,
             columns_ptr, values_ptr,
             const_cast<CFP_t *>(this->_statevector.getData()),
@@ -716,7 +716,7 @@ class MeasurementsMPI final
     /**
      * @brief Variance of a sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
@@ -728,9 +728,9 @@ class MeasurementsMPI final
      * @param numNNZ        number of non-zero elements.
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
-    template <class index_type>
-    PrecisionT var(const index_type *csrOffsets_ptr,
-                   const int64_t csrOffsets_size, const index_type *columns_ptr,
+    template <class IndexT>
+    PrecisionT var(const IndexT *csrOffsets_ptr,
+                   const int64_t csrOffsets_size, const IndexT *columns_ptr,
                    const std::complex<PrecisionT> *values_ptr,
                    const int64_t numNNZ) {
         if (mpi_manager_.getRank() == 0) {
@@ -752,7 +752,7 @@ class MeasurementsMPI final
                                                   stream_id, true};
         d_res_per_rowblock.zeroInit();
 
-        cuUtil::SparseMV_cuSparseMPI<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparseMPI<IndexT, PrecisionT, CFP_t>(
             mpi_manager_, length_local, csrOffsets_ptr, csrOffsets_size,
             columns_ptr, values_ptr,
             const_cast<CFP_t *>(this->_statevector.getData()),
