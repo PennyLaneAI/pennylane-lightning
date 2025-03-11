@@ -1961,7 +1961,7 @@ void applyNamedOperation(const GateOperation gateop,
         applyMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
         return;
     case GateOperation::PSWAP:
-        //FIXME: Not actually implemented yet!
+        // FIXME: Not actually implemented yet!
         return;
     default:
         PL_ABORT("Gate operation does not exist.");
