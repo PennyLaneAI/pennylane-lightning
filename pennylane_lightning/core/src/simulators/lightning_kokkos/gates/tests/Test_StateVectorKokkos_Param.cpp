@@ -836,31 +836,31 @@ TEMPLATE_TEST_CASE(
         }
     }
 
-    // SECTION("N-controlled PSWAP") {
-    //     if (control != wire0 && control != wire1 && wire0 != wire1) {
-    //         StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
-    //         StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
+    SECTION("N-controlled PSWAP") {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            StateVectorT kokkos_sv_mat{ini_st.data(), ini_st.size()};
+            StateVectorT kokkos_sv_op{ini_st.data(), ini_st.size()};
 
-    //         auto matrix = getPSWAP<Kokkos::complex, PrecisionT>(param);
-    //         std::vector<ComplexT> cmatrix = getControlledGate(matrix);
-    //         kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
-    //                                   inverse);
-    //         kokkos_sv_op.applyOperation(
-    //             "PSWAP", std::vector<std::size_t>{control},
-    //             std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
-    //             inverse, {param});
+            auto matrix = getPSWAP<Kokkos::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            kokkos_sv_mat.applyMatrix(cmatrix, {control, wire0, wire1},
+                                      inverse);
+            kokkos_sv_op.applyOperation(
+                "PSWAP", std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
+                inverse, {param});
 
-    //         auto result_mat = kokkos_sv_mat.getDataVector();
-    //         auto result_op = kokkos_sv_op.getDataVector();
+            auto result_mat = kokkos_sv_mat.getDataVector();
+            auto result_op = kokkos_sv_op.getDataVector();
 
-    //         for (std::size_t j = 0; j < exp2(num_qubits); j++) {
-    //             CHECK(real(result_op[j]) ==
-    //                   Approx(real(result_mat[j])).margin(EP));
-    //             CHECK(imag(result_op[j]) ==
-    //                   Approx(imag(result_mat[j])).margin(EP));
-    //         }
-    //     }
-    // }
+            for (std::size_t j = 0; j < exp2(num_qubits); j++) {
+                CHECK(real(result_op[j]) ==
+                      Approx(real(result_mat[j])).margin(EP));
+                CHECK(imag(result_op[j]) ==
+                      Approx(imag(result_mat[j])).margin(EP));
+            }
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE("StateVectorKokkos::applyOperation param "

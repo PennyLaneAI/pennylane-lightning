@@ -2135,7 +2135,7 @@ void applyNCNamedOperation(const ControlledGateOperation gateop,
                                        params);
         return;
     case ControlledGateOperation::PSWAP:
-        applyNCMultiRZ<ExecutionSpace>(arr_, num_qubits, controlled_wires,
+        applyNCPSWAP<ExecutionSpace>(arr_, num_qubits, controlled_wires,
                                        controlled_values, wires, inverse,
                                        params);
         return;
