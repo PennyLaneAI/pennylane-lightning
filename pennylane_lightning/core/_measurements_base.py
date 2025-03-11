@@ -17,6 +17,7 @@ Class implementation for state vector measurements.
 
 from abc import ABC, abstractmethod
 from typing import Any, Callable, List, Union
+from copy import copy
 
 import numpy as np
 import pennylane as qml
@@ -317,8 +318,9 @@ class LightningBaseMeasurements(ABC):
         # last N measurements are sampling MCMs in ``dynamic_one_shot`` execution mode
         mps = measurements[0 : -len(mid_measurements)] if mid_measurements else measurements
 
-        for measurement in mps:
-            if not measurement.wires:
+        #for measurement in mps:
+            #if measurement.wires == Wires([]):
+            #if not measurement.obs and not measurement.wires:
                 # This is required for the case where no wires is specific for the statevector
                 # (i.e. dynamically determined from circuit), and no wires (and no observable)
                 # is provided for the measurement (e.g. qml.probs() or qml.counts() or
@@ -326,7 +328,12 @@ class LightningBaseMeasurements(ABC):
                 # the same operation is performed in validate_device_wires during preprocess.
 
                 # pylint:disable=protected-access
-                measurement._wires = Wires(range(self._qubit_state.num_wires))
+                #measurement._wires = Wires(range(self._qubit_state.num_wires))
+                #if measurement.mv is not None and measurement.mv == []:
+                #    measurement.mv.wires = Wires(range(self._qubit_state.num_wires))
+                #else:
+                #    measurement._wires = Wires(range(self._qubit_state.num_wires))
+                #
 
         groups, indices = _group_measurements(mps)
 

@@ -25,6 +25,7 @@ from conftest import LightningDevice as ld
 from conftest import LightningException, device_name, lightning_ops, validate_measurements
 from flaky import flaky
 from pennylane.measurements import ExpectationMP, Shots, VarianceMP
+from pennylane.wires import Wires
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -510,7 +511,7 @@ class TestSample:
 @pytest.mark.parametrize(
     "obs",
     [
-        None,
+        None, [], 
         [0],
         [0, 1],
         qml.PauliZ(0),
