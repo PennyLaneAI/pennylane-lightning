@@ -1785,6 +1785,44 @@ void applyNCMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 }
 
 template <class ExecutionSpace, class PrecisionT>
+void applyPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+               std::size_t num_qubits, const std::vector<std::size_t> &wires,
+               bool inverse = false,
+               [[maybe_unused]] const std::vector<PrecisionT> &params = {}) {
+    applyNCPSWAP<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {}, wires,
+                                            inverse);
+}
+
+template <class ExecutionSpace, class PrecisionT>
+void applyNCPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                std::size_t num_qubits,
+                const std::vector<std::size_t> &controlled_wires,
+                const std::vector<bool> &controlled_values,
+                const std::vector<std::size_t> &wires, bool inverse = false,
+                const std::vector<PrecisionT> &params = {}) {
+    const Kokkos::complex<PrecisionT> shift = Kokkos::exp(-Kokkos::complex<PrecisionT>(0, inverse? -angle : angle));
+    auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
+        [[maybe_unused]] const auto i00_ = i00;
+        [[maybe_unused]] const auto i11_ = i11;
+
+        arr(i01) *= shift;
+        arr(i10) *= shift;
+        kokkos_swap(arr(i10), arr(i01));
+    };
+
+    if (controlled_wires.empty()) {
+        applyNC2Functor<PrecisionT, decltype(core_function), false>(
+            ExecutionSpace{}, arr_, num_qubits, wires, core_function);
+    } else {
+        applyNC2Functor<PrecisionT, decltype(core_function), true>(
+            ExecutionSpace{}, arr_, num_qubits, controlled_wires,
+            controlled_values, wires, core_function);
+    }
+}
+
+template <class ExecutionSpace, class PrecisionT>
 void applyPauliRot(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                    std::size_t num_qubits,
                    const std::vector<std::size_t> &wires, bool inverse,
@@ -1961,7 +1999,7 @@ void applyNamedOperation(const GateOperation gateop,
         applyMultiRZ<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
         return;
     case GateOperation::PSWAP:
-        // FIXME: Not actually implemented yet!
+        applyPSWAP<ExecutionSpace>(arr_, num_qubits, wires, inverse, params);
         return;
     default:
         PL_ABORT("Gate operation does not exist.");
