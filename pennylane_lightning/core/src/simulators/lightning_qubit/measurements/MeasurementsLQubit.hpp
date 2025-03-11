@@ -246,7 +246,7 @@ class Measurements final
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
@@ -254,15 +254,15 @@ class Measurements final
      */
     template <class IndexT>
     auto expval(const IndexT *row_map_ptr, const IndexT row_map_size,
-                const IndexT *entries_ptr, const ComplexT *values_ptr,
+                const IndexT *column_idx_ptr, const ComplexT *values_ptr,
                 const IndexT numNNZ) -> PrecisionT {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
-            static_cast<IndexT>(this->_statevector.getLength()),
-            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
+            static_cast<IndexT>(this->_statevector.getLength()), row_map_ptr,
+            row_map_size, column_idx_ptr, values_ptr, numNNZ);
 
         ComplexT expected_value =
             innerProdC(this->_statevector.getData(), operator_vector.data(),
@@ -539,7 +539,7 @@ class Measurements final
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
@@ -547,15 +547,15 @@ class Measurements final
      */
     template <class IndexT>
     PrecisionT var(const IndexT *row_map_ptr, const IndexT row_map_size,
-                   const IndexT *entries_ptr, const ComplexT *values_ptr,
+                   const IndexT *column_idx_ptr, const ComplexT *values_ptr,
                    const IndexT numNNZ) {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
         auto operator_vector = Util::apply_Sparse_Matrix(
             this->_statevector.getData(),
-            static_cast<IndexT>(this->_statevector.getLength()),
-            row_map_ptr, row_map_size, entries_ptr, values_ptr, numNNZ);
+            static_cast<IndexT>(this->_statevector.getLength()), row_map_ptr,
+            row_map_size, column_idx_ptr, values_ptr, numNNZ);
 
         const PrecisionT mean_square =
             std::real(innerProdC(operator_vector.data(), operator_vector.data(),

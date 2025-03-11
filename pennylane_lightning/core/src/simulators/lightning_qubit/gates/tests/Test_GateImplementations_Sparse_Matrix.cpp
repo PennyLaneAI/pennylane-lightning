@@ -39,7 +39,7 @@ using namespace Pennylane::LightningQubit::Gates;
  * @brief Encapsulates a single run of the applyNCMultiQubitSparseOp and checks
  * the result.
  * @tparam ComplexT Precision of the complex data type.
- * @tparam StateVectorT State vector type.
+ * @tparam VectorT State vector data type.
  * @param ref_st Reference state vector.
  * @param dense_matrix Dense matrix to be converted to a sparse matrix.
  * @param st State vector to apply the operation.
@@ -50,16 +50,13 @@ using namespace Pennylane::LightningQubit::Gates;
  * @param inverse If inverse is required.
  * @param margin Margin for comparison.
  */
-template <typename ComplexT, typename StateVectorT>
-void applySparseNCMultiQubitOpRun(StateVectorT &ref_st,
-                                  const std::vector<ComplexT> &dense_matrix,
-                                  StateVectorT &st,
-                                  const std::size_t num_qubits,
-                                  const std::vector<std::size_t> &control_wires,
-                                  const std::vector<bool> &control_values,
-                                  const std::vector<std::size_t> &target_wires,
-                                  const bool inverse,
-                                  const float margin = 1e-5) {
+template <typename ComplexT, typename VectorT>
+void applySparseNCMultiQubitOpRun(
+    VectorT &ref_st, const std::vector<ComplexT> &dense_matrix, VectorT &st,
+    const std::size_t num_qubits, const std::vector<std::size_t> &control_wires,
+    const std::vector<bool> &control_values,
+    const std::vector<std::size_t> &target_wires, const bool inverse,
+    const typename ComplexT::value_type margin = 1e-5) {
     SparseMatrixCSR<ComplexT> sparse_matrix_from_dense(
         dense_matrix, std::sqrt(dense_matrix.size()));
     auto row_map_ptr = sparse_matrix_from_dense.row_map.data();
@@ -127,7 +124,7 @@ TEMPLATE_TEST_CASE(
  * @brief Encapsulates a single run of the applyMultiQubitSparseOp and checks
  * the result.
  * @tparam ComplexT Precision of the complex data type.
- * @tparam StateVectorT State vector type.
+ * @tparam VectorT State vector data type.
  * @param ref_st Reference state vector.
  * @param dense_matrix Dense matrix to be converted to a sparse matrix.
  * @param st State vector to apply the operation.
@@ -136,14 +133,11 @@ TEMPLATE_TEST_CASE(
  * @param inverse If inverse is required.
  * @param margin Margin for comparison.
  */
-template <typename ComplexT, typename StateVectorT>
-void applySparseMultiQubitOpRunPauli(StateVectorT &ref_st,
-                                     const std::vector<ComplexT> &dense_matrix,
-                                     StateVectorT &st,
-                                     const std::size_t num_qubits,
-                                     const std::vector<std::size_t> &wires,
-                                     const bool inverse,
-                                     const float margin = 1e-5) {
+template <typename ComplexT, typename VectorT>
+void applySparseMultiQubitOpRunPauli(
+    VectorT &ref_st, const std::vector<ComplexT> &dense_matrix, VectorT &st,
+    const std::size_t num_qubits, const std::vector<std::size_t> &wires,
+    const bool inverse, const typename ComplexT::value_type margin = 1e-5) {
     SparseMatrixCSR<ComplexT> sparse_matrix_from_dense(
         dense_matrix, std::sqrt(dense_matrix.size()));
 
@@ -157,12 +151,11 @@ void applySparseMultiQubitOpRunPauli(StateVectorT &ref_st,
     REQUIRE(st == approx(ref_st).margin(margin));
 }
 
-template <typename ComplexT, typename StateVectorT>
+template <typename ComplexT, typename VectorT>
 void applySparseMultiQubitOpRunRandomUnitary(
-    StateVectorT &ref_st, SparseMatrixCSR<ComplexT> &sparse_unitary,
-    StateVectorT &st, const std::size_t num_qubits,
-    const std::vector<std::size_t> &wires, const bool inverse,
-    const float margin = 1e-5) {
+    VectorT &ref_st, SparseMatrixCSR<ComplexT> &sparse_unitary, VectorT &st,
+    const std::size_t num_qubits, const std::vector<std::size_t> &wires,
+    const bool inverse, const float margin = 1e-5) {
 
     GateImplementationsLM::applyMultiQubitSparseOp(
         st.data(), num_qubits, sparse_unitary.row_map.data(),

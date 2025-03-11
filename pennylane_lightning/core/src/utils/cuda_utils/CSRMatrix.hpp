@@ -89,17 +89,15 @@ template <class Precision, class IndexT> class CSRMatrix {
  */
 template <class Precision, class IndexT>
 auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
-                    const IndexT *csrOffsets_ptr,
-                    const IndexT *columns_ptr,
+                    const IndexT *csrOffsets_ptr, const IndexT *columns_ptr,
                     const std::complex<Precision> *values_ptr)
     -> std::vector<std::vector<CSRMatrix<Precision, IndexT>>> {
     std::size_t num_row_blocks = mpi_manager.getSize();
     std::size_t num_col_blocks = num_row_blocks;
 
-    std::vector<std::vector<CSRMatrix<Precision, IndexT>>>
-        splitSparseMatrix(
-            num_row_blocks,
-            std::vector<CSRMatrix<Precision, IndexT>>(num_col_blocks));
+    std::vector<std::vector<CSRMatrix<Precision, IndexT>>> splitSparseMatrix(
+        num_row_blocks,
+        std::vector<CSRMatrix<Precision, IndexT>>(num_col_blocks));
 
     std::size_t row_block_size = num_rows / num_row_blocks;
     std::size_t col_block_size = row_block_size;
@@ -207,8 +205,7 @@ auto scatterCSRMatrix(MPIManager &mpi_manager,
         } else if (mpi_manager.getRank() == k && local_nnz) {
             mpi_manager.Recv<std::complex<Precision>>(
                 localCSRMatrix.getValues(), source);
-            mpi_manager.Recv<IndexT>(localCSRMatrix.getCsrOffsets(),
-                                         source);
+            mpi_manager.Recv<IndexT>(localCSRMatrix.getCsrOffsets(), source);
             mpi_manager.Recv<IndexT>(localCSRMatrix.getColumns(), source);
         }
     }

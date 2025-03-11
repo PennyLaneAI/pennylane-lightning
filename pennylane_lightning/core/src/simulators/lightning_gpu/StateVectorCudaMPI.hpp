@@ -330,7 +330,7 @@ class StateVectorCudaMPI final
             indices[i] = static_cast<IndexT>(index);
         }
         setStateVector_<IndexT>(num_states, state_ptr, indices.data(),
-                                    use_async);
+                                use_async);
         mpi_manager_.Barrier();
     }
 

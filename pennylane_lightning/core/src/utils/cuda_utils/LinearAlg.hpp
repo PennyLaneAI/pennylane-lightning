@@ -375,8 +375,8 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
  */
 template <class IndexT, class Precision, class CFP_t, class DevTypeID = int>
 inline void
-SparseMV_cuSparse(const IndexT *csrOffsets_ptr,
-                  const int64_t csrOffsets_size, const IndexT *columns_ptr,
+SparseMV_cuSparse(const IndexT *csrOffsets_ptr, const int64_t csrOffsets_size,
+                  const IndexT *columns_ptr,
                   const std::complex<Precision> *values_ptr,
                   const int64_t numNNZ, CFP_t *X, CFP_t *Y, DevTypeID device_id,
                   cudaStream_t stream_id, cusparseHandle_t handle) {
@@ -394,7 +394,7 @@ SparseMV_cuSparse(const IndexT *csrOffsets_ptr,
     DataBuffer<IndexT, int> d_csrOffsets{
         static_cast<std::size_t>(csrOffsets_size), device_id, stream_id, true};
     DataBuffer<IndexT, int> d_columns{static_cast<std::size_t>(numNNZ),
-                                          device_id, stream_id, true};
+                                      device_id, stream_id, true};
     DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(numNNZ), device_id,
                                     stream_id, true};
 
@@ -526,7 +526,7 @@ inline void SparseMV_cuSparse(const IndexT *csrOffsets_ptr,
     DataBuffer<IndexT, int> d_csrOffsets{
         static_cast<std::size_t>(csrOffsets_size), device_id, stream_id, true};
     DataBuffer<IndexT, int> d_columns{static_cast<std::size_t>(numNNZ),
-                                          device_id, stream_id, true};
+                                      device_id, stream_id, true};
     DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(numNNZ), device_id,
                                     stream_id, true};
 

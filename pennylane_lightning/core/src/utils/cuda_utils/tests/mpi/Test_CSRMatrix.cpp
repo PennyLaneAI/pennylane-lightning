@@ -103,8 +103,7 @@ TEMPLATE_TEST_CASE("CRSMatrix::Split", "[CRSMatrix]", float, double) {
     }
 
     SECTION("Apply SparseMatrix scatter") {
-        std::vector<std::vector<CSRMatrix<TestType, IndexT>>>
-            csrmatrix_blocks;
+        std::vector<std::vector<CSRMatrix<TestType, IndexT>>> csrmatrix_blocks;
 
         if (rank == 0) {
             csrmatrix_blocks = splitCSRMatrix<TestType, IndexT>(

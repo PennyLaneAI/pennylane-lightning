@@ -300,16 +300,15 @@ class Measurements final
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
      * @return Floating point expected value of the observable.
      */
     template <class IndexT>
-    PrecisionT expval(const IndexT *row_map_ptr,
-                      const IndexT row_map_size,
-                      const IndexT *entries_ptr, const ComplexT *values_ptr,
+    PrecisionT expval(const IndexT *row_map_ptr, const IndexT row_map_size,
+                      const IndexT *column_idx_ptr, const ComplexT *values_ptr,
                       const IndexT numNNZ) {
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
@@ -320,7 +319,7 @@ class Measurements final
         Kokkos::deep_copy(kok_data,
                           UnmanagedConstComplexHostView(values_ptr, numNNZ));
         Kokkos::deep_copy(kok_indices,
-                          UnmanagedConstSizeTHostView(entries_ptr, numNNZ));
+                          UnmanagedConstSizeTHostView(column_idx_ptr, numNNZ));
         Kokkos::deep_copy(kok_row_map, UnmanagedConstSizeTHostView(
                                            row_map_ptr, row_map_size));
 
@@ -430,7 +429,7 @@ class Measurements final
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
@@ -438,7 +437,7 @@ class Measurements final
      */
     template <class IndexT>
     auto var(const IndexT *row_map_ptr, const IndexT row_map_size,
-             const IndexT *entries_ptr, const ComplexT *values_ptr,
+             const IndexT *column_idx_ptr, const ComplexT *values_ptr,
              const IndexT numNNZ) -> PrecisionT {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
@@ -448,7 +447,7 @@ class Measurements final
 
         SparseMV_Kokkos<PrecisionT>(this->_statevector.getView(),
                                     ob_sv.getView(), row_map_ptr, row_map_size,
-                                    entries_ptr, values_ptr, numNNZ);
+                                    column_idx_ptr, values_ptr, numNNZ);
 
         const PrecisionT mean_square =
             getRealOfComplexInnerProduct(ob_sv.getView(), ob_sv.getView());

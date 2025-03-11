@@ -656,8 +656,8 @@ class Measurements final
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
     template <class IndexT>
-    PrecisionT var(const IndexT *csrOffsets_ptr,
-                   const int64_t csrOffsets_size, const IndexT *columns_ptr,
+    PrecisionT var(const IndexT *csrOffsets_ptr, const int64_t csrOffsets_size,
+                   const IndexT *columns_ptr,
                    const std::complex<PrecisionT> *values_ptr,
                    const int64_t numNNZ) {
         PL_ABORT_IF((this->_statevector.getLength() !=

@@ -32,7 +32,8 @@ namespace Pennylane::LightningQubit::Util {
  * @param row_map_ptr   Pointer to the row_map array. Elements of this array
  * return the number of non-zero terms in all rows before it.
  * @param row_map_size  number of elements in the row_map.
- * @param entries_ptr   pointer to the column indices of the non-zero elements.
+ * @param column_idx_ptr   pointer to the column indices of the non-zero
+ * elements.
  * @param values_ptr    non-zero elements.
  * @param numNNZ        number of non-zero elements.
  * @return result       result of the matrix vector multiplication.
@@ -41,7 +42,7 @@ template <class fp_precision, class IndexT>
 std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
     const std::complex<fp_precision> *vector_ptr, const IndexT vector_size,
     const IndexT *row_map_ptr, [[maybe_unused]] const IndexT row_map_size,
-    const IndexT *entries_ptr, const std::complex<fp_precision> *values_ptr,
+    const IndexT *column_idx_ptr, const std::complex<fp_precision> *values_ptr,
     [[maybe_unused]] const IndexT numNNZ) {
     std::vector<std::complex<fp_precision>> result;
     result.resize(vector_size);
@@ -49,7 +50,7 @@ std::vector<std::complex<fp_precision>> apply_Sparse_Matrix(
     for (IndexT i = 0; i < vector_size; i++) {
         result[i] = 0.0;
         for (IndexT j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; j++) {
-            result[i] += values_ptr[count] * vector_ptr[entries_ptr[count]];
+            result[i] += values_ptr[count] * vector_ptr[column_idx_ptr[count]];
             count++;
         }
     }

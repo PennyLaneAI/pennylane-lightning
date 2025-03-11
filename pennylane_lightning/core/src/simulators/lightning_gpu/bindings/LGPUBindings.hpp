@@ -319,12 +319,11 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "var",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
-                return M.var(
-                    static_cast<SparseIndexT *>(row_map.request().ptr),
-                    static_cast<int64_t>(row_map.request().size),
-                    static_cast<SparseIndexT *>(entries.request().ptr),
-                    static_cast<ComplexT *>(values.request().ptr),
-                    static_cast<int64_t>(values.request().size));
+                return M.var(static_cast<SparseIndexT *>(row_map.request().ptr),
+                             static_cast<int64_t>(row_map.request().size),
+                             static_cast<SparseIndexT *>(entries.request().ptr),
+                             static_cast<ComplexT *>(values.request().ptr),
+                             static_cast<int64_t>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.");
 }
