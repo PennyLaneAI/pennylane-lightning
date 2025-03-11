@@ -977,6 +977,8 @@ void testApplyControlledPhaseShift() {
         ps_data.push_back(getPhaseShift<std::complex, PrecisionT>(a));
     }
 
+    const std::vector<std::vector<size_t>> wires = {{0, 1}, {1, 2}};
+
     std::vector<std::vector<ComplexT>> expected = {
         {ps_data[0][0], ps_data[0][0], ps_data[0][0], ps_data[0][0],
          ps_data[0][0], ps_data[0][0], ps_data[0][3], ps_data[0][3]},
@@ -987,12 +989,14 @@ void testApplyControlledPhaseShift() {
         scaleVector(vec, coef);
     }
 
-    auto st = ini_st;
+    for (std::size_t i = 0; i < angles.size(); ++i) {
+        auto st = ini_st;
 
-    GateImplementation::applyControlledPhaseShift(st.data(), num_qubits, {0, 1},
-                                                  false, angles[0]);
-    CAPTURE(st);
-    CHECK(st == approx(expected[0]));
+        GateImplementation::applyControlledPhaseShift(
+            st.data(), num_qubits, wires[i], false, angles[i]);
+        CAPTURE(st);
+        CHECK(st == approx(expected[i]));
+    }
 }
 PENNYLANE_RUN_TEST(ControlledPhaseShift);
 
