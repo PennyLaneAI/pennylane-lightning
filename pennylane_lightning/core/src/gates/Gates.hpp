@@ -1331,7 +1331,7 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
     case GateOperation::Toffoli:
         return getToffoli<ComplexT, T>();
     case GateOperation::PSWAP:
-        return getPSWAP<ComplexT, T>();
+        return getPSWAP<ComplexT, T>((inverse) ? -params[0] : params[0]);
     default:
         PL_ABORT("This GateOperation does not have a corresponding matrix.");
     }
