@@ -487,7 +487,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @brief Apply a sparse matrix with controls to the statevector.
      * @tparam PrecisionT Floating point precision of underlying statevector
      * data
-     * @tparam index_type Index type
+     * @tparam IndexT Index type
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param row_map_ptr Pointer to the row map.
@@ -498,10 +498,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param wires Wires the gate applies to.
      * @param inverse Indicate whether inverse should be taken.
      */
-    template <class PrecisionT, class index_type = std::size_t>
+    template <class PrecisionT, class IndexT = std::size_t>
     static void applyNCMultiQubitSparseOp(
         std::complex<PrecisionT> *arr, std::size_t num_qubits,
-        const index_type *row_map_ptr, const index_type *col_idx_ptr,
+        const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
         const std::complex<PrecisionT> *values_ptr,
         const std::vector<std::size_t> &controlled_wires,
         const std::vector<bool> &controlled_values,
@@ -521,11 +521,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 coeffs[i] = arr[indices[i] + offset];
             }
             std::size_t count = 0;
-            for (index_type i = 0; i < dim; i++) {
+            for (IndexT i = 0; i < dim; i++) {
                 const auto index = indices[i] + offset;
                 // const std::size_t base_idx = i * dim;
                 arr[index] = 0.0;
-                for (index_type j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i];
+                for (IndexT j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i];
                      j++) {
                     arr[index] +=
                         values_ptr[count] * coeffs[col_idx_ptr[count]];
@@ -537,10 +537,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                  core_function);
     }
 
-    template <class PrecisionT, class index_type = std::size_t>
+    template <class PrecisionT, class IndexT = std::size_t>
     static void applyMultiQubitSparseOp(
         std::complex<PrecisionT> *arr, std::size_t num_qubits,
-        const index_type *row_map_ptr, const index_type *col_idx_ptr,
+        const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
         const std::complex<PrecisionT> *values_ptr,
         const std::vector<std::size_t> &wires, bool inverse = false) {
         applyNCMultiQubitSparseOp(arr, num_qubits, row_map_ptr, col_idx_ptr,

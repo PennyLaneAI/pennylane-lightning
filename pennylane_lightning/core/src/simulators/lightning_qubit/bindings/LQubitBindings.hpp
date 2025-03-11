@@ -249,9 +249,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using sparse_index_type = std::size_t;
+    using SparseIndexT = std::size_t;
     using np_arr_sparse_ind =
-        py::array_t<sparse_index_type,
+        py::array_t<SparseIndexT,
                     py::array::c_style | py::array::forcecast>;
 
     pyclass
@@ -265,12 +265,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.expval(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT>(row_map.request().size),
+                    static_cast<SparseIndexT *>(entries.request().ptr),
                     static_cast<std::complex<PrecisionT> *>(
                         values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+                    static_cast<SparseIndexT>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
         .def("var",
@@ -288,12 +288,12 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.var(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT>(row_map.request().size),
+                    static_cast<SparseIndexT *>(entries.request().ptr),
                     static_cast<std::complex<PrecisionT> *>(
                         values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+                    static_cast<SparseIndexT>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.")
         .def("generate_samples",

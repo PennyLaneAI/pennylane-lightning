@@ -33,20 +33,20 @@ namespace Pennylane::LightningGPU::MPI {
  * contain nonzero values, row offsets, and column indices.
  *
  * @tparam Precision Floating-point precision type.
- * @tparam index_type Integer type.
+ * @tparam IndexT Integer type.
  */
-template <class Precision, class index_type> class CSRMatrix {
+template <class Precision, class IndexT> class CSRMatrix {
   private:
-    std::vector<index_type> columns_;
-    std::vector<index_type> csrOffsets_;
+    std::vector<IndexT> columns_;
+    std::vector<IndexT> csrOffsets_;
     std::vector<std::complex<Precision>> values_;
 
   public:
     CSRMatrix(std::size_t num_rows, std::size_t nnz)
         : columns_(nnz, 0), csrOffsets_(num_rows + 1, 0), values_(nnz){};
 
-    CSRMatrix(std::size_t num_rows, std::size_t nnz, index_type *column_ptr,
-              index_type *csrOffsets_ptr, std::complex<Precision> *value_ptr)
+    CSRMatrix(std::size_t num_rows, std::size_t nnz, IndexT *column_ptr,
+              IndexT *csrOffsets_ptr, std::complex<Precision> *value_ptr)
         : columns_(column_ptr, column_ptr + nnz),
           csrOffsets_(csrOffsets_ptr, csrOffsets_ptr + num_rows + 1),
           values_(value_ptr, value_ptr + nnz){};
@@ -56,12 +56,12 @@ template <class Precision, class index_type> class CSRMatrix {
     /**
      * @brief Get the CSR format index vector of the matrix.
      */
-    auto getColumns() -> std::vector<index_type> & { return columns_; }
+    auto getColumns() -> std::vector<IndexT> & { return columns_; }
 
     /**
      * @brief Get CSR format offset vector of the matrix.
      */
-    auto getCsrOffsets() -> std::vector<index_type> & { return csrOffsets_; }
+    auto getCsrOffsets() -> std::vector<IndexT> & { return csrOffsets_; }
 
     /**
      * @brief Get CSR format data vector of the matrix.
@@ -76,7 +76,7 @@ template <class Precision, class index_type> class CSRMatrix {
  * local blocks. This operation should be conducted on the rank 0.
  *
  * @tparam Precision Floating-point precision type.
- * @tparam index_type Integer type used as indices of the sparse matrix.
+ * @tparam IndexT Integer type used as indices of the sparse matrix.
  * @param mpi_manager MPIManager object.
  * @param num_rows Number of rows of the CSR matrix.
  * @param csrOffsets_ptr Pointer to the array of row offsets of the sparse
@@ -87,19 +87,19 @@ template <class Precision, class index_type> class CSRMatrix {
  *
  * @return auto A vector of vector of CSRMatrix.
  */
-template <class Precision, class index_type>
+template <class Precision, class IndexT>
 auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
-                    const index_type *csrOffsets_ptr,
-                    const index_type *columns_ptr,
+                    const IndexT *csrOffsets_ptr,
+                    const IndexT *columns_ptr,
                     const std::complex<Precision> *values_ptr)
-    -> std::vector<std::vector<CSRMatrix<Precision, index_type>>> {
+    -> std::vector<std::vector<CSRMatrix<Precision, IndexT>>> {
     std::size_t num_row_blocks = mpi_manager.getSize();
     std::size_t num_col_blocks = num_row_blocks;
 
-    std::vector<std::vector<CSRMatrix<Precision, index_type>>>
+    std::vector<std::vector<CSRMatrix<Precision, IndexT>>>
         splitSparseMatrix(
             num_row_blocks,
-            std::vector<CSRMatrix<Precision, index_type>>(num_col_blocks));
+            std::vector<CSRMatrix<Precision, IndexT>>(num_col_blocks));
 
     std::size_t row_block_size = num_rows / num_row_blocks;
     std::size_t col_block_size = row_block_size;
@@ -128,7 +128,7 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
                     .getCsrOffsets()
                     .size() == 0) {
                 splitSparseMatrix[block_row_id][block_col_id].getCsrOffsets() =
-                    std::vector<index_type>(row_block_size + 1, 0);
+                    std::vector<IndexT>(row_block_size + 1, 0);
             }
 
             splitSparseMatrix[block_row_id][block_col_id]
@@ -163,17 +163,17 @@ auto splitCSRMatrix(MPIManager &mpi_manager, const std::size_t &num_rows,
  * @brief Scatter a CSR (Compressed Sparse Row) format matrix.
  *
  * @tparam Precision Floating-point precision type.
- * @tparam index_type Integer type used as indices of the sparse matrix.
+ * @tparam IndexT Integer type used as indices of the sparse matrix.
  * @param mpi_manager MPIManager object.
  * @param matrix CSR (Compressed Sparse Row) format matrix vector.
  * @param local_num_rows Number of rows of local CSR matrix.
  * @param root Root rank of the scatter operation.
  */
-template <class Precision, class index_type>
+template <class Precision, class IndexT>
 auto scatterCSRMatrix(MPIManager &mpi_manager,
-                      std::vector<CSRMatrix<Precision, index_type>> &matrix,
+                      std::vector<CSRMatrix<Precision, IndexT>> &matrix,
                       std::size_t local_num_rows, std::size_t root)
-    -> CSRMatrix<Precision, index_type> {
+    -> CSRMatrix<Precision, IndexT> {
     std::size_t num_col_blocks = mpi_manager.getSize();
 
     std::vector<std::size_t> nnzs;
@@ -187,7 +187,7 @@ auto scatterCSRMatrix(MPIManager &mpi_manager,
 
     std::size_t local_nnz = mpi_manager.scatter<std::size_t>(nnzs, 0)[0];
 
-    CSRMatrix<Precision, index_type> localCSRMatrix(local_num_rows, local_nnz);
+    CSRMatrix<Precision, IndexT> localCSRMatrix(local_num_rows, local_nnz);
 
     if (mpi_manager.getRank() == root) {
         localCSRMatrix.getValues() = matrix[0].getValues();
@@ -202,14 +202,14 @@ auto scatterCSRMatrix(MPIManager &mpi_manager,
         if (mpi_manager.getRank() == 0 && matrix[k].getValues().size()) {
             mpi_manager.Send<std::complex<Precision>>(matrix[k].getValues(),
                                                       dest);
-            mpi_manager.Send<index_type>(matrix[k].getCsrOffsets(), dest);
-            mpi_manager.Send<index_type>(matrix[k].getColumns(), dest);
+            mpi_manager.Send<IndexT>(matrix[k].getCsrOffsets(), dest);
+            mpi_manager.Send<IndexT>(matrix[k].getColumns(), dest);
         } else if (mpi_manager.getRank() == k && local_nnz) {
             mpi_manager.Recv<std::complex<Precision>>(
                 localCSRMatrix.getValues(), source);
-            mpi_manager.Recv<index_type>(localCSRMatrix.getCsrOffsets(),
+            mpi_manager.Recv<IndexT>(localCSRMatrix.getCsrOffsets(),
                                          source);
-            mpi_manager.Recv<index_type>(localCSRMatrix.getColumns(), source);
+            mpi_manager.Recv<IndexT>(localCSRMatrix.getColumns(), source);
         }
     }
     return localCSRMatrix;

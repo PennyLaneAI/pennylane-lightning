@@ -26,7 +26,7 @@ namespace Pennylane::LightningQubit::Util {
  * @brief Apply a sparse matrix to a vector.
  *
  * @tparam fp_precision data float point precision.
- * @tparam index_type integer type used as indices of the sparse matrix.
+ * @tparam IndexT integer type used as indices of the sparse matrix.
  * @param vector_ptr    pointer to the vector.
  * @param vector_size   size of the vector.
  * @param row_map_ptr   Pointer to the row_map array. Elements of this array
@@ -37,20 +37,20 @@ namespace Pennylane::LightningQubit::Util {
  * @param numNNZ        number of non-zero elements.
  * @return result       result of the matrix vector multiplication.
  */
-template <class fp_precision, class index_type>
+template <class fp_precision, class IndexT>
 std::vector<std::complex<fp_precision>>
 apply_Sparse_Matrix(const std::complex<fp_precision> *vector_ptr,
-                    const index_type vector_size, const index_type *row_map_ptr,
-                    [[maybe_unused]] const index_type row_map_size,
-                    const index_type *entries_ptr,
+                    const IndexT vector_size, const IndexT *row_map_ptr,
+                    [[maybe_unused]] const IndexT row_map_size,
+                    const IndexT *entries_ptr,
                     const std::complex<fp_precision> *values_ptr,
-                    [[maybe_unused]] const index_type numNNZ) {
+                    [[maybe_unused]] const IndexT numNNZ) {
     std::vector<std::complex<fp_precision>> result;
     result.resize(vector_size);
     std::size_t count = 0;
-    for (index_type i = 0; i < vector_size; i++) {
+    for (IndexT i = 0; i < vector_size; i++) {
         result[i] = 0.0;
-        for (index_type j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; j++) {
+        for (IndexT j = 0; j < row_map_ptr[i + 1] - row_map_ptr[i]; j++) {
             result[i] += values_ptr[count] * vector_ptr[entries_ptr[count]];
             count++;
         }

@@ -190,7 +190,7 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using sparse_index_type =
+    using SparseIndexT =
         typename std::conditional<std::is_same<ParamT, float>::value, int32_t,
                                   int64_t>::type;
     using np_arr_sparse_ind = typename std::conditional<
@@ -210,9 +210,9 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
                const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.expval(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
                     static_cast<int64_t>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<SparseIndexT *>(entries.request().ptr),
                     static_cast<ComplexT *>(values.request().ptr),
                     static_cast<int64_t>(values.request().size));
             },
@@ -255,9 +255,9 @@ void registerBackendSpecificMeasurementsMPI(PyClass &pyclass) {
                const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.var(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
                     static_cast<int64_t>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<SparseIndexT *>(entries.request().ptr),
                     static_cast<ComplexT *>(values.request().ptr),
                     static_cast<int64_t>(values.request().size));
             },

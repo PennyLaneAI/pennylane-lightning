@@ -357,7 +357,7 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
  * @brief Sparse matrix vector multiply offloaded to cuSparse (Y =
  * alpha*SparseMat*X + beta)
  *
- * @tparam index_type Integer type for offsets, indices and number of elements
+ * @tparam IndexT Integer type for offsets, indices and number of elements
  * (std::size_t for the moment).
  * @tparam Precision Floating data-type.
  * @tparam DevTypeID Integer type of device id.
@@ -373,10 +373,10 @@ inline SharedCusparseHandle make_shared_cusparse_handle() {
  * @param cudaStream_t Stream id.
  * @param handle cuSparse handle.
  */
-template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
+template <class IndexT, class Precision, class CFP_t, class DevTypeID = int>
 inline void
-SparseMV_cuSparse(const index_type *csrOffsets_ptr,
-                  const int64_t csrOffsets_size, const index_type *columns_ptr,
+SparseMV_cuSparse(const IndexT *csrOffsets_ptr,
+                  const int64_t csrOffsets_size, const IndexT *columns_ptr,
                   const std::complex<Precision> *values_ptr,
                   const int64_t numNNZ, CFP_t *X, CFP_t *Y, DevTypeID device_id,
                   cudaStream_t stream_id, cusparseHandle_t handle) {
@@ -391,9 +391,9 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     const CFP_t alpha = {1.0, 0.0};
     const CFP_t beta = {0.0, 0.0};
 
-    DataBuffer<index_type, int> d_csrOffsets{
+    DataBuffer<IndexT, int> d_csrOffsets{
         static_cast<std::size_t>(csrOffsets_size), device_id, stream_id, true};
-    DataBuffer<index_type, int> d_columns{static_cast<std::size_t>(numNNZ),
+    DataBuffer<IndexT, int> d_columns{static_cast<std::size_t>(numNNZ),
                                           device_id, stream_id, true};
     DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(numNNZ), device_id,
                                     stream_id, true};
@@ -488,7 +488,7 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
  * @brief Sparse matrix vector multiply offloaded to cuSparse (Y =
  * alpha*SparseMat*X + beta)
  *
- * @tparam index_type Integer type for offsets, indices and number of elements
+ * @tparam IndexT Integer type for offsets, indices and number of elements
  * (std::size_t for the moment).
  * @tparam Precision Floating data-type.
  * @tparam DevTypeID Integer type of device id.
@@ -504,10 +504,10 @@ SparseMV_cuSparse(const index_type *csrOffsets_ptr,
  * @param cudaStream_t Stream id.
  * @param handle cuSparse handle.
  */
-template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
-inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
+template <class IndexT, class Precision, class CFP_t, class DevTypeID = int>
+inline void SparseMV_cuSparse(const IndexT *csrOffsets_ptr,
                               const int64_t csrOffsets_size,
-                              const index_type *columns_ptr,
+                              const IndexT *columns_ptr,
                               const std::complex<Precision> *values_ptr,
                               const int64_t numNNZ, const CFP_t *X, CFP_t *Y,
                               DevTypeID device_id, cudaStream_t stream_id,
@@ -523,9 +523,9 @@ inline void SparseMV_cuSparse(const index_type *csrOffsets_ptr,
     const CFP_t alpha = {1.0, 0.0};
     const CFP_t beta = {0.0, 0.0};
 
-    DataBuffer<index_type, int> d_csrOffsets{
+    DataBuffer<IndexT, int> d_csrOffsets{
         static_cast<std::size_t>(csrOffsets_size), device_id, stream_id, true};
-    DataBuffer<index_type, int> d_columns{static_cast<std::size_t>(numNNZ),
+    DataBuffer<IndexT, int> d_columns{static_cast<std::size_t>(numNNZ),
                                           device_id, stream_id, true};
     DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(numNNZ), device_id,
                                     stream_id, true};
