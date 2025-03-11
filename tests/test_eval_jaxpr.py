@@ -621,6 +621,22 @@ class TestDeferMeasurements:
         res = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
         assert qml.math.allclose(res, 1)
 
+    @pytest.mark.parametrize("postselect", [0, 1])
+    def test_postselection_error(self, postselect):
+        """Test that a runtime error is raised if postselection is used with defer_measurements."""
+
+        dev = qml.device(device_name, wires=5)
+
+        @DeferMeasurementsInterpreter(num_wires=5)
+        def f():
+            qml.PauliX(0)
+            qml.measure(0, postselect=postselect)
+            return qml.expval(qml.PauliZ(0))
+
+        jaxpr = jax.make_jaxpr(f)()
+        with pytest.raises(qml.DeviceError, match="Lightning devices do not support postselection"):
+            _ = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+
     def test_mcms_as_gate_parameters(self):
         """Test that using MCMs as gate parameters works as expected."""
 
