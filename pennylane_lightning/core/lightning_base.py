@@ -119,7 +119,7 @@ class LightningBase(Device):
 
         if self.wires is None:
             num_wires = circuit.num_wires
-            # Map to follow default.qubit wire order for dynamic wires
+            # Map to follow the standard wire order for dynamic wires
             circuit = circuit.map_to_standard_wires()
         else:
             num_wires = len(self.wires)
