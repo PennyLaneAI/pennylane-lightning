@@ -289,7 +289,7 @@ class LightningTensorMeasurements:
         mps = measurements
 
         for measurement in mps:
-            if not measurement.wires:
+            if measurement.wires == Wires([]):
                 # This is required for the case where no wires is specific for the tensornet
                 # (i.e. dynamically determined from circuit), and no wires (and no observable)
                 # is provided for the measurement (e.g. qml.probs() or qml.counts() or
