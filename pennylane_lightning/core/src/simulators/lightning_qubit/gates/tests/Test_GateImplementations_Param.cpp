@@ -1932,7 +1932,7 @@ void testApplyPSWAP() {
         ps_data.push_back(getPhaseShift<std::complex, PrecisionT>(a));
     }
 
-    std::vector<std::vector<size_t>> wires = {
+    const std::vector<std::vector<size_t>> wires = {
         {1, 2},
         {1, 2},
         {0, 1},
@@ -1965,21 +1965,6 @@ void testApplyPSWAP() {
         CAPTURE(st);
         CHECK(st == approx(expected[i]));
     }
-
-    // Do a single test with controlled PSWAP
-    expected = {
-        {ps_data[1][0], -ps_data[1][0], ps_data[1][0], -ps_data[1][0],
-         ps_data[1][0], ps_data[1][3], -ps_data[1][3], -ps_data[1][0]},
-    };
-
-    scaleVector(expected[0], coef);
-
-    auto st = ini_st;
-
-    GateImplementation::applyNCPSWAP(st.data(), num_qubits, {0}, {true}, {1, 2},
-                                     false, angles[1]);
-    CAPTURE(st);
-    CHECK(st == approx(expected[0]));
 }
 PENNYLANE_RUN_TEST(PSWAP);
 
@@ -2790,6 +2775,29 @@ TEMPLATE_TEST_CASE(
                 "SingleExcitationPlus", std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
                 inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled PSWAP - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getPSWAP<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("PSWAP", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire0, wire1}, inverse,
+                               {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }

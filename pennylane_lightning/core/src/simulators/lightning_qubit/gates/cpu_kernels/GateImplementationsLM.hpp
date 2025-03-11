@@ -1963,23 +1963,22 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT>
-    static void
-    applyPSWAP(std::complex<PrecisionT> *arr, std::size_t num_qubits,
-               [[maybe_unused]] const std::vector<std::size_t> &wires,
-               [[maybe_unused]] bool inverse, [[maybe_unused]] ParamT angle) {
+    static void applyPSWAP(std::complex<PrecisionT> *arr,
+                           std::size_t num_qubits,
+                           const std::vector<std::size_t> &wires, bool inverse,
+                           ParamT angle) {
         applyNCPSWAP(arr, num_qubits, {}, {}, wires, inverse, angle);
     }
 
     template <class PrecisionT, class ParamT>
-    static void
-    applyNCPSWAP(std::complex<PrecisionT> *arr, std::size_t num_qubits,
-                 const std::vector<std::size_t> &controlled_wires,
-                 const std::vector<bool> &controlled_values,
-                 [[maybe_unused]] const std::vector<std::size_t> &wires,
-                 bool inverse, ParamT angle) {
+    static void applyNCPSWAP(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
         const std::complex<PrecisionT> phase =
-            inverse ? std::exp(-std::complex<PrecisionT>(0, angle))
-                    : std::exp(std::complex<PrecisionT>(0, angle));
+            std::exp(std::complex<PrecisionT>(0, inverse ? -angle : angle));
         auto core_function = [phase](std::complex<PrecisionT> *arr,
                                      [[maybe_unused]] const std::size_t i00,
                                      const std::size_t i01,

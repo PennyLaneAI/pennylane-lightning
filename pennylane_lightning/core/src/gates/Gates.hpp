@@ -1217,6 +1217,35 @@ static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
     };
 }
 
+/**
+ * @brief Create a matrix representation of the PSWAP gate data in row-major
+ * format.
+ *
+ * @tparam ComplexT Complex class.
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<ComplexT<T>> Return constant expression
+ * of PSWAP gate data.
+ */
+template <template <typename...> class ComplexT, typename T>
+static constexpr auto getPSWAP(T angle) -> std::vector<ComplexT<T>> {
+    return {ONE<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            {std::cos(angle), std::sin(angle)},
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            {std::cos(angle), std::sin(angle)},
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ZERO<ComplexT, T>(),
+            ONE<ComplexT, T>()};
+}
+
 template <template <typename...> class ComplexT, typename T>
 std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
                                    const std::vector<T> &params,
@@ -1301,6 +1330,8 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
         return getCSWAP<ComplexT, T>();
     case GateOperation::Toffoli:
         return getToffoli<ComplexT, T>();
+    case GateOperation::PSWAP:
+        return getPSWAP<ComplexT, T>();
     default:
         PL_ABORT("This GateOperation does not have a corresponding matrix.");
     }
