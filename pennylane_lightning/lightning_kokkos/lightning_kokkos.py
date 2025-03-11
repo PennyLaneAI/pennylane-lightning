@@ -239,11 +239,8 @@ class LightningKokkos(LightningBase):
         # Set the attributes to call the Lightning classes
         self._set_lightning_classes()
 
-        # Kokkos specific options
-        self._kokkos_args = kokkos_args
-
         self._statevector = None
-        self._sv_init_kwargs = {"kokkos_args": self._kokkos_args}
+        self._sv_init_kwargs = {"kokkos_args": kokkos_args}
 
     @property
     def name(self):

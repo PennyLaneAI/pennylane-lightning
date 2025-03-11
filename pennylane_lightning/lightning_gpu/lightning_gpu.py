@@ -268,7 +268,6 @@ class LightningGPU(LightningBase):
 
         # GPU specific options
         self._dp = DevPool()
-        self._use_async = use_async
 
         # Create the state vector only for MPI, otherwise created dynamically before execution
         if mpi:
@@ -281,12 +280,12 @@ class LightningGPU(LightningBase):
                 num_wires=len(self.wires),
                 dtype=c_dtype,
                 mpi_handler=self._mpi_handler,
-                use_async=self._use_async,
+                use_async=use_async,
             )
         else:
             self._statevector = None
             self._mpi_handler = None
-            self._sv_init_kwargs = {"mpi_handler": None, "use_async": self._use_async}
+            self._sv_init_kwargs = {"mpi_handler": None, "use_async": use_async}
 
     @property
     def name(self):
