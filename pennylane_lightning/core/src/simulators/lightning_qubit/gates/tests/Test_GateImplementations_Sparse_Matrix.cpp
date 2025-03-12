@@ -177,8 +177,8 @@ void testPauliOperation(GateOperationT<PrecisionT> gateOp, const MatrixT matrix,
     applyGateOperation(gateOp, ref_st.data(), num_qubits, unitary_wires,
                        inverse);
 
-    applySparseMultiQubitOpRun(ref_st, matrix, st, num_qubits,
-                                    unitary_wires, inverse);
+    applySparseMultiQubitOpRun(ref_st, matrix, st, num_qubits, unitary_wires,
+                               inverse);
 }
 
 template <typename ComplexT, typename VectorT>

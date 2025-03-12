@@ -525,8 +525,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 const auto index = indices[i] + offset;
                 arr[index] = 0.0;
                 auto row_range = row_map_ptr[i + 1] - row_map_ptr[i];
-                for (IndexT j = 0; j < row_range;
-                     j++) {
+                for (IndexT j = 0; j < row_range; j++) {
                     arr[index] +=
                         values_ptr[count] * coeffs[col_idx_ptr[count]];
                     count++;

@@ -475,6 +475,10 @@ template <typename IndexT, class RandomEngine>
 inline auto createRandomWiresSubset(RandomEngine &re, IndexT sv_num_qubits,
                                     IndexT unitary_num_qubits)
     -> std::vector<IndexT> {
+    if (unitary_num_qubits > sv_num_qubits) {
+        PL_ABORT("If unitary_num_qubits > sv_num_qubits, the internal while "
+                 "loop will go on forever.");
+    }
     // creating a vector with a subset of unique random wires
     std::uniform_int_distribution<> dis(0, sv_num_qubits - 1);
     std::unordered_set<std::size_t> unitary_wires_set;
