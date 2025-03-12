@@ -1786,22 +1786,23 @@ void applyNCMultiRZ(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
 
 template <class ExecutionSpace, class PrecisionT>
 void applyPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-               std::size_t num_qubits, const std::vector<std::size_t> &wires,
-               bool inverse = false,
-               const std::vector<PrecisionT> &params = {}) {
+                std::size_t num_qubits, const std::vector<std::size_t> &wires,
+                bool inverse = false,
+                const std::vector<PrecisionT> &params = {}) {
     applyNCPSWAP<ExecutionSpace, PrecisionT>(arr_, num_qubits, {}, {}, wires,
-                                            inverse, params);
+                                             inverse, params);
 }
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                std::size_t num_qubits,
-                const std::vector<std::size_t> &controlled_wires,
-                const std::vector<bool> &controlled_values,
-                const std::vector<std::size_t> &wires, bool inverse = false,
-                const std::vector<PrecisionT> &params = {}) {
+                  std::size_t num_qubits,
+                  const std::vector<std::size_t> &controlled_wires,
+                  const std::vector<bool> &controlled_values,
+                  const std::vector<std::size_t> &wires, bool inverse = false,
+                  const std::vector<PrecisionT> &params = {}) {
     const PrecisionT angle = params[0];
-    const Kokkos::complex<PrecisionT> shift = Kokkos::exp(Kokkos::complex<PrecisionT>(0, inverse? -angle : angle));
+    const Kokkos::complex<PrecisionT> shift =
+        Kokkos::exp(Kokkos::complex<PrecisionT>(0, inverse ? -angle : angle));
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -2136,8 +2137,7 @@ void applyNCNamedOperation(const ControlledGateOperation gateop,
         return;
     case ControlledGateOperation::PSWAP:
         applyNCPSWAP<ExecutionSpace>(arr_, num_qubits, controlled_wires,
-                                       controlled_values, wires, inverse,
-                                       params);
+                                     controlled_values, wires, inverse, params);
         return;
     default:
         PL_ABORT("Controlled gate operation does not exist.");

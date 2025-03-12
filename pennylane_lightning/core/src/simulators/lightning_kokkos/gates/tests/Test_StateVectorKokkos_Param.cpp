@@ -87,7 +87,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyMatrix/Operation",
         "PhaseShift", "RX", "RY", "RZ", "ControlledPhaseShift", "CRX", "CRY",
         "CRZ", "IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
         "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
-        "DoubleExcitationMinus", "DoubleExcitationPlus", "Rot", "CRot", "PSWAP");
+        "DoubleExcitationMinus", "DoubleExcitationPlus", "Rot", "CRot",
+        "PSWAP");
     DYNAMIC_SECTION("Matrix - Gate = " << gate_name
                                        << " Inverse = " << inverse) {
         auto gate_op =
