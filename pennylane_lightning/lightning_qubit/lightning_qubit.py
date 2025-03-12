@@ -93,9 +93,7 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return stopping_condition(op) or isinstance(
-        op, (MidMeasureMP, qml.ops.op_math.Conditional)
-    )
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -352,9 +350,7 @@ class LightningQubit(LightningBase):
             num_wires = len(self.wires)
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
-            self._statevector = self.LightningStateVector(
-                num_wires=num_wires, dtype=self._c_dtype
-            )
+            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype)
 
         return circuit
 
@@ -381,9 +377,7 @@ class LightningQubit(LightningBase):
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(
-            validate_observables, accepted_observables, name=self.name
-        )
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
@@ -488,9 +482,7 @@ class LightningQubit(LightningBase):
         """
         if mcmc is None:
             mcmc = {}
-        if circuit.shots and (
-            any(isinstance(op, MidMeasureMP) for op in circuit.operations)
-        ):
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             results = []
             aux_circ = qml.tape.QuantumScript(
                 circuit.operations,
@@ -515,9 +507,7 @@ class LightningQubit(LightningBase):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(
-            circuit
-        )
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @staticmethod
     def get_c_interface():
@@ -559,9 +549,7 @@ class LightningQubit(LightningBase):
                 lib_location = (Path(path) / lib_name).as_posix()
                 return "LightningSimulator", lib_location
 
-        raise RuntimeError(
-            "'LightningSimulator' shared library not found"
-        )  # pragma: no cover
+        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
 
     def jaxpr_jvp(
         self,
@@ -609,15 +597,11 @@ def execute_and_jvp(jaxpr, args: tuple, tangents: tuple, num_wires: int):
 
     # This is a limitation of the current implementation
     if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
-        raise NotImplementedError(
-            "tangents must not contain jax.interpreter.ad.Zero objects"
-        )
+        raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
 
     env = {
         var: (arg, tangent)
-        for var, arg, tangent in zip(
-            jaxpr.constvars + jaxpr.invars, args, tangents, strict=True
-        )
+        for var, arg, tangent in zip(jaxpr.constvars + jaxpr.invars, args, tangents, strict=True)
     }
 
     tape = qml.tape.plxpr_to_tape(jaxpr, {}, args)

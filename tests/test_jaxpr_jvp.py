@@ -26,9 +26,7 @@ jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
 
 if device_name == "lightning.tensor":
-    pytest.skip(
-        "Skipping tests for the LightningTensor class.", allow_module_level=True
-    )
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
