@@ -1818,6 +1818,24 @@ TEMPLATE_TEST_CASE(
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
+
+    DYNAMIC_SECTION("N-controlled PSWAP - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getPSWAP<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("PSWAP", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire0, wire1}, inverse,
+                               {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
 }
 
 TEMPLATE_TEST_CASE(
@@ -1991,7 +2009,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
     }
 }
 
-
 TEMPLATE_TEST_CASE("LightningGPU::applyPSWAP", "[LightningGPU_Param]", double) {
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
@@ -1999,7 +2016,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPSWAP", "[LightningGPU_Param]", double) {
 
     // Test using |++-> state
     sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}, {"PauliZ"}},
-                       {{0}, {1}, {2}, {2}}, {{false}, {false}, {false}, {false}});
+                       {{0}, {1}, {2}, {2}},
+                       {{false}, {false}, {false}, {false}});
 
     const std::vector<TestType> angles{{0.1}, {0.6}};
     const std::vector<std::vector<size_t>> wires{{1, 2}, {0, 1}};
@@ -2007,23 +2025,23 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPSWAP", "[LightningGPU_Param]", double) {
     const auto init_state = sv.getDataVector();
     SECTION("adj = false") {
         std::vector<std::vector<cp_t>> expected_results{
-            std::vector<cp_t>{{ 0.35355339,  0},
-                              { 0.35178710,  0.03529644},
+            std::vector<cp_t>{{0.35355339, 0},
+                              {0.35178710, 0.03529644},
                               {-0.35178710, -0.03529644},
-                              {-0.35355339,  0},
-                              { 0.35355339,  0},
-                              { 0.35178710,  0.03529644},
+                              {-0.35355339, 0},
+                              {0.35355339, 0},
+                              {0.35178710, 0.03529644},
                               {-0.35178710, -0.03529644},
-                              {-0.35355339,  0}},
+                              {-0.35355339, 0}},
 
-            std::vector<cp_t>{{ 0.35355339,  0},
-                              {-0.35355339,  0},
-                              { 0.29180021,  0.19963126},
+            std::vector<cp_t>{{0.35355339, 0},
+                              {-0.35355339, 0},
+                              {0.29180021, 0.19963126},
                               {-0.29180021, -0.19963126},
-                              { 0.29180021,  0.19963126},
+                              {0.29180021, 0.19963126},
                               {-0.29180021, -0.19963126},
-                              { 0.35355339,  0},
-                              {-0.35355339,  0}},
+                              {0.35355339, 0},
+                              {-0.35355339, 0}},
         };
 
         SECTION("Apply directly") {
@@ -2039,7 +2057,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPSWAP", "[LightningGPU_Param]", double) {
             for (std::size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
                                                              init_state.size()};
-                sv_dispatch.applyOperation("PSWAP", wires[index], false, {angles[index]});
+                sv_dispatch.applyOperation("PSWAP", wires[index], false,
+                                           {angles[index]});
                 CHECK(sv_dispatch.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -2047,23 +2066,23 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPSWAP", "[LightningGPU_Param]", double) {
     }
     SECTION("adj = true") {
         std::vector<std::vector<cp_t>> expected_results_adj{
-            std::vector<cp_t>{{ 0.35355339,  0},
-                              { 0.35178710, -0.03529644},
-                              {-0.35178710,  0.03529644},
-                              {-0.35355339,  0},
-                              { 0.35355339,  0},
-                              { 0.35178710, -0.03529644},
-                              {-0.35178710,  0.03529644},
-                              {-0.35355339,  0}},
+            std::vector<cp_t>{{0.35355339, 0},
+                              {0.35178710, -0.03529644},
+                              {-0.35178710, 0.03529644},
+                              {-0.35355339, 0},
+                              {0.35355339, 0},
+                              {0.35178710, -0.03529644},
+                              {-0.35178710, 0.03529644},
+                              {-0.35355339, 0}},
 
-            std::vector<cp_t>{{ 0.35355339,  0},
-                              {-0.35355339,  0},
-                              { 0.29180021, -0.19963126},
-                              {-0.29180021,  0.19963126},
-                              { 0.29180021, -0.19963126},
-                              {-0.29180021,  0.19963126},
-                              { 0.35355339,  0},
-                              {-0.35355339,  0}},
+            std::vector<cp_t>{{0.35355339, 0},
+                              {-0.35355339, 0},
+                              {0.29180021, -0.19963126},
+                              {-0.29180021, 0.19963126},
+                              {0.29180021, -0.19963126},
+                              {-0.29180021, 0.19963126},
+                              {0.35355339, 0},
+                              {-0.35355339, 0}},
         };
 
         SECTION("Apply directly") {
@@ -2079,7 +2098,8 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPSWAP", "[LightningGPU_Param]", double) {
             for (std::size_t index = 0; index < angles.size(); index++) {
                 StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
                                                              init_state.size()};
-                sv_dispatch.applyOperation("PSWAP", wires[index], true, {angles[index]});
+                sv_dispatch.applyOperation("PSWAP", wires[index], true,
+                                           {angles[index]});
                 CHECK(sv_dispatch.getDataVector() ==
                       Pennylane::Util::approx(expected_results_adj[index]));
             }

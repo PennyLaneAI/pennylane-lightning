@@ -1438,7 +1438,8 @@ static constexpr auto getGeneratorIsingXY() -> std::vector<CFP_t> {
 }
 
 /**
- * @brief Create a matrix representation of the PSWAP gate data in row-major format.
+ * @brief Create a matrix representation of the PSWAP gate data in row-major
+ * format.
  *
  * @tparam CFP_t Required precision of gate (`float` or `double`).
  * @tparam U Required precision of parameter (`float` or `double`).
@@ -1447,22 +1448,32 @@ static constexpr auto getGeneratorIsingXY() -> std::vector<CFP_t> {
  */
 template <class CFP_t, class U = double>
 static auto getPSWAP(U angle) -> std::vector<CFP_t> {
-    return {cuUtil::ONE<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+    return {
+        cuUtil::ONE<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        {std::cos(angle), std::sin(angle)}, cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
+        {std::cos(angle), std::sin(angle)},
+        cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), {std::cos(angle), std::sin(angle)},
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
+        {std::cos(angle), std::sin(angle)},
+        cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
 
-        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
-        cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
-        };
+        cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(),
+        cuUtil::ONE<CFP_t>(),
+    };
 }
 
 /**
- * @brief Create a matrix representation of the PSWAP gate data in row-major format.
+ * @brief Create a matrix representation of the PSWAP gate data in row-major
+ * format.
  *
  * @tparam CFP_t Required precision of gate (`float` or `double`).
  * @tparam U Required precision of parameter (`float` or `double`).
@@ -1858,8 +1869,13 @@ template <class PrecisionT> class DynamicGateDataAccess {
              return cuGates::getDoubleExcitationMinus<CFP_t>(
                  std::forward<decltype(params[0])>(params[0]));
          }},
-        {"DoubleExcitationPlus", [](auto &&params) {
+        {"DoubleExcitationPlus",
+         [](auto &&params) {
              return cuGates::getDoubleExcitationPlus<CFP_t>(
+                 std::forward<decltype(params[0])>(params[0]));
+         }},
+        {"PSWAP", [](auto &&params) {
+             return cuGates::getPSWAP<CFP_t>(
                  std::forward<decltype(params[0])>(params[0]));
          }}};
 };

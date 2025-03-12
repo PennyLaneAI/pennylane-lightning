@@ -58,6 +58,7 @@ DoubleExcitationMinus  = { properties = [ "invertible", "controllable", "differe
 MultiRZ                = { properties = [ "invertible", "controllable", "differentiable" ] }
 QubitUnitary           = { properties = [ "invertible", "controllable"                   ] }
 GlobalPhase            = { properties = [ "invertible", "controllable", "differentiable" ] }
+PSWAP                  = { properties = [ "invertible", "controllable",                  ] }
 
 # Operations supported by the execution in Python but not directly supported by the backend
 [pennylane.operators.gates]
@@ -66,7 +67,6 @@ BlockEncode            = { properties = [ "controllable" ] }
 ControlledQubitUnitary = {}
 ECR                    = {}
 ISWAP                  = {}
-PSWAP                  = {}
 SISWAP                 = {}
 SQISW                  = {}
 OrbitalRotation        = {}
