@@ -337,7 +337,13 @@ class TestHelpers:
         [
             (QuantumScript([qml.RX(0.1, 0)], [qml.expval(qml.Z(1))]), 2),
             (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))]), 3),
-            (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 1), qml.RX(0.1, 4), qml.RX(0.1, 6)], [qml.expval(qml.Z(2))]), 5),
+            (
+                QuantumScript(
+                    [qml.RX(0.1, 0), qml.RX(0.1, 1), qml.RX(0.1, 4), qml.RX(0.1, 6)],
+                    [qml.expval(qml.Z(2))],
+                ),
+                5,
+            ),
         ],
     )
     @pytest.mark.parametrize("shots", [None, 10])
