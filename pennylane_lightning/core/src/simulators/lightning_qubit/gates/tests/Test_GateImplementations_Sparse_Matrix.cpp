@@ -11,8 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#include <unordered_set>
-
 #include <catch2/catch.hpp>
 
 #include "ConstantUtil.hpp"  // array_has_elem
@@ -146,7 +144,7 @@ TEMPLATE_TEST_CASE(
  * @param margin Margin for comparison.
  */
 template <typename ComplexT, typename VectorT>
-void applySparseMultiQubitOpRunPauli(
+void applySparseMultiQubitOpRun(
     VectorT &ref_st, const std::vector<ComplexT> &dense_matrix, VectorT &st,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
     const bool inverse, const typename ComplexT::value_type margin = 1e-5) {
@@ -179,12 +177,12 @@ void testPauliOperation(GateOperationT<PrecisionT> gateOp, const MatrixT matrix,
     applyGateOperation(gateOp, ref_st.data(), num_qubits, unitary_wires,
                        inverse);
 
-    applySparseMultiQubitOpRunPauli(ref_st, matrix, st, num_qubits,
+    applySparseMultiQubitOpRun(ref_st, matrix, st, num_qubits,
                                     unitary_wires, inverse);
 }
 
 template <typename ComplexT, typename VectorT>
-void applySparseMultiQubitOpRunRandomUnitary(
+void applySparseMultiQubitOpRunSparseUnitary(
     VectorT &ref_st, SparseMatrixCSR<ComplexT> &sparse_unitary, VectorT &st,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
     const bool inverse, const float margin = 1e-5) {
@@ -259,7 +257,7 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
 
-        applySparseMultiQubitOpRunRandomUnitary(
+        applySparseMultiQubitOpRunSparseUnitary(
             ref_st, sparse_unitary, st, num_qubits, unitary_wires, inverse);
     }
 
@@ -277,7 +275,7 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
 
-        applySparseMultiQubitOpRunRandomUnitary(
+        applySparseMultiQubitOpRunSparseUnitary(
             ref_st, sparse_unitary, st, num_qubits, unitary_wires, inverse);
     }
     SECTION(
@@ -295,7 +293,7 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
 
-        applySparseMultiQubitOpRunRandomUnitary(
+        applySparseMultiQubitOpRunSparseUnitary(
             ref_st, sparse_unitary, st, num_qubits, unitary_wires, inverse);
     }
     SECTION("Random Unitary - Varying unitary dimension") {
@@ -312,7 +310,7 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
         auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
         auto st(ref_st);
 
-        applySparseMultiQubitOpRunRandomUnitary(
+        applySparseMultiQubitOpRunSparseUnitary(
             ref_st, sparse_unitary, st, num_qubits, unitary_wires, inverse);
     }
 }
