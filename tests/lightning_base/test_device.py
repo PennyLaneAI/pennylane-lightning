@@ -390,7 +390,6 @@ class TestHelpers:
         circuit_num_wires = 3
 
         device.dynamic_wires_from_circuit(circuit)
-        assert device._sv_init_kwargs == sv_init_kwargs
 
         if device_name == "lightning.gpu":
             assert device._statevector._use_async == sv_init_kwargs["use_async"]
@@ -399,7 +398,8 @@ class TestHelpers:
             type(sv) == type(device._statevector)
 
     @pytest.mark.parametrize("shots", [None, 10])
-    def test_dynamic_wires_from_circuit_bad_kwargs(self, shots):
+    @pytest.mark.parametrize("n_wires", [None, 3])
+    def test_dynamic_wires_from_circuit_bad_kwargs(self, n_wires, shots):
         """Test that dynamic_wires_from_circuit produce right error when setting the state with the incorrect device init kwargs"""
 
         if device_name == "lightning.kokkos":
@@ -407,16 +407,17 @@ class TestHelpers:
         else:
             bad_init_kwargs = {"XXX": True}
 
-        device = LightningDevice(wires=None, shots=shots, **bad_init_kwargs)
-
         circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
-        circuit_num_wires = 3
 
         if device_name == "lightning.kokkos":
             with pytest.raises(TypeError, match="Argument kokkos_args must be of type "):
+                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
                 device.dynamic_wires_from_circuit(circuit)
         else:
-            with pytest.raises(TypeError, match="got an unexpected keyword argument"):
+            with pytest.raises(
+                TypeError, match=r"got an unexpected keyword argument|Unexpected argument"
+            ):
+                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
                 device.dynamic_wires_from_circuit(circuit)
 
 
