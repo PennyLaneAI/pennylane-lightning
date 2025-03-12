@@ -151,10 +151,18 @@ class LightningTensorMeasurements:
             Probabilities of the supplied observable or wires
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
+
         if diagonalizing_gates:
             self._tensornet.apply_operations(diagonalizing_gates)
             self._tensornet.appendFinalState()
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+
+        if measurementprocess.wires == Wires([]):
+            # For the case where no wires is specified for tensornet
+            # and measurement process, wires are determined here
+            measurewires = self._tensornet._wires
+        else:
+            measurewires = measurementprocess.wires.tolist()
+        results = self._measurement_lightning.probs(measurewires)
         if diagonalizing_gates:
             self._tensornet.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
@@ -279,6 +287,18 @@ class LightningTensorMeasurements:
             List[TensorLike[Any]]: Sample measurement results
         """
         mps = measurements
+
+        for measurement in mps:
+            if measurement.wires == Wires([]):
+                # This is required for the case where no wires is specific for the tensornet
+                # (i.e. dynamically determined from circuit), and no wires (and no observable)
+                # is provided for the measurement (e.g. qml.probs() or qml.counts() or
+                # qml.samples()). In the case where number of wires is provided for the statevector,
+                # the same operation is performed in validate_device_wires during preprocess.
+
+                # pylint:disable=protected-access
+                measurement._wires = Wires(range(self._tensornet.num_wires))
+
         groups, indices = _group_measurements(mps)
 
         all_res = []

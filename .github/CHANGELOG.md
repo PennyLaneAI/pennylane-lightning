@@ -84,6 +84,9 @@
 
 ### Bug fixes
 
+* Fix measurements with empty wires and operators for statevectors with dynamically allocated wires.
+  [(#1081)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1081)
+
 * Fix unit tests that were being skipped in `testApplyControlledPhaseShift`.
   [(#1083)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1083)
 
