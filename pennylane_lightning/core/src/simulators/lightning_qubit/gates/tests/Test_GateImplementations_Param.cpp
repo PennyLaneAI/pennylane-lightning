@@ -34,7 +34,8 @@
 
 /**
  * @file This file contains tests for parameterized gates. List of such gates is
- * [RX, RY, RZ, PhaseShift, Rot, ControlledPhaseShift, CRX, CRY, CRZ, CRot, PSWAP]
+ * [RX, RY, RZ, PhaseShift, Rot, ControlledPhaseShift, CRX, CRY, CRZ, CRot,
+ * PSWAP]
  */
 
 /// @cond DEV
