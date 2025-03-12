@@ -103,7 +103,7 @@ struct SparseMatrixCSR {
      */
     void fromDenseMatrix(const std::vector<ComplexT> &dense_matrix,
                          IndexT _num_rows, IndexT _num_cols,
-                         PrecisionT tolerance = 1e-8) {
+                         PrecisionT tolerance = 1e-5) {
         num_rows = _num_rows;
         num_cols = _num_cols;
         row_map.reserve(num_rows + 1);
@@ -138,7 +138,7 @@ struct SparseMatrixCSR {
      * @param tolerance tolerance for non-zero elements.
      */
     void fromDenseMatrix(const std::vector<ComplexT> &dense_matrix,
-                         IndexT _num_rows, double tolerance = 1e-8) {
+                         IndexT _num_rows, double tolerance = 1e-5) {
         fromDenseMatrix(dense_matrix, _num_rows, _num_rows, tolerance);
     }
 

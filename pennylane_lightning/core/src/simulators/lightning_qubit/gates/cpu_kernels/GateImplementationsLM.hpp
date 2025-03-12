@@ -510,7 +510,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         const std::size_t n_wires = wires.size();
         const std::size_t dim = one << n_wires;
 
-        PL_ABORT_IF(inverse, "Inverse not supported for sparse ops.");
+        PL_ABORT_IF(inverse, "Inverse not implemented for sparse ops.");
 
         auto core_function = [dim, &row_map_ptr, &col_idx_ptr, &values_ptr](
                                  std::complex<PrecisionT> *arr,

@@ -30,9 +30,21 @@ namespace {
 using namespace Pennylane::LightningQubit;
 using namespace Pennylane::Util;
 using namespace Pennylane::LightningQubit::Gates;
+
+// Function signature for the gate operation
+template <typename PrecisionT>
+using GateOperationT = void (*)(std::complex<PrecisionT> *, std::size_t,
+                                const std::vector<std::size_t> &, bool);
 } // namespace
 /// @endcond
 
+// Gate operation as a parameter
+template <typename PrecisionT>
+void applyGateOperation(GateOperationT<PrecisionT> gateOp,
+                        std::complex<PrecisionT> *state, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool inverse) {
+    gateOp(state, num_qubits, wires, inverse);
+}
 // Encapsulates a single run of the applyNCMultiQubitSparseOp and checks the
 // result.
 /**
@@ -70,45 +82,45 @@ void applySparseNCMultiQubitOpRun(
     REQUIRE(st == approx(ref_st).margin(margin));
 }
 
+template <typename PrecisionT, typename MatrixT>
+void testControlledOperation(GateOperationT<PrecisionT> gateOp,
+                             const MatrixT matrix, const std::size_t num_qubits,
+                             const bool inverse = false) {
+    std::mt19937 re{1337};
+    auto n = GENERATE(range(0, 5));
+    re.seed(1337 + n); // changing seed for each iteration.
+    std::vector<std::size_t> unitary_wires =
+        createRandomWiresSubset(re, num_qubits, std::size_t{2});
+
+    auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+    auto st(ref_st);
+
+    applyGateOperation(gateOp, ref_st.data(), num_qubits, unitary_wires,
+                       inverse);
+
+    applySparseNCMultiQubitOpRun(ref_st, matrix, st, num_qubits,
+                                 {unitary_wires[0]}, {true}, {unitary_wires[1]},
+                                 inverse);
+}
 template <typename PrecisionT> void testApplySparseNCMultiQubitOp() {
     std::mt19937 re{1337};
     const std::size_t num_qubits = 4;
-    bool inverse = false;
     using ComplexT = std::complex<PrecisionT>;
     using MatrixT = typename std::vector<ComplexT>;
-
     SECTION("CNOT") {
         const MatrixT matrix = getPauliX<std::complex, PrecisionT>();
-        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto st(ref_st);
-
-        GateImplementationsLM::applyCNOT(ref_st.data(), num_qubits, {2, 3},
-                                         inverse);
-
-        applySparseNCMultiQubitOpRun(ref_st, matrix, st, num_qubits, {2},
-                                     {true}, {3}, inverse);
+        testControlledOperation<PrecisionT>(GateImplementationsLM::applyCNOT,
+                                            matrix, num_qubits);
     }
     SECTION("CY") {
         const MatrixT matrix = getPauliY<std::complex, PrecisionT>();
-        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto st(ref_st);
-
-        GateImplementationsLM::applyCY(ref_st.data(), num_qubits, {2, 3},
-                                       inverse);
-
-        applySparseNCMultiQubitOpRun(ref_st, matrix, st, num_qubits, {2},
-                                     {true}, {3}, inverse);
+        testControlledOperation<PrecisionT>(GateImplementationsLM::applyCY,
+                                            matrix, num_qubits);
     }
     SECTION("CZ") {
         const MatrixT matrix = getPauliZ<std::complex, PrecisionT>();
-        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto st(ref_st);
-
-        GateImplementationsLM::applyCZ(ref_st.data(), num_qubits, {2, 3},
-                                       inverse);
-
-        applySparseNCMultiQubitOpRun(ref_st, matrix, st, num_qubits, {2},
-                                     {true}, {3}, inverse);
+        testControlledOperation<PrecisionT>(GateImplementationsLM::applyCZ,
+                                            matrix, num_qubits);
     }
 }
 
@@ -151,6 +163,26 @@ void applySparseMultiQubitOpRunPauli(
     REQUIRE(st == approx(ref_st).margin(margin));
 }
 
+template <typename PrecisionT, typename MatrixT>
+void testPauliOperation(GateOperationT<PrecisionT> gateOp, const MatrixT matrix,
+                        const std::size_t num_qubits,
+                        const bool inverse = false) {
+    std::mt19937 re{1337};
+    auto n = GENERATE(range(0, 5));
+    re.seed(1337 + n); // changing seed for each iteration.
+    std::vector<std::size_t> unitary_wires =
+        createRandomWiresSubset(re, num_qubits, std::size_t{1});
+
+    auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+    auto st(ref_st);
+
+    applyGateOperation(gateOp, ref_st.data(), num_qubits, unitary_wires,
+                       inverse);
+
+    applySparseMultiQubitOpRunPauli(ref_st, matrix, st, num_qubits,
+                                    unitary_wires, inverse);
+}
+
 template <typename ComplexT, typename VectorT>
 void applySparseMultiQubitOpRunRandomUnitary(
     VectorT &ref_st, SparseMatrixCSR<ComplexT> &sparse_unitary, VectorT &st,
@@ -175,41 +207,24 @@ template <typename PrecisionT> void testApplySparseMultiQubitOp() {
     const auto margin = PrecisionT{1e-5};
     bool inverse = false;
     using ComplexT = std::complex<PrecisionT>;
+    using MatrixT = typename std::vector<ComplexT>;
     SECTION("PauliX") {
         const std::size_t num_qubits = 4;
-        const auto matrix = getPauliX<std::complex, PrecisionT>();
-        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto st(ref_st);
-
-        GateImplementationsLM::applyPauliX(ref_st.data(), num_qubits, {2},
-                                           inverse);
-
-        applySparseMultiQubitOpRunPauli(ref_st, matrix, st, num_qubits, {2},
-                                        inverse);
+        const MatrixT matrix = getPauliX<std::complex, PrecisionT>();
+        testPauliOperation<PrecisionT>(GateImplementationsLM::applyPauliX,
+                                       matrix, num_qubits);
     }
     SECTION("PauliY") {
         const std::size_t num_qubits = 4;
-        const auto matrix = getPauliY<std::complex, PrecisionT>();
-        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto st(ref_st);
-
-        GateImplementationsLM::applyPauliY(ref_st.data(), num_qubits, {2},
-                                           inverse);
-
-        applySparseMultiQubitOpRunPauli(ref_st, matrix, st, num_qubits, {2},
-                                        inverse);
+        const MatrixT matrix = getPauliY<std::complex, PrecisionT>();
+        testPauliOperation<PrecisionT>(GateImplementationsLM::applyPauliY,
+                                       matrix, num_qubits);
     }
     SECTION("PauliZ") {
         const std::size_t num_qubits = 4;
-        const auto matrix = getPauliZ<std::complex, PrecisionT>();
-        auto ref_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto st(ref_st);
-
-        GateImplementationsLM::applyPauliZ(ref_st.data(), num_qubits, {2},
-                                           inverse);
-
-        applySparseMultiQubitOpRunPauli(ref_st, matrix, st, num_qubits, {2},
-                                        inverse);
+        const MatrixT matrix = getPauliZ<std::complex, PrecisionT>();
+        testPauliOperation<PrecisionT>(GateImplementationsLM::applyPauliZ,
+                                       matrix, num_qubits);
     }
     SECTION("Random Unitary - Full Dense Matrix") {
         const std::size_t num_qubits = 4;
