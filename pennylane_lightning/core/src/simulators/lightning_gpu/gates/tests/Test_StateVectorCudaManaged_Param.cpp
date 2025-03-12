@@ -1990,3 +1990,99 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
     }
 }
+
+
+TEMPLATE_TEST_CASE("LightningGPU::applyPSWAP", "[LightningGPU_Param]", double) {
+    using cp_t = std::complex<TestType>;
+    const std::size_t num_qubits = 3;
+    StateVectorCudaManaged<TestType> sv{num_qubits};
+
+    // Test using |++-> state
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}, {"PauliZ"}},
+                       {{0}, {1}, {2}, {2}}, {{false}, {false}, {false}, {false}});
+
+    const std::vector<TestType> angles{{0.1}, {0.6}};
+    const std::vector<std::vector<size_t>> wires{{1, 2}, {0, 1}};
+
+    const auto init_state = sv.getDataVector();
+    SECTION("adj = false") {
+        std::vector<std::vector<cp_t>> expected_results{
+            std::vector<cp_t>{{ 0.35355339,  0},
+                              { 0.35178710,  0.03529644},
+                              {-0.35178710, -0.03529644},
+                              {-0.35355339,  0},
+                              { 0.35355339,  0},
+                              { 0.35178710,  0.03529644},
+                              {-0.35178710, -0.03529644},
+                              {-0.35355339,  0}},
+
+            std::vector<cp_t>{{ 0.35355339,  0},
+                              {-0.35355339,  0},
+                              { 0.29180021,  0.19963126},
+                              {-0.29180021, -0.19963126},
+                              { 0.29180021,  0.19963126},
+                              {-0.29180021, -0.19963126},
+                              { 0.35355339,  0},
+                              {-0.35355339,  0}},
+        };
+
+        SECTION("Apply directly") {
+            for (std::size_t index = 0; index < angles.size(); index++) {
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
+                sv_direct.applyPSWAP(wires[index], false, angles[index]);
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(expected_results[index]));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (std::size_t index = 0; index < angles.size(); index++) {
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                sv_dispatch.applyOperation("PSWAP", wires[index], false, {angles[index]});
+                CHECK(sv_dispatch.getDataVector() ==
+                      Pennylane::Util::approx(expected_results[index]));
+            }
+        }
+    }
+    SECTION("adj = true") {
+        std::vector<std::vector<cp_t>> expected_results_adj{
+            std::vector<cp_t>{{ 0.35355339,  0},
+                              { 0.35178710, -0.03529644},
+                              {-0.35178710,  0.03529644},
+                              {-0.35355339,  0},
+                              { 0.35355339,  0},
+                              { 0.35178710, -0.03529644},
+                              {-0.35178710,  0.03529644},
+                              {-0.35355339,  0}},
+
+            std::vector<cp_t>{{ 0.35355339,  0},
+                              {-0.35355339,  0},
+                              { 0.29180021, -0.19963126},
+                              {-0.29180021,  0.19963126},
+                              { 0.29180021, -0.19963126},
+                              {-0.29180021,  0.19963126},
+                              { 0.35355339,  0},
+                              {-0.35355339,  0}},
+        };
+
+        SECTION("Apply directly") {
+            for (std::size_t index = 0; index < angles.size(); index++) {
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
+                sv_direct.applyPSWAP(wires[index], true, {angles[index]});
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(expected_results_adj[index]));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (std::size_t index = 0; index < angles.size(); index++) {
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                sv_dispatch.applyOperation("PSWAP", wires[index], true, {angles[index]});
+                CHECK(sv_dispatch.getDataVector() ==
+                      Pennylane::Util::approx(expected_results_adj[index]));
+            }
+        }
+    }
+}
