@@ -42,7 +42,7 @@ from pennylane.operation import DecompositionUndefinedError, Operator
 from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
-from pennylane.typing import Result
+from pennylane.typing import Result, TensorLike
 
 from pennylane_lightning.core.lightning_base import (
     LightningBase,
@@ -93,7 +93,9 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return stopping_condition(op) or isinstance(
+        op, (MidMeasureMP, qml.ops.op_math.Conditional)
+    )
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -213,7 +215,14 @@ class LightningQubit(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
+    _device_options = (
+        "rng",
+        "c_dtype",
+        "batch_obs",
+        "mcmc",
+        "kernel_name",
+        "num_burnin",
+    )
     # Device specific options
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
@@ -307,7 +316,10 @@ class LightningQubit(LightningBase):
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_gradient is None:
-            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+            updated_values["use_device_gradient"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
         if (
             config.use_device_gradient
             or updated_values.get("use_device_gradient", False)
@@ -340,7 +352,9 @@ class LightningQubit(LightningBase):
             num_wires = len(self.wires)
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
-            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype)
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype
+            )
 
         return circuit
 
@@ -367,7 +381,9 @@ class LightningQubit(LightningBase):
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(
+            validate_observables, accepted_observables, name=self.name
+        )
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
@@ -472,7 +488,9 @@ class LightningQubit(LightningBase):
         """
         if mcmc is None:
             mcmc = {}
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+        if circuit.shots and (
+            any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+        ):
             results = []
             aux_circ = qml.tape.QuantumScript(
                 circuit.operations,
@@ -484,7 +502,9 @@ class LightningQubit(LightningBase):
                 state.reset_state()
                 mid_measurements = {}
                 final_state = state.get_final_state(
-                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
+                    aux_circ,
+                    mid_measurements=mid_measurements,
+                    postselect_mode=postselect_mode,
                 )
                 results.append(
                     LightningMeasurements(final_state, **mcmc).measure_final_state(
@@ -495,7 +515,9 @@ class LightningQubit(LightningBase):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+            circuit
+        )
 
     @staticmethod
     def get_c_interface():
@@ -537,8 +559,67 @@ class LightningQubit(LightningBase):
                 lib_location = (Path(path) / lib_name).as_posix()
                 return "LightningSimulator", lib_location
 
-        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
+        raise RuntimeError(
+            "'LightningSimulator' shared library not found"
+        )  # pragma: no cover
+
+    def jaxpr_jvp(
+        self,
+        jaxpr,
+        args: Sequence[TensorLike],
+        tangents: Sequence[TensorLike],
+        execution_config=None,
+    ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
+        gradient_method = getattr(execution_config, "gradient_method", "backprop")
+
+        if gradient_method == "adjoint":
+
+            execute_and_jvp(jaxpr, args, tangents, num_wires=len(self.wires))
+
+        raise NotImplementedError(
+            f"DefaultQubit does not support gradient_method={gradient_method}"
+        )
 
 
 _supports_operation = LightningQubit.capabilities.supports_operation
 _supports_observable = LightningQubit.capabilities.supports_observable
+
+
+# TODO This functions will be moved somewhere else once they have been implemented
+def execute_and_jvp(jaxpr, args: tuple, tangents: tuple, num_wires: int):
+    # TODO: modify the docstring to emphasize current limitation
+    """Execute and calculate the jvp for a jaxpr using the adjoint method.
+
+    Args:
+        jaxpr (jax.core.Jaxpr): the jaxpr to evaluate
+        args : an iterable of tensorlikes.  Should include the consts followed by the inputs
+        tangents: an iterable of tensorlikes and ``jax.interpreter.ad.Zero`` objects.  Should
+            include the consts followed by the inputs.
+        num_wires (int): the number of wires to use.
+
+    Note that the consts for the jaxpr should be included at the beginning of both the ``args``
+    and ``tangents``.
+    """
+
+    import jax
+
+    # This is a limitation of the current implementation
+    if len(args) != len(tangents):
+        raise NotImplementedError("The number of arguments and tangents must match")
+
+    # This is a limitation of the current implementation
+    if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
+        raise NotImplementedError(
+            "tangents must not contain jax.interpreter.ad.Zero objects"
+        )
+
+    env = {
+        var: (arg, tangent)
+        for var, arg, tangent in zip(
+            jaxpr.constvars + jaxpr.invars, args, tangents, strict=True
+        )
+    }
+
+    tape = qml.tape.plxpr_to_tape(jaxpr, {}, args)
+
+    # TODO: continue from here
