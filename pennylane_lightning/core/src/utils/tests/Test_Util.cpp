@@ -238,8 +238,8 @@ TEST_CASE("Util::areVecsDisjoint", "[Util][LinearAlgebra]") {
 
 TEST_CASE("Util::createRandomWiresSubset", "[createRandomWiresSubset]") {
     using IndexT = std::size_t;
-
     std::mt19937 re{1337};
+
     SECTION(
         "createRandomWiresSubset generates correct number of unique wires") {
         IndexT sv_num_qubits = 10;
