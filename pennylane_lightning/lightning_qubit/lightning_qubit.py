@@ -306,6 +306,11 @@ class LightningQubit(LightningBase):
         updated_values = {}
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
+        if config.use_device_jacobian_product is None:
+            updated_values["use_device_jacobian_product"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
         if (
@@ -346,8 +351,17 @@ class LightningQubit(LightningBase):
 
     def __setup_execution_config_capture(self, config: ExecutionConfig) -> ExecutionConfig:
         updated_values = {}
+        for option, _ in config.device_options.items():
+            if option not in self._device_options:
+                raise qml.DeviceError(f"device option {option} not present on {self}")
+
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
+        if config.use_device_jacobian_product is None:
+            updated_values["use_device_jacobian_product"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
         if (
@@ -370,7 +384,7 @@ class LightningQubit(LightningBase):
             None,
         ):
             raise qml.DeviceError(
-                f"mcm_method='{mcm_method}' is not supported with default.qubit "
+                f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
                 "when program capture is enabled."
             )
 
