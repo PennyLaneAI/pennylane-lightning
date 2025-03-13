@@ -375,26 +375,47 @@ void applyExpValMat5(const std::complex<ParamT> *arr,
     };
 };
 
-
 template <class ParamT>
-void applyExpValMat(const std::complex<ParamT> *arr,
-                     const std::size_t num_qubits,
-                     const std::vector<size_t> &wires,
-                     const std::vector<std::complex<ParamT>> &matrix,
-                     [[maybe_unused]] ParamT &expected_value) {
+void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
+                    const std::size_t num_qubits,
+                    const std::vector<size_t> &wires,
+                    const std::vector<std::complex<ParamT>> &matrix,
+                    ParamT &expected_value) {
     std::vector<std::size_t> parity;
     std::vector<std::size_t> rev_wire_shifts;
     std::tie(parity, rev_wire_shifts) = wires2Parity(num_qubits, wires);
 
+    std::size_t dim = PUtil::exp2(wires.size());
+    const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
+    #pragma omp parallel for reduction(+:expected_value)
+    for (std::size_t k = 0; k < two2N; ++k) {
+        ParamT tempExpVal = 0.0;
+        std::vector<std::complex<ParamT>> coeffs_in(dim);
 
-    dim = PUtil::exp2(wires.size());
+        std::size_t idx = (k & parity[0]);
+        for (std::size_t i = 1; i < parity.size(); ++i) {
+            idx |= ((k & parity[i]) );
+        }
+        coeffs_in[0] = arr[idx];
 
-#pragma omp parallel for collapse(2) reduction(+ : expected_value)
-for (std::size_t k = 0; k < PUtil::exp2(num_qubits - wires.size()); k++) {
-    for(std::size_t i = 0; i < dim; i++) {        
-        expected_value += real(matrix[i] * arr[base_idx + offset[i]]);
+        for (std::size_t inner_idx = 1; inner_idx < dim; ++inner_idx) {
+            std::size_t index = idx;
+            for (std::size_t i = 0; i < wires.size(); ++i) {
+                if ((inner_idx & (1 << i)) != 0) {
+                    index |= rev_wire_shifts[i];
+                }
+            }
+            coeffs_in[inner_idx] = arr[index];
+        }
 
-
+        for (std::size_t i = 0; i < dim; ++i) {
+            std::complex<ParamT> tmp(0.0);
+            for (std::size_t j = 0; j < dim; ++j) {
+                tmp += matrix[i * dim + j] * coeffs_in[j];
+            }
+            tempExpVal += std::real(std::conj(coeffs_in[i]) * tmp);
+        }
+        expected_value += tempExpVal;
     }
-}
+};
 } // namespace Pennylane::LightningQubit::Measures
