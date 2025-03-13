@@ -23,7 +23,7 @@ namespace Pennylane::LightningGPU::Util {
  * @brief Sparse matrix vector multiply offloaded to cuSparse (Y =
  * alpha*SparseMat*X + beta)
  *
- * @tparam index_type Integer type for offsets, indices and number of elements
+ * @tparam IndexT Integer type for offsets, indices and number of elements
  * (std::size_t for the moment).
  * @tparam Precision Floating data-type.
  * @tparam DevTypeID Integer type of device id.
@@ -41,24 +41,25 @@ namespace Pennylane::LightningGPU::Util {
  * @param cudaStream_t Stream id.
  * @param handle cuSparse handle.
  */
-template <class index_type, class Precision, class CFP_t, class DevTypeID = int>
-inline void SparseMV_cuSparseMPI(
-    MPIManager &mpi_manager, const std::size_t &length_local,
-    const index_type *csrOffsets_ptr, const int64_t csrOffsets_size,
-    const index_type *columns_ptr, const std::complex<Precision> *values_ptr,
-    CFP_t *X, CFP_t *Y, DevTypeID device_id, cudaStream_t stream_id,
-    cusparseHandle_t handle) {
-    std::vector<std::vector<CSRMatrix<Precision, index_type>>> csrmatrix_blocks;
+template <class IndexT, class Precision, class CFP_t, class DevTypeID = int>
+inline void
+SparseMV_cuSparseMPI(MPIManager &mpi_manager, const std::size_t &length_local,
+                     const IndexT *csrOffsets_ptr,
+                     const int64_t csrOffsets_size, const IndexT *columns_ptr,
+                     const std::complex<Precision> *values_ptr, CFP_t *X,
+                     CFP_t *Y, DevTypeID device_id, cudaStream_t stream_id,
+                     cusparseHandle_t handle) {
+    std::vector<std::vector<CSRMatrix<Precision, IndexT>>> csrmatrix_blocks;
     if (mpi_manager.getRank() == 0) {
-        csrmatrix_blocks = splitCSRMatrix<Precision, index_type>(
+        csrmatrix_blocks = splitCSRMatrix<Precision, IndexT>(
             mpi_manager, static_cast<std::size_t>(csrOffsets_size - 1),
             csrOffsets_ptr, columns_ptr, values_ptr);
     }
     mpi_manager.Barrier();
 
-    std::vector<CSRMatrix<Precision, index_type>> localCSRMatVector;
+    std::vector<CSRMatrix<Precision, IndexT>> localCSRMatVector;
     for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
-        auto localCSRMat = scatterCSRMatrix<Precision, index_type>(
+        auto localCSRMat = scatterCSRMatrix<Precision, IndexT>(
             mpi_manager, csrmatrix_blocks[i], length_local, 0);
         localCSRMatVector.push_back(localCSRMat);
     }
@@ -76,7 +77,7 @@ inline void SparseMV_cuSparseMPI(
         if (localCSRMatrix.getValues().size() != 0) {
             d_res_per_block.zeroInit();
             color = 1;
-            SparseMV_cuSparse<index_type, Precision, CFP_t>(
+            SparseMV_cuSparse<IndexT, Precision, CFP_t>(
                 localCSRMatrix.getCsrOffsets().data(),
                 static_cast<int64_t>(localCSRMatrix.getCsrOffsets().size()),
                 localCSRMatrix.getColumns().data(),
