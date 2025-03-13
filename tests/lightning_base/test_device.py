@@ -267,6 +267,7 @@ class TestHelpers:
     def test_dynamic_wires_from_circuit(self, circuit_in, n_wires, expected_circuit_out):
         """Test that dynamic_wires_from_circuit returns correct circuit and creates state-vectors properly"""
         device = LightningDevice(wires=None)
+
         circuit_out = device.dynamic_wires_from_circuit(circuit_in)
 
         assert circuit_out.num_wires == n_wires
@@ -312,6 +313,7 @@ class TestHelpers:
     def test_dynamic_wires_from_circuit_fixed_wires(self, circuit_in, n_wires, wires_list):
         """Test that dynamic_wires_from_circuit does not alter the circuit if wires are fixed and state-vector is created properly"""
         device = LightningDevice(wires=n_wires)
+
         circuit_out = device.dynamic_wires_from_circuit(circuit_in)
 
         assert circuit_out.num_wires == circuit_in.num_wires
@@ -322,6 +324,101 @@ class TestHelpers:
         if device_name != "lightning.tensor":
             assert device._statevector._num_wires == n_wires
             assert device._statevector._wires == qml.wires.Wires(range(n_wires))
+
+    @pytest.mark.parametrize(
+        "circuit_0, n_wires_0",
+        [
+            (QuantumScript([qml.RX(0.1, 0)], [qml.expval(qml.Z(1))]), 2),
+            (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 1)], [qml.expval(qml.Z(2))]), 3),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "circuit_1, n_wires_1",
+        [
+            (QuantumScript([qml.RX(0.1, 0)], [qml.expval(qml.Z(1))]), 2),
+            (QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))]), 3),
+            (
+                QuantumScript(
+                    [qml.RX(0.1, 0), qml.RX(0.1, 1), qml.RX(0.1, 4), qml.RX(0.1, 6)],
+                    [qml.expval(qml.Z(2))],
+                ),
+                5,
+            ),
+        ],
+    )
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor", reason="lightning.tensor does not have state vector"
+    )
+    def test_dynamic_wires_from_circuit_reset_state(
+        self, circuit_0, n_wires_0, circuit_1, n_wires_1, shots, dtype
+    ):
+        """Test that dynamic_wires_from_circuit resets state when reusing or initializing new state vector"""
+        device = LightningDevice(wires=None, c_dtype=dtype, shots=shots)
+
+        # Initialize statevector and apply a state
+        device.dynamic_wires_from_circuit(circuit_0)
+        state = np.zeros(2**n_wires_0)
+        state[-1] = 1.0
+        device._statevector._apply_state_vector(state, range(n_wires_0))
+
+        # Dynamic wires again will reset the state
+        device.dynamic_wires_from_circuit(circuit_1)
+        expected_state = np.zeros(2**n_wires_1)
+        expected_state[0] = 1.0
+        assert np.allclose(device._statevector.state, expected_state)
+
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.skipif(
+        device_name not in ("lightning.kokkos", "lightning.gpu"),
+        reason="This device state has no additional kwargs",
+    )
+    def test_dynamic_wires_from_circuit_state_kwargs(self, shots):
+        """Test that dynamic_wires_from_circuit sets the state with the correct device init kwargs"""
+
+        if device_name == "lightning.kokkos":
+            from pennylane_lightning.lightning_kokkos_ops import InitializationSettings
+
+            sv_init_kwargs = {"kokkos_args": InitializationSettings().set_num_threads(2)}
+        if device_name == "lightning.gpu":
+            sv_init_kwargs = {"use_async": True}
+
+        device = LightningDevice(wires=None, shots=shots, **sv_init_kwargs)
+
+        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
+        circuit_num_wires = 3
+
+        device.dynamic_wires_from_circuit(circuit)
+
+        if device_name == "lightning.gpu":
+            assert device._statevector._use_async == sv_init_kwargs["use_async"]
+        if device_name == "lightning.kokkos":
+            sv = LightningStateVector(circuit_num_wires, **sv_init_kwargs)
+            type(sv) == type(device._statevector)
+
+    @pytest.mark.parametrize("shots", [None, 10])
+    @pytest.mark.parametrize("n_wires", [None, 3])
+    def test_dynamic_wires_from_circuit_bad_kwargs(self, n_wires, shots):
+        """Test that dynamic_wires_from_circuit produce right error when setting the state with the incorrect device init kwargs"""
+
+        if device_name == "lightning.kokkos":
+            bad_init_kwargs = {"kokkos_args": np.array([33])}
+        else:
+            bad_init_kwargs = {"XXX": True}
+
+        circuit = QuantumScript([qml.RX(0.1, 0), qml.RX(0.1, 2)], [qml.expval(qml.Z(1))])
+
+        if device_name == "lightning.kokkos":
+            with pytest.raises(TypeError, match="Argument kokkos_args must be of type "):
+                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
+                device.dynamic_wires_from_circuit(circuit)
+        else:
+            with pytest.raises(
+                TypeError, match=r"got an unexpected keyword argument|Unexpected argument"
+            ):
+                device = LightningDevice(wires=n_wires, shots=shots, **bad_init_kwargs)
+                device.dynamic_wires_from_circuit(circuit)
 
 
 class TestInitialization:

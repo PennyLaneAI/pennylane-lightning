@@ -10,6 +10,9 @@
 
 * Expand test structure to efficiently handle sparse data.
   [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  
+* Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
+  [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
 * Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
   [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
