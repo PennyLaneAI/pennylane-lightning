@@ -36,7 +36,8 @@ target_link_libraries(compile_time_tests    lightning_compile_options
                                             lightning_qubit_utils
                                             )
 
-set(TEST_SOURCES    Test_AVXSingleQubitGateHelpers.cpp
+set(TEST_SOURCES    
+                    Test_AVXSingleQubitGateHelpers.cpp
                     Test_AVXTwoQubitGateHelpers.cpp
                     Test_DynamicDispatcher.cpp
                     Test_GateImplementations_CompareKernels.cpp
@@ -45,6 +46,7 @@ set(TEST_SOURCES    Test_AVXSingleQubitGateHelpers.cpp
                     Test_GateImplementations_Matrix.cpp
                     Test_GateImplementations_Nonparam.cpp
                     Test_GateImplementations_Param.cpp
+                    Test_GateImplementations_Sparse_Matrix.cpp
                     Test_GateIndices.cpp
                     Test_Internal.cpp
                     Test_KernelMap.cpp
