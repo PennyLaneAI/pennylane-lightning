@@ -50,7 +50,7 @@ TEST_CASE("GateImplementationsLM::applyNCMultiQubitSparseOp throws if inverse "
     const std::vector<IndexT> wires = {1, 2};
     const bool inverse = true;
 
-    std::vector<ComplexT> state(1 << num_qubits, 0);
+    std::vector<ComplexT> state(1U << num_qubits, 0);
     state[0] = 1.0;
 
     std::vector<IndexT> row_map = {0, 1, 2, 3, 4};
