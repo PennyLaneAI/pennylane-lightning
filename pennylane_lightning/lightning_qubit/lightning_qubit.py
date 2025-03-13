@@ -287,6 +287,7 @@ class LightningQubit(LightningBase):
         }
 
         self._statevector = None
+        self._sv_init_kwargs = {}
 
     @property
     def name(self):
@@ -565,7 +566,6 @@ class LightningQubit(LightningBase):
                 )
             return tuple(results)
 
-        state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
