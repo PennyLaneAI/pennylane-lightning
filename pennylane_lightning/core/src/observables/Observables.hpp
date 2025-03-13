@@ -661,8 +661,7 @@ class SparseHamiltonianBase : public Observable<StateVectorT> {
 
     void applyInPlace([[maybe_unused]] StateVectorT &sv) const override {
         PL_ABORT("For SparseHamiltonian Observables, the applyInPlace method "
-                 "must be "
-                 "defined at the backend level.");
+                 "must be defined at the backend level.");
     }
 
     void applyInPlaceShots(
