@@ -129,9 +129,35 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 
-    SECTION("Testing expval of matrix for one wire:") {
-        std::vector<ComplexT> matrix(4);
-        for (std::size_t i = 0; i < 4; i++) {
+    // For the following tests, the results are generated using the following
+    // Pennylane python script:
+    /*  n_wires = 6
+        op_wires = 2
+        wires = [0, 1]
+        size = 2**op_wires
+        dev = qml.device("default.qubit", wires=n_wires)
+
+
+        mat = np.zeros(size**2, dtype=np.complex128)
+        for i in range(size**2):
+            mat[i] = i/10 + (i+1)/10*1j
+        mat = mat.reshape((size, size))
+        @qml.qnode(dev)
+        def circ():
+            phase = 0.7
+            for i in range(n_wires):
+                qml.RX(phase, wires=i)
+                qml.RY(phase, wires=i)
+                phase -=0.2
+            return qml.expval(qml.Hermitian(mat, wires=wires))
+
+        print(circ())
+    */
+
+    SECTION("Testing expval of matrix for one wire - wires=[0]:") {
+        std::size_t op_wires = 1;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
             matrix[i] *= 0.1;
@@ -143,9 +169,25 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
-    SECTION("Testing expval of matrix for two wires:") {
-        std::vector<ComplexT> matrix(16);
-        for (std::size_t i = 0; i < 16; i++) {
+    SECTION("Testing expval of matrix for one wire - wires=[2]:") {
+        std::size_t op_wires = 1;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {2};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        // reference value obtained from Pennylane default qubit
+        PrecisionT exp_values_ref = 0.0406720;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expval of matrix for two wires - wires=[0, 1]:") {
+        std::size_t op_wires = 2;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
             matrix[i] *= 0.1;
@@ -157,9 +199,25 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
-    SECTION("Testing expval of matrix for three wires:") {
-        std::vector<ComplexT> matrix(64);
-        for (std::size_t i = 0; i < 64; i++) {
+    SECTION("Testing expval of matrix for two wires - wires=[3, 5]:") {
+        std::size_t op_wires = 2;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {3, 5};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        // reference value obtained from Pennylane default qubit
+        PrecisionT exp_values_ref = 0.0128689;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expval of matrix for three wires - wires=[0, 1, 2]:") {
+        std::size_t op_wires = 3;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
             matrix[i] *= 0.1;
@@ -171,9 +229,25 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
-    SECTION("Testing expval of matrix for four wires:") {
-        std::vector<ComplexT> matrix(256);
-        for (std::size_t i = 0; i < 256; i++) {
+    SECTION("Testing expval of matrix for three wires - wires=[1, 3, 5]:") {
+        std::size_t op_wires = 3;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {1, 3, 5};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        // reference value obtained from Pennylane default qubit
+        PrecisionT exp_values_ref = 0.447919;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expval of matrix for four wires - wires=[0, 1, 2, 3]:") {
+        std::size_t op_wires = 4;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
             matrix[i] *= 0.1;
@@ -185,9 +259,25 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
-    SECTION("Testing expval of matrix for five wires:") {
-        std::vector<ComplexT> matrix(1024);
-        for (std::size_t i = 0; i < 1024; i++) {
+    SECTION("Testing expval of matrix for four wires - wires=[1, 2, 4, 5]:") {
+        std::size_t op_wires = 4;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {1, 2, 4, 5};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        // reference value obtained from Pennylane default qubit
+        PrecisionT exp_values_ref = 1.7115293;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing expval of matrix for five wires - wires=[0, 1, 2, 3, 4]:") {
+        std::size_t op_wires = 5;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
             matrix[i] *= 0.1;
@@ -199,9 +289,25 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
 
+    SECTION("Testing expval of matrix for five wires - wires=[0, 1, 2, 4, 5]:") {
+        std::size_t op_wires = 5;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {0, 1, 2, 4, 5};
+        PrecisionT exp_value = Measurer.expval(matrix, wires);
+        // reference value obtained from Pennylane default qubit
+        PrecisionT exp_values_ref = 13.8715816;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
     SECTION("Testing expval of matrix for six wires:") {
-        std::vector<ComplexT> matrix(4096);
-        for (std::size_t i = 0; i < 4096; i++) {
+        std::size_t op_wires = 6;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
             matrix[i] *= 0.1;
@@ -212,7 +318,81 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         PrecisionT exp_values_ref = 55.749319;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
+
+    SECTION("Testing applyExpValMatMultiQubit - 7 wires") {
+    const std::size_t num_qubits = 8;
+        auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
+
+        std::size_t op_wires = 7;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {0, 1, 2, 3, 4, 5, 6};
+        PrecisionT exp_value = 0.0;
+        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires, matrix, exp_value);
+        PrecisionT exp_values_ref = 127.103239;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+
+
+        wires = {1, 2, 3, 4, 5, 6, 7};
+        exp_value = 0.0;
+        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires, matrix, exp_value);
+        exp_values_ref = 31.53268364;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing applyExpValMatMultiQubit - 3 wires") {
+    const std::size_t num_qubits = 3;
+        auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
+
+        std::size_t op_wires = 2;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {0, 1};
+        PrecisionT exp_value = 0.0;
+        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires, matrix, exp_value);
+        PrecisionT exp_values_ref = 0.5056895;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+
+
+        wires = {1, 2};
+        exp_value = 0.0;
+        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires, matrix, exp_value);
+        exp_values_ref = 0.30101232;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+
+        wires = {0, 2};
+        exp_value = 0.0;
+        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires, matrix, exp_value);
+        exp_values_ref = 0.40595792;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Testing applyExpValMatMultiQubit - 8 wires") {
+    const std::size_t num_qubits = 8;
+        auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
+
+        std::size_t op_wires = 8;
+        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        for (std::size_t i = 0; i < matrix.size(); i++) {
+            matrix[i] = ComplexT{static_cast<PrecisionT>(i),
+                                 static_cast<PrecisionT>(i + 1)};
+            matrix[i] *= 0.1;
+        }
+        std::vector<std::size_t> wires = {0, 1, 2, 3, 4, 5, 6, 7};
+        PrecisionT exp_value = 0.0;
+        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires, matrix, exp_value);
+        PrecisionT exp_values_ref = 260.3916559;
+        REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
 }
+                           }
 
 TEMPLATE_PRODUCT_TEST_CASE("Variances", "[Measurements]",
                            (StateVectorLQubitManaged, StateVectorLQubitRaw),

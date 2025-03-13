@@ -29,7 +29,7 @@
 #include <vector>
 
 #include "BitUtil.hpp"
-#include "ExpValFunctorsLQubit.hpp"
+#include "ExpValFunc.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementKernels.hpp"
 #include "MeasurementsBase.hpp"
@@ -294,47 +294,48 @@ class Measurements final
         const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
         const std::size_t num_qubits = this->_statevector.getNumQubits();
 
-        using CoreFunctionType =
-            std::function<void(const std::complex<PrecisionT> *,
-                               const std::size_t, const std::size_t)>;
+        using CoreFunctionType = std::function<void(
+            const std::complex<PrecisionT> *, const std::size_t,
+            const std::size_t, PrecisionT &)>;
         CoreFunctionType core_function;
 
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
             return 1.0;
         case ExpValFunc::PauliX:
-            core_function =
-                [&expected_value](const std::complex<PrecisionT> *arr,
-                                  const std::size_t i0, const std::size_t i1) {
-                    expected_value += real(conj(arr[i0]) * arr[i1]);
-                    expected_value += real(conj(arr[i1]) * arr[i0]);
-                };
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += std::real(std::conj(arr[i0]) * arr[i1]);
+                expected_value += std::real(std::conj(arr[i1]) * arr[i0]);
+            };
             break;
         case ExpValFunc::PauliY:
-            core_function =
-                [&expected_value](const std::complex<PrecisionT> *arr,
-                                  const std::size_t i0, const std::size_t i1) {
-                    expected_value += imag(conj(arr[i0]) * arr[i1]);
-                    expected_value -= imag(conj(arr[i1]) * arr[i0]);
-                };
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += std::imag(std::conj(arr[i0]) * arr[i1]);
+                expected_value -= std::imag(std::conj(arr[i1]) * arr[i0]);
+            };
             break;
         case ExpValFunc::PauliZ:
-            core_function =
-                [&expected_value](const std::complex<PrecisionT> *arr,
-                                  const std::size_t i0, const std::size_t i1) {
-                    expected_value += real(conj(arr[i0]) * arr[i0]);
-                    expected_value -= real(conj(arr[i1]) * arr[i1]);
-                };
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += std::real(std::conj(arr[i0]) * arr[i0]);
+                expected_value -= std::real(std::conj(arr[i1]) * arr[i1]);
+            };
             break;
         case ExpValFunc::Hadamard:
-            core_function = [&expected_value](
-                                const std::complex<PrecisionT> *arr,
-                                const std::size_t i0, const std::size_t i1) {
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
                 const std::complex<PrecisionT> v0 = arr[i0];
                 const std::complex<PrecisionT> v1 = arr[i1];
 
-                expected_value += M_SQRT1_2 * real(conj(arr[i0]) * (v0 + v1) +
-                                                   conj(arr[i1]) * (v0 - v1));
+                expected_value +=
+                    M_SQRT1_2 * std::real(std::conj(arr[i0]) * (v0 + v1) +
+                                          std::conj(arr[i1]) * (v0 - v1));
             };
             break;
         default:
