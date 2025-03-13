@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #include <cmath>
+#include <random>
+#include <unordered_set>
 #include <vector>
 
 #include "TestHelpers.hpp"
@@ -231,5 +233,49 @@ TEST_CASE("Util::areVecsDisjoint", "[Util][LinearAlgebra]") {
         std::vector<std::size_t> vec1{2, 4, 5};
 
         REQUIRE(areVecsDisjoint(vec0, vec1) == false);
+    }
+}
+
+TEST_CASE("Util::createRandomWiresSubset", "[createRandomWiresSubset]") {
+    using IndexT = std::size_t;
+
+    std::mt19937 re{1337};
+    SECTION(
+        "createRandomWiresSubset generates correct number of unique wires") {
+        IndexT sv_num_qubits = 10;
+        IndexT unitary_num_qubits = 5;
+
+        auto wires =
+            createRandomWiresSubset(re, sv_num_qubits, unitary_num_qubits);
+
+        REQUIRE(wires.size() == unitary_num_qubits);
+
+        std::unordered_set<std::size_t> unique_wires(wires.begin(),
+                                                     wires.end());
+        REQUIRE(unique_wires.size() == unitary_num_qubits);
+    }
+
+    SECTION("createRandomWiresSubset throws if unitary_num_qubits > "
+            "sv_num_qubits") {
+        IndexT sv_num_qubits = 5;
+        IndexT unitary_num_qubits = 10;
+
+        REQUIRE_THROWS_WITH(
+            createRandomWiresSubset(re, sv_num_qubits, unitary_num_qubits),
+            Catch::Matchers::Contains(
+                "If unitary_num_qubits > sv_num_qubits, the "
+                "internal while loop will go on forever."));
+    }
+
+    SECTION("createRandomWiresSubset generates wires within correct range") {
+        IndexT sv_num_qubits = 10;
+        IndexT unitary_num_qubits = 5;
+
+        auto wires =
+            createRandomWiresSubset(re, sv_num_qubits, unitary_num_qubits);
+
+        for (auto wire : wires) {
+            REQUIRE(wire < sv_num_qubits);
+        }
     }
 }

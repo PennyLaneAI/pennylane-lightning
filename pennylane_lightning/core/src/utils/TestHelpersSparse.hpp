@@ -120,7 +120,7 @@ struct SparseMatrixCSR {
         for (IndexT rowIdx = 0; rowIdx < num_rows; ++rowIdx) {
             for (IndexT colIdx = 0; colIdx < num_cols; ++colIdx) {
                 ComplexT val = dense_matrix[rowIdx * num_cols + colIdx];
-                if (abs(val) > tolerance) {
+                if (std::abs(val) > tolerance) {
                     col_idx.push_back(colIdx);
                     values.push_back(val);
                 }
@@ -138,7 +138,7 @@ struct SparseMatrixCSR {
      * @param tolerance tolerance for non-zero elements.
      */
     void fromDenseMatrix(const std::vector<ComplexT> &dense_matrix,
-                         IndexT _num_rows, double tolerance = 1e-5) {
+                         IndexT _num_rows, PrecisionT tolerance = 1e-5) {
         fromDenseMatrix(dense_matrix, _num_rows, _num_rows, tolerance);
     }
 
@@ -155,7 +155,7 @@ struct SparseMatrixCSR {
      */
     template <typename RandomEngine>
     void makeSparseUnitary(RandomEngine &gen, IndexT dimension,
-                           double sparsity) {
+                           PrecisionT sparsity) {
         if (dimension <= 0) {
             PL_ABORT("Dimension must be greater than 0.");
         }
