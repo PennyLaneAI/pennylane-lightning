@@ -93,7 +93,9 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return stopping_condition(op) or isinstance(
+        op, (MidMeasureMP, qml.ops.op_math.Conditional)
+    )
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -350,7 +352,9 @@ class LightningQubit(LightningBase):
             num_wires = len(self.wires)
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
-            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype)
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype
+            )
 
         return circuit
 
@@ -377,7 +381,9 @@ class LightningQubit(LightningBase):
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(
+            validate_observables, accepted_observables, name=self.name
+        )
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
@@ -482,7 +488,9 @@ class LightningQubit(LightningBase):
         """
         if mcmc is None:
             mcmc = {}
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+        if circuit.shots and (
+            any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+        ):
             results = []
             aux_circ = qml.tape.QuantumScript(
                 circuit.operations,
@@ -507,7 +515,9 @@ class LightningQubit(LightningBase):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+            circuit
+        )
 
     @staticmethod
     def get_c_interface():
@@ -549,7 +559,9 @@ class LightningQubit(LightningBase):
                 lib_location = (Path(path) / lib_name).as_posix()
                 return "LightningSimulator", lib_location
 
-        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
+        raise RuntimeError(
+            "'LightningSimulator' shared library not found"
+        )  # pragma: no cover
 
     def jaxpr_jvp(
         self,
@@ -558,14 +570,20 @@ class LightningQubit(LightningBase):
         tangents: Sequence[TensorLike],
         execution_config=None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
+
+        if self.wires is None:
+            raise NotImplementedError(
+                "Wires must be specified for integration with plxpr capture."
+            )
+
         gradient_method = getattr(execution_config, "gradient_method", "backprop")
 
         if gradient_method == "adjoint":
 
-            execute_and_jvp(jaxpr, args, tangents, num_wires=len(self.wires))
+            execute_and_jvp(self, jaxpr, args, tangents, num_wires=len(self.wires))
 
         raise NotImplementedError(
-            f"DefaultQubit does not support gradient_method={gradient_method}"
+            f"LightningQubit does not support gradient_method={gradient_method} for jaxpr_jvp."
         )
 
 
@@ -573,8 +591,7 @@ _supports_operation = LightningQubit.capabilities.supports_operation
 _supports_observable = LightningQubit.capabilities.supports_observable
 
 
-# TODO This functions will be moved somewhere else once they have been implemented
-def execute_and_jvp(jaxpr, args: tuple, tangents: tuple, num_wires: int):
+def execute_and_jvp(self, jaxpr, args: tuple, tangents: tuple, num_wires: int):
     # TODO: modify the docstring to emphasize current limitation
     """Execute and calculate the jvp for a jaxpr using the adjoint method.
 
@@ -590,6 +607,118 @@ def execute_and_jvp(jaxpr, args: tuple, tangents: tuple, num_wires: int):
     """
 
     import jax
+    import jax.numpy as jnp
+
+    def _to_jax(result: qml.typing.ResultBatch) -> qml.typing.ResultBatch:
+        """Converts an arbitrary result batch to one with jax arrays.
+        Args:
+            result (ResultBatch): a nested structure of lists, tuples, and numpy arrays
+        Returns:
+            ResultBatch: a nested structure of tuples, and jax arrays
+
+        """
+        if isinstance(result, dict):
+            return {key: _to_jax(value) for key, value in result.items()}
+        if isinstance(result, (list, tuple)):
+            return tuple(_to_jax(r) for r in result)
+        return jax.numpy.array([result])
+
+    # pylint: disable=no-member
+    def _jax_dtype(m_type):
+        if m_type == int:
+            return jnp.int64 if jax.config.jax_enable_x64 else jnp.int32
+        if m_type == float:
+            return jnp.float64 if jax.config.jax_enable_x64 else jnp.float32
+        if m_type == complex:
+            return jnp.complex128 if jax.config.jax_enable_x64 else jnp.complex64
+        return jnp.dtype(m_type)
+
+    def _get_counts_shape(mp: "qml.measurements.CountsMP", num_device_wires=0):
+        num_wires = len(mp.wires) if mp.wires else num_device_wires
+        outcome_counts = {}
+        binary_pattern = "{0:0" + str(num_wires) + "b}"
+        for outcome in range(2**num_wires):
+            outcome_binary = binary_pattern.format(outcome)
+            outcome_counts[outcome_binary] = jax.core.ShapedArray((), _jax_dtype(int))
+
+        return outcome_counts
+
+    def _zero_jvp_single_shots(shots, tape):
+        jvp = tuple(
+            np.zeros(mp.shape(shots=shots), dtype=mp.numeric_type)
+            for mp in tape.measurements
+        )
+        return jvp[0] if len(tape.measurements) == 1 else jvp
+
+    def _zero_jvp(tape):
+        if tape.shots.has_partitioned_shots:
+            return tuple(_zero_jvp_single_shots(s, tape) for s in tape.shots)
+        return _zero_jvp_single_shots(tape.shots.total_shots, tape)
+
+    def _result_shape_dtype_struct(
+        tape: "qml.tape.QuantumScript", device: "qml.devices.Device"
+    ):
+        """Auxiliary function for creating the shape and dtype object structure
+        given a tape."""
+
+        num_device_wires = len(device.wires) if device.wires else len(tape.wires)
+
+        def struct(mp, shots):
+            # depends on num_device_wires and tape.batch_size from closure
+            if isinstance(mp, qml.measurements.CountsMP):
+                counts_shape = _get_counts_shape(mp, num_device_wires=num_device_wires)
+                if tape.batch_size:
+                    return tuple(counts_shape for _ in range(tape.batch_size))
+                return counts_shape
+
+            mp_shape = mp.shape(shots=shots, num_device_wires=num_device_wires)
+            if tape.batch_size:
+                mp_shape = (tape.batch_size, *mp_shape)
+            return jax.ShapeDtypeStruct(mp_shape, _jax_dtype(mp.numeric_type))
+
+        shape = []
+        for s in tape.shots if tape.shots else [None]:
+            shots_shape = tuple(struct(mp, s) for mp in tape.measurements)
+
+            shots_shape = (
+                shots_shape[0] if len(shots_shape) == 1 else tuple(shots_shape)
+            )
+            shape.append(shots_shape)
+
+        return tuple(shape) if tape.shots.has_partitioned_shots else shape[0]
+
+    def _jac_shape_dtype_struct(
+        tape: "qml.tape.QuantumScript", device: "qml.devices.Device"
+    ):
+        """The shape of a jacobian for a single tape given a device.
+
+        Args:
+            tape (QuantumTape): the tape who's output we want to determine
+            device (Device): the device used to execute the tape.
+
+        >>> tape = qml.tape.QuantumScript([qml.RX(1.0, wires=0)], [qml.expval(qml.X(0)), qml.probs(0)])
+        >>> dev = qml.devices.DefaultQubit()
+        >>> _jac_shape_dtype_struct(tape, dev)
+        (ShapeDtypeStruct(shape=(), dtype=float64),
+        ShapeDtypeStruct(shape=(2,), dtype=float64))
+        >>> tapes, fn = qml.gradients.param_shift(tape)
+        >>> fn(dev.execute(tapes))
+        (array(0.), array([-0.42073549,  0.42073549]))
+        """
+        shape_and_dtype = _result_shape_dtype_struct(tape, device)
+        if len(tape.trainable_params) == 1:
+            return shape_and_dtype
+        if len(tape.measurements) == 1:
+            return tuple(shape_and_dtype for _ in tape.trainable_params)
+        return tuple(tuple(_s for _ in tape.trainable_params) for _s in shape_and_dtype)
+
+    def _compute_single_jvp(jac, dx, tape):
+        """Compute the jvp of a single tape, directly from a Jacobian and tangent."""
+        if len(tape.trainable_params) == 0:
+            return _zero_jvp(tape)
+        if tape.shots.has_partitioned_shots:
+            return tuple(qml.gradients.compute_jvp_single(dx, j) for j in jac)
+        return qml.gradients.compute_jvp_single(dx, jac)
 
     # This is a limitation of the current implementation
     if len(args) != len(tangents):
@@ -597,13 +726,27 @@ def execute_and_jvp(jaxpr, args: tuple, tangents: tuple, num_wires: int):
 
     # This is a limitation of the current implementation
     if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
-        raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
+        raise NotImplementedError(
+            "tangents must not contain jax.interpreter.ad.Zero objects"
+        )
 
-    env = {
-        var: (arg, tangent)
-        for var, arg, tangent in zip(jaxpr.constvars + jaxpr.invars, args, tangents, strict=True)
-    }
-
+    # Let's ignore consts for now
     tape = qml.tape.plxpr_to_tape(jaxpr, {}, args)
 
-    # TODO: continue from here
+    self._statevector = self.LightningStateVector(
+        num_wires=len(self.wires), dtype=self._c_dtype
+    )
+
+    def wrapper():
+        result = _to_jax(self.simulate_and_jacobian(tape, state=self._statevector))
+        print(f"result: {result}")
+        return result
+
+    res_struct = _result_shape_dtype_struct(
+        tape, qml.device("lightning.qubit", wires=1)
+    )
+    jac_struct = _jac_shape_dtype_struct(tape, qml.device("lightning.qubit", wires=1))
+    results, jacobians = jax.pure_callback(wrapper, (res_struct, jac_struct))
+
+    jvps = _compute_single_jvp(jacobians, tangents, tape)
+    return results, jvps

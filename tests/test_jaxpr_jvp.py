@@ -26,7 +26,9 @@ jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
 
 if device_name == "lightning.tensor":
-    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
+    pytest.skip(
+        "Skipping tests for the LightningTensor class.", allow_module_level=True
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -58,7 +60,13 @@ class TestErrors:
             NotImplementedError,
             match="tangents must not contain jax.interpreter.ad.Zero objects",
         ):
-            execute_and_jvp(jaxpr.jaxpr, args, tangents, num_wires=1)
+            execute_and_jvp(
+                qml.device("lightning.qubit", wires=1),
+                jaxpr.jaxpr,
+                args,
+                tangents,
+                num_wires=1,
+            )
 
     def test_mismatch_args_tangents(self):
 
@@ -75,4 +83,39 @@ class TestErrors:
         with pytest.raises(
             NotImplementedError, match="The number of arguments and tangents must match"
         ):
-            execute_and_jvp(jaxpr.jaxpr, args, tangents, num_wires=1)
+            execute_and_jvp(
+                qml.device("lightning.qubit", wires=1),
+                jaxpr.jaxpr,
+                args,
+                tangents,
+                num_wires=1,
+            )
+
+    @pytest.mark.parametrize("use_jit", (False, True))
+    def test_basic_circuit(self, use_jit):
+        """Test the calculation of results and jvp for a basic circuit."""
+
+        def f(x):
+            qml.RX(x, 0)
+            return qml.expval(qml.Z(0))
+
+        jaxpr = jax.make_jaxpr(f)(0.5)
+
+        args = (0.82,)
+        tangents = (2.0,)
+
+        executor = partial(
+            execute_and_jvp,
+            qml.device("lightning.qubit", wires=1),
+            jaxpr.jaxpr,
+            num_wires=1,
+        )
+        if use_jit:
+            executor = jax.jit(executor)
+
+        results, dresults = executor(args, tangents)
+
+        assert len(results) == 1
+        assert qml.math.allclose(results, jax.numpy.cos(args[0]))
+        assert len(dresults) == 1
+        assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
