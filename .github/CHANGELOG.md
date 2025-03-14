@@ -8,6 +8,9 @@
 
 ### Improvements
 
+* Add `PSWAP` gate implementation to Lightning-GPU.
+  [(#1090)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1090)
+
 * Add `PSWAP` gate implementation to Lightning-Kokkos.
   [(#1089)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1089)
 
