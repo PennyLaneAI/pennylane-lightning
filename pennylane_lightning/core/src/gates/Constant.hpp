@@ -85,7 +85,8 @@ using GateView = typename std::pair<GateOperation, std::string_view>;
     GateView{GateOperation::DoubleExcitationMinus, "DoubleExcitationMinus"},
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
     GateView{GateOperation::MultiRZ, "MultiRZ"},
-    GateView{GateOperation::GlobalPhase, "GlobalPhase"}};
+    GateView{GateOperation::GlobalPhase, "GlobalPhase"},
+    GateView{GateOperation::PSWAP, "PSWAP"}};
 
 using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
@@ -118,6 +119,7 @@ using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
               "DoubleExcitationPlus"},
     CGateView{ControlledGateOperation::MultiRZ, "MultiRZ"},
     CGateView{ControlledGateOperation::GlobalPhase, "GlobalPhase"},
+    CGateView{ControlledGateOperation::PSWAP, "PSWAP"},
 };
 
 /**
@@ -238,6 +240,7 @@ using GateNWires = typename std::pair<GateOperation, std::size_t>;
     GateNWires{GateOperation::DoubleExcitationMinus, 4},
     GateNWires{GateOperation::DoubleExcitationPlus, 4},
     GateNWires{GateOperation::GlobalPhase, 1},
+    GateNWires{GateOperation::PSWAP, 2},
 };
 
 using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
@@ -266,6 +269,7 @@ using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
     CGateNWires{ControlledGateOperation::DoubleExcitationMinus, 4},
     CGateNWires{ControlledGateOperation::DoubleExcitationPlus, 4},
     CGateNWires{ControlledGateOperation::GlobalPhase, 1},
+    CGateNWires{ControlledGateOperation::PSWAP, 2},
 };
 
 /**
@@ -355,6 +359,7 @@ using GateNParams = typename std::pair<GateOperation, std::size_t>;
     GateNParams{GateOperation::CSWAP, 0},
     GateNParams{GateOperation::MultiRZ, 1},
     GateNParams{GateOperation::GlobalPhase, 1},
+    GateNParams{GateOperation::PSWAP, 1},
 };
 
 /**
@@ -387,5 +392,6 @@ using CGateNParams = typename std::pair<ControlledGateOperation, std::size_t>;
     CGateNParams{ControlledGateOperation::DoubleExcitationPlus, 1},
     CGateNParams{ControlledGateOperation::MultiRZ, 1},
     CGateNParams{ControlledGateOperation::GlobalPhase, 1},
+    CGateNParams{ControlledGateOperation::PSWAP, 1},
 };
 } // namespace Pennylane::Gates::Constant

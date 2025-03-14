@@ -34,7 +34,8 @@
 
 /**
  * @file This file contains tests for parameterized gates. List of such gates is
- * [RX, RY, RZ, PhaseShift, Rot, ControlledPhaseShift, CRX, CRY, CRZ, CRot]
+ * [RX, RY, RZ, PhaseShift, Rot, ControlledPhaseShift, CRX, CRY, CRZ, CRot,
+ * PSWAP]
  */
 
 /// @cond DEV
@@ -1916,6 +1917,62 @@ void testApplySingleExcitationPlus() {
 }
 PENNYLANE_RUN_TEST(SingleExcitationPlus);
 
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyPSWAP() {
+    using ComplexT = std::complex<PrecisionT>;
+
+    const std::size_t num_qubits = 3;
+
+    // Test using |++-> state
+    auto ini_st = createProductState<PrecisionT>("++-");
+
+    const auto isqrt2 = INVSQRT2<PrecisionT>();
+
+    const std::vector<PrecisionT> angles{0, 0.3, 2.4, -2.4};
+    const ComplexT coef{isqrt2 / PrecisionT{2.0}, PrecisionT{0.0}};
+
+    std::vector<std::vector<ComplexT>> ps_data;
+    ps_data.reserve(angles.size());
+    for (auto &a : angles) {
+        ps_data.push_back(getPSWAP<std::complex, PrecisionT>(a));
+    }
+
+    const std::vector<std::vector<size_t>> wires = {
+        {1, 2},
+        {1, 2},
+        {0, 1},
+        {0, 1},
+    };
+
+    std::vector<std::vector<ComplexT>> expected = {
+        {ps_data[0][0], ps_data[0][6], -ps_data[0][6], -ps_data[0][0],
+         ps_data[0][0], ps_data[0][6], -ps_data[0][6], -ps_data[0][0]},
+
+        {ps_data[1][0], ps_data[1][6], -ps_data[1][6], -ps_data[1][0],
+         ps_data[1][0], ps_data[1][6], -ps_data[1][6], -ps_data[1][0]},
+
+        {ps_data[2][0], -ps_data[2][0], ps_data[2][6], -ps_data[2][6],
+         ps_data[2][6], -ps_data[2][6], ps_data[2][0], -ps_data[2][0]},
+
+        {ps_data[3][0], -ps_data[3][0], ps_data[3][6], -ps_data[3][6],
+         ps_data[3][6], -ps_data[3][6], ps_data[3][0], -ps_data[3][0]},
+    };
+
+    for (auto &vec : expected) {
+        scaleVector(vec, coef);
+    }
+
+    for (std::size_t i = 0; i < angles.size(); ++i) {
+        auto st = ini_st;
+
+        GateImplementation::applyPSWAP(st.data(), num_qubits, wires[i], false,
+                                       angles[i]);
+        CAPTURE(st);
+        CHECK(st == approx(expected[i]));
+    }
+}
+PENNYLANE_RUN_TEST(PSWAP);
+
 /*******************************************************************************
  * Four-qubit gates
  ******************************************************************************/
@@ -2723,6 +2780,29 @@ TEMPLATE_TEST_CASE(
                 "SingleExcitationPlus", std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire0, wire1},
                 inverse, {param});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled PSWAP - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire0 << ", " << wire1 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        if (control != wire0 && control != wire1 && wire0 != wire1) {
+            auto matrix = getPSWAP<std::complex, PrecisionT>(param);
+            std::vector<ComplexT> cmatrix = getControlledGate(matrix);
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+
+            sv0.applyMatrix(cmatrix, {control, wire0, wire1}, inverse);
+            sv1.applyOperation("PSWAP", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire0, wire1}, inverse,
+                               {param});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }

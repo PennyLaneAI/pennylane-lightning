@@ -153,6 +153,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ,
         GateOperation::GlobalPhase,
+        GateOperation::PSWAP,
     };
 
     constexpr static std::array implemented_controlled_gates = {
@@ -181,6 +182,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::DoubleExcitationPlus,
         ControlledGateOperation::MultiRZ,
         ControlledGateOperation::GlobalPhase,
+        ControlledGateOperation::PSWAP,
     };
 
     constexpr static std::array implemented_generators = {
@@ -1643,6 +1645,43 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                           bool inverse, ParamT angle) {
         applyNCSingleExcitationPlus(arr, num_qubits, {}, {}, wires, inverse,
                                     angle);
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyNCPSWAP(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &controlled_wires,
+                             const std::vector<bool> &controlled_values,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle) {
+        const std::complex<PrecisionT> phase =
+            std::exp(std::complex<PrecisionT>(0, inverse ? -angle : angle));
+        auto core_function = [phase](std::complex<PrecisionT> *arr,
+                                     [[maybe_unused]] const std::size_t i00,
+                                     const std::size_t i01,
+                                     const std::size_t i10,
+                                     [[maybe_unused]] const std::size_t i11) {
+            arr[i10] *= phase;
+            arr[i01] *= phase;
+            std::swap(arr[i10], arr[i01]);
+        };
+        if (controlled_wires.empty()) {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), false>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        } else {
+            applyNC2<PrecisionT, ParamT, decltype(core_function), true>(
+                arr, num_qubits, controlled_wires, controlled_values, wires,
+                core_function);
+        }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyPSWAP(std::complex<PrecisionT> *arr,
+                           std::size_t num_qubits,
+                           const std::vector<std::size_t> &wires, bool inverse,
+                           ParamT angle) {
+        applyNCPSWAP(arr, num_qubits, {}, {}, wires, inverse, angle);
     }
 
     /* Four-qubit gates*/

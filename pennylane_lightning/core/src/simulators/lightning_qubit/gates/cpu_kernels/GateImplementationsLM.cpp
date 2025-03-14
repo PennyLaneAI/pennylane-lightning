@@ -254,6 +254,12 @@ template void GateImplementationsLM::applyGlobalPhase<float, float>(
 template void GateImplementationsLM::applyGlobalPhase<double, double>(
     std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
     double);
+template void GateImplementationsLM::applyPSWAP<float, float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
+template void GateImplementationsLM::applyPSWAP<double, double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 /* QChem functions */
 

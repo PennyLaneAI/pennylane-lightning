@@ -64,6 +64,7 @@ def op(op_name):
         "SISWAP": [qml.SISWAP, [], {"wires": [0, 1]}],
         "SQISW": [qml.SQISW, [], {"wires": [0, 1]}],
         "CSWAP": [qml.CSWAP, [], {"wires": [0, 1, 2]}],
+        "PSWAP": [qml.PSWAP, [], {"phi": 0.1117, "wires": [0, 1]}],
         "PauliRot": [qml.PauliRot, [0.123], {"pauli_word": "Y", "wires": [0]}],
         "IsingXX": [qml.IsingXX, [], {"phi": 0.123, "wires": [0, 1]}],
         "IsingXY": [qml.IsingXY, [], {"phi": 0.123, "wires": [0, 1]}],
@@ -151,6 +152,8 @@ def test_gate_unitary_correct(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
+    if op_name == "PSWAP" and device_name != "lightning.qubit":
+        pytest.skip("Skipping PSWAP test for non-lightning.qubit device.")
 
     wires = len(op[2]["wires"])
 
@@ -217,6 +220,8 @@ def test_gate_unitary_correct_lt(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
+    if op_name == "PSWAP" and device_name != "lightning.qubit":
+        pytest.skip("Skipping PSWAP test for non-lightning.qubit device.")
 
     wires = len(op[2]["wires"])
 
@@ -251,6 +256,8 @@ def test_inverse_unitary_correct(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
+    if op_name == "PSWAP" and device_name != "lightning.qubit":
+        pytest.skip("Skipping PSWAP test for non-lightning.qubit device.")
 
     wires = len(op[2]["wires"])
 
@@ -492,6 +499,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.RZ,
         qml.Rot,
         qml.SWAP,
+        qml.PSWAP,
         qml.IsingXX,
         qml.IsingXY,
         qml.IsingYY,
@@ -516,6 +524,9 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
     threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
     operation = qml.adjoint(operation) if adjoint else operation
+
+    if operation == qml.PSWAP and device_name != "lightning.qubit":
+        pytest.skip("Skipping PSWAP test for non-lightning.qubit device.")
 
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
@@ -696,6 +707,7 @@ def test_controlled_globalphase(n_qubits, control_value, tol):
         qml.RZ,
         qml.Rot,
         qml.SWAP,
+        qml.PSWAP,
         qml.IsingXX,
         qml.IsingXY,
         qml.IsingYY,
@@ -720,6 +732,8 @@ def test_adjoint_controlled_qubit_gates(operation, n_qubits, control_value, tol,
     threshold = 5 if device_name == "lightning.tensor" else 250
     num_wires = max(operation.num_wires, 1)
     operation = qml.adjoint(operation) if adjoint else operation
+    if operation == qml.PSWAP and device_name != "lightning.qubit":
+        pytest.skip("Skipping PSWAP test for non-lightning.qubit device.")
 
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))

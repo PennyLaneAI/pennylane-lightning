@@ -6,6 +6,9 @@
 
 ### Improvements
 
+* Add `PSWAP` gate implementation to Lightning-Qubit. 
+  [(#1082)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1082)
+
 * Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
   [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
@@ -121,7 +124,8 @@ Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Alex Preciado,
-Shuli Shu
+Shuli Shu,
+Jake Zaia
 
 ---
 
