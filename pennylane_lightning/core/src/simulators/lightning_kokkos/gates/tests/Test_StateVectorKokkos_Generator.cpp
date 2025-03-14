@@ -456,7 +456,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         "RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "IsingXX", "IsingXY",
         "IsingYY", "IsingZZ", "SingleExcitation", "SingleExcitationMinus",
         "SingleExcitationPlus", "DoubleExcitation", "DoubleExcitationMinus",
-        "DoubleExcitationPlus", "MultiRZ");
+        "DoubleExcitationPlus", "MultiRZ", "PSWAP");
 
     DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
                                        << inverse << " 1-control: c{5}") {
