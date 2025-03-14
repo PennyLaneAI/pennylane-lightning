@@ -33,7 +33,6 @@
 /// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
-// using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 

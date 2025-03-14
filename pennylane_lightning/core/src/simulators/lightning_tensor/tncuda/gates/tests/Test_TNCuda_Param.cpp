@@ -479,8 +479,10 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXX", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits),
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
 
     expected_results[0][0] = {0.9887710779360422, 0.0};
     expected_results[0][6] = {0.0, -0.14943813247359922};
@@ -542,8 +544,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingXY", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
     };
 
     expected_results[0][2] = {0.34958337, 0.05283436};
@@ -608,8 +610,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingYY", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, 0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, 0.05283436}),
     };
 
     expected_results[0][2] = {0.34958337, -0.05283436};
@@ -673,8 +675,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::IsingZZ", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, 0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, 0.05283436}),
     };
 
     expected_results[0][0] = {0.34958337, -0.05283436};
@@ -761,8 +763,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRX", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.0, 0.0}),
-        std::vector<cp_t>(1 << num_qubits, {0.0, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.0, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.0, 0.0}),
     };
 
     // adjacent wires
@@ -831,8 +833,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRY", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
     };
 
     expected_results[0][4] = {0.29674901, 0.0};
@@ -900,8 +902,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::CRZ", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
     };
 
     expected_results[0][4] = {0.34958337, -0.05283436};
@@ -966,8 +968,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitation", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
-        std::vector<cp_t>(1 << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
+        std::vector<cp_t>(1U << num_qubits, {0.35355339, 0.0}),
     };
 
     expected_results[0][2] = {0.29674901, 0.0};
@@ -1032,8 +1034,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationMinus",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, -0.05283436}),
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, -0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, -0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, -0.05283436}),
     };
 
     for (auto &vec : expected_results) {
@@ -1108,8 +1110,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::SingleExcitationPlus", "[TNCuda_Param]",
 
     // Results collected from `default.qubit`
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
-        std::vector<cp_t>(1 << num_qubits, {0.34958337, 0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, 0.05283436}),
+        std::vector<cp_t>(1U << num_qubits, {0.34958337, 0.05283436}),
     };
 
     for (auto &vec : expected_results) {
@@ -1221,8 +1223,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitation", "[TNCuda_Param]",
 
         // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
-            std::vector<cp_t>(1 << num_qubits, {0.17677669, 0.0}),
-            std::vector<cp_t>(1 << num_qubits, {0.17677669, 0.0}),
+            std::vector<cp_t>(1U << num_qubits, {0.17677669, 0.0}),
+            std::vector<cp_t>(1U << num_qubits, {0.17677669, 0.0}),
         };
 
         expected_results[0][6] = {0.14837450, 0.0};
@@ -1301,8 +1303,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationMinus",
 
         // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641717}),
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, -0.02641717}),
+            std::vector<cp_t>(1U << num_qubits, {0.17479168, -0.02641717}),
+            std::vector<cp_t>(1U << num_qubits, {0.17479168, -0.02641717}),
 
         };
 
@@ -1387,8 +1389,8 @@ TEMPLATE_LIST_TEST_CASE("TNCuda::Gates::DoubleExcitationPlus", "[TNCuda_Param]",
 
         // Results collected from `default.qubit`
         std::vector<std::vector<cp_t>> expected_results{
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641717}),
-            std::vector<cp_t>(1 << num_qubits, {0.17479168, 0.02641717}),
+            std::vector<cp_t>(1U << num_qubits, {0.17479168, 0.02641717}),
+            std::vector<cp_t>(1U << num_qubits, {0.17479168, 0.02641717}),
 
         };
 

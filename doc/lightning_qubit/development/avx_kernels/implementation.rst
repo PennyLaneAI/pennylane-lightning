@@ -58,9 +58,9 @@ The following simple (C++ style) pseudocode shows how the algorithm is implement
          // Between rows
          for proper index k {
             row1 = load k-th row
-            row2 = load [k + (1 << wire)]-th row
+            row2 = load [k + (1U << wire)]-th row
             save row2 to k-th row
-            save row1 to [k + (1 << wire)]-th row
+            save row1 to [k + (1U << wire)]-th row
          }
       }
    }
