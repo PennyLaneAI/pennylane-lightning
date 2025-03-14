@@ -73,6 +73,7 @@ class LightningBase(Device):
 
         # State-vector is dynamically allocated just before execution
         self._statevector = None
+        self._sv_init_kwargs = {}
 
         if isinstance(wires, int) or wires is None:
             self._wire_map = None  # should just use wires as is
@@ -106,7 +107,6 @@ class LightningBase(Device):
 
         """
 
-    @abstractmethod
     def dynamic_wires_from_circuit(self, circuit):
         """Allocate the underlying quantum state from the pre-defined wires or a given circuit if applicable. Circuit wires will be mapped to Pennylane ``default.qubit`` standard wire order.
 
@@ -116,6 +116,22 @@ class LightningBase(Device):
         Returns:
             QuantumTape: The updated circuit with the wires mapped to the standard wire order.
         """
+
+        if self.wires is None:
+            num_wires = circuit.num_wires
+            # Map to follow the standard wire order for dynamic wires
+            circuit = circuit.map_to_standard_wires()
+        else:
+            num_wires = len(self.wires)
+
+        if (self._statevector is None) or (self._statevector.num_wires != num_wires):
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype, **self._sv_init_kwargs
+            )
+        else:
+            self._statevector.reset_state()
+
+        return circuit
 
     @abstractmethod
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):

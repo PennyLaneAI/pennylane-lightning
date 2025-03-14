@@ -28,7 +28,8 @@ target_sources(lightning_qubit_measurements_tests INTERFACE runner_lightning_qub
 ################################################################################
 # Define targets
 ################################################################################
-set(TEST_SOURCES    Test_MeasurementsLQubit.cpp
+set(TEST_SOURCES    
+                    Test_MeasurementsLQubit.cpp
                     Test_MeasurementsLQubitSparse.cpp
                     )
 

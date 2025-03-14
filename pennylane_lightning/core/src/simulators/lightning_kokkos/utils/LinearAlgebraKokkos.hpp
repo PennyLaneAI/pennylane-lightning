@@ -108,7 +108,7 @@ template <class PrecisionT> struct SparseMV_KokkosFunctor {
  above
  * row j.
  * @param row_map_size  row_map array size.
- * @param entries_ptr   pointer to an array with column indices of the
+ * @param column_idx_ptr   pointer to an array with column indices of the
  * non-zero elements.
  * @param values_ptr    pointer to an array with the non-zero elements.
  * @param numNNZ        number of non-zero elements.
@@ -116,8 +116,8 @@ template <class PrecisionT> struct SparseMV_KokkosFunctor {
 template <class PrecisionT, class ComplexT>
 void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
                      const std::size_t *row_map, const std::size_t row_map_size,
-                     const std::size_t *entries_ptr, const ComplexT *values_ptr,
-                     const std::size_t numNNZ) {
+                     const std::size_t *column_idx_ptr,
+                     const ComplexT *values_ptr, const std::size_t numNNZ) {
     using ConstComplexHostView =
         Kokkos::View<const ComplexT *, Kokkos::HostSpace,
                      Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
@@ -128,17 +128,18 @@ void SparseMV_Kokkos(Kokkos::View<ComplexT *> x, Kokkos::View<ComplexT *> y,
     using KokkosVector = Kokkos::View<ComplexT *>;
 
     KokkosVector kok_data("kokkos_sparese_matrix_vals", numNNZ);
-    KokkosSizeTVector kok_entries_ptr("kokkos_entries_ptr", numNNZ);
+    KokkosSizeTVector kok_column_idx_ptr("kokkos_column_idx_ptr", numNNZ);
     KokkosSizeTVector kok_row_map("kokkos_offsets", row_map_size);
 
     Kokkos::deep_copy(kok_data, ConstComplexHostView(values_ptr, numNNZ));
 
-    Kokkos::deep_copy(kok_entries_ptr, ConstSizeTHostView(entries_ptr, numNNZ));
+    Kokkos::deep_copy(kok_column_idx_ptr,
+                      ConstSizeTHostView(column_idx_ptr, numNNZ));
     Kokkos::deep_copy(kok_row_map, ConstSizeTHostView(row_map, row_map_size));
 
     Kokkos::parallel_for(row_map_size - 1,
                          SparseMV_KokkosFunctor<PrecisionT>(
-                             x, y, kok_data, kok_entries_ptr, kok_row_map));
+                             x, y, kok_data, kok_column_idx_ptr, kok_row_map));
 }
 
 /**
