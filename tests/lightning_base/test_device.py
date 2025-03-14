@@ -503,7 +503,7 @@ class TestExecution:
     }
 
     @pytest.mark.skipif(
-        device_name="lightning.tensor", reason="lightning.tensor does not support rng key"
+        device_name == "lightning.tensor", reason="lightning.tensor does not support rng key"
     )
     @pytest.mark.parametrize(
         "config, expected_config",
