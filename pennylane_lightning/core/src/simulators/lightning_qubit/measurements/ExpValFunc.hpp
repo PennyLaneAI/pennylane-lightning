@@ -22,11 +22,13 @@
 #pragma once
 
 #include "BitUtil.hpp"
+#include "LinearAlgebra.hpp"
 #include "Util.hpp"
 
 /// @cond DEV
 namespace {
 namespace PUtil = Pennylane::Util;
+namespace LQUtil = Pennylane::LightningQubit::Util;
 } // namespace
 /// @endcond
 
@@ -146,6 +148,7 @@ void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
          EXPVALTERM3(xx, 0B010, i010) + EXPVALTERM3(xx, 0B011, i011) +         \
          EXPVALTERM3(xx, 0B100, i100) + EXPVALTERM3(xx, 0B101, i101) +         \
          EXPVALTERM3(xx, 0B110, i110) + EXPVALTERM3(xx, 0B111, i111))
+
 template <class ParamT>
 void applyExpValMat3(const std::complex<ParamT> *arr, std::size_t num_qubits,
                      const std::vector<size_t> &wires,
@@ -376,7 +379,6 @@ void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
     const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
 #pragma omp parallel for reduction(+ : expected_value)
     for (std::size_t k = 0; k < two2N; ++k) {
-        ParamT innerExpVal = 0.0;
         std::vector<std::complex<ParamT>> coeffs_in(dim);
 
         std::size_t idx = (k & parity[0]);
@@ -395,14 +397,9 @@ void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
             coeffs_in[inner_idx] = arr[index];
         }
 
-        for (std::size_t i = 0; i < dim; ++i) {
-            std::complex<ParamT> tmp(0.0);
-            for (std::size_t j = 0; j < dim; ++j) {
-                tmp += matrix[i * dim + j] * coeffs_in[j];
-            }
-            innerExpVal += std::real(std::conj(coeffs_in[i]) * tmp);
-        }
-        expected_value += innerExpVal;
+        const auto temp_vec =
+            LQUtil::matrixVecProd(matrix, coeffs_in, dim, dim);
+        expected_value += std::real(LQUtil::innerProdC(coeffs_in, temp_vec));
     }
 };
 } // namespace Pennylane::LightningQubit::Measures
