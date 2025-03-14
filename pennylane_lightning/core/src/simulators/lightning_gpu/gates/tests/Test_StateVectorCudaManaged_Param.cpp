@@ -480,8 +480,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits),
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results[0][0] = {0.9887710779360422, 0.0};
     expected_results[0][6] = {0.0, -0.14943813247359922};
 
@@ -495,8 +497,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingXX", "[LightningGPU_Param]", float,
     expected_results[3][5] = {0.0, -0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits),
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, 0.0};
     expected_results_adj[0][6] = {0.0, 0.14943813247359922};
 
@@ -632,8 +636,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits),
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results[0][0] = {0.9887710779360422, 0.0};
     expected_results[0][6] = {0.0, 0.14943813247359922};
 
@@ -647,8 +653,10 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingYY", "[LightningGPU_Param]", float,
     expected_results[3][5] = {0.0, 0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits),
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, 0.0};
     expected_results_adj[0][6] = {0.0, -0.14943813247359922};
 
@@ -725,13 +733,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyIsingZZ", "[LightningGPU_Param]", float,
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits, {0, 0}),
-        std::vector<cp_t>(1 << num_qubits, {0, 0})};
+        std::vector<cp_t>(1U << num_qubits, {0, 0}),
+        std::vector<cp_t>(1U << num_qubits, {0, 0})};
     expected_results[0][0] = {0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = {0.9210609940028851, -0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, 0.14943813247359922};
     expected_results_adj[1][0] = {0.9210609940028851, 0.3894183423086505};
 
@@ -973,7 +982,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitation",
 
     const std::vector<TestType> angles{0.3, 0.8};
 
-    std::vector<cp_t> expected_results(1 << num_qubits);
+    std::vector<cp_t> expected_results(1U << num_qubits);
     expected_results[0] = {1.0, 0.0};
 
     const auto init_state = sv.getDataVector();
@@ -1019,12 +1028,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationMinus",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results[0][0] = {0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = {0.9210609940028851, -0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, 0.14943813247359922};
     expected_results_adj[1][0] = {0.9210609940028851, 0.3894183423086505};
 
@@ -1098,12 +1109,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applySingleExcitationPlus",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results[0][0] = {0.9887710779360422, 0.14943813247359922};
     expected_results[1][0] = {0.9210609940028851, 0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, -0.14943813247359922};
     expected_results_adj[1][0] = {0.9210609940028851, -0.3894183423086505};
 
@@ -1176,7 +1189,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitation",
 
     const std::vector<TestType> angles{0.3, 0.8, 2.4};
 
-    std::vector<cp_t> expected_results(1 << num_qubits);
+    std::vector<cp_t> expected_results(1U << num_qubits);
     expected_results[0] = {1.0, 0.0};
 
     const auto init_state = sv.getDataVector();
@@ -1214,12 +1227,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationMinus",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results[0][0] = {0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = {0.9210609940028851, -0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, 0.14943813247359922};
     expected_results_adj[1][0] = {0.9210609940028851, 0.3894183423086505};
 
@@ -1269,12 +1284,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyDoubleExcitationPlus",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results[0][0] = {0.9887710779360422, 0.14943813247359922};
     expected_results[1][0] = {0.9210609940028851, 0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, -0.14943813247359922};
     expected_results_adj[1][0] = {0.9210609940028851, -0.3894183423086505};
 
@@ -1324,12 +1341,14 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<cp_t>> expected_results{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results[0][0] = {0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = {0.9210609940028851, -0.3894183423086505};
 
     std::vector<std::vector<cp_t>> expected_results_adj{
-        std::vector<cp_t>(1 << num_qubits), std::vector<cp_t>(1 << num_qubits)};
+        std::vector<cp_t>(1U << num_qubits),
+        std::vector<cp_t>(1U << num_qubits)};
     expected_results_adj[0][0] = {0.9887710779360422, 0.14943813247359922};
     expected_results_adj[1][0] = {0.9210609940028851, 0.3894183423086505};
 

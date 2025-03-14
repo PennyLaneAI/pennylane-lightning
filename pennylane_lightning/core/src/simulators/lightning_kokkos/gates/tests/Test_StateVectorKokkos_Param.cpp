@@ -1868,10 +1868,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingXX",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<ComplexT>> expected_results{
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits)};
+        std::vector<ComplexT>(1U << num_qubits),
+        std::vector<ComplexT>(1U << num_qubits),
+        std::vector<ComplexT>(1U << num_qubits),
+        std::vector<ComplexT>(1U << num_qubits)};
     expected_results[0][0] = ComplexT{0.9887710779360422, 0.0};
     expected_results[0][6] = ComplexT{0.0, -0.14943813247359922};
 
@@ -1950,10 +1950,10 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingYY",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<ComplexT>> expected_results{
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits)};
+        std::vector<ComplexT>(1U << num_qubits),
+        std::vector<ComplexT>(1U << num_qubits),
+        std::vector<ComplexT>(1U << num_qubits),
+        std::vector<ComplexT>(1U << num_qubits)};
     expected_results[0][0] = ComplexT{0.9887710779360422, 0.0};
     expected_results[0][6] = ComplexT{0.0, 0.14943813247359922};
 
@@ -2032,8 +2032,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyIsingZZ",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<ComplexT>> expected_results{
-        std::vector<ComplexT>(1 << num_qubits, {0, 0}),
-        std::vector<ComplexT>(1 << num_qubits, {0, 0})};
+        std::vector<ComplexT>(1U << num_qubits, {0, 0}),
+        std::vector<ComplexT>(1U << num_qubits, {0, 0})};
     expected_results[0][0] = ComplexT{0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = ComplexT{0.9210609940028851, -0.3894183423086505};
 
@@ -2100,8 +2100,8 @@ TEMPLATE_TEST_CASE("StateVectorKokkosManaged::applyMultiRZ",
     const std::vector<TestType> angles{0.3, 0.8};
 
     std::vector<std::vector<ComplexT>> expected_results{
-        std::vector<ComplexT>(1 << num_qubits),
-        std::vector<ComplexT>(1 << num_qubits)};
+        std::vector<ComplexT>(1U << num_qubits),
+        std::vector<ComplexT>(1U << num_qubits)};
     expected_results[0][0] = ComplexT{0.9887710779360422, -0.14943813247359922};
     expected_results[1][0] = ComplexT{0.9210609940028851, -0.3894183423086505};
 
