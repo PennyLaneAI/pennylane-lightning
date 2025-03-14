@@ -8,6 +8,9 @@
 
 ### Improvements
 
+* `LightningQubit.preprocess` can be used with program capture enabled.
+  [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
+
 * Expand test structure to efficiently handle sparse data.
   [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
@@ -304,6 +307,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
 Raul Torres,
