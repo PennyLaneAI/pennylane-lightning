@@ -726,6 +726,16 @@ class StateVectorCudaMPI final
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
                               wires, adjoint);
     }
+    inline void applyPSWAP(const std::vector<std::size_t> &wires, bool adjoint,
+                           Precision param) {
+        static const std::string name{"PSWAP"};
+        const auto gate_key = std::make_pair(name, param);
+        if (!gate_cache_.gateExists(gate_key)) {
+            gate_cache_.add_gate(gate_key, cuGates::getPSWAP<CFP_t>(param));
+        }
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(gate_key), {},
+                              wires, adjoint);
+    }
 
     /* three-qubit gates */
     inline void applyToffoli(const std::vector<std::size_t> &wires,
