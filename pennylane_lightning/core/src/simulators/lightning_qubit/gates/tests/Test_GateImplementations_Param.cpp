@@ -1934,7 +1934,7 @@ void testApplyPSWAP() {
     std::vector<std::vector<ComplexT>> ps_data;
     ps_data.reserve(angles.size());
     for (auto &a : angles) {
-        ps_data.push_back(getPhaseShift<std::complex, PrecisionT>(a));
+        ps_data.push_back(getPSWAP<std::complex, PrecisionT>(a));
     }
 
     const std::vector<std::vector<size_t>> wires = {
@@ -1945,17 +1945,17 @@ void testApplyPSWAP() {
     };
 
     std::vector<std::vector<ComplexT>> expected = {
-        {ps_data[0][0], ps_data[0][3], -ps_data[0][3], -ps_data[0][0],
-         ps_data[0][0], ps_data[0][3], -ps_data[0][3], -ps_data[0][0]},
+        {ps_data[0][0], ps_data[0][6], -ps_data[0][6], -ps_data[0][0],
+         ps_data[0][0], ps_data[0][6], -ps_data[0][6], -ps_data[0][0]},
 
-        {ps_data[1][0], ps_data[1][3], -ps_data[1][3], -ps_data[1][0],
-         ps_data[1][0], ps_data[1][3], -ps_data[1][3], -ps_data[1][0]},
+        {ps_data[1][0], ps_data[1][6], -ps_data[1][6], -ps_data[1][0],
+         ps_data[1][0], ps_data[1][6], -ps_data[1][6], -ps_data[1][0]},
 
-        {ps_data[2][0], -ps_data[2][0], ps_data[2][3], -ps_data[2][3],
-         ps_data[2][3], -ps_data[2][3], ps_data[2][0], -ps_data[2][0]},
+        {ps_data[2][0], -ps_data[2][0], ps_data[2][6], -ps_data[2][6],
+         ps_data[2][6], -ps_data[2][6], ps_data[2][0], -ps_data[2][0]},
 
-        {ps_data[3][0], -ps_data[3][0], ps_data[3][3], -ps_data[3][3],
-         ps_data[3][3], -ps_data[3][3], ps_data[3][0], -ps_data[3][0]},
+        {ps_data[3][0], -ps_data[3][0], ps_data[3][6], -ps_data[3][6],
+         ps_data[3][6], -ps_data[3][6], ps_data[3][0], -ps_data[3][0]},
     };
 
     for (auto &vec : expected) {
