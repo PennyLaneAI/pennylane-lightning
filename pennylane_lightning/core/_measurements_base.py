@@ -128,10 +128,12 @@ class LightningBaseMeasurements(ABC):
                 CSR_SparseHamiltonian.data,
             )
 
-        if (
-            isinstance(measurementprocess.obs, qml.Hermitian)
-            or (measurementprocess.obs.arithmetic_depth > 0)
-            or isinstance(measurementprocess.obs.name, List)
+        if isinstance(measurementprocess.obs, qml.Hermitian):
+            observable_wires = measurementprocess.obs.wires
+            matrix = measurementprocess.obs.matrix()
+            return self._measurement_lightning.expval(matrix, observable_wires)
+        if (measurementprocess.obs.arithmetic_depth > 0) or isinstance(
+            measurementprocess.obs.name, List
         ):
             # pylint: disable=protected-access
             ob_serialized = QuantumScriptSerializer(

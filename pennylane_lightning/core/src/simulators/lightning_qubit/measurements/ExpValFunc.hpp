@@ -23,6 +23,7 @@
 
 #include "BitUtil.hpp"
 #include "Util.hpp"
+#include <iostream>
 
 /// @cond DEV
 namespace {
@@ -383,14 +384,14 @@ void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
 
         std::size_t idx = (k & parity[0]);
         for (std::size_t i = 1; i < parity.size(); i++) {
-            idx |= ((k & parity[i]));
+            idx |= (((k << i) & parity[i]));
         }
         coeffs_in[0] = arr[idx];
 
         for (std::size_t inner_idx = 1; inner_idx < dim; ++inner_idx) {
             std::size_t index = idx;
             for (std::size_t i = 0; i < wires.size(); i++) {
-                if ((inner_idx & (1 << i)) != 0) {
+                if ((inner_idx & (static_cast<std::size_t>(1U) << i)) != 0) {
                     index |= rev_wire_shifts[i];
                 }
             }
