@@ -86,6 +86,9 @@
 
 ### Bug fixes
 
+* Fix test_preprocess test skip condition.
+  [(#XX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/X)
+
 * Fix measurements with empty wires and operators for statevectors with dynamically allocated wires.
   [(#1081)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1081)
 

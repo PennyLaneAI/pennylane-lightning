@@ -570,7 +570,7 @@ class TestExecution:
         assert new_config == expected_config
 
     @pytest.mark.skipif(
-        device_name="lightning.tensor", reason="lightning.tensor does not support adjoint"
+        device_name == "lightning.tensor", reason="lightning.tensor does not support adjoint"
     )
     @pytest.mark.parametrize("adjoint", [True, False])
     def test_preprocess(self, adjoint):
