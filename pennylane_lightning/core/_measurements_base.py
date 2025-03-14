@@ -132,6 +132,7 @@ class LightningBaseMeasurements(ABC):
             observable_wires = measurementprocess.obs.wires
             matrix = measurementprocess.obs.matrix()
             return self._measurement_lightning.expval(matrix, observable_wires)
+
         if (measurementprocess.obs.arithmetic_depth > 0) or isinstance(
             measurementprocess.obs.name, List
         ):

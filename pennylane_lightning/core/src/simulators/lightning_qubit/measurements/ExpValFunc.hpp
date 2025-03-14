@@ -23,7 +23,6 @@
 
 #include "BitUtil.hpp"
 #include "Util.hpp"
-#include <iostream>
 
 /// @cond DEV
 namespace {
