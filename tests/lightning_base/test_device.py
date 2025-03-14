@@ -511,7 +511,7 @@ class TestExecution:
             (
                 DefaultExecutionConfig,
                 ExecutionConfig(
-                    grad_on_execution=True,
+                    grad_on_execution=None,
                     use_device_gradient=False,
                     device_options=_default_device_options,
                 ),
@@ -533,7 +533,7 @@ class TestExecution:
                     }
                 ),
                 ExecutionConfig(
-                    grad_on_execution=True,
+                    grad_on_execution=None,
                     use_device_gradient=False,
                     device_options={
                         "c_dtype": np.complex64,

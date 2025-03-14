@@ -86,7 +86,7 @@
 
 ### Bug fixes
 
-* Fix test_preprocess test skip condition.
+* Fix the `test_preprocess` test skip condition for `lightning.tensor`.
   [(#1092)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1092)
 
 * Fix measurements with empty wires and operators for statevectors with dynamically allocated wires.
