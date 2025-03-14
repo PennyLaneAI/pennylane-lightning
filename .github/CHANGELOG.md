@@ -8,6 +8,12 @@
 
 ### Improvements
 
+* Add `PSWAP` gate implementation to Lightning-Kokkos.
+  [(#1089)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1089)
+
+* Add `PSWAP` gate implementation to Lightning-Qubit. 
+  [(#1082)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1082)
+
 * Expand test structure to efficiently handle sparse data.
   [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
@@ -129,7 +135,8 @@ Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Alex Preciado,
-Shuli Shu
+Shuli Shu,
+Jake Zaia
 
 ---
 

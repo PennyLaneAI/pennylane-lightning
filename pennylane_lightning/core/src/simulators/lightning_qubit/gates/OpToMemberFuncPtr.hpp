@@ -271,6 +271,12 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
     constexpr static auto value =
         &GateImplementation::template applyGlobalPhase<PrecisionT, ParamT>;
 };
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::PSWAP> {
+    constexpr static auto value =
+        &GateImplementation::template applyPSWAP<PrecisionT, ParamT>;
+};
 
 template <class PrecisionT, class ParamT, class GateImplementation,
           ControlledGateOperation gate_op>
@@ -439,6 +445,12 @@ struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::GlobalPhase> {
     constexpr static auto value =
         &GateImplementation::template applyNCGlobalPhase<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::PSWAP> {
+    constexpr static auto value =
+        &GateImplementation::template applyNCPSWAP<PrecisionT, ParamT>;
 };
 
 /**
