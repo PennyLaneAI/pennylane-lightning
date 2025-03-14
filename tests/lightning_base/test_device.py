@@ -503,7 +503,7 @@ class TestExecution:
     }
 
     @pytest.mark.skipif(
-        device_name="lightning.tensor", reason="lightning.tensor does not support rng key"
+        device_name == "lightning.tensor", reason="lightning.tensor does not support rng key"
     )
     @pytest.mark.parametrize(
         "config, expected_config",
@@ -511,7 +511,7 @@ class TestExecution:
             (
                 DefaultExecutionConfig,
                 ExecutionConfig(
-                    grad_on_execution=True,
+                    grad_on_execution=None,
                     use_device_gradient=False,
                     device_options=_default_device_options,
                 ),
@@ -533,7 +533,7 @@ class TestExecution:
                     }
                 ),
                 ExecutionConfig(
-                    grad_on_execution=True,
+                    grad_on_execution=None,
                     use_device_gradient=False,
                     device_options={
                         "c_dtype": np.complex64,
@@ -570,7 +570,7 @@ class TestExecution:
         assert new_config == expected_config
 
     @pytest.mark.skipif(
-        device_name="lightning.tensor", reason="lightning.tensor does not support adjoint"
+        device_name == "lightning.tensor", reason="lightning.tensor does not support adjoint"
     )
     @pytest.mark.parametrize("adjoint", [True, False])
     def test_preprocess(self, adjoint):
