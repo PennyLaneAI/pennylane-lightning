@@ -51,7 +51,7 @@ TEMPLATE_TEST_CASE("CSRMatrix", "[Sparse Matrix]", float, double) {
 TEMPLATE_TEST_CASE("CRSMatrix::Split", "[CRSMatrix]", float, double) {
     using PrecisionT = TestType;
     using cp_t = std::complex<PrecisionT>;
-    using index_type =
+    using IndexT =
         typename std::conditional<std::is_same<TestType, float>::value, int32_t,
                                   int64_t>::type;
 
@@ -61,24 +61,24 @@ TEMPLATE_TEST_CASE("CRSMatrix::Split", "[CRSMatrix]", float, double) {
     int rank = mpi_manager.getRank();
     int size = mpi_manager.getSize();
 
-    index_type csrOffsets[9] = {0, 2, 4, 6, 8, 10, 12, 14, 16};
-    index_type columns[16] = {0, 3, 1, 2, 1, 2, 0, 3, 4, 7, 5, 6, 5, 6, 4, 7};
+    IndexT csrOffsets[9] = {0, 2, 4, 6, 8, 10, 12, 14, 16};
+    IndexT columns[16] = {0, 3, 1, 2, 1, 2, 0, 3, 4, 7, 5, 6, 5, 6, 4, 7};
 
     cp_t values[16] = {{1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
                        {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0},
                        {1.0, 0.0},  {0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0},
                        {0.0, -1.0}, {1.0, 0.0},  {0.0, 1.0}, {1.0, 0.0}};
 
-    index_type num_csrOffsets = 9;
-    index_type num_rows = num_csrOffsets - 1;
+    IndexT num_csrOffsets = 9;
+    IndexT num_rows = num_csrOffsets - 1;
 
     SECTION("Apply split") {
         if (rank == 0) {
-            auto CSRMatVector = splitCSRMatrix<TestType, index_type>(
+            auto CSRMatVector = splitCSRMatrix<TestType, IndexT>(
                 mpi_manager, num_rows, csrOffsets, columns, values);
 
-            std::vector<index_type> localcsrOffsets = {0, 2, 4, 6, 8};
-            std::vector<index_type> local_indices = {0, 3, 1, 2, 1, 2, 0, 3};
+            std::vector<IndexT> localcsrOffsets = {0, 2, 4, 6, 8};
+            std::vector<IndexT> local_indices = {0, 3, 1, 2, 1, 2, 0, 3};
 
             for (std::size_t i = 0; i < localcsrOffsets.size(); i++) {
                 CHECK(CSRMatVector[0][0].getCsrOffsets()[i] ==
@@ -103,25 +103,24 @@ TEMPLATE_TEST_CASE("CRSMatrix::Split", "[CRSMatrix]", float, double) {
     }
 
     SECTION("Apply SparseMatrix scatter") {
-        std::vector<std::vector<CSRMatrix<TestType, index_type>>>
-            csrmatrix_blocks;
+        std::vector<std::vector<CSRMatrix<TestType, IndexT>>> csrmatrix_blocks;
 
         if (rank == 0) {
-            csrmatrix_blocks = splitCSRMatrix<TestType, index_type>(
+            csrmatrix_blocks = splitCSRMatrix<TestType, IndexT>(
                 mpi_manager, num_rows, csrOffsets, columns, values);
         }
 
         std::size_t local_num_rows = num_rows / size;
 
-        std::vector<CSRMatrix<TestType, index_type>> localCSRMatVector;
+        std::vector<CSRMatrix<TestType, IndexT>> localCSRMatVector;
         for (std::size_t i = 0; i < mpi_manager.getSize(); i++) {
-            auto localCSRMat = scatterCSRMatrix<TestType, index_type>(
+            auto localCSRMat = scatterCSRMatrix<TestType, IndexT>(
                 mpi_manager, csrmatrix_blocks[i], local_num_rows, 0);
             localCSRMatVector.push_back(localCSRMat);
         }
 
-        std::vector<index_type> localcsrOffsets = {0, 2, 4, 6, 8};
-        std::vector<index_type> local_indices = {0, 3, 1, 2, 1, 2, 0, 3};
+        std::vector<IndexT> localcsrOffsets = {0, 2, 4, 6, 8};
+        std::vector<IndexT> local_indices = {0, 3, 1, 2, 1, 2, 0, 3};
 
         if (rank == 0) {
             for (std::size_t i = 0; i < localcsrOffsets.size(); i++) {
