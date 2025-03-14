@@ -20,6 +20,7 @@
 #include <bit>
 #include <complex>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -485,6 +486,69 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         applyNCMultiQubitOp(arr, num_qubits, matrix, {}, {}, wires, inverse);
     }
 
+    /**
+     * @brief Apply a sparse matrix with controls to the statevector.
+     * @tparam PrecisionT Floating point precision of underlying statevector
+     * data
+     * @tparam IndexT Index type
+     * @param arr Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param row_map_ptr Pointer to the row map.
+     * @param col_idx_ptr Pointer to the columns indexes
+     * @param values_ptr Pointer to the values.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <class PrecisionT, class IndexT = std::size_t>
+    static void applyNCMultiQubitSparseOp(
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,
+        const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
+        const std::complex<PrecisionT> *values_ptr,
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool inverse = false) {
+        constexpr std::size_t one{1U};
+        const std::size_t n_wires = wires.size();
+        const std::size_t dim = one << n_wires;
+
+        PL_ABORT_IF(inverse, "Inverse not implemented for sparse ops.");
+
+        auto core_function = [dim, &row_map_ptr, &col_idx_ptr, &values_ptr](
+                                 std::complex<PrecisionT> *arr,
+                                 const std::vector<std::size_t> &indices,
+                                 const std::size_t offset) {
+            std::vector<std::complex<PrecisionT>> coeffs(dim);
+            for (std::size_t i = 0; i < dim; i++) {
+                coeffs[i] = arr[indices[i] + offset];
+            }
+            std::size_t count = 0;
+            for (IndexT i = 0; i < dim; i++) {
+                const auto index = indices[i] + offset;
+                arr[index] = 0.0;
+                auto row_range = row_map_ptr[i + 1] - row_map_ptr[i];
+                for (IndexT j = 0; j < row_range; j++) {
+                    arr[index] +=
+                        values_ptr[count] * coeffs[col_idx_ptr[count]];
+                    count++;
+                }
+            }
+        };
+        applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
+                 core_function);
+    }
+
+    template <class PrecisionT, class IndexT = std::size_t>
+    static void applyMultiQubitSparseOp(
+        std::complex<PrecisionT> *arr, std::size_t num_qubits,
+        const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
+        const std::complex<PrecisionT> *values_ptr,
+        const std::vector<std::size_t> &wires, bool inverse = false) {
+        applyNCMultiQubitSparseOp(arr, num_qubits, row_map_ptr, col_idx_ptr,
+                                  values_ptr, {}, {}, wires, inverse);
+    }
+
     template <class PrecisionT>
     static void
     applyPauliRot(std::complex<PrecisionT> *arr, std::size_t num_qubits,
@@ -557,8 +621,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
-     * @param core_function Gate function returning the matrix-vector product
-     * for a wire block.
+     * @param core_function Gate function returning the matrix-vector
+     * product for a wire block.
      */
     template <class PrecisionT, class ParamT = PrecisionT, class FuncT,
               bool has_controls = true>
@@ -1230,8 +1294,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
-     * @param core_function Gate function returning the matrix-vector product
-     * for a wire block.
+     * @param core_function Gate function returning the matrix-vector
+     * product for a wire block.
      */
     template <class PrecisionT, class ParamT = PrecisionT, class FuncT,
               bool has_controls = true>
@@ -1696,15 +1760,15 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @tparam has_controls True if the gate has control wires and false
      * otherwise (for optimization)
      * @tparam compute_indices True if the controlled gate requires the
-     * computation of all statevector indices, otherwise only the 3rd and 12th
-     * entries are calculated (for optimization)
+     * computation of all statevector indices, otherwise only the 3rd and
+     * 12th entries are calculated (for optimization)
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
-     * @param core_function Gate function returning the matrix-vector product
-     * for a wire block.
+     * @param core_function Gate function returning the matrix-vector
+     * product for a wire block.
      */
     template <class PrecisionT, class ParamT = PrecisionT, class FuncT,
               bool has_controls = true, bool compute_indices = true>
@@ -2002,7 +2066,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     /* Generators */
 
     /**
-     * @brief Apply a single-qubit generator with controls to the statevector.
+     * @brief Apply a single-qubit generator with controls to the
+     * statevector.
      *
      * @tparam PrecisionT Floating point precision of underlying statevector
      * data
@@ -2012,8 +2077,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
-     * @param core_function Gate function returning the matrix-vector product
-     * for a wire block.
+     * @param core_function Gate function returning the matrix-vector
+     * product for a wire block.
      */
     template <class PrecisionT, class FuncT>
     static void
@@ -2232,8 +2297,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
-     * @param core_function Gate function returning the matrix-vector product
-     * for a wire block.
+     * @param core_function Gate function returning the matrix-vector
+     * product for a wire block.
      */
     template <class PrecisionT, class FuncT>
     static void
@@ -2504,21 +2569,22 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     /**
-     * @brief Apply a single-qubit generator with controls to the statevector.
+     * @brief Apply a single-qubit generator with controls to the
+     * statevector.
      *
      * @tparam PrecisionT Floating point precision of underlying statevector
      * data
      * @tparam FuncT Gate function type.
      * @tparam compute_indices True if the controlled gate requires the
-     * computation of all statevector indices, otherwise only the 3rd and 12th
-     * entries are calculated (for optimization)
+     * computation of all statevector indices, otherwise only the 3rd and
+     * 12th entries are calculated (for optimization)
      * @param arr Pointer to the statevector.
      * @param num_qubits Number of qubits.
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param wires Wires the gate applies to.
-     * @param core_function Gate function returning the matrix-vector product
-     * for a wire block.
+     * @param core_function Gate function returning the matrix-vector
+     * product for a wire block.
      */
     template <class PrecisionT, class FuncT, bool compute_indices = true>
     static void
