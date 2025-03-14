@@ -225,6 +225,9 @@ void assignKernelsForGeneratorOp_Default() {
     instance.assignKernelForOp(GeneratorOperation::GlobalPhase, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GeneratorOperation::PSWAP, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 }
 void assignKernelsForMatrixOp_Default() {
     auto &instance = OperationKernelMap<MatrixOperation>::getInstance();
@@ -373,6 +376,9 @@ void assignKernelsForControlledGeneratorOp_Default() {
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
     instance.assignKernelForOp(ControlledGeneratorOperation::GlobalPhase,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGeneratorOperation::PSWAP,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
 }

@@ -264,6 +264,7 @@ class StateVectorCudaBase : public StateVectorBase<Precision, Derived> {
         {"ControlledPhaseShift", 1},
         {"CNOT", 1},
         {"SWAP", 0},
+        {"PSWAP", 0},
         {"CY", 1},
         {"CZ", 1},
         {"CRX", 1},

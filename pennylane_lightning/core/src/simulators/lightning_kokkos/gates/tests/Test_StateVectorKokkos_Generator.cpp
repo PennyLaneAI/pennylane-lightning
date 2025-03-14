@@ -124,7 +124,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyGenerator",
         "CRZ", "IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
         "SingleExcitationMinus", "SingleExcitationPlus", "DoubleExcitation",
         "DoubleExcitationMinus", "DoubleExcitationPlus", "MultiRZ",
-        "GlobalPhase");
+        "GlobalPhase", "PSWAP");
     DYNAMIC_SECTION("Generator - Gate = " << gate_name
                                           << " Inverse = " << inverse) {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
@@ -456,7 +456,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator",
         "RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "IsingXX", "IsingXY",
         "IsingYY", "IsingZZ", "SingleExcitation", "SingleExcitationMinus",
         "SingleExcitationPlus", "DoubleExcitation", "DoubleExcitationMinus",
-        "DoubleExcitationPlus", "MultiRZ");
+        "DoubleExcitationPlus", "MultiRZ", "PSWAP");
 
     DYNAMIC_SECTION("Matrix - Gate = " << controlled_gate_name << " Inverse = "
                                        << inverse << " 1-control: c{5}") {
@@ -654,7 +654,7 @@ TEMPLATE_TEST_CASE("StateVectorKokkos::applyControlledGenerator empty control",
 
     const bool inverse = GENERATE(true, false);
     const std::string controlled_gate_name =
-        GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase");
+        GENERATE("RX", "RY", "RZ", "PhaseShift", "GlobalPhase", "PSWAP");
     {
         StateVectorKokkos<TestType> kokkos_gntr_sv{ini_st.data(),
                                                    ini_st.size()};
