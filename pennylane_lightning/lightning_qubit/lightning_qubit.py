@@ -329,6 +329,10 @@ class LightningQubit(LightningBase):
         return replace(config, **updated_values, device_options=new_device_options)
 
     def __setup_execution_config_capture(self, config: ExecutionConfig) -> ExecutionConfig:
+        """
+        Updates the execution config with choices for how the device should be used and the device options
+        when program capture is enabled.
+        """
         updated_values = {}
         for option, _ in config.device_options.items():
             if option not in self._device_options:
@@ -383,6 +387,8 @@ class LightningQubit(LightningBase):
     def __preprocess_capture(
         self, execution_config=DefaultExecutionConfig
     ) -> tuple[TransformProgram, ExecutionConfig]:
+        """This function defines the device transform program to be applied and an updated device configuration
+        when program capture is enabled."""
         execution_config = self.__setup_execution_config_capture(config=execution_config)
         transform_program = TransformProgram()
 
