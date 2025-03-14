@@ -634,8 +634,11 @@ class TestDeferMeasurements:
             return qml.expval(qml.PauliZ(0))
 
         jaxpr = jax.make_jaxpr(f)()
-        with pytest.raises(qml.DeviceError, match="Lightning devices do not support postselection"):
-            _ = dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
+        with pytest.raises(jaxlib.xla_extension.XlaRuntimeError):
+            with pytest.raises(
+                qml.DeviceError, match="Lightning devices do not support postselection"
+            ):
+                dev.eval_jaxpr(jaxpr.jaxpr, jaxpr.consts)
 
     def test_mcms_as_gate_parameters(self):
         """Test that using MCMs as gate parameters works as expected."""
