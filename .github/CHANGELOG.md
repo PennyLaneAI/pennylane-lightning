@@ -1,6 +1,8 @@
 # Release 0.41.0-dev
 
 ### New features since last release
+* Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
+  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
 
 ### Breaking changes
 
@@ -9,6 +11,9 @@
 * `LightningQubit.preprocess` can be used with program capture enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
 
+* Expand test structure to efficiently handle sparse data.
+  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  
 * Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 

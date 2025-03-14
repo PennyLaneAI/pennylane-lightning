@@ -69,9 +69,9 @@ void setBasisState_CUDA(cuDoubleComplex *sv, cuDoubleComplex &value,
  * @param indices Integer data pointer of the sv indices (on device) to be set
  * with corresponding elements in values.
  */
-template <class GPUDataT, class index_type>
-__global__ void setStateVectorkernel(GPUDataT *sv, index_type num_indices,
-                                     GPUDataT *value, index_type *indices) {
+template <class GPUDataT, class IndexT>
+__global__ void setStateVectorkernel(GPUDataT *sv, IndexT num_indices,
+                                     GPUDataT *value, IndexT *indices) {
     const unsigned int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < num_indices) {
         sv[indices[i]] = value[i];
@@ -89,9 +89,9 @@ __global__ void setStateVectorkernel(GPUDataT *sv, index_type num_indices,
  * @param thread_per_block Number of threads set per block.
  * @param stream_id Stream id of CUDA calls
  */
-template <class GPUDataT, class index_type>
-void setStateVector_CUDA_call(GPUDataT *sv, index_type &num_indices,
-                              GPUDataT *value, index_type *indices,
+template <class GPUDataT, class IndexT>
+void setStateVector_CUDA_call(GPUDataT *sv, IndexT &num_indices,
+                              GPUDataT *value, IndexT *indices,
                               std::size_t thread_per_block,
                               cudaStream_t stream_id) {
     auto dv = std::div(num_indices, thread_per_block);
@@ -100,7 +100,7 @@ void setStateVector_CUDA_call(GPUDataT *sv, index_type &num_indices,
     dim3 blockSize(thread_per_block, 1, 1);
     dim3 gridSize(block_per_grid, 1);
 
-    setStateVectorkernel<GPUDataT, index_type>
+    setStateVectorkernel<GPUDataT, IndexT>
         <<<gridSize, blockSize, 0, stream_id>>>(sv, num_indices, value,
                                                 indices);
     PL_CUDA_IS_SUCCESS(cudaGetLastError());
