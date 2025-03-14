@@ -236,11 +236,11 @@ void applyGenSingleExcitationPlus(
 
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                  std::size_t num_qubits,
-                  const std::vector<std::size_t> &controlled_wires,
-                  const std::vector<bool> &controlled_values,
-                  const std::vector<std::size_t> &wires,
-                  [[maybe_unused]] bool inverse = false) {
+                     std::size_t num_qubits,
+                     const std::vector<std::size_t> &controlled_wires,
+                     const std::vector<bool> &controlled_values,
+                     const std::vector<std::size_t> &wires,
+                     [[maybe_unused]] bool inverse = false) {
     auto core_function = KOKKOS_LAMBDA(
         Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
         std::size_t i01, std::size_t i10, std::size_t i11) {
@@ -1122,9 +1122,8 @@ PrecisionT applyNCNamedGenerator(
             inverse);
         return static_cast<PrecisionT>(-1.0);
     case ControlledGeneratorOperation::PSWAP:
-        applyNCGenPSWAP<ExecutionSpace>(
-            arr_, num_qubits, controlled_wires, controlled_values, wires,
-            inverse);
+        applyNCGenPSWAP<ExecutionSpace>(arr_, num_qubits, controlled_wires,
+                                        controlled_values, wires, inverse);
         return static_cast<PrecisionT>(1.0);
     default:
         PL_ABORT("Controlled generator operation does not exist.");

@@ -491,12 +491,14 @@ template auto GateImplementationsLM::applyGeneratorControlledPhaseShift(
 template auto GateImplementationsLM::applyGeneratorControlledPhaseShift(
     std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
     -> float;
-template auto GateImplementationsLM::applyGeneratorPSWAP(
-    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
-    -> double;
-template auto GateImplementationsLM::applyGeneratorPSWAP(
-    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
-    -> float;
+template auto
+GateImplementationsLM::applyGeneratorPSWAP(std::complex<double> *, std::size_t,
+                                           const std::vector<std::size_t> &,
+                                           bool) -> double;
+template auto
+GateImplementationsLM::applyGeneratorPSWAP(std::complex<float> *, std::size_t,
+                                           const std::vector<std::size_t> &,
+                                           bool) -> float;
 template auto GateImplementationsLM::applyGeneratorMultiRZ(
     std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
     -> double;

@@ -587,8 +587,7 @@ template <class PrecisionT, class GateImplementation>
 struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
                                   GeneratorOperation::PSWAP> {
     constexpr static auto value =
-        &GateImplementation::template applyGeneratorPSWAP<
-            PrecisionT>;
+        &GateImplementation::template applyGeneratorPSWAP<PrecisionT>;
 };
 template <class PrecisionT, class GateImplementation>
 struct GeneratorOpToMemberFuncPtr<PrecisionT, GateImplementation,
@@ -707,11 +706,9 @@ struct ControlledGeneratorOpToMemberFuncPtr<
 };
 template <class PrecisionT, class GateImplementation>
 struct ControlledGeneratorOpToMemberFuncPtr<
-    PrecisionT, GateImplementation,
-    ControlledGeneratorOperation::PSWAP> {
+    PrecisionT, GateImplementation, ControlledGeneratorOperation::PSWAP> {
     constexpr static auto value =
-        &GateImplementation::template applyNCGeneratorPSWAP<
-            PrecisionT>;
+        &GateImplementation::template applyNCGeneratorPSWAP<PrecisionT>;
 };
 template <class PrecisionT, class GateImplementation>
 struct ControlledGeneratorOpToMemberFuncPtr<
