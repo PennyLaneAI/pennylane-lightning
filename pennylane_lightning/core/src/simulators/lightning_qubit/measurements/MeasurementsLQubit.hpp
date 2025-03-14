@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ExpValFunc.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementKernels.hpp"
 #include "MeasurementsBase.hpp"
@@ -46,6 +47,15 @@ using namespace Pennylane::Observables;
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Util::innerProdC;
 namespace PUtil = Pennylane::Util;
+enum class ExpValFunc : uint32_t {
+    BEGIN = 1,
+    Identity = 1,
+    PauliX,
+    PauliY,
+    PauliZ,
+    Hadamard,
+    END
+};
 } // namespace
 /// @endcond
 
@@ -202,39 +212,113 @@ class Measurements final
      */
     auto expval(const std::vector<ComplexT> &matrix,
                 const std::vector<std::size_t> &wires) -> PrecisionT {
-        // Copying the original state vector, for the application of the
-        // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+        PL_ABORT_IF(matrix.size() != PUtil::exp2(2 * wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
 
-        operator_statevector.applyMatrix(matrix, wires);
-
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
-        return std::real(expected_value);
+        PrecisionT expected_value = 0.0;
+        switch (wires.size()) {
+        case 1: {
+            applyExpValMat1<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
+        case 2: {
+            applyExpValMat2<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
+        case 3: {
+            applyExpValMat3<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
+        case 4: {
+            applyExpValMat4<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
+        case 5: {
+            applyExpValMat5<PrecisionT>(arr_data, num_qubits, wires, matrix,
+                                        expected_value);
+            break;
+        }
+        default:
+            applyExpValMatMultiQubit<PrecisionT>(arr_data, num_qubits, wires,
+                                                 matrix, expected_value);
+            break;
+        }
+        return expected_value;
     };
 
     /**
-     * @brief Expected value of an observable.
+     * @brief Expected value of a named observable.
      *
      * @param operation String with the operator name.
-     * @param wires Wires where to apply the operator.
-     * @return Floating point expected value of the observable.
+     * @param wires Wires to apply the operator.
+     * @return Expected value of the observable.
      */
-    auto expval(const std::string &operation,
-                const std::vector<std::size_t> &wires) -> PrecisionT {
-        // Copying the original state vector, for the application of the
-        // observable operator.
-        StateVectorLQubitManaged<PrecisionT> operator_statevector(
-            this->_statevector);
+    auto expval(const std::string &operation, const std::vector<size_t> &wires)
+        -> PrecisionT {
+        PrecisionT expected_value = 0.0;
+        const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
 
-        operator_statevector.applyOperation(operation, wires);
+        using FuncT = std::function<void(const std::complex<PrecisionT> *,
+                                         const std::size_t, const std::size_t,
+                                         PrecisionT &)>;
+        FuncT core_function;
 
-        ComplexT expected_value = innerProdC(this->_statevector.getData(),
-                                             operator_statevector.getData(),
-                                             this->_statevector.getLength());
-        return std::real(expected_value);
+        switch (expval_funcs_[operation]) {
+        case ExpValFunc::Identity:
+            return 1.0;
+        case ExpValFunc::PauliX:
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += std::real(std::conj(arr[i0]) * arr[i1]);
+                expected_value += std::real(std::conj(arr[i1]) * arr[i0]);
+            };
+            break;
+        case ExpValFunc::PauliY:
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += std::imag(std::conj(arr[i0]) * arr[i1]);
+                expected_value -= std::imag(std::conj(arr[i1]) * arr[i0]);
+            };
+            break;
+        case ExpValFunc::PauliZ:
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
+                expected_value += std::real(std::conj(arr[i0]) * arr[i0]);
+                expected_value -= std::real(std::conj(arr[i1]) * arr[i1]);
+            };
+            break;
+        case ExpValFunc::Hadamard:
+            core_function = [](const std::complex<PrecisionT> *arr,
+                               const std::size_t i0, const std::size_t i1,
+                               PrecisionT &expected_value) {
+                const std::complex<PrecisionT> v0 = arr[i0];
+                const std::complex<PrecisionT> v1 = arr[i1];
+
+                expected_value +=
+                    M_SQRT1_2 * std::real(std::conj(arr[i0]) * (v0 + v1) +
+                                          std::conj(arr[i1]) * (v0 - v1));
+            };
+            break;
+        default:
+            PL_ABORT(
+                std::string("Expval does not exist for named observable ") +
+                operation);
+            break;
+        }
+        applyExpVal1<PrecisionT, FuncT>(arr_data, num_qubits, wires,
+                                        core_function, expected_value);
+        return expected_value;
     };
 
     /**
@@ -612,6 +696,12 @@ class Measurements final
     }
 
   private:
+    std::unordered_map<std::string, ExpValFunc> expval_funcs_ = {
+        {"Identity", ExpValFunc::Identity},
+        {"PauliX", ExpValFunc::PauliX},
+        {"PauliY", ExpValFunc::PauliY},
+        {"PauliZ", ExpValFunc::PauliZ},
+        {"Hadamard", ExpValFunc::Hadamard}};
     /**
      * @brief Support function that calculates <bra|obs|ket> to obtain the
      * observable's expectation value.
