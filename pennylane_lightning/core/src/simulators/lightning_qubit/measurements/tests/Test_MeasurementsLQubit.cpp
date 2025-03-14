@@ -97,6 +97,26 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         CHECK_THAT(exp_values, Catch::Approx(exp_values_ref).margin(1e-6));
     }
 
+    // For the following tests, the results are generated using the following
+    // Pennylane python script:
+    /*  n_wires = 6
+        op_wires = 2
+        wires = [0]
+        size = 2**op_wires
+        dev = qml.device("default.qubit", wires=n_wires)
+
+        @qml.qnode(dev)
+        def circ():
+            phase = 0.7
+            for i in range(n_wires):
+                qml.RX(phase, wires=i)
+                qml.RY(phase, wires=i)
+                phase -=0.2
+            return qml.expval(qml.Op(wires))
+
+        print(circ())
+    */
+
     SECTION("Testing list of operators defined by its name:") {
         std::vector<PrecisionT> exp_values;
         std::vector<PrecisionT> exp_values_ref;

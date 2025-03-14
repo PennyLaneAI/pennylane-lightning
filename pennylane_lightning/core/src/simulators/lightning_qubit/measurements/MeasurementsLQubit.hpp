@@ -267,9 +267,9 @@ class Measurements final
         const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
         const std::size_t num_qubits = this->_statevector.getNumQubits();
 
-        using FuncT = std::function<void(
-            const std::complex<PrecisionT> *, const std::size_t,
-            const std::size_t, PrecisionT &)>;
+        using FuncT = std::function<void(const std::complex<PrecisionT> *,
+                                         const std::size_t, const std::size_t,
+                                         PrecisionT &)>;
         FuncT core_function;
 
         switch (expval_funcs_[operation]) {
@@ -317,8 +317,8 @@ class Measurements final
                 operation);
             break;
         }
-        applyExpVal1<PrecisionT, FuncT>(
-            arr_data, num_qubits, wires, core_function, expected_value);
+        applyExpVal1<PrecisionT, FuncT>(arr_data, num_qubits, wires,
+                                        core_function, expected_value);
         return expected_value;
     };
 
@@ -698,12 +698,11 @@ class Measurements final
 
   private:
     std::unordered_map<std::string, ExpValFunc> expval_funcs_ = {
-        {"Identity" , ExpValFunc::Identity},
-        {"PauliX" , ExpValFunc::PauliX},
-        {"PauliY" , ExpValFunc::PauliY},
-        {"PauliZ" , ExpValFunc::PauliZ},
-        {"Hadamard" , ExpValFunc::Hadamard}
-    };
+        {"Identity", ExpValFunc::Identity},
+        {"PauliX", ExpValFunc::PauliX},
+        {"PauliY", ExpValFunc::PauliY},
+        {"PauliZ", ExpValFunc::PauliZ},
+        {"Hadamard", ExpValFunc::Hadamard}};
     /**
      * @brief Support function that calculates <bra|obs|ket> to obtain the
      * observable's expectation value.
