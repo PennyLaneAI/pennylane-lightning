@@ -43,7 +43,6 @@ namespace Pennylane::LightningQubit::Measures {
 inline auto wires2Parity(std::size_t num_qubits,
                          const std::vector<std::size_t> &wires)
     -> std::pair<std::vector<std::size_t>, std::vector<std::size_t>> {
-
     std::vector<std::size_t> rev_wires_(wires.size());
     std::vector<std::size_t> rev_wire_shifts_(wires.size());
     for (std::size_t k = 0; k < wires.size(); k++) {
@@ -112,7 +111,6 @@ void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
                      const std::vector<size_t> &wires,
                      const std::vector<std::complex<ParamT>> &matrix,
                      ParamT &expected_value) {
-
     const std::size_t rev_wire0 = num_qubits - wires[1] - 1;
     const std::size_t rev_wire1 = num_qubits - wires[0] - 1;
     const std::size_t rev_wire0_shift = static_cast<std::size_t>(1U)

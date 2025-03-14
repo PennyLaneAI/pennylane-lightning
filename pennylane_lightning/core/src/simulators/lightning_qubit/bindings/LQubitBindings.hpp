@@ -263,7 +263,8 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_c &matrix,
                const std::vector<std::size_t> &wires) {
-                const std::size_t matrix_size = Pennylane::Util::exp2(2 * wires.size());
+                const std::size_t matrix_size =
+                    Pennylane::Util::exp2(2 * wires.size());
                 auto matrix_data = static_cast<std::complex<PrecisionT> *>(
                     matrix.request().ptr);
                 std::vector<std::complex<PrecisionT>> matrix_v{
