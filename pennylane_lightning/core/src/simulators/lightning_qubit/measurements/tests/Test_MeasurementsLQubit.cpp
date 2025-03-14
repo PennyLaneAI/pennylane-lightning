@@ -56,12 +56,29 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
     // This object attaches to the statevector allowing several measures.
     Measurements<StateVectorT> Measurer(statevector);
 
+    SECTION("Test expval with matrix of wrong size:") {
+        std::vector<ComplexT> matrix = {0, 1}; // Should be 2x2
+        std::vector<std::size_t> wires = {0, 1};
+
+        REQUIRE_THROWS_WITH(
+            Measurer.expval(matrix, wires),
+            Catch::Contains("The size of matrix does not match"));
+    }
+
     SECTION("Testing single operation defined by a matrix:") {
         std::vector<ComplexT> PauliX = {0, 1, 1, 0};
         std::vector<std::size_t> wires_single = {0};
         PrecisionT exp_value = Measurer.expval(PauliX, wires_single);
         PrecisionT exp_values_ref = 0.492725;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
+    }
+
+    SECTION("Test expval with wrong named observable:") {
+        std::vector<std::size_t> wires = {0, 1};
+
+        REQUIRE_THROWS_WITH(
+            Measurer.expval("huh", wires),
+            Catch::Contains("Expval does not exist for named observable"));
     }
 
     SECTION("Testing single operation defined by its name:") {

@@ -28,7 +28,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "BitUtil.hpp"
 #include "ExpValFunc.hpp"
 #include "LinearAlgebra.hpp"
 #include "MeasurementKernels.hpp"
