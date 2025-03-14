@@ -300,34 +300,6 @@ class LightningQubit(LightningBase):
         self.LightningMeasurements = LightningMeasurements
         self.LightningAdjointJacobian = LightningAdjointJacobian
 
-    def _setup_execution_config(self, config):
-        """
-        Update the execution config with choices for how the device should be used and the device options.
-        """
-        updated_values = {}
-        if config.gradient_method == "best":
-            updated_values["gradient_method"] = "adjoint"
-        if config.use_device_jacobian_product is None:
-            updated_values["use_device_jacobian_product"] = config.gradient_method in (
-                "best",
-                "adjoint",
-            )
-        if config.use_device_gradient is None:
-            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
-        if (
-            config.use_device_gradient
-            or updated_values.get("use_device_gradient", False)
-            and config.grad_on_execution is None
-        ):
-            updated_values["grad_on_execution"] = True
-
-        new_device_options = dict(config.device_options)
-        for option in self._device_options:
-            if option not in new_device_options:
-                new_device_options[option] = getattr(self, f"_{option}", None)
-
-        return replace(config, **updated_values, device_options=new_device_options)
-
     def __setup_execution_config_capture(self, config: ExecutionConfig) -> ExecutionConfig:
         """
         Updates the execution config with choices for how the device should be used and the device options
@@ -381,6 +353,34 @@ class LightningQubit(LightningBase):
         if mcm_method is None:
             mcm_updated_values["mcm_method"] = "deferred"
         updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
+
+        return replace(config, **updated_values, device_options=new_device_options)
+
+    def _setup_execution_config(self, config):
+        """
+        Update the execution config with choices for how the device should be used and the device options.
+        """
+        updated_values = {}
+        if config.gradient_method == "best":
+            updated_values["gradient_method"] = "adjoint"
+        if config.use_device_jacobian_product is None:
+            updated_values["use_device_jacobian_product"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
+        if config.use_device_gradient is None:
+            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
+        if (
+            config.use_device_gradient
+            or updated_values.get("use_device_gradient", False)
+            and config.grad_on_execution is None
+        ):
+            updated_values["grad_on_execution"] = True
+
+        new_device_options = dict(config.device_options)
+        for option in self._device_options:
+            if option not in new_device_options:
+                new_device_options[option] = getattr(self, f"_{option}", None)
 
         return replace(config, **updated_values, device_options=new_device_options)
 
