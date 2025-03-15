@@ -612,17 +612,26 @@ class LightningQubit(LightningBase):
                 return jax.core.ShapedArray(s, dtype_map[dtype])
             return var.aval
 
+        def flatten_shaped_array(aval):
+            """Flatten a ShapedArray into a list of scalars."""
+            if aval.shape == ():
+                return [aval]
+            num_elements = np.prod(aval.shape, dtype=int)
+            return [jax.core.ShapedArray((), aval.dtype) for _ in range(num_elements)]
+
         def shape_jac(shape_res):
             """Get the shape of the jacobian."""
 
             jaxpr_train_args = jaxpr.invars + jaxpr.constvars
 
-            if len(jaxpr_train_args) == 1:
-                return shape_res
-            if len(jaxpr.outvars) == 1:
-                return [shape(var) for var in jaxpr_train_args]
+            flattened_inputs = [
+                fa for var in jaxpr_train_args for fa in flatten_shaped_array(var.aval)
+            ]
 
-            return [[shape(var) for var in jaxpr_train_args] for _ in shape_res]
+            if len(jaxpr.outvars) == 1:
+                return flattened_inputs
+
+            return [flattened_inputs for _ in shape_res]
 
         def _to_jax(result: qml.typing.ResultBatch) -> qml.typing.ResultBatch:
             """Converts an arbitrary result batch to one with jax arrays.
@@ -667,7 +676,14 @@ class LightningQubit(LightningBase):
 
         shapes_res = [shape(var) for var in jaxpr.outvars]
         shapes_jac = shape_jac(shapes_res)
+
+        print(f"shapes_res: {shapes_res}")
+        print(f"shapes_jac: {shapes_jac}")
+
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
+
+        print(f"results: {results}")
+        print(f"jacobians: {jacobians}")
 
         if len(jaxpr.outvars) == 1:
 
