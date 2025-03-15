@@ -25,7 +25,9 @@ jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
 
 if device_name == "lightning.tensor":
-    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
+    pytest.skip(
+        "Skipping tests for the LightningTensor class.", allow_module_level=True
+    )
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -77,7 +79,9 @@ class TestErrors:
             NotImplementedError,
             match="tangents must not contain jax.interpreter.ad.Zero objects",
         ):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(
+                jaxpr.jaxpr, args, tangents
+            )
 
     def test_mismatch_args_tangents(self):
         """Test that the jaxpr_jvp method raises an error if the number of arguments and tangents do not match."""
@@ -94,7 +98,13 @@ class TestErrors:
         with pytest.raises(
             NotImplementedError, match="The number of arguments and tangents must match"
         ):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(
+                jaxpr.jaxpr, args, tangents
+            )
+
+
+class TestCorrectResults:
+    """Test the correctness of the results and jvp for various circuits."""
 
     @pytest.mark.parametrize("use_jit", (False, True))
     def test_basic_circuit(self, use_jit):
@@ -169,3 +179,47 @@ class TestErrors:
         assert qml.math.allclose(dres[0], 0)
         assert qml.math.allclose(dres[1], 2.0 * -jax.numpy.cos(x))
         assert qml.math.allclose(dres[2], 2.0 * -jax.numpy.sin(x))
+
+    def test_classical_preprocessing(self):
+        """Test that we can perform classical preprocessing of variables."""
+
+        def f(x):
+            y = x**2
+            qml.RX(y[0], 0)
+            qml.RX(y[1], 1)
+            return qml.expval(qml.Z(0) @ qml.Z(1))
+
+        x = jax.numpy.array([1.5, 2.5])
+        dx = jax.numpy.array([2.0, 3.0])
+        jaxpr = jax.make_jaxpr(f)(x)
+
+        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+
+        [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
+
+        expected = jax.numpy.cos(x[0] ** 2) * jax.numpy.cos(x[1] ** 2)
+        assert qml.math.allclose(res, expected)
+        dexpected = (
+            -jax.numpy.sin(x[0] ** 2) * 2 * x[0] * dx[0] * jax.numpy.cos(x[1] ** 2)
+            + jax.numpy.cos(x[0] ** 2) * -jax.numpy.sin(x[1] ** 2) * 2 * x[1] * dx[1]
+        )
+        assert qml.math.allclose(dres, dexpected)
+
+    def test_jaxpr_consts(self):
+        """Test that we can execute jaxpr with consts."""
+
+        def f():
+            x = jax.numpy.array([1.0])
+            qml.RX(x[0], 0)
+            return qml.expval(qml.Z(0))
+
+        jaxpr = jax.make_jaxpr(f)()
+
+        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+
+        const = jax.numpy.array([1.2])
+        dconst = jax.numpy.array([0.25])
+        [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (const,), (dconst,))
+
+        assert qml.math.allclose(res, jax.numpy.cos(1.2))
+        assert qml.math.allclose(dres, dconst[0] * -jax.numpy.sin(1.2))

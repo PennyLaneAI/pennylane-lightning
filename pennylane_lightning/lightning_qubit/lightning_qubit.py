@@ -93,7 +93,9 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
+    return stopping_condition(op) or isinstance(
+        op, (MidMeasureMP, qml.ops.op_math.Conditional)
+    )
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -350,7 +352,9 @@ class LightningQubit(LightningBase):
             num_wires = len(self.wires)
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
-            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype)
+            self._statevector = self.LightningStateVector(
+                num_wires=num_wires, dtype=self._c_dtype
+            )
 
         return circuit
 
@@ -377,7 +381,9 @@ class LightningQubit(LightningBase):
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(validate_observables, accepted_observables, name=self.name)
+        program.add_transform(
+            validate_observables, accepted_observables, name=self.name
+        )
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
@@ -482,7 +488,9 @@ class LightningQubit(LightningBase):
         """
         if mcmc is None:
             mcmc = {}
-        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
+        if circuit.shots and (
+            any(isinstance(op, MidMeasureMP) for op in circuit.operations)
+        ):
             results = []
             aux_circ = qml.tape.QuantumScript(
                 circuit.operations,
@@ -507,7 +515,9 @@ class LightningQubit(LightningBase):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(
+            circuit
+        )
 
     @staticmethod
     def get_c_interface():
@@ -549,7 +559,9 @@ class LightningQubit(LightningBase):
                 lib_location = (Path(path) / lib_name).as_posix()
                 return "LightningSimulator", lib_location
 
-        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
+        raise RuntimeError(
+            "'LightningSimulator' shared library not found"
+        )  # pragma: no cover
 
     def jaxpr_jvp(
         self,
@@ -559,14 +571,14 @@ class LightningQubit(LightningBase):
         execution_config=None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
 
+        # pylint: disable=import-outside-toplevel
         import jax
-        import jax.numpy as jnp
         from pennylane.capture.primitives import AbstractMeasurement
 
         if self.wires is None:
-            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
-
-        print(f"execution_config: {execution_config}")
+            raise NotImplementedError(
+                "Wires must be specified for integration with plxpr capture."
+            )
 
         gradient_method = getattr(execution_config, "gradient_method", "adjoint")
 
@@ -590,20 +602,27 @@ class LightningQubit(LightningBase):
             }
 
         def shape(var):
+            """Get the shape of a variable in the jaxpr."""
+
             if isinstance(var.aval, AbstractMeasurement):
                 shots = self.shots.total_shots
-                s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
+                s, dtype = var.aval.abstract_eval(
+                    num_device_wires=len(self.wires), shots=shots
+                )
                 return jax.core.ShapedArray(s, dtype_map[dtype])
             return var.aval
 
         def shape_jac(shape_res):
+            """Get the shape of the jacobian."""
 
-            if len(jaxpr.invars) == 1:
+            jaxpr_train_args = jaxpr.invars + jaxpr.constvars
+
+            if len(jaxpr_train_args) == 1:
                 return shape_res
             if len(jaxpr.outvars) == 1:
-                return [shape(var) for var in jaxpr.invars]
+                return [shape(var) for var in jaxpr_train_args]
 
-            return [[shape(var) for var in jaxpr.invars] for _ in shape_res]
+            return [[shape(var) for var in jaxpr_train_args] for _ in shape_res]
 
         def _to_jax(result: qml.typing.ResultBatch) -> qml.typing.ResultBatch:
             """Converts an arbitrary result batch to one with jax arrays.
@@ -625,7 +644,9 @@ class LightningQubit(LightningBase):
 
         # This is a limitation of the current implementation
         if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
-            raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
+            raise NotImplementedError(
+                "tangents must not contain jax.interpreter.ad.Zero objects"
+            )
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=self._c_dtype
@@ -633,16 +654,19 @@ class LightningQubit(LightningBase):
 
         def wrapper(*args):
 
-            tape = qml.tape.plxpr_to_tape(jaxpr, jaxpr.constvars, *args)
-            results, jacobians = _to_jax(self.simulate_and_jacobian(tape, state=self._statevector))
-            print(f"results: {results}")
-            print(f"jacobians: {jacobians}")
+            # args is supposed to contain the jaxpr.constvars + jaxpr.invars,
+            # all of which are trainable parameters
+            const_args = args[: len(jaxpr.constvars)]
+            non_const_args = args[len(jaxpr.constvars) :]
+
+            tape = qml.tape.plxpr_to_tape(jaxpr, const_args, *non_const_args)
+            results, jacobians = _to_jax(
+                self.simulate_and_jacobian(tape, state=self._statevector)
+            )
             return results, jacobians
 
         shapes_res = [shape(var) for var in jaxpr.outvars]
-        print(f"shapes_res: {shapes_res}")
         shapes_jac = shape_jac(shapes_res)
-        print(f"shapes_jac: {shapes_jac}")
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
 
         if len(jaxpr.outvars) == 1:
@@ -652,10 +676,6 @@ class LightningQubit(LightningBase):
         else:
 
             jvps = _to_jax(qml.gradients.compute_jvp_multi(tangents, jacobians))
-
-        print(f"results: {results}")
-        print(f"jacobians: {jacobians}")
-        print(f"jvps: {jvps}")
 
         return results, jvps
 
