@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module tests the eval_jaxpr method.
+This module tests the jaxpr_jvp method of the LightningQubit device.
 """
 from functools import partial
 
@@ -96,6 +96,21 @@ class TestErrors:
         ):
             qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
+    def test_only_measurements(self):
+        """Test that the jaxpr_jvp method raises an error if the circuit does not return a measurement."""
+
+        def circuit(x):
+            qml.RX(x, 0)
+            return x
+
+        args = (0.5,)
+        jaxpr = jax.make_jaxpr(circuit)(*args)
+
+        with pytest.raises(
+            NotImplementedError, match="The circuit should return measurement"
+        ):
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+
 
 class TestCorrectResults:
     """Test the correctness of the results and jvp for various circuits."""
@@ -174,7 +189,7 @@ class TestCorrectResults:
         assert qml.math.allclose(dres[1], 2.0 * -jax.numpy.cos(x))
         assert qml.math.allclose(dres[2], 2.0 * -jax.numpy.sin(x))
 
-    def test_input_array_preprocessing(self):
+    def test_input_array(self):
         """Test that the input array is handled correctly."""
 
         def f(x):
@@ -216,3 +231,25 @@ class TestCorrectResults:
 
         assert qml.math.allclose(res, jax.numpy.cos(1.2))
         assert qml.math.allclose(dres, dconst[0] * -jax.numpy.sin(1.2))
+
+    def test_multiple_train_params(self):
+        """Test that we can differentiate multiple trainable parameters."""
+
+        def f(x, y, z):
+            qml.Rot(x, y, z, 0)
+            return qml.expval(qml.Z(0))
+        
+        jaxpr = jax.make_jaxpr(f)(0.5, 0.6, 0.7)
+
+        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+
+        x = (0.5, 0.6, 0.7)
+        dx = (0.5, 0.6, 0.7)
+
+        res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, x, dx)
+
+        expected = jax.numpy.array(0.8253356) 
+        assert qml.math.allclose(res, expected)
+
+        expected_dres = jax.numpy.array(-0.33878549)
+        assert qml.math.allclose(dres, expected_dres)

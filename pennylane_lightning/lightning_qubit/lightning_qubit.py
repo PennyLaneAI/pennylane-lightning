@@ -536,6 +536,9 @@ class LightningQubit(LightningBase):
         tangents: Sequence[TensorLike],
         execution_config=None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
+        
+        # TODO: The current implementation of this function is based on the conversion of the jaxpr to a PennyLane tape.
+        # This has very strict limitations and it is not the most efficient way to compute the jvp.
 
         # pylint: disable=import-outside-toplevel
         import jax
@@ -565,7 +568,7 @@ class LightningQubit(LightningBase):
                 shots = self.shots.total_shots
                 s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
                 return jax.core.ShapedArray(s, dtype_map[dtype])
-            return var.aval
+            raise NotImplementedError("The circuit should return measurement")
 
         def flatten_shaped_array(aval):
             """Flatten a ShapedArray into a list of scalars."""
@@ -610,15 +613,15 @@ class LightningQubit(LightningBase):
         shapes_jac = shape_jac(shapes_res)
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
 
-        if len(jaxpr.outvars) == 1:
-
-            if (
+        if (
                 isinstance(tangents, tuple)
                 and len(tangents) == 1
                 and isinstance(tangents[0], jax.numpy.ndarray)
                 and not qml.math.is_abstract(tangents[0])
             ):
                 tangents = tangents[0]
+
+        if len(jaxpr.outvars) == 1:
 
             jvps = [qml.gradients.compute_jvp_single(tangents, jacobians)]
 
