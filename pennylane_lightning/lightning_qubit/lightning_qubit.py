@@ -601,11 +601,28 @@ class LightningQubit(LightningBase):
         )
 
         def wrapper(*args):
-            # args is supposed to contain the jaxpr.constvars + jaxpr.invars,
-            # all of which are trainable parameters
+            """
+        Evaluate a jaxpr by converting it into a quantum tape, ensuring the provided
+        parameters match the tape's parameters, and then simulating the tape to compute
+        both the result and the Jacobian.
+    
+        The *args should contain the concatenation of jaxpr.constvars and jaxpr.invars,
+        which are assumed to represent the trainable parameters.
+        """
             const_args = args[: len(jaxpr.constvars)]
             non_const_args = args[len(jaxpr.constvars) :]
+
             tape = qml.tape.plxpr_to_tape(jaxpr, const_args, *non_const_args)
+            tape_params = tape.get_parameters()
+
+            flat_args, _ = jax.tree_util.tree_flatten(args)
+            flat_args = [jax.numpy.array(arg) for arg in flat_args]
+
+            if not qml.math.allclose(flat_args, tape_params):
+                raise NotImplementedError(
+            "The parameters of the quantum tape do not match the provided arguments."
+        )
+            
             results, jacobians = self.simulate_and_jacobian(tape, state=self._statevector)
             return results, jacobians
 
