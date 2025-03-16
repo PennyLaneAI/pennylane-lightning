@@ -93,9 +93,7 @@ def stopping_condition(op: Operator) -> bool:
 def stopping_condition_shots(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.qubit``
     with finite shots."""
-    return stopping_condition(op) or isinstance(
-        op, (MidMeasureMP, qml.ops.op_math.Conditional)
-    )
+    return stopping_condition(op) or isinstance(op, (MidMeasureMP, qml.ops.op_math.Conditional))
 
 
 def accepted_observables(obs: Operator) -> bool:
@@ -352,9 +350,7 @@ class LightningQubit(LightningBase):
             num_wires = len(self.wires)
 
         if (self._statevector is None) or (self._statevector.num_wires != num_wires):
-            self._statevector = self.LightningStateVector(
-                num_wires=num_wires, dtype=self._c_dtype
-            )
+            self._statevector = self.LightningStateVector(num_wires=num_wires, dtype=self._c_dtype)
 
         return circuit
 
@@ -381,9 +377,7 @@ class LightningQubit(LightningBase):
         program = TransformProgram()
 
         program.add_transform(validate_measurements, name=self.name)
-        program.add_transform(
-            validate_observables, accepted_observables, name=self.name
-        )
+        program.add_transform(validate_observables, accepted_observables, name=self.name)
         program.add_transform(validate_device_wires, self.wires, name=self.name)
         program.add_transform(
             mid_circuit_measurements, device=self, mcm_config=exec_config.mcm_config
@@ -488,9 +482,7 @@ class LightningQubit(LightningBase):
         """
         if mcmc is None:
             mcmc = {}
-        if circuit.shots and (
-            any(isinstance(op, MidMeasureMP) for op in circuit.operations)
-        ):
+        if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
             results = []
             aux_circ = qml.tape.QuantumScript(
                 circuit.operations,
@@ -515,9 +507,7 @@ class LightningQubit(LightningBase):
 
         state.reset_state()
         final_state = state.get_final_state(circuit)
-        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(
-            circuit
-        )
+        return self.LightningMeasurements(final_state, **mcmc).measure_final_state(circuit)
 
     @staticmethod
     def get_c_interface():
@@ -559,9 +549,7 @@ class LightningQubit(LightningBase):
                 lib_location = (Path(path) / lib_name).as_posix()
                 return "LightningSimulator", lib_location
 
-        raise RuntimeError(
-            "'LightningSimulator' shared library not found"
-        )  # pragma: no cover
+        raise RuntimeError("'LightningSimulator' shared library not found")  # pragma: no cover
 
     def jaxpr_jvp(
         self,
@@ -576,9 +564,7 @@ class LightningQubit(LightningBase):
         from pennylane.capture.primitives import AbstractMeasurement
 
         if self.wires is None:
-            raise NotImplementedError(
-                "Wires must be specified for integration with plxpr capture."
-            )
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
         gradient_method = getattr(execution_config, "gradient_method", "adjoint")
 
@@ -588,27 +574,18 @@ class LightningQubit(LightningBase):
                 f"LightningQubit does not support gradient_method={gradient_method} for jaxpr_jvp."
             )
 
-        if jax.config.jax_enable_x64:  # pylint: disable=no-member
-            dtype_map = {
-                float: jax.numpy.float64,
-                int: jax.numpy.int64,
-                complex: jax.numpy.complex128,
-            }
-        else:
-            dtype_map = {
-                float: jax.numpy.float32,
-                int: jax.numpy.int32,
-                complex: jax.numpy.complex64,
-            }
+        # pylint: disable=no-member
+        dtype_map = {
+            float: (jax.numpy.float64 if jax.config.jax_enable_x64 else jax.numpy.float32),
+            int: jax.numpy.int64 if jax.config.jax_enable_x64 else jax.numpy.int32,
+            complex: (jax.numpy.complex128 if jax.config.jax_enable_x64 else jax.numpy.complex64),
+        }
 
         def shape(var):
             """Get the shape of a variable in the jaxpr."""
-
             if isinstance(var.aval, AbstractMeasurement):
                 shots = self.shots.total_shots
-                s, dtype = var.aval.abstract_eval(
-                    num_device_wires=len(self.wires), shots=shots
-                )
+                s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
                 return jax.core.ShapedArray(s, dtype_map[dtype])
             return var.aval
 
@@ -621,31 +598,14 @@ class LightningQubit(LightningBase):
 
         def shape_jac(shape_res):
             """Get the shape of the jacobian."""
-
             jaxpr_train_args = jaxpr.invars + jaxpr.constvars
-
             flattened_inputs = [
                 fa for var in jaxpr_train_args for fa in flatten_shaped_array(var.aval)
             ]
-
             if len(jaxpr.outvars) == 1:
                 return flattened_inputs
 
             return [flattened_inputs for _ in shape_res]
-
-        def _to_jax(result: qml.typing.ResultBatch) -> qml.typing.ResultBatch:
-            """Converts an arbitrary result batch to one with jax arrays.
-            Args:
-                result (ResultBatch): a nested structure of lists, tuples, and numpy arrays
-            Returns:
-                ResultBatch: a nested structure of tuples, and jax arrays
-
-            """
-            if isinstance(result, dict):
-                return {key: _to_jax(value) for key, value in result.items()}
-            if isinstance(result, (list, tuple)):
-                return tuple(_to_jax(r) for r in result)
-            return jax.numpy.array(result)
 
         # This is a limitation of the current implementation
         if len(args) != len(tangents):
@@ -653,45 +613,40 @@ class LightningQubit(LightningBase):
 
         # This is a limitation of the current implementation
         if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
-            raise NotImplementedError(
-                "tangents must not contain jax.interpreter.ad.Zero objects"
-            )
+            raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
 
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=self._c_dtype
         )
 
         def wrapper(*args):
-
             # args is supposed to contain the jaxpr.constvars + jaxpr.invars,
             # all of which are trainable parameters
             const_args = args[: len(jaxpr.constvars)]
             non_const_args = args[len(jaxpr.constvars) :]
-
             tape = qml.tape.plxpr_to_tape(jaxpr, const_args, *non_const_args)
-            results, jacobians = _to_jax(
-                self.simulate_and_jacobian(tape, state=self._statevector)
-            )
+            results, jacobians = self.simulate_and_jacobian(tape, state=self._statevector)
             return results, jacobians
 
         shapes_res = [shape(var) for var in jaxpr.outvars]
         shapes_jac = shape_jac(shapes_res)
-
-        print(f"shapes_res: {shapes_res}")
-        print(f"shapes_jac: {shapes_jac}")
-
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
-
-        print(f"results: {results}")
-        print(f"jacobians: {jacobians}")
 
         if len(jaxpr.outvars) == 1:
 
-            jvps = [_to_jax(qml.gradients.compute_jvp_single(tangents, jacobians))]
+            if (
+                isinstance(tangents, tuple)
+                and len(tangents) == 1
+                and isinstance(tangents[0], jax.numpy.ndarray)
+                and not qml.math.is_abstract(tangents[0])
+            ):
+                tangents = tangents[0]
+
+            jvps = [qml.gradients.compute_jvp_single(tangents, jacobians)]
 
         else:
 
-            jvps = _to_jax(qml.gradients.compute_jvp_multi(tangents, jacobians))
+            jvps = qml.gradients.compute_jvp_multi(tangents, jacobians)
 
         return results, jvps
 

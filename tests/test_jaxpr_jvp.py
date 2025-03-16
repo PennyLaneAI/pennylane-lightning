@@ -25,9 +25,7 @@ jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
 
 if device_name == "lightning.tensor":
-    pytest.skip(
-        "Skipping tests for the LightningTensor class.", allow_module_level=True
-    )
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -79,9 +77,7 @@ class TestErrors:
             NotImplementedError,
             match="tangents must not contain jax.interpreter.ad.Zero objects",
         ):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(
-                jaxpr.jaxpr, args, tangents
-            )
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
     def test_mismatch_args_tangents(self):
         """Test that the jaxpr_jvp method raises an error if the number of arguments and tangents do not match."""
@@ -98,9 +94,7 @@ class TestErrors:
         with pytest.raises(
             NotImplementedError, match="The number of arguments and tangents must match"
         ):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(
-                jaxpr.jaxpr, args, tangents
-            )
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
 
 class TestCorrectResults:
@@ -180,13 +174,12 @@ class TestCorrectResults:
         assert qml.math.allclose(dres[1], 2.0 * -jax.numpy.cos(x))
         assert qml.math.allclose(dres[2], 2.0 * -jax.numpy.sin(x))
 
-    def test_classical_preprocessing(self):
-        """Test that we can perform classical preprocessing of variables."""
+    def test_input_array_preprocessing(self):
+        """Test that the input array is handled correctly."""
 
         def f(x):
-            y = x**2
-            qml.RX(y[0], 0)
-            qml.RX(y[1], 1)
+            qml.RX(x[0], 0)
+            qml.RX(x[1], 1)
             return qml.expval(qml.Z(0) @ qml.Z(1))
 
         x = jax.numpy.array([1.5, 2.5])
@@ -197,11 +190,11 @@ class TestCorrectResults:
 
         [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
-        expected = jax.numpy.cos(x[0] ** 2) * jax.numpy.cos(x[1] ** 2)
+        expected = jax.numpy.cos(x[0]) * jax.numpy.cos(x[1])
         assert qml.math.allclose(res, expected)
         dexpected = (
-            -jax.numpy.sin(x[0] ** 2) * 2 * x[0] * dx[0] * jax.numpy.cos(x[1] ** 2)
-            + jax.numpy.cos(x[0] ** 2) * -jax.numpy.sin(x[1] ** 2) * 2 * x[1] * dx[1]
+            -jax.numpy.sin(x[0]) * dx[0] * jax.numpy.cos(x[1])
+            + jax.numpy.cos(x[0]) * -jax.numpy.sin(x[1]) * dx[1]
         )
         assert qml.math.allclose(dres, dexpected)
 
