@@ -248,8 +248,8 @@ class TestCorrectResults:
 
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, x, dx)
 
-        expected = jax.numpy.array(0.8253356) 
+        expected = jax.numpy.cos(x[1])
         assert qml.math.allclose(res, expected)
 
-        expected_dres = jax.numpy.array(-0.33878549)
+        expected_dres = x[1] * -jax.numpy.sin(x[1])
         assert qml.math.allclose(dres, expected_dres)
