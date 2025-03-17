@@ -556,3 +556,123 @@ class LightningBase(Device):
 
         shapes = [shape(var) for var in jaxpr.outvars]
         return jax.pure_callback(evaluator, shapes, consts, *args, vectorized=False)
+
+    def jaxpr_jvp(
+        self,
+        jaxpr,
+        args: Sequence[TensorLike],
+        tangents: Sequence[TensorLike],
+        execution_config: Optional[ExecutionConfig] = None,
+    ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
+
+        # TODO: The current implementation of this function is based on the conversion of the jaxpr to a PennyLane tape.
+        # This has very strict limitations.
+
+        # pylint: disable=import-outside-toplevel
+        import jax
+        from pennylane.capture.primitives import AbstractMeasurement
+
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
+
+        gradient_method = getattr(execution_config, "gradient_method", "adjoint")
+
+        if gradient_method != "adjoint":
+
+            raise NotImplementedError(
+                f"LightningQubit does not support gradient_method={gradient_method} for jaxpr_jvp."
+            )
+
+        # pylint: disable=no-member
+        dtype_map = {
+            float: (jax.numpy.float64 if jax.config.jax_enable_x64 else jax.numpy.float32),
+            int: jax.numpy.int64 if jax.config.jax_enable_x64 else jax.numpy.int32,
+            complex: (jax.numpy.complex128 if jax.config.jax_enable_x64 else jax.numpy.complex64),
+        }
+
+        def shape(var):
+            """Get the shape of a variable in the jaxpr."""
+            if isinstance(var.aval, AbstractMeasurement):
+                shots = self.shots.total_shots
+                s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
+                return jax.core.ShapedArray(s, dtype_map[dtype])
+            raise NotImplementedError("The circuit should return measurement")
+
+        def flatten_shaped_array(aval):
+            """Flatten a ShapedArray into a list of scalars."""
+            if aval.shape == ():
+                return [aval]
+            num_elements = np.prod(aval.shape, dtype=int)
+            return [jax.core.ShapedArray((), aval.dtype) for _ in range(num_elements)]
+
+        def shape_jac(shape_res):
+            """Get the shape of the jacobian."""
+            jaxpr_train_args = jaxpr.invars + jaxpr.constvars
+            flattened_inputs = [
+                fa for var in jaxpr_train_args for fa in flatten_shaped_array(var.aval)
+            ]
+            if len(jaxpr.outvars) == 1:
+                return flattened_inputs
+
+            return [flattened_inputs for _ in shape_res]
+
+        if len(args) != len(tangents):
+            raise ValueError("The number of arguments and tangents must match")
+
+        # This is a limitation of the current implementation
+        if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
+            raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
+
+        def wrapper(*args):
+            """
+            Evaluate a jaxpr by converting it into a quantum tape, ensuring the provided
+            parameters match the tape's parameters, and then simulating the tape to compute
+            both the result and the Jacobian.
+
+            The *args should contain the concatenation of jaxpr.constvars and jaxpr.invars,
+            which are assumed to represent the trainable parameters.
+            """
+            const_args = args[: len(jaxpr.constvars)]
+            non_const_args = args[len(jaxpr.constvars) :]
+
+            tape = qml.tape.plxpr_to_tape(jaxpr, const_args, *non_const_args)
+            tape_params = tape.get_parameters()
+
+            flat_args, _ = jax.tree_util.tree_flatten(args)
+            len_train_inputs = sum(jax.numpy.size(p) for p in flat_args)
+
+            if not qml.math.allclose(flat_args, tape_params) or len_train_inputs != len(
+                tape.trainable_params
+            ):
+                raise NotImplementedError(
+                    "The parameters of the quantum tape do not match the provided arguments."
+                )
+
+            results, jacobians = self.simulate_and_jacobian(tape, state=self._statevector)
+            return results, jacobians
+
+        shapes_res = [shape(var) for var in jaxpr.outvars]
+        shapes_jac = shape_jac(shapes_res)
+        results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
+
+        if (
+            isinstance(tangents, tuple)
+            and len(tangents) == 1
+            and isinstance(tangents[0], jax.numpy.ndarray)
+            and not qml.math.is_abstract(tangents[0])
+        ):
+            tangents = tangents[0]
+
+        if len(jaxpr.outvars) == 1:
+
+            jvps = [qml.gradients.compute_jvp_single(tangents, jacobians)]
+
+        else:
+
+            jvps = qml.gradients.compute_jvp_multi(tangents, jacobians)
+
+        return results, jvps

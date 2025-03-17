@@ -91,9 +91,7 @@ class TestErrors:
         tangents = (0.5, 0.5)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        with pytest.raises(
-            NotImplementedError, match="The number of arguments and tangents must match"
-        ):
+        with pytest.raises(ValueError, match="The number of arguments and tangents must match"):
             qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
     def test_only_measurements(self):
