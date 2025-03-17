@@ -24,6 +24,8 @@
 #include <complex>
 #include <unordered_map>
 
+#include <iostream>
+
 #include "CPUMemoryModel.hpp"
 #include "GateOperation.hpp"
 #include "KernelMap.hpp"
@@ -70,19 +72,25 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     using GeneratorKernelMap =
         std::unordered_map<GeneratorOperation, KernelType>;
     using MatrixKernelMap = std::unordered_map<MatrixOperation, KernelType>;
+    using SparseMatrixKernelMap =
+        std::unordered_map<SparseMatrixOperation, KernelType>;
     using ControlledGateKernelMap =
         std::unordered_map<ControlledGateOperation, KernelType>;
     using ControlledGeneratorKernelMap =
         std::unordered_map<ControlledGeneratorOperation, KernelType>;
     using ControlledMatrixKernelMap =
         std::unordered_map<ControlledMatrixOperation, KernelType>;
+    using ControlledSparseMatrixKernelMap =
+        std::unordered_map<ControlledSparseMatrixOperation, KernelType>;
 
     GateKernelMap kernel_for_gates_;
     GeneratorKernelMap kernel_for_generators_;
     MatrixKernelMap kernel_for_matrices_;
+    SparseMatrixKernelMap kernel_for_sparse_matrices_;
     ControlledGateKernelMap kernel_for_controlled_gates_;
     ControlledGeneratorKernelMap kernel_for_controlled_generators_;
     ControlledMatrixKernelMap kernel_for_controlled_matrices_;
+    ControlledSparseMatrixKernelMap kernel_for_controlled_sparse_matrices_;
 
     /**
      * @brief Internal function to set kernels for all operations depending on
@@ -104,6 +112,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         kernel_for_matrices_ =
             OperationKernelMap<MatrixOperation>::getInstance().getKernelMap(
                 num_qubits, threading, memory_model);
+        kernel_for_sparse_matrices_ =
+            OperationKernelMap<SparseMatrixOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
         kernel_for_controlled_gates_ =
             OperationKernelMap<ControlledGateOperation>::getInstance()
                 .getKernelMap(num_qubits, threading, memory_model);
@@ -112,6 +123,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                 .getKernelMap(num_qubits, threading, memory_model);
         kernel_for_controlled_matrices_ =
             OperationKernelMap<ControlledMatrixOperation>::getInstance()
+                .getKernelMap(num_qubits, threading, memory_model);
+        kernel_for_controlled_sparse_matrices_ =
+            OperationKernelMap<ControlledSparseMatrixOperation>::getInstance()
                 .getKernelMap(num_qubits, threading, memory_model);
     }
 
@@ -182,6 +196,28 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
     getKernelForControlledMatrix(ControlledMatrixOperation mat_op) const
         -> KernelType {
         return kernel_for_controlled_matrices_.at(mat_op);
+    }
+
+    /**
+     * @brief Get a kernel for a sparse matrix operation.
+     *
+     * @param mat_op sparse matrix operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto
+    getKernelForSparseMatrix(SparseMatrixOperation mat_op) const -> KernelType {
+        return kernel_for_sparse_matrices_.at(mat_op);
+    }
+
+    /**
+     * @brief Get a kernel for a controlled sparse matrix operation.
+     *
+     * @param mat_op Controlled matrix operation
+     * @return KernelType
+     */
+    [[nodiscard]] inline auto getKernelForControlledSparseMatrix(
+        ControlledSparseMatrixOperation mat_op) const -> KernelType {
+        return kernel_for_controlled_sparse_matrices_.at(mat_op);
     }
 
     /**
@@ -670,6 +706,170 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
                     "number of wires");
 
         applyMatrix(matrix.data(), wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given controlled-sparse-matrix directly to the
+     * statevector.
+     * @param row_map_ptr Pointer to the row map data.
+     * @param col_idx_ptr Pointer to the column index data.
+     * @param values_ptr Pointer to the values data.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     *
+     */
+    template <typename IndexT = std::size_t>
+    inline void applyControlledSparseMatrix(
+        const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
+        const ComplexT *values_ptr,
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool inverse = false) {
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = BaseType::getData();
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        PL_ABORT_IF_NOT(
+            areVecsDisjoint<std::size_t>(controlled_wires, wires),
+            "`controlled_wires` and `target wires` must be disjoint.");
+        const auto kernel = [n_wires = wires.size(), this]() {
+            switch (n_wires) {
+            default:
+                return getKernelForControlledSparseMatrix(
+                    ControlledSparseMatrixOperation::NCSparseMultiQubitOp);
+            }
+        }();
+        dispatcher.applyControlledSparseMatrix(
+            kernel, arr, BaseType::getNumQubits(), row_map_ptr, col_idx_ptr,
+            values_ptr, controlled_wires, controlled_values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given controlled-sparse-matrix directly to the
+     * statevector.
+     *
+     * @param row_map Vector containing the row map data.
+     * @param col_idx Vector containing the column index data.
+     * @param values Vector containing the values data.
+     * @param controlled_wires Control wires.
+     * @param controlled_values Control values (false or true).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <typename Alloc, typename IndexT = std::size_t>
+    inline void applyControlledSparseMatrix(
+        const std::vector<IndexT> &row_map, const std::vector<IndexT> &col_idx,
+        const std::vector<ComplexT, Alloc> &values,
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool inverse = false) {
+        applyControlledSparseMatrix(row_map.data(), col_idx.data(),
+                                    values.data(), controlled_wires,
+                                    controlled_values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given sparse matrix directly to the statevector using a
+     * given kernel.
+     *
+     * @param kernel Kernel to run the operation.
+     * @param row_map Pointer to the row map data.
+     * @param col_idx Pointer to the column index data.
+     * @param values Pointer to the values data.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <typename IndexT = std::size_t>
+    inline void applySparseMatrix(Pennylane::Gates::KernelType kernel,
+                                  const IndexT *row_map, const IndexT *col_idx,
+                                  const ComplexT *values,
+                                  const std::vector<std::size_t> &wires,
+                                  bool inverse = false) {
+        const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+        auto *arr = BaseType::getData();
+
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+
+        dispatcher.applySparseMatrix(kernel, arr, BaseType::getNumQubits(),
+                                     row_map, col_idx, values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given sparse matrix directly to the statevector using a
+     * given kernel.
+     *
+     * @param kernel Kernel to run the operation
+     * @param matrix Matrix data (in row-major format).
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <typename Alloc, typename IndexT = std::size_t>
+    inline void applySparseMatrix(Pennylane::Gates::KernelType kernel,
+                                  const std::vector<IndexT> &row_map,
+                                  const std::vector<IndexT> &col_idx,
+                                  const std::vector<ComplexT, Alloc> &values,
+                                  const std::vector<std::size_t> &wires,
+                                  bool inverse = false) {
+        PL_ABORT_IF(row_map.size() - 1 != exp2(wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+
+        applySparseMatrix(kernel, row_map.data(), col_idx.data(), values.data(),
+                          wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given sparse matrix directly to the statevector using raw
+     * pointers.
+     * @param row_map Pointer to the row map data.
+     * @param col_idx Pointer to the column index data.
+     * @param values Pointer to the values data.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <typename IndexT = std::size_t>
+    inline void applySparseMatrix(const IndexT *row_map, const IndexT *col_idx,
+                                  const ComplexT *values,
+                                  const std::vector<std::size_t> &wires,
+                                  bool inverse = false) {
+        using Pennylane::Gates::SparseMatrixOperation;
+
+        PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
+
+        const auto kernel = [n_wires = wires.size(), this]() {
+            switch (n_wires) {
+            default:
+                return getKernelForSparseMatrix(
+                    SparseMatrixOperation::SparseMultiQubitOp);
+            }
+        }();
+        applySparseMatrix(kernel, row_map, col_idx, values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given sparse matrix directly to the statevector.
+     * @param row_map Vector containing the row map data.
+     * @param col_idx Vector containing the column index data.
+     * @param values Vector containing the values data.
+     * @param wires Wires to apply gate to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <typename Alloc, typename IndexT = std::size_t>
+    inline void applySparseMatrix(const std::vector<IndexT> &row_map,
+                                  const std::vector<IndexT> &col_idx,
+                                  const std::vector<ComplexT, Alloc> &values,
+                                  const std::vector<std::size_t> &wires,
+                                  bool inverse = false) {
+        PL_ABORT_IF(row_map.size() - 1 != exp2(wires.size()),
+                    "The size of matrix does not match with the given "
+                    "number of wires");
+
+        applySparseMatrix(row_map.data(), col_idx.data(), values.data(), wires,
+                          inverse);
     }
 
     /**
