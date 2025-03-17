@@ -27,7 +27,7 @@ template <typename T, typename... Ts> struct TypeNode {
     using Type = T;
     using Next = TypeNode<Ts...>;
 };
-///@cond DEV
+/// @cond DEV
 template <typename T> struct TypeNode<T, void> {
     using Type = T;
     using Next = void;
@@ -36,7 +36,7 @@ template <typename T> struct TypeNode<T> {
     using Type = T;
     using Next = void;
 };
-///@endcond
+/// @endcond
 
 /// @cond DEV
 /**

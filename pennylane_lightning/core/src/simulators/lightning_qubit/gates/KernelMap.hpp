@@ -48,7 +48,7 @@ using Pennylane::Util::PairHash;
 /// @endcond
 
 namespace Pennylane::LightningQubit::KernelMap {
-///@cond DEV
+/// @cond DEV
 namespace Internal {
 int assignKernelsForGateOp();
 int assignKernelsForGeneratorOp();
@@ -81,9 +81,9 @@ struct AssignKernelForOp<Pennylane::Gates::ControlledMatrixOperation> {
     static inline const int dummy = assignKernelsForControlledMatrixOp();
 };
 } // namespace Internal
-///@endcond
+/// @endcond
 
-///@cond DEV
+/// @cond DEV
 class DispatchElement final {
   private:
     KernelType kernel_;
@@ -190,9 +190,9 @@ class PriorityDispatchSet {
         ordered_vec_.erase(begin, end);
     }
 };
-///@endcond
+/// @endcond
 
-///@cond DEV
+/// @cond DEV
 /**
  * @brief A dummy type used as a tag for a function.
  */
@@ -211,7 +211,7 @@ constexpr static AllThreading all_threading{};
  * @brief A dummy variable used as a tag for indicating all memory models.
  */
 constexpr static AllMemoryModel all_memory_model{};
-///@endcond
+/// @endcond
 
 /**
  * @brief This class manages all data related to kernel map statevector uses.

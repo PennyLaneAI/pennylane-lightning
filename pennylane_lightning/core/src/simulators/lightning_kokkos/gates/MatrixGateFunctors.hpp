@@ -379,7 +379,7 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
     }
 };
 
-///@cond DEV
+/// @cond DEV
 #define GATEENTRY3(xx, yy) xx << 3 | yy
 #define GATETERM3(xx, yy, vyy) matrix(GATEENTRY3(xx, yy)) * vyy
 #define GATESUM3(xx)                                                           \
@@ -508,7 +508,7 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
     }
 };
 
-///@cond DEV
+/// @cond DEV
 #define GATEENTRY4(xx, yy) xx << 4 | yy
 #define GATETERM4(xx, yy, vyy) matrix(GATEENTRY4(xx, yy)) * vyy
 #define GATESUM4(xx)                                                           \
@@ -608,7 +608,7 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     }
 };
 
-///@cond DEV
+/// @cond DEV
 #define GATEENTRY5(xx, yy) xx << 5 | yy
 #define GATETERM5(xx, yy, vyy) matrix(GATEENTRY5(xx, yy)) * vyy
 #define GATESUM5(xx)                                                           \

@@ -312,7 +312,7 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     }
 };
 
-///@cond DEV
+/// @cond DEV
 #define EXPVALENTRY2(xx, yy) xx << 2 | yy
 #define EXPVALTERM2(xx, yy, iyy) matrix(EXPVALENTRY2(xx, yy)) * arr(iyy)
 #define EXPVAL2(ixx, xx)                                                       \
@@ -377,7 +377,7 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     }
 };
 
-///@cond DEV
+/// @cond DEV
 #define EXPVALENTRY3(xx, yy) xx << 3 | yy
 #define EXPVALTERM3(xx, yy, iyy) matrix(EXPVALENTRY3(xx, yy)) * arr(iyy)
 #define EXPVAL3(ixx, xx)                                                       \
@@ -441,7 +441,7 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
     }
 };
 
-///@cond DEV
+/// @cond DEV
 #define EXPVALENTRY4(xx, yy) xx << 4 | yy
 #define EXPVALTERM4(xx, yy, iyy) matrix(EXPVALENTRY4(xx, yy)) * arr(iyy)
 #define EXPVAL4(ixx, xx)                                                       \
@@ -530,7 +530,7 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
     }
 };
 
-///@cond DEV
+/// @cond DEV
 #define EXPVALENTRY5(xx, yy) xx << 5 | yy
 #define EXPVALTERM5(xx, yy, iyy) matrix(EXPVALENTRY5(xx, yy)) * arr(iyy)
 #define EXPVAL5(ixx, xx)                                                       \
