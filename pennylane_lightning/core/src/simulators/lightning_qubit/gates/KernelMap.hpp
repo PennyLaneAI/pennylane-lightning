@@ -19,6 +19,7 @@
 
 // Ignore invalid warnings for compile-time checks without kernel specifics
 // NOLINTBEGIN
+#include <iostream>
 
 #include <cstdint>
 #include <deque>
@@ -53,9 +54,11 @@ namespace Internal {
 int assignKernelsForGateOp();
 int assignKernelsForGeneratorOp();
 int assignKernelsForMatrixOp();
+int assignKernelsForSparseMatrixOp();
 int assignKernelsForControlledGateOp();
 int assignKernelsForControlledGeneratorOp();
 int assignKernelsForControlledMatrixOp();
+int assignKernelsForControlledSparseMatrixOp();
 
 template <class Operation> struct AssignKernelForOp;
 
@@ -68,6 +71,9 @@ template <> struct AssignKernelForOp<Pennylane::Gates::GeneratorOperation> {
 template <> struct AssignKernelForOp<Pennylane::Gates::MatrixOperation> {
     static inline const int dummy = assignKernelsForMatrixOp();
 };
+template <> struct AssignKernelForOp<Pennylane::Gates::SparseMatrixOperation> {
+    static inline const int dummy = assignKernelsForSparseMatrixOp();
+};
 template <>
 struct AssignKernelForOp<Pennylane::Gates::ControlledGateOperation> {
     static inline const int dummy = assignKernelsForControlledGateOp();
@@ -79,6 +85,10 @@ struct AssignKernelForOp<Pennylane::Gates::ControlledGeneratorOperation> {
 template <>
 struct AssignKernelForOp<Pennylane::Gates::ControlledMatrixOperation> {
     static inline const int dummy = assignKernelsForControlledMatrixOp();
+};
+template <>
+struct AssignKernelForOp<Pennylane::Gates::ControlledSparseMatrixOperation> {
+    static inline const int dummy = assignKernelsForControlledSparseMatrixOp();
 };
 } // namespace Internal
 ///@endcond
