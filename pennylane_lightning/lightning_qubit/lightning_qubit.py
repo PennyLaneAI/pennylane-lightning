@@ -536,9 +536,30 @@ class LightningQubit(LightningBase):
         tangents: Sequence[TensorLike],
         execution_config: Optional[ExecutionConfig] = None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
+        """An **experimental** method for computing the results and jvp for PLXPR with LightningQubit.
 
-        # TODO: The current implementation of this function is based on the conversion of the jaxpr to a PennyLane tape.
-        # This has very strict limitations.
+        Args:
+            jaxpr (jax.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
+                and measurements
+            args (Sequence[TensorLike]): the ``consts`` followed by the normal   arguments
+            tangents (Sequence[TensorLike]): the tangents corresponding to ``args``.
+                For lightning.qubit, this cannot contain ``jax.interpreters.ad.Zero``.
+
+        Keyword Args:
+            execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
+
+        Returns:
+            Sequence[TensorLike], Sequence[TensorLike]: the results and jacobian vector products
+
+
+        .. note::
+
+            For lightning.qubit, the current implementation of this method is based on the conversion of the jaxpr to a PennyLane tape.
+            This has strict limitations. The ``args`` should contain the concatenation of ``jaxpr.constvars`` and ``jaxpr.invars``,
+            which are assumed to represent the trainable parameters of the circuit.
+            The method will raise an error if ``args`` do not match exactly the parameters of the jaxpr converted to quantum tape.
+
+        """
 
         # pylint: disable=import-outside-toplevel
         import jax
@@ -568,6 +589,7 @@ class LightningQubit(LightningBase):
                 shots = self.shots.total_shots
                 s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
                 return jax.core.ShapedArray(s, dtype_map[dtype])
+            # The `simulate_and_jacobian` method requires the circuit to return measurements
             raise NotImplementedError("The circuit should return measurement")
 
         def flatten_shaped_array(aval):
@@ -595,6 +617,12 @@ class LightningQubit(LightningBase):
         if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
             raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
 
+        flat_tangents, _ = jax.tree_util.tree_flatten(tangents)
+
+        for tan in flat_tangents:
+            if jax.numpy.issubdtype(jax.numpy.asarray(tan).dtype, jax.numpy.integer):
+                raise ValueError("Tangents cannot be of integer type")
+
         self._statevector = self.LightningStateVector(
             num_wires=len(self.wires), dtype=self._c_dtype
         )
@@ -621,7 +649,7 @@ class LightningQubit(LightningBase):
                 tape.trainable_params
             ):
                 raise NotImplementedError(
-                    "The parameters of the quantum tape do not match the provided arguments."
+                    "The provided arguments do not match the parameters of the jaxpr converted to quantum tape."
                 )
 
             results, jacobians = self.simulate_and_jacobian(tape, state=self._statevector)
@@ -631,21 +659,14 @@ class LightningQubit(LightningBase):
         shapes_jac = shape_jac(shapes_res)
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
 
-        if (
-            isinstance(tangents, tuple)
-            and len(tangents) == 1
-            and isinstance(tangents[0], jax.numpy.ndarray)
-            and not qml.math.is_abstract(tangents[0])
-        ):
-            tangents = tangents[0]
+        # The `compute_jvp_single` and `compute_jvp_multi` methods don't accept a list with a single array
+        if len(flat_tangents) == 1 and not jax.numpy.isscalar(flat_tangents[0]):
+            flat_tangents = flat_tangents[0]
 
         if len(jaxpr.outvars) == 1:
-
-            jvps = [qml.gradients.compute_jvp_single(tangents, jacobians)]
-
+            jvps = [qml.gradients.compute_jvp_single(flat_tangents, jacobians)]
         else:
-
-            jvps = qml.gradients.compute_jvp_multi(tangents, jacobians)
+            jvps = qml.gradients.compute_jvp_multi(flat_tangents, jacobians)
 
         return results, jvps
 

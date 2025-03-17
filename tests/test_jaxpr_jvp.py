@@ -119,28 +119,13 @@ class TestErrors:
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5, 0.6))
 
-        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
-            exc_info.value
+        assert (
+            "NotImplementedError: The provided arguments do not match the parameters of the jaxpr converted to quantum tape"
+            in str(exc_info.value)
         )
 
-    def test_wrong_length(self):
-
-        def circuit(x):
-            qml.RX(x, 0)
-            qml.RX(x, 0)
-            return qml.expval(qml.Z(0))
-
-        args = (0.5,)
-        jaxpr = jax.make_jaxpr(circuit)(*args)
-
-        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
-            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
-
-        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
-            exc_info.value
-        )
-
-    def test_no_for_loop(self):
+    def test_wrong_order2(self):
+        """Test that the jaxpr_jvp method raises an error if the order of the arguments does match the tape parameters."""
 
         def f(x):
             @qml.for_loop(3)
@@ -156,11 +141,32 @@ class TestErrors:
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
-        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
-            exc_info.value
+        assert (
+            "NotImplementedError: The provided arguments do not match the parameters of the jaxpr converted to quantum tape"
+            in str(exc_info.value)
+        )
+
+    def test_wrong_length(self):
+        """Test that the jaxpr_jvp method raises an error if the length of the arguments does not match the tape parameters."""
+
+        def circuit(x):
+            qml.RX(x, 0)
+            qml.RX(x, 0)
+            return qml.expval(qml.Z(0))
+
+        args = (0.5,)
+        jaxpr = jax.make_jaxpr(circuit)(*args)
+
+        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+
+        assert (
+            "NotImplementedError: The provided arguments do not match the parameters of the jaxpr converted to quantum tape"
+            in str(exc_info.value)
         )
 
     def test_no_classical_preprocessing(self):
+        """Test that the jaxpr_jvp method raises an error if the circuit contains classical preprocessing."""
 
         def f(x):
             y = x**2
@@ -175,9 +181,25 @@ class TestErrors:
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
-        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
-            exc_info.value
+        assert (
+            "NotImplementedError: The provided arguments do not match the parameters of the jaxpr converted to quantum tape"
+            in str(exc_info.value)
         )
+
+    def test_no_int_tangent(self):
+        """Test that the jaxpr_jvp method raises an error if the tangents contain integers."""
+
+        @qml.qnode(device=qml.device(device_name, wires=1))
+        def circuit(x):
+            qml.RX(x, 0)
+            return qml.expval(qml.Z(0))
+
+        args = (0.5,)
+        tangents = (1,)
+        jaxpr = jax.make_jaxpr(circuit)(*args)
+
+        with pytest.raises(ValueError, match="Tangents cannot be of integer type"):
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
 
 class TestCorrectResults:
@@ -315,6 +337,28 @@ class TestCorrectResults:
         dx = (0.5, 0.6, 0.7)
 
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, x, dx)
+
+        expected = jax.numpy.cos(x[1])
+        assert qml.math.allclose(res, expected)
+
+        expected_dres = x[1] * -jax.numpy.sin(x[1])
+        assert qml.math.allclose(dres, expected_dres)
+
+    def test_multiple_train_params_array(self):
+        """Test that we can differentiate multiple trainable parameters provided as an array."""
+
+        def f(x):
+            qml.Rot(x[0], x[1], x[2], 0)
+            return qml.expval(qml.Z(0))
+
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
+
+        x = jax.numpy.array([0.5, 0.6, 0.7])
+        dx = jax.numpy.array([0.5, 0.6, 0.7])
+
+        jaxpr = jax.make_jaxpr(f)(x)
+
+        res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
         expected = jax.numpy.cos(x[1])
         assert qml.math.allclose(res, expected)
