@@ -24,11 +24,12 @@ from pennylane.devices import DefaultExecutionConfig
 jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
 
-if device_name == "lightning.tensor":
-    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
+if device_name != "lightning.qubit":
+    pytest.skip("Skipping tests for the the device.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
+
 
 @pytest.fixture(autouse=True)
 def enable_disable_plxpr():
@@ -57,9 +58,7 @@ class TestErrors:
         with pytest.raises(
             NotImplementedError, match="LightningQubit does not support gradient_method"
         ):
-            qml.device(device_name, wires=1).jaxpr_jvp(
-                jaxpr.jaxpr, args, (0.5,), execution_config
-            )
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,), execution_config)
 
     def test_no_allowed_zeros(self):
         """Test that the jaxpr_jvp method raises an error if the tangents contain zeros."""
