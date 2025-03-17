@@ -238,6 +238,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledMatrixOperation::NCMultiQubitOp,
     };
 
+    constexpr static std::array implemented_sparse_matrices = {
+        SparseMatrixOperation::SparseMultiQubitOp,
+    };
+
+    constexpr static std::array implemented_controlled_sparse_matrices = {
+        ControlledSparseMatrixOperation::NCSparseMultiQubitOp,
+    };
+
     static std::size_t parity_2_offset(const std::vector<std::size_t> &parity,
                                        const std::size_t k) {
         std::size_t offset{0U};
