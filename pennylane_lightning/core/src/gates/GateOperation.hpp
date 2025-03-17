@@ -178,4 +178,21 @@ enum class ControlledMatrixOperation : uint32_t {
     END
 };
 
+/**
+ * @brief Enum class for sparse matrix operation
+ */
+enum class SparseMatrixOperation : uint32_t {
+    BEGIN = 0,
+    SparseMultiQubitOp = 0,
+    /* END (placeholder) */
+    END
+};
+
+enum class ControlledSparseMatrixOperation : uint32_t {
+    BEGIN = 0,
+    NCSparseMultiQubitOp = 0,
+    /* END (placeholder) */
+    END
+};
+
 } // namespace Pennylane::Gates
