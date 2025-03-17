@@ -300,12 +300,12 @@ class LightningQubit(LightningBase):
         self.LightningMeasurements = LightningMeasurements
         self.LightningAdjointJacobian = LightningAdjointJacobian
 
-    def __setup_execution_config_capture(self, config: ExecutionConfig) -> ExecutionConfig:
+    def _setup_execution_config(self, config):
         """
-        Updates the execution config with choices for how the device should be used and the device options
-        when program capture is enabled.
+        Update the execution config with choices for how the device should be used and the device options.
         """
         updated_values = {}
+
         for option, _ in config.device_options.items():
             if option not in self._device_options:
                 raise qml.DeviceError(f"device option {option} not present on {self}")
@@ -331,72 +331,31 @@ class LightningQubit(LightningBase):
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
-        mcm_config = config.mcm_config
-        mcm_updated_values = {}
-        if (mcm_method := mcm_config.mcm_method) not in (
-            "deferred",
-            "single-branch-statistics",
-            None,
-        ):
-            raise qml.DeviceError(
-                f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                "when program capture is enabled."
-            )
+        if qml.capture.enabled():
+            mcm_config = config.mcm_config
+            mcm_updated_values = {}
+            if (mcm_method := mcm_config.mcm_method) not in (
+                "deferred",
+                "single-branch-statistics",
+                None,
+            ):
+                raise qml.DeviceError(
+                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
+                    "when program capture is enabled."
+                )
 
-        if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
-            warn(
-                "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
-                "statistics'. 'postselect_mode' will be ignored.",
-                UserWarning,
-            )
-            mcm_updated_values["postselect_mode"] = None
-        if mcm_method is None:
-            mcm_updated_values["mcm_method"] = "deferred"
-        updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
-
-        return replace(config, **updated_values, device_options=new_device_options)
-
-    def _setup_execution_config(self, config):
-        """
-        Update the execution config with choices for how the device should be used and the device options.
-        """
-        updated_values = {}
-        if config.gradient_method == "best":
-            updated_values["gradient_method"] = "adjoint"
-        if config.use_device_jacobian_product is None:
-            updated_values["use_device_jacobian_product"] = config.gradient_method in (
-                "best",
-                "adjoint",
-            )
-        if config.use_device_gradient is None:
-            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
-        if (
-            config.use_device_gradient
-            or updated_values.get("use_device_gradient", False)
-            and config.grad_on_execution is None
-        ):
-            updated_values["grad_on_execution"] = True
-
-        new_device_options = dict(config.device_options)
-        for option in self._device_options:
-            if option not in new_device_options:
-                new_device_options[option] = getattr(self, f"_{option}", None)
+            if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
+                warn(
+                    "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
+                    "statistics'. 'postselect_mode' will be ignored.",
+                    UserWarning,
+                )
+                mcm_updated_values["postselect_mode"] = None
+            if mcm_method is None:
+                mcm_updated_values["mcm_method"] = "deferred"
+            updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
 
         return replace(config, **updated_values, device_options=new_device_options)
-
-    def __preprocess_capture(
-        self, execution_config=DefaultExecutionConfig
-    ) -> tuple[TransformProgram, ExecutionConfig]:
-        """This function defines the device transform program to be applied and an updated device configuration
-        when program capture is enabled."""
-        execution_config = self.__setup_execution_config_capture(config=execution_config)
-        transform_program = TransformProgram()
-
-        if execution_config.mcm_config.mcm_method == "deferred":
-            transform_program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
-        # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
-        transform_program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
-        return transform_program, execution_config
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
         """This function defines the device transform program to be applied and an updated device configuration.
@@ -417,11 +376,17 @@ class LightningQubit(LightningBase):
         * Currently does not intrinsically support parameter broadcasting
 
         """
-        if qml.capture.enabled():
-            return self.__preprocess_capture(execution_config=execution_config)
 
         exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
+
+        if qml.capture.enabled():
+
+            if exec_config.mcm_config.mcm_method == "deferred":
+                program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
+            # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
+            program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
+            return program, exec_config
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
