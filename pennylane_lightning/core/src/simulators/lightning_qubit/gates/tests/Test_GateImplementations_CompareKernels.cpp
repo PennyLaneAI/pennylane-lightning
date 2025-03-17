@@ -286,6 +286,8 @@ void testSparseMatrixOp(std::size_t num_qubits, std::size_t unit_num_wires,
 
     using Pennylane::Gates::Constant::sparse_matrix_names;
     const auto sparse_mat_op = [unit_num_wires]() -> SparseMatrixOperation {
+        // for future expansion:
+        [[maybe_unused]] auto unused_unit_num_wires = unit_num_wires;
         return SparseMatrixOperation::SparseMultiQubitOp;
     }();
     const auto sparse_op_name = lookup(sparse_matrix_names, sparse_mat_op);
@@ -381,6 +383,8 @@ void testControlledSparseMatrixOp(std::size_t num_qubits,
     using Pennylane::Gates::Constant::controlled_sparse_matrix_names;
     const auto sparse_mat_op =
         [unit_num_wires]() -> ControlledSparseMatrixOperation {
+        // for future expansion:
+        [[maybe_unused]] auto unused_unit_num_wires = unit_num_wires;
         return ControlledSparseMatrixOperation::NCSparseMultiQubitOp;
     }();
     const auto sparse_op_name =
