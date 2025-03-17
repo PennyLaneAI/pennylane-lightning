@@ -414,7 +414,6 @@ void testControlledSparseMatrixOp(std::size_t num_qubits,
             CombinationGenerator(num_qubits, unit_num_wires + control_wires)
                 .all_perms();
         for (const auto &wires : all_wires) {
-
             std::vector<std::size_t> unitary_wires(
                 wires.begin(), wires.begin() + unit_num_wires);
             std::vector<std::size_t> control_wires(
