@@ -581,6 +581,9 @@ class TestExecution:
 
         assert new_config == expected_config
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit", reason="Only lightning.qubit has this logic."
+    )
     def test_preprocess_incorrect_device_config(self):
         """Test that an error is raised if the device options are not valid"""
 
@@ -594,6 +597,9 @@ class TestExecution:
         with pytest.raises(qml.DeviceError, match="device option is_wrong_option"):
             _ = device.preprocess(config)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit", reason="Only lightning.qubit has this logic."
+    )
     @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
     def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
         """Test that a warning is raised if post-selection is used with single branch statistics."""
