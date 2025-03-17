@@ -8,6 +8,9 @@
 
 ### Improvements
 
+* Implemented the `jaxpr_jvp` method to compute the adjoint jvp of a jaxpr using `lightning.qubit`.
+  [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
+
 * Expand test structure to efficiently handle sparse data.
   [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
@@ -127,6 +130,7 @@ This release contains contributions from (in alphabetical order):
 Astral Cai,
 Yushao Chen,
 Amintor Dusko,
+Pietropaolo Frisoni,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
