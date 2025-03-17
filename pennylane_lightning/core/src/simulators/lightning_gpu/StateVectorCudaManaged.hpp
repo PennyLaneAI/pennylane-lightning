@@ -2011,8 +2011,9 @@ class StateVectorCudaManaged
     const GMap generator_map_{
         {"PSWAP",
          [&](auto &&wires, auto &&adjoint) {
-             return applyGeneratorPSWAP(std::forward<decltype(wires)>(wires),
-                                        std::forward<decltype(adjoint)>(adjoint));
+             return applyGeneratorPSWAP(
+                 std::forward<decltype(wires)>(wires),
+                 std::forward<decltype(adjoint)>(adjoint));
          }},
         {"GlobalPhase",
          [&](auto &&wires, auto &&adjoint) {
