@@ -63,7 +63,9 @@ void applyExpVal1(const std::complex<ParamT> *arr, std::size_t num_qubits,
     const std::size_t wire_parity = PUtil::fillTrailingOnes(rev_wire);
     const std::size_t wire_parity_inv = PUtil::fillLeadingOnes(rev_wire + 1);
 
-#pragma omp parallel for reduction(+ : expected_value)
+#pragma omp parallel for reduction(+ : expected_value) default(none)           \
+    shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift, arr,      \
+               core_function)
     for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 1); k++) {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
@@ -83,7 +85,8 @@ void applyExpValMat1(const std::complex<ParamT> *arr, std::size_t num_qubits,
     const std::size_t wire_parity = PUtil::fillTrailingOnes(rev_wire);
     const std::size_t wire_parity_inv = PUtil::fillLeadingOnes(rev_wire + 1);
 
-#pragma omp parallel for reduction(+ : expected_value)
+#pragma omp parallel for reduction(+ : expected_value) default(none) shared(   \
+        num_qubits, wire_parity_inv, wire_parity, rev_wire_shift, arr, matrix)
     for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 1); k++) {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
@@ -98,7 +101,8 @@ void applyExpValMat1(const std::complex<ParamT> *arr, std::size_t num_qubits,
     }
 }
 
-#define EXPVALENTRY2(xx, yy) xx << 2 | yy
+#define EXPVALENTRY2(xx, yy)                                                   \
+    static_cast<std::size_t>(xx) << 2U | static_cast<std::size_t>(yy)
 #define EXPVALTERM2(xx, yy, iyy) matrix[EXPVALENTRY2(xx, yy)] * arr[iyy]
 #define EXPVAL2(ixx, xx)                                                       \
     std::conj(arr[ixx]) *                                                      \
@@ -123,7 +127,9 @@ void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
     const std::size_t parity_middle = PUtil::fillLeadingOnes(rev_wire_min + 1) &
                                       PUtil::fillTrailingOnes(rev_wire_max);
 
-#pragma omp parallel for reduction(+ : expected_value)
+#pragma omp parallel for reduction(+ : expected_value) default(none)           \
+    shared(num_qubits, rev_wire0, rev_wire1, rev_wire0_shift, rev_wire1_shift, \
+               parity_low, parity_high, parity_middle, arr, matrix)
     for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 2); k++) {
         const std::size_t i00 = ((k << 2U) & parity_high) |
                                 ((k << 1U) & parity_middle) | (k & parity_low);
@@ -138,7 +144,8 @@ void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
     }
 }
 
-#define EXPVALENTRY3(xx, yy) xx << 3 | yy
+#define EXPVALENTRY3(xx, yy)                                                   \
+    static_cast<std::size_t>(xx) << 3U | static_cast<std::size_t>(yy)
 #define EXPVALTERM3(xx, yy, iyy) matrix[EXPVALENTRY3(xx, yy)] * arr[iyy]
 #define EXPVAL3(ixx, xx)                                                       \
     std::conj(arr[ixx]) *                                                      \
@@ -152,9 +159,14 @@ void applyExpValMat3(const std::complex<ParamT> *arr, std::size_t num_qubits,
                      const std::vector<size_t> &wires,
                      const std::vector<std::complex<ParamT>> &matrix,
                      ParamT &expected_value) {
-    const auto [parity, rev_wire_shifts] = wires2Parity(num_qubits, wires);
+    std::vector<std::size_t> parity;
+    std::vector<std::size_t> rev_wire_shifts;
+    const auto &[parity_, rev_wire_shifts_] = wires2Parity(num_qubits, wires);
+    parity = parity_;
+    rev_wire_shifts = rev_wire_shifts_;
 
-#pragma omp parallel for reduction(+ : expected_value)
+#pragma omp parallel for reduction(+ : expected_value) default(none)           \
+    shared(num_qubits, parity, rev_wire_shifts, arr, matrix)
     for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 3); k++) {
         std::size_t i000 = (k & parity[0]);
         for (std::size_t i = 1; i < parity.size(); i++) {
@@ -186,11 +198,16 @@ void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
                               const std::vector<size_t> &wires,
                               const std::vector<std::complex<ParamT>> &matrix,
                               ParamT &expected_value) {
-    const auto [parity, rev_wire_shifts] = wires2Parity(num_qubits, wires);
+    std::vector<std::size_t> parity;
+    std::vector<std::size_t> rev_wire_shifts;
+    const auto &[parity_, rev_wire_shifts_] = wires2Parity(num_qubits, wires);
+    parity = parity_;
+    rev_wire_shifts = rev_wire_shifts_;
 
     const std::size_t dim = PUtil::exp2(wires.size());
     const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
-#pragma omp parallel for reduction(+ : expected_value)
+#pragma omp parallel for reduction(+ : expected_value) default(none) shared(   \
+        dim, two2N, wires, num_qubits, parity, arr, rev_wire_shifts, matrix)
     for (std::size_t k = 0; k < two2N; ++k) {
         ParamT innerExpVal = 0.0;
         std::vector<std::complex<ParamT>> coeffs_in(dim);

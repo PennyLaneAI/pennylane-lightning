@@ -193,7 +193,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 1 wire - wires=[0]:") {
         std::size_t op_wires = 1;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -208,7 +208,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 1 wire - wires=[2]:") {
         std::size_t op_wires = 1;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -223,7 +223,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 2 wires - wires=[0, 1]:") {
         std::size_t op_wires = 2;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -238,7 +238,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 2 wires - wires=[3, 5]:") {
         std::size_t op_wires = 2;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -253,7 +253,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 3 wires - wires=[0, 1, 2]:") {
         std::size_t op_wires = 3;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -268,7 +268,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 3 wires - wires=[1, 3, 5]:") {
         std::size_t op_wires = 3;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -283,7 +283,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 4 wires - wires=[0, 1, 2, 3]:") {
         std::size_t op_wires = 4;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -298,7 +298,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 4 wires - wires=[1, 2, 4, 5]:") {
         std::size_t op_wires = 4;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -313,7 +313,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 5 wires - wires=[0, 1, 2, 3, 4]:") {
         std::size_t op_wires = 5;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -328,7 +328,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 5 wires - wires=[0, 1, 2, 4, 5]:") {
         std::size_t op_wires = 5;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -343,7 +343,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
 
     SECTION("Testing expval of matrix for 6 wires:") {
         std::size_t op_wires = 6;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -361,7 +361,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
 
         std::size_t op_wires = 2;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -394,7 +394,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
 
         std::size_t op_wires = 7;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
@@ -427,7 +427,7 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
         auto statevector_data = createNonTrivialState<StateVectorT>(num_qubits);
 
         std::size_t op_wires = 8;
-        std::vector<ComplexT> matrix((1 << (2 * op_wires)));
+        std::vector<ComplexT> matrix((1U << (2 * op_wires)));
         for (std::size_t i = 0; i < matrix.size(); i++) {
             matrix[i] = ComplexT{static_cast<PrecisionT>(i),
                                  static_cast<PrecisionT>(i + 1)};
