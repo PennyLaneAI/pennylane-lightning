@@ -83,6 +83,7 @@ namespace Pennylane::LightningQubit {
 template <typename PrecisionT> class DynamicDispatcher {
   public:
     using CFP_t = std::complex<PrecisionT>;
+    using IndexT = std::size_t;
 
     using GateFunc = std::function<void(
         std::complex<PrecisionT> * /*data*/, std::size_t /*num_qubits*/,
@@ -102,6 +103,10 @@ template <typename PrecisionT> class DynamicDispatcher {
     using MatrixFunc = Gates::MatrixFuncPtrT<PrecisionT>;
     using ControlledMatrixFunc = Gates::ControlledMatrixFuncPtrT<PrecisionT>;
 
+    using SparseMatrixFunc = Gates::SparseMatrixFuncPtrT<PrecisionT, IndexT>;
+    using ControlledSparseMatrixFunc =
+        Gates::ControlledSparseMatrixFuncPtrT<PrecisionT, IndexT>;
+
   private:
     std::unordered_map<std::string, GateOperation> str_to_gates_{};
 
@@ -117,6 +122,10 @@ template <typename PrecisionT> class DynamicDispatcher {
     std::unordered_map<std::pair<MatrixOperation, KernelType>, MatrixFunc,
                        PairHash>
         matrix_kernels_{};
+
+    std::unordered_map<std::pair<SparseMatrixOperation, KernelType>,
+                       SparseMatrixFunc, PairHash>
+        sparse_matrix_kernels_{};
 
     std::unordered_map<KernelType, std::string> kernel_names_{};
 
@@ -137,6 +146,10 @@ template <typename PrecisionT> class DynamicDispatcher {
     std::unordered_map<std::pair<ControlledMatrixOperation, KernelType>,
                        ControlledMatrixFunc, PairHash>
         controlled_matrix_kernels_{};
+
+    std::unordered_map<std::pair<ControlledSparseMatrixOperation, KernelType>,
+                       ControlledSparseMatrixFunc, PairHash>
+        controlled_sparse_matrix_kernels_{};
 
     DynamicDispatcher() {
         constexpr static auto gntr_names_without_prefix =
@@ -318,6 +331,42 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
+     * @brief Get registered matrix operations for the given kernel
+     *
+     * @param kernel Kernel
+     */
+    [[nodiscard]] auto
+    registeredSparseMatricesForKernel(KernelType kernel) const
+        -> std::unordered_set<SparseMatrixOperation> {
+        std::unordered_set<SparseMatrixOperation> matrices;
+
+        for (const auto &[key, val] : sparse_matrix_kernels_) {
+            if (key.second == kernel) {
+                matrices.emplace(key.first);
+            }
+        }
+        return matrices;
+    }
+
+    /**
+     * @brief Get registered controlled matrix operations for the given kernel
+     *
+     * @param kernel Kernel
+     */
+    [[nodiscard]] auto
+    registeredControlledSparseMatricesForKernel(KernelType kernel) const
+        -> std::unordered_set<ControlledSparseMatrixOperation> {
+        std::unordered_set<ControlledSparseMatrixOperation> matrices;
+
+        for (const auto &[key, val] : controlled_sparse_matrix_kernels_) {
+            if (key.second == kernel) {
+                matrices.emplace(key.first);
+            }
+        }
+        return matrices;
+    }
+
+    /**
      * @brief Gate name to gate operation
      *
      * @param gate_name Gate name
@@ -416,7 +465,10 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     /**
      * @brief Register a new matrix operation. Can pass a custom
-     * kernel
+     * kernel.
+     * @param mat_op Matrix operation
+     * @param kernel Kernel
+     * @param func Function pointer for the matrix operation
      */
     void registerMatrixOperation(MatrixOperation mat_op, KernelType kernel,
                                  MatrixFunc func) {
@@ -425,12 +477,41 @@ template <typename PrecisionT> class DynamicDispatcher {
 
     /**
      * @brief Register a new controlled matrix operation.
+     * @param mat_op Controlled matrix operation
+     * @param kernel Kernel
+     * @param func Function pointer for the controlled matrix operation
      */
     void registerControlledMatrixOperation(ControlledMatrixOperation mat_op,
                                            KernelType kernel,
                                            ControlledMatrixFunc func) {
         controlled_matrix_kernels_.emplace(std::make_pair(mat_op, kernel),
                                            func);
+    }
+
+    /**
+     * @brief Register a new sparse matrix operation. Can pass a custom
+     * kernel.
+     * @param mat_op Sparse matrix operation
+     * @param kernel Kernel
+     * @param func Function pointer for the sparse matrix operation
+     */
+    void registerSparseMatrixOperation(SparseMatrixOperation mat_op,
+                                       KernelType kernel,
+                                       SparseMatrixFunc func) {
+        sparse_matrix_kernels_.emplace(std::make_pair(mat_op, kernel), func);
+    }
+
+    /**
+     * @brief Register a new controlled sparse matrix operation.
+     * @param mat_op Controlled sparse matrix operation
+     * @param kernel Kernel
+     * @param func Function pointer for the controlled sparse matrix operation
+     */
+    void registerControlledSparseMatrixOperation(
+        ControlledSparseMatrixOperation mat_op, KernelType kernel,
+        ControlledSparseMatrixFunc func) {
+        controlled_sparse_matrix_kernels_.emplace(
+            std::make_pair(mat_op, kernel), func);
     }
 
     /**
@@ -759,6 +840,101 @@ template <typename PrecisionT> class DynamicDispatcher {
                 " is not registered for the given kernel");
         (iter->second)(data, num_qubits, matrix, controlled_wires,
                        controlled_values, wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given sparse matrix directly to the statevector.
+     * @param kernel Kernel to use for this operation
+     * @param data Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param row_map_ptr Pointer to the row map.
+     * @param col_idx_ptr Pointer to the column index.
+     * @param values_ptr Pointer to the values.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <class IndexT>
+    void applySparseMatrix(KernelType kernel, CFP_t *data,
+                           std::size_t num_qubits, const IndexT *row_map_ptr,
+                           const IndexT *col_idx_ptr,
+                           const std::complex<PrecisionT> *values_ptr,
+                           const std::vector<std::size_t> &wires,
+                           bool inverse) const {
+        PL_ASSERT(num_qubits >= wires.size());
+
+        const auto mat_op = [n_wires = wires.size()]() {
+            switch (n_wires) {
+            default:
+                return SparseMatrixOperation::SparseMultiQubitOp;
+            }
+        }();
+
+        const auto iter =
+            sparse_matrix_kernels_.find(std::make_pair(mat_op, kernel));
+        PL_ABORT_IF(
+            iter == sparse_matrix_kernels_.end(),
+            std::string(lookup(GateConstant::sparse_matrix_names, mat_op)) +
+                " is not registered for the given kernel");
+        (iter->second)(data, num_qubits, row_map_ptr, col_idx_ptr, values_ptr,
+                       wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given sparse matrix directly to the statevector.
+     */
+    template <class IndexT>
+    void applySparseMatrix(KernelType kernel, CFP_t *data,
+                           std::size_t num_qubits,
+                           const std::vector<IndexT> &row_map,
+                           const std::vector<IndexT> &col_idx,
+                           const std::vector<std::complex<PrecisionT>> &values,
+                           const std::vector<std::size_t> &wires,
+                           bool inverse) const {
+        PL_ABORT_IF_NOT(row_map.size() - 1 == exp2(wires.size()),
+                        "The size of matrix does not match with the given "
+                        "number of wires");
+        applySparseMatrix(kernel, data, num_qubits, row_map.data(),
+                          col_idx.data(), values.data(), wires, inverse);
+    }
+
+    /**
+     * @brief Apply a given matrix and controls directly to the statevector.
+     *
+     * @param kernel Kernel to use for this operation
+     * @param data Pointer to the statevector.
+     * @param num_qubits Number of qubits.
+     * @param matrix Perfect square matrix in row-major order.
+     * @param wires Control wires.
+     * @param wires Wires the gate applies to.
+     * @param inverse Indicate whether inverse should be taken.
+     */
+    template <class IndexT>
+    void applyControlledSparseMatrix(
+        KernelType kernel, CFP_t *data, std::size_t num_qubits,
+        const IndexT *row_map_ptr, const IndexT *col_idx_ptr,
+        const std::complex<PrecisionT> *values_ptr,
+        const std::vector<std::size_t> &controlled_wires,
+        const std::vector<bool> &controlled_values,
+        const std::vector<std::size_t> &wires, bool inverse) const {
+        PL_ASSERT(num_qubits >= controlled_wires.size() + wires.size());
+        PL_ABORT_IF_NOT(controlled_wires.size() == controlled_values.size(),
+                        "`controlled_wires` must have the same size as "
+                        "`controlled_values`.");
+        const auto mat_op = [n_wires = wires.size()]() {
+            switch (n_wires) {
+            default:
+                return ControlledSparseMatrixOperation::NCSparseMultiQubitOp;
+            }
+        }();
+
+        const auto iter = controlled_sparse_matrix_kernels_.find(
+            std::make_pair(mat_op, kernel));
+        PL_ABORT_IF(iter == controlled_sparse_matrix_kernels_.end(),
+                    std::string(lookup(
+                        GateConstant::controlled_sparse_matrix_names, mat_op)) +
+                        " is not registered for the given kernel");
+        (iter->second)(data, num_qubits, row_map_ptr, col_idx_ptr, values_ptr,
+                       controlled_wires, controlled_values, wires, inverse);
     }
 
     /**
