@@ -26,6 +26,7 @@
 #include "ObservablesLQubit.hpp"
 #include "StateVectorLQubitManaged.hpp"
 
+/// @cond DEV
 namespace {
 using Pennylane::LightningQubit::StateVectorLQubitManaged;
 using Pennylane::LightningQubit::Observables::HermitianObs;
@@ -33,6 +34,7 @@ using Pennylane::LightningQubit::Observables::NamedObs;
 using Pennylane::LightningQubit::Observables::TensorProdObs;
 using Pennylane::Observables::Observable;
 } // namespace
+/// @endcond
 
 namespace Catalyst::Runtime::Simulator {
 

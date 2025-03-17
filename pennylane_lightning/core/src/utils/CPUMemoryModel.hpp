@@ -23,12 +23,14 @@
 #include <cstdint>
 #include <memory>
 
+/// @cond DEV
 namespace {
 struct BitWidth {
     static constexpr uint32_t b64 = 64U;
     static constexpr uint32_t b32 = 32U;
 };
 } // namespace
+/// @endcond
 
 // LCOV_EXCL_START
 namespace Pennylane::Util {

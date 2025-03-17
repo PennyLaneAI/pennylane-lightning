@@ -15,10 +15,13 @@
 #include <cuComplex.h>
 
 #include "cuda_helpers.hpp"
+
+/// @cond DEV
 namespace {
 using Pennylane::LightningGPU::Util::Cmul;
 using Pennylane::LightningGPU::Util::Conj;
 } // namespace
+/// @endcond
 
 namespace Pennylane::LightningGPU {
 
