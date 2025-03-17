@@ -235,16 +235,6 @@ class Measurements final
                                         expected_value);
             break;
         }
-        case 4: {
-            applyExpValMat4<PrecisionT>(arr_data, num_qubits, wires, matrix,
-                                        expected_value);
-            break;
-        }
-        case 5: {
-            applyExpValMat5<PrecisionT>(arr_data, num_qubits, wires, matrix,
-                                        expected_value);
-            break;
-        }
         default:
             applyExpValMatMultiQubit<PrecisionT>(arr_data, num_qubits, wires,
                                                  matrix, expected_value);
