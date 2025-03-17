@@ -106,10 +106,82 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        with pytest.raises(
-            NotImplementedError, match="The circuit should return measurement"
-        ):
+        with pytest.raises(NotImplementedError, match="The circuit should return measurement"):
             qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+
+    def test_wrong_order(self):
+        """Test that the jaxpr_jvp method raises an error if the order of the arguments does match the tape parameters."""
+
+        def circuit(x, y):
+            qml.RY(y, 0)
+            qml.RX(x, 0)
+            return qml.expval(qml.Z(0))
+
+        args = (0.5, 0.6)
+        jaxpr = jax.make_jaxpr(circuit)(*args)
+
+        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5, 0.6))
+
+        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
+            exc_info.value
+        )
+
+    def test_wrong_length(self):
+
+        def circuit(x):
+            qml.RX(x, 0)
+            qml.RX(x, 0)
+            return qml.expval(qml.Z(0))
+
+        args = (0.5,)
+        jaxpr = jax.make_jaxpr(circuit)(*args)
+
+        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+
+        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
+            exc_info.value
+        )
+
+    def test_no_for_loop(self):
+
+        def f(x):
+            @qml.for_loop(3)
+            def g(i):
+                qml.RX(x, i)
+
+            g()
+            return qml.expval(qml.Z(0))
+
+        args = (0.5,)
+        jaxpr = jax.make_jaxpr(f)(*args)
+
+        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+
+        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
+            exc_info.value
+        )
+
+    def test_no_classical_preprocessing(self):
+
+        def f(x):
+            y = x**2
+            qml.RX(y[0], 0)
+            qml.RX(y[1], 1)
+            return qml.expval(qml.Z(0) @ qml.Z(1))
+
+        x = jax.numpy.array([1.5, 2.5])
+        dx = jax.numpy.array([2.0, 3.0])
+        jaxpr = jax.make_jaxpr(f)(x)
+
+        with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
+            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
+
+        assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
+            exc_info.value
+        )
 
 
 class TestCorrectResults:
@@ -238,7 +310,7 @@ class TestCorrectResults:
         def f(x, y, z):
             qml.Rot(x, y, z, 0)
             return qml.expval(qml.Z(0))
-        
+
         jaxpr = jax.make_jaxpr(f)(0.5, 0.6, 0.7)
 
         dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp

@@ -536,7 +536,7 @@ class LightningQubit(LightningBase):
         tangents: Sequence[TensorLike],
         execution_config=None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
-        
+
         # TODO: The current implementation of this function is based on the conversion of the jaxpr to a PennyLane tape.
         # This has very strict limitations and it is not the most efficient way to compute the jvp.
 
@@ -602,13 +602,13 @@ class LightningQubit(LightningBase):
 
         def wrapper(*args):
             """
-        Evaluate a jaxpr by converting it into a quantum tape, ensuring the provided
-        parameters match the tape's parameters, and then simulating the tape to compute
-        both the result and the Jacobian.
-    
-        The *args should contain the concatenation of jaxpr.constvars and jaxpr.invars,
-        which are assumed to represent the trainable parameters.
-        """
+            Evaluate a jaxpr by converting it into a quantum tape, ensuring the provided
+            parameters match the tape's parameters, and then simulating the tape to compute
+            both the result and the Jacobian.
+
+            The *args should contain the concatenation of jaxpr.constvars and jaxpr.invars,
+            which are assumed to represent the trainable parameters.
+            """
             const_args = args[: len(jaxpr.constvars)]
             non_const_args = args[len(jaxpr.constvars) :]
 
@@ -616,13 +616,15 @@ class LightningQubit(LightningBase):
             tape_params = tape.get_parameters()
 
             flat_args, _ = jax.tree_util.tree_flatten(args)
-            flat_args = [jax.numpy.array(arg) for arg in flat_args]
+            len_train_inputs = sum(jax.numpy.size(p) for p in flat_args)
 
-            if not qml.math.allclose(flat_args, tape_params):
+            if not qml.math.allclose(flat_args, tape_params) or len_train_inputs != len(
+                tape.trainable_params
+            ):
                 raise NotImplementedError(
-            "The parameters of the quantum tape do not match the provided arguments."
-        )
-            
+                    "The parameters of the quantum tape do not match the provided arguments."
+                )
+
             results, jacobians = self.simulate_and_jacobian(tape, state=self._statevector)
             return results, jacobians
 
@@ -631,12 +633,12 @@ class LightningQubit(LightningBase):
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
 
         if (
-                isinstance(tangents, tuple)
-                and len(tangents) == 1
-                and isinstance(tangents[0], jax.numpy.ndarray)
-                and not qml.math.is_abstract(tangents[0])
-            ):
-                tangents = tangents[0]
+            isinstance(tangents, tuple)
+            and len(tangents) == 1
+            and isinstance(tangents[0], jax.numpy.ndarray)
+            and not qml.math.is_abstract(tangents[0])
+        ):
+            tangents = tangents[0]
 
         if len(jaxpr.outvars) == 1:
 
