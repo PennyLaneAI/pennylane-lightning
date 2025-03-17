@@ -616,6 +616,9 @@ class TestExecution:
         ):
             _ = device.preprocess(config)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit", reason="Only lightning.qubit has this logic."
+    )
     def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
         """Test that an error is raised if mcm_method is invalid."""
         device = LightningDevice(wires=1)
