@@ -864,10 +864,7 @@ template <typename PrecisionT> class DynamicDispatcher {
         PL_ASSERT(num_qubits >= wires.size());
 
         const auto mat_op = [n_wires = wires.size()]() {
-            switch (n_wires) {
-            default:
-                return SparseMatrixOperation::SparseMultiQubitOp;
-            }
+            return SparseMatrixOperation::SparseMultiQubitOp;
         }();
 
         const auto iter =
@@ -922,10 +919,7 @@ template <typename PrecisionT> class DynamicDispatcher {
                         "`controlled_wires` must have the same size as "
                         "`controlled_values`.");
         const auto mat_op = [n_wires = wires.size()]() {
-            switch (n_wires) {
-            default:
-                return ControlledSparseMatrixOperation::NCSparseMultiQubitOp;
-            }
+            return ControlledSparseMatrixOperation::NCSparseMultiQubitOp;
         }();
 
         const auto iter = controlled_sparse_matrix_kernels_.find(

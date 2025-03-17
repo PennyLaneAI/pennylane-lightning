@@ -735,11 +735,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
             areVecsDisjoint<std::size_t>(controlled_wires, wires),
             "`controlled_wires` and `target wires` must be disjoint.");
         const auto kernel = [n_wires = wires.size(), this]() {
-            switch (n_wires) {
-            default:
-                return getKernelForControlledSparseMatrix(
-                    ControlledSparseMatrixOperation::NCSparseMultiQubitOp);
-            }
+            return getKernelForControlledSparseMatrix(
+                ControlledSparseMatrixOperation::NCSparseMultiQubitOp);
         }();
         dispatcher.applyControlledSparseMatrix(
             kernel, arr, BaseType::getNumQubits(), row_map_ptr, col_idx_ptr,
@@ -839,11 +836,8 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
         PL_ABORT_IF(wires.empty(), "Number of wires must be larger than 0");
 
         const auto kernel = [n_wires = wires.size(), this]() {
-            switch (n_wires) {
-            default:
-                return getKernelForSparseMatrix(
-                    SparseMatrixOperation::SparseMultiQubitOp);
-            }
+            return getKernelForSparseMatrix(
+                SparseMatrixOperation::SparseMultiQubitOp);
         }();
         applySparseMatrix(kernel, row_map, col_idx, values, wires, inverse);
     }
