@@ -1770,7 +1770,7 @@ TEMPLATE_TEST_CASE("Generators::applyControlledGenerator - 2 wires",
     const std::string controlled_gate_name =
         GENERATE("IsingXX", "IsingXY", "IsingYY", "IsingZZ", "SingleExcitation",
                  "SingleExcitationMinus", "SingleExcitationPlus", "GlobalPhase",
-                 "MultiRZ");
+                 "MultiRZ", "PSWAP");
     const std::size_t num_qubits = 4;
     const TestType ep_deriv = 1e-3;
     const TestType ep_margin = 1e-4;
