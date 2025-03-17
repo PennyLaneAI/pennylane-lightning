@@ -33,6 +33,7 @@ namespace PUtil = Pennylane::Util;
 } // namespace
 /// @endcond
 
+/// @cond DEV
 /**
  * @brief Call bitshift `probs` implementation templated on the number of wires
  * and return.
@@ -296,7 +297,7 @@ namespace PUtil = Pennylane::Util;
         PROBS_CORE_SUM_8_128(0);                                               \
         PROBS_CORE_SUM_8_128(1);                                               \
     }
-
+/// @endcond
 namespace Pennylane::LightningQubit::Measures {
 
 /**

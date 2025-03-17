@@ -90,8 +90,10 @@ struct handleDeleter {
     }
 };
 
+/// @cond DEV
 using SharedCusvHandle =
     std::shared_ptr<std::remove_pointer<custatevecHandle_t>::type>;
+/// @endcond
 
 /**
  * @brief Creates a SharedCusvHandle (a shared pointer to a custatevecHandle)

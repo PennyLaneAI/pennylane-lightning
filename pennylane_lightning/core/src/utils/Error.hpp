@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 
+/// @cond DEV
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)
 /**
  * @brief Macro that throws `%LightningException` with given message.
@@ -138,3 +139,4 @@ class LightningException : public std::exception {
 }
 
 } // namespace Pennylane::Util
+/// @endcond

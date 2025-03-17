@@ -43,9 +43,11 @@ using Pennylane::LightningQubit::StateVectorLQubitManaged;
 namespace py = pybind11;
 
 namespace Pennylane::LightningQubit {
+/// @cond DEV
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorLQubitManaged<float>,
                               StateVectorLQubitManaged<double>, void>;
+/// @endcond
 
 /**
  * @brief Get a gate kernel map for a statevector.

@@ -39,17 +39,18 @@ namespace Pennylane::LightningQubit::Gates {
  * See specialized classes.
  */
 template <class PrecisionT, class ParamT, class GateImplementation,
-          GateOperation gate_op>
+GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
     // raises compile error when this struct is instantiated.
     static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
-                  "GateOpToMemberFuncPtr is not defined for the given gate. "
-                  "When you define a new GateOperation, check that you also "
-                  "have added the corresponding entry in "
-                  "GateOpToMemberFuncPtr.");
+    "GateOpToMemberFuncPtr is not defined for the given gate. "
+    "When you define a new GateOperation, check that you also "
+    "have added the corresponding entry in "
+    "GateOpToMemberFuncPtr.");
     constexpr static auto value = nullptr;
 };
 
+/// @cond DEV
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::Identity> {
@@ -698,7 +699,6 @@ struct ControlledGeneratorOpToMemberFuncPtr<
     constexpr static auto value =
         &GateImplementation::template applyNCGeneratorGlobalPhase<PrecisionT>;
 };
-
 /**
  * @brief Matrix operation to member function pointer
  */
@@ -753,7 +753,6 @@ struct ControlledMatrixOpToMemberFuncPtr<
         &GateImplementation::template applyNCMultiQubitOp<PrecisionT>;
 };
 
-/// @cond DEV
 namespace Internal {
 /**
  * @brief Gate operation pointer type for a statevector. See all specialized
@@ -897,7 +896,6 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
 };
 
 } // namespace Internal
-/// @endcond
 
 /**
  * @brief Convenient type alias for GateFuncPtr.
@@ -939,6 +937,7 @@ using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
 template <class PrecisionT>
 using ControlledMatrixFuncPtrT =
     typename Internal::ControlledMatrixFuncPtr<PrecisionT>::Type;
+/// @endcond
 
 /**
  * @defgroup Call gate operation with provided arguments

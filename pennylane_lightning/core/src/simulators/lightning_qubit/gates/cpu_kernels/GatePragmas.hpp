@@ -19,7 +19,7 @@
 #pragma once
 
 namespace Pennylane::LightningQubit::Gates::Pragmas {
-
+/// @cond DEV
 // Defines utility macros to annotate gate-kernel loops with OpenMP parallel-for
 // and OpenMP SIMD pragmas. Selectable at compile time.
 #if defined PL_LQ_KERNEL_OMP && defined _OPENMP
@@ -32,5 +32,5 @@ namespace Pennylane::LightningQubit::Gates::Pragmas {
 #define PL_LOOP_PARALLEL_VA(N, ...)
 #define PL_LOOP_SIMD
 #endif
-
+/// @endcond
 }; // namespace Pennylane::LightningQubit::Gates::Pragmas

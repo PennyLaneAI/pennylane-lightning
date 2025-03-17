@@ -28,7 +28,6 @@
 namespace {
 using namespace Pennylane::Util;
 } // namespace
-/// @endcond
 
 #ifndef CUDA_UNSAFE
 
@@ -47,7 +46,7 @@ using namespace Pennylane::Util;
 #define PL_CUTENSORNET_IS_SUCCESS(err)                                         \
     { static_cast<void>(err); }
 #endif
-
+/// @endcond
 namespace Pennylane::LightningTensor::TNCuda::Util {
 static const std::string
 GetCuTensorNetworkErrorString(const cutensornetStatus_t &err) {

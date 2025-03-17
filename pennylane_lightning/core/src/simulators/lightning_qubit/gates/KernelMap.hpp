@@ -192,6 +192,7 @@ class PriorityDispatchSet {
 };
 ///@endcond
 
+///@cond DEV
 /**
  * @brief A dummy type used as a tag for a function.
  */
@@ -210,6 +211,7 @@ constexpr static AllThreading all_threading{};
  * @brief A dummy variable used as a tag for indicating all memory models.
  */
 constexpr static AllMemoryModel all_memory_model{};
+///@endcond
 
 /**
  * @brief This class manages all data related to kernel map statevector uses.

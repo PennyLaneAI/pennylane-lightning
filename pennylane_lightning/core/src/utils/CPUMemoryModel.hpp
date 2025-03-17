@@ -35,6 +35,7 @@ namespace Pennylane::Util {
 /**
  * @brief Enum class for defining CPU memory alignments
  */
+/// @cond DEV
 enum class CPUMemoryModel : uint8_t {
     Unaligned,
     Aligned256,
@@ -42,6 +43,7 @@ enum class CPUMemoryModel : uint8_t {
     END,
     BEGIN = Unaligned,
 };
+/// @endcond
 
 /**
  * @brief Compute alignment of a given data pointer

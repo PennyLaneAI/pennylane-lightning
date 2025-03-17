@@ -38,10 +38,12 @@ template <typename T> struct TypeNode<T> {
 };
 ///@endcond
 
+/// @cond DEV
 /**
  * @brief Define type list
  */
 template <typename... Ts> using TypeList = TypeNode<Ts...>;
+/// @endcond
 
 /**
  * @brief Get N-th type of a type list.

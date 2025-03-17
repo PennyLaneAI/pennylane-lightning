@@ -379,13 +379,15 @@ template <class PrecisionT> struct applyNC2QubitOpFunctor {
     }
 };
 
+///@cond DEV
 #define GATEENTRY3(xx, yy) xx << 3 | yy
 #define GATETERM3(xx, yy, vyy) matrix(GATEENTRY3(xx, yy)) * vyy
 #define GATESUM3(xx)                                                           \
-    GATETERM3(xx, 0B000, v000) + GATETERM3(xx, 0B001, v001) +                  \
-        GATETERM3(xx, 0B010, v010) + GATETERM3(xx, 0B011, v011) +              \
-        GATETERM3(xx, 0B100, v100) + GATETERM3(xx, 0B101, v101) +              \
-        GATETERM3(xx, 0B110, v110) + GATETERM3(xx, 0B111, v111)
+GATETERM3(xx, 0B000, v000) + GATETERM3(xx, 0B001, v001) +                  \
+GATETERM3(xx, 0B010, v010) + GATETERM3(xx, 0B011, v011) +              \
+GATETERM3(xx, 0B100, v100) + GATETERM3(xx, 0B101, v101) +              \
+GATETERM3(xx, 0B110, v110) + GATETERM3(xx, 0B111, v111)
+/// @endcond
 
 template <class PrecisionT> struct apply3QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -506,17 +508,19 @@ template <class PrecisionT> struct applyNC3QubitOpFunctor {
     }
 };
 
+///@cond DEV
 #define GATEENTRY4(xx, yy) xx << 4 | yy
 #define GATETERM4(xx, yy, vyy) matrix(GATEENTRY4(xx, yy)) * vyy
 #define GATESUM4(xx)                                                           \
-    GATETERM4(xx, 0B0000, v0000) + GATETERM4(xx, 0B0001, v0001) +              \
-        GATETERM4(xx, 0B0010, v0010) + GATETERM4(xx, 0B0011, v0011) +          \
-        GATETERM4(xx, 0B0100, v0100) + GATETERM4(xx, 0B0101, v0101) +          \
-        GATETERM4(xx, 0B0110, v0110) + GATETERM4(xx, 0B0111, v0111) +          \
-        GATETERM4(xx, 0B1000, v1000) + GATETERM4(xx, 0B1001, v1001) +          \
-        GATETERM4(xx, 0B1010, v1010) + GATETERM4(xx, 0B1011, v1011) +          \
-        GATETERM4(xx, 0B1100, v1100) + GATETERM4(xx, 0B1101, v1101) +          \
-        GATETERM4(xx, 0B1110, v1110) + GATETERM4(xx, 0B1111, v1111)
+GATETERM4(xx, 0B0000, v0000) + GATETERM4(xx, 0B0001, v0001) +              \
+GATETERM4(xx, 0B0010, v0010) + GATETERM4(xx, 0B0011, v0011) +          \
+GATETERM4(xx, 0B0100, v0100) + GATETERM4(xx, 0B0101, v0101) +          \
+GATETERM4(xx, 0B0110, v0110) + GATETERM4(xx, 0B0111, v0111) +          \
+GATETERM4(xx, 0B1000, v1000) + GATETERM4(xx, 0B1001, v1001) +          \
+GATETERM4(xx, 0B1010, v1010) + GATETERM4(xx, 0B1011, v1011) +          \
+GATETERM4(xx, 0B1100, v1100) + GATETERM4(xx, 0B1101, v1101) +          \
+GATETERM4(xx, 0B1110, v1110) + GATETERM4(xx, 0B1111, v1111)
+/// @endcond
 
 template <class PrecisionT> struct apply4QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -604,25 +608,27 @@ template <class PrecisionT> struct apply4QubitOpFunctor {
     }
 };
 
+///@cond DEV
 #define GATEENTRY5(xx, yy) xx << 5 | yy
 #define GATETERM5(xx, yy, vyy) matrix(GATEENTRY5(xx, yy)) * vyy
 #define GATESUM5(xx)                                                           \
-    GATETERM5(xx, 0B00000, v00000) + GATETERM5(xx, 0B00001, v00001) +          \
-        GATETERM5(xx, 0B00010, v00010) + GATETERM5(xx, 0B00011, v00011) +      \
-        GATETERM5(xx, 0B00100, v00100) + GATETERM5(xx, 0B00101, v00101) +      \
-        GATETERM5(xx, 0B00110, v00110) + GATETERM5(xx, 0B00111, v00111) +      \
-        GATETERM5(xx, 0B01000, v01000) + GATETERM5(xx, 0B01001, v01001) +      \
-        GATETERM5(xx, 0B01010, v01010) + GATETERM5(xx, 0B01011, v01011) +      \
-        GATETERM5(xx, 0B01100, v01100) + GATETERM5(xx, 0B01101, v01101) +      \
-        GATETERM5(xx, 0B01110, v01110) + GATETERM5(xx, 0B01111, v01111) +      \
-        GATETERM5(xx, 0B10000, v10000) + GATETERM5(xx, 0B10001, v10001) +      \
-        GATETERM5(xx, 0B10010, v10010) + GATETERM5(xx, 0B10011, v10011) +      \
-        GATETERM5(xx, 0B10100, v10100) + GATETERM5(xx, 0B10101, v10101) +      \
-        GATETERM5(xx, 0B10110, v10110) + GATETERM5(xx, 0B10111, v10111) +      \
-        GATETERM5(xx, 0B11000, v11000) + GATETERM5(xx, 0B11001, v11001) +      \
-        GATETERM5(xx, 0B11010, v11010) + GATETERM5(xx, 0B11011, v11011) +      \
-        GATETERM5(xx, 0B11100, v11100) + GATETERM5(xx, 0B11101, v11101) +      \
-        GATETERM5(xx, 0B11110, v11110) + GATETERM5(xx, 0B11111, v11111)
+GATETERM5(xx, 0B00000, v00000) + GATETERM5(xx, 0B00001, v00001) +          \
+GATETERM5(xx, 0B00010, v00010) + GATETERM5(xx, 0B00011, v00011) +      \
+GATETERM5(xx, 0B00100, v00100) + GATETERM5(xx, 0B00101, v00101) +      \
+GATETERM5(xx, 0B00110, v00110) + GATETERM5(xx, 0B00111, v00111) +      \
+GATETERM5(xx, 0B01000, v01000) + GATETERM5(xx, 0B01001, v01001) +      \
+GATETERM5(xx, 0B01010, v01010) + GATETERM5(xx, 0B01011, v01011) +      \
+GATETERM5(xx, 0B01100, v01100) + GATETERM5(xx, 0B01101, v01101) +      \
+GATETERM5(xx, 0B01110, v01110) + GATETERM5(xx, 0B01111, v01111) +      \
+GATETERM5(xx, 0B10000, v10000) + GATETERM5(xx, 0B10001, v10001) +      \
+GATETERM5(xx, 0B10010, v10010) + GATETERM5(xx, 0B10011, v10011) +      \
+GATETERM5(xx, 0B10100, v10100) + GATETERM5(xx, 0B10101, v10101) +      \
+GATETERM5(xx, 0B10110, v10110) + GATETERM5(xx, 0B10111, v10111) +      \
+GATETERM5(xx, 0B11000, v11000) + GATETERM5(xx, 0B11001, v11001) +      \
+GATETERM5(xx, 0B11010, v11010) + GATETERM5(xx, 0B11011, v11011) +      \
+GATETERM5(xx, 0B11100, v11100) + GATETERM5(xx, 0B11101, v11101) +      \
+GATETERM5(xx, 0B11110, v11110) + GATETERM5(xx, 0B11111, v11111)
+/// @endcond
 template <class PrecisionT> struct apply5QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
     using KokkosComplexVector = Kokkos::View<ComplexT *>;
