@@ -513,6 +513,7 @@ class TestExecution:
                 ExecutionConfig(
                     grad_on_execution=None,
                     use_device_gradient=False,
+                    use_device_jacobian_product=False,
                     device_options=_default_device_options,
                 ),
             ),
@@ -522,6 +523,7 @@ class TestExecution:
                     gradient_method="adjoint",
                     grad_on_execution=True,
                     use_device_gradient=True,
+                    use_device_jacobian_product=True,
                     device_options=_default_device_options,
                 ),
             ),
@@ -535,6 +537,7 @@ class TestExecution:
                 ExecutionConfig(
                     grad_on_execution=None,
                     use_device_gradient=False,
+                    use_device_jacobian_product=False,
                     device_options={
                         "c_dtype": np.complex64,
                         "batch_obs": False,
@@ -556,6 +559,7 @@ class TestExecution:
                     gradient_method="backprop",
                     use_device_gradient=False,
                     grad_on_execution=False,
+                    use_device_jacobian_product=False,
                     device_options=_default_device_options,
                 ),
             ),
