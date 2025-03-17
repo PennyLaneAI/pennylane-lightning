@@ -260,6 +260,11 @@ class LightningKokkos(LightningBase):
         updated_values = {}
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
+        if config.use_device_jacobian_product is None:
+            updated_values["use_device_jacobian_product"] = config.gradient_method in (
+                "best",
+                "adjoint",
+            )
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
         if (
