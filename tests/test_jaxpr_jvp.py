@@ -102,7 +102,7 @@ class TestErrors:
         args = (0.5,)
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
-        with pytest.raises(NotImplementedError, match="The circuit should return measurement"):
+        with pytest.raises(NotImplementedError, match="The circuit should return a measurement"):
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
     def test_wrong_order(self):
@@ -230,6 +230,26 @@ class TestCorrectResults:
         assert len(dresults) == 1
         assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
 
+    def test_diffentiabl_opmath(self):
+        """Test that we can differentiate opmath functions."""
+
+        def f(x):
+            qml.adjoint(qml.RX(x, 0))
+            return qml.expval(qml.Z(0))
+
+        jaxpr = jax.make_jaxpr(f)(0.5)
+
+        args = (0.82,)
+        tangents = (2.0,)
+        dev_jaxpr_jvp = qml.device(device_name, wires=1).jaxpr_jvp
+
+        results, dresults = dev_jaxpr_jvp(jaxpr.jaxpr, args, tangents)
+
+        assert len(results) == 1
+        assert qml.math.allclose(results, jax.numpy.cos(args[0]))
+        assert len(dresults) == 1
+        assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
+
     def test_multiple_in(self):
         """Test that we can differentiate multiple inputs."""
 
@@ -279,6 +299,34 @@ class TestCorrectResults:
         assert qml.math.allclose(dres[1], 2.0 * -jax.numpy.cos(x))
         assert qml.math.allclose(dres[2], 2.0 * -jax.numpy.sin(x))
 
+    def test_multiple_in_and_out(self):
+        """Test that we can differentiate multiple inputs and outputs."""
+
+        def f(x, y):
+            qml.RX(x, 0)
+            qml.RY(y, 1)
+            return qml.expval(qml.Y(0)), qml.expval(qml.X(1))
+
+        x = jax.numpy.array(0.5)
+        y = jax.numpy.array(1.2)
+        dx = jax.numpy.array(2.0)
+        dy = jax.numpy.array(3.0)
+
+        jaxpr = jax.make_jaxpr(f)(x, y)
+
+        args = (x, y)
+        tangents = (dx, dy)
+
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
+
+        res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, args, tangents)
+
+        expected = -jax.numpy.sin(x), jax.numpy.sin(y)
+        assert qml.math.allclose(res, expected)
+
+        expected_dres = dx * -jax.numpy.cos(x), dy * jax.numpy.cos(y)
+        assert qml.math.allclose(dres, expected_dres)
+
     def test_input_array(self):
         """Test that the input array is handled correctly."""
 
@@ -321,6 +369,37 @@ class TestCorrectResults:
 
         assert qml.math.allclose(res, jax.numpy.cos(1.2))
         assert qml.math.allclose(dres, dconst[0] * -jax.numpy.sin(1.2))
+
+    def test_jaxpr_consts_and_traced_args(self):
+        """Test that we can execute jaxpr with consts and traced arguments together."""
+
+        const = jax.numpy.array(0.5)
+
+        def f(x):
+            qml.RX(const, 0)
+            qml.RY(x, 1)
+            qml.CNOT((0, 1))
+            return qml.expval(qml.Y(0))
+
+        x = jax.numpy.array(0.5)
+        y = jax.numpy.array(1.2)
+        dx = jax.numpy.array(2.0)
+        dy = jax.numpy.array(3.0)
+
+        jaxpr = jax.make_jaxpr(f)(
+            x,
+        )
+
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
+
+        [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x, y), (dx, dy))
+        expected = -jax.numpy.sin(x) * jax.numpy.sin(y)
+        assert qml.math.allclose(res, expected)
+
+        expected_dres = dx * -jax.numpy.cos(x) * jax.numpy.sin(y) + dy * -jax.numpy.sin(
+            x
+        ) * jax.numpy.cos(y)
+        assert qml.math.allclose(dres, expected_dres)
 
     def test_multiple_train_params(self):
         """Test that we can differentiate multiple trainable parameters."""

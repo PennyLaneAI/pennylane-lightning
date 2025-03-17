@@ -543,7 +543,7 @@ class LightningQubit(LightningBase):
                 and measurements
             args (Sequence[TensorLike]): the ``consts`` followed by the normal   arguments
             tangents (Sequence[TensorLike]): the tangents corresponding to ``args``.
-                For lightning.qubit, this cannot contain ``jax.interpreters.ad.Zero``.
+                For LightningQubit, this cannot contain ``jax.interpreters.ad.Zero``.
 
         Keyword Args:
             execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
@@ -554,7 +554,7 @@ class LightningQubit(LightningBase):
 
         .. note::
 
-            For lightning.qubit, the current implementation of this method is based on the conversion of the jaxpr to a PennyLane tape.
+            For LightningQubit, the current implementation of this method is based on the conversion of the jaxpr to a PennyLane tape.
             This has strict limitations. The ``args`` should contain the concatenation of ``jaxpr.constvars`` and ``jaxpr.invars``,
             which are assumed to represent the trainable parameters of the circuit.
             The method will raise an error if ``args`` do not match exactly the parameters of the jaxpr converted to quantum tape.
@@ -583,32 +583,26 @@ class LightningQubit(LightningBase):
             complex: (jax.numpy.complex128 if jax.config.jax_enable_x64 else jax.numpy.complex64),
         }
 
-        def shape(var):
-            """Get the shape of a variable in the jaxpr."""
+        def _get_shape(var):
             if isinstance(var.aval, AbstractMeasurement):
                 shots = self.shots.total_shots
                 s, dtype = var.aval.abstract_eval(num_device_wires=len(self.wires), shots=shots)
                 return jax.core.ShapedArray(s, dtype_map[dtype])
             # The `simulate_and_jacobian` method requires the circuit to return measurements
-            raise NotImplementedError("The circuit should return measurement")
+            raise NotImplementedError("The circuit should return a measurement")
 
-        def flatten_shaped_array(aval):
-            """Flatten a ShapedArray into a list of scalars."""
+        def _flatten_shaped_array(aval):
             if aval.shape == ():
                 return [aval]
-            num_elements = np.prod(aval.shape, dtype=int)
+            num_elements = int(np.prod(aval.shape))
             return [jax.core.ShapedArray((), aval.dtype) for _ in range(num_elements)]
 
-        def shape_jac(shape_res):
-            """Get the shape of the jacobian."""
-            jaxpr_train_args = jaxpr.invars + jaxpr.constvars
-            flattened_inputs = [
-                fa for var in jaxpr_train_args for fa in flatten_shaped_array(var.aval)
-            ]
+        def _get_jacobian_shape(shape_res):
+            train_args = jaxpr.invars + jaxpr.constvars
+            flattened = [scalar for var in train_args for scalar in _flatten_shaped_array(var.aval)]
             if len(jaxpr.outvars) == 1:
-                return flattened_inputs
-
-            return [flattened_inputs for _ in shape_res]
+                return flattened
+            return [flattened for _ in shape_res]
 
         if len(args) != len(tangents):
             raise ValueError("The number of arguments and tangents must match")
@@ -618,7 +612,6 @@ class LightningQubit(LightningBase):
             raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
 
         flat_tangents, _ = jax.tree_util.tree_flatten(tangents)
-
         for tan in flat_tangents:
             if jax.numpy.issubdtype(jax.numpy.asarray(tan).dtype, jax.numpy.integer):
                 raise ValueError("Tangents cannot be of integer type")
@@ -655,8 +648,8 @@ class LightningQubit(LightningBase):
             results, jacobians = self.simulate_and_jacobian(tape, state=self._statevector)
             return results, jacobians
 
-        shapes_res = [shape(var) for var in jaxpr.outvars]
-        shapes_jac = shape_jac(shapes_res)
+        shapes_res = [_get_shape(var) for var in jaxpr.outvars]
+        shapes_jac = _get_jacobian_shape(shapes_res)
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
 
         # The `compute_jvp_single` and `compute_jvp_multi` methods don't accept a list with a single array
