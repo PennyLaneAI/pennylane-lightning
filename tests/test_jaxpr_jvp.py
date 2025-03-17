@@ -30,7 +30,6 @@ if device_name == "lightning.tensor":
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
-
 @pytest.fixture(autouse=True)
 def enable_disable_plxpr():
     """Fixture to enable and disable the plxpr capture."""
@@ -58,7 +57,7 @@ class TestErrors:
         with pytest.raises(
             NotImplementedError, match="LightningQubit does not support gradient_method"
         ):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(
+            qml.device(device_name, wires=1).jaxpr_jvp(
                 jaxpr.jaxpr, args, (0.5,), execution_config
             )
 
@@ -77,12 +76,12 @@ class TestErrors:
             NotImplementedError,
             match="tangents must not contain jax.interpreter.ad.Zero objects",
         ):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
     def test_mismatch_args_tangents(self):
         """Test that the jaxpr_jvp method raises an error if the number of arguments and tangents do not match."""
 
-        @qml.qnode(device=qml.device("lightning.qubit", wires=1))
+        @qml.qnode(device=qml.device(device_name, wires=1))
         def circuit(x):
             qml.RX(x, 0)
             return qml.expval(qml.Z(0))
@@ -92,7 +91,7 @@ class TestErrors:
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
         with pytest.raises(ValueError, match="The number of arguments and tangents must match"):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
     def test_only_measurements(self):
         """Test that the jaxpr_jvp method raises an error if the circuit does not return a measurement."""
@@ -105,7 +104,7 @@ class TestErrors:
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
         with pytest.raises(NotImplementedError, match="The circuit should return measurement"):
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
     def test_wrong_order(self):
         """Test that the jaxpr_jvp method raises an error if the order of the arguments does match the tape parameters."""
@@ -119,7 +118,7 @@ class TestErrors:
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5, 0.6))
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5, 0.6))
 
         assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
             exc_info.value
@@ -136,7 +135,7 @@ class TestErrors:
         jaxpr = jax.make_jaxpr(circuit)(*args)
 
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
         assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
             exc_info.value
@@ -156,7 +155,7 @@ class TestErrors:
         jaxpr = jax.make_jaxpr(f)(*args)
 
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
         assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
             exc_info.value
@@ -175,7 +174,7 @@ class TestErrors:
         jaxpr = jax.make_jaxpr(f)(x)
 
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
-            qml.device("lightning.qubit", wires=1).jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
+            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
         assert "NotImplementedError: The parameters of the quantum tape do not match" in str(
             exc_info.value
@@ -197,7 +196,7 @@ class TestCorrectResults:
 
         args = (0.82,)
         tangents = (2.0,)
-        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=1).jaxpr_jvp
+        dev_jaxpr_jvp = qml.device(device_name, wires=1).jaxpr_jvp
 
         executor = partial(dev_jaxpr_jvp, jaxpr.jaxpr)
         if use_jit:
@@ -226,7 +225,7 @@ class TestCorrectResults:
 
         jaxpr = jax.make_jaxpr(f)(x, y)
 
-        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x, y), (dx, dy))
         expected = -jax.numpy.sin(x) * jax.numpy.sin(y)
@@ -246,7 +245,7 @@ class TestCorrectResults:
 
         jaxpr = jax.make_jaxpr(f)(0.5)
 
-        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         x = -0.5
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (2.0,))
@@ -271,7 +270,7 @@ class TestCorrectResults:
         dx = jax.numpy.array([2.0, 3.0])
         jaxpr = jax.make_jaxpr(f)(x)
 
-        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
@@ -293,7 +292,7 @@ class TestCorrectResults:
 
         jaxpr = jax.make_jaxpr(f)()
 
-        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         const = jax.numpy.array([1.2])
         dconst = jax.numpy.array([0.25])
@@ -311,7 +310,7 @@ class TestCorrectResults:
 
         jaxpr = jax.make_jaxpr(f)(0.5, 0.6, 0.7)
 
-        dev_jaxpr_jvp = qml.device("lightning.qubit", wires=2).jaxpr_jvp
+        dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         x = (0.5, 0.6, 0.7)
         dx = (0.5, 0.6, 0.7)
