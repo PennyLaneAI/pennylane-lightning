@@ -312,12 +312,14 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     }
 };
 
+///@cond DEV
 #define EXPVALENTRY2(xx, yy) xx << 2 | yy
 #define EXPVALTERM2(xx, yy, iyy) matrix(EXPVALENTRY2(xx, yy)) * arr(iyy)
 #define EXPVAL2(ixx, xx)                                                       \
     conj(arr(ixx)) *                                                           \
         (EXPVALTERM2(xx, 0B00, i00) + EXPVALTERM2(xx, 0B01, i01) +             \
          EXPVALTERM2(xx, 0B10, i10) + EXPVALTERM2(xx, 0B11, i11))
+/// @endcond
 
 template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
