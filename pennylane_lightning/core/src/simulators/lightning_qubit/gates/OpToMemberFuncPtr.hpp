@@ -39,14 +39,14 @@ namespace Pennylane::LightningQubit::Gates {
  * See specialized classes.
  */
 template <class PrecisionT, class ParamT, class GateImplementation,
-GateOperation gate_op>
+          GateOperation gate_op>
 struct GateOpToMemberFuncPtr {
     // raises compile error when this struct is instantiated.
     static_assert(sizeof(PrecisionT) == std::numeric_limits<std::size_t>::max(),
-    "GateOpToMemberFuncPtr is not defined for the given gate. "
-    "When you define a new GateOperation, check that you also "
-    "have added the corresponding entry in "
-    "GateOpToMemberFuncPtr.");
+                  "GateOpToMemberFuncPtr is not defined for the given gate. "
+                  "When you define a new GateOperation, check that you also "
+                  "have added the corresponding entry in "
+                  "GateOpToMemberFuncPtr.");
     constexpr static auto value = nullptr;
 };
 

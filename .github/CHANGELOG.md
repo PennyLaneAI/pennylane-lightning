@@ -8,6 +8,9 @@
 
 ### Improvements
 
+* Hide unnecessary C++ APIs in Lightning docs.
+  [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
+
 * Hide anonymous namespaces in Lightning docs.
   [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
 
