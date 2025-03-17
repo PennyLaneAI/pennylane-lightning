@@ -8,6 +8,8 @@
 
 ### Improvements
 
+* Remove dispensable C++ source code in Lightning wheels.
+
 * Expand test structure to efficiently handle sparse data.
   [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
