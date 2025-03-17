@@ -65,6 +65,7 @@ clean:
 	rm -rf .coverage coverage_html_report/
 	rm -rf pennylane_lightning/*_ops*
 	rm -rf *.egg-info
+	rm -rf dist
 
 .PHONY: python python-skip-compile
 python:
