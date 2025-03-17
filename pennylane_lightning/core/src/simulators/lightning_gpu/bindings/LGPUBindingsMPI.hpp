@@ -320,4 +320,4 @@ void registerBackendSpecificInfoMPI(py::module_ &m) {
             "MPI Scatter.");
 }
 } // namespace Pennylane::LightningGPU
-  /// @endcond
+/// @endcond

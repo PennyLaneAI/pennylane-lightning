@@ -49,7 +49,7 @@ constexpr bool BACKEND_FOUND = true;
 namespace {
 using namespace Pennylane::LightningGPU::Util;
 } // namespace
-  /// @endcond
+/// @endcond
 
 #else
 constexpr bool BACKEND_FOUND = false;

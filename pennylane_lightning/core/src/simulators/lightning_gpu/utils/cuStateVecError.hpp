@@ -33,10 +33,12 @@
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
-}
+} // namespace
+/// @endcond
 
 #ifndef CUDA_UNSAFE
 
+/// @cond DEV
 /**
  * @brief Macro that throws Exception from cuStateVec failure error codes.
  *
