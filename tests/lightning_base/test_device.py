@@ -627,6 +627,33 @@ class TestExecution:
         with pytest.raises(qml.DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.preprocess(config)
 
+    def test_transform_program(self, enable_disable_plxpr):
+        """Test that the transform program returned by preprocess has the correct transforms."""
+        dev = LightningDevice(wires=1)
+
+        # Default config
+        config = ExecutionConfig()
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 2
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.defer_measurements._transform
+        assert program[1].transform == qml.transforms.decompose._transform
+
+        # mcm_method="deferred"
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="deferred"))
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 2
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.defer_measurements._transform
+        assert program[1].transform == qml.transforms.decompose._transform
+
+        # mcm_method="single-branch-statistics"
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="single-branch-statistics"))
+        program, _ = dev.preprocess(execution_config=config)
+        assert len(program) == 1
+        # pylint: disable=protected-access
+        assert program[0].transform == qml.transforms.decompose._transform
+
     @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor does not support adjoint"
     )
