@@ -24,8 +24,6 @@
 #include <complex>
 #include <unordered_map>
 
-#include <iostream>
-
 #include "CPUMemoryModel.hpp"
 #include "GateOperation.hpp"
 #include "KernelMap.hpp"

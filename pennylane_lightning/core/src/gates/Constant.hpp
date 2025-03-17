@@ -45,7 +45,7 @@ namespace Pennylane::Gates::Constant {
     MatrixOperation::MultiQubitOp,
 };
 /**
- * @brief List of multi-qubit matrix operation
+ * @brief List of multi-qubit sparse matrix operations
  */
 [[maybe_unused]] constexpr std::array sparse_multi_qubit_matrix_ops{
     SparseMatrixOperation::SparseMultiQubitOp,

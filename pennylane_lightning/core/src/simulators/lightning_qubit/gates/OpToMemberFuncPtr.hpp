@@ -936,7 +936,7 @@ template <class PrecisionT, class IndexT> struct SparseMatrixFuncPtr {
 };
 
 /**
- * @brief Pointer type for a controlled sparsematrix operation
+ * @brief Pointer type for a controlled sparse matrix operation
  */
 template <class PrecisionT, class IndexT> struct ControlledSparseMatrixFuncPtr {
     using Type = void (*)(std::complex<PrecisionT> *, std::size_t,

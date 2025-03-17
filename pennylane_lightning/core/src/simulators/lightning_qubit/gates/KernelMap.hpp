@@ -19,8 +19,6 @@
 
 // Ignore invalid warnings for compile-time checks without kernel specifics
 // NOLINTBEGIN
-#include <iostream>
-
 #include <cstdint>
 #include <deque>
 #include <functional>
