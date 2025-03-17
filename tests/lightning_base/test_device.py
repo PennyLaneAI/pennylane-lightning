@@ -109,6 +109,14 @@ def dev(request):
     return LightningDevice(wires=request.param[0], c_dtype=request.param[1])
 
 
+@pytest.fixture()
+def enable_disable_plxpr():
+    """Fixture to enable and disable the plxpr capture"""
+    qml.capture.enable()
+    yield
+    qml.capture.disable()
+
+
 class TestHelpers:
     """Unit tests for helper functions"""
 
@@ -572,6 +580,43 @@ class TestExecution:
         del new_config.device_options["rng"]
 
         assert new_config == expected_config
+
+    def test_preprocess_incorrect_device_config(self):
+        """Test that an error is raised if the device options are not valid"""
+
+        config = ExecutionConfig(
+            device_options={
+                "is_wrong_option": True,
+            }
+        )
+
+        device = LightningDevice(wires=2)
+        with pytest.raises(qml.DeviceError, match="device option is_wrong_option"):
+            _ = device.preprocess(config)
+
+    @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
+    def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
+        """Test that a warning is raised if post-selection is used with single branch statistics."""
+        device = LightningDevice(wires=1)
+        config = ExecutionConfig(
+            mcm_config=MCMConfig(
+                mcm_method="single-branch-statistics", postselect_mode=postselect_mode
+            )
+        )
+
+        with pytest.warns(
+            UserWarning,
+            match="Setting 'postselect_mode' is not supported with mcm_method='single-branch-",
+        ):
+            _ = device.preprocess(config)
+
+    def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
+        """Test that an error is raised if mcm_method is invalid."""
+        device = LightningDevice(wires=1)
+        config = ExecutionConfig(mcm_config=MCMConfig(mcm_method="foo"))
+
+        with pytest.raises(qml.DeviceError, match="mcm_method='foo' is not supported"):
+            _ = device.preprocess(config)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor does not support adjoint"
