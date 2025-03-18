@@ -288,30 +288,6 @@ class LightningKokkos(LightningBase):
         mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0, "rng": None}
         new_device_options.update(mcmc_default)
 
-        if qml.capture.enabled():
-            mcm_config = config.mcm_config
-            mcm_updated_values = {}
-            if (mcm_method := mcm_config.mcm_method) not in (
-                "deferred",
-                "single-branch-statistics",
-                None,
-            ):
-                raise qml.DeviceError(
-                    f"mcm_method='{mcm_method}' is not supported with lightning.qubit "
-                    "when program capture is enabled."
-                )
-
-            if mcm_method == "single-branch-statistics" and mcm_config.postselect_mode is not None:
-                warn(
-                    "Setting 'postselect_mode' is not supported with mcm_method='single-branch-"
-                    "statistics'. 'postselect_mode' will be ignored.",
-                    UserWarning,
-                )
-                mcm_updated_values["postselect_mode"] = None
-            if mcm_method is None:
-                mcm_updated_values["mcm_method"] = "deferred"
-            updated_values["mcm_config"] = replace(mcm_config, **mcm_updated_values)
-
         return replace(config, **updated_values, device_options=new_device_options)
 
     def preprocess(self, execution_config: ExecutionConfig = DefaultExecutionConfig):
@@ -335,14 +311,6 @@ class LightningKokkos(LightningBase):
         """
         exec_config = self._setup_execution_config(execution_config)
         program = TransformProgram()
-
-        if qml.capture.enabled():
-
-            if exec_config.mcm_config.mcm_method == "deferred":
-                program.add_transform(qml.defer_measurements, num_wires=len(self.wires))
-            # Using stopping_condition_shots because we don't want to decompose Conditionals or MCMs
-            program.add_transform(qml.transforms.decompose, gate_set=stopping_condition_shots)
-            return program, exec_config
 
         program.add_transform(validate_measurements, name=self.name)
         program.add_transform(validate_observables, accepted_observables, name=self.name)
