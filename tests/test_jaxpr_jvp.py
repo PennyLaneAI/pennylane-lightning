@@ -60,23 +60,6 @@ class TestErrors:
         ):
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,), execution_config)
 
-    def test_no_allowed_zeros(self):
-        """Test that the jaxpr_jvp method raises an error if the tangents contain zeros."""
-
-        def circuit(x):
-            qml.RX(x, 0)
-            return qml.expval(qml.Z(0))
-
-        args = (0.5,)
-        tangents = (jax.interpreters.ad.Zero(jax.core.ShapedArray((), float)),)
-        jaxpr = jax.make_jaxpr(circuit)(*args)
-
-        with pytest.raises(
-            NotImplementedError,
-            match="tangents must not contain jax.interpreter.ad.Zero objects",
-        ):
-            qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
-
     def test_mismatch_args_tangents(self):
         """Test that the jaxpr_jvp method raises an error if the number of arguments and tangents do not match."""
 
@@ -249,6 +232,25 @@ class TestCorrectResults:
         assert qml.math.allclose(results, jax.numpy.cos(args[0]))
         assert len(dresults) == 1
         assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
+
+    def test_abstract_zero_tangent(self):
+        """Test we get the derivatives will be zero if the tangent is abstract zero."""
+
+        def f(x):
+            _ = x + 1
+            qml.RX(0.5, 0)
+            return qml.expval(qml.Z(0))
+
+        args = (0.5,)
+        tangents = (jax.interpreters.ad.Zero(jax.core.ShapedArray((), float)),)
+
+        jaxpr = jax.make_jaxpr(f)(0.5)
+        [results], [dresults] = qml.device(device_name, wires=1).jaxpr_jvp(
+            jaxpr.jaxpr, args, tangents
+        )
+
+        assert qml.math.allclose(results, jax.numpy.cos(0.5))
+        assert qml.math.allclose(dresults, 0)
 
     def test_multiple_in(self):
         """Test that we can differentiate multiple inputs."""

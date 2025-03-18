@@ -536,14 +536,15 @@ class LightningQubit(LightningBase):
         tangents: Sequence[TensorLike],
         execution_config: Optional[ExecutionConfig] = None,
     ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
-        """An **experimental** method for computing the results and jvp for PLXPR with LightningQubit.
+        """
+        An **experimental** method for computing the results and jvp for PLXPR with LightningQubit.
 
         Args:
             jaxpr (jax.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
                 and measurements
-            args (Sequence[TensorLike]): the ``consts`` followed by the normal   arguments
+            args (Sequence[TensorLike]): the ``consts`` followed by the normal arguments
             tangents (Sequence[TensorLike]): the tangents corresponding to ``args``.
-                For LightningQubit, this cannot contain ``jax.interpreters.ad.Zero``.
+                May contain ``jax.interpreters.ad.Zero``.
 
         Keyword Args:
             execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
@@ -607,12 +608,14 @@ class LightningQubit(LightningBase):
         if len(args) != len(tangents):
             raise ValueError("The number of arguments and tangents must match")
 
-        # This is a limitation of the current implementation
-        if any(isinstance(tangent, jax.interpreters.ad.Zero) for tangent in tangents):
-            raise NotImplementedError("tangents must not contain jax.interpreter.ad.Zero objects")
+        def _make_zero(tan, arg):
+            return (
+                jax.lax.zeros_like_array(arg) if isinstance(tan, jax.interpreters.ad.Zero) else tan
+            )
 
-        flat_tangents, _ = jax.tree_util.tree_flatten(tangents)
-        for tan in flat_tangents:
+        tangents = tuple(map(_make_zero, tangents, args))
+
+        for tan in tangents:
             if jax.numpy.issubdtype(jax.numpy.asarray(tan).dtype, jax.numpy.integer):
                 raise ValueError("Tangents cannot be of integer type")
 
@@ -635,10 +638,9 @@ class LightningQubit(LightningBase):
             tape = qml.tape.plxpr_to_tape(jaxpr, const_args, *non_const_args)
             tape_params = tape.get_parameters()
 
-            flat_args, _ = jax.tree_util.tree_flatten(args)
-            len_train_inputs = sum(jax.numpy.size(p) for p in flat_args)
+            len_train_inputs = sum(jax.numpy.size(p) for p in args)
 
-            if not qml.math.allclose(flat_args, tape_params) or len_train_inputs != len(
+            if not qml.math.allclose(args, tape_params) or len_train_inputs != len(
                 tape.trainable_params
             ):
                 raise NotImplementedError(
@@ -653,13 +655,13 @@ class LightningQubit(LightningBase):
         results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
 
         # The `compute_jvp_single` and `compute_jvp_multi` methods don't accept a list with a single array
-        if len(flat_tangents) == 1 and not jax.numpy.isscalar(flat_tangents[0]):
-            flat_tangents = flat_tangents[0]
+        if len(tangents) == 1 and not jax.numpy.isscalar(tangents[0]):
+            tangents = tangents[0]
 
         if len(jaxpr.outvars) == 1:
-            jvps = [qml.gradients.compute_jvp_single(flat_tangents, jacobians)]
+            jvps = [qml.gradients.compute_jvp_single(tangents, jacobians)]
         else:
-            jvps = qml.gradients.compute_jvp_multi(flat_tangents, jacobians)
+            jvps = qml.gradients.compute_jvp_multi(tangents, jacobians)
 
         return results, jvps
 
