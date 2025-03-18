@@ -259,8 +259,11 @@ class LightningKokkos(LightningBase):
         """
         updated_values = {}
 
+        # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
+        mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0, "rng": None}
+
         for option, _ in config.device_options.items():
-            if option not in self._device_options:
+            if option not in self._device_options and option != "mcmc":
                 raise qml.DeviceError(f"device option {option} not present on {self}")
 
         if config.gradient_method == "best":
@@ -284,8 +287,6 @@ class LightningKokkos(LightningBase):
             if option not in new_device_options:
                 new_device_options[option] = getattr(self, f"_{option}", None)
 
-        # It is necessary to set the mcmc default configuration to complete the requirements of ExecuteConfig
-        mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0, "rng": None}
         new_device_options.update(mcmc_default)
 
         return replace(config, **updated_values, device_options=new_device_options)
