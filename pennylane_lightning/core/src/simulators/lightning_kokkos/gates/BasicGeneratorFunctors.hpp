@@ -235,25 +235,6 @@ void applyGenSingleExcitationPlus(
 }
 
 template <class ExecutionSpace, class PrecisionT>
-void applyNCGenPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-                     std::size_t num_qubits,
-                     const std::vector<std::size_t> &controlled_wires,
-                     const std::vector<bool> &controlled_values,
-                     const std::vector<std::size_t> &wires,
-                     [[maybe_unused]] bool inverse = false) {
-    auto core_function = KOKKOS_LAMBDA(
-        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
-        std::size_t i01, std::size_t i10, std::size_t i11) {
-        arr(i00) = 0.0;
-        arr(i11) = 0.0;
-        kokkos_swap(arr(i01), arr(i10));
-    };
-    applyNC2Functor<PrecisionT, decltype(core_function), true>(
-        ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
-        wires, core_function);
-}
-
-template <class ExecutionSpace, class PrecisionT>
 void applyGenPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                    std::size_t num_qubits,
                    const std::vector<std::size_t> &wires,
@@ -778,6 +759,26 @@ void applyNCGenSingleExcitationPlus(
         const auto v10 = arr(i10);
         arr(i10) = Kokkos::complex<PrecisionT>{-imag(v01), real(v01)};
         arr(i01) = Kokkos::complex<PrecisionT>{imag(v10), -real(v10)};
+    };
+    applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
+        ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
+        wires, core_function);
+}
+
+
+template <class ExecutionSpace, class PrecisionT>
+void applyNCGenPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
+                     std::size_t num_qubits,
+                     const std::vector<std::size_t> &controlled_wires,
+                     const std::vector<bool> &controlled_values,
+                     const std::vector<std::size_t> &wires,
+                     [[maybe_unused]] bool inverse = false) {
+    auto core_function = KOKKOS_LAMBDA(
+        Kokkos::View<Kokkos::complex<PrecisionT> *> arr, std::size_t i00,
+        std::size_t i01, std::size_t i10, std::size_t i11) {
+        arr(i00) = 0.0;
+        arr(i11) = 0.0;
+        kokkos_swap(arr(i01), arr(i10));
     };
     applyNCGenerator2Functor<PrecisionT, decltype(core_function)>(
         ExecutionSpace{}, arr_, num_qubits, controlled_wires, controlled_values,
