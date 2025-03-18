@@ -627,6 +627,9 @@ class TestExecution:
         with pytest.raises(qml.DeviceError, match="mcm_method='foo' is not supported"):
             _ = device.preprocess(config)
 
+    @pytest.mark.skipif(
+        device_name != "lightning.qubit", reason="Only lightning.qubit has this logic."
+    )
     def test_transform_program(self, enable_disable_plxpr):
         """Test that the transform program returned by preprocess has the correct transforms."""
         dev = LightningDevice(wires=1)
