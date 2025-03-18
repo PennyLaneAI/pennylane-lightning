@@ -118,11 +118,11 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
     std::vector<cp_t> expected_state(Pennylane::Util::exp2(num_qubits));
     std::vector<cp_t> local_state(subSvLength);
 
-    using index_type =
+    using IndexT =
         typename std::conditional<std::is_same<PrecisionT, float>::value,
                                   int32_t, int64_t>::type;
 
-    std::vector<index_type> indices(Pennylane::Util::exp2(num_qubits));
+    std::vector<IndexT> indices(Pennylane::Util::exp2(num_qubits));
 
     if (mpi_manager.getRank() == 0) {
         std::mt19937 re{1337};
@@ -142,7 +142,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaMPI::SetStateVector",
     mpi_manager.Barrier();
 
     auto expected_local_state = mpi_manager.scatter<cp_t>(expected_state, 0);
-    mpi_manager.Bcast<index_type>(indices, 0);
+    mpi_manager.Bcast<IndexT>(indices, 0);
     mpi_manager.Bcast<cp_t>(init_state, 0);
     mpi_manager.Barrier();
 

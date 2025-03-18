@@ -219,7 +219,7 @@ class StateVectorCudaManaged
                                      }) == wires.end(),
                         "Invalid wire index.");
 
-        using index_type =
+        using IndexT =
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
@@ -233,11 +233,11 @@ class StateVectorCudaManaged
 
         if (is_wires_sorted_contiguous && is_side_significant) {
             // Set most common case: contiguous wires
-            setSortedContiguousStateVector_<index_type>(
+            setSortedContiguousStateVector_<IndexT>(
                 state_size, state_ptr, wires, is_left_significant, use_async);
         } else {
             // Set the state-vector for non-contiguous wires
-            std::vector<index_type> indices(state_size);
+            std::vector<IndexT> indices(state_size);
 
             // Calculate the indices of the state-vector to be set.
             // TODO: Could move to GPU calculation if the state size is large.
@@ -255,12 +255,12 @@ class StateVectorCudaManaged
                         index |= bit << (num_qubits - 1 -
                                          local_wires[num_wires - 1 - j]);
                     }
-                    indices[i] = static_cast<index_type>(index);
+                    indices[i] = static_cast<IndexT>(index);
                 }
             }
             // set the state-vector
-            setStateVector_<index_type>(state_size, state_ptr, indices.data(),
-                                        use_async);
+            setStateVector_<IndexT>(state_size, state_ptr, indices.data(),
+                                    use_async);
         }
     }
 
@@ -342,7 +342,7 @@ class StateVectorCudaManaged
             if (!gate_cache_.gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
                 std::string message = "Currently unsupported gate: " + opName +
-                                      "and no matrix is provided.";
+                                      " and no matrix is provided.";
                 throw LightningException(message);
             } else if (!gate_cache_.gateExists(opName, par[0])) {
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
@@ -2158,7 +2158,7 @@ class StateVectorCudaManaged
      * method is implemented by the customized CUDA kernel defined in the
      * DataBuffer class.
      *
-     * @tparam index_type Integer value type.
+     * @tparam IndexT Integer value type.
      *
      * @param num_indices Number of elements to be passed to the state vector.
      * @param values Pointer to values to be set for the target elements.
@@ -2167,8 +2167,8 @@ class StateVectorCudaManaged
      * Otherwise, the last target wire matches the last qubit.
      * @param async Use an asynchronous memory copy.
      */
-    template <class index_type>
-    void setSortedContiguousStateVector_(const index_type num_indices,
+    template <class IndexT>
+    void setSortedContiguousStateVector_(const IndexT num_indices,
                                          const std::complex<PrecisionT> *values,
                                          const std::vector<std::size_t> &wires,
                                          const bool is_left_significant = false,
@@ -2197,17 +2197,17 @@ class StateVectorCudaManaged
      * @param indices Pointer to indices of the target elements.
      * @param async Use an asynchronous memory copy.
      */
-    template <class index_type, std::size_t thread_per_block = 256>
-    void setStateVector_(const index_type num_indices,
+    template <class IndexT, std::size_t thread_per_block = 256>
+    void setStateVector_(const IndexT num_indices,
                          const std::complex<PrecisionT> *values,
-                         const index_type *indices, const bool async = false) {
+                         const IndexT *indices, const bool async = false) {
         BaseType::getDataBuffer().zeroInit();
 
         auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
 
-        index_type num_elements = num_indices;
-        DataBuffer<index_type, int> d_indices{
+        IndexT num_elements = num_indices;
+        DataBuffer<IndexT, int> d_indices{
             static_cast<std::size_t>(num_elements), device_id, stream_id, true};
         DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
                                         device_id, stream_id, true};
