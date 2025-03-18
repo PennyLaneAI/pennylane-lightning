@@ -1,10 +1,33 @@
 # Release 0.41.0-dev
 
 ### New features since last release
+* Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
+  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
 
 ### Breaking changes
 
 ### Improvements
+
+* Hide anonymous namespaces in Lightning docs.
+  [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
+
+* Expand test structure to efficiently handle sparse data.
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  
+* Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
+  [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
+
+* Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+
+* Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+
+* Optimize the copy of a input state-vector into the LGPU #1071 
+  [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
+
+* Fix wheel naming in Docker builds for `setuptools v75.8.1` compatibility.
+  [(#1075)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1075)
 
 * Use native C++ kernels for controlled-adjoint and adjoint-controlled of supported operations.
   [(#1063)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1063)
@@ -24,7 +47,7 @@
 
 * Remove the old device API references in the Lightning repo and test suite.
   [(#1057)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1057)
-  
+
 * Update `qml.ControlledQubitUnitary` tests following the latest updates in PennyLane.
   [(#1047)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1047)
 
@@ -56,9 +79,30 @@
 * `SX` and `C(SX)` gates are natively supported for all lightning devices.
   [(#731)](https://github.com/PennyLaneAI/pennylane-lightning/pull/731)
 
+* Programs transformed by `qml.defer_measurements` can be executed on `lightning.qubit`.
+  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
+
+* `lightning.qubit` supports `ctrl` and `adjoint` with program capture.
+  [(#1069)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1069)
+
 ### Documentation
 
 ### Bug fixes
+
+* Fix the `test_preprocess` test skip condition for `lightning.tensor`.
+  [(#1092)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1092)
+
+* Fix measurements with empty wires and operators for statevectors with dynamically allocated wires.
+  [(#1081)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1081)
+
+* Fix unit tests that were being skipped in `testApplyControlledPhaseShift`.
+  [(#1083)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1083)
+
+* Fix Github CI for aarch64 cuda to clean up after runs.
+  [(#1074)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1074)
+
+* Increase maximum time for aarch64-CUDA Github CI action .
+  [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
 
 * Fix `SyntaxWarning` from `is` with a literal in Python tests.
   [(#1070)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1070)
@@ -83,12 +127,14 @@
 
 This release contains contributions from (in alphabetical order):
 
+Astral Cai,
 Yushao Chen,
 Amintor Dusko,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
+Alex Preciado,
 Shuli Shu
 
 ---

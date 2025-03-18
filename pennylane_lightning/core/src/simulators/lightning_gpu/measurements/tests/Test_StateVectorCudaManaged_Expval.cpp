@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <catch2/catch.hpp>
+
 #include <algorithm>
 #include <complex>
 #include <iostream>
@@ -29,6 +31,7 @@
 #include "cuda_helpers.hpp"
 
 #include "TestHelpers.hpp"
+#include "TestHelpersSparse.hpp"
 
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::Util;

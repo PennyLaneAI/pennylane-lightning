@@ -152,16 +152,13 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             Expectation value of the observable
         """
 
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
+        if self._observable_is_sparse(measurementprocess.obs):
             # ensuring CSR sparse representation.
 
             if self._use_mpi:
                 # Identity for CSR_SparseHamiltonian to pass to processes with rank != 0 to reduce
                 # host(cpu) memory requirements
-                obs = qml.Identity(0)
-                Hmat = qml.Hamiltonian([1.0], [obs]).sparse_matrix()
-                H_sparse = qml.SparseHamiltonian(Hmat, wires=range(1))
-                CSR_SparseHamiltonian = H_sparse.sparse_matrix().tocsr()
+                CSR_SparseHamiltonian = qml.Identity(0).sparse_matrix()
                 # CSR_SparseHamiltonian for rank == 0
                 if self._mpi_handler.mpi_manager.getRank() == 0:
                     CSR_SparseHamiltonian = measurementprocess.obs.sparse_matrix().tocsr()

@@ -35,6 +35,7 @@ from typing import Union
 
 import numpy as np
 import pennylane as qml
+import scipy as sp
 from pennylane import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
@@ -195,8 +196,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
         Args:
-        state (array[complex]): normalized input state (on host) of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+        state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
         device_wires (Wires): wires that get initialized in the state
         use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
@@ -213,11 +213,16 @@ class LightningGPUStateVector(LightningBaseStateVector):
             # state.getState(state_data)
             # state = state_data
 
-        state = self._asarray(state, dtype=self.dtype)  # this operation on host
+        if sp.sparse.issparse(state):
+            state = state.toarray().flatten()  # this operation is on host
+        else:
+            state = self._asarray(state, dtype=self.dtype)  # this operation is on host
+
         output_shape = [2] * self._num_local_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
+            output_shape = [2] * self._num_local_wires
             if self.num_wires == self._num_local_wires:
                 self.syncH2D(np.reshape(state, output_shape))
                 return
