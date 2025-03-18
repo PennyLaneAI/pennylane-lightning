@@ -303,6 +303,11 @@ class LightningGPU(LightningBase):
         Update the execution config with choices for how the device should be used and the device options.
         """
         updated_values = {}
+
+        for option, _ in config.device_options.items():
+            if option not in self._device_options:
+                raise qml.DeviceError(f"device option {option} not present on {self}")
+
         if config.gradient_method == "best":
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_jacobian_product is None:

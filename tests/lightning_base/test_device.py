@@ -581,18 +581,13 @@ class TestExecution:
 
         assert new_config == expected_config
 
-    @pytest.mark.skipif(
-        device_name != "lightning.qubit", reason="Only lightning.qubit has this logic."
-    )
     def test_preprocess_incorrect_device_config(self):
         """Test that an error is raised if the device options are not valid"""
-
         config = ExecutionConfig(
             device_options={
                 "is_wrong_option": True,
             }
         )
-
         device = LightningDevice(wires=2)
         with pytest.raises(qml.DeviceError, match="device option is_wrong_option"):
             _ = device.preprocess(config)
