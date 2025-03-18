@@ -8,8 +8,7 @@
 
 ### Improvements
 
-* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-proccessing are now a part of the 
-  execution pipeline when program capture is enabled.
+* `LightningQubit.preprocess` can be used with program capture enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
   
 * Hide anonymous namespaces in Lightning docs.
