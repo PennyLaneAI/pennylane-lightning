@@ -11,17 +11,20 @@
 * Implemented the `jaxpr_jvp` method to compute the adjoint jvp of a jaxpr using `lightning.qubit`.
   [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
 
+* Hide anonymous namespaces in Lightning docs.
+  [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
+
 * Expand test structure to efficiently handle sparse data.
-  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
 * Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
 * Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Optimize the copy of a input state-vector into the LGPU #1071 
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)

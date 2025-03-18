@@ -28,9 +28,11 @@
 #include "tncudaError.hpp"
 #include "tncuda_helpers.hpp"
 
+/// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 }
+/// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda {
 

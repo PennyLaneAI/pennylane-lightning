@@ -30,12 +30,13 @@
 
 #include "TestHelpers.hpp"
 
+/// @cond DEV
+namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::Util;
-
-namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
+/// @endcond
 
 /**
  * @brief Tests the constructability of the StateVectorCudaManaged class.
