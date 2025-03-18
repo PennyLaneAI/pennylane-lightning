@@ -90,7 +90,7 @@
 ### Bug fixes
 
 * Fix Github CI to run `Lightning-GPU-MPI` tests when pushed to master branch.
-  [(#XX)](https://github.com/PennyLaneAI/pennylane-lightning/pull/XX)
+  [(#1101)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1101)
 
 * Fix the `test_preprocess` test skip condition for `lightning.tensor`.
   [(#1092)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1092)
