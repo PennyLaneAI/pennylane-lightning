@@ -41,6 +41,9 @@ class GateImplementationsAVX2
         MatrixOperation::SingleQubitOp,
     };
 
+    constexpr static std::array<SparseMatrixOperation, 0>
+        implemented_sparse_matrices{};
+
     template <typename PrecisionT>
     static void applySingleQubitOp(std::complex<PrecisionT> *arr,
                                    const std::size_t num_qubits,

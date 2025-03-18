@@ -739,7 +739,7 @@ template <class PrecisionT, class GateImplementation>
 struct SparseMatrixOpToMemberFuncPtr<
     PrecisionT, GateImplementation, SparseMatrixOperation::SparseMultiQubitOp> {
     constexpr static auto value =
-        &GateImplementation::template applySparseMultiQubitOp<PrecisionT>;
+        &GateImplementation::template applyMultiQubitSparseOp<PrecisionT>;
 };
 
 template <class PrecisionT, class GateImplementation,
@@ -779,7 +779,7 @@ struct ControlledSparseMatrixOpToMemberFuncPtr<
     PrecisionT, GateImplementation,
     ControlledSparseMatrixOperation::NCSparseMultiQubitOp> {
     constexpr static auto value =
-        &GateImplementation::template applyNCSparseMultiQubitOp<PrecisionT>;
+        &GateImplementation::template applyNCMultiQubitSparseOp<PrecisionT>;
 };
 
 /// @cond DEV

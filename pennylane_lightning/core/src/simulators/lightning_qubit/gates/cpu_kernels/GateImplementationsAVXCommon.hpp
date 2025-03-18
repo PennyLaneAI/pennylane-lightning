@@ -78,6 +78,9 @@ class GateImplementationsAVXCommon
     constexpr static std::array<ControlledMatrixOperation, 0>
         implemented_controlled_matrices{};
 
+    constexpr static std::array<ControlledSparseMatrixOperation, 0>
+        implemented_controlled_sparse_matrices{};
+
     template <class PrecisionT>
     static void applyPauliX(std::complex<PrecisionT> *arr,
                             const std::size_t num_qubits,

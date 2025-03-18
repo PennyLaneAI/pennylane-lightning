@@ -349,7 +349,7 @@ template <typename PrecisionT> class DynamicDispatcher {
     }
 
     /**
-     * @brief Get registered a controlled sparse matrix operations for the given
+     * @brief Get a registered controlled sparse matrix operations for the given
      * kernel
      *
      * @param kernel Kernel
