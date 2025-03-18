@@ -19,6 +19,7 @@ namespace {
 using Pennylane::Util::isApproxEqual;
 } // namespace
 /// @endcond
+
 #include <algorithm>
 #include <optional>
 #include <string>

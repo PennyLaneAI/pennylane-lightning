@@ -33,7 +33,7 @@ using namespace Pennylane::LightningQubit::Observables;
 using Pennylane::Util::randomIntVector;
 // using namespace Pennylane::Simulators;
 } // namespace
-  /// @endcond
+/// @endcond
 
 #if !defined(_USE_MATH_DEFINES)
 #define _USE_MATH_DEFINES

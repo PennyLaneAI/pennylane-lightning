@@ -18,9 +18,11 @@
 #include "cuError.hpp"
 #include "cuda.h"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
-}
+} // namespace
+/// @endcond
 
 namespace Pennylane::LightningGPU {
 
