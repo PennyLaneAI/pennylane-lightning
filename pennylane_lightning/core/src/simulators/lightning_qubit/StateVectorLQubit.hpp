@@ -798,7 +798,9 @@ class StateVectorLQubit : public StateVectorBase<PrecisionT, Derived> {
      * given kernel.
      *
      * @param kernel Kernel to run the operation
-     * @param matrix Matrix data (in row-major format).
+     * @param row_map Vector containing the row map data.
+     * @param col_idx Vector containing the column index data.
+     * @param values Vector containing the values data.
      * @param wires Wires to apply gate to.
      * @param inverse Indicate whether inverse should be taken.
      */

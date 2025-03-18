@@ -427,8 +427,6 @@ void testControlledSparseMatrixOp(std::size_t num_qubits,
             std::generate(control_values.begin(), control_values.end(),
                           [&re]() -> bool { return re() % 2; });
 
-            std::vector<TestVector<std::complex<PrecisionT>>> res;
-
             // Calculate with dense and sparse kernels and compare results.
             for (KernelType kernel : implementing_sparse_kernels) {
                 auto st_dense = ini_st;
