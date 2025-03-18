@@ -284,7 +284,7 @@ template <typename ComplexT, typename VectorT>
 void applyMultiQubitOpRunSparseUnitary(
     VectorT &ref_st, SparseMatrixCSR<ComplexT> &sparse_unitary, VectorT &st,
     const std::size_t num_qubits, const std::vector<std::size_t> &wires,
-    const bool inverse, const float margin = 1e-5) {
+    const bool inverse, const typename ComplexT::value_type margin = 1e-5) {
 
     GateImplementationsLM::applyMultiQubitSparseOp(
         st.data(), num_qubits, sparse_unitary.row_map.data(),
