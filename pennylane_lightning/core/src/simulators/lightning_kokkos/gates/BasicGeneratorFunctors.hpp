@@ -765,7 +765,6 @@ void applyNCGenSingleExcitationPlus(
         wires, core_function);
 }
 
-
 template <class ExecutionSpace, class PrecisionT>
 void applyNCGenPSWAP(Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
                      std::size_t num_qubits,
