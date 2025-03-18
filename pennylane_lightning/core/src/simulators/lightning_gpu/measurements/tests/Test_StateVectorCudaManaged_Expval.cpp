@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <catch2/catch.hpp>
-
 #include <algorithm>
 #include <complex>
 #include <iostream>
@@ -459,33 +457,21 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs larger",
 }
 
 template <typename TestType>
-static auto bench_tensorProduct(TestVector<std::complex<TestType>> &values, std::vector<std::shared_ptr<Observable<StateVectorCudaManaged<TestType>>>> &obs)
+static auto bench_tensorProduct(StateVectorCudaManaged<TestType> &sv, std::vector<std::shared_ptr<Observable<StateVectorCudaManaged<TestType>>>> &obs)
 {
 
     using StateVectorT = StateVectorCudaManaged<TestType>;
-    using ComplexT = StateVectorT::ComplexT;
 
-    std::vector<ComplexT> init_state(values.begin(), values.end());
-
-    StateVectorT sv_ref{init_state.data(), init_state.size()};
-
-    auto m_ref = Measurements(sv_ref);
+    auto m_ref = Measurements(sv);
 
     auto ob = TensorProdObs<StateVectorT>::create(obs);
     return m_ref.expval(*ob);
 }
 
 template <typename TestType>
-static auto bench_tensorProduct_test(TestVector<std::complex<TestType>> &values, std::vector<std::shared_ptr<Observable<StateVectorCudaManaged<TestType>>>> &obs)
+static auto bench_tensorProduct_test(StateVectorCudaManaged<TestType> &sv, std::vector<std::shared_ptr<Observable<StateVectorCudaManaged<TestType>>>> &obs)
 {
-
     using StateVectorT = StateVectorCudaManaged<TestType>;
-    using ComplexT = StateVectorT::ComplexT;
-
-    std::vector<ComplexT> init_state(values.begin(), values.end());
-
-    StateVectorT sv{init_state.data(), init_state.size()};
-
     auto m = Measurements(sv);
 
     auto ob = TensorProdObs_test<StateVectorT>::create(obs);
@@ -493,14 +479,11 @@ static auto bench_tensorProduct_test(TestVector<std::complex<TestType>> &values,
 }
 
 template <typename TestType>
-static auto bench_pauli(TestVector<std::complex<TestType>> &values, std::string &pauli_word, std::vector<std::size_t> &wires)
+static auto bench_pauli(StateVectorCudaManaged<TestType> &sv, std::string &pauli_word, std::vector<std::size_t> &wires)
 {
 
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using ComplexT = StateVectorT::ComplexT;
-
-    std::vector<ComplexT> init_state(values.begin(), values.end());
-    StateVectorT sv{init_state.data(), init_state.size()};
 
     std::vector<ComplexT> coeffs{{1.0, 0.0}};
 
@@ -513,12 +496,13 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs bench",
 {
     using StateVectorT = StateVectorCudaManaged<TestType>;
     using PrecisionT = StateVectorT::PrecisionT;
+    using ComplexT = StateVectorT::ComplexT;
 
     std::mt19937 re{1337};
     std::size_t num_qubits = 24;
     auto values = createRandomStateVectorData<PrecisionT>(re, num_qubits);
 
-    std::size_t n_target = GENERATE(2, 5, 7, 13, 15, 19, 21);
+    std::size_t n_target = GENERATE(15, 19, 21);
     std::cout << "num_qubits: " << num_qubits << std::endl;
     std::cout << "n_target: " << n_target << std::endl;
     // std::size_t n_target = GENERATE(15);
@@ -544,7 +528,11 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs bench",
         pauli_word += obs_name;
     }
 
+    std::vector<ComplexT> init_state(values.begin(), values.end());
+    StateVectorT sv{init_state.data(), init_state.size()};
+    
     BENCHMARK("warmup")
+    
     {
         auto values_warmup = createRandomStateVectorData<PrecisionT>(re, 5);
 
@@ -557,21 +545,24 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs bench",
 
         std::vector<std::shared_ptr<Observable<StateVectorT>>> obs_warmup{X0, Z1, X2};
 
-        return bench_tensorProduct<TestType>(values_warmup, obs_warmup);
+        std::vector<ComplexT> init_state_warmup(values_warmup.begin(), values_warmup.end());
+        StateVectorT sv_warmup{init_state_warmup.data(), init_state_warmup.size()};
+
+        return bench_tensorProduct<TestType>(sv_warmup, obs_warmup);
     };
 
     BENCHMARK("Using TensorProduct Func")
     {
-        return bench_tensorProduct<TestType>(values, obs);
+        return bench_tensorProduct<TestType>(sv, obs);
     };
     BENCHMARK("Using TensorProduct Func test")
     {
-        return bench_tensorProduct_test<TestType>(values, obs);
+        return bench_tensorProduct_test<TestType>(sv, obs);
     };
 
     BENCHMARK("Using Paulis Func")
     {
-        return bench_pauli<TestType>(values, pauli_word, wires);
+        return bench_pauli<TestType>(sv, pauli_word, wires);
     };
 
     // SECTION("Check results, TensorProduct vs TensorProduct_test")
