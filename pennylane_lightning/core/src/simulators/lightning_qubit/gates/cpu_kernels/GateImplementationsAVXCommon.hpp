@@ -69,6 +69,9 @@ class GateImplementationsAVXCommon
         /* IsingXY, CRX, CRY, CRZ, ControllPhaseShift */
     };
 
+    constexpr static std::array<SparseMatrixOperation, 0>
+        implemented_sparse_matrices = {};
+
     constexpr static std::array<ControlledGateOperation, 0>
         implemented_controlled_gates{};
 
