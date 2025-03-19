@@ -216,6 +216,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
         if operation.reset and bool(sample):
             self.apply_operations([qml.PauliX(operation.wires)], mid_measurements=mid_measurements)
 
+    # pylint: disable=too-many-branches
     def _apply_lightning(
         self, operations, mid_measurements: dict = None, postselect_mode: str = None
     ):  # pylint: disable=protected-access

@@ -164,7 +164,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """Check if the operation is a sparse matrix operation.
 
         Args:
-            operation (Operation): operation to check
+            operation (_): operation to check
 
         Returns:
             bool: True if the operation is a sparse matrix operation, False otherwise
