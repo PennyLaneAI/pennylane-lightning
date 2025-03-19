@@ -263,7 +263,7 @@ class LightningKokkos(LightningBase):
         mcmc_default = {"mcmc": False, "kernel_name": None, "num_burnin": 0, "rng": None}
 
         for option, _ in config.device_options.items():
-            if option not in self._device_options and option != "mcmc":
+            if option not in self._device_options and option not in mcmc_default:
                 raise qml.DeviceError(f"device option {option} not present on {self}")
 
         if config.gradient_method == "best":
