@@ -9,10 +9,9 @@
 ### Improvements
 
 * Modify expval of named operators in LightningQubit for in-place computation of expectation value, to avoid creating an intermediate statevector
-  [(##1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
-  [(##565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
+  [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
+  [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
   
-
 * Expand test structure to efficiently handle sparse data.
   [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
