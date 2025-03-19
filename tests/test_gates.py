@@ -540,10 +540,8 @@ def test_controlled_sparse_qubit_unitary(n_qubits, control_value, tol):
                 init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
                 init_state /= np.linalg.norm(init_state)
 
-                wires=control_wires + target_wires
-                control_values=[
-                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
-                        ]
+                wires = control_wires + target_wires
+                control_values = [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
 
                 @qml.qnode(dev)
                 def circuit_dense(init_state):
@@ -554,8 +552,9 @@ def test_controlled_sparse_qubit_unitary(n_qubits, control_value, tol):
                         control_values=control_values,
                     )
                     return qml.state()
-                
+
                 sparse_matrix = csr_matrix(U)
+
                 @qml.qnode(dev)
                 def circuit_sparse(init_state):
                     qml.StatePrep(init_state, wires=range(n_qubits))
@@ -569,7 +568,6 @@ def test_controlled_sparse_qubit_unitary(n_qubits, control_value, tol):
                 st_dense = circuit_dense(init_state)
                 st_sparse = circuit_sparse(init_state)
                 assert np.allclose(st_dense, st_sparse)
-
 
 
 @pytest.mark.parametrize(

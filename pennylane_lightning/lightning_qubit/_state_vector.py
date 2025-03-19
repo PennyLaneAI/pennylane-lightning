@@ -270,7 +270,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             elif self._operation_is_sparse(operation):
                 CSR_SparseHamiltonian = operation.sparse_matrix()
                 # Inverse can be set to False since operation.sparse_matrix() is already in inverted form
-                if isinstance(op_adjoint_base, qml.ops.Controlled):      
+                if isinstance(op_adjoint_base, qml.ops.Controlled):
                     self._apply_lightning_controlled_sparse(op_adjoint_base)
                 # If the operation is not controlled, apply it as a sparse matrix.
                 else:
