@@ -14,6 +14,7 @@
 #include <catch2/catch.hpp>
 
 #include "TestHelpers.hpp"
+
 /// @cond DEV
 namespace {
 using Pennylane::Util::isApproxEqual;
@@ -38,7 +39,7 @@ using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU::Measures;
 using namespace Pennylane::LightningGPU::Observables;
 } // namespace
-  /// @endcond
+/// @endcond
 
 #else
 constexpr bool BACKEND_FOUND = false;

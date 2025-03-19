@@ -24,7 +24,6 @@
 #include "Observables.hpp"
 #include "Util.hpp"
 
-// using namespace Pennylane;
 /// @cond DEV
 namespace {
 using Pennylane::Observables::Observable;

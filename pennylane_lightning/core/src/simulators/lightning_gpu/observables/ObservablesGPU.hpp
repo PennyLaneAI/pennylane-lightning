@@ -25,7 +25,6 @@
 #include "Util.hpp"
 #include "cuError.hpp"
 
-// using namespace Pennylane;
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
