@@ -523,7 +523,6 @@ def test_controlled_sparse_qubit_unitary(n_qubits, control_value, tol):
         pytest.skip("Skipping tests if not lightning.qubit.")
 
     dev = qml.device(device_name, wires=n_qubits)
-    dev1 = qml.device(device_name, wires=n_qubits)
 
     threshold = 500
     for n_wires in range(1, 5):
