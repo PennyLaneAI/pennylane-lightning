@@ -161,7 +161,6 @@ TEST_CASE("Generators::applyGeneratorPhaseShift", "[GateGenerators]") {
 }
 
 TEST_CASE("Generators::applyGeneratorPSWAP", "[GateGenerators]") {
-    // grad(PhaseShift) = grad(e^{i*0.5*a}*e^{-i*0.5*PauliZ*a}) => -i|1><1|
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
         {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
         {1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
