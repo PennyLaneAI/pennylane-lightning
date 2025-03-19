@@ -128,48 +128,6 @@ void applyControlledMatrix(
         static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
         controlled_values, wires, inverse);
 }
-/**
- * @brief Register sparse matrix kernel.
- */
-// template <class StateVectorT>
-// void applySparseMatrix(StateVectorT &st,
-//                        const py::array_t <
-//                            std::complex<typename StateVectorT::PrecisionT>,
-//                        const np_arr_sparse_ind &row_map,
-//                        const np_arr_sparse_ind &col_idx, const np_arr_c
-//                        &values, const std::vector<std::size_t> &wires, bool
-//                        inverse = false) {
-//     using ComplexT = typename StateVectorT::ComplexT;
-//     using SparseIndexT = std::size_t;
-//     st.applySparseMatrix(static_cast<SparseIndexT *>(row_map.request().ptr),
-//                          static_cast<SparseIndexT>(row_map.request().size),
-//                          static_cast<SparseIndexT *>(col_idx.request().ptr),
-//                          static_cast<ComplexT> * > (values.request().ptr),
-//                          static_cast<SparseIndexT>(values.request().size),
-//                          wires, inverse);
-// }
-
-// /**
-//  * @brief Register controlled sparse matrix kernel.
-//  */
-// template <class StateVectorT>
-// void applyControlledSparseMatrix(
-//     StateVectorT &st,
-//     const py::array_t < std::complex<typename StateVectorT::PrecisionT>,
-//     const np_arr_sparse_ind &row_map, const np_arr_sparse_ind &col_idx,
-//     const np_arr_c &values, const std::vector<std::size_t> &controlled_wires,
-//     const std::vector<bool> &controlled_values,
-//     const std::vector<std::size_t> &wires, bool inverse = false) {
-//     using ComplexT = typename StateVectorT::ComplexT;
-//     using SparseIndexT = std::size_t;
-//     st.applyControlledSparseMatrix(
-//         static_cast<SparseIndexT *>(row_map.request().ptr),
-//         static_cast<SparseIndexT>(row_map.request().size),
-//         static_cast<SparseIndexT *>(col_idx.request().ptr),
-//         static_cast<ComplexT> * > (values.request().ptr),
-//         static_cast<SparseIndexT>(values.request().size), controlled_wires,
-//         controlled_values, wires, inverse);
-// }
 
 template <class StateVectorT, class PyClass>
 void registerSparseMatrixOperators(PyClass &pyclass) {
