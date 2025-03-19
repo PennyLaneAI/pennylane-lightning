@@ -220,6 +220,7 @@ def test_compare_sparse_and_dense_operations(op, op_name):
     if op == None:
         pytest.skip("Skipping operation.")
 
+    # op is a tuple with the operation, its parameters, and its keyword arguments
     qml_op = op[0](*op[1], **op[2])
     wires = op[2]["wires"]
     num_wires = len(wires)
