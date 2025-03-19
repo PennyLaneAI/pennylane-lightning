@@ -597,8 +597,8 @@ class TestExecution:
             _ = device.preprocess(config)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="Only lightning.qubit is supported for capture enabled.",
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
     )
     @pytest.mark.parametrize("postselect_mode", ["hw-like", "fill-shots"])
     def test_sbs_and_postselect_warning(self, enable_disable_plxpr, postselect_mode):
@@ -617,8 +617,8 @@ class TestExecution:
             _ = device.preprocess(config)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="Only lightning.qubit is supported for capture enabled.",
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device doesn't have support for program capture.",
     )
     def test_preprocess_invalid_mcm_method_error(self, enable_disable_plxpr):
         """Test that an error is raised if mcm_method is invalid."""
@@ -629,8 +629,8 @@ class TestExecution:
             _ = device.preprocess(config)
 
     @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="Only lightning.qubit is supported for capture enabled.",
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device supports new device options",
     )
     def test_transform_program(self, enable_disable_plxpr):
         """Test that the transform program returned by preprocess has the correct transforms."""
