@@ -95,15 +95,20 @@ class LightningKokkosSimulator final : public Catalyst::Runtime::QuantumDevice {
         return res;
     }
 
+    inline auto generateSeed() -> std::optional<std::size_t> {
+        if (this->gen != nullptr) {
+            return (*(this->gen))();
+        }
+
+        return std::nullopt;
+    }
+
     auto GenerateSamples(size_t shots) -> std::vector<size_t>;
 
   public:
     explicit LightningKokkosSimulator(
         const std::string &kwargs = "{}") noexcept {
         auto &&args = Catalyst::Runtime::parse_kwargs(kwargs);
-        device_shots = args.contains("shots")
-                           ? static_cast<std::size_t>(std::stoll(args["shots"]))
-                           : 0;
     }
     ~LightningKokkosSimulator() noexcept = default;
 

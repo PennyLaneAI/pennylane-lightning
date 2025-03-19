@@ -31,6 +31,7 @@ from typing import Union
 
 import numpy as np
 import pennylane as qml
+import scipy as sp
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
@@ -38,7 +39,6 @@ from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 # pylint: disable=ungrouped-imports
-from pennylane_lightning.core._serialize import global_phase_diagonal
 from pennylane_lightning.core._state_vector_base import LightningBaseStateVector
 
 from ._measurements import LightningKokkosMeasurements
@@ -162,10 +162,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
             device_wires (Wires): wires that get initialized in the state
         """
+
+        if sp.sparse.issparse(state):
+            state = state.toarray().flatten()
 
         if isinstance(state, self._qubit_state.__class__):
             state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
@@ -182,26 +184,40 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         # This operate on device
         self._qubit_state.setStateVector(state, list(device_wires))
 
-    def _apply_lightning_controlled(self, operation):
+    def _apply_lightning_controlled(self, operation, adjoint):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
             operation (~pennylane.operation.Operation): controlled operation to apply
+            adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
             None
         """
         state = self.state_vector
 
+        if isinstance(operation.base, Adjoint):
+            base_operation = operation.base.base
+            adjoint = not adjoint
+        else:
+            base_operation = operation.base
+
+        method = getattr(state, f"{base_operation.name}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
-        name = operation.name
-        # Apply GlobalPhase
-        inv = False
-        param = operation.parameters[0]
-        wires = self.wires.indices(operation.wires)
-        matrix = global_phase_diagonal(param, self.wires, control_wires, control_values)
-        state.apply(name, wires, inv, [[param]], matrix)
+        target_wires = list(operation.target_wires)
+        if method is not None:  # apply n-controlled specialized gate
+            param = operation.parameters
+            method(control_wires, control_values, target_wires, adjoint, param)
+        else:  # apply gate as an n-controlled matrix
+            method = getattr(state, "applyControlledMatrix")
+            method(
+                qml.matrix(base_operation),
+                control_wires,
+                control_values,
+                target_wires,
+                adjoint,
+            )
 
     def _apply_lightning_midmeasure(
         self, operation: MidMeasureMP, mid_measurements: dict, postselect_mode: str
@@ -254,11 +270,12 @@ class LightningKokkosStateVector(LightningBaseStateVector):
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                name = operation.base.name
+                op_adjoint_base = operation.base
                 invert_param = True
             else:
-                name = operation.name
+                op_adjoint_base = operation
                 invert_param = False
+            name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
@@ -271,21 +288,17 @@ class LightningKokkosStateVector(LightningBaseStateVector):
                 )
             elif isinstance(operation, qml.PauliRot):
                 method = getattr(state, "applyPauliRot")
-                # pylint: disable=protected-access
-                paulis = operation._hyperparameters[
+                paulis = operation._hyperparameters[  # pylint: disable=protected-access
                     "pauli_word"
-                ]  # pylint: disable=protected-access
+                ]
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
                 word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, operation.parameters, word)
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(operation, qml.ops.Controlled) and isinstance(
-                operation.base, qml.GlobalPhase
-            ):  # apply n-controlled gate
-                # Kokkos do not support the controlled gates except for GlobalPhase
-                self._apply_lightning_controlled(operation)
+            elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
+                self._apply_lightning_controlled(op_adjoint_base, invert_param)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
                 # inverted form

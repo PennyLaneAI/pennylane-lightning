@@ -26,61 +26,51 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
 /// @endcond
 
-TEST_CASE("swap_op_wires_queue", "[TNCuda_utils]") {
-    SECTION("is_wires_local: true") {
-        std::vector<std::size_t> wires = {0, 1, 2, 3};
-        REQUIRE(is_wires_local(wires) == true);
+TEST_CASE("MPSShapeCheck", "[TNCuda_utils]") {
+    SECTION("Correct incoming MPS shape") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        std::vector<std::vector<std::size_t>> MPS_shape_source{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        REQUIRE_NOTHROW(MPSShapeCheck(MPS_shape_dest, MPS_shape_source));
     }
 
-    SECTION("is_wires_local: false") {
-        std::vector<std::size_t> wires = {0, 1, 3, 4};
-        REQUIRE(is_wires_local(wires) == false);
+    SECTION("Incorrect incoming MPS shape, bond dimension") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
+
+        std::vector<std::vector<std::size_t>> incorrect_MPS_shape{
+            {2, 2}, {2, 2, 2}, {2, 2, 2}, {2, 2}};
+
+        REQUIRE_THROWS_WITH(
+            MPSShapeCheck(MPS_shape_dest, incorrect_MPS_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
     }
+    SECTION("Incorrect incoming MPS shape, physical dimension") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
 
-    SECTION("swap_op_wires_queue: local") {
-        std::vector<std::size_t> wires = {0, 1, 2, 3};
-        auto [target_wires, swap_wires_queue] =
-            create_swap_wire_pair_queue(wires);
-        REQUIRE(wires == target_wires);
-        REQUIRE(swap_wires_queue.empty() == true);
+        std::vector<std::vector<std::size_t>> incorrect_shape{
+            {4, 2}, {2, 4, 4}, {4, 4, 2}, {2, 4}};
+
+        REQUIRE_THROWS_WITH(
+            MPSShapeCheck(MPS_shape_dest, incorrect_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
     }
+    SECTION("Incorrect incoming MPS shape, number sites") {
+        std::vector<std::vector<std::size_t>> MPS_shape_dest{
+            {2, 2}, {2, 2, 4}, {4, 2, 2}, {2, 2}};
 
-    SECTION("swap_op_wires_queue: non-local [0,1,n_wires-1]") {
-        std::vector<std::size_t> wires = {0, 1, 4};
+        std::vector<std::vector<std::size_t>> incorrect_shape{
+            {2, 2}, {2, 2, 2}, {2, 2}};
 
-        std::vector<std::size_t> target_wires_ref = {0, 1, 2};
-        std::vector<std::vector<std::size_t>> swap_wires_queue_ref = {{4, 3},
-                                                                      {3, 2}};
-        auto [local_wires, swap_wires_queue] =
-            create_swap_wire_pair_queue(wires);
-        REQUIRE(local_wires == target_wires_ref);
-        REQUIRE(swap_wires_queue.size() == 1);
-        REQUIRE(swap_wires_queue[0] == swap_wires_queue_ref);
-    }
-
-    SECTION("swap_op_wires_queue: non-local [0,n_wires-2,n_wires-1]") {
-        std::vector<std::size_t> wires = {0, 3, 4};
-
-        std::vector<std::size_t> target_wires_ref = {2, 3, 4};
-        std::vector<std::vector<std::size_t>> swap_wires_queue_ref = {{0, 1},
-                                                                      {1, 2}};
-        auto [local_wires, swap_wires_queue] =
-            create_swap_wire_pair_queue(wires);
-        REQUIRE(local_wires == target_wires_ref);
-        REQUIRE(swap_wires_queue.size() == 1);
-        REQUIRE(swap_wires_queue[0] == swap_wires_queue_ref);
-    }
-
-    SECTION("swap_op_wires_queue: non-local [0,n_wires/2,n_wires-1]") {
-        std::vector<std::size_t> wires = {0, 2, 4};
-        std::vector<std::size_t> target_wires_ref = {1, 2, 3};
-        std::vector<std::vector<std::size_t>> swap_wires_queue_ref0 = {{0, 1}};
-        std::vector<std::vector<std::size_t>> swap_wires_queue_ref1 = {{4, 3}};
-        auto [local_wires, swap_wires_queue] =
-            create_swap_wire_pair_queue(wires);
-        REQUIRE(local_wires == target_wires_ref);
-        REQUIRE(swap_wires_queue.size() == 2);
-        REQUIRE(swap_wires_queue[0] == swap_wires_queue_ref0);
-        REQUIRE(swap_wires_queue[1] == swap_wires_queue_ref1);
+        REQUIRE_THROWS_WITH(
+            MPSShapeCheck(MPS_shape_dest, incorrect_shape),
+            Catch::Matchers::Contains("The incoming MPS does not have the "
+                                      "correct layout for lightning.tensor"));
     }
 }

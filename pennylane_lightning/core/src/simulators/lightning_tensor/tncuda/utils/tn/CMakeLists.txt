@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.20)
+project(tncuda_test_utils LANGUAGES CXX)
+
+add_library(tncuda_test_utils INTERFACE)
+
+target_include_directories(tncuda_test_utils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(tncuda_test_utils INTERFACE lightning_utils lightning_compile_options lightning_external_libs)
+
+set_property(TARGET tncuda_test_utils PROPERTY POSITION_INDEPENDENT_CODE ON)

@@ -21,7 +21,7 @@ from typing import Any, Callable, List
 import numpy as np
 import pennylane as qml
 from pennylane import BasisState, QuantumFunctionError, StatePrep
-from pennylane.measurements import Expectation, MeasurementProcess, State
+from pennylane.measurements import ExpectationMP, MeasurementProcess, StateMP
 from pennylane.operation import Operation
 from pennylane.tape import QuantumTape
 
@@ -84,10 +84,10 @@ class LightningBaseAdjointJacobian(ABC):
         if not measurements:
             return None
 
-        if len(measurements) == 1 and measurements[0].return_type is State:
-            return State
+        if len(measurements) == 1 and isinstance(measurements[0], StateMP):
+            return "state"
 
-        return Expectation
+        return "expval"
 
     def _process_jacobian_tape(self, tape: QuantumTape, split_obs: bool = False):
         """Process a tape, serializing and building a dictionary proper for
@@ -184,7 +184,7 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements
                 return True
 
-            if tape_return_type is State:
+            if tape_return_type == "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation method does not support measurement StateMP."
                 )
@@ -194,12 +194,12 @@ class LightningBaseAdjointJacobian(ABC):
                 # the tape does not have measurements or the gradient is 0.0
                 return True
 
-            if tape_return_type is State:
+            if tape_return_type == "state":
                 raise QuantumFunctionError(
                     "Adjoint differentiation does not support State measurements."
                 )
 
-        if any(m.return_type is not Expectation for m in tape.measurements):
+        if any(not isinstance(m, ExpectationMP) for m in tape.measurements):
             raise QuantumFunctionError(
                 "Adjoint differentiation method does not support expectation return type "
                 "mixed with other return types"

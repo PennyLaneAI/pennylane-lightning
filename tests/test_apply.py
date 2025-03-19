@@ -30,495 +30,6 @@ if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
 
 
-@pytest.mark.skipif(
-    ld._new_API,
-    reason="Old API required.",
-)
-class TestApply:
-    """Tests that operations of certain operations are applied correctly or
-    that the proper errors are raised.
-    """
-
-    test_data_no_parameters = [
-        (qml.PauliX, [1, 0], np.array([0, 1])),
-        (qml.PauliX, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
-        (qml.PauliY, [1, 0], [0, 1j]),
-        (qml.PauliY, [1 / math.sqrt(2), 1 / math.sqrt(2)], [-1j / math.sqrt(2), 1j / math.sqrt(2)]),
-        (qml.PauliZ, [1, 0], [1, 0]),
-        (qml.PauliZ, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), -1 / math.sqrt(2)]),
-        (qml.S, [1, 0], [1, 0]),
-        (qml.S, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1j / math.sqrt(2)]),
-        (qml.T, [1, 0], [1, 0]),
-        (
-            qml.T,
-            [1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / math.sqrt(2), np.exp(1j * np.pi / 4) / math.sqrt(2)],
-        ),
-        (qml.Hadamard, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
-        (qml.Hadamard, [1 / math.sqrt(2), -1 / math.sqrt(2)], [0, 1]),
-        (qml.Identity, [1, 0], [1, 0]),
-        (qml.Identity, [1 / math.sqrt(2), 1 / math.sqrt(2)], [1 / math.sqrt(2), 1 / math.sqrt(2)]),
-    ]
-
-    @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
-    def test_apply_operation_single_wire_no_parameters(
-        self, qubit_device, tol, operation, input, expected_output
-    ):
-        """Tests that applying an operation yields the expected output state for single wire
-        operations that have no parameters."""
-
-        dev = qubit_device(wires=1)
-        _state = np.array(input).astype(dev.C_DTYPE)
-        dev._apply_state_vector(_state, dev.wires)
-        dev.apply([operation(wires=[0])])
-
-        assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev.state.dtype == dev.C_DTYPE
-
-    @pytest.mark.skipif(
-        device_name == "lightning.kokkos" or device_name == "lightning.gpu",
-        reason="Only meaningful for lightning_qubit",
-    )
-    @pytest.mark.parametrize("operation,input,expected_output", test_data_no_parameters)
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_apply_operation_preserve_pointer_single_wire_no_parameters(
-        self, qubit_device, operation, input, expected_output, C
-    ):
-        dev = qubit_device(wires=1)
-        dev._state = dev._asarray(input, dtype=C)
-        pointer_before, _ = dev._state.__array_interface__["data"]
-        dev.apply([operation(wires=[0])])
-        pointer_after, _ = dev._state.__array_interface__["data"]
-
-        assert pointer_before == pointer_after
-
-    test_data_two_wires_no_parameters = [
-        (qml.CNOT, [1, 0, 0, 0], [1, 0, 0, 0]),
-        (qml.CNOT, [0, 0, 1, 0], [0, 0, 0, 1]),
-        (
-            qml.CNOT,
-            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
-            [1 / math.sqrt(2), 0, 1 / math.sqrt(2), 0],
-        ),
-        (qml.SWAP, [1, 0, 0, 0], [1, 0, 0, 0]),
-        (qml.SWAP, [0, 0, 1, 0], [0, 1, 0, 0]),
-        (
-            qml.SWAP,
-            [1 / math.sqrt(2), 0, -1 / math.sqrt(2), 0],
-            [1 / math.sqrt(2), -1 / math.sqrt(2), 0, 0],
-        ),
-        (qml.CZ, [1, 0, 0, 0], [1, 0, 0, 0]),
-        (qml.CZ, [0, 0, 0, 1], [0, 0, 0, -1]),
-        (
-            qml.CZ,
-            [1 / math.sqrt(2), 0, 0, -1 / math.sqrt(2)],
-            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
-        ),
-    ]
-
-    @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
-    def test_apply_operation_two_wires_no_parameters(
-        self, qubit_device, tol, operation, input, expected_output
-    ):
-        """Tests that applying an operation yields the expected output state for two wire
-        operations that have no parameters."""
-        dev = qubit_device(wires=2)
-        _state = np.array(input).reshape(2 * [2]).astype(dev.C_DTYPE)
-        dev._apply_state_vector(_state, dev.wires)
-        dev.apply([operation(wires=[0, 1])])
-
-        assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev.state.dtype == dev.C_DTYPE
-
-    @pytest.mark.parametrize("operation,input,expected_output", test_data_two_wires_no_parameters)
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_apply_operation_preserve_pointer_two_wires_no_parameters(
-        self, qubit_device, operation, input, expected_output, C
-    ):
-        dev = qubit_device(wires=2)
-        dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
-        pointer_before, _ = dev._state.__array_interface__["data"]
-        dev.apply([operation(wires=[0, 1])])
-        pointer_after, _ = dev._state.__array_interface__["data"]
-
-        assert pointer_before == pointer_after
-
-    test_data_three_wires_no_parameters = [
-        (qml.CSWAP, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
-        (qml.CSWAP, [0, 0, 0, 0, 0, 1, 0, 0], [0, 0, 0, 0, 0, 0, 1, 0]),
-        (qml.CSWAP, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 1, 0, 0]),
-        (qml.Toffoli, [1, 0, 0, 0, 0, 0, 0, 0], [1, 0, 0, 0, 0, 0, 0, 0]),
-        (qml.Toffoli, [0, 1, 0, 0, 0, 0, 0, 0], [0, 1, 0, 0, 0, 0, 0, 0]),
-        (qml.Toffoli, [0, 0, 0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 0, 0, 0, 1]),
-        (qml.Toffoli, [0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 0, 0, 0, 0, 1, 0]),
-    ]
-
-    @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
-    def test_apply_operation_three_wires_no_parameters(
-        self, qubit_device, tol, operation, input, expected_output
-    ):
-        """Tests that applying an operation yields the expected output state for three wire
-        operations that have no parameters."""
-
-        dev = qubit_device(wires=3)
-        _state = np.array(input).reshape(3 * [2]).astype(dev.C_DTYPE)
-        dev._apply_state_vector(_state, dev.wires)
-        dev.apply([operation(wires=[0, 1, 2])])
-
-        assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev.state.dtype == dev.C_DTYPE
-
-    @pytest.mark.parametrize("operation,input,expected_output", test_data_three_wires_no_parameters)
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_apply_operation_preserve_pointer_three_wires_no_parameters(
-        self, qubit_device, operation, input, expected_output, C
-    ):
-        dev = qubit_device(wires=3)
-        dev._state = dev._asarray(input, dtype=C).reshape(3 * [2])
-        pointer_before, _ = dev._state.__array_interface__["data"]
-        dev.apply([operation(wires=[0, 1, 2])])
-        pointer_after, _ = dev._state.__array_interface__["data"]
-
-        assert pointer_before == pointer_after
-
-    @pytest.mark.parametrize(
-        "operation,expected_output,par",
-        (
-            [
-                (qml.BasisState, [0, 0, 1, 0], [1, 0]),
-                (qml.BasisState, [0, 0, 0, 1], [1, 1]),
-                (qml.StatePrep, [0, 0, 1, 0], [0, 0, 1, 0]),
-                (qml.StatePrep, [0, 0, 0, 1], [0, 0, 0, 1]),
-                (
-                    qml.StatePrep,
-                    [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-                    [1 / math.sqrt(3), 0, 1 / math.sqrt(3), 1 / math.sqrt(3)],
-                ),
-                (
-                    qml.StatePrep,
-                    [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-                    [1 / math.sqrt(3), 0, -1 / math.sqrt(3), 1 / math.sqrt(3)],
-                ),
-            ]
-        ),
-    )
-    def test_apply_operation_state_preparation(
-        self, qubit_device, tol, operation, expected_output, par
-    ):
-        """Tests that applying an operation yields the expected output state for single wire
-        operations that have no parameters."""
-
-        par = np.array(par)
-        dev = qubit_device(wires=2)
-        dev.reset()
-        ops = [operation(par, wires=[0, 1])]
-
-        dev.apply(ops)
-        assert len(ops) == 1  # input not mutated
-
-        assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
-
-    def test_integer_state_preparation(self, qubit_device, tol):
-        """Tests that applying an operation yields the expected output state for single wire
-        operations that have no parameters."""
-        dev = qubit_device(wires=2)
-
-        @qml.qnode(dev)
-        def circuit0():
-            qml.RX(0.2, wires=[0])
-            return qml.state()
-
-        @qml.qnode(dev)
-        def circuit1():
-            qml.StatePrep(np.array([1, 0, 0, 0]), wires=[0, 1])
-            qml.RX(0.2, wires=[0])
-            return qml.state()
-
-        assert np.allclose(circuit0(), circuit1(), atol=tol, rtol=0)
-
-    """ operation,input,expected_output,par """
-    test_data_single_wire_with_parameters = [
-        (qml.PhaseShift, [1, 0], [1, 0], [math.pi / 2]),
-        (qml.PhaseShift, [0, 1], [0, 1j], [math.pi / 2]),
-        (
-            qml.PhaseShift,
-            [1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / math.sqrt(2), 1 / 2 + 1j / 2],
-            [math.pi / 4],
-        ),
-        (qml.RX, [1, 0], [1 / math.sqrt(2), -1j * 1 / math.sqrt(2)], [math.pi / 2]),
-        (qml.RX, [1, 0], [0, -1j], [math.pi]),
-        (
-            qml.RX,
-            [1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / 2 - 1j / 2, 1 / 2 - 1j / 2],
-            [math.pi / 2],
-        ),
-        (qml.RY, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)], [math.pi / 2]),
-        (qml.RY, [1, 0], [0, 1], [math.pi]),
-        (qml.RY, [1 / math.sqrt(2), 1 / math.sqrt(2)], [0, 1], [math.pi / 2]),
-        (qml.RZ, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2]),
-        (qml.RZ, [0, 1], [0, 1j], [math.pi]),
-        (
-            qml.RZ,
-            [1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
-            [math.pi / 2],
-        ),
-        (qml.MultiRZ, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2]),
-        (qml.MultiRZ, [0, 1], [0, 1j], [math.pi]),
-        (
-            qml.MultiRZ,
-            [1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
-            [math.pi / 2],
-        ),
-        (qml.Rot, [1, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0], [math.pi / 2, 0, 0]),
-        (qml.Rot, [1, 0], [1 / math.sqrt(2), 1 / math.sqrt(2)], [0, math.pi / 2, 0]),
-        (
-            qml.Rot,
-            [1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
-            [0, 0, math.pi / 2],
-        ),
-        (
-            qml.Rot,
-            [1, 0],
-            [-1j / math.sqrt(2), -1 / math.sqrt(2)],
-            [math.pi / 2, -math.pi / 2, math.pi / 2],
-        ),
-        (
-            qml.Rot,
-            [1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / 2 + 1j / 2, -1 / 2 + 1j / 2],
-            [-math.pi / 2, math.pi, math.pi],
-        ),
-    ]
-
-    @pytest.mark.parametrize(
-        "operation,input,expected_output,par", test_data_single_wire_with_parameters
-    )
-    def test_apply_operation_single_wire_with_parameters(
-        self, qubit_device, tol, operation, input, expected_output, par
-    ):
-        """Tests that applying an operation yields the expected output state for single wire
-        operations that have parameters."""
-
-        dev = qubit_device(wires=1)
-        _state = np.array(input).astype(dev.C_DTYPE)
-        dev._apply_state_vector(_state, dev.wires)
-        dev.apply([operation(*par, wires=[0])])
-
-        assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev.state.dtype == dev.C_DTYPE
-
-    @pytest.mark.parametrize(
-        "operation,input,expected_output,par", test_data_single_wire_with_parameters
-    )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_apply_operation_preserve_pointer_single_wire_with_parameters(
-        self, qubit_device, operation, input, expected_output, par, C
-    ):
-        dev = qubit_device(wires=1)
-        dev._state = dev._asarray(input, dtype=C)
-        pointer_before, _ = dev._state.__array_interface__["data"]
-        dev.apply([operation(*par, wires=[0])])
-        pointer_after, _ = dev._state.__array_interface__["data"]
-
-        assert pointer_before == pointer_after
-
-    """ operation,input,expected_output,par """
-    test_data_two_wires_with_parameters = [
-        (qml.IsingXX, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, -1j / math.sqrt(2)], [math.pi / 2]),
-        (
-            qml.IsingXX,
-            [0, 1 / math.sqrt(2), 0, 1 / math.sqrt(2)],
-            [-0.5j, 0.5, -0.5j, 0.5],
-            [math.pi / 2],
-        ),
-        (qml.IsingXY, [1, 0, 0, 0], [1, 0, 0, 0], [math.pi / 2]),
-        (
-            qml.IsingXY,
-            [0, 1 / math.sqrt(2), 0, 1 / math.sqrt(2)],
-            [0, 0.5, 0.5j, 1 / math.sqrt(2)],
-            [math.pi / 2],
-        ),
-        (qml.IsingYY, [1, 0, 0, 0], [1 / math.sqrt(2), 0, 0, 1j / math.sqrt(2)], [math.pi / 2]),
-        (
-            qml.IsingYY,
-            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
-            [0.5 + 0.5j, 0, 0, 0.5 + 0.5j],
-            [math.pi / 2],
-        ),
-        (qml.IsingZZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
-        (
-            qml.IsingZZ,
-            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
-            [0.5 - 0.5j, 0, 0, 0.5 - 0.5j],
-            [math.pi / 2],
-        ),
-        (qml.MultiRZ, [1, 0, 0, 0], [1 / math.sqrt(2) - 1j / math.sqrt(2), 0, 0, 0], [math.pi / 2]),
-        (
-            qml.MultiRZ,
-            [1 / math.sqrt(2), 0, 0, 1 / math.sqrt(2)],
-            [0.5 - 0.5j, 0, 0, 0.5 - 0.5j],
-            [math.pi / 2],
-        ),
-        (qml.CRX, [0, 1, 0, 0], [0, 1, 0, 0], [math.pi / 2]),
-        (qml.CRX, [0, 0, 0, 1], [0, 0, -1j, 0], [math.pi]),
-        (
-            qml.CRX,
-            [0, 1 / math.sqrt(2), 1 / math.sqrt(2), 0],
-            [0, 1 / math.sqrt(2), 1 / 2, -1j / 2],
-            [math.pi / 2],
-        ),
-        (qml.CRY, [0, 0, 0, 1], [0, 0, -1 / math.sqrt(2), 1 / math.sqrt(2)], [math.pi / 2]),
-        (qml.CRY, [0, 0, 0, 1], [0, 0, -1, 0], [math.pi]),
-        (
-            qml.CRY,
-            [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
-            [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
-            [math.pi / 2],
-        ),
-        (qml.CRZ, [0, 0, 0, 1], [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)], [math.pi / 2]),
-        (qml.CRZ, [0, 0, 0, 1], [0, 0, 0, 1j], [math.pi]),
-        (
-            qml.CRZ,
-            [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
-            [1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0],
-            [math.pi / 2],
-        ),
-        (
-            qml.CRot,
-            [0, 0, 0, 1],
-            [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)],
-            [math.pi / 2, 0, 0],
-        ),
-        (qml.CRot, [0, 0, 0, 1], [0, 0, -1 / math.sqrt(2), 1 / math.sqrt(2)], [0, math.pi / 2, 0]),
-        (
-            qml.CRot,
-            [0, 0, 1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [0, 0, 1 / 2 - 1j / 2, 1 / 2 + 1j / 2],
-            [0, 0, math.pi / 2],
-        ),
-        (
-            qml.CRot,
-            [0, 0, 0, 1],
-            [0, 0, 1 / math.sqrt(2), 1j / math.sqrt(2)],
-            [math.pi / 2, -math.pi / 2, math.pi / 2],
-        ),
-        (
-            qml.CRot,
-            [0, 1 / math.sqrt(2), 1 / math.sqrt(2), 0],
-            [0, 1 / math.sqrt(2), 0, -1 / 2 + 1j / 2],
-            [-math.pi / 2, math.pi, math.pi],
-        ),
-        (
-            qml.ControlledPhaseShift,
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [math.pi / 2],
-        ),
-        (
-            qml.ControlledPhaseShift,
-            [0, 1, 0, 0],
-            [0, 1, 0, 0],
-            [math.pi / 2],
-        ),
-        (
-            qml.ControlledPhaseShift,
-            [0, 0, 1, 0],
-            [0, 0, 1, 0],
-            [math.pi / 2],
-        ),
-        (
-            qml.ControlledPhaseShift,
-            [0, 0, 0, 1],
-            [0, 0, 0, 1 / math.sqrt(2) + 1j / math.sqrt(2)],
-            [math.pi / 4],
-        ),
-        (
-            qml.ControlledPhaseShift,
-            [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2)],
-            [1 / math.sqrt(2), 1 / math.sqrt(2), 1 / math.sqrt(2), 1 / 2 + 1j / 2],
-            [math.pi / 4],
-        ),
-    ]
-
-    @pytest.mark.parametrize(
-        "operation,input,expected_output,par", test_data_two_wires_with_parameters
-    )
-    def test_apply_operation_two_wires_with_parameters(
-        self, qubit_device, tol, operation, input, expected_output, par
-    ):
-        """Tests that applying an operation yields the expected output state for two wire
-        operations that have parameters."""
-
-        dev = qubit_device(wires=2)
-        _state = np.array(input).reshape(2 * [2]).astype(dev.C_DTYPE)
-        dev._apply_state_vector(_state, dev.wires)
-        dev.apply([operation(*par, wires=[0, 1])])
-
-        assert np.allclose(dev.state, np.array(expected_output), atol=tol, rtol=0)
-        assert dev.state.dtype == dev.C_DTYPE
-
-    @pytest.mark.parametrize(
-        "operation,input,expected_output,par", test_data_two_wires_with_parameters
-    )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_apply_operation_preserve_pointer_two_wires_with_parameters(
-        self, qubit_device, operation, input, expected_output, par, C
-    ):
-        dev = qubit_device(wires=2)
-        dev._state = dev._asarray(input, dtype=C).reshape(2 * [2])
-        pointer_before, _ = dev._state.__array_interface__["data"]
-        dev.apply([operation(*par, wires=[0, 1])])
-        pointer_after, _ = dev._state.__array_interface__["data"]
-
-        assert pointer_before == pointer_after
-
-    def test_apply_errors_qubit_state_vector(self, qubit_device):
-        """Test that apply fails for incorrect state preparation, and > 2 qubit gates"""
-        dev = qubit_device(wires=2)
-        with pytest.raises(ValueError, match="The state must be a vector of norm 1.0;"):
-            dev.apply([qml.StatePrep(np.array([1, -1]), wires=[0])])
-
-        with pytest.raises(
-            DeviceError,
-            match=f"Operation {qml.StatePrep(np.array([1, 0]), wires=[0]).name} cannot be used after other Operations have already been applied ",
-        ):
-            dev.reset()
-            dev.apply([qml.RZ(0.5, wires=[0]), qml.StatePrep(np.array([0, 1, 0, 0]), wires=[0, 1])])
-
-    def test_apply_errors_basis_state(self, qubit_device):
-        dev = qubit_device(wires=2)
-        with pytest.raises(ValueError, match="Basis state must only consist of 0s and 1s;"):
-            dev.apply([qml.BasisState(np.array([-0.2, 4.2]), wires=[0, 1])])
-
-        with pytest.raises(ValueError, match="State must be of length 1;"):
-            dev.apply([qml.BasisState(np.array([0, 1]), wires=[0])])
-
-        with pytest.raises(
-            DeviceError,
-            match="Operation BasisState cannot be used after other Operations have already been applied ",
-        ):
-            dev.reset()
-            dev.apply([qml.RZ(0.5, wires=[0]), qml.BasisState(np.array([1, 1]), wires=[0, 1])])
-
-    @pytest.mark.skipif(
-        device_name != "lightning.qubit",
-        reason="Only meaningful for LightningQubit.",
-    )
-    def test_apply_state_vector_lightning_handle(self, qubit_device, tol):
-        dev = qubit_device(wires=2)
-        dev.apply([qml.BasisState(np.array([0, 1]), wires=[0, 1])])
-
-        dev_2 = qubit_device(wires=2)
-        dev_2._apply_state_vector(dev.state_vector, device_wires=Wires([0, 1]))
-
-        assert np.allclose(dev.state, dev_2.state, atol=tol, rtol=0)
-
-
 class TestExpval:
     """Tests that expectation values are properly calculated or that the proper errors are raised."""
 
@@ -703,41 +214,44 @@ class TestLightningDeviceIntegration:
         assert not dev.shots
         assert len(dev.wires) == 2
 
-    @pytest.mark.xfail(ld._new_API, reason="Old device API required.")
-    def test_no_backprop(self):
-        """Test that lightning device does not support the backprop
-        differentiation method."""
-
-        dev = qml.device(device_name, wires=2)
-
-        def circuit():
-            """Simple quantum function."""
-            return qml.expval(qml.PauliZ(0))
-
-        with pytest.raises(qml.QuantumFunctionError):
-            qml.QNode(circuit, dev, diff_method="backprop")
-
-    @pytest.mark.xfail(ld._new_API, reason="New device API currently has the wrong module path.")
-    def test_best_gets_lightning(self):
-        """Test that the best differentiation method returns lightning
-        qubit."""
-        dev = qml.device(device_name, wires=2)
-
-        def circuit():
-            """Simple quantum function."""
-            return qml.expval(qml.PauliZ(0))
-
-        qnode = qml.QNode(circuit, dev, diff_method="best")
-        assert isinstance(qnode.device, ld)
-
-    @pytest.mark.xfail(
-        device_name == "lightning.tensor", reason="lightning.tensor raises different errors"
+    @pytest.mark.parametrize(
+        "wires, expected_state",
+        [
+            ([3, 0], [1 / np.sqrt(2), 1 / np.sqrt(2), 0, 0]),
+            ([1, 0], [1 / np.sqrt(2), 0, 1 / np.sqrt(2), 0]),
+        ],
     )
-    def test_args(self):
-        """Test that the plugin requires correct arguments"""
+    def test_dynamic_allocate_two_qubits(self, qubit_device, tol, wires, expected_state):
+        """Test the dynamic allocation of qubits in Lightning devices"""
 
-        with pytest.raises(TypeError, match="missing 1 required positional argument: 'wires'"):
-            qml.device(device_name)
+        def circuit():
+            qml.Identity(wires=wires[0])
+            qml.Hadamard(wires=wires[1])
+            return qml.state()
+
+        dev = qubit_device(None)
+        results = qml.qnode(dev)(circuit)()
+        assert np.allclose(results, expected_state, atol=tol, rtol=0)
+
+    @pytest.mark.parametrize(
+        "wires, expected_state",
+        [
+            ([3, 1, 0], [1 / np.sqrt(2), 1 / np.sqrt(2), 0, 0, 0, 0, 0, 0]),
+            ([2, 1, 0], [1 / np.sqrt(2), 0, 0, 0, 1 / np.sqrt(2), 0, 0, 0]),
+        ],
+    )
+    def test_dynamic_allocate_three_qubits(self, qubit_device, tol, wires, expected_state):
+        """Test the dynamic allocation of qubits in Lightning devices"""
+
+        def circuit():
+            qml.Identity(wires=wires[0])
+            qml.Identity(wires=wires[1])
+            qml.Hadamard(wires=wires[2])
+            return qml.state()
+
+        dev = qubit_device(None)
+        results = qml.qnode(dev)(circuit)()
+        assert np.allclose(results, expected_state, atol=tol, rtol=0)
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor", reason="lightning.tensor requires num_wires > 1"
@@ -1242,13 +756,9 @@ class TestLightningDeviceIntegration:
 
         probs = circuit()
 
-        if ld._new_API:
-            # pylint: disable=protected-access
-            res_sv = dev._statevector.state
-            res_probs = probs
-        else:
-            res_sv = dev.state
-            res_probs = dev.probability([0, 1])
+        # pylint: disable=protected-access
+        res_sv = dev._statevector.state
+        res_probs = probs
 
         expected_sv = np.array(
             [
@@ -1307,36 +817,6 @@ class TestApplyLightningMethod:
         device_name == "lightning.tensor",
         reason="lightning.tensor does not support direct access to the state",
     )
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_apply_identity_skipped(self, mocker, tol):
-        """Test identity operation does not perform additional computations."""
-        dev = qml.device(device_name, wires=1)
-        dev._apply_state_vector(dev._asarray(dev.state).astype(dev.C_DTYPE), dev.wires)
-
-        starting_state = np.array([1, 0], dtype=dev.C_DTYPE)
-        op = [qml.Identity(0)]
-        dev.apply(op)
-
-        assert np.allclose(dev.state, starting_state, atol=tol, rtol=0)
-        assert dev.state.dtype == dev.C_DTYPE
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_unsupported_operation(self, mocker, tol):
-        """Test unsupported operations."""
-
-        class EmptyGate(Operation):
-            num_wires = 1
-
-            @staticmethod
-            def compute_matrix(*params, **hyperparams):
-                return np.eye(0)
-
-        dev = qml.device(device_name, wires=1)
-        dev.operations.add("EmptyGate")
-
-        with pytest.raises(ValueError, match="Unsupported operation"):
-            dev.apply_lightning([EmptyGate(0)])
-
     @pytest.mark.parametrize(
         "ops0",
         [

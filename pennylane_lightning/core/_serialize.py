@@ -54,12 +54,18 @@ class QuantumScriptSerializer:
     use_csingle (bool): whether to use np.complex64 instead of np.complex128
     use_mpi (bool, optional): If using MPI to accelerate calculation. Defaults to False.
     split_obs (Union[bool, int], optional): If splitting the observables in a list. Defaults to False.
+    tensor_backend (str): If using `lightning.tensor` and select the TensorNetwork backend, mps or exact. Default to ''
 
     """
 
-    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements
+    # pylint: disable=import-outside-toplevel, too-many-instance-attributes, c-extension-no-member, too-many-branches, too-many-statements too-many-positional-arguments too-many-arguments
     def __init__(
-        self, device_name, use_csingle: bool = False, use_mpi: bool = False, split_obs: bool = False
+        self,
+        device_name,
+        use_csingle: bool = False,
+        use_mpi: bool = False,
+        split_obs: bool = False,
+        tensor_backend: str = str(),
     ):
         self.use_csingle = use_csingle
         self.device_name = device_name
@@ -95,43 +101,14 @@ class QuantumScriptSerializer:
         else:
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
-        if device_name == "lightning.tensor":
-            self.tensornetwork_c64 = lightning_ops.TensorNetC64
-            self.tensornetwork_c128 = lightning_ops.TensorNetC128
-        else:
-            self.statevector_c64 = lightning_ops.StateVectorC64
-            self.statevector_c128 = lightning_ops.StateVectorC128
-
-        self.named_obs_c64 = lightning_ops.observables.NamedObsC64
-        self.named_obs_c128 = lightning_ops.observables.NamedObsC128
-        self.hermitian_obs_c64 = lightning_ops.observables.HermitianObsC64
-        self.hermitian_obs_c128 = lightning_ops.observables.HermitianObsC128
-        self.tensor_prod_obs_c64 = lightning_ops.observables.TensorProdObsC64
-        self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
-        self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
-        self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
-
-        if device_name != "lightning.tensor":
-            self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
-            self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
-
         self._use_mpi = use_mpi
 
-        if self._use_mpi:
-            self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
-            self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
-            self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
-            self.named_obs_mpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
-            self.hermitian_obs_mpi_c64 = lightning_ops.observablesMPI.HermitianObsMPIC64
-            self.hermitian_obs_mpi_c128 = lightning_ops.observablesMPI.HermitianObsMPIC128
-            self.tensor_prod_obs_mpi_c64 = lightning_ops.observablesMPI.TensorProdObsMPIC64
-            self.tensor_prod_obs_mpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
-            self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
-            self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
-            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
-            self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
-
-            self._mpi_manager = lightning_ops.MPIManager
+        if device_name in ["lightning.qubit", "lightning.kokkos", "lightning.gpu"]:
+            assert tensor_backend == str()
+            self._set_lightning_state_bindings(lightning_ops)
+        else:
+            self._tensor_backend = tensor_backend
+            self._set_lightning_tensor_bindings(tensor_backend, lightning_ops)
 
     @property
     def ctype(self):
@@ -192,6 +169,75 @@ class QuantumScriptSerializer:
                 else self.sparse_hamiltonian_mpi_c128
             )
         return self.sparse_hamiltonian_c64 if self.use_csingle else self.sparse_hamiltonian_c128
+
+    def _set_lightning_state_bindings(self, lightning_ops):
+        """Define the variables needed to access the modules from the C++ bindings for state vector."""
+
+        self.statevector_c64 = lightning_ops.StateVectorC64
+        self.statevector_c128 = lightning_ops.StateVectorC128
+
+        self.named_obs_c64 = lightning_ops.observables.NamedObsC64
+        self.named_obs_c128 = lightning_ops.observables.NamedObsC128
+        self.hermitian_obs_c64 = lightning_ops.observables.HermitianObsC64
+        self.hermitian_obs_c128 = lightning_ops.observables.HermitianObsC128
+        self.tensor_prod_obs_c64 = lightning_ops.observables.TensorProdObsC64
+        self.tensor_prod_obs_c128 = lightning_ops.observables.TensorProdObsC128
+        self.hamiltonian_c64 = lightning_ops.observables.HamiltonianC64
+        self.hamiltonian_c128 = lightning_ops.observables.HamiltonianC128
+
+        self.sparse_hamiltonian_c64 = lightning_ops.observables.SparseHamiltonianC64
+        self.sparse_hamiltonian_c128 = lightning_ops.observables.SparseHamiltonianC128
+
+        if self._use_mpi:
+            self.statevector_mpi_c64 = lightning_ops.StateVectorMPIC64
+            self.statevector_mpi_c128 = lightning_ops.StateVectorMPIC128
+
+            self.named_obs_mpi_c64 = lightning_ops.observablesMPI.NamedObsMPIC64
+            self.named_obs_mpi_c128 = lightning_ops.observablesMPI.NamedObsMPIC128
+            self.hermitian_obs_mpi_c64 = lightning_ops.observablesMPI.HermitianObsMPIC64
+            self.hermitian_obs_mpi_c128 = lightning_ops.observablesMPI.HermitianObsMPIC128
+            self.tensor_prod_obs_mpi_c64 = lightning_ops.observablesMPI.TensorProdObsMPIC64
+            self.tensor_prod_obs_mpi_c128 = lightning_ops.observablesMPI.TensorProdObsMPIC128
+            self.hamiltonian_mpi_c64 = lightning_ops.observablesMPI.HamiltonianMPIC64
+            self.hamiltonian_mpi_c128 = lightning_ops.observablesMPI.HamiltonianMPIC128
+
+            self.sparse_hamiltonian_mpi_c64 = lightning_ops.observablesMPI.SparseHamiltonianMPIC64
+            self.sparse_hamiltonian_mpi_c128 = lightning_ops.observablesMPI.SparseHamiltonianMPIC128
+
+            self._mpi_manager = lightning_ops.MPIManager
+
+    def _set_lightning_tensor_bindings(self, tensor_backend, lightning_ops):
+        """Define the variables needed to access the modules from the C++ bindings for tensor network."""
+        if tensor_backend == "mps":
+            self.tensornetwork_c64 = lightning_ops.mpsTensorNetC64
+            self.tensornetwork_c128 = lightning_ops.mpsTensorNetC128
+
+            self.named_obs_c64 = lightning_ops.observables.mpsNamedObsC64
+            self.named_obs_c128 = lightning_ops.observables.mpsNamedObsC128
+            self.hermitian_obs_c64 = lightning_ops.observables.mpsHermitianObsC64
+            self.hermitian_obs_c128 = lightning_ops.observables.mpsHermitianObsC128
+            self.tensor_prod_obs_c64 = lightning_ops.observables.mpsTensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.mpsTensorProdObsC128
+            self.hamiltonian_c64 = lightning_ops.observables.mpsHamiltonianC64
+            self.hamiltonian_c128 = lightning_ops.observables.mpsHamiltonianC128
+
+        elif tensor_backend == "tn":
+            self.tensornetwork_c64 = lightning_ops.exactTensorNetC64
+            self.tensornetwork_c128 = lightning_ops.exactTensorNetC128
+
+            self.named_obs_c64 = lightning_ops.observables.exactNamedObsC64
+            self.named_obs_c128 = lightning_ops.observables.exactNamedObsC128
+            self.hermitian_obs_c64 = lightning_ops.observables.exactHermitianObsC64
+            self.hermitian_obs_c128 = lightning_ops.observables.exactHermitianObsC128
+            self.tensor_prod_obs_c64 = lightning_ops.observables.exactTensorProdObsC64
+            self.tensor_prod_obs_c128 = lightning_ops.observables.exactTensorProdObsC128
+            self.hamiltonian_c64 = lightning_ops.observables.exactHamiltonianC64
+            self.hamiltonian_c128 = lightning_ops.observables.exactHamiltonianC128
+
+        else:
+            raise ValueError(
+                f"Unsupported method: {tensor_backend}. Supported methods are 'mps' (Matrix Product State) and 'tn' (Exact Tensor Network)."
+            )
 
     def _named_obs(self, observable, wires_map: dict = None):
         """Serializes a Named observable"""
@@ -397,8 +443,18 @@ class QuantumScriptSerializer:
         uses_stateprep = False
 
         def get_wires(operation, single_op):
-            if isinstance(operation, qml.ops.op_math.Controlled) and not isinstance(
-                operation,
+            # Serialize adjoint(op) and adjoint(ctrl(op))
+            if isinstance(operation, qml.ops.op_math.Adjoint):
+                inverse = True
+                op_base = operation.base
+                single_op_base = single_op.base
+            else:
+                inverse = False
+                op_base = operation
+                single_op_base = single_op
+
+            if isinstance(op_base, qml.ops.op_math.Controlled) and not isinstance(
+                op_base,
                 (
                     qml.CNOT,
                     qml.CY,
@@ -411,19 +467,41 @@ class QuantumScriptSerializer:
                     qml.CSWAP,
                 ),
             ):
-                name = operation.base.name
-                wires_list = list(operation.target_wires)
-                controlled_wires_list = list(operation.control_wires)
-                control_values_list = operation.control_values
+                wires_list = list(op_base.target_wires)
+                controlled_wires_list = list(op_base.control_wires)
+                control_values_list = op_base.control_values
+                # Serialize ctrl(adjoint(op))
+                if isinstance(op_base.base, qml.ops.op_math.Adjoint):
+                    ctrl_adjoint = True
+                    name = op_base.base.base.name
+                else:
+                    ctrl_adjoint = False
+                    name = op_base.base.name
+
+                # Inside the controlled operation, if the base operation (of the adjoint)
+                # is supported natively, we apply the the base operation and invert the
+                # inverse flag; otherwise we apply the QubitUnitary of a matrix which
+                # contains the inverse and leave the inverse flag as is.
                 if not hasattr(self.sv_type, name):
-                    single_op = QubitUnitary(matrix(single_op.base), single_op.base.wires)
-                    name = single_op.name
+                    single_op_base = QubitUnitary(
+                        matrix(single_op_base.base), single_op_base.base.wires
+                    )
+                    name = single_op_base.name
+                else:
+                    inverse ^= ctrl_adjoint
             else:
-                name = single_op.name
-                wires_list = single_op.wires.tolist()
+                name = single_op_base.name
+                wires_list = single_op_base.wires.tolist()
                 controlled_wires_list = []
                 control_values_list = []
-            return single_op, name, list(wires_list), controlled_wires_list, control_values_list
+            return (
+                single_op_base,
+                name,
+                inverse,
+                list(wires_list),
+                controlled_wires_list,
+                control_values_list,
+            )
 
         for operation in tape.operations:
             if isinstance(operation, (BasisState, StatePrep)):
@@ -434,30 +512,29 @@ class QuantumScriptSerializer:
             else:
                 op_list = [operation]
 
-            inverse = isinstance(operation, qml.ops.op_math.Adjoint)
-
             for single_op in op_list:
                 (
-                    single_op,
+                    single_op_base,
                     name,
+                    inverse,
                     wires_list,
                     controlled_wires_list,
                     controlled_values_list,
                 ) = get_wires(operation, single_op)
                 inverses.append(inverse)
-                names.append(single_op.base.name if inverse else name)
+                names.append(name)
                 # QubitUnitary is a special case, it has a parameter which is not differentiable.
                 # We thus pass a dummy 0.0 parameter which will not be referenced
-                if isinstance(single_op, qml.QubitUnitary):
+                if isinstance(single_op_base, qml.QubitUnitary):
                     params.append([0.0])
-                    mats.append(matrix(single_op))
+                    mats.append(matrix(single_op_base))
                 else:
-                    if hasattr(self.sv_type, single_op.base.name if inverse else name):
-                        params.append(single_op.parameters)
+                    if hasattr(self.sv_type, name):
+                        params.append(single_op_base.parameters)
                         mats.append([])
                     else:
                         params.append([])
-                        mats.append(matrix(single_op))
+                        mats.append(matrix(single_op_base))
 
                 controlled_values.append(controlled_values_list)
                 controlled_wires.append(

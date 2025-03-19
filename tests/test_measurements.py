@@ -14,6 +14,7 @@
 """
 Unit tests for Measurements in Lightning devices.
 """
+import itertools
 import math
 from typing import Sequence
 
@@ -21,19 +22,13 @@ import numpy as np
 import pennylane as qml
 import pytest
 from conftest import LightningDevice as ld
-from conftest import device_name, lightning_ops, validate_measurements
+from conftest import LightningException, device_name, lightning_ops, validate_measurements
 from flaky import flaky
-from pennylane.measurements import Expectation, Shots, Variance
+from pennylane.measurements import ExpectationMP, Shots, VarianceMP
+from pennylane.wires import Wires
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
-
-
-@pytest.mark.skipif(ld._new_API, reason="Old API required")
-def test_measurements():
-    dev = qml.device(device_name, wires=2)
-    m = dev.measurements
-    assert isinstance(m, (lightning_ops.MeasurementsC64, lightning_ops.MeasurementsC128))
 
 
 def test_no_measure():
@@ -53,53 +48,61 @@ def test_no_measure():
 class TestProbs:
     """Test Probs in Lightning devices"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.fixture(params=itertools.product([np.complex64, np.complex128], [None, 2]))
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_probs_dtype64(self, dev):
-        """Test if probs changes the state dtype"""
-        _state = dev._asarray(
-            np.array([1 / math.sqrt(2), 1 / math.sqrt(2), 0, 0]).astype(dev.C_DTYPE)
-        )
-        dev._apply_state_vector(_state, dev.wires)
-        p = dev.probability(wires=[0, 1])
-
-        assert dev.state.dtype == dev.C_DTYPE
-        assert np.allclose(p, [0.5, 0.5, 0, 0])
-
-    def test_probs_H(self, tol, dev):
+    @pytest.mark.parametrize(
+        "wire, expected", [(0, [0.5, 0.0, 0.5, 0.0]), (1, [0.5, 0.5, 0.0, 0.0])]
+    )
+    def test_probs_H(self, wire, expected, tol, dev):
         """Test probs with Hadamard"""
 
         @qml.qnode(dev)
         def circuit():
-            qml.Hadamard(wires=1)
+            qml.Hadamard(wires=wire)
             return qml.probs(wires=[0, 1])
 
-        assert np.allclose(circuit(), [0.5, 0.5, 0.0, 0.0], atol=tol, rtol=0)
+        if device_name == "lightning.tensor" and wire == 1 and dev.num_wires is None:
+            with pytest.raises(LightningException, match="Invalid wire indices order"):
+                # With dynamic wires, in this case since wires appear in this order 1, 0
+                # The wires will map 1 -> 0 and 0 -> 1. Therefore the wires in the probs
+                # measurement will be [1, 0] which is out of order and invalid for LT.
+                circuit()
+        else:
+            assert np.allclose(circuit(), expected, atol=tol, rtol=0)
 
-    @pytest.mark.parametrize(
-        "cases",
-        [
-            [None, [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
-            [[], [0.9165164490394898, 0.0, 0.08348355096051052, 0.0]],
-        ],
-    )
-    @pytest.mark.xfail
-    def test_probs_tape_nowires(self, cases, tol, dev):
-        """Test probs with a circuit on wires=[0]"""
+    def test_probs_tape_none_wires(self, tol, dev):
+        """Test probs with a circuit with wires=None"""
 
         x, y, z = [0.5, 0.3, -0.7]
+        expected = [0.903281826, 0.00909338007, 0.0867514634, 0.000873331009]
+        wires = None
+
+        @qml.qnode(dev)
+        def circuit():
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[1])
+            return qml.probs(wires=wires)
+
+        assert np.allclose(circuit(), expected, atol=tol, rtol=0)
+
+    def test_probs_tape_empty_wires(self, dev):
+        """Test that probs with empty list for wires raises an error"""
+
+        x, y, z = [0.5, 0.3, -0.7]
+        wires = []
 
         @qml.qnode(dev)
         def circuit():
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
-            return qml.probs(wires=cases[0])
+            return qml.probs(wires=wires)
 
-        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        with pytest.raises(ValueError, match="Cannot set an empty list of wires"):
+            circuit()
 
     @pytest.mark.parametrize(
         "cases",
@@ -121,34 +124,15 @@ class TestProbs:
             qml.RY(-0.2, wires=[0])
             return qml.probs(wires=cases[0])
 
-        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.parametrize(
-        "cases",
-        [
-            [[0, 1], [1, 0]],
-            [[1, 0], [0, 1]],
-        ],
-    )
-    def test_fail_probs_tape_unordered_wires(self, cases):
-        """Test probs with a circuit on wires=[0] fails for out-of-order wires passed to probs."""
-
-        x, y, z = [0.5, 0.3, -0.7]
-        dev = qml.device(device_name, wires=cases[1])
-
-        @qml.qnode(dev)
-        def circuit():
-            qml.RX(0.4, wires=[0])
-            qml.Rot(x, y, z, wires=[0])
-            qml.RY(-0.2, wires=[0])
-            return qml.probs(wires=cases[0])
-
-        with pytest.raises(
-            RuntimeError,
-            match="Lightning does not currently support out-of-order indices for probabilities",
+        if (
+            device_name == "lightning.tensor"
+            and (isinstance(cases[0], int) or len(cases[0]) < 2)
+            and dev.num_wires is None
         ):
-            _ = circuit()
+            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
+                circuit()
+        else:
+            assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
     @pytest.mark.skipif(
         device_name in ("lightning.tensor"),
@@ -203,90 +187,35 @@ class TestProbs:
 
         assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
     @pytest.mark.parametrize(
         "cases",
         [
-            [
-                [1, 0],
-                [
-                    0.9178264236525453,
-                    0.059841820910257436,
-                    0.02096485729264079,
-                    0.0013668981445561978,
-                ],
-            ],
+            [qml.PauliZ(0), [0.91237521, 0.08762479]],
+            [qml.PauliZ(1), [0.99003329, 0.00996671]],
+            [qml.PauliY(0), [0.22418248, 0.77581752]],
+            [qml.PauliY(1), [0.5, 0.5]],
+            [qml.PauliX(0), [0.56222044, 0.43777956]],
+            [qml.PauliX(1), [0.40066533, 0.59933467]],
+            [qml.Hadamard(0), [0.8355898, 0.1644102]],
+            [qml.Hadamard(1), [0.77626565, 0.22373435]],
         ],
     )
-    def test_fail_probs_tape_wire01(self, cases, tol, dev):
-        """Test probs with a circuit on wires=[0,1]"""
+    def test_probs_named_op(self, cases, tol, dev):
+        """Test probs with a named observable"""
+
+        x, y, z = [0.5, 0.3, -0.7]
 
         @qml.qnode(dev)
         def circuit():
-            qml.RX(0.5, wires=[0])
-            qml.RY(0.3, wires=[1])
-            return qml.probs(wires=cases[0])
+            qml.RX(0.4, wires=[0])
+            qml.Rot(x, y, z, wires=[0])
+            qml.RY(-0.2, wires=[1])
+            return qml.probs(op=cases[0])
 
-        with pytest.raises(
-            RuntimeError,
-            match="Lightning does not currently support out-of-order indices for probabilities",
-        ):
-            assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.parametrize("n_qubits", range(4, 25, 4))
-    @pytest.mark.parametrize("n_targets", list(range(1, 9)) + list(range(9, 25, 4)))
-    def test_probs_many_wires(self, n_qubits, n_targets, tol):
-        """Test probs measuring many wires of a random quantum state."""
-        if n_targets >= n_qubits:
-            pytest.skip("Number of targets cannot exceed the number of wires.")
-
-        dev = qml.device(device_name, wires=n_qubits)
-        dq = qml.device("default.qubit", wires=n_qubits)
-
-        init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-        init_state /= np.linalg.norm(init_state)
-
-        def circuit():
-            qml.StatePrep(init_state, wires=range(n_qubits))
-            return qml.probs(wires=range(0, n_targets))
-
-        res = qml.QNode(circuit, dev)()
-        ref = qml.QNode(circuit, dq)()
-
-        assert np.allclose(res, ref, atol=tol, rtol=0)
-
-
-class TestExpval:
-    """Tests for the expval function"""
-
-    @pytest.fixture(params=[np.complex64, np.complex128])
-    def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_expval_dtype64(self, dev):
-        """Test if expval changes the state dtype"""
-        _state = np.array([1, 0, 0, 0]).astype(dev.C_DTYPE)
-        dev._apply_state_vector(_state, dev.wires)
-        e = dev.expval(qml.PauliX(0))
-
-        assert dev.state.dtype == dev.C_DTYPE
-        assert np.allclose(e, 0.0)
-
-    @pytest.mark.parametrize(
-        "cases",
-        [
-            [qml.PauliX(0), -0.041892271271228736],
-            [qml.PauliX(1), 0.0],
-            [qml.PauliY(0), -0.5516350865364075],
-            [qml.PauliY(1), 0.0],
-            [qml.PauliZ(0), 0.8330328980789793],
-            [qml.PauliZ(1), 1.0],
-        ],
-    )
-    def test_expval_qml_tape_wire0(self, cases, tol, dev):
-        """Test expval with a circuit on wires=[0]"""
+    def test_probs_named_op_with_wires(self, dev):
+        """Test probs with a circuit on wires=[0]"""
 
         x, y, z = [0.5, 0.3, -0.7]
 
@@ -295,9 +224,18 @@ class TestExpval:
             qml.RX(0.4, wires=[0])
             qml.Rot(x, y, z, wires=[0])
             qml.RY(-0.2, wires=[0])
-            return qml.expval(cases[0])
+            return qml.probs(op=qml.PauliZ(0), wires=[0])
 
-        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        with pytest.raises(qml.QuantumFunctionError, match="Cannot specify the wires to probs"):
+            circuit()
+
+
+class TestExpval:
+    """Tests for the expval function"""
+
+    @pytest.fixture(params=itertools.product([np.complex64, np.complex128], [None, 2]))
+    def dev(self, request):
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     @pytest.mark.parametrize(
         "cases",
@@ -366,12 +304,12 @@ class TestExpval:
         @qml.qnode(dev)
         def circuit(x):
             qml.RX(x, wires=0)
+            qml.RX(x, wires=1)
             return qml.expval(qml.PauliY(0))
 
         x = 0.54
         res = circuit(x)
         expected = -np.sin(x)
-
         assert np.allclose(res, expected, atol=tol, rtol=0)
 
     def test_not_an_observable(self, dev):
@@ -387,12 +325,13 @@ class TestExpval:
             circuit()
 
     def test_observable_return_type_is_expectation(self, dev):
-        """Test that the return type of the observable is :attr:`ObservableReturnTypes.Expectation`"""
+        """Test that the return type of the observable is :class:`ExpectationMP`"""
 
         @qml.qnode(dev)
         def circuit():
-            res = qml.expval(qml.PauliZ(0))
-            assert res.return_type is Expectation
+            qml.PauliX(0)
+            res = qml.expval(qml.PauliZ(1))
+            assert isinstance(res, ExpectationMP)
             return res
 
         circuit()
@@ -401,18 +340,9 @@ class TestExpval:
 class TestVar:
     """Tests for the var function"""
 
-    @pytest.fixture(params=[np.complex64, np.complex128])
+    @pytest.fixture(params=itertools.product([np.complex64, np.complex128], [None, 2]))
     def dev(self, request):
-        return qml.device(device_name, wires=2, c_dtype=request.param)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    def test_var_dtype64(self, dev):
-        """Test if var changes the state dtype"""
-        _state = np.array([1, 0, 0, 0]).astype(np.complex64)
-        dev._apply_state_vector(_state, dev.wires)
-        v = dev.var(qml.PauliX(0))
-
-        assert np.allclose(v, 1.0)
+        return qml.device(device_name, wires=request.param[1], c_dtype=request.param[0])
 
     @pytest.mark.parametrize(
         "cases",
@@ -437,7 +367,15 @@ class TestVar:
             qml.RY(-0.2, wires=[0])
             return qml.var(cases[0])
 
-        assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
+        if (
+            device_name == "lightning.tensor"
+            and cases[0].wires.tolist() == [0]
+            and dev.num_wires is None
+        ):
+            with pytest.raises(ValueError, match="Number of wires must be greater than 1"):
+                circuit()
+        else:
+            assert np.allclose(circuit(), cases[1], atol=tol, rtol=0)
 
     @pytest.mark.parametrize(
         "cases",
@@ -467,6 +405,7 @@ class TestVar:
         @qml.qnode(dev)
         def circuit(x):
             qml.RX(x, wires=0)
+            qml.RY(x, wires=1)
             return qml.var(qml.PauliZ(0))
 
         x = 0.54
@@ -488,135 +427,16 @@ class TestVar:
             circuit()
 
     def test_observable_return_type_is_variance(self, dev):
-        """Test that the return type of the observable is :attr:`ObservableReturnTypes.Variance`"""
+        """Test that the return type is :class:`VarianceMP`"""
 
         @qml.qnode(dev)
         def circuit():
+            qml.PauliX(1)
             res = qml.var(qml.PauliZ(0))
-            assert res.return_type is Variance
+            assert isinstance(res, VarianceMP)
             return res
 
         circuit()
-
-
-@pytest.mark.parametrize("stat_func", [qml.expval, qml.var])
-class TestBetaStatisticsError:
-    """Tests for errors arising for the beta statistics functions"""
-
-    def test_not_an_observable(self, stat_func):
-        """Test that a qml.QuantumFunctionError is raised if the provided
-        argument is not an observable"""
-        dev = qml.device(device_name, wires=2)
-
-        @qml.qnode(dev)
-        def circuit():
-            qml.RX(0.52, wires=0)
-            return qml.var(qml.RX(0.742, wires=[0]))
-
-        with pytest.raises(qml.DeviceError, match="Observable RX.*not supported"):
-            circuit()
-
-
-class TestWiresInExpval:
-    """Test different Wires settings in Lightning's expval."""
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.parametrize(
-        "wires1, wires2",
-        [
-            ([2, 3, 0], [2, 3, 0]),
-            ([0, 1], [0, 1]),
-            ([0, 2, 3], [2, 0, 3]),
-            (["a", "c", "d"], [2, 3, 0]),
-            ([-1, -2, -3], ["q1", "ancilla", 2]),
-            (["a", "c"], [3, 0]),
-            ([-1, -2], ["ancilla", 2]),
-            (["a"], ["nothing"]),
-        ],
-    )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_wires_expval(self, wires1, wires2, C, tol):
-        """Test that the expectation of a circuit is independent from the wire labels used."""
-        dev1 = qml.device(device_name, wires=wires1, c_dtype=C)
-        _state = dev1._asarray(dev1.state, C)
-        dev1._apply_state_vector(_state, dev1.wires)
-
-        dev2 = qml.device(device_name, wires=wires2)
-        _state = dev2._asarray(dev2.state, C)
-        dev2._apply_state_vector(_state, dev2.wires)
-
-        n_wires = len(wires1)
-
-        @qml.qnode(dev1)
-        def circuit1():
-            qml.RX(0.5, wires=wires1[0 % n_wires])
-            qml.RY(2.0, wires=wires1[1 % n_wires])
-            if n_wires > 1:
-                qml.CNOT(wires=[wires1[0], wires1[1]])
-            return [qml.expval(qml.PauliZ(wires=w)) for w in wires1]
-
-        @qml.qnode(dev2)
-        def circuit2():
-            qml.RX(0.5, wires=wires2[0 % n_wires])
-            qml.RY(2.0, wires=wires2[1 % n_wires])
-            if n_wires > 1:
-                qml.CNOT(wires=[wires2[0], wires2[1]])
-            return [qml.expval(qml.PauliZ(wires=w)) for w in wires2]
-
-        assert np.allclose(circuit1(), circuit2(), atol=tol)
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.parametrize(
-        "wires1, wires2",
-        [
-            ([2, 3, 0], [2, 3, 0]),
-            ([0, 1], [0, 1]),
-            ([0, 2, 3], [2, 0, 3]),
-            (["a", "c", "d"], [2, 3, 0]),
-            ([-1, -2, -3], ["q1", "ancilla", 2]),
-            (["a", "c"], [3, 0]),
-            ([-1, -2], ["ancilla", 2]),
-        ],
-    )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_wires_expval_hermitian(self, wires1, wires2, C, tol):
-        """Test that the expectation of a circuit is independent from the wire labels used."""
-        dev1 = qml.device(device_name, wires=wires1, c_dtype=C)
-        _state = dev1._asarray(dev1.state, C)
-        dev1._apply_state_vector(_state, dev1.wires)
-
-        dev2 = qml.device(device_name, wires=wires2)
-        _state = dev2._asarray(dev2.state, C)
-        dev2._apply_state_vector(_state, dev2.wires)
-
-        ob_mat = [
-            [1.0, 2.0, 0.0, 1.0],
-            [2.0, -1.0, 0.0, 0.0],
-            [0.0, 0.0, 2.0, 0.0],
-            [1.0, 0.0, 0.0, -1.0],
-        ]
-
-        n_wires = len(wires1)
-        ob1 = qml.Hermitian(ob_mat, wires=[wires1[0 % n_wires], wires1[1 % n_wires]])
-        ob2 = qml.Hermitian(ob_mat, wires=[wires2[0 % n_wires], wires2[1 % n_wires]])
-
-        @qml.qnode(dev1)
-        def circuit1():
-            qml.RX(0.5, wires=wires1[0 % n_wires])
-            qml.RY(2.0, wires=wires1[1 % n_wires])
-            if n_wires > 1:
-                qml.CNOT(wires=[wires1[0], wires1[1]])
-            return [qml.expval(ob1)]
-
-        @qml.qnode(dev2)
-        def circuit2():
-            qml.RX(0.5, wires=wires2[0 % n_wires])
-            qml.RY(2.0, wires=wires2[1 % n_wires])
-            if n_wires > 1:
-                qml.CNOT(wires=[wires2[0], wires2[1]])
-            return [qml.expval(ob2)]
-
-        assert np.allclose(circuit1(), circuit2(), atol=tol)
 
 
 class TestSample:
@@ -660,7 +480,7 @@ class TestSample:
     @pytest.mark.parametrize("nwires", range(1, 11))
     def test_sample_variations(self, qubit_device, nwires, seed):
         """Tests if `sample(wires)` returns correct statistics."""
-        shots = 20000
+        shots = 200000
         n_qubits = max(5, nwires + 1)
         np.random.seed(seed)
         wires = qml.wires.Wires(np.random.permutation(nwires))
@@ -669,6 +489,7 @@ class TestSample:
         state /= np.linalg.norm(state)
         ops = [qml.StatePrep(state, wires=range(n_qubits))]
         tape = qml.tape.QuantumScript(ops, [qml.sample(wires=wires)], shots=shots)
+        tape_exact = qml.tape.QuantumScript(ops, [qml.probs(wires=wires)])
 
         def reshape_samples(samples):
             return np.atleast_3d(samples) if len(wires) == 1 else np.atleast_2d(samples)
@@ -679,67 +500,19 @@ class TestSample:
             reshape_samples(samples), wire_order=wires
         )
 
-        dev = qml.device("default.qubit", wires=n_qubits, shots=shots)
-        samples = dev.execute(tape)
-        ref = qml.measurements.ProbabilityMP(wires=wires).process_samples(
-            reshape_samples(samples), wire_order=wires
-        )
+        dev_ref = qml.device("default.qubit", wires=n_qubits)
+        probs_ref = dev_ref.execute(tape_exact)
 
-        assert np.allclose(probs, ref, atol=2.0e-2, rtol=1.0e-4)
+        assert np.allclose(probs, probs_ref, atol=2.0e-2, rtol=1.0e-4)
 
 
-class TestWiresInVar:
-    """Test different Wires settings in Lightning's var."""
-
-    @pytest.mark.skipif(ld._new_API, reason="Old API required")
-    @pytest.mark.parametrize(
-        "wires1, wires2",
-        [
-            (["a", "c", "d"], [2, 3, 0]),
-            ([-1, -2, -3], ["q1", "ancilla", 2]),
-            (["a", "c"], [3, 0]),
-            ([-1, -2], ["ancilla", 2]),
-            (["a"], ["nothing"]),
-        ],
-    )
-    @pytest.mark.parametrize("C", [np.complex64, np.complex128])
-    def test_wires_var(self, wires1, wires2, C, tol):
-        """Test that the expectation of a circuit is independent from the wire labels used."""
-        dev1 = qml.device(device_name, wires=wires1)
-        _state = dev1._asarray(dev1.state, C)
-        dev1._apply_state_vector(_state, dev1.wires)
-
-        dev2 = qml.device(device_name, wires=wires2)
-        _state = dev2._asarray(dev2.state, C)
-        dev2._apply_state_vector(_state, dev2.wires)
-
-        n_wires = len(wires1)
-
-        @qml.qnode(dev1)
-        def circuit1():
-            qml.RX(0.5, wires=wires1[0 % n_wires])
-            qml.RY(2.0, wires=wires1[1 % n_wires])
-            if n_wires > 1:
-                qml.CNOT(wires=[wires1[0], wires1[1]])
-            return [qml.var(qml.PauliZ(wires=w)) for w in wires1]
-
-        @qml.qnode(dev2)
-        def circuit2():
-            qml.RX(0.5, wires=wires2[0 % n_wires])
-            qml.RY(2.0, wires=wires2[1 % n_wires])
-            if n_wires > 1:
-                qml.CNOT(wires=[wires2[0], wires2[1]])
-            return [qml.var(qml.PauliZ(wires=w)) for w in wires2]
-
-        assert np.allclose(circuit1(), circuit2(), atol=tol)
-
-
-@flaky(max_runs=5)
-@pytest.mark.parametrize("shots", [None, 10000, [10000, 11111]])
+@pytest.mark.parametrize("shots", [None, 100000, [100000, 111111]])
 @pytest.mark.parametrize("measure_f", [qml.counts, qml.expval, qml.probs, qml.sample, qml.var])
 @pytest.mark.parametrize(
     "obs",
     [
+        None,
+        [],
         [0],
         [0, 1],
         qml.PauliZ(0),
@@ -749,10 +522,10 @@ class TestWiresInVar:
     ],
 )
 @pytest.mark.parametrize("mcmc", [False, True])
+@pytest.mark.parametrize("n_wires", [None, 3])
 @pytest.mark.parametrize("kernel_name", ["Local", "NonZeroRandom"])
-def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
+def test_shots_single_measure_obs(shots, measure_f, obs, n_wires, mcmc, kernel_name):
     """Tests that Lightning handles shots in a circuit where a single measurement of a common observable is performed at the end."""
-    n_qubits = 3
 
     if (
         shots is None or device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor")
@@ -765,13 +538,16 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
     if measure_f in (qml.counts, qml.sample) and shots is None:
         pytest.skip("qml.counts, qml.sample do not work with shots = None.")
 
+    if measure_f in (qml.expval, qml.var) and obs is None:
+        pytest.skip("qml.expval, qml.var requires observable.")
+
     if device_name in ("lightning.gpu", "lightning.kokkos", "lightning.tensor"):
-        dev = qml.device(device_name, wires=n_qubits, shots=shots)
+        dev = qml.device(device_name, wires=n_wires, shots=shots)
     else:
         dev = qml.device(
-            device_name, wires=n_qubits, shots=shots, mcmc=mcmc, kernel_name=kernel_name
+            device_name, wires=n_wires, shots=shots, mcmc=mcmc, kernel_name=kernel_name
         )
-    dq = qml.device("default.qubit", wires=n_qubits, shots=shots)
+    dq = qml.device("default.qubit", wires=n_wires, shots=shots)
     params = [np.pi / 4, -np.pi / 4]
 
     def func(x, y):
@@ -781,13 +557,17 @@ def test_shots_single_measure_obs(shots, measure_f, obs, mcmc, kernel_name):
         qml.RX(x, 2)
         return measure_f(wires=obs) if isinstance(obs, Sequence) else measure_f(op=obs)
 
-    func1 = qml.QNode(func, dev)
-    results1 = func1(*params)
+    if obs == []:
+        with pytest.raises(ValueError, match="Cannot set an empty list of wires"):
+            qml.QNode(func, dev)(*params)
+    else:
+        func1 = qml.QNode(func, dev)
+        results1 = func1(*params)
 
-    func2 = qml.QNode(func, dq)
-    results2 = func2(*params)
+        func2 = qml.QNode(func, dq)
+        results2 = func2(*params)
 
-    validate_measurements(measure_f, shots, results1, results2)
+        validate_measurements(measure_f, shots, results1, results2)
 
 
 # TODO: Add LT after extending the support for shots_vector

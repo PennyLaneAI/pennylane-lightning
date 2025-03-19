@@ -35,6 +35,7 @@ from typing import Union
 
 import numpy as np
 import pennylane as qml
+import scipy as sp
 from pennylane import DeviceError
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
@@ -195,8 +196,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.
         Args:
-        state (array[complex]): normalized input state (on host) of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+        state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
         device_wires (Wires): wires that get initialized in the state
         use_async(bool): indicates whether to use asynchronous memory copy from host to device or not.
         Note: This function only supports synchronized memory copy from host to device.
@@ -213,11 +213,16 @@ class LightningGPUStateVector(LightningBaseStateVector):
             # state.getState(state_data)
             # state = state_data
 
-        state = self._asarray(state, dtype=self.dtype)  # this operation on host
+        if sp.sparse.issparse(state):
+            state = state.toarray().flatten()  # this operation is on host
+        else:
+            state = self._asarray(state, dtype=self.dtype)  # this operation is on host
+
         output_shape = [2] * self._num_local_wires
 
         if len(device_wires) == self.num_wires and Wires(sorted(device_wires)) == device_wires:
             # Initialize the entire device state with the input state
+            output_shape = [2] * self._num_local_wires
             if self.num_wires == self._num_local_wires:
                 self.syncH2D(np.reshape(state, output_shape))
                 return
@@ -229,34 +234,39 @@ class LightningGPUStateVector(LightningBaseStateVector):
         # set the state vector on GPU with provided state and their corresponding wires
         self._qubit_state.setStateVector(state, list(device_wires), use_async)
 
-    def _apply_lightning_controlled(self, operation):
+    def _apply_lightning_controlled(self, operation, adjoint):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
             operation (~pennylane.operation.Operation): controlled operation to apply
+            adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
             None
         """
         state = self.state_vector
 
-        basename = operation.base.name
-        method = getattr(state, f"{basename}", None)
+        if isinstance(operation.base, Adjoint):
+            base_operation = operation.base.base
+            adjoint = not adjoint
+        else:
+            base_operation = operation.base
+
+        method = getattr(state, f"{base_operation.name}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
         if method:  # apply n-controlled specialized gate
-            inv = False
             param = operation.parameters
-            method(control_wires, control_values, target_wires, inv, param)
+            method(control_wires, control_values, target_wires, adjoint, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
-                qml.matrix(operation.base),
+                qml.matrix(base_operation),
                 control_wires,
                 control_values,
                 target_wires,
-                False,
+                adjoint,
             )
 
     def _apply_lightning_midmeasure(
@@ -300,6 +310,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 postselection. Use ``"hw-like"`` to discard invalid shots and ``"fill-shots"`` to
                 keep the same number of shots. Default is ``None``.
 
+
         Returns:
             None
         """
@@ -311,11 +322,12 @@ class LightningGPUStateVector(LightningBaseStateVector):
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                name = operation.base.name
+                op_adjoint_base = operation.base
                 invert_param = True
             else:
-                name = operation.name
+                op_adjoint_base = operation
                 invert_param = False
+            name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
@@ -330,13 +342,13 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 param = operation.parameters
                 method(wires, invert_param, param)
             elif (
-                isinstance(operation, qml.ops.Controlled) and not self._mpi_handler.use_mpi
+                isinstance(op_adjoint_base, qml.ops.Controlled) and not self._mpi_handler.use_mpi
             ):  # MPI backend does not have native controlled gates support
-                self._apply_lightning_controlled(operation)
+                self._apply_lightning_controlled(op_adjoint_base, invert_param)
             elif (
                 self._mpi_handler.use_mpi
-                and isinstance(operation, qml.ops.Controlled)
-                and isinstance(operation.base, qml.GlobalPhase)
+                and isinstance(op_adjoint_base, qml.ops.Controlled)
+                and isinstance(op_adjoint_base.base, qml.GlobalPhase)
             ):
                 # TODO: To move this line to the _apply_lightning_controlled method once the MPI backend supports controlled gates natively
                 raise DeviceError(
@@ -348,7 +360,6 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 except AttributeError:  # pragma: no cover
                     # To support older versions of PL
                     mat = operation.matrix
-
                 r_dtype = np.float32 if self.dtype == np.complex64 else np.float64
                 param = (
                     [[r_dtype(operation.hash)]]

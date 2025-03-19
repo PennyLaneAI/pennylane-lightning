@@ -14,7 +14,6 @@
 #pragma once
 #include <chrono>
 #include <cstdint>
-#include <optional>
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
@@ -135,9 +134,9 @@ class Measurements final
      */
     auto getExpValMatrix(const KokkosVector matrix,
                          const std::vector<std::size_t> &wires) -> PrecisionT {
-        std::size_t num_qubits = this->_statevector.getNumQubits();
-        std::size_t two2N = std::exp2(num_qubits - wires.size());
-        std::size_t dim = std::exp2(wires.size());
+        const std::size_t num_qubits = this->_statevector.getNumQubits();
+        const std::size_t two2N = exp2(num_qubits - wires.size());
+        const std::size_t dim = exp2(wires.size());
         const KokkosVector arr_data = this->_statevector.getView();
 
         PrecisionT expval = 0.0;
@@ -295,23 +294,22 @@ class Measurements final
     /**
      * @brief Expected value of a Sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
      * @return Floating point expected value of the observable.
      */
-    template <class index_type>
-    PrecisionT expval(const index_type *row_map_ptr,
-                      const index_type row_map_size,
-                      const index_type *entries_ptr, const ComplexT *values_ptr,
-                      const index_type numNNZ) {
+    template <class IndexT>
+    PrecisionT expval(const IndexT *row_map_ptr, const IndexT row_map_size,
+                      const IndexT *column_idx_ptr, const ComplexT *values_ptr,
+                      const IndexT numNNZ) {
         const Kokkos::View<ComplexT *> arr_data = this->_statevector.getView();
         PrecisionT expval = 0.0;
         KokkosSizeTVector kok_row_map("row_map", row_map_size);
@@ -321,7 +319,7 @@ class Measurements final
         Kokkos::deep_copy(kok_data,
                           UnmanagedConstComplexHostView(values_ptr, numNNZ));
         Kokkos::deep_copy(kok_indices,
-                          UnmanagedConstSizeTHostView(entries_ptr, numNNZ));
+                          UnmanagedConstSizeTHostView(column_idx_ptr, numNNZ));
         Kokkos::deep_copy(kok_row_map, UnmanagedConstSizeTHostView(
                                            row_map_ptr, row_map_size));
 
@@ -425,22 +423,22 @@ class Measurements final
     /**
      * @brief Variance of a sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
      * row j.
      * @param row_map_size  row_map array size.
-     * @param entries_ptr   pointer to an array with column indices of the
+     * @param column_idx_ptr   pointer to an array with column indices of the
      * non-zero elements.
      * @param values_ptr    pointer to an array with the non-zero elements.
      * @param numNNZ        number of non-zero elements.
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
-    template <class index_type>
-    auto var(const index_type *row_map_ptr, const index_type row_map_size,
-             const index_type *entries_ptr, const ComplexT *values_ptr,
-             const index_type numNNZ) -> PrecisionT {
+    template <class IndexT>
+    auto var(const IndexT *row_map_ptr, const IndexT row_map_size,
+             const IndexT *column_idx_ptr, const ComplexT *values_ptr,
+             const IndexT numNNZ) -> PrecisionT {
         PL_ABORT_IF(
             (this->_statevector.getLength() != (std::size_t(row_map_size) - 1)),
             "Statevector and Hamiltonian have incompatible sizes.");
@@ -449,7 +447,7 @@ class Measurements final
 
         SparseMV_Kokkos<PrecisionT>(this->_statevector.getView(),
                                     ob_sv.getView(), row_map_ptr, row_map_size,
-                                    entries_ptr, values_ptr, numNNZ);
+                                    column_idx_ptr, values_ptr, numNNZ);
 
         const PrecisionT mean_square =
             getRealOfComplexInnerProduct(ob_sv.getView(), ob_sv.getView());
@@ -650,16 +648,13 @@ class Measurements final
      * Reference https://en.wikipedia.org/wiki/Inverse_transform_sampling
      *
      * @param num_samples Number of Samples
-     * @param seed Seed to generate the samples from
      *
      * @return std::vector<std::size_t> to the samples.
      * Each sample has a length equal to the number of qubits. Each sample can
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples,
-                          const std::optional<std::size_t> &seed = std::nullopt)
-        -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         const std::size_t num_qubits = this->_statevector.getNumQubits();
         const std::size_t N = this->_statevector.getLength();
         Kokkos::View<std::size_t *> samples("num_samples",
@@ -678,12 +673,13 @@ class Measurements final
             });
 
         // Sampling using Random_XorShift64_Pool
-        auto rand_pool = seed.has_value()
-                             ? Kokkos::Random_XorShift64_Pool<>(seed.value())
-                             : Kokkos::Random_XorShift64_Pool<>(
-                                   std::chrono::high_resolution_clock::now()
-                                       .time_since_epoch()
-                                       .count());
+        auto rand_pool =
+            this->_deviceseed.has_value()
+                ? Kokkos::Random_XorShift64_Pool<>(this->_deviceseed.value())
+                : Kokkos::Random_XorShift64_Pool<>(
+                      std::chrono::high_resolution_clock::now()
+                          .time_since_epoch()
+                          .count());
 
         Kokkos::parallel_for(
             Kokkos::RangePolicy<KokkosExecSpace>(0, num_samples),

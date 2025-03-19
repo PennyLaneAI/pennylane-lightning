@@ -30,7 +30,7 @@ from warnings import warn
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
@@ -43,12 +43,12 @@ from pennylane.devices.preprocess import (
 )
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
-from pennylane.ops import Prod, SProd, Sum
+from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
-from pennylane_lightning.core.lightning_newAPI_base import (
+from pennylane_lightning.core.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
@@ -74,135 +74,24 @@ from ._measurements import LightningGPUMeasurements
 from ._mpi_handler import MPIHandler
 from ._state_vector import LightningGPUStateVector
 
-# The set of supported operations.
-_operations = frozenset(
-    {
-        "Identity",
-        "QubitUnitary",
-        "ControlledQubitUnitary",
-        "MultiControlledX",
-        "DiagonalQubitUnitary",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "MultiRZ",
-        "GlobalPhase",
-        "C(PauliX)",
-        "C(PauliY)",
-        "C(PauliZ)",
-        "C(Hadamard)",
-        "C(S)",
-        "C(T)",
-        "C(PhaseShift)",
-        "C(RX)",
-        "C(RY)",
-        "C(RZ)",
-        "C(Rot)",
-        "C(SWAP)",
-        "C(IsingXX)",
-        "C(IsingXY)",
-        "C(IsingYY)",
-        "C(IsingZZ)",
-        "C(SingleExcitation)",
-        "C(SingleExcitationMinus)",
-        "C(SingleExcitationPlus)",
-        "C(DoubleExcitation)",
-        "C(DoubleExcitationMinus)",
-        "C(DoubleExcitationPlus)",
-        "C(MultiRZ)",
-        "C(GlobalPhase)",
-        "Hadamard",
-        "S",
-        "Adjoint(S)",
-        "T",
-        "Adjoint(T)",
-        "SX",
-        "Adjoint(SX)",
-        "CNOT",
-        "SWAP",
-        "ISWAP",
-        "PSWAP",
-        "Adjoint(ISWAP)",
-        "SISWAP",
-        "Adjoint(SISWAP)",
-        "SQISW",
-        "CSWAP",
-        "Toffoli",
-        "CY",
-        "CZ",
-        "PhaseShift",
-        "ControlledPhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "IsingXX",
-        "IsingYY",
-        "IsingZZ",
-        "IsingXY",
-        "SingleExcitation",
-        "SingleExcitationPlus",
-        "SingleExcitationMinus",
-        "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
-        "Adjoint(MultiRZ)",
-        "Adjoint(GlobalPhase)",
-        "Adjoint(PhaseShift)",
-        "Adjoint(ControlledPhaseShift)",
-        "Adjoint(RX)",
-        "Adjoint(RY)",
-        "Adjoint(RZ)",
-        "Adjoint(CRX)",
-        "Adjoint(CRY)",
-        "Adjoint(CRZ)",
-        "Adjoint(IsingXX)",
-        "Adjoint(IsingYY)",
-        "Adjoint(IsingZZ)",
-        "Adjoint(IsingXY)",
-        "Adjoint(SingleExcitation)",
-        "Adjoint(SingleExcitationPlus)",
-        "Adjoint(SingleExcitationMinus)",
-        "Adjoint(DoubleExcitation)",
-        "Adjoint(DoubleExcitationPlus)",
-        "Adjoint(DoubleExcitationMinus)",
-        "QubitCarry",
-        "QubitSum",
-        "OrbitalRotation",
-        "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
-    }
-)
-# End the set of supported operations.
-
-# The set of supported observables.
-_observables = frozenset(
-    {
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "SparseHamiltonian",
-        "LinearCombination",
-        "Hermitian",
-        "Identity",
-        "Projector",
-        "Sum",
-        "Prod",
-        "SProd",
-        "Exp",
-    }
-)
+_to_matrix_ops = {
+    "BlockEncode": OperatorProperties(controllable=True),
+    "ControlledQubitUnitary": OperatorProperties(),
+    "ECR": OperatorProperties(),
+    "ISWAP": OperatorProperties(),
+    "PSWAP": OperatorProperties(),
+    "SISWAP": OperatorProperties(),
+    "SQISW": OperatorProperties(),
+    "OrbitalRotation": OperatorProperties(),
+    "QubitCarry": OperatorProperties(),
+    "QubitSum": OperatorProperties(),
+    "DiagonalQubitUnitary": OperatorProperties(),
+}
 
 
 def stopping_condition(op: Operator) -> bool:
     """A function that determines whether or not an operation is supported by ``lightning.gpu``."""
-    return op.name in _operations
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -213,7 +102,7 @@ def stopping_condition_shots(op: Operator) -> bool:
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.gpu``."""
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -228,7 +117,7 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -252,7 +141,10 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    return adjoint_ops(op) and not isinstance(op, qml.PauliRot)
+
+    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
+        not qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+    )
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
@@ -305,13 +197,13 @@ def check_gpu_resources() -> None:
 class LightningGPU(LightningBase):
     """PennyLane Lightning GPU device.
 
-    A device that interfaces with C++ to perform fast linear algebra calculations.
+    A device that interfaces with C++ to perform fast linear algebra calculations on GPUs using `custatevec`.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/lightning_gpu/installation` guide for more details.
 
     Args:
-        wires (int): the number of wires to initialize the device with
+        wires (Optional[int, list]): the number of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -326,6 +218,8 @@ class LightningGPU(LightningBase):
         use_async (bool): is host-device data copy asynchronized or not.
     """
 
+    # pylint: disable=too-many-instance-attributes
+
     # General device options
     _device_options = ("c_dtype", "batch_obs")
 
@@ -333,19 +227,17 @@ class LightningGPU(LightningBase):
     _CPP_BINARY_AVAILABLE = LGPU_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LGPU_CPP_BINARY_AVAILABLE else None
 
-    # This `config` is used in Catalyst-Frontend
-    config = Path(__file__).parent / "lightning_gpu.toml"
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when customizable multiple decomposition pathways are implemented
+    _to_matrix_ops = _to_matrix_ops
 
-    # TODO: Move supported ops/obs to TOML file
-    operations = _operations
-    # The names of the supported operations.
-
-    observables = _observables
-    # The names of the supported observables.
+    # This configuration file declares capabilities of the device
+    config_filepath = Path(__file__).parent / "lightning_gpu.toml"
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
@@ -376,17 +268,24 @@ class LightningGPU(LightningBase):
 
         # GPU specific options
         self._dp = DevPool()
-        self._use_async = use_async
 
-        # Creating the state vector
-        self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
-
-        self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires),
-            dtype=c_dtype,
-            mpi_handler=self._mpi_handler,
-            use_async=self._use_async,
-        )
+        # Create the state vector only for MPI, otherwise created dynamically before execution
+        if mpi:
+            if wires is None:
+                raise qml.DeviceError(
+                    "Lightning-GPU-MPI does not support dynamic wires allocation."
+                )
+            self._mpi_handler = MPIHandler(mpi, mpi_buf_size, len(self.wires), c_dtype)
+            self._statevector = self.LightningStateVector(
+                num_wires=len(self.wires),
+                dtype=c_dtype,
+                mpi_handler=self._mpi_handler,
+                use_async=use_async,
+            )
+        else:
+            self._statevector = None
+            self._mpi_handler = None
+            self._sv_init_kwargs = {"mpi_handler": None, "use_async": use_async}
 
     @property
     def name(self):
@@ -408,7 +307,11 @@ class LightningGPU(LightningBase):
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
-        if config.grad_on_execution is None:
+        if (
+            config.use_device_gradient
+            or updated_values.get("use_device_gradient", False)
+            and config.grad_on_execution is None
+        ):
             updated_values["grad_on_execution"] = True
 
         new_device_options = dict(config.device_options)
@@ -485,7 +388,7 @@ class LightningGPU(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    circuit,
+                    self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
@@ -539,7 +442,7 @@ class LightningGPU(LightningBase):
         Note that this function can return measurements for non-commuting observables simultaneously.
         """
         if circuit.shots and (any(isinstance(op, MidMeasureMP) for op in circuit.operations)):
-            if self._mpi_handler.use_mpi:
+            if self._mpi_handler and self._mpi_handler.use_mpi:
                 raise qml.DeviceError(
                     "Lightning-GPU-MPI does not support Mid-circuit measurements."
                 )
@@ -564,7 +467,6 @@ class LightningGPU(LightningBase):
                 )
             return tuple(results)
 
-        state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state).measure_final_state(circuit)
 
@@ -607,3 +509,7 @@ class LightningGPU(LightningBase):
                 return "LightningGPUSimulator", lib_location
 
         raise RuntimeError("'LightningGPUSimulator' shared library not found")  # pragma: no cover
+
+
+_supports_operation = LightningGPU.capabilities.supports_operation
+_supports_observable = LightningGPU.capabilities.supports_observable

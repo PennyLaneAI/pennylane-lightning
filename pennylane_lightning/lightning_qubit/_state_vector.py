@@ -29,6 +29,7 @@ from typing import Union
 
 import numpy as np
 import pennylane as qml
+import scipy as sp
 from pennylane.measurements import MidMeasureMP
 from pennylane.ops import Conditional
 from pennylane.ops.op_math import Adjoint
@@ -87,12 +88,13 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
             device_wires (Wires): wires that get initialized in the state
         """
 
-        if isinstance(state, self._qubit_state.__class__):
+        if sp.sparse.issparse(state):
+            state = state.toarray().flatten()
+        elif isinstance(state, self._qubit_state.__class__):
             state_data = allocate_aligned_array(state.size, np.dtype(self.dtype), True)
             state.getState(state_data)
             state = state_data
@@ -106,34 +108,39 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
         self._qubit_state.setStateVector(state, list(device_wires))
 
-    def _apply_lightning_controlled(self, operation):
+    def _apply_lightning_controlled(self, operation, adjoint):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
             operation (~pennylane.operation.Operation): controlled operation to apply
+            adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
             None
         """
         state = self.state_vector
 
-        basename = operation.base.name
-        method = getattr(state, f"{basename}", None)
+        if isinstance(operation.base, Adjoint):
+            base_operation = operation.base.base
+            adjoint = not adjoint
+        else:
+            base_operation = operation.base
+
+        method = getattr(state, f"{base_operation.name}", None)
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
         if method is not None:  # apply n-controlled specialized gate
-            inv = False
             param = operation.parameters
-            method(control_wires, control_values, target_wires, inv, param)
+            method(control_wires, control_values, target_wires, adjoint, param)
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
-                qml.matrix(operation.base),
+                qml.matrix(base_operation),
                 control_wires,
                 control_values,
                 target_wires,
-                False,
+                adjoint,
             )
 
     def _apply_lightning_midmeasure(
@@ -187,11 +194,12 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             if isinstance(operation, qml.Identity):
                 continue
             if isinstance(operation, Adjoint):
-                name = operation.base.name
+                op_adjoint_base = operation.base
                 invert_param = True
             else:
-                name = operation.name
+                op_adjoint_base = operation
                 invert_param = False
+            name = op_adjoint_base.name
             method = getattr(state, name, None)
             wires = list(operation.wires)
 
@@ -213,8 +221,8 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
                 method(wires, invert_param, param)
-            elif isinstance(operation, qml.ops.Controlled):  # apply n-controlled gate
-                self._apply_lightning_controlled(operation)
+            elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
+                self._apply_lightning_controlled(op_adjoint_base, invert_param)
             else:  # apply gate as a matrix
                 # Inverse can be set to False since qml.matrix(operation) is already in
                 # inverted form

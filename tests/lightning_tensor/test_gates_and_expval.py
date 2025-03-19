@@ -22,14 +22,14 @@ from pennylane import DeviceError
 from pennylane import numpy as np
 
 if device_name != "lightning.tensor":
-    pytest.skip("Exclusive tests for Lightning Tensor device. Skipping.", allow_module_level=True)
+    pytest.skip(
+        "Exclusive tests for Lightning Tensor device. Skipping.",
+        allow_module_level=True,
+    )
 else:
     from pennylane_lightning.lightning_tensor import LightningTensor
     from pennylane_lightning.lightning_tensor._measurements import LightningTensorMeasurements
     from pennylane_lightning.lightning_tensor._tensornet import LightningTensorNet
-
-if not LightningDevice._new_API:  # pylint: disable=protected-access
-    pytest.skip("Exclusive tests for new API. Skipping.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:  # pylint: disable=protected-access
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -69,11 +69,9 @@ def circuit_ansatz(params, wires):
     """Circuit ansatz containing all the parametrized gates"""
     qml.Identity(wires=wires[0])
     qml.QubitUnitary(random_unitary, wires=[wires[1], wires[3]])
-    qml.ControlledQubitUnitary(
-        qml.matrix(qml.PauliX([wires[1]])), control_wires=[wires[0]], wires=wires[1]
-    )
+    qml.ControlledQubitUnitary(qml.matrix(qml.PauliX([wires[1]])), wires=[wires[0], wires[1]])
     qml.DiagonalQubitUnitary(np.array([1, 1]), wires=wires[2])
-    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[wires[0], wires[1]])
+    qml.MultiControlledX(wires=[wires[0], wires[1], wires[3]], control_values=[0, 1])
     qml.PauliX(wires=wires[1])
     qml.PauliY(wires=wires[2])
     qml.PauliZ(wires=wires[3])
@@ -138,49 +136,60 @@ def circuit_ansatz(params, wires):
     qml.ECR(wires=[wires[1], wires[3]])
 
 
+# The expected values were generated using default.qubit
+@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 @pytest.mark.parametrize(
-    "returns",
+    "returns,expected_value",
     [
-        (qml.PauliX(0),),
-        (qml.PauliY(0),),
-        (qml.PauliZ(0),),
-        (qml.PauliX(1),),
-        (qml.PauliY(1),),
-        (qml.PauliZ(1),),
-        (qml.PauliX(2),),
-        (qml.PauliY(2),),
-        (qml.PauliZ(2),),
-        (qml.PauliX(3),),
-        (qml.PauliY(3),),
-        (qml.PauliZ(3),),
-        (qml.PauliX(0), qml.PauliY(1)),
+        ((qml.PauliX(0),), -0.094606003),
+        ((qml.PauliY(0),), -0.138130983),
+        ((qml.PauliZ(0),), 0.052683073),
+        ((qml.PauliX(1),), -0.027114956),
+        ((qml.PauliY(1),), 0.035227835),
+        ((qml.PauliZ(1),), 0.130383680),
+        ((qml.PauliX(2),), -0.112239026),
+        ((qml.PauliY(2),), -0.043408985),
+        ((qml.PauliZ(2),), -0.186733557),
+        ((qml.PauliX(3),), 0.081030290),
+        ((qml.PauliY(3),), 0.136389367),
+        ((qml.PauliZ(3),), -0.024382650),
+        ((qml.PauliX(0), qml.PauliY(1)), [-0.094606, 0.03522784]),
         (
-            qml.PauliZ(0),
-            qml.PauliX(1),
-            qml.PauliY(2),
+            (
+                qml.PauliZ(0),
+                qml.PauliX(1),
+                qml.PauliY(2),
+            ),
+            [0.05268307, -0.02711496, -0.04340899],
         ),
         (
-            qml.PauliY(0),
-            qml.PauliZ(1),
-            qml.PauliY(3),
+            (
+                qml.PauliY(0),
+                qml.PauliZ(1),
+                qml.PauliY(3),
+            ),
+            [-0.13813098, 0.13038368, 0.13638937],
         ),
-        (qml.PauliZ(0) @ qml.PauliY(3),),
-        (qml.Hadamard(2),),
-        (qml.Hadamard(3) @ qml.PauliZ(2),),
-        (qml.PauliX(0) @ qml.PauliY(3),),
-        (qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),),
-        (qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),),
-        (0.5 * qml.PauliZ(0) @ qml.PauliZ(2),),
-        (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
-        (qml.ops.prod(qml.X(0), qml.Y(1))),
+        ((qml.PauliZ(0) @ qml.PauliY(3),), 0.174335019),
+        ((qml.Hadamard(2),), -0.211405541),
+        ((qml.Hadamard(3) @ qml.PauliZ(2),), -0.024206963),
+        ((qml.PauliX(0) @ qml.PauliY(3),), 0.088232689),
+        ((qml.PauliY(0) @ qml.PauliY(2) @ qml.PauliY(3),), 0.193644667),
+        ((qml.PauliZ(0) @ qml.PauliZ(1) @ qml.PauliZ(2),), -0.034583947),
+        ((0.5 * qml.PauliZ(0) @ qml.PauliZ(2),), 0.002016079),
+        (
+            (qml.ops.LinearCombination([1.0, 2.0], [qml.X(0) @ qml.Z(1), qml.Y(3) @ qml.Z(2)])),
+            [0.08618213, 0.09506244],
+        ),
+        ((qml.ops.prod(qml.X(0), qml.Y(1))), [-0.094606, 0.03522784]),
     ],
 )
-def test_integration_for_all_supported_gates(returns):
+def test_integration_for_all_supported_gates(returns, expected_value, method):
     """Integration tests that compare to default.qubit for a large circuit containing parametrized
     operations"""
+
     num_wires = 8
-    dev_default = qml.device("default.qubit", wires=range(num_wires))
-    dev_ltensor = LightningTensor(wires=range(num_wires), max_bond_dim=128, c_dtype=np.complex128)
+    dev_ltensor = LightningTensor(wires=range(num_wires), c_dtype=np.complex128, **method)
 
     def circuit(params):
         qml.BasisState(np.array([1, 0, 1, 0, 1, 0, 1, 0]), wires=range(num_wires))
@@ -192,33 +201,30 @@ def test_integration_for_all_supported_gates(returns):
     params_init = np.random.rand(n_params)
 
     params = np.array(params_init, requires_grad=True)
-
     qnode_ltensor = qml.QNode(circuit, dev_ltensor)
-    qnode_default = qml.QNode(circuit, dev_default)
-
     j_ltensor = qnode_ltensor(params)
-    j_default = qnode_default(params)
 
-    assert np.allclose(j_ltensor, j_default, rtol=1e-6)
+    assert np.allclose(j_ltensor, expected_value, rtol=1e-6)
 
 
+@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
 class TestSparseHExpval:
     """Test sparseH expectation values"""
 
     @pytest.mark.parametrize(
         "cases",
         [
-            [qml.PauliX(0) @ qml.Identity(1), 0.00000000000000000, 1.000000000000000000],
-            [qml.Identity(0) @ qml.PauliX(1), -0.19866933079506122, 0.960530638694763184],
-            [qml.PauliY(0) @ qml.Identity(1), -0.38941834230865050, 0.848353326320648193],
-            [qml.Identity(0) @ qml.PauliY(1), 0.00000000000000000, 1.000000119209289551],
-            [qml.PauliZ(0) @ qml.Identity(1), 0.92106099400288520, 0.151646673679351807],
-            [qml.Identity(0) @ qml.PauliZ(1), 0.98006657784124170, 0.039469480514526367],
+            [qml.PauliX(0) @ qml.Identity(1), 0.000000000, 1.000000000],
+            [qml.Identity(0) @ qml.PauliX(1), -0.198669330, 0.960530638],
+            [qml.PauliY(0) @ qml.Identity(1), -0.389418342, 0.848353326],
+            [qml.Identity(0) @ qml.PauliY(1), 0.000000000, 1.000000119],
+            [qml.PauliZ(0) @ qml.Identity(1), 0.921060994, 0.151646673],
+            [qml.Identity(0) @ qml.PauliZ(1), 0.980066577, 0.039469480],
         ],
     )
-    def test_sparse_Pauli_words(self, cases, qubit_device):
+    def test_sparse_Pauli_words(self, cases, qubit_device, method):
         """Test expval of some simple sparse Hamiltonian"""
-        dev = qubit_device(wires=4)
+        dev = qml.device(device_name, wires=4, **method)
 
         @qml.qnode(dev, diff_method="parameter-shift")
         def circuit_expval():
@@ -233,67 +239,84 @@ class TestSparseHExpval:
         with pytest.raises(DeviceError):
             circuit_expval()
 
-    def test_expval_sparseH_not_supported(self):
+    def test_expval_sparseH_not_supported(self, method):
         """Test that expval of SparseH is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, **method)
+
         m = LightningTensorMeasurements(tensornet)
 
-        with pytest.raises(NotImplementedError, match="Sparse Hamiltonians are not supported."):
+        with pytest.raises(NotImplementedError, match="Sparse Observables are not supported."):
             m.expval(q.queue[0])
 
-    def test_var_sparseH_not_supported(self):
+    def test_var_sparseH_not_supported(self, method):
         """Test that var of SparseH is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.var(qml.SparseHamiltonian(qml.PauliX.compute_sparse_matrix(), wires=0))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, **method)
+
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
             NotImplementedError,
-            match="The var measurement does not support sparse Hamiltonian observables.",
+            match="The var measurement does not support sparse observables.",
         ):
             m.var(q.queue[0])
 
-    def test_expval_hermitian_not_supported(self):
+    def test_expval_hermitian_not_supported(self, method):
         """Test that expval of Hermitian with 1+ wires is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.expval(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, **method)
+
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            ValueError, match="The number of Hermitian observables target wires should be 1."
+            ValueError,
+            match="The number of Hermitian observables target wires should be 1.",
         ):
             m.expval(q.queue[0])
 
-    def test_var_hermitian_not_supported(self):
+    def test_var_hermitian_not_supported(self, method):
         """Test that var of Hermitian with 1+ wires is not supported."""
         with qml.queuing.AnnotatedQueue() as q:
             qml.var(qml.Hermitian(np.eye(4), wires=[0, 1]))
 
-        tensornet = LightningTensorNet(4, 10)
+        tensornet = LightningTensorNet(4, **method)
+
         m = LightningTensorMeasurements(tensornet)
 
         with pytest.raises(
-            ValueError, match="The number of Hermitian observables target wires should be 1."
+            ValueError,
+            match="The number of Hermitian observables target wires should be 1.",
         ):
             m.var(q.queue[0])
 
 
-class QChem:
+@pytest.mark.parametrize("method", [{"method": "mps", "max_bond_dim": 128}, {"method": "tn"}])
+class TestQChem:
     """Integration tests for qchem module by parameter-shift and finite-diff differentiation methods."""
 
-    @pytest.mark.parametrize("diff_approach", ["parameter-shift", "finite-diff"])
-    def test_integration_H2_Hamiltonian(self, diff_approach):
+    # The expected values were generated using default.qubit
+    @pytest.mark.parametrize(
+        "diff_approach, expected_value",
+        [
+            ("parameter-shift", -0.17987143),
+            ("finite-diff", -0.17987139),
+        ],
+    )
+    def test_integration_H2_Hamiltonian(self, diff_approach, expected_value, method):
         symbols = ["H", "H"]
 
         geometry = np.array(
-            [[-0.676411907, 0.000000000, 0.000000000], [0.676411907, 0.000000000, 0.000000000]],
+            [
+                [-0.676411907, 0.000000000, 0.000000000],
+                [0.676411907, 0.000000000, 0.000000000],
+            ],
             requires_grad=False,
         )
 
@@ -307,15 +330,13 @@ class QChem:
 
         singles, doubles = qml.qchem.excitations(mol.n_electrons, len(H.wires))
 
-        excitations = singles + doubles
         num_params = len(singles + doubles)
         params = np.zeros(num_params, requires_grad=True)
 
         hf_state = qml.qchem.hf_state(mol.n_electrons, qubits)
 
         # Choose different batching supports here
-        dev = qml.device(device_name, wires=qubits)
-        dev_comp = qml.device("default.qubit", wires=qubits)
+        dev = qml.device(device_name, wires=qubits, **method)
 
         @qml.qnode(dev, diff_method=diff_approach)
         def circuit(params, excitations):
@@ -327,22 +348,9 @@ class QChem:
                     qml.SingleExcitation(params[i], wires=excitation)
             return qml.expval(H)
 
-        @qml.qnode(dev_comp, diff_method=diff_approach)
-        def circuit_compare(params, excitations):
-            qml.BasisState(hf_state, wires=range(qubits))
-
-            for i, excitation in enumerate(excitations):
-                if len(excitation) == 4:
-                    qml.DoubleExcitation(params[i], wires=excitation)
-                else:
-                    qml.SingleExcitation(params[i], wires=excitation)
-            return qml.expval(H)
-
         jac_func = qml.jacobian(circuit)
-        jac_func_comp = qml.jacobian(circuit_compare)
 
         params = qml.numpy.array([0.0] * len(doubles), requires_grad=True)
         jacs = jac_func(params, excitations=doubles)
-        jacs_comp = jac_func_comp(params, excitations=doubles)
 
-        assert np.allclose(jacs, jacs_comp)
+        assert np.allclose(jacs, expected_value)

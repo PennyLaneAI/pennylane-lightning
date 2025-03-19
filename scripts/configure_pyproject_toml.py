@@ -118,8 +118,23 @@ if __name__ == "__main__":
     pyproject["project"]["entry-points"]["pennylane.plugins"] = {device_name: plugin}
 
     dependencies = [
-        "pennylane>=0.37",
+        "pennylane>=0.40",
+        "scipy-openblas32>=0.3.26",
     ]
+
+    if backend == "lightning_gpu":
+        dependencies += ["custatevec-cu12"]
+
+    if backend == "lightning_tensor":
+        dependencies += ["cutensornet-cu12", "nvidia-cusolver-cu12"]
+
+    if backend in ("lightning_gpu", "lightning_tensor"):
+        dependencies += [
+            "nvidia-nvjitlink-cu12",
+            "nvidia-cusparse-cu12",
+            "nvidia-cublas-cu12",
+            "nvidia-cuda-runtime-cu12",
+        ]
 
     if backend != "lightning_qubit":
         dependencies += ["pennylane_lightning==" + version]

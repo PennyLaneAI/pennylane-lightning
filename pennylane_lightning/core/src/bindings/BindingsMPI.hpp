@@ -53,7 +53,7 @@ using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 using namespace Pennylane::LightningGPU::Measures;
 } // namespace
-  /// @endcond
+/// @endcond
 
 #else
 

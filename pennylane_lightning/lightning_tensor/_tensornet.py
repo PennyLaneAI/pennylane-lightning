@@ -17,65 +17,140 @@ Class implementation for tensornet manipulation.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import TensorNetC64, TensorNetC128
+    from pennylane_lightning.lightning_tensor_ops import (
+        exactTensorNetC64,
+        exactTensorNetC128,
+        mpsTensorNetC64,
+        mpsTensorNetC128,
+    )
 except ImportError:
     pass
 
 import numpy as np
 import pennylane as qml
-from pennylane import BasisState, DeviceError, StatePrep
+from pennylane import BasisState, DeviceError, MPSPrep, StatePrep
 from pennylane.ops.op_math import Adjoint
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
 
-def svd_split(Mat, site_shape, max_bond_dim):
-    """SVD decomposition of a matrix via numpy linalg. Note that this function is to be moved to the C++ layer."""
+def svd_split(
+    Mat: np.ndarray, site_shape: list[int], max_bond_dim: int, is_right: bool = True
+) -> tuple[np.ndarray, np.ndarray]:
+    """Perform SVD decomposition of a matrix using numpy linalg.
+
+    This function allows selecting which orthonormal singular vector to return.
+    If `is_right` is True, it returns Vd; otherwise, it returns U.
+    Note that this function is intended to be moved to the C++ layer.
+
+    Args:
+        Mat (np.ndarray): Input matrix.
+        site_shape (list[int]): Shape of the site tensor.
+        max_bond_dim (int): Maximum bond dimension.
+        is_right (bool): Direction of the SVD decomposition. Default is True.
+
+    Returns:
+        tuple[np.ndarray, np.ndarray]: U and Vd matrices.
+    """
     # TODO: Check if cutensornet allows us to remove all zero (or < tol) singular values and the respective rows and columns of U and Vd
+
     U, S, Vd = np.linalg.svd(Mat, full_matrices=False)
-    U = U * S  # Append singular values to U
+
+    # Removing noise from singular values
+    # Reference: https://scicomp.stackexchange.com/questions/350/what-should-be-the-criteria-for-accepting-rejecting-singular-values/355#355
+    epsilon = np.finfo(Mat.dtype).eps * S[0] if S[0] > 1.0 else np.finfo(Mat.dtype).eps
+    S[S < epsilon] = 0.0
+
     bonds = len(S)
+    chi = min(bonds, max_bond_dim)
 
-    Vd = Vd.reshape([bonds] + site_shape + [-1])
-    U = U.reshape([-1] + site_shape + [bonds])
+    # Crop the singular values and the corresponding singular vectors
+    S = S[:chi]
+    U = U[:, :chi]
+    Vd = Vd[:chi]
 
-    # keep only chi bonds
-    chi = min([bonds, max_bond_dim])
-    U, Vd = U[..., :chi], Vd[:chi]
-    return U, Vd
+    if is_right:  # Vd as orthonormal singular vectors
+        U = U * S  # Append singular values to U
+    else:  # U as orthonormal singular vectors
+        Vd = (S * Vd.T).T  # Append singular values to Vd, equivalent operation to np.diag(S) @ Vd
+
+    # keep only chi bonds and reshape to fit the bond dimension and site shape
+    Vd = Vd.reshape([chi] + site_shape + [-1])
+    U = U.reshape([-1] + site_shape + [chi])
+
+    if is_right:
+        return U, Vd
+    else:
+        return Vd, U
 
 
-def decompose_dense(psi, n_wires, site_shape, max_bond_dim):
-    """Decompose a dense state vector/gate matrix into MPS/MPO sites."""
-    Ms = [[] for _ in range(n_wires)]
+def decompose_dense(
+    psi: np.ndarray,
+    n_wires: int,
+    site_shape: list[int],
+    max_bond_dim: int,
+    canonical_right: bool = True,
+) -> list[np.ndarray]:
+    """Decompose a dense state vector/gate matrix into MPS/MPO sites.
+
+    Args:
+        psi (np.ndarray): input state vector or gate matrix
+        n_wires (int): number of wires
+        site_shape (list[int]): shape of the site tensor
+        max_bond_dim (int): maximum bond dimension
+        canonical_right (bool): right-canonical form if True; left-canonical form if False. Default is True.
+
+    Returns:
+        list[np.ndarray]: MPS/MPO sites
+    """
+
+    Ms = []
     site_len = np.prod(site_shape)
-    psi = np.reshape(psi, (site_len, -1))  # split psi [2, 2, 2, 2...] to psi [site_len, -1]
 
-    U, Vd = svd_split(
-        psi, site_shape, max_bond_dim
-    )  # psi [site_len, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
+    psi = np.reshape(psi, (-1, site_len) if canonical_right else (site_len, -1))
+    psi, A = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
 
-    Ms[0] = U.reshape(site_shape + [-1])
-    bondL = Vd.shape[0]
-    psi = Vd
+    Ms.append(A)
+    bondL = psi.shape[-1 if canonical_right else 0]
 
-    for i in range(1, n_wires - 1):
-        psi = np.reshape(psi, (site_len * bondL, -1))  # reshape psi[site_len*bondL, -1]
-        U, Vd = svd_split(
-            psi, site_shape, max_bond_dim
-        )  # psi [site_len*bondL, -1] -> U [site_len, mu] Vd [mu, (2x2x2x..)]
-        Ms[i] = U
+    for _ in range(1, n_wires - 1):
+        psi = np.reshape(psi, (-1, site_len * bondL) if canonical_right else (site_len * bondL, -1))
+        psi, A = svd_split(psi, site_shape, max_bond_dim, is_right=canonical_right)
+        Ms.append(A)
 
-        psi = Vd
-        bondL = Vd.shape[0]
+        bondL = psi.shape[-1 if canonical_right else 0]
 
-    Ms[-1] = Vd.reshape([-1] + site_shape)
+    Ms.append(psi)
+
+    if canonical_right:
+        Ms.reverse()
+
+    # Removing the virtual bond dimension of 1 from the first and last sites
+    Ms[0] = np.reshape(Ms[0], Ms[0].shape[1:])
+    Ms[-1] = np.reshape(Ms[-1], Ms[-1].shape[:-1])
 
     return Ms
 
 
-def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
-    """Permute and decompose a gate matrix into MPO sites. This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention."""
+def gate_matrix_decompose(
+    gate_ops_matrix: np.ndarray,
+    wires: list[int],
+    max_mpo_bond_dim: int,
+    c_dtype: np.complex64 | np.complex128,
+) -> tuple[list[np.ndarray], list[int]]:
+    """Permute and decompose a gate matrix into MPO sites.
+
+    This method return the MPO sites in the Fortran order of the ``cutensornet`` backend. Note that MSB in the Pennylane convention is the LSB in the ``cutensornet`` convention.
+
+    Args:
+        gate_ops_matrix (np.ndarray): input gate matrix
+        wires (list): list of wires
+        max_mpo_bond_dim (int): maximum bond dimension
+        c_dtype (np.complex64 | np.complex128): complex dtype
+
+    Returns:
+        [list[np.ndarray], list[int]]: MPO sites and sorted wires
+    """
     sorted_indexed_wires = sorted(enumerate(wires), key=lambda x: x[1])
 
     original_axes, sorted_wires = zip(*sorted_indexed_wires)
@@ -118,6 +193,193 @@ def gate_matrix_decompose(gate_ops_matrix, wires, max_mpo_bond_dim, c_dtype):
     return mpos, sorted_wires
 
 
+def check_canonical_form(mps: list[np.ndarray], is_right: bool = True) -> bool:
+    """Check if the MPS is in the canonical form.
+
+    The computation of expectation values and matrix elements is simpler if the MPS is built from orthonormal tensors, i.e. in canonical form (either in the left or right direction).
+
+    Args:
+        mps (list[np.ndarray]): MPS state
+        is_right (bool): True if the MPS is in the right canonical form; False if the MPS is in the left canonical form. Default is True.
+
+    Returns:
+        bool: True if the MPS is in the canonical form specified by the direction
+    """
+
+    for sites in mps:
+
+        sites_conj_t = sites.conj().T
+
+        if not is_right:
+            sites, sites_conj_t = sites_conj_t, sites
+
+        C = np.tensordot(sites, sites_conj_t, axes=[[-1, -2], [0, 1]])
+
+        # Compare C with the identity matrix
+        if not np.allclose(C, np.eye(C.shape[0], dtype=C.dtype), atol=np.finfo(C.dtype).eps * 1e4):
+            return False
+
+    # Return True if all the values of canon_values are True
+    return True
+
+
+def expand_mps_first_site(state_MPS: list[np.ndarray], max_bond_dim: int = 128) -> list[np.ndarray]:
+    """Expand the MPS to match the size of the target wires.
+
+    This function modifies the original MPS state by adding a single wire at the beginning of the MPS state. The algorithm to expand the input MPS state to fit into the device MPS state is based on the following steps:
+
+    - Set the device MPS state as $B$ and the input MPS state as $A$.
+    - Padding with zeros the tensor $B_i$ to fit the tensor shape $A_{i+1}$ up to $i = N/2$ where $N$ is the total number of tensors in $B$.
+    - Add the identity matrix with shape `(1,2,2)` at the beginning of $B$.
+    - Restore the $B$ MPS into the initial canonical form to spread the new site information across the entire MPS $A$.
+
+    The details about how to create a MPS state can be found in the PennyLane tutorial: [Introducing matrix product states for quantum practitioners](https://pennylane.ai/qml/demos/tutorial_mps)
+
+    Args:
+        state_MPS (list[np.ndarray]): The MPS state to be expanded.
+        max_bond_dim (int): The maximum bond dimension.
+
+    Returns:
+        list[np.ndarray]: The expanded MPS state.
+    """
+
+    expanded_MPS = state_MPS
+
+    # Number of sites that should be changed from the first site
+    n_sites = len(state_MPS)
+    n_sites_change = (n_sites + 1) // 2
+    odd_n_sites = n_sites % 2 == 1
+
+    for i in range(n_sites_change - 1):
+        # Create the new site for expanded_MPS
+        new_site = expanded_MPS[i]
+
+        # Horizontal padding with zeros
+        horizontal_pad = 2**i if 2**i < max_bond_dim else 0
+        new_site = np.pad(new_site, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
+
+        # Vertical padding with zeros
+        target_l, _, target_r = state_MPS[i + 1].shape
+
+        if odd_n_sites:  # odd sites need to double the bond dimension
+            target_r = target_l * 2 if target_l * 2 < max_bond_dim else max_bond_dim
+
+        site_r = new_site.shape[-1]
+
+        new_site = np.pad(
+            new_site.reshape(target_l, 2, site_r),
+            ((0, 0), (0, 0), (0, target_r - site_r)),
+            mode="constant",
+        )
+
+        # Assign the new site
+        expanded_MPS[i] = new_site
+
+    # Padding mid site
+    new_site = expanded_MPS[n_sites_change - 1]
+
+    # Horizontal padding
+    horizontal_pad = 2 ** (n_sites_change - 1) if 2 ** (n_sites_change - 1) < max_bond_dim else 0
+    new_site = np.pad(new_site, ((0, horizontal_pad), (0, 0), (0, 0)), mode="constant")
+
+    # Vertical padding
+    target_l, _, target_r = state_MPS[n_sites_change].shape
+
+    # if the mid + 1 site is odd, the bond dimension needs to be doubled
+    if odd_n_sites:
+        target_l *= 2
+        target_r *= 2
+    else:  # even
+        target_r = target_l
+
+    site_r = new_site.shape[-1]
+
+    new_site = new_site.reshape(target_l, 2, target_r)
+    new_site = np.pad(new_site, ((0, 0), (0, 0), (0, target_r - site_r)), mode="constant")
+
+    # Assign the last new site
+    expanded_MPS[n_sites_change - 1] = new_site
+
+    # Add the initial site
+    expanded_MPS = [np.eye(2, dtype=state_MPS[0].dtype).reshape(1, 2, 2)] + expanded_MPS
+
+    return expanded_MPS
+
+
+def restore_left_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
+    """Restore the left canonical form of the MPS.
+
+    The left canonical form is defined as the form where the tensors are orthonormal in the left direction.
+
+    Args:
+        mps (list[np.ndarray]): MPS state
+        site_shape (list[int]): shape of the site tensor
+
+    Returns:
+        list[np.ndarray]: MPS state in the left canonical form
+    """
+
+    new_mps = []
+    Vd = np.eye(1, dtype=mps[0].dtype)
+
+    for site in mps:
+        site_p = np.tensordot(Vd, site, axes=[[-1], [0]])
+        site_p = site_p.reshape(-1, site.shape[-1])
+
+        U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
+
+        # Removing noise from singular values
+        epsilon = np.finfo(site.dtype).eps * S[0] if S[0] > 1.0 else np.finfo(site.dtype).eps
+        S[S < epsilon] = 0.0
+
+        bonds = len(S)
+
+        Vd = S * Vd
+        U = U.reshape([-1] + site_shape + [bonds])
+
+        new_mps.append(U)
+
+    return new_mps
+
+
+def restore_right_canonical_form(mps: list[np.ndarray], site_shape: list[int]) -> list[np.ndarray]:
+    """Restore the right canonical form of the MPS.
+
+    The right canonical form is defined as the form where the tensors are orthonormal in the right direction.
+
+    Args:
+        mps (list[np.ndarray]): MPS state
+        site_shape (list[int]): shape of the site tensor
+
+    Returns:
+        list[np.ndarray]: MPS state in the right canonical form
+    """
+
+    new_mps = []
+    U = np.eye(1, dtype=mps[0].dtype)
+
+    for site in reversed(mps):
+        site_p = np.tensordot(site, U, axes=[[-1], [0]])
+        site_p = site_p.reshape(site.shape[0], -1)
+
+        U, S, Vd = np.linalg.svd(site_p, full_matrices=False)
+
+        # Removing noise from singular values
+        epsilon = np.finfo(site.dtype).eps * S[0] if S[0] > 1.0 else np.finfo(site.dtype).eps
+        S[S < epsilon] = 0.0
+
+        bonds = len(S)
+
+        U = U * S
+        Vd = Vd.reshape([bonds] + site_shape + [-1])
+
+        new_mps.append(Vd)
+
+    new_mps.reverse()
+
+    return new_mps
+
+
 # pylint: disable=too-many-instance-attributes
 class LightningTensorNet:
     """Lightning tensornet class.
@@ -128,41 +390,53 @@ class LightningTensorNet:
         num_wires(int): the number of wires to initialize the device with
         c_dtype: Datatypes for tensor network representation. Must be one of
             ``np.complex64`` or ``np.complex128``. Default is ``np.complex128``
-        method(string): tensor network method. Options: ["mps"]. Default is "mps".
-        max_bond_dim(int): maximum bond dimension for the tensor network
-        cutoff(float): threshold for singular value truncation. Default is 0.
-        cutoff_mode(string): singular value truncation mode. Options: ["rel", "abs"].
+        method(string): tensor network method. Supported methods are "mps" (Matrix Product State) and
+            "tn" (Exact Tensor Network). Options: ["mps", "tn"].
         device_name(string): tensor network device name. Options: ["lightning.tensor"]
+    Keyword Args:
+        max_bond_dim (int): The maximum bond dimension to be used in the MPS simulation. Default is 128.
+            The accuracy of the wavefunction representation comes with a memory tradeoff which can be
+            tuned with `max_bond_dim`. The larger the internal bond dimension, the more entanglement can
+            be described but the larger the memory requirements. Note that GPUs are ill-suited (i.e. less
+            competitive compared with CPUs) for simulating circuits with low bond dimensions and/or circuit
+            layers with a single or few gates because the arithmetic intensity is lower.
+        cutoff (float): The threshold used to truncate the singular values of the MPS tensors. Default is 0.
+        cutoff_mode (str): Singular value truncation mode for MPS tensors can be done either by
+            considering the absolute values of the singular values (``"abs"``) or by considering
+            the relative values of the singular values (``"rel"``). Default is ``"abs"``.
     """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     def __init__(
         self,
-        num_wires,
+        num_wires=None,
         method: str = "mps",
         c_dtype=np.complex128,
-        max_bond_dim: int = 128,
-        cutoff: float = 0,
-        cutoff_mode: str = "abs",
         device_name="lightning.tensor",
+        **kwargs,
     ):
-        self._num_wires = num_wires
-        self._max_bond_dim = max_bond_dim
-        self._method = method
-        self._cutoff = cutoff
-        self._cutoff_mode = cutoff_mode
-        self._c_dtype = c_dtype
-
         if device_name != "lightning.tensor":
             raise DeviceError(f'The device name "{device_name}" is not a valid option.')
 
         if num_wires < 2:
             raise ValueError("Number of wires must be greater than 1.")
 
+        self._num_wires = num_wires
+        self._method = method
+        self._c_dtype = c_dtype
+        self._device_name = device_name
+
         self._wires = Wires(range(num_wires))
 
-        self._device_name = device_name
-        self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+        if self._method == "mps":
+            self._max_bond_dim = kwargs.get("max_bond_dim", 128)
+            self._cutoff = kwargs.get("cutoff", 0)
+            self._cutoff_mode = kwargs.get("cutoff_mode", "abs")
+            self._tensornet = self._tensornet_dtype()(self._num_wires, self._max_bond_dim)
+        elif self._method == "tn":
+            self._tensornet = self._tensornet_dtype()(self._num_wires)
+        else:
+            raise DeviceError(f"The method {self._method} is not supported.")
 
     @property
     def dtype(self):
@@ -176,8 +450,13 @@ class LightningTensorNet:
 
     @property
     def num_wires(self):
-        """Number of wires addressed on this device"""
+        """Returns the number of wires addressed on this device"""
         return self._num_wires
+
+    @property
+    def method(self):
+        """Returns the method (mps or tn) for evaluating the tensor network."""
+        return self._method
 
     @property
     def tensornet(self):
@@ -196,7 +475,10 @@ class LightningTensorNet:
 
         Returns: the tensor network class
         """
-        return TensorNetC128 if self.dtype == np.complex128 else TensorNetC64
+        if self.method == "tn":  # Using "tn" method
+            return exactTensorNetC128 if self.dtype == np.complex128 else exactTensorNetC64
+        # Using "mps" method
+        return mpsTensorNetC128 if self.dtype == np.complex128 else mpsTensorNetC64
 
     def reset_state(self):
         """Reset the device's initial quantum state"""
@@ -264,18 +546,67 @@ class LightningTensorNet:
         return np.reshape(full_state, output_shape).ravel(order="C")
 
     def _apply_state_vector(self, state, device_wires: Wires):
-        """Convert a specified state to MPS sites.
+        """Convert a specified state to MPS state.
+
         Args:
             state (array[complex]): normalized input state of length ``2**len(device_wires)``
                 or broadcasted state of shape ``(batch_size, 2**len(device_wires))``
             device_wires (Wires): wires that get initialized in the state
         """
+        if self.method == "tn":
+            raise DeviceError("Exact Tensor Network does not support StatePrep")
 
-        state = self._preprocess_state_vector(state, device_wires)
-        mps_site_shape = [2]
-        M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
+        if self.method == "mps":
+            state = self._preprocess_state_vector(state, device_wires)
+            mps_site_shape = [2]
+            M = decompose_dense(state, self._num_wires, mps_site_shape, self._max_bond_dim)
+            self._tensornet.updateMPSSitesData(M)
 
-        self._tensornet.updateMPSSitesData(M)
+    def _apply_mps_state(self, mps: tuple[np.ndarray], target_wires: Wires) -> None:
+
+        if len(target_wires) == self._num_wires and Wires(sorted(target_wires)) == target_wires:
+            self._tensornet.updateMPSSitesData(mps)
+            return
+
+        trgt_wires = target_wires.tolist()
+
+        # Sort wires in ascending order
+        trgt_wires.sort()
+
+        # check if 0 is present in trgt_wires and the number of wires to be appended is more than 1
+        if not 0 in trgt_wires and (self._num_wires - len(trgt_wires) > 1):
+            raise DeviceError(
+                "MPSPrep only support to append a single wire at the beginning of the MPS."
+            )
+
+        mps = list(mps)
+
+        if len(mps[0].shape) != 3:
+            mps[0] = mps[0].reshape(1, 2, 2)
+
+        if len(mps[-1].shape) != 3:
+            mps[-1] = mps[-1].reshape(2, 2, 1)
+
+        # Check the canonical form of the MPS
+        if check_canonical_form(mps, is_right=False):
+            # Expand and restore the canonical form for the current MPS to match the size of the target wires
+            new_mps = expand_mps_first_site(mps, self._max_bond_dim)
+            new_mps = restore_left_canonical_form(new_mps, [2])
+
+        elif check_canonical_form(mps, is_right=True):
+            # Expand and restore the canonical form for the current MPS to match the size of the target wires
+            new_mps = expand_mps_first_site(mps, self._max_bond_dim)
+            new_mps = restore_right_canonical_form(new_mps, [2])
+
+        else:  # No canonical form
+            new_mps = expand_mps_first_site(mps, self._max_bond_dim)
+
+        # Restore dimension of first and last sites
+        new_mps[0] = new_mps[0].reshape(2, 2)
+        new_mps[-1] = new_mps[-1].reshape(2, 2)
+
+        # Update the MPS sites in the tensornet
+        self._tensornet.updateMPSSitesData(new_mps)
 
     def _apply_basis_state(self, state, wires):
         """Initialize the quantum state in a specified computational basis state.
@@ -300,7 +631,7 @@ class LightningTensorNet:
         self._tensornet.setBasisState(state)
 
     def _apply_MPO(self, gate_matrix, wires):
-        """Apply a matrix product operator to the quantum state.
+        """Apply a matrix product operator to the quantum state (MPS method only).
 
         Args:
             gate_matrix (array[complex/float]): matrix representation of the MPO
@@ -397,18 +728,35 @@ class LightningTensorNet:
                     # To support older versions of PL
                     gate_ops_matrix = operation.matrix()
 
-                self._apply_MPO(gate_ops_matrix, wires)
+                if self.method == "mps":
+                    self._apply_MPO(gate_ops_matrix, wires)
+                if self.method == "tn":
+                    method = getattr(tensornet, "applyMatrix")
+                    method(gate_ops_matrix, wires, False)
 
     def apply_operations(self, operations):
         """Append operations to the tensor network graph."""
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
-                operations = operations[1:]
+                if self.method == "mps":
+                    self._apply_state_vector(
+                        operations[0].parameters[0].copy(), operations[0].wires
+                    )
+                    operations = operations[1:]
+                if self.method == "tn":
+                    raise DeviceError("Exact Tensor Network does not support StatePrep")
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
+            elif isinstance(operations[0], MPSPrep):
+                if self.method == "mps":
+                    self._apply_mps_state(operations[0].mps, operations[0].wires)
+
+                    operations = operations[1:]
+
+                if self.method == "tn":
+                    raise DeviceError("Exact Tensor Network does not support MPSPrep")
 
         self._apply_lightning(operations)
 
@@ -422,13 +770,13 @@ class LightningTensorNet:
             circuit (QuantumScript): The single circuit to simulate
         """
         self.apply_operations(circuit.operations)
-        self.appendMPSFinalState()
+        self.appendFinalState()
+
         return self
 
-    def appendMPSFinalState(self):
+    def appendFinalState(self):
         """
-        Append the final state to the tensor network for the MPS backend. This is an function to be called
-        by once apply_operations is called.
+        Append the final state to the tensor network. This function should be called once when apply_operations is called. It only applies to the MPS method and is an empty call for the Exact Tensor Network method.
         """
-        if self._method == "mps":
+        if self.method == "mps":
             self._tensornet.appendMPSFinalState(self._cutoff, self._cutoff_mode)

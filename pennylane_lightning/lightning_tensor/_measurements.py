@@ -17,7 +17,12 @@ Class implementation for tensornet measurements.
 
 # pylint: disable=import-error, no-name-in-module, ungrouped-imports
 try:
-    from pennylane_lightning.lightning_tensor_ops import MeasurementsC64, MeasurementsC128
+    from pennylane_lightning.lightning_tensor_ops import (
+        exactMeasurementsC64,
+        exactMeasurementsC128,
+        mpsMeasurementsC64,
+        mpsMeasurementsC128,
+    )
 except ImportError:
     pass
 
@@ -39,6 +44,7 @@ from pennylane.measurements import (
     StateMeasurement,
     VarianceMP,
 )
+from pennylane.operation import Observable
 from pennylane.ops import SparseHamiltonian, Sum
 from pennylane.tape import QuantumScript
 from pennylane.typing import Result, TensorLike
@@ -62,6 +68,7 @@ class LightningTensorMeasurements:
     ) -> None:
         self._tensornet = tensor_network
         self._dtype = tensor_network.dtype
+        self._method = tensor_network._method
         self._measurement_lightning = self._measurement_dtype()(tensor_network.tensornet)
 
     @property
@@ -69,16 +76,32 @@ class LightningTensorMeasurements:
         """Returns the simulation data type."""
         return self._dtype
 
+    @staticmethod
+    def _observable_is_sparse(obs: Observable) -> bool:
+        """States if the required observable is sparse.
+
+        Args:
+            obs(Observable): PennyLane observable to check sparsity.
+
+        Returns:
+            True if the measurement process only uses the sparse data representation.
+        """
+
+        return isinstance(obs, qml.SparseHamiltonian)
+
     def _measurement_dtype(self):
         """Binding to Lightning Measurements C++ class.
 
         Returns: the Measurements class
         """
-        return MeasurementsC64 if self.dtype == np.complex64 else MeasurementsC128
+        if self._method == "tn":  # Using "tn" method
+            return exactMeasurementsC64 if self.dtype == np.complex64 else exactMeasurementsC128
+        # Using "mps" method
+        return mpsMeasurementsC64 if self.dtype == np.complex64 else mpsMeasurementsC128
 
     def state_diagonalizing_gates(self, measurementprocess: StateMeasurement) -> TensorLike:
         """Apply a measurement to state when the measurement process has an observable with diagonalizing gates.
-            This method is bypassing the measurement process to default.qubit implementation.
+            This method bypasses default.qubit's implementation of the measurement process.
 
         Args:
             measurementprocess (StateMeasurement): measurement to apply to the state
@@ -88,12 +111,12 @@ class LightningTensorMeasurements:
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
         self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
         state_array = self._tensornet.state
         wires = Wires(range(self._tensornet.num_wires))
         result = measurementprocess.process_state(state_array, wires)
         self._tensornet.apply_operations([qml.adjoint(g) for g in reversed(diagonalizing_gates)])
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
         return result
 
     # pylint: disable=protected-access
@@ -106,15 +129,15 @@ class LightningTensorMeasurements:
         Returns:
             Expectation value of the observable
         """
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError("Sparse Hamiltonians are not supported.")
+        if self._observable_is_sparse(measurementprocess.obs):
+            raise NotImplementedError("Sparse Observables are not supported.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
+            self._tensornet.device_name, self.dtype == np.complex64, tensor_backend=self._method
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.expval(ob_serialized)
 
@@ -128,15 +151,23 @@ class LightningTensorMeasurements:
             Probabilities of the supplied observable or wires
         """
         diagonalizing_gates = measurementprocess.diagonalizing_gates()
+
         if diagonalizing_gates:
             self._tensornet.apply_operations(diagonalizing_gates)
-            self._tensornet.appendMPSFinalState()
-        results = self._measurement_lightning.probs(measurementprocess.wires.tolist())
+            self._tensornet.appendFinalState()
+
+        if measurementprocess.wires == Wires([]):
+            # For the case where no wires is specified for tensornet
+            # and measurement process, wires are determined here
+            measurewires = self._tensornet._wires
+        else:
+            measurewires = measurementprocess.wires.tolist()
+        results = self._measurement_lightning.probs(measurewires)
         if diagonalizing_gates:
             self._tensornet.apply_operations(
                 [qml.adjoint(g, lazy=False) for g in reversed(diagonalizing_gates)]
             )
-            self._tensornet.appendMPSFinalState()
+            self._tensornet.appendFinalState()
         return results
 
     def var(self, measurementprocess: MeasurementProcess):
@@ -150,17 +181,15 @@ class LightningTensorMeasurements:
         Returns:
             Variance of the observable
         """
-        if isinstance(measurementprocess.obs, qml.SparseHamiltonian):
-            raise NotImplementedError(
-                "The var measurement does not support sparse Hamiltonian observables."
-            )
+        if self._observable_is_sparse(measurementprocess.obs):
+            raise NotImplementedError("The var measurement does not support sparse observables.")
 
         if isinstance(measurementprocess.obs, qml.Hermitian):
             if len(measurementprocess.obs.wires) > 1:
                 raise ValueError("The number of Hermitian observables target wires should be 1.")
 
         ob_serialized = QuantumScriptSerializer(
-            self._tensornet.device_name, self.dtype == np.complex64
+            self._tensornet.device_name, self.dtype == np.complex64, tensor_backend=self._method
         )._ob(measurementprocess.obs)
         return self._measurement_lightning.var(ob_serialized)
 
@@ -258,6 +287,18 @@ class LightningTensorMeasurements:
             List[TensorLike[Any]]: Sample measurement results
         """
         mps = measurements
+
+        for measurement in mps:
+            if measurement.wires == Wires([]):
+                # This is required for the case where no wires is specific for the tensornet
+                # (i.e. dynamically determined from circuit), and no wires (and no observable)
+                # is provided for the measurement (e.g. qml.probs() or qml.counts() or
+                # qml.samples()). In the case where number of wires is provided for the statevector,
+                # the same operation is performed in validate_device_wires during preprocess.
+
+                # pylint:disable=protected-access
+                measurement._wires = Wires(range(self._tensornet.num_wires))
+
         groups, indices = _group_measurements(mps)
 
         all_res = []
@@ -307,7 +348,7 @@ class LightningTensorMeasurements:
             ]
 
         self._tensornet.apply_operations(diagonalizing_gates)
-        self._tensornet.appendMPSFinalState()
+        self._tensornet.appendFinalState()
 
     def _measure_with_samples_diagonalizing_gates(
         self,

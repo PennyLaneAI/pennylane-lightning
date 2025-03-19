@@ -312,13 +312,13 @@ class StateVectorCudaMPI final
                                      }) == wires.end(),
                         "Invalid wire index.");
 
-        using index_type =
+        using IndexT =
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
         // Calculate the indices of the state-vector to be set.
         // TODO: Could move to GPU/MPI calculation if the state size is large.
-        std::vector<index_type> indices(num_states);
+        std::vector<IndexT> indices(num_states);
         const std::size_t num_wires = wires.size();
         constexpr std::size_t one{1U};
         for (std::size_t i = 0; i < num_states; i++) {
@@ -327,10 +327,10 @@ class StateVectorCudaMPI final
                 const std::size_t bit = (i & (one << j)) >> j;
                 index |= bit << (num_qubits - 1 - wires[num_wires - 1 - j]);
             }
-            indices[i] = static_cast<index_type>(index);
+            indices[i] = static_cast<IndexT>(index);
         }
-        setStateVector_<index_type>(num_states, state_ptr, indices.data(),
-                                    use_async);
+        setStateVector_<IndexT>(num_states, state_ptr, indices.data(),
+                                use_async);
         mpi_manager_.Barrier();
     }
 
@@ -400,9 +400,7 @@ class StateVectorCudaMPI final
                                      adjoint);
         } else if (opName == "Rot" || opName == "CRot") {
             auto rot_matrix =
-                adjoint
-                    ? cuGates::getRot<CFP_t>(params[2], params[1], params[0])
-                    : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+                cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
             applyDeviceMatrixGate(rot_matrix.data(), ctrls, tgts, adjoint);
         } else if (opName == "Matrix") {
             applyDeviceMatrixGate(gate_matrix.data(), ctrls, tgts, adjoint);
@@ -553,6 +551,13 @@ class StateVectorCudaMPI final
     }
     inline void applyS(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"S"};
+        static const Precision param = 0.0;
+        applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
+                              {wires.begin(), wires.end() - 1}, {wires.back()},
+                              adjoint);
+    }
+    inline void applySX(const std::vector<std::size_t> &wires, bool adjoint) {
+        static const std::string name{"SX"};
         static const Precision param = 0.0;
         applyDeviceMatrixGate(gate_cache_.get_gate_device_ptr(name, param),
                               {wires.begin(), wires.end() - 1}, {wires.back()},
@@ -1533,13 +1538,13 @@ class StateVectorCudaMPI final
      * @param indices Pointer to indices of the target elements.
      * @param async Use an asynchronous memory copy.
      */
-    template <class index_type, std::size_t thread_per_block = 256>
-    void setStateVector_(const index_type num_indices,
+    template <class IndexT, std::size_t thread_per_block = 256>
+    void setStateVector_(const IndexT num_indices,
                          const std::complex<Precision> *values,
-                         const index_type *indices, const bool async = false) {
+                         const IndexT *indices, const bool async = false) {
         BaseType::getDataBuffer().zeroInit();
 
-        std::vector<index_type> indices_local;
+        std::vector<IndexT> indices_local;
         std::vector<std::complex<Precision>> values_local;
 
         for (std::size_t i = 0; i < static_cast<std::size_t>(num_indices);
@@ -1561,9 +1566,9 @@ class StateVectorCudaMPI final
         auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
 
-        index_type num_elements = indices_local.size();
+        IndexT num_elements = indices_local.size();
 
-        DataBuffer<index_type, int> d_indices{
+        DataBuffer<IndexT, int> d_indices{
             static_cast<std::size_t>(num_elements), device_id, stream_id, true};
 
         DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),

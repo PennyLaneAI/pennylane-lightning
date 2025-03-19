@@ -47,6 +47,52 @@ namespace Pennylane::LightningKokkos {
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
+/**
+ * @brief Register controlled matrix kernel.
+ */
+template <class StateVectorT>
+void applyControlledMatrix(
+    StateVectorT &st,
+    const py::array_t<std::complex<typename StateVectorT::PrecisionT>,
+                      py::array::c_style | py::array::forcecast> &matrix,
+    const std::vector<std::size_t> &controlled_wires,
+    const std::vector<bool> &controlled_values,
+    const std::vector<std::size_t> &wires, bool inverse = false) {
+    using ComplexT = typename StateVectorT::ComplexT;
+    st.applyControlledMatrix(
+        static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
+        controlled_values, wires, inverse);
+}
+
+/**
+ * @brief Register controlled gates.
+ */
+template <class StateVectorT, class PyClass>
+void registerControlledGate(PyClass &pyclass) {
+    using ParamT = typename StateVectorT::PrecisionT;
+
+    using Pennylane::Gates::ControlledGateOperation;
+    using Pennylane::Util::for_each_enum;
+    namespace Constant = Pennylane::Gates::Constant;
+
+    for_each_enum<ControlledGateOperation>(
+        [&pyclass](ControlledGateOperation gate_op) {
+            using Pennylane::Util::lookup;
+            const auto gate_name =
+                std::string(lookup(Constant::controlled_gate_names, gate_op));
+            const std::string doc = "Apply the " + gate_name + " gate.";
+            auto func = [gate_name = gate_name](
+                            StateVectorT &sv,
+                            const std::vector<std::size_t> &controlled_wires,
+                            const std::vector<bool> &controlled_values,
+                            const std::vector<std::size_t> &wires, bool inverse,
+                            const std::vector<ParamT> &params) {
+                sv.applyOperation(gate_name, controlled_wires,
+                                  controlled_values, wires, inverse, params);
+            };
+            pyclass.def(gate_name.c_str(), func, doc.c_str());
+        });
+}
 
 /**
  * @brief Get a gate kernel map for a statevector.
@@ -61,7 +107,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
                                  py::array::c_style | py::array::forcecast>;
 
     registerGatesForStateVector<StateVectorT>(pyclass);
-
+    registerControlledGate<StateVectorT>(pyclass);
     pyclass.def(
         "applyPauliRot",
         [](StateVectorT &sv, const std::vector<std::size_t> &wires,
@@ -142,8 +188,8 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
             "Apply operation via the gate matrix")
         .def("collapse", &StateVectorT::collapse,
              "Collapse the statevector onto the 0 or 1 branch of a given wire.")
-        .def("normalize", &StateVectorT::normalize,
-             "Normalize the statevector to norm 1.");
+        .def("applyControlledMatrix", &applyControlledMatrix<StateVectorT>,
+             "Apply controlled operation");
 }
 
 /**
@@ -163,10 +209,9 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
 
     using np_arr_c = py::array_t<std::complex<ParamT>,
                                  py::array::c_style | py::array::forcecast>;
-    using sparse_index_type = std::size_t;
+    using SparseIndexT = std::size_t;
     using np_arr_sparse_ind =
-        py::array_t<sparse_index_type,
-                    py::array::c_style | py::array::forcecast>;
+        py::array_t<SparseIndexT, py::array::c_style | py::array::forcecast>;
 
     pyclass
         .def("expval",
@@ -191,11 +236,11 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
                 return M.expval(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT>(row_map.request().size),
+                    static_cast<SparseIndexT *>(entries.request().ptr),
                     static_cast<ComplexT *>(values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+                    static_cast<SparseIndexT>(values.request().size));
             },
             "Expected value of a sparse Hamiltonian.")
         .def("var",
@@ -212,12 +257,11 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
             "var",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
                const np_arr_sparse_ind &entries, const np_arr_c &values) {
-                return M.var(
-                    static_cast<sparse_index_type *>(row_map.request().ptr),
-                    static_cast<sparse_index_type>(row_map.request().size),
-                    static_cast<sparse_index_type *>(entries.request().ptr),
-                    static_cast<ComplexT *>(values.request().ptr),
-                    static_cast<sparse_index_type>(values.request().size));
+                return M.var(static_cast<SparseIndexT *>(row_map.request().ptr),
+                             static_cast<SparseIndexT>(row_map.request().size),
+                             static_cast<SparseIndexT *>(entries.request().ptr),
+                             static_cast<ComplexT *>(values.request().ptr),
+                             static_cast<SparseIndexT>(values.request().size));
             },
             "Variance of a sparse Hamiltonian.");
 }

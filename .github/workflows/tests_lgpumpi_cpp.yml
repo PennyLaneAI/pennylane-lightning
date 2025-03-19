@@ -40,18 +40,15 @@ jobs:
   cpp_tests:
     if: ${{ github.event.pull_request.draft == false && (contains(github.event.pull_request.labels.*.name, 'ci:use-multi-gpu-runner') || contains(fromJSON('["schedule", "workflow_dispatch"]'), github.event_name)) }}
     runs-on:
-      - self-hosted
-      - linux
-      - x64
-      - ubuntu-22.04
-      - multi-gpu
+      - multi-gpu-x64
+
     strategy:
       max-parallel: 1
       matrix:
         mpilib: ["mpich", "openmpi"]
         cuda_version_maj: ["12"]
-        cuda_version_min: ["2"]
-    timeout-minutes: 30
+        cuda_version_min: ["4"]
+    timeout-minutes: 35
 
     steps:
       - name: Checkout
@@ -117,18 +114,19 @@ jobs:
 
       - name: Validate Multi-GPU packages
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           echo 'Checking for ${{ matrix.mpilib }}'
           which -a mpirun
           mpirun --version
           which -a mpicxx
           mpicxx --version
-          module unload ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          module unload ${{ matrix.mpilib }}
 
       - name: Build and run unit tests
         run: |
-          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}/cuda-${{ matrix.cuda_version_maj }}.${{ matrix.cuda_version_min }}
+          source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
           export CUQUANTUM_SDK=$(python -c "import site; print( f'{site.getsitepackages()[0]}/cuquantum')")
+          export SCIPY_OPENBLAS=$(python -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
           cmake . -BBuild \
             -DPL_BACKEND=lightning_gpu \
             -DENABLE_PYTHON=OFF \
@@ -140,6 +138,7 @@ jobs:
             -DCMAKE_CUDA_COMPILER=$(which nvcc) \
             -DCMAKE_CUDA_ARCHITECTURES="86" \
             -DCUQUANTUM_SDK=${CUQUANTUM_SDK} \
+            -DSCIPY_OPENBLAS=${SCIPY_OPENBLAS} \
             -DPython_EXECUTABLE:FILE="${{ steps.python_path.outputs.python }}" \
             -G Ninja
           cmake --build ./Build

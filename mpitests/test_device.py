@@ -39,6 +39,62 @@ def test_create_device():
         dev = qml.device(device_name, mpi=True, wires=4)
 
 
+def test_unsupported_dynamic_wires():
+    with pytest.raises(
+        DeviceError,
+        match="does not support dynamic wires allocation.",
+    ):
+        dev = qml.device(device_name, mpi=True)
+
+
+@pytest.mark.parametrize(
+    "circuit_in, n_wires, wires_list",
+    [
+        (
+            QuantumScript(
+                [
+                    qml.RX(0.1, 0),
+                    qml.CNOT([1, 0]),
+                    qml.RZ(0.1, 1),
+                    qml.CNOT([2, 1]),
+                ],
+                [qml.expval(qml.Z(0))],
+            ),
+            3,
+            [0, 1, 2],
+        ),
+        (
+            QuantumScript(
+                [
+                    qml.RX(0.1, 0),
+                    qml.CNOT([1, 4]),
+                    qml.RZ(0.1, 4),
+                    qml.CNOT([2, 1]),
+                ],
+                [qml.expval(qml.Z(6))],
+            ),
+            7,
+            [0, 1, 4, 2, 6],
+        ),
+    ],
+)
+def test_dynamic_wires_from_circuit_fixed_wires(circuit_in, n_wires, wires_list):
+    """Test that dynamic_wires_from_circuit creates correct statevector and circuit."""
+    dev = qml.device(device_name, mpi=True, wires=n_wires)
+    circuit_out = dev.dynamic_wires_from_circuit(circuit_in)
+
+    assert circuit_out.num_wires == circuit_in.num_wires
+    assert circuit_out.wires == qml.wires.Wires(wires_list)
+    assert circuit_out.operations == circuit_in.operations
+    assert circuit_out.measurements == circuit_in.measurements
+
+    assert dev._statevector._mpi_handler.use_mpi
+    assert (
+        dev._statevector._mpi_handler.num_local_wires
+        + dev._statevector._mpi_handler.num_global_wires
+    ) == n_wires
+
+
 def test_unsupported_mpi_buf_size():
     with pytest.raises(ValueError, match="Unsupported mpi_buf_size value"):
         dev = qml.device(device_name, mpi=True, wires=4, mpi_buf_size=-1)

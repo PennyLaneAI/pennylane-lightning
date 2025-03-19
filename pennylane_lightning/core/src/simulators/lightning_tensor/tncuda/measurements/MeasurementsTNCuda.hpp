@@ -27,7 +27,6 @@
 #include <vector>
 
 #include "LinearAlg.hpp"
-#include "MPSTNCuda.hpp"
 #include "ObservablesTNCuda.hpp"
 #include "ObservablesTNCudaOperator.hpp"
 

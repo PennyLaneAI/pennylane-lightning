@@ -24,7 +24,7 @@ env:
   TF_VERSION: 2.10.0
   TORCH_VERSION: 1.11.0+cpu
   COVERAGE_FLAGS: "--cov=pennylane_lightning --cov-report=term-missing --no-flaky-report -p no:warnings --tb=native"
-  GCC_VERSION: 11
+  GCC_VERSION: 13
   OMP_NUM_THREADS: "2"
   OMP_PROC_BIND: "false"
 
@@ -77,8 +77,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-base libopenblas-dev
-          python -m pip install scipy wheel
+          sudo apt-get update && sudo apt-get -y -q install cmake gcc-$GCC_VERSION g++-$GCC_VERSION libopenblas-dev
+          python -m pip install scipy-openblas32 wheel
 
       - name: Get required Python packages
         run: |
@@ -144,6 +144,10 @@ jobs:
           name: wheel_${{ matrix.pl_backend }}-${{ matrix.blas }}.whl
           path: ${{ github.workspace }}
 
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get -y -q install libopenblas-dev
+
       - name: Get required Python packages
         run: |
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.blas }}_name.txt)
@@ -183,7 +187,6 @@ jobs:
       - name: Install ML libraries for interfaces
         run: |
           python -m pip install --upgrade torch==$TORCH_VERSION -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python -m pip install --upgrade "jax[cpu]"  # This also installs jaxlib
           python -m pip install --upgrade tensorflow~=$TF_VERSION keras~=$TF_VERSION
 
       - name: Switch to stable tag of Lightning
@@ -194,16 +197,43 @@ jobs:
           git log -1 --format='%H'
           git status
 
+      - name: Run PennyLane-Lightning integration tests
+        run: |
+          DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
+          # Remove source files here to ensure pytest collect source coverage from wheel package
+          rm -r pennylane_lightning
+          pl-device-test --device ${DEVICENAME} --skip-ops --shots=10000 $COVERAGE_FLAGS --cov-append
+          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      #TODO: remove after v0.41.0 release (update the next step if condition too)
+      - name: Patch (stable/latest) - Remove after release
+        if: inputs.lightning-version == 'stable' && inputs.pennylane-version == 'latest'
+        run: |
+          pushd tests
+          find . -type f -exec sed -i 's/control_values=[wires[0], wires[1]]/control_values=[0, 1]/g' {} +
+          find . -type f -exec sed -i 's/"control_values": "01"/"control_values": [0, 1]/g' {} +
+          popd
+
       - name: Run PennyLane-Lightning unit tests
+        env:
+          OMP_NUM_THREADS: 1
         run: |
           DEVICENAME=`echo ${{ matrix.pl_backend }} | sed "s/_/./g"`
           # Remove `python -m` to avoid running tests with relative modules
-          OMP_NUM_THREADS=1 PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
-            $COVERAGE_FLAGS --splits 4 --group ${{ matrix.group }} \
+          PL_DEVICE=${DEVICENAME} pytest -n auto tests/ -k "not unitary_correct" \
+            $COVERAGE_FLAGS --store-durations --splits 4 --group ${{ matrix.group }} \
             --durations-path='.github/workflows/python_lightning_qubit_test_durations.json' --splitting-algorithm=least_duration
           PL_DEVICE=${DEVICENAME} pytest tests/ -k "unitary_correct" $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --skip-ops --shots=20000 $COVERAGE_FLAGS --cov-append
-          pl-device-test --device ${DEVICENAME} --shots=None --skip-ops $COVERAGE_FLAGS --cov-append
+
+      - name: Upload test durations
+        uses: actions/upload-artifact@v4
+        with:
+          name: .test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+          retention-days: 1
+          path: ${{ github.workspace }}/.test_durations-${{ matrix.exec_model }}-${{ matrix.group }}
+
+      - name: Move coverage file
+        run: |
           mv .coverage ${{ github.workspace }}/.coverage-${{ github.job }}-${{ matrix.pl_backend }}-${{ matrix.blas }}-${{ matrix.group }}
 
       - name: Upload code coverage results
@@ -222,6 +252,11 @@ jobs:
     name: Upload python coverage data to codecov
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/setup-python@v5
+        name: Install Python
+        with:
+          python-version: '3.10'
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -235,8 +270,16 @@ jobs:
 
       - name: Combine coverage files
         run: |
+          # Update .coveragerc to include sources for combining equivalent paths
+          wheelpath=$Python_ROOT_DIR/lib/python3.10/site-packages
+          echo "" >> .coveragerc
+          echo "[paths]" >> .coveragerc
+          echo "source =" >> .coveragerc
+          echo "    pennylane_lightning" >> .coveragerc
+          echo "    $wheelpath/pennylane_lightning" >> .coveragerc
+          echo "    /home/runner/work/pennylane-lightning/pennylane-lightning/pennylane_lightning" >> .coveragerc
           python -m pip install coverage
-          python -m coverage combine .coverage-*
+          python -m coverage combine --debug=pathmap .coverage-*
           # Added cov xml -i to ignore "No source for code" random errors
           # https://stackoverflow.com/questions/2386975/no-source-for-code-message-in-coverage-py
           python -m coverage xml -i -o coverage-${{ github.job }}.xml

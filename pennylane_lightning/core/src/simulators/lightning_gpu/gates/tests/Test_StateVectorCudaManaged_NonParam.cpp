@@ -30,12 +30,13 @@
 
 #include "TestHelpers.hpp"
 
+/// @cond DEV
+namespace {
 using namespace Pennylane::LightningGPU;
 using namespace Pennylane::Util;
-
-namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 } // namespace
+/// @endcond
 
 /**
  * @brief Tests the constructability of the StateVectorCudaManaged class.
@@ -302,6 +303,53 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyS",
                                                              init_state.size()};
                 CHECK(sv_dispatch.getDataVector() == init_state);
                 sv_dispatch.applyOperation("S", {index}, inverse);
+                CHECK(sv_dispatch.getDataVector() ==
+                      Pennylane::Util::approx(expected_results[index]));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applySX",
+                   "[StateVectorCudaManaged_Nonparam]", float, double) {
+    const bool inverse = GENERATE(true, false);
+    {
+        using cp_t = std::complex<TestType>;
+        const std::size_t num_qubits = 3;
+        StateVectorCudaManaged<TestType> sv{num_qubits};
+        // Test using |000> state
+
+        const cp_t z(0.0, 0.0);
+        cp_t p(0.5, 0.5);
+        cp_t m(0.5, -0.5);
+
+        if (inverse) {
+            p = conj(p);
+            m = conj(m);
+        }
+
+        const std::vector<std::vector<cp_t>> expected_results = {
+            {p, z, z, z, m, z, z, z},
+            {p, z, m, z, z, z, z, z},
+            {p, m, z, z, z, z, z, z}};
+
+        const auto init_state = sv.getDataVector();
+        SECTION("Apply directly") {
+            for (std::size_t index = 0; index < num_qubits; index++) {
+                StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                           init_state.size()};
+                CHECK(sv_direct.getDataVector() == init_state);
+                sv_direct.applySX({index}, inverse);
+                CHECK(sv_direct.getDataVector() ==
+                      Pennylane::Util::approx(expected_results[index]));
+            }
+        }
+        SECTION("Apply using dispatcher") {
+            for (std::size_t index = 0; index < num_qubits; index++) {
+                StateVectorCudaManaged<TestType> sv_dispatch{init_state.data(),
+                                                             init_state.size()};
+                CHECK(sv_dispatch.getDataVector() == init_state);
+                sv_dispatch.applyOperation("SX", {index}, inverse);
                 CHECK(sv_dispatch.getDataVector() ==
                       Pennylane::Util::approx(expected_results[index]));
             }
@@ -1061,12 +1109,6 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
             "the host") {
         auto init_state =
             createRandomStateVectorData<PrecisionT>(re, num_qubits);
-        auto expected_state = init_state;
-
-        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
-             i++) {
-            std::swap(expected_state[i * 2], expected_state[i * 2 + 1]);
-        }
 
         StateVectorCudaManaged<TestType> sv{num_qubits};
 
@@ -1076,6 +1118,96 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::SetStateVector",
         sv.setStateVector(values.data(), values.size(),
                           std::vector<std::size_t>{0, 1, 2});
         CHECK(init_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
+
+    SECTION("Set state vector with values and their corresponding indices on "
+            "the host for a subset of wires right significant") {
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits - 1);
+
+        std::vector<std::complex<PrecisionT>> expected_state(
+            Pennylane::Util::exp2(num_qubits), {0, 0});
+
+        std::copy(init_state.begin(), init_state.end(), expected_state.begin());
+
+        StateVectorCudaManaged<TestType> sv{num_qubits};
+
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
+
+        sv.setStateVector(values.data(), values.size(),
+                          std::vector<std::size_t>{1, 2});
+        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
+
+    SECTION("Set state vector with values and their corresponding indices on "
+            "the host for a subset of wires left significant") {
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits - 1);
+
+        std::vector<std::complex<PrecisionT>> expected_state(
+            Pennylane::Util::exp2(num_qubits), {0, 0});
+
+        // Distributing along the base vector with a stride.
+        // Stride is 2**(n_qubits - n_target_wires)
+        for (std::size_t i = 0; i < Pennylane::Util::exp2(num_qubits - 1);
+             i++) {
+            expected_state[i * 2] = init_state[i];
+        }
+
+        StateVectorCudaManaged<TestType> sv{num_qubits};
+
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
+
+        sv.setStateVector(values.data(), values.size(),
+                          std::vector<std::size_t>{0, 1});
+        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
+    SECTION("Set state vector with values and their corresponding indices on "
+            "the host for a subset of wires non-consecutive") {
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits - 1);
+
+        std::vector<std::complex<PrecisionT>> expected_state(
+            Pennylane::Util::exp2(num_qubits), {0, 0});
+
+        expected_state[0] = init_state[0];
+        expected_state[1] = init_state[1];
+        expected_state[4] = init_state[2];
+        expected_state[5] = init_state[3];
+
+        StateVectorCudaManaged<TestType> sv{num_qubits};
+
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
+
+        sv.setStateVector(values.data(), values.size(),
+                          std::vector<std::size_t>{0, 2});
+        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
+    }
+    SECTION("Set state vector with values and their corresponding indices on "
+            "the host for a subset of wires consecutive and not significant") {
+        std::size_t num_qubits_local = 4;
+        auto init_state =
+            createRandomStateVectorData<PrecisionT>(re, num_qubits_local - 2);
+
+        std::vector<std::complex<PrecisionT>> expected_state(
+            Pennylane::Util::exp2(num_qubits_local), {0, 0});
+
+        expected_state[0] = init_state[0];
+        expected_state[2] = init_state[1];
+        expected_state[4] = init_state[2];
+        expected_state[6] = init_state[3];
+
+        StateVectorCudaManaged<TestType> sv{num_qubits_local};
+
+        std::vector<std::complex<PrecisionT>> values(init_state.begin(),
+                                                     init_state.end());
+
+        sv.setStateVector(values.data(), values.size(),
+                          std::vector<std::size_t>{1, 2});
+        CHECK(expected_state == Pennylane::Util::approx(sv.getDataVector()));
     }
 }
 
@@ -1196,7 +1328,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
             const auto matrix = getHadamard<std::complex, PrecisionT>();
 
             sv0.applyControlledMatrix(
-                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+                matrix.data(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("Hadamard", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
@@ -1205,6 +1337,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
+
     DYNAMIC_SECTION("N-controlled S - "
                     << "controls = {" << control << "} "
                     << ", wires = {" << wire << "} - "
@@ -1213,9 +1346,27 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
             const auto matrix = getS<std::complex, PrecisionT>();
 
             sv0.applyControlledMatrix(
-                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+                matrix.data(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("S", std::vector<std::size_t>{control},
+                               std::vector<bool>{true},
+                               std::vector<std::size_t>{wire});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
+    DYNAMIC_SECTION("N-controlled SX - "
+                    << "controls = {" << control << "} "
+                    << ", wires = {" << wire << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        if (control != wire) {
+            const auto matrix = getSX<std::complex, PrecisionT>();
+
+            sv0.applyControlledMatrix(
+                matrix.data(), std::vector<std::size_t>{control},
+                std::vector<bool>{true}, std::vector<std::size_t>{wire});
+            sv1.applyOperation("SX", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
                                std::vector<std::size_t>{wire});
             REQUIRE(sv0.getDataVector() ==
@@ -1232,7 +1383,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
                 getT<std::complex, PrecisionT>();
 
             sv0.applyControlledMatrix(
-                matrix.data(), matrix.size(), std::vector<std::size_t>{control},
+                matrix.data(), std::vector<std::size_t>{control},
                 std::vector<bool>{true}, std::vector<std::size_t>{wire});
             sv1.applyOperation("T", std::vector<std::size_t>{control},
                                std::vector<bool>{true},
@@ -1281,7 +1432,7 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyOperation non-param "
         if (control != wire0 && control != wire1 && wire0 != wire1) {
             const std::vector<std::complex<PrecisionT>> matrix =
                 getSWAP<std::complex, PrecisionT>();
-            sv0.applyControlledMatrix(matrix.data(), matrix.size(),
+            sv0.applyControlledMatrix(matrix.data(),
                                       std::vector<std::size_t>{control},
                                       std::vector<bool>{true},
                                       std::vector<std::size_t>{wire0, wire1});
@@ -1311,9 +1462,9 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::controlled Toffoli",
 
     const std::vector<std::complex<PrecisionT>> matrix =
         getToffoli<std::complex, PrecisionT>();
-    sv0.applyControlledMatrix(
-        matrix.data(), matrix.size(), std::vector<std::size_t>{control},
-        std::vector<bool>{true}, std::vector<std::size_t>{3, 4, 5});
+    sv0.applyControlledMatrix(matrix.data(), std::vector<std::size_t>{control},
+                              std::vector<bool>{true},
+                              std::vector<std::size_t>{3, 4, 5});
     sv1.applyOperation("PauliX", std::vector<std::size_t>{control, 3, 4},
                        std::vector<bool>{true, true, true},
                        std::vector<std::size_t>{5});
@@ -1348,10 +1499,9 @@ TEMPLATE_TEST_CASE(
     SECTION("direct base matrix offload") {
         const std::vector<std::complex<PrecisionT>> matrix = {
             {0.0, 0.0}, {1.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}};
-        sv0.applyControlledMatrix(matrix.data(), matrix.size(),
-                                  std::vector<std::size_t>{control, 3, 4},
-                                  std::vector<bool>{true, true, true},
-                                  std::vector<std::size_t>{5});
+        sv0.applyControlledMatrix(
+            matrix.data(), std::vector<std::size_t>{control, 3, 4},
+            std::vector<bool>{true, true, true}, std::vector<std::size_t>{5});
         sv1.applyOperation("Paulix", std::vector<std::size_t>{control, 3, 4},
                            std::vector<bool>{true, true, true},
                            std::vector<std::size_t>{5}, false, {0.0}, matrix);

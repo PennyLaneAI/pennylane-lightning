@@ -69,7 +69,6 @@ class TestGrover:
         assert np.allclose(np.sum(prob), 1.0)
         assert prob[index] > 0.95
 
-    @pytest.mark.skipif(not LightningDevice._new_API, reason="New API required.")
     @pytest.mark.parametrize("wires", [5, 10, 13, 15])
     def test_preprocess_grover_operator_decomposition(self, wires):
         """Test that qml.GroverOperator is not decomposed for less than 10 wires."""
@@ -744,7 +743,6 @@ class TestQFT:
 
         assert np.allclose(res, ref)
 
-    @pytest.mark.skipif(not LightningDevice._new_API, reason="New API required")
     @pytest.mark.parametrize("wires", [5, 13])
     def test_preprocess_qft_decomposition(self, wires):
         """Test that qml.QFT is always decomposed for any wires."""

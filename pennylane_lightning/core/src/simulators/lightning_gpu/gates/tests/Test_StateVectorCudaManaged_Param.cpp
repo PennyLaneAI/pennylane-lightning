@@ -372,7 +372,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyRot", "[LightningGPU_Param]", float,
     for (std::size_t i = 0; i < angles.size(); i++) {
         const auto rot_mat =
             (adjoint) ? Gates::getRot<std::complex, TestType>(
-                            -angles[i][0], -angles[i][1], -angles[i][2])
+                            -angles[i][2], -angles[i][1], -angles[i][0])
                       : Gates::getRot<std::complex, TestType>(
                             angles[i][0], angles[i][1], angles[i][2]);
         expected_results[i][0] = rot_mat[0];
@@ -419,7 +419,7 @@ TEMPLATE_TEST_CASE("LightningGPU::applyCRot", "[LightningGPU_Param]", float,
 
     std::vector<cp_t> expected_results(8);
     const auto rot_mat = (adjoint) ? Gates::getRot<std::complex, TestType>(
-                                         -angles[0], -angles[1], -angles[2])
+                                         -angles[2], -angles[1], -angles[0])
                                    : Gates::getRot<std::complex, TestType>(
                                          angles[0], angles[1], angles[2]);
 
@@ -1941,9 +1941,9 @@ TEMPLATE_TEST_CASE(
         matrix[10] = std::conj(e);
         matrix[15] = e;
         if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
-            sv0.applyControlledMatrix(
-                matrix.data(), matrix.size(), {control, wire0, wire1},
-                std::vector<bool>{true, false, true}, {wire2, wire3}, inverse);
+            sv0.applyControlledMatrix(matrix.data(), {control, wire0, wire1},
+                                      std::vector<bool>{true, false, true},
+                                      {wire2, wire3}, inverse);
             sv1.applyOperation(
                 "MultiRZ", std::vector<std::size_t>{control, wire0, wire1},
                 std::vector<bool>{true, false, true},

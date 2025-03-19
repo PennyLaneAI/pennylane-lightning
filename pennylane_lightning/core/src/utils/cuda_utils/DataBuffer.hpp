@@ -18,9 +18,11 @@
 #include "cuError.hpp"
 #include "cuda.h"
 
+/// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU;
-}
+} // namespace
+/// @endcond
 
 namespace Pennylane::LightningGPU {
 
@@ -210,6 +212,73 @@ template <class GPUDataT, class DevTagT = int> class DataBuffer {
             PL_CUDA_IS_SUCCESS(cudaMemcpy(getData(), host_in,
                                           sizeof(GPUDataT) * getLength(),
                                           cudaMemcpyDefault));
+        }
+    }
+
+    /**
+     * @brief Explicitly copy data from host memory to GPU device with an
+     * offset.
+     *
+     * @tparam HostDataT Host data type.
+     *
+     * @param host_in Host data buffer.
+     * @param length Number of elements to copy.
+     * @param offset Offset in the GPU buffer.
+     * @param async Asynchronous copy flag.
+     *
+     */
+    template <class HostDataT = GPUDataT>
+    void CopyHostDataToGpu(const HostDataT *host_in, std::size_t length,
+                           std::size_t offset, bool async = false) {
+        PL_ABORT_IF(
+            (getLength() * sizeof(GPUDataT)) <
+                ((offset + length) * sizeof(HostDataT)),
+            "Sizes do not match for host & GPU data. Please ensure the source "
+            "buffer is out of bounds of the destination buffer");
+
+        if (async) {
+            PL_CUDA_IS_SUCCESS(cudaMemcpyAsync(
+                getData() + offset, host_in, sizeof(GPUDataT) * length,
+                cudaMemcpyHostToDevice, getStream()));
+        } else {
+            PL_CUDA_IS_SUCCESS(cudaMemcpy(getData() + offset, host_in,
+                                          sizeof(GPUDataT) * length,
+                                          cudaMemcpyDefault));
+        }
+    }
+
+    /**
+     * @brief Explicitly copy data from host memory to GPU device with a stride.
+     *
+     * @tparam HostDataT Host data type.
+     *
+     * @param host_in Host data buffer.
+     * @param length Number of elements to copy.
+     * @param stride Stride in the GPU buffer.
+     * @param async Asynchronous copy flag.
+     *
+     */
+    template <class HostDataT = GPUDataT>
+    void CopyHostDataToGpuWithStride(const HostDataT *host_in,
+                                     std::size_t length, std::size_t stride,
+                                     bool async = false) {
+        PL_ABORT_IF(
+            (getLength() * sizeof(GPUDataT)) <
+                ((stride * length) * sizeof(HostDataT)),
+            "Sizes do not match for host & GPU data. Please ensure the source "
+            "buffer is out of bounds of the destination buffer or the stride "
+            "is too large");
+
+        if (async) {
+            PL_CUDA_IS_SUCCESS(
+                cudaMemcpy2DAsync(getData(), sizeof(GPUDataT) * stride, host_in,
+                                  sizeof(HostDataT), sizeof(HostDataT), length,
+                                  cudaMemcpyHostToDevice, getStream()));
+        } else {
+            PL_CUDA_IS_SUCCESS(
+                cudaMemcpy2D(getData(), sizeof(GPUDataT) * stride, host_in,
+                             sizeof(HostDataT), sizeof(HostDataT), length,
+                             cudaMemcpyHostToDevice));
         }
     }
 

@@ -21,6 +21,7 @@ from typing import Optional, Union
 import numpy as np
 from pennylane import BasisState, StatePrep
 from pennylane.measurements import MidMeasureMP
+from pennylane.ops import Controlled
 from pennylane.tape import QuantumScript
 from pennylane.wires import Wires
 
@@ -104,8 +105,7 @@ class LightningBaseStateVector(ABC):
     def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
         """Initialize the internal state vector in a specified state.
         Args:
-            state (array[complex]): normalized input state of length ``2**len(wires)``
-                or broadcasted state of shape ``(batch_size, 2**len(wires))``
+            state (Union[array[complex], scipy.SparseABC]): normalized input state of length ``2**len(wires)`` as a dense array or Scipy sparse array.
             device_wires (Wires): wires that get initialized in the state
         """
 
@@ -131,11 +131,12 @@ class LightningBaseStateVector(ABC):
         self._qubit_state.setBasisState(list(state), list(wires))
 
     @abstractmethod
-    def _apply_lightning_controlled(self, operation):
+    def _apply_lightning_controlled(self, operation: Controlled, adjoint: bool):
         """Apply an arbitrary controlled operation to the state tensor.
 
         Args:
             operation (~pennylane.operation.Operation): controlled operation to apply
+            adjoint (bool): Apply the adjoint of the operation if True
 
         Returns:
             None
@@ -182,7 +183,7 @@ class LightningBaseStateVector(ABC):
         # State preparation is currently done in Python
         if operations:  # make sure operations[0] exists
             if isinstance(operations[0], StatePrep):
-                self._apply_state_vector(operations[0].parameters[0].copy(), operations[0].wires)
+                self._apply_state_vector(operations[0].parameters[0], operations[0].wires)
                 operations = operations[1:]
             elif isinstance(operations[0], BasisState):
                 self._apply_basis_state(operations[0].parameters[0], operations[0].wires)

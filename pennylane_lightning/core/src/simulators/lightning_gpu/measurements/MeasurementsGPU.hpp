@@ -25,7 +25,6 @@
 #include <cuda.h>
 #include <cusparse.h>
 #include <custatevec.h> // custatevecApplyMatrix
-#include <optional>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -215,9 +214,7 @@ class Measurements final
      * be accessed using the stride sample_id*num_qubits, where sample_id is a
      * number between 0 and num_samples-1.
      */
-    auto generate_samples(std::size_t num_samples,
-                          const std::optional<std::size_t> &seed = std::nullopt)
-        -> std::vector<std::size_t> {
+    auto generate_samples(std::size_t num_samples) -> std::vector<std::size_t> {
         std::vector<double> rand_nums(num_samples);
         custatevecSamplerDescriptor_t sampler;
 
@@ -236,15 +233,11 @@ class Measurements final
         } else {
             data_type = CUDA_C_32F;
         }
+        this->setSeed(this->_deviceseed);
 
-        if (seed.has_value()) {
-            this->setSeed(seed.value());
-        } else {
-            this->setRandomSeed();
-        }
         std::uniform_real_distribution<PrecisionT> dis(0.0, 1.0);
         for (std::size_t n = 0; n < num_samples; n++) {
-            rand_nums[n] = dis(this->rng);
+            rand_nums[n] = dis(this->_rng);
         }
         std::vector<std::size_t> samples(num_samples * num_qubits, 0);
         std::unordered_map<std::size_t, std::size_t> cache;
@@ -312,7 +305,7 @@ class Measurements final
     /**
      * @brief expval(H) calculation with cuSparseSpMV.
      *
-     * @tparam index_type Integer type used as indices of the sparse matrix.
+     * @tparam IndexT Integer type used as indices of the sparse matrix.
      * @param csr_Offsets_ptr Pointer to the array of row offsets of the sparse
      * matrix. Array of size csrOffsets_size.
      * @param csrOffsets_size Number of Row offsets of the sparse matrix.
@@ -322,9 +315,9 @@ class Measurements final
      * @param numNNZ Number of non-zero elements.
      * @return auto Expectation value.
      */
-    template <class index_type>
-    auto expval(const index_type *csrOffsets_ptr, const int64_t csrOffsets_size,
-                const index_type *columns_ptr,
+    template <class IndexT>
+    auto expval(const IndexT *csrOffsets_ptr, const int64_t csrOffsets_size,
+                const IndexT *columns_ptr,
                 const std::complex<PrecisionT> *values_ptr,
                 const int64_t numNNZ) -> PrecisionT {
         const std::size_t nIndexBits = this->_statevector.getNumQubits();
@@ -339,7 +332,7 @@ class Measurements final
             std::make_unique<DataBuffer<CFP_t>>(length, device_id, stream_id,
                                                 true);
 
-        cuUtil::SparseMV_cuSparse<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparse<IndexT, PrecisionT, CFP_t>(
             csrOffsets_ptr, csrOffsets_size, columns_ptr, values_ptr, numNNZ,
             this->_statevector.getData(), d_sv_prime->getData(), device_id,
             stream_id, this->_statevector.getCusparseHandle());
@@ -650,7 +643,7 @@ class Measurements final
     /**
      * @brief Variance of a sparse Hamiltonian.
      *
-     * @tparam index_type integer type used as indices of the sparse matrix.
+     * @tparam IndexT integer type used as indices of the sparse matrix.
      * @param row_map_ptr   row_map array pointer.
      *                      The j element encodes the number of non-zeros
      above
@@ -662,9 +655,9 @@ class Measurements final
      * @param numNNZ        number of non-zero elements.
      * @return Floating point with the variance of the sparse Hamiltonian.
      */
-    template <class index_type>
-    PrecisionT var(const index_type *csrOffsets_ptr,
-                   const int64_t csrOffsets_size, const index_type *columns_ptr,
+    template <class IndexT>
+    PrecisionT var(const IndexT *csrOffsets_ptr, const int64_t csrOffsets_size,
+                   const IndexT *columns_ptr,
                    const std::complex<PrecisionT> *values_ptr,
                    const int64_t numNNZ) {
         PL_ABORT_IF((this->_statevector.getLength() !=
@@ -680,7 +673,7 @@ class Measurements final
             this->_statevector.getDataBuffer().getDevTag().getStreamID();
         cusparseHandle_t handle = this->_statevector.getCusparseHandle();
 
-        cuUtil::SparseMV_cuSparse<index_type, PrecisionT, CFP_t>(
+        cuUtil::SparseMV_cuSparse<IndexT, PrecisionT, CFP_t>(
             csrOffsets_ptr, csrOffsets_size, columns_ptr, values_ptr, numNNZ,
             this->_statevector.getData(), ob_sv.getData(), device_id, stream_id,
             handle);

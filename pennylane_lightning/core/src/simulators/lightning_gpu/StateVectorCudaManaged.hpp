@@ -16,6 +16,7 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <random>
 #include <type_traits>
 #include <unordered_map>
@@ -159,8 +160,8 @@ class StateVectorCudaManaged
      */
     void resetStateVector(bool use_async = false) {
         BaseType::getDataBuffer().zeroInit();
-        std::size_t index = 0;
-        ComplexT value(1.0, 0.0);
+        constexpr std::size_t index = 0;
+        constexpr ComplexT value(1.0, 0.0);
         setBasisState_(value, index, use_async);
     };
 
@@ -200,14 +201,14 @@ class StateVectorCudaManaged
      * @brief Set values for a batch of elements of the state-vector.
      *
      * @param state_ptr Pointer to the initial state data.
-     * @param num_states Length of the initial state data.
+     * @param state_size Length of the initial state data.
      * @param wires Wires.
      * @param use_async Use an asynchronous memory copy. Default is false.
      */
-    void setStateVector(const ComplexT *state_ptr, const std::size_t num_states,
+    void setStateVector(const ComplexT *state_ptr, const std::size_t state_size,
                         const std::vector<std::size_t> &wires,
                         bool use_async = false) {
-        PL_ABORT_IF_NOT(num_states == Pennylane::Util::exp2(wires.size()),
+        PL_ABORT_IF_NOT(state_size == Pennylane::Util::exp2(wires.size()),
                         "Inconsistent state and wires dimensions.");
 
         const auto num_qubits = BaseType::getNumQubits();
@@ -218,25 +219,49 @@ class StateVectorCudaManaged
                                      }) == wires.end(),
                         "Invalid wire index.");
 
-        using index_type =
+        using IndexT =
             typename std::conditional<std::is_same<PrecisionT, float>::value,
                                       int32_t, int64_t>::type;
 
-        // Calculate the indices of the state-vector to be set.
-        // TODO: Could move to GPU calculation if the state size is large.
-        std::vector<index_type> indices(num_states);
-        const std::size_t num_wires = wires.size();
-        constexpr std::size_t one{1U};
-        for (std::size_t i = 0; i < num_states; i++) {
-            std::size_t index{0U};
-            for (std::size_t j = 0; j < num_wires; j++) {
-                const std::size_t bit = (i & (one << j)) >> j;
-                index |= bit << (num_qubits - 1 - wires[num_wires - 1 - j]);
+        const bool is_wires_sorted_contiguous =
+            std::is_sorted(wires.begin(), wires.end()) &&
+            wires.front() + wires.size() - 1 == wires.back();
+
+        const bool is_left_significant = wires.front() == 0;
+        const bool is_side_significant =
+            is_left_significant || wires.back() == num_qubits - 1;
+
+        if (is_wires_sorted_contiguous && is_side_significant) {
+            // Set most common case: contiguous wires
+            setSortedContiguousStateVector_<IndexT>(
+                state_size, state_ptr, wires, is_left_significant, use_async);
+        } else {
+            // Set the state-vector for non-contiguous wires
+            std::vector<IndexT> indices(state_size);
+
+            // Calculate the indices of the state-vector to be set.
+            // TODO: Could move to GPU calculation if the state size is large.
+#pragma omp parallel shared(state_size, num_qubits, indices, wires)
+            {
+                const std::size_t num_wires = wires.size();
+                auto local_wires = wires;
+
+#pragma omp for
+                for (std::size_t i = 0; i < state_size; i++) {
+                    constexpr std::size_t one{1U};
+                    std::size_t index{0U};
+                    for (std::size_t j = 0; j < num_wires; j++) {
+                        const std::size_t bit = (i & (one << j)) >> j;
+                        index |= bit << (num_qubits - 1 -
+                                         local_wires[num_wires - 1 - j]);
+                    }
+                    indices[i] = static_cast<IndexT>(index);
+                }
             }
-            indices[i] = static_cast<index_type>(index);
-        }
-        setStateVector_<index_type>(num_states, state_ptr, indices.data(),
+            // set the state-vector
+            setStateVector_<IndexT>(state_size, state_ptr, indices.data(),
                                     use_async);
+        }
     }
 
     /**
@@ -304,15 +329,9 @@ class StateVectorCudaManaged
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
                                       adjoint);
         } else if (opName == "Rot" || opName == "CRot") {
-            if (adjoint) {
-                auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[2], params[1], params[0]);
-                applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, true);
-            } else {
-                auto rot_matrix =
-                    cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
-                applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, false);
-            }
+            auto rot_matrix =
+                cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+            applyDeviceMatrixGate_(rot_matrix.data(), ctrls, tgts, adjoint);
         } else if (opName == "Matrix") {
             applyDeviceMatrixGate_(gate_matrix.data(), ctrls, tgts, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
@@ -323,7 +342,7 @@ class StateVectorCudaManaged
             if (!gate_cache_.gateExists(opName, par[0]) &&
                 gate_matrix.empty()) {
                 std::string message = "Currently unsupported gate: " + opName +
-                                      "and no matrix is provided.";
+                                      " and no matrix is provided.";
                 throw LightningException(message);
             } else if (!gate_cache_.gateExists(opName, par[0])) {
                 gate_cache_.add_gate(opName, par[0], gate_matrix);
@@ -407,9 +426,7 @@ class StateVectorCudaManaged
                                              params.front(), adjoint);
         } else if (opName == "Rot") {
             auto rot_matrix =
-                adjoint
-                    ? cuGates::getRot<CFP_t>(params[2], params[1], params[0])
-                    : cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
+                cuGates::getRot<CFP_t>(params[0], params[1], params[2]);
             applyDeviceGeneralGate_(rot_matrix.data(), ctrlsInt, tgtsInt,
                                     ctrls_valuesInt, adjoint);
         } else if (par_gates_.find(opName) != par_gates_.end()) {
@@ -444,14 +461,12 @@ class StateVectorCudaManaged
      * @brief Apply a single gate to the state vector.
      *
      * @param gate_matrix Gate matrix data (in row-major format).
-     * @param matrix_size Size of the matrix.
      * @param controlled_wires Control wires.
      * @param controlled_values Control values (false or true).
      * @param tgt_wires Target wires to apply gate to.
      * @param inverse Indicates whether to use adjoint of gate.
      */
     void applyControlledMatrix(const ComplexT *gate_matrix,
-                               const std::size_t matrix_size,
                                const std::vector<std::size_t> &controlled_wires,
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &tgt_wires,
@@ -462,6 +477,8 @@ class StateVectorCudaManaged
         PL_ABORT_IF(controlled_wires.size() != controlled_values.size(),
                     "`controlled_wires` and `controlled_values` must have the "
                     "same size.");
+        const std::size_t matrix_size =
+            Pennylane::Util::exp2(2 * tgt_wires.size());
         DataBuffer<CFP_t, int> d_matrix{
             matrix_size, BaseType::getDataBuffer().getDevTag(), true};
         d_matrix.CopyHostDataToGpu(gate_matrix, matrix_size, false);
@@ -682,6 +699,13 @@ class StateVectorCudaManaged
     }
     inline void applyS(const std::vector<std::size_t> &wires, bool adjoint) {
         static const std::string name{"S"};
+        static const Precision param = 0.0;
+        applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
+                               {wires.begin(), wires.end() - 1}, {wires.back()},
+                               adjoint);
+    }
+    inline void applySX(const std::vector<std::size_t> &wires, bool adjoint) {
+        static const std::string name{"SX"};
         static const Precision param = 0.0;
         applyDeviceMatrixGate_(gate_cache_.get_gate_device_ptr(name, param),
                                {wires.begin(), wires.end() - 1}, {wires.back()},
@@ -2134,22 +2158,56 @@ class StateVectorCudaManaged
      * method is implemented by the customized CUDA kernel defined in the
      * DataBuffer class.
      *
+     * @tparam IndexT Integer value type.
+     *
+     * @param num_indices Number of elements to be passed to the state vector.
+     * @param values Pointer to values to be set for the target elements.
+     * @param wires Wires of the target elements.
+     * @param is_left_significant If true, the target wires start from zero.
+     * Otherwise, the last target wire matches the last qubit.
+     * @param async Use an asynchronous memory copy.
+     */
+    template <class IndexT>
+    void setSortedContiguousStateVector_(const IndexT num_indices,
+                                         const std::complex<PrecisionT> *values,
+                                         const std::vector<std::size_t> &wires,
+                                         const bool is_left_significant = false,
+                                         const bool async = false) {
+        BaseType::getDataBuffer().zeroInit();
+
+        if (is_left_significant) {
+            size_t stride = std::size_t(1)
+                            << (BaseType::getNumQubits() - wires.size());
+            BaseType::getDataBuffer().CopyHostDataToGpuWithStride(
+                values, num_indices, stride, async);
+        } else {
+            BaseType::getDataBuffer().CopyHostDataToGpu(values, num_indices,
+                                                        std::size_t(0), async);
+        }
+        PL_CUDA_IS_SUCCESS(cudaDeviceSynchronize());
+    }
+
+    /**
+     * @brief Set values for a batch of elements of the state-vector. This
+     * method is implemented by the customized CUDA kernel defined in the
+     * DataBuffer class.
+     *
      * @param num_indices Number of elements to be passed to the state vector.
      * @param values Pointer to values to be set for the target elements.
      * @param indices Pointer to indices of the target elements.
      * @param async Use an asynchronous memory copy.
      */
-    template <class index_type, std::size_t thread_per_block = 256>
-    void setStateVector_(const index_type num_indices,
-                         const std::complex<Precision> *values,
-                         const index_type *indices, const bool async = false) {
+    template <class IndexT, std::size_t thread_per_block = 256>
+    void setStateVector_(const IndexT num_indices,
+                         const std::complex<PrecisionT> *values,
+                         const IndexT *indices, const bool async = false) {
         BaseType::getDataBuffer().zeroInit();
 
         auto device_id = BaseType::getDataBuffer().getDevTag().getDeviceID();
         auto stream_id = BaseType::getDataBuffer().getDevTag().getStreamID();
 
-        index_type num_elements = num_indices;
-        DataBuffer<index_type, int> d_indices{
+        IndexT num_elements = num_indices;
+        DataBuffer<IndexT, int> d_indices{
             static_cast<std::size_t>(num_elements), device_id, stream_id, true};
         DataBuffer<CFP_t, int> d_values{static_cast<std::size_t>(num_elements),
                                         device_id, stream_id, true};

@@ -195,12 +195,22 @@ def qubit_device(request):
 # General LightningStateVector fixture, for any number of wires.
 @pytest.fixture(
     scope="function",
-    params=[np.complex64, np.complex128],
+    params=(
+        [np.complex64, np.complex128]
+        if device_name != "lightning.tensor"
+        else [
+            [c_dtype, method]
+            for c_dtype in [np.complex64, np.complex128]
+            for method in ["mps", "tn"]
+        ]
+    ),
 )
 def lightning_sv(request):
     def _statevector(num_wires):
         if device_name == "lightning.tensor":
-            return LightningStateVector(num_wires=num_wires, c_dtype=request.param)
+            return LightningStateVector(
+                num_wires=num_wires, c_dtype=request.param[0], method=request.param[1]
+            )
         return LightningStateVector(num_wires=num_wires, dtype=request.param)
 
     return _statevector

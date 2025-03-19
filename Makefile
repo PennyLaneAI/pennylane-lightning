@@ -3,6 +3,7 @@ COVERAGE := --cov=pennylane_lightning --cov-report term-missing --cov-report=htm
 TESTRUNNER := -m pytest tests --tb=short
 
 PL_BACKEND ?= "$(if $(backend:-=),$(backend),lightning_qubit)"
+SCIPY_OPENBLAS :=$(shell $(PYTHON) -c "import scipy_openblas32; print(scipy_openblas32.get_lib_dir())")
 
 ifdef check
     CHECK := --check --diff
@@ -83,7 +84,7 @@ wheel:
 coverage:
 	@echo "Generating coverage report for $(if $(device:-=),$(device),lightning.qubit) device:"
 	$(PYTHON) $(TESTRUNNER) $(COVERAGE)
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000 $(COVERAGE) --cov-append
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000 $(COVERAGE) --cov-append
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops $(COVERAGE) --cov-append
 
 coverage-cpp:
@@ -107,7 +108,7 @@ test-builtin:
 	PL_DEVICE=$(if $(device:-=),$(device),lightning.qubit) $(PYTHON) -I $(TESTRUNNER)
 
 test-suite:
-	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=20000
+	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --skip-ops --shots=10000
 	pl-device-test --device $(if $(device:-=),$(device),lightning.qubit) --shots=None --skip-ops
 
 test-cpp:
@@ -117,6 +118,7 @@ test-cpp:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=$(PL_BACKEND) \
+		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  $(OPTIONS)
 ifdef target
 	cmake --build ./BuildTests $(VERBOSE) --target $(target)
@@ -133,6 +135,7 @@ test-cpp-mpi:
 		  -DBUILD_TESTS=ON \
 		  -DENABLE_WARNINGS=ON \
 		  -DPL_BACKEND=lightning_gpu \
+		  -DSCIPY_OPENBLAS=$(SCIPY_OPENBLAS) \
 		  -DENABLE_MPI=ON \
 		  $(OPTIONS)
 ifdef target

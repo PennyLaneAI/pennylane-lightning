@@ -15,6 +15,7 @@
 
 #include "JacobianData.hpp"
 #include "TestHelpers.hpp" //PLApprox
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::Util;
@@ -40,7 +41,7 @@ using namespace Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningGPU::Algorithms;
 using namespace Pennylane::LightningGPU::Observables;
 } // namespace
-  /// @endcond
+/// @endcond
 
 #else
 constexpr bool BACKEND_FOUND = false;

@@ -9,13 +9,15 @@ pytest-mock>=3.7.0
 pytest-xdist>=2.5.0
 pytest-split
 flaky>=3.7.0
-black>=21
+black>=25.1.0
 clang-tidy~=16.0
 clang-format~=16.0
 isort==5.13.2
 click==8.0.4
 cmake
-custatevec-cu12
-cutensornet-cu12
+jax[cpu]==0.4.28
+custatevec-cu12; sys_platform == "linux"
+cutensornet-cu12>=2.6.0; sys_platform == "linux"
 pylint==2.7.4
+scipy-openblas32>=0.3.26
 git+https://github.com/PennyLaneAI/pennylane.git@master

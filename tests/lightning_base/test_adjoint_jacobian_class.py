@@ -28,12 +28,6 @@ from pennylane import numpy as np
 from pennylane.tape import QuantumScript
 from scipy.stats import unitary_group
 
-if not LightningDevice._new_API:
-    pytest.skip(
-        "Exclusive tests for new API backends LightningAdjointJacobian class. Skipping.",
-        allow_module_level=True,
-    )
-
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
@@ -165,10 +159,6 @@ class TestAdjointJacobian:
         ):
             self.calculate_jacobian(lightning_sv(num_wires=1), tape)
 
-    @pytest.mark.skipif(
-        device_name in ("lightning.kokkos"),
-        reason="N-controlled operations are not implemented in lightning.kokkos.",
-    )
     @pytest.mark.parametrize("n_qubits", [1, 2, 3, 4])
     @pytest.mark.parametrize("par", [-np.pi / 7, np.pi / 5, 2 * np.pi / 3])
     def test_phaseshift_gradient(self, n_qubits, par, tol, lightning_sv):

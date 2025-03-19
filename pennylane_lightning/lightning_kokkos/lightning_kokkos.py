@@ -26,7 +26,7 @@ from warnings import warn
 import numpy as np
 import pennylane as qml
 from pennylane.devices import DefaultExecutionConfig, ExecutionConfig
-from pennylane.devices.default_qubit import adjoint_ops
+from pennylane.devices.capabilities import OperatorProperties
 from pennylane.devices.modifiers import simulator_tracking, single_tape_support
 from pennylane.devices.preprocess import (
     decompose,
@@ -39,12 +39,12 @@ from pennylane.devices.preprocess import (
 )
 from pennylane.measurements import MidMeasureMP
 from pennylane.operation import DecompositionUndefinedError, Operator
-from pennylane.ops import Prod, SProd, Sum
+from pennylane.ops import Conditional, PauliRot, Prod, SProd, Sum
 from pennylane.tape import QuantumScript
 from pennylane.transforms.core import TransformProgram
 from pennylane.typing import Result
 
-from pennylane_lightning.core.lightning_newAPI_base import (
+from pennylane_lightning.core.lightning_base import (
     LightningBase,
     QuantumTape_or_Batch,
     Result_or_ResultBatch,
@@ -63,107 +63,18 @@ from ._adjoint_jacobian import LightningKokkosAdjointJacobian
 from ._measurements import LightningKokkosMeasurements
 from ._state_vector import LightningKokkosStateVector
 
-# The set of supported operations.
-_operations = frozenset(
-    {
-        "Identity",
-        "QubitUnitary",
-        "ControlledQubitUnitary",
-        "MultiControlledX",
-        "DiagonalQubitUnitary",
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "MultiRZ",
-        "GlobalPhase",
-        "C(GlobalPhase)",
-        "Hadamard",
-        "S",
-        "Adjoint(S)",
-        "T",
-        "Adjoint(T)",
-        "SX",
-        "Adjoint(SX)",
-        "CNOT",
-        "SWAP",
-        "ISWAP",
-        "PSWAP",
-        "Adjoint(ISWAP)",
-        "SISWAP",
-        "Adjoint(SISWAP)",
-        "SQISW",
-        "CSWAP",
-        "Toffoli",
-        "CY",
-        "CZ",
-        "PhaseShift",
-        "ControlledPhaseShift",
-        "RX",
-        "RY",
-        "RZ",
-        "Rot",
-        "CRX",
-        "CRY",
-        "CRZ",
-        "CRot",
-        "IsingXX",
-        "IsingYY",
-        "IsingZZ",
-        "IsingXY",
-        "SingleExcitation",
-        "SingleExcitationPlus",
-        "SingleExcitationMinus",
-        "DoubleExcitation",
-        "DoubleExcitationPlus",
-        "DoubleExcitationMinus",
-        "Adjoint(MultiRZ)",
-        "Adjoint(GlobalPhase)",
-        "Adjoint(PhaseShift)",
-        "Adjoint(ControlledPhaseShift)",
-        "Adjoint(RX)",
-        "Adjoint(RY)",
-        "Adjoint(RZ)",
-        "Adjoint(CRX)",
-        "Adjoint(CRY)",
-        "Adjoint(CRZ)",
-        "Adjoint(IsingXX)",
-        "Adjoint(IsingYY)",
-        "Adjoint(IsingZZ)",
-        "Adjoint(IsingXY)",
-        "Adjoint(SingleExcitation)",
-        "Adjoint(SingleExcitationPlus)",
-        "Adjoint(SingleExcitationMinus)",
-        "Adjoint(DoubleExcitation)",
-        "Adjoint(DoubleExcitationPlus)",
-        "Adjoint(DoubleExcitationMinus)",
-        "QubitCarry",
-        "QubitSum",
-        "OrbitalRotation",
-        "ECR",
-        "BlockEncode",
-        "C(BlockEncode)",
-    }
-)
-# End the set of supported operations.
-
-# The set of supported observables.
-_observables = frozenset(
-    {
-        "PauliX",
-        "PauliY",
-        "PauliZ",
-        "Hadamard",
-        "Hermitian",
-        "Identity",
-        "Projector",
-        "SparseHamiltonian",
-        "LinearCombination",
-        "Sum",
-        "SProd",
-        "Prod",
-        "Exp",
-    }
-)
+_to_matrix_ops = {
+    "BlockEncode": OperatorProperties(),
+    "DiagonalQubitUnitary": OperatorProperties(),
+    "ECR": OperatorProperties(),
+    "ISWAP": OperatorProperties(),
+    "OrbitalRotation": OperatorProperties(),
+    "PSWAP": OperatorProperties(),
+    "QubitCarry": OperatorProperties(),
+    "QubitSum": OperatorProperties(),
+    "SISWAP": OperatorProperties(),
+    "SQISW": OperatorProperties(),
+}
 
 
 def stopping_condition(op: Operator) -> bool:
@@ -172,7 +83,7 @@ def stopping_condition(op: Operator) -> bool:
         word = op._hyperparameters["pauli_word"]  # pylint: disable=protected-access
         # decomposes to IsingXX, etc. for n <= 2
         return reduce(lambda x, y: x + (y != "I"), word, 0) > 2
-    return op.name in _operations
+    return _supports_operation(op.name)
 
 
 def stopping_condition_shots(op: Operator) -> bool:
@@ -183,7 +94,7 @@ def stopping_condition_shots(op: Operator) -> bool:
 
 def accepted_observables(obs: Operator) -> bool:
     """A function that determines whether or not an observable is supported by ``lightning.kokkos``."""
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_observables(obs: Operator) -> bool:
@@ -198,7 +109,7 @@ def adjoint_observables(obs: Operator) -> bool:
     if isinstance(obs, (Sum, Prod)):
         return all(adjoint_observables(o) for o in obs)
 
-    return obs.name in _observables
+    return _supports_observable(obs.name)
 
 
 def adjoint_measurements(mp: qml.measurements.MeasurementProcess) -> bool:
@@ -222,7 +133,10 @@ def _supports_adjoint(circuit):
 
 def _adjoint_ops(op: qml.operation.Operator) -> bool:
     """Specify whether or not an Operator is supported by adjoint differentiation."""
-    return not isinstance(op, qml.PauliRot) and adjoint_ops(op)
+
+    return not isinstance(op, (Conditional, MidMeasureMP, PauliRot)) and (
+        not qml.operation.is_trainable(op) or (op.num_params == 1 and op.has_generator)
+    )
 
 
 def _add_adjoint_transforms(program: TransformProgram) -> None:
@@ -264,13 +178,13 @@ def _kokkos_configuration():
 class LightningKokkos(LightningBase):
     """PennyLane Lightning Kokkos device.
 
-    A device that interfaces with C++ to perform fast linear algebra calculations.
+    A device that interfaces with C++ to perform fast linear algebra calculations on CPUs or GPUs using `Kokkos`.
 
     Use of this device requires pre-built binaries or compilation from source. Check out the
     :doc:`/lightning_kokkos/installation` guide for more details.
 
     Args:
-        wires (int): the number of wires to initialize the device with
+        wires (Optional[int, list]): the number of wires to initialize the device with. Defaults to ``None`` if not specified, and the device will allocate the number of wires depending on the circuit to execute.
         c_dtype: Datatypes for statevector representation. Must be one of
             ``np.complex64`` or ``np.complex128``.
         shots (int): How many times the circuit should be evaluated (or sampled) to estimate
@@ -290,19 +204,17 @@ class LightningKokkos(LightningBase):
     _backend_info = backend_info if LK_CPP_BINARY_AVAILABLE else None
     kokkos_config = {}
 
-    # This `config` is used in Catalyst-Frontend
-    config = Path(__file__).parent / "lightning_kokkos.toml"
+    # The configuration file declares the capabilities of the device
+    config_filepath = Path(__file__).parent / "lightning_kokkos.toml"
 
-    # TODO: Move supported ops/obs to TOML file
-    operations = _operations
-    # The names of the supported operations.
-
-    observables = _observables
-    # The names of the supported observables.
+    # TODO: This is to communicate to Catalyst in qjit-compiled workflows that these operations
+    #       should be converted to QubitUnitary instead of their original decompositions. Remove
+    #       this when customizable multiple decomposition pathways are implemented
+    _to_matrix_ops = _to_matrix_ops
 
     def __init__(  # pylint: disable=too-many-arguments
         self,
-        wires: Union[int, List],
+        wires: Union[int, List] = None,
         *,
         c_dtype: Union[np.complex128, np.complex64] = np.complex128,
         shots: Union[int, List] = None,
@@ -327,16 +239,8 @@ class LightningKokkos(LightningBase):
         # Set the attributes to call the Lightning classes
         self._set_lightning_classes()
 
-        # Kokkos specific options
-        self._kokkos_args = kokkos_args
-
-        # Creating the state vector
-        self._statevector = self.LightningStateVector(
-            num_wires=len(self.wires), dtype=c_dtype, kokkos_args=kokkos_args
-        )
-
-        if not LightningKokkos.kokkos_config:
-            LightningKokkos.kokkos_config = _kokkos_configuration()
+        self._statevector = None
+        self._sv_init_kwargs = {"kokkos_args": kokkos_args}
 
     @property
     def name(self):
@@ -358,7 +262,11 @@ class LightningKokkos(LightningBase):
             updated_values["gradient_method"] = "adjoint"
         if config.use_device_gradient is None:
             updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
-        if config.grad_on_execution is None:
+        if (
+            config.use_device_gradient
+            or updated_values.get("use_device_gradient", False)
+            and config.grad_on_execution is None
+        ):
             updated_values["grad_on_execution"] = True
 
         new_device_options = dict(config.device_options)
@@ -435,7 +343,7 @@ class LightningKokkos(LightningBase):
                 [circuit], _ = qml.map_wires(circuit, self._wire_map)
             results.append(
                 self.simulate(
-                    circuit,
+                    self.dynamic_wires_from_circuit(circuit),
                     self._statevector,
                     postselect_mode=execution_config.mcm_config.postselect_mode,
                 )
@@ -509,7 +417,6 @@ class LightningKokkos(LightningBase):
                 )
             return tuple(results)
 
-        state.reset_state()
         final_state = state.get_final_state(circuit)
         return self.LightningMeasurements(final_state).measure_final_state(circuit)
 
@@ -554,3 +461,7 @@ class LightningKokkos(LightningBase):
                 return "LightningKokkosSimulator", lib_location
 
         raise RuntimeError("'LightningKokkosSimulator' shared library not found")
+
+
+_supports_operation = LightningKokkos.capabilities.supports_operation
+_supports_observable = LightningKokkos.capabilities.supports_observable
