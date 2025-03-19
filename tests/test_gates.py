@@ -234,10 +234,12 @@ def test_compare_sparse_and_dense_operations(op, op_name):
         qml.QubitUnitary(matrix, wires=wires)
         return qml.state()
 
+    sparse_matrix = csr_matrix(matrix)
+
     @qml.qnode(dev)
     def circuit_sparse(input):
         qml.BasisState(input, wires=range(num_wires))
-        qml.QubitUnitary(csr_matrix(matrix), wires=wires)
+        qml.QubitUnitary(sparse_matrix, wires=wires)
         return qml.state()
 
     for input in itertools.product([0, 1], repeat=num_wires):
