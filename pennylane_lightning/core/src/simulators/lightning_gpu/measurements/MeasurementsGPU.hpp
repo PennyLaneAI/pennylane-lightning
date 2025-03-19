@@ -514,16 +514,18 @@ class Measurements final
         std::vector<int32_t *> basisBits_ptr;
         std::vector<uint32_t> n_basisBits;
 
-        for (auto &wires : target_wires) {
-            std::vector<int32_t> wiresInt(wires.size());
-            std::transform(wires.begin(), wires.end(), wiresInt.begin(),
-                           [&](std::size_t x) {
-                               return static_cast<int>(
-                                   this->_statevector.getNumQubits() - 1 - x);
-                           });
-            basisBits.push_back(wiresInt);
-            basisBits_ptr.push_back((*basisBits.rbegin()).data());
-            n_basisBits.push_back(wiresInt.size());
+        for ( [[maybe_unused]] auto &p_word : pauli_words) {
+            for (auto &wires : target_wires) {
+                std::vector<int32_t> wiresInt(wires.size());
+                std::transform(wires.begin(), wires.end(), wiresInt.begin(),
+                            [&](std::size_t x) {
+                                return static_cast<int>(
+                                    this->_statevector.getNumQubits() - 1 - x);
+                            });
+                basisBits.push_back(wiresInt);
+                basisBits_ptr.push_back((*basisBits.rbegin()).data());
+                n_basisBits.push_back(wiresInt.size());
+            }
         }
 
         // compute expectation

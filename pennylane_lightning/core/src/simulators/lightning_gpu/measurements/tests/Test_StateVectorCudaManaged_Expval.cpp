@@ -479,7 +479,7 @@ static auto bench_tensorProduct_test(StateVectorCudaManaged<TestType> &sv, std::
 }
 
 template <typename TestType>
-static auto bench_pauli(StateVectorCudaManaged<TestType> &sv, std::string &pauli_word, std::vector<std::size_t> &wires)
+static auto bench_pauli(StateVectorCudaManaged<TestType> &sv, std::vector<std::string> &pauli_word, std::vector<std::size_t> &wires)
 {
 
     using StateVectorT = StateVectorCudaManaged<TestType>;
@@ -488,7 +488,7 @@ static auto bench_pauli(StateVectorCudaManaged<TestType> &sv, std::string &pauli
     std::vector<ComplexT> coeffs{{1.0, 0.0}};
 
     auto m = Measurements(sv);
-    return m.expval({pauli_word}, {wires}, coeffs.data());
+    return m.expval(pauli_word, {wires}, coeffs.data());
 }
 
 TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs bench",
@@ -527,6 +527,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs bench",
         obs.push_back(obs_ptr);
         pauli_word += obs_name;
     }
+    std::vector<std::string> pauli_sentence(10000, pauli_word);
 
     std::vector<ComplexT> init_state(values.begin(), values.end());
     StateVectorT sv{init_state.data(), init_state.size()};
@@ -562,7 +563,7 @@ TEMPLATE_TEST_CASE("Test expectation value of TensorProdObs bench",
 
     BENCHMARK("Using Paulis Func")
     {
-        return bench_pauli<TestType>(sv, pauli_word, wires);
+        return bench_pauli<TestType>(sv, pauli_sentence, wires);
     };
 
     // SECTION("Check results, TensorProduct vs TensorProduct_test")
