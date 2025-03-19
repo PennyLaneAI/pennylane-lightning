@@ -168,7 +168,6 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
         if isinstance(operation.base, Adjoint):
             base_operation = operation.base.base
-            adjoint = not adjoint
         else:
             base_operation = operation.base
 
