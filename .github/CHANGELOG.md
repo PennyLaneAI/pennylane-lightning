@@ -8,6 +8,9 @@
 * Incorporate sparse kernels to the Lightning-Qubit dynamic dispatcher.
   [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
 
+* Incorporate sparse kernels to the Lightning-Qubit python layers and expand testing.
+  [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
+
 ### Breaking changes
 
 ### Improvements
