@@ -8,7 +8,7 @@
 
 ### Improvements
 
-* Device pre-processing (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) are now a part of the 
+* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
   execution pipeline when program capture is enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
   
