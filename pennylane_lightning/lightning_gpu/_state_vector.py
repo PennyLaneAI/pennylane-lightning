@@ -192,6 +192,19 @@ class LightningGPUStateVector(LightningBaseStateVector):
 
         return arr
 
+    @staticmethod
+    def _operation_is_sparse(operation):
+        """Check if the operation is a sparse matrix operation.
+
+        Args:
+            operation (Operation): operation to check
+
+        Returns:
+            bool: True if the operation is a sparse matrix operation, False otherwise
+        """
+        # Currently there is not support for sparse matrices in the LightningGPU device.
+        return False
+
     def _apply_state_vector(self, state, device_wires, use_async: bool = False):
         """Initialize the state vector on GPU with a specified state on host.
         Note that any use of this method will introduce host-overheads.

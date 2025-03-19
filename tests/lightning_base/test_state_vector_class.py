@@ -506,3 +506,13 @@ def test_get_final_state(tol, operation, input, expected_output, par):
     assert np.allclose(final_state.state, np.array(expected_output), atol=tol, rtol=0)
     assert final_state.state.dtype == final_state.dtype
     assert final_state == state_vector
+
+
+def test_operation_is_sparse_is_false_for_not_supported_devices():
+    """_operation_is_sparse returns False if not overridden by the device class."""
+    if device_name == "lightning.qubit":
+        pytest.skip("Skipping tests for supported devices")
+
+    wires = 2
+    state_vector = LightningStateVector(wires)
+    assert state_vector._operation_is_sparse == False
