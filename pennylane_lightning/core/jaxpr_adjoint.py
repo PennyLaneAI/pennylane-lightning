@@ -72,7 +72,6 @@ def get_output_shapes(jaxpr: "jax.core.Jaxpr", shots: int, num_wires: int) -> Tu
 
     def _get_shape(var):
         if isinstance(var.aval, AbstractMeasurement):
-            # shots = self.shots.total_shots
             s, dtype = var.aval.abstract_eval(num_device_wires=num_wires, shots=shots)
             return jax.core.ShapedArray(s, dtype_map[dtype])
         raise NotImplementedError("The circuit should return a measurement")
@@ -116,7 +115,6 @@ def convert_jaxpr_to_tape(
     tape_params = tape.get_parameters()
 
     len_train_inputs = sum(jax.numpy.size(p) for p in args)
-
     if not qml.math.allclose(args, tape_params) or len_train_inputs != len(tape.trainable_params):
         raise NotImplementedError(
             "The provided arguments do not match the parameters of the jaxpr converted to quantum tape."
