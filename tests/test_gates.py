@@ -516,7 +516,8 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
 
 @pytest.mark.parametrize("control_value", [False, True])
 @pytest.mark.parametrize("n_qubits", list(range(2, 8)))
-def test_controlled_sparse_qubit_unitary(n_qubits, control_value, tol):
+@pytest.mark.parametrize("n_wires", list(range(1, 5)))
+def test_controlled_sparse_qubit_unitary(n_wires, n_qubits, control_value, tol):
     """Test that a sparse ControlledQubitUnitary is correctly applied to a state"""
 
     if device_name != "lightning.qubit":
@@ -525,49 +526,48 @@ def test_controlled_sparse_qubit_unitary(n_qubits, control_value, tol):
     dev = qml.device(device_name, wires=n_qubits)
 
     threshold = 500
-    for n_wires in range(1, 5):
-        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
-        n_perms = len(wire_lists) * (n_wires) ** 2
-        if n_perms > threshold:
-            wire_lists = wire_lists[0 :: (n_perms // threshold)]
-        for all_wires in wire_lists:
-            for i in range(1, len(all_wires)):
-                control_wires = all_wires[0:i]
-                target_wires = all_wires[i:]
-                m = 2 ** len(target_wires)
-                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
-                U, _ = np.linalg.qr(U)
-                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
-                init_state /= np.linalg.norm(init_state)
+    wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+    n_perms = len(wire_lists) * (n_wires) ** 2
+    if n_perms > threshold:
+        wire_lists = wire_lists[0 :: (n_perms // threshold)]
+    for all_wires in wire_lists:
+        for i in range(1, len(all_wires)):
+            control_wires = all_wires[0:i]
+            target_wires = all_wires[i:]
+            m = 2 ** len(target_wires)
+            U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+            U, _ = np.linalg.qr(U)
+            init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+            init_state /= np.linalg.norm(init_state)
 
-                wires = control_wires + target_wires
-                control_values = [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
+            wires = control_wires + target_wires
+            control_values = [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
 
-                @qml.qnode(dev)
-                def circuit_dense(init_state):
-                    qml.StatePrep(init_state, wires=range(n_qubits))
-                    qml.ControlledQubitUnitary(
-                        U,
-                        wires=wires,
-                        control_values=control_values,
-                    )
-                    return qml.state()
+            @qml.qnode(dev)
+            def circuit_dense(init_state):
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.ControlledQubitUnitary(
+                    U,
+                    wires=wires,
+                    control_values=control_values,
+                )
+                return qml.state()
 
-                sparse_matrix = csr_matrix(U)
+            sparse_matrix = csr_matrix(U)
 
-                @qml.qnode(dev)
-                def circuit_sparse(init_state):
-                    qml.StatePrep(init_state, wires=range(n_qubits))
-                    qml.ControlledQubitUnitary(
-                        sparse_matrix,
-                        wires=wires,
-                        control_values=control_values,
-                    )
-                    return qml.state()
+            @qml.qnode(dev)
+            def circuit_sparse(init_state):
+                qml.StatePrep(init_state, wires=range(n_qubits))
+                qml.ControlledQubitUnitary(
+                    sparse_matrix,
+                    wires=wires,
+                    control_values=control_values,
+                )
+                return qml.state()
 
-                st_dense = circuit_dense(init_state)
-                st_sparse = circuit_sparse(init_state)
-                assert np.allclose(st_dense, st_sparse)
+            st_dense = circuit_dense(init_state)
+            st_sparse = circuit_sparse(init_state)
+            assert np.allclose(st_dense, st_sparse)
 
 
 @pytest.mark.parametrize(
