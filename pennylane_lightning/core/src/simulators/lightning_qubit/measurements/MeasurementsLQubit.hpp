@@ -204,7 +204,7 @@ class Measurements final
     }
 
     /**
-     * @brief Expected value of an observable.
+     * @brief Expected value of a matrix.
      *
      * @param matrix Square matrix in row-major order.
      * @param wires Wires where to apply the operator.
@@ -216,31 +216,25 @@ class Measurements final
                     "The size of matrix does not match with the given "
                     "number of wires");
         const std::size_t num_qubits = this->_statevector.getNumQubits();
-        const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
+        const ComplexT *arr_data = this->_statevector.getData();
 
-        PrecisionT expected_value = 0.0;
         switch (wires.size()) {
         case 1: {
-            applyExpValMat1<PrecisionT>(arr_data, num_qubits, wires, matrix,
-                                        expected_value);
-            break;
+            return applyExpValMatWires1<PrecisionT>(arr_data, num_qubits, wires,
+                                                    matrix);
         }
         case 2: {
-            applyExpValMat2<PrecisionT>(arr_data, num_qubits, wires, matrix,
-                                        expected_value);
-            break;
+            return applyExpValMatWires2<PrecisionT>(arr_data, num_qubits, wires,
+                                                    matrix);
         }
         case 3: {
-            applyExpValMat3<PrecisionT>(arr_data, num_qubits, wires, matrix,
-                                        expected_value);
-            break;
+            return applyExpValMatWires3<PrecisionT>(arr_data, num_qubits, wires,
+                                                    matrix);
         }
         default:
-            applyExpValMatMultiQubit<PrecisionT>(arr_data, num_qubits, wires,
-                                                 matrix, expected_value);
-            break;
+            return applyExpValMatMultiQubit<PrecisionT>(arr_data, num_qubits,
+                                                        wires, matrix);
         }
-        return expected_value;
     };
 
     /**
@@ -252,52 +246,51 @@ class Measurements final
      */
     auto expval(const std::string &operation, const std::vector<size_t> &wires)
         -> PrecisionT {
-        PrecisionT expected_value = 0.0;
-        const std::complex<PrecisionT> *arr_data = this->_statevector.getData();
+        const ComplexT *arr_data = this->_statevector.getData();
         const std::size_t num_qubits = this->_statevector.getNumQubits();
 
-        using FuncT = std::function<void(const std::complex<PrecisionT> *,
-                                         const std::size_t, const std::size_t,
-                                         PrecisionT &)>;
+        using FuncT = std::function<void(const ComplexT *, const std::size_t,
+                                         const std::size_t, PrecisionT &)>;
         FuncT core_function;
 
         switch (expval_funcs_[operation]) {
         case ExpValFunc::Identity:
             return 1.0;
         case ExpValFunc::PauliX:
-            core_function = [](const std::complex<PrecisionT> *arr,
-                               const std::size_t i0, const std::size_t i1,
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
                                PrecisionT &expected_value) {
-                expected_value += std::real(std::conj(arr[i0]) * arr[i1]);
-                expected_value += std::real(std::conj(arr[i1]) * arr[i0]);
+                expected_value += (arr[i0].real() * arr[i1].real() +
+                                   arr[i0].imag() * arr[i1].imag()) *
+                                  2.0;
             };
             break;
         case ExpValFunc::PauliY:
-            core_function = [](const std::complex<PrecisionT> *arr,
-                               const std::size_t i0, const std::size_t i1,
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
                                PrecisionT &expected_value) {
-                expected_value += std::imag(std::conj(arr[i0]) * arr[i1]);
-                expected_value -= std::imag(std::conj(arr[i1]) * arr[i0]);
+                expected_value += (arr[i0].real() * arr[i1].imag() -
+                                   arr[i0].imag() * arr[i1].real()) *
+                                  2.0;
             };
             break;
         case ExpValFunc::PauliZ:
-            core_function = [](const std::complex<PrecisionT> *arr,
-                               const std::size_t i0, const std::size_t i1,
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
                                PrecisionT &expected_value) {
-                expected_value += std::real(std::conj(arr[i0]) * arr[i0]);
-                expected_value -= std::real(std::conj(arr[i1]) * arr[i1]);
+                expected_value += std::norm(arr[i0]) - std::norm(arr[i1]);
             };
             break;
         case ExpValFunc::Hadamard:
-            core_function = [](const std::complex<PrecisionT> *arr,
-                               const std::size_t i0, const std::size_t i1,
+            core_function = [](const ComplexT *arr, const std::size_t i0,
+                               const std::size_t i1,
                                PrecisionT &expected_value) {
-                const std::complex<PrecisionT> v0 = arr[i0];
-                const std::complex<PrecisionT> v1 = arr[i1];
-
+                const ComplexT v0 = arr[i0];
+                const ComplexT v1 = arr[i1];
                 expected_value +=
-                    M_SQRT1_2 * std::real(std::conj(arr[i0]) * (v0 + v1) +
-                                          std::conj(arr[i1]) * (v0 - v1));
+                    M_SQRT1_2 *
+                    (std::norm(v0) - std::norm(v1) +
+                     2.0 * (v0.real() * v1.real() + v0.imag() * v1.imag()));
             };
             break;
         default:
@@ -306,9 +299,9 @@ class Measurements final
                 operation);
             break;
         }
-        applyExpVal1<PrecisionT, FuncT>(arr_data, num_qubits, wires,
-                                        core_function, expected_value);
-        return expected_value;
+
+        return applyExpVal1<PrecisionT, FuncT>(arr_data, num_qubits, wires,
+                                               core_function);
     };
 
     /**

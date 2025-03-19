@@ -368,23 +368,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
             matrix[i] *= 0.1;
         }
         std::vector<std::size_t> wires = {0, 1};
-        PrecisionT exp_value = 0.0;
-        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires,
-                                 matrix, exp_value);
+        PrecisionT exp_value = applyExpValMatMultiQubit(
+            statevector_data.data(), num_qubits, wires, matrix);
         PrecisionT exp_values_ref = 0.5056895;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
 
         wires = {1, 2};
-        exp_value = 0.0;
-        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires,
-                                 matrix, exp_value);
+        exp_value = applyExpValMatMultiQubit(statevector_data.data(),
+                                             num_qubits, wires, matrix);
         exp_values_ref = 0.30101232;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
 
         wires = {0, 2};
-        exp_value = 0.0;
-        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires,
-                                 matrix, exp_value);
+        exp_value = applyExpValMatMultiQubit(statevector_data.data(),
+                                             num_qubits, wires, matrix);
         exp_values_ref = 0.40595792;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
@@ -401,23 +398,20 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
             matrix[i] *= 0.1;
         }
         std::vector<std::size_t> wires = {0, 1, 2, 3, 4, 5, 6};
-        PrecisionT exp_value = 0.0;
-        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires,
-                                 matrix, exp_value);
+        PrecisionT exp_value = applyExpValMatMultiQubit(
+            statevector_data.data(), num_qubits, wires, matrix);
         PrecisionT exp_values_ref = 127.103239;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
 
         wires = {1, 2, 3, 4, 5, 6, 7};
-        exp_value = 0.0;
-        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires,
-                                 matrix, exp_value);
+        exp_value = applyExpValMatMultiQubit(statevector_data.data(),
+                                             num_qubits, wires, matrix);
         exp_values_ref = 31.53268364;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
 
         wires = {0, 1, 3, 4, 5, 6, 7};
-        exp_value = 0.0;
-        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires,
-                                 matrix, exp_value);
+        exp_value = applyExpValMatMultiQubit(statevector_data.data(),
+                                             num_qubits, wires, matrix);
         exp_values_ref = 53.101090;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }
@@ -434,9 +428,8 @@ TEMPLATE_PRODUCT_TEST_CASE("Expected Values", "[Measurements]",
             matrix[i] *= 0.1;
         }
         std::vector<std::size_t> wires = {0, 1, 2, 3, 4, 5, 6, 7};
-        PrecisionT exp_value = 0.0;
-        applyExpValMatMultiQubit(statevector_data.data(), num_qubits, wires,
-                                 matrix, exp_value);
+        PrecisionT exp_value = applyExpValMatMultiQubit(
+            statevector_data.data(), num_qubits, wires, matrix);
         PrecisionT exp_values_ref = 260.3916559;
         REQUIRE(exp_value == Approx(exp_values_ref).margin(1e-6));
     }

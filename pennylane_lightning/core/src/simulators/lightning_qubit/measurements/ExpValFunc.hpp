@@ -42,10 +42,10 @@ namespace Pennylane::LightningQubit::Measures {
 inline auto wires2Parity(std::size_t num_qubits,
                          const std::vector<std::size_t> &wires)
     -> std::pair<std::vector<std::size_t>, std::vector<std::size_t>> {
-    std::vector<std::size_t> rev_wires_(wires.size());
+    std::vector<std::size_t> rev_wires_(wires.size(), (num_qubits - 1));
     std::vector<std::size_t> rev_wire_shifts_(wires.size());
     for (std::size_t k = 0; k < wires.size(); k++) {
-        rev_wires_[k] = (num_qubits - 1) - wires[(wires.size() - 1) - k];
+        rev_wires_[k] -= wires[wires.size() - 1 - k];
         rev_wire_shifts_[k] = (static_cast<std::size_t>(1U) << rev_wires_[k]);
     }
     const std::vector<std::size_t> parity_ = PUtil::revWireParity(rev_wires_);
@@ -53,41 +53,71 @@ inline auto wires2Parity(std::size_t num_qubits,
     return {parity_, rev_wire_shifts_};
 }
 
+/**
+ * @brief Compute the expectation values from a given core function with 1 wire.
+ *
+ * @tparam ParamT Floating point precision type
+ * @tparam FuncT Function type for the core function
+ * @param arr Pointer to statevector data
+ * @param num_qubits Number of qubits in the state vector
+ * @param wires Wires where to apply the operator
+ * @param core_function Function representing the matrix for one wire
+ * @return ParamT Expected value of the observable
+ */
 template <class ParamT, class FuncT>
-void applyExpVal1(const std::complex<ParamT> *arr, std::size_t num_qubits,
-                  const std::vector<size_t> &wires, const FuncT &core_function,
-                  ParamT &expected_value) {
+auto applyExpVal1(const std::complex<ParamT> *arr, std::size_t num_qubits,
+                  const std::vector<std::size_t> &wires,
+                  const FuncT &core_function) -> ParamT {
+    ParamT expected_value = 0.0;
     const std::size_t rev_wire = num_qubits - wires[0] - 1;
     const std::size_t rev_wire_shift =
         (static_cast<std::size_t>(1U) << rev_wire);
     const std::size_t wire_parity = PUtil::fillTrailingOnes(rev_wire);
     const std::size_t wire_parity_inv = PUtil::fillLeadingOnes(rev_wire + 1);
+    const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
 
 #pragma omp parallel for reduction(+ : expected_value) default(none)           \
     shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift, arr,      \
-               core_function)
-    for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 1); k++) {
+               core_function) firstprivate(two2N)
+    for (std::size_t k = 0; k < two2N; k++) {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
         core_function(arr, i0, i1, expected_value);
     }
+
+    return expected_value;
 }
 
+/**
+ * @brief Compute the expectation values in-place from a given matrix for 1
+ * wire.
+ *
+ * @tparam ParamT Floating point precision type
+ * @param arr Pointer to statevector data
+ * @param num_qubits Number of qubits in the state vector
+ * @param wires Wire where to apply the operator
+ * @param matrix Vector with the matrix elements
+ * @return ParamT Expected value of the observable
+ */
 template <class ParamT>
-void applyExpValMat1(const std::complex<ParamT> *arr, std::size_t num_qubits,
-                     const std::vector<size_t> &wires,
-                     const std::vector<std::complex<ParamT>> &matrix,
-                     ParamT &expected_value) {
+auto applyExpValMatWires1(const std::complex<ParamT> *arr,
+                          std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
+                          const std::vector<std::complex<ParamT>> &matrix)
+    -> ParamT {
+    ParamT expected_value = 0.0;
     const std::size_t rev_wire = num_qubits - wires[0] - 1;
     const std::size_t rev_wire_shift =
         (static_cast<std::size_t>(1U) << rev_wire);
     const std::size_t wire_parity = PUtil::fillTrailingOnes(rev_wire);
     const std::size_t wire_parity_inv = PUtil::fillLeadingOnes(rev_wire + 1);
+    const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
 
-#pragma omp parallel for reduction(+ : expected_value) default(none) shared(   \
-        num_qubits, wire_parity_inv, wire_parity, rev_wire_shift, arr, matrix)
-    for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 1); k++) {
+#pragma omp parallel for reduction(+ : expected_value) default(none)           \
+    shared(num_qubits, wire_parity_inv, wire_parity, rev_wire_shift, arr,      \
+               matrix) firstprivate(two2N)
+    for (std::size_t k = 0; k < two2N; k++) {
         const std::size_t i0 =
             ((k << 1U) & wire_parity_inv) | (wire_parity & k);
         const std::size_t i1 = i0 | rev_wire_shift;
@@ -99,6 +129,8 @@ void applyExpValMat1(const std::complex<ParamT> *arr, std::size_t num_qubits,
             std::real(std::conj(arr[i1]) *
                       (matrix[0B10] * arr[i0] + matrix[0B11] * arr[i1]));
     }
+
+    return expected_value;
 }
 
 #define EXPVALENTRY2(xx, yy)                                                   \
@@ -109,11 +141,25 @@ void applyExpValMat1(const std::complex<ParamT> *arr, std::size_t num_qubits,
         (EXPVALTERM2(xx, 0B00, i00) + EXPVALTERM2(xx, 0B01, i01) +             \
          EXPVALTERM2(xx, 0B10, i10) + EXPVALTERM2(xx, 0B11, i11))
 
+/**
+ * @brief Compute the expectation values in-place from a given matrix for 2
+ * wires.
+ *
+ * @tparam ParamT Floating point precision type
+ * @param arr Pointer to statevector data
+ * @param num_qubits Number of qubits in the state vector
+ * @param wires Wires where to apply the operator
+ * @param matrix Vector with the matrix elements
+ * @return ParamT Expected value of the observable
+ */
 template <class ParamT>
-void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
-                     const std::vector<size_t> &wires,
-                     const std::vector<std::complex<ParamT>> &matrix,
-                     ParamT &expected_value) {
+auto applyExpValMatWires2(const std::complex<ParamT> *arr,
+                          std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
+                          const std::vector<std::complex<ParamT>> &matrix)
+    -> ParamT {
+    ParamT expected_value = 0.0;
+    const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
     const std::size_t rev_wire0 = num_qubits - wires[1] - 1;
     const std::size_t rev_wire1 = num_qubits - wires[0] - 1;
     const std::size_t rev_wire0_shift = static_cast<std::size_t>(1U)
@@ -129,8 +175,9 @@ void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
 
 #pragma omp parallel for reduction(+ : expected_value) default(none)           \
     shared(num_qubits, rev_wire0, rev_wire1, rev_wire0_shift, rev_wire1_shift, \
-               parity_low, parity_high, parity_middle, arr, matrix)
-    for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 2); k++) {
+               parity_low, parity_high, parity_middle, arr, matrix)            \
+    firstprivate(two2N)
+    for (std::size_t k = 0; k < two2N; k++) {
         const std::size_t i00 = ((k << 2U) & parity_high) |
                                 ((k << 1U) & parity_middle) | (k & parity_low);
         const std::size_t i10 = i00 | rev_wire1_shift;
@@ -142,6 +189,8 @@ void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
         expected_value += std::real(EXPVAL2(i01, 0B01));
         expected_value += std::real(EXPVAL2(i11, 0B11));
     }
+
+    return expected_value;
 }
 
 #define EXPVALENTRY3(xx, yy)                                                   \
@@ -154,11 +203,25 @@ void applyExpValMat2(const std::complex<ParamT> *arr, std::size_t num_qubits,
          EXPVALTERM3(xx, 0B100, i100) + EXPVALTERM3(xx, 0B101, i101) +         \
          EXPVALTERM3(xx, 0B110, i110) + EXPVALTERM3(xx, 0B111, i111))
 
+/**
+ * @brief Compute the expectation values in-place from a given matrix for 3
+ * wires.
+ *
+ * @tparam ParamT Floating point precision type
+ * @param arr Pointer to statevector data
+ * @param num_qubits Number of qubits in the state vector
+ * @param wires Wires where to apply the operator
+ * @param matrix Vector with the matrix elements
+ * @return ParamT Expected value of the observable
+ */
 template <class ParamT>
-void applyExpValMat3(const std::complex<ParamT> *arr, std::size_t num_qubits,
-                     const std::vector<size_t> &wires,
-                     const std::vector<std::complex<ParamT>> &matrix,
-                     ParamT &expected_value) {
+auto applyExpValMatWires3(const std::complex<ParamT> *arr,
+                          std::size_t num_qubits,
+                          const std::vector<std::size_t> &wires,
+                          const std::vector<std::complex<ParamT>> &matrix)
+    -> ParamT {
+    ParamT expected_value = 0.0;
+    const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
     std::vector<std::size_t> parity;
     std::vector<std::size_t> rev_wire_shifts;
     const auto &[parity_, rev_wire_shifts_] = wires2Parity(num_qubits, wires);
@@ -166,8 +229,9 @@ void applyExpValMat3(const std::complex<ParamT> *arr, std::size_t num_qubits,
     rev_wire_shifts = rev_wire_shifts_;
 
 #pragma omp parallel for reduction(+ : expected_value) default(none)           \
-    shared(num_qubits, parity, rev_wire_shifts, arr, matrix)
-    for (std::size_t k = 0; k < PUtil::exp2(num_qubits - 3); k++) {
+    shared(num_qubits, parity, rev_wire_shifts, arr, matrix)                   \
+    firstprivate(two2N)
+    for (std::size_t k = 0; k < two2N; k++) {
         std::size_t i000 = (k & parity[0]);
         for (std::size_t i = 1; i < parity.size(); i++) {
             i000 |= ((k << i) & parity[i]);
@@ -190,14 +254,27 @@ void applyExpValMat3(const std::complex<ParamT> *arr, std::size_t num_qubits,
         expected_value += std::real(EXPVAL3(i110, 0B110));
         expected_value += std::real(EXPVAL3(i111, 0B111));
     }
+    return expected_value;
 };
 
+/**
+ * @brief Compute the expectation values in-place from a given matrix for any
+ * number of wires.
+ *
+ * @tparam ParamT Floating point precision type
+ * @param arr Pointer to statevector data
+ * @param num_qubits Number of qubits in the state vector
+ * @param wires Wires where to apply the operator
+ * @param matrix Vector with the matrix elements
+ * @return ParamT Expected value of the observable
+ */
 template <class ParamT>
-void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
+auto applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
                               std::size_t num_qubits,
-                              const std::vector<size_t> &wires,
-                              const std::vector<std::complex<ParamT>> &matrix,
-                              ParamT &expected_value) {
+                              const std::vector<std::size_t> &wires,
+                              const std::vector<std::complex<ParamT>> &matrix)
+    -> ParamT {
+    ParamT expected_value = 0.0;
     std::vector<std::size_t> parity;
     std::vector<std::size_t> rev_wire_shifts;
     const auto &[parity_, rev_wire_shifts_] = wires2Parity(num_qubits, wires);
@@ -206,8 +283,9 @@ void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
 
     const std::size_t dim = PUtil::exp2(wires.size());
     const std::size_t two2N = PUtil::exp2(num_qubits - wires.size());
-#pragma omp parallel for reduction(+ : expected_value) default(none) shared(   \
-        dim, two2N, wires, num_qubits, parity, arr, rev_wire_shifts, matrix)
+#pragma omp parallel for reduction(+ : expected_value) default(none)           \
+    shared(dim, wires, num_qubits, parity, arr, rev_wire_shifts, matrix)       \
+    firstprivate(two2N)
     for (std::size_t k = 0; k < two2N; ++k) {
         ParamT innerExpVal = 0.0;
         std::vector<std::complex<ParamT>> coeffs_in(dim);
@@ -221,9 +299,10 @@ void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
         for (std::size_t inner_idx = 1; inner_idx < dim; ++inner_idx) {
             std::size_t index = idx;
             for (std::size_t i = 0; i < wires.size(); i++) {
-                if ((inner_idx & (static_cast<std::size_t>(1U) << i)) != 0) {
-                    index |= rev_wire_shifts[i];
-                }
+                index |=
+                    ((inner_idx & (static_cast<std::size_t>(1U) << i)) != 0)
+                        ? rev_wire_shifts[i]
+                        : 0;
             }
             coeffs_in[inner_idx] = arr[index];
         }
@@ -237,5 +316,6 @@ void applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
         }
         expected_value += innerExpVal;
     }
+    return expected_value;
 };
 } // namespace Pennylane::LightningQubit::Measures
