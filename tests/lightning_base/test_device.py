@@ -581,6 +581,10 @@ class TestExecution:
 
         assert new_config == expected_config
 
+    @pytest.mark.skipif(
+        device_name == "lightning.tensor",
+        reason="lightning.tensor device supports new device options",
+    )
     def test_preprocess_incorrect_device_config(self):
         """Test that an error is raised if the device options are not valid"""
         config = ExecutionConfig(
