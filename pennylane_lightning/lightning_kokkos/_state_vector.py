@@ -159,6 +159,7 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         return print_configuration()
 
+    # pylint: disable=unused-argument
     @staticmethod
     def _operation_is_sparse(operation):
         """Check if the operation is a sparse matrix operation.

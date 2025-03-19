@@ -193,6 +193,7 @@ class LightningGPUStateVector(LightningBaseStateVector):
         return arr
 
     @staticmethod
+    # pylint: disable=unused-argument
     def _operation_is_sparse(operation):
         """Check if the operation is a sparse matrix operation.
 
