@@ -630,7 +630,7 @@ class TestExecution:
 
     @pytest.mark.skipif(
         device_name == "lightning.tensor",
-        reason="lightning.tensor device supports new device options",
+        reason="lightning.tensor device doesn't have support for program capture.",
     )
     def test_transform_program(self, enable_disable_plxpr):
         """Test that the transform program returned by preprocess has the correct transforms."""
