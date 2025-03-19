@@ -23,6 +23,7 @@ import pytest
 from conftest import PHI, THETA
 from conftest import LightningDevice as ld
 from conftest import device_name
+from scipy.sparse import csr_matrix
 
 if not ld._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
@@ -206,6 +207,42 @@ def test_gate_unitary_correct(op, op_name):
 
     unitary_expected = qml.matrix(op[0](*op1, **op2)) @ qml.matrix(op[0](*op[1], **op[2]))
     assert np.allclose(unitary, unitary_expected)
+
+
+@pytest.mark.parametrize("op_name", ld_operations)
+def test_compare_sparse_and_dense_operations(op, op_name):
+    """Test if lightning device correctly applies QubitUnitary sparse operators by comparing it with the dense case."""
+    if device_name != "lightning.qubit":
+        pytest.skip("Skipping tests if not lightning.qubit.")
+
+    if op_name in ("BasisState", "StatePrep"):
+        pytest.skip("Skipping operation because it is a state preparation")
+    if op == None:
+        pytest.skip("Skipping operation.")
+
+    qml_op = op[0](*op[1], **op[2])
+    wires = op[2]["wires"]
+    num_wires = len(wires)
+    matrix = qml.matrix(qml_op)
+
+    dev = qml.device(device_name, wires=num_wires)
+
+    @qml.qnode(dev)
+    def circuit_dense(input):
+        qml.BasisState(input, wires=range(num_wires))
+        qml.QubitUnitary(matrix, wires=wires)
+        return qml.state()
+
+    @qml.qnode(dev)
+    def circuit_sparse(input):
+        qml.BasisState(input, wires=range(num_wires))
+        qml.QubitUnitary(csr_matrix(matrix), wires=wires)
+        return qml.state()
+
+    for input in itertools.product([0, 1], repeat=num_wires):
+        st_dense = circuit_dense(np.array(input))
+        st_sparse = circuit_sparse(np.array(input))
+        assert np.allclose(st_dense, st_sparse)
 
 
 @pytest.mark.parametrize("op_name", ld_operations)
@@ -474,6 +511,65 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
                 circ = qml.QNode(circuit, dev)
                 circ_def = qml.QNode(circuit, dev_def)
                 assert np.allclose(circ(), circ_def(), tol)
+
+
+@pytest.mark.parametrize("control_value", [False, True])
+@pytest.mark.parametrize("n_qubits", list(range(2, 8)))
+def test_controlled_sparse_qubit_unitary(n_qubits, control_value, tol):
+    """Test that a sparse ControlledQubitUnitary is correctly applied to a state"""
+
+    if device_name != "lightning.qubit":
+        pytest.skip("Skipping tests if not lightning.qubit.")
+
+    dev = qml.device(device_name, wires=n_qubits)
+    dev1 = qml.device(device_name, wires=n_qubits)
+
+    threshold = 500
+    for n_wires in range(1, 5):
+        wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
+        n_perms = len(wire_lists) * (n_wires) ** 2
+        if n_perms > threshold:
+            wire_lists = wire_lists[0 :: (n_perms // threshold)]
+        for all_wires in wire_lists:
+            for i in range(1, len(all_wires)):
+                control_wires = all_wires[0:i]
+                target_wires = all_wires[i:]
+                m = 2 ** len(target_wires)
+                U = np.random.rand(m, m) + 1.0j * np.random.rand(m, m)
+                U, _ = np.linalg.qr(U)
+                init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
+                init_state /= np.linalg.norm(init_state)
+
+                wires=control_wires + target_wires
+                control_values=[
+                            control_value or bool(i % 2) for i, _ in enumerate(control_wires)
+                        ]
+
+                @qml.qnode(dev)
+                def circuit_dense(init_state):
+                    qml.StatePrep(init_state, wires=range(n_qubits))
+                    qml.ControlledQubitUnitary(
+                        U,
+                        wires=wires,
+                        control_values=control_values,
+                    )
+                    return qml.state()
+                
+                sparse_matrix = csr_matrix(U)
+                @qml.qnode(dev)
+                def circuit_sparse(init_state):
+                    qml.StatePrep(init_state, wires=range(n_qubits))
+                    qml.ControlledQubitUnitary(
+                        sparse_matrix,
+                        wires=wires,
+                        control_values=control_values,
+                    )
+                    return qml.state()
+
+                st_dense = circuit_dense(init_state)
+                st_sparse = circuit_sparse(init_state)
+                assert np.allclose(st_dense, st_sparse)
+
 
 
 @pytest.mark.parametrize(
