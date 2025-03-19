@@ -90,6 +90,10 @@ class LightningInterpreter(PlxprInterpreter):
 
     def interpret_operation(self, op):
         """Apply an operation to the state."""
+        if isinstance(op, qml.Projector):
+            raise qml.DeviceError(
+                "Lightning devices do not support postselection with mcm_method='deferred'."
+            )
         self.state.apply_operations([op])
 
     def interpret_measurement_eqn(self, eqn: "jax.core.JaxprEqn"):
