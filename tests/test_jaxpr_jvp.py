@@ -107,8 +107,8 @@ class TestErrors:
             in str(exc_info.value)
         )
 
-    def test_wrong_order2(self):
-        """Test that the jaxpr_jvp method raises an error if the order of the arguments does match the tape parameters."""
+    def test_wrong_number(self):
+        """Test that the jaxpr_jvp method raises an error if the number of arguments does not match the tape parameters."""
 
         def f(x):
             @qml.for_loop(3)
