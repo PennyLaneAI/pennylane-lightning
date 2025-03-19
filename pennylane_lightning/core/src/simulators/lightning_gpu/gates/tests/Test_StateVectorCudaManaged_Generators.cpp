@@ -160,6 +160,43 @@ TEST_CASE("Generators::applyGeneratorPhaseShift", "[GateGenerators]") {
     }
 }
 
+TEST_CASE("Generators::applyGeneratorPSWAP", "[GateGenerators]") {
+    // grad(PhaseShift) = grad(e^{i*0.5*a}*e^{-i*0.5*PauliZ*a}) => -i|1><1|
+    std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
+        {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
+        {1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {1.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
+        {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0}, {0.0, 0.0},
+    };
+    std::mt19937 re{1337U};
+
+    for (std::size_t num_qubits = 1; num_qubits <= 5; num_qubits++) {
+        for (std::size_t applied_qubit = 0; applied_qubit < num_qubits;
+             applied_qubit++) {
+            auto init_state =
+                createRandomStateVectorData<double>(re, num_qubits);
+
+            StateVectorCudaManaged<double> psi(init_state.data(),
+                                               init_state.size());
+            StateVectorCudaManaged<double> psi_direct(init_state.data(),
+                                                      init_state.size());
+            StateVectorCudaManaged<double> psi_dispatch(init_state.data(),
+                                                        init_state.size());
+
+            std::string cache_gate_name = "DirectGenPSWAP" +
+                                          std::to_string(applied_qubit) + "_" +
+                                          std::to_string(num_qubits);
+
+            psi.applyGeneratorPSWAP({applied_qubit}, false);
+            psi_direct.applyOperation(cache_gate_name, {applied_qubit}, false,
+                                      {0.0}, matrix);
+            psi_dispatch.applyGenerator({"PSWAP"}, {applied_qubit}, false);
+
+            CHECK(psi.getDataVector() == psi_direct.getDataVector());
+            CHECK(psi_dispatch.getDataVector() == psi_direct.getDataVector());
+        }
+    }
+}
+
 TEST_CASE("Generators::applyGeneratorIsingXX", "[GateGenerators]") {
     // grad(IsingXX)() = e^{-i*0.5*a*(kron(X, X))}) => -0.5*i*(kron(X, X))
     std::vector<typename StateVectorCudaManaged<double>::CFP_t> matrix{
