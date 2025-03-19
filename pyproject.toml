@@ -27,3 +27,10 @@ Homepage = "https://github.com/PennyLaneAI/pennylane-lightning"
 
 [project.entry-points."pennylane.plugins"]
 "lightning.qubit" = "pennylane_lightning.lightning_qubit:LightningQubit"
+
+[tool.bandit]
+targets = "pennylane_lightning"
+exclude_dirs = ["tests"]
+skips = [
+    "B101", # We are okay with using asserts in source code as we do not compile optimized bytecode of pennylane
+]
