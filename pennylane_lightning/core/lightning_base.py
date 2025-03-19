@@ -523,18 +523,13 @@ class LightningBase(Device):
 
         from .lightning_interpreter import LightningInterpreter
 
-        if jax.config.jax_enable_x64:  # pylint: disable=no-member
-            dtype_map = {
-                float: jax.numpy.float64,
-                int: jax.numpy.int64,
-                complex: jax.numpy.complex128,
-            }
-        else:
-            dtype_map = {
-                float: jax.numpy.float32,
-                int: jax.numpy.int32,
-                complex: jax.numpy.complex64,
-            }
+        # pylint: disable=no-member
+        dtype_map = {
+            float: (jax.numpy.float64 if jax.config.jax_enable_x64 else jax.numpy.float32),
+            int: jax.numpy.int64 if jax.config.jax_enable_x64 else jax.numpy.int32,
+            complex: (jax.numpy.complex128 if jax.config.jax_enable_x64 else jax.numpy.complex64),
+        }
+
         if self.wires is None:
             raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
 
@@ -556,3 +551,87 @@ class LightningBase(Device):
 
         shapes = [shape(var) for var in jaxpr.outvars]
         return jax.pure_callback(evaluator, shapes, consts, *args, vectorized=False)
+
+    def jaxpr_jvp(
+        self,
+        jaxpr: "jax.core.Jaxpr",
+        args: Sequence[TensorLike],
+        tangents: Sequence[TensorLike],
+        execution_config: Optional[ExecutionConfig] = None,
+    ) -> tuple[Sequence[TensorLike], Sequence[TensorLike]]:
+        """
+        An **experimental** method for computing the results and jvp for PLXPR with LightningQubit.
+
+        Args:
+            jaxpr (jax.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
+                and measurements
+            args (Sequence[TensorLike]): the ``consts`` followed by the normal arguments
+            tangents (Sequence[TensorLike]): the tangents corresponding to ``args``.
+                May contain ``jax.interpreters.ad.Zero``.
+
+        Keyword Args:
+            execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
+
+        Returns:
+            Sequence[TensorLike], Sequence[TensorLike]: the results and jacobian vector products
+
+
+        .. note::
+
+            For LightningQubit, the current implementation of this method is based on the conversion of the jaxpr to a PennyLane tape.
+            This has strict limitations. The ``args`` should contain the concatenation of ``jaxpr.constvars`` and ``jaxpr.invars``,
+            which are assumed to represent the trainable parameters of the circuit.
+            The method will raise an error if ``args`` do not match exactly the parameters of the jaxpr converted to quantum tape.
+
+        """
+
+        # pylint: disable=import-outside-toplevel
+        import jax
+
+        from pennylane_lightning.core.jaxpr_adjoint import (
+            convert_jaxpr_to_tape,
+            get_output_shapes,
+            validate_args_tangents,
+        )
+
+        if self.wires is None:
+            raise NotImplementedError("Wires must be specified for integration with plxpr capture.")
+
+        gradient_method = getattr(execution_config, "gradient_method", "adjoint")
+
+        if gradient_method != "adjoint":
+            raise NotImplementedError(
+                f"LightningQubit does not support gradient_method={gradient_method} for jaxpr_jvp."
+            )
+
+        tangents = validate_args_tangents(args, tangents)
+
+        self._statevector = self.LightningStateVector(
+            num_wires=len(self.wires), dtype=self._c_dtype
+        )
+
+        def wrapper(*args):
+            """
+            Evaluate a jaxpr by converting it into a quantum tape, ensuring the provided
+            parameters match the tape's parameters, and then simulating the tape to compute
+            both the result and the Jacobian.
+
+            The *args should contain the concatenation of jaxpr.constvars and jaxpr.invars,
+            which are assumed to represent the trainable parameters.
+            """
+            tape = convert_jaxpr_to_tape(jaxpr, args)
+            return self.simulate_and_jacobian(tape, state=self._statevector)
+
+        shapes_res, shapes_jac = get_output_shapes(jaxpr, len(self.wires))
+        results, jacobians = jax.pure_callback(wrapper, (shapes_res, shapes_jac), *args)
+
+        if len(tangents) == 1 and not jax.numpy.isscalar(tangents[0]):
+            tangents = tangents[0]
+
+        jvps = (
+            [qml.gradients.compute_jvp_single(tangents, jacobians)]
+            if len(jaxpr.outvars) == 1
+            else qml.gradients.compute_jvp_multi(tangents, jacobians)
+        )
+
+        return results, jvps

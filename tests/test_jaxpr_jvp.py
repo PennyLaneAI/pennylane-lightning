@@ -213,8 +213,8 @@ class TestCorrectResults:
         assert len(dresults) == 1
         assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
 
-    def test_diffentiabl_opmath(self):
-        """Test that we can differentiate opmath functions."""
+    def test_diffentiable_op_math(self):
+        """Test that we can handle differentiable operations in the circuit."""
 
         def f(x):
             qml.adjoint(qml.RX(x, 0))
@@ -320,34 +320,6 @@ class TestCorrectResults:
         tangents = (dx, dy)
 
         dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
-
-        res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, args, tangents)
-
-        expected = -jax.numpy.sin(x), jax.numpy.sin(y)
-        assert qml.math.allclose(res, expected)
-
-        expected_dres = dx * -jax.numpy.cos(x), dy * jax.numpy.cos(y)
-        assert qml.math.allclose(dres, expected_dres)
-
-    def test_shots(self):
-        """Test that we can differentiate a circuit with shots."""
-
-        def f(x, y):
-            qml.RX(x, 0)
-            qml.RY(y, 1)
-            return qml.expval(qml.Y(0)), qml.expval(qml.X(1))
-
-        x = jax.numpy.array(0.5)
-        y = jax.numpy.array(1.2)
-        dx = jax.numpy.array(2.0)
-        dy = jax.numpy.array(3.0)
-
-        jaxpr = jax.make_jaxpr(f)(x, y)
-
-        args = (x, y)
-        tangents = (dx, dy)
-
-        dev_jaxpr_jvp = qml.device(device_name, wires=2, shots=1000).jaxpr_jvp
 
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 

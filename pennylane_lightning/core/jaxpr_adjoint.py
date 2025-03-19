@@ -50,13 +50,12 @@ def validate_args_tangents(
     return tangents
 
 
-def get_output_shapes(jaxpr: "jax.core.Jaxpr", shots: int, num_wires: int) -> Tuple:
+def get_output_shapes(jaxpr: "jax.core.Jaxpr", num_wires: int) -> Tuple:
     """
     Compute the output shapes of the JAXPR and the Jacobian shapes of the JAXPR.
 
     Args:
         jaxpr (jax.core.Jaxpr): the JAXPR to analyze
-        shots (int): the number of shots
         num_wires (int): the number of wires
 
     Returns:
@@ -72,7 +71,7 @@ def get_output_shapes(jaxpr: "jax.core.Jaxpr", shots: int, num_wires: int) -> Tu
 
     def _get_shape(var):
         if isinstance(var.aval, AbstractMeasurement):
-            s, dtype = var.aval.abstract_eval(num_device_wires=num_wires, shots=shots)
+            s, dtype = var.aval.abstract_eval(num_device_wires=num_wires, shots=0)
             return jax.core.ShapedArray(s, dtype_map[dtype])
         raise NotImplementedError("The circuit should return a measurement")
 
