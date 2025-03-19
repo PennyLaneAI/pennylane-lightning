@@ -263,16 +263,13 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                 wires = [i for i, w in zip(wires, paulis) if w != "I"]
                 word = "".join(p for p in paulis if p != "I")
                 method(wires, invert_param, operation.parameters, word)
-            elif method is not None:  # apply specialized gate
-                param = operation.parameters
-                method(wires, invert_param, param)
             elif self._operation_is_sparse(operation):
-                CSR_SparseHamiltonian = operation.sparse_matrix()
                 # Inverse can be set to False since operation.sparse_matrix() is already in inverted form
                 if isinstance(op_adjoint_base, qml.ops.Controlled):
                     self._apply_lightning_controlled_sparse(op_adjoint_base)
                 # If the operation is not controlled, apply it as a sparse matrix.
                 else:
+                    CSR_SparseHamiltonian = operation.sparse_matrix()
                     method = getattr(state, "applySparseMatrix")
                     method(
                         CSR_SparseHamiltonian.indptr,
@@ -281,6 +278,9 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
                         wires,
                         False,
                     )
+            elif method is not None:  # apply specialized gate
+                param = operation.parameters
+                method(wires, invert_param, param)
             elif isinstance(op_adjoint_base, qml.ops.Controlled):  # apply n-controlled gate
                 self._apply_lightning_controlled(op_adjoint_base, invert_param)
             else:
