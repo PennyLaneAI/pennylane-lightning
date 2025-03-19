@@ -128,6 +128,92 @@ void applyControlledMatrix(
         static_cast<const ComplexT *>(matrix.request().ptr), controlled_wires,
         controlled_values, wires, inverse);
 }
+/**
+ * @brief Register sparse matrix kernel.
+ */
+// template <class StateVectorT>
+// void applySparseMatrix(StateVectorT &st,
+//                        const py::array_t <
+//                            std::complex<typename StateVectorT::PrecisionT>,
+//                        const np_arr_sparse_ind &row_map,
+//                        const np_arr_sparse_ind &col_idx, const np_arr_c
+//                        &values, const std::vector<std::size_t> &wires, bool
+//                        inverse = false) {
+//     using ComplexT = typename StateVectorT::ComplexT;
+//     using SparseIndexT = std::size_t;
+//     st.applySparseMatrix(static_cast<SparseIndexT *>(row_map.request().ptr),
+//                          static_cast<SparseIndexT>(row_map.request().size),
+//                          static_cast<SparseIndexT *>(col_idx.request().ptr),
+//                          static_cast<ComplexT> * > (values.request().ptr),
+//                          static_cast<SparseIndexT>(values.request().size),
+//                          wires, inverse);
+// }
+
+// /**
+//  * @brief Register controlled sparse matrix kernel.
+//  */
+// template <class StateVectorT>
+// void applyControlledSparseMatrix(
+//     StateVectorT &st,
+//     const py::array_t < std::complex<typename StateVectorT::PrecisionT>,
+//     const np_arr_sparse_ind &row_map, const np_arr_sparse_ind &col_idx,
+//     const np_arr_c &values, const std::vector<std::size_t> &controlled_wires,
+//     const std::vector<bool> &controlled_values,
+//     const std::vector<std::size_t> &wires, bool inverse = false) {
+//     using ComplexT = typename StateVectorT::ComplexT;
+//     using SparseIndexT = std::size_t;
+//     st.applyControlledSparseMatrix(
+//         static_cast<SparseIndexT *>(row_map.request().ptr),
+//         static_cast<SparseIndexT>(row_map.request().size),
+//         static_cast<SparseIndexT *>(col_idx.request().ptr),
+//         static_cast<ComplexT> * > (values.request().ptr),
+//         static_cast<SparseIndexT>(values.request().size), controlled_wires,
+//         controlled_values, wires, inverse);
+// }
+
+template <class StateVectorT, class PyClass>
+void registerSparseMatrixOperators(PyClass &pyclass) {
+    using PrecisionT =
+        typename StateVectorT::PrecisionT; // Statevector's precision
+    using ParamT = PrecisionT;             // Parameter's data precision
+    using ComplexT = typename StateVectorT::ComplexT;
+
+    using np_arr_c = py::array_t<std::complex<ParamT>,
+                                 py::array::c_style | py::array::forcecast>;
+    using SparseIndexT = std::size_t;
+    using np_arr_sparse_ind =
+        py::array_t<SparseIndexT, py::array::c_style | py::array::forcecast>;
+    // Note: Only pointers to data are passed to the kernels, as they infer the
+    // unitary dimensions from the wires vector.
+    pyclass
+        .def(
+            "applySparseMatrix",
+            [](StateVectorT &st, const np_arr_sparse_ind &row_map,
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values,
+               const std::vector<std::size_t> &wires, bool inverse) {
+                st.applySparseMatrix(
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT *>(col_idx.request().ptr),
+                    static_cast<ComplexT *>(values.request().ptr), wires,
+                    inverse);
+            },
+            "Apply a sparse matrix to the statevector.")
+        .def(
+            "applyControlledSparseMatrix",
+            [](StateVectorT &st, const np_arr_sparse_ind &row_map,
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values,
+               const std::vector<std::size_t> &controlled_wires,
+               const std::vector<bool> &controlled_values,
+               const std::vector<std::size_t> &wires, bool inverse) {
+                st.applyControlledSparseMatrix(
+                    static_cast<SparseIndexT *>(row_map.request().ptr),
+                    static_cast<SparseIndexT *>(col_idx.request().ptr),
+                    static_cast<ComplexT *>(values.request().ptr),
+                    controlled_wires, controlled_values, wires, inverse);
+            },
+            "Apply a controlled sparse matrix to the statevector.");
+}
+
 template <class StateVectorT, class PyClass>
 void registerControlledGate(PyClass &pyclass) {
     using PrecisionT =
@@ -171,6 +257,7 @@ void registerBackendClassSpecificBindings(PyClass &pyclass) {
 
     registerGatesForStateVector<StateVectorT>(pyclass);
     registerControlledGate<StateVectorT>(pyclass);
+    registerSparseMatrixOperators<StateVectorT>(pyclass);
     pyclass.def(
         "applyPauliRot",
         [](StateVectorT &sv, const std::vector<std::size_t> &wires,
@@ -262,11 +349,11 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         .def(
             "expval",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-               const np_arr_sparse_ind &entries, const np_arr_c &values) {
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values) {
                 return M.expval(
                     static_cast<SparseIndexT *>(row_map.request().ptr),
                     static_cast<SparseIndexT>(row_map.request().size),
-                    static_cast<SparseIndexT *>(entries.request().ptr),
+                    static_cast<SparseIndexT *>(col_idx.request().ptr),
                     static_cast<std::complex<PrecisionT> *>(
                         values.request().ptr),
                     static_cast<SparseIndexT>(values.request().size));
@@ -285,10 +372,10 @@ void registerBackendSpecificMeasurements(PyClass &pyclass) {
         .def(
             "var",
             [](Measurements<StateVectorT> &M, const np_arr_sparse_ind &row_map,
-               const np_arr_sparse_ind &entries, const np_arr_c &values) {
+               const np_arr_sparse_ind &col_idx, const np_arr_c &values) {
                 return M.var(static_cast<SparseIndexT *>(row_map.request().ptr),
                              static_cast<SparseIndexT>(row_map.request().size),
-                             static_cast<SparseIndexT *>(entries.request().ptr),
+                             static_cast<SparseIndexT *>(col_idx.request().ptr),
                              static_cast<std::complex<PrecisionT> *>(
                                  values.request().ptr),
                              static_cast<SparseIndexT>(values.request().size));
