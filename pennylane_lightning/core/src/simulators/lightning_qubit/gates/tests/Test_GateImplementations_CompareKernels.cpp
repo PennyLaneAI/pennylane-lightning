@@ -301,7 +301,7 @@ void testSparseMatrixOp(std::size_t num_qubits, std::size_t unit_num_wires,
     for (KernelType kernel : implementing_sparse_kernels) {
         ss << dispatcher.getKernelName(kernel) << ", ";
     }
-    ss << ", num_qubits: " << num_qubits;
+    ss << "num_qubits: " << num_qubits;
     ss << ", unit_num_wires: " << unit_num_wires;
     ss << ", sparsity: " << sparsity;
     ss << ", inverse: " << inverse;
