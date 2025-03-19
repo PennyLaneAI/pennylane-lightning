@@ -25,6 +25,7 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <custatevec.h>
+
 /// @cond DEV
 namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
