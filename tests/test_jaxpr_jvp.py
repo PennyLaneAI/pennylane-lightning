@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-This module tests the ``jaxpr_jvp`` method of the ``LightningQubit`` device.
+This module tests the ``jaxpr_jvp`` method.
 """
 from functools import partial
 
@@ -24,8 +24,8 @@ from pennylane.devices import DefaultExecutionConfig
 jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
 
-if device_name != "lightning.qubit":
-    pytest.skip("Skipping tests for the the device.", allow_module_level=True)
+if device_name == "lightning.tensor":
+    pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
 
 if not LightningDevice._CPP_BINARY_AVAILABLE:
     pytest.skip("No binary module found. Skipping.", allow_module_level=True)
