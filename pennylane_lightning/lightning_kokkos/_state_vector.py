@@ -159,6 +159,19 @@ class LightningKokkosStateVector(LightningBaseStateVector):
         """
         return print_configuration()
 
+    @staticmethod
+    def _operation_is_sparse(operation):
+        """Check if the operation is a sparse matrix operation.
+
+        Args:
+            operation (Operation): operation to check
+
+        Returns:
+            bool: True if the operation is a sparse matrix operation, False otherwise
+        """
+        # Currently there is not support for sparse matrices in the LightningKokkos device.
+        return False
+
     def _apply_state_vector(self, state, device_wires: Wires):
         """Initialize the internal state vector in a specified state.
         Args:
