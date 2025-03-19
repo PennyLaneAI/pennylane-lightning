@@ -2575,11 +2575,11 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                           const std::vector<bool> &controlled_values,
                           const std::vector<std::size_t> &wires,
                           [[maybe_unused]] const bool adj) -> PrecisionT {
-        constexpr std::complex<PrecisionT> zero{0.0};
+        using ComplexT = std::complex<PrecisionT>;
+        constexpr ComplexT zero{0.0};
         auto core_function =
-            [zero](std::complex<PrecisionT> *arr, const std::size_t i00,
-                   const std::size_t i01, const std::size_t i10,
-                   const std::size_t i11) {
+            [zero](ComplexT *arr, const std::size_t i00, const std::size_t i01,
+                   const std::size_t i10, const std::size_t i11) {
                 arr[i00] = zero;
                 arr[i11] = zero;
                 std::swap(arr[i10], arr[i01]);
