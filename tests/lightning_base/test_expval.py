@@ -190,6 +190,10 @@ class TestExpval:
     @pytest.mark.parametrize("dtype", [np.complex64, np.complex128])
     def test_hermitian_arbitrary_size_expectation(self, dtype, theta, phi, n_op_wires, wires, tol):
         """Tests the expectation value of an arbitrary size Hermitian matrix."""
+        if device_name == "lightning.tensor" and n_op_wires > 1:
+            pytest.skip(
+                "lightning.tensor does not support Hermitian matrices with n_op_wires not equal to 1"
+            )
         n_qubits = 8
         dev = LightningDevice(wires=n_qubits, c_dtype=dtype)
         mat = np.random.rand(2**n_op_wires, 2**n_op_wires) + 1j * np.random.rand(
