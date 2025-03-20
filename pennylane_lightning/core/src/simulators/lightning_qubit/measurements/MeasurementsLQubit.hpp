@@ -244,7 +244,7 @@ class Measurements final
      * @param wires Wires to apply the operator.
      * @return Expected value of the observable.
      */
-    auto expval(const std::string &operation, const std::vector<size_t> &wires)
+    auto expval(const std::string &operation, const std::vector<std::size_t> &wires)
         -> PrecisionT {
         const ComplexT *arr_data = this->_statevector.getData();
         const std::size_t num_qubits = this->_statevector.getNumQubits();
