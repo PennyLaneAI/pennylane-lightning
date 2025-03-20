@@ -112,7 +112,6 @@ def dev(request):
 @pytest.fixture()
 def enable_disable_plxpr():
     """Fixture to enable and disable the plxpr capture"""
-    pytest.importorskip("jax")
     qml.capture.enable()
     yield
     qml.capture.disable()
