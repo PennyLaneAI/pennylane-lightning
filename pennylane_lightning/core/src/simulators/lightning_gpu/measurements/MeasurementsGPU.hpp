@@ -408,45 +408,6 @@ class Measurements final
     }
 
     /**
-     * @brief Calculate expectation value for a general Observable.
-     *
-     * @param ob Observable.
-     * @return Expectation value with respect to the given observable.
-     */
-    auto expval_test(const Observable<StateVectorT> &ob) -> PrecisionT {
-        // Expectation value calculation using the tensrprod method with
-        // custatevecApplyPauliRotation function
-        StateVectorT ob_sv(this->_statevector);
-        ob.applyInPlace(ob_sv);
-
-        auto device_id = ob_sv.getDataBuffer().getDevTag().getDeviceID();
-        auto stream_id = ob_sv.getDataBuffer().getDevTag().getStreamID();
-
-        auto expect =
-            innerProdC_CUDA(this->_statevector.getData(), ob_sv.getData(),
-                            this->_statevector.getLength(), device_id,
-                            stream_id, this->_statevector.getCublasCaller());
-
-        // convert to complex
-        ComplexT expect2{expect.x, expect.y};
-
-        // Multiply by -i to get the correct expectation value
-        // Because applyInPlace applies the exponential of the Pauli rotation
-        // exp(-i*theta*P)|psi> = cos(theta)|psi> + i*sin(theta)P|psi>
-        //                      with theta = pi/2, P = Pauli matrix
-        //                      = iP|psi>
-        // Therefore, the expectation value is
-        //                      = <psi|i P|psi>
-        //                      = i <psi|P|psi>
-        // Multiply by -i to get the correct expectation value
-        //                     = i <psi|P|psi> * -i
-        //                     = <psi|P|psi>
-        ComplexT minus_i{0, -1};
-        expect2 = expect2 * minus_i;
-        return static_cast<PrecisionT>(expect2.real());
-    }
-
-    /**
      * @brief Expectation value for a Observable with shots
      *
      * @param obs Observable.

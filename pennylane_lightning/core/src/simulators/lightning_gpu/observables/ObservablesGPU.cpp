@@ -26,9 +26,6 @@ template class Observables::HermitianObs<StateVectorCudaManaged<double>>;
 template class Observables::TensorProdObs<StateVectorCudaManaged<float>>;
 template class Observables::TensorProdObs<StateVectorCudaManaged<double>>;
 
-template class Observables::TensorProdObs_test<StateVectorCudaManaged<float>>;
-template class Observables::TensorProdObs_test<StateVectorCudaManaged<double>>;
-
 template class Observables::Hamiltonian<StateVectorCudaManaged<float>>;
 template class Observables::Hamiltonian<StateVectorCudaManaged<double>>;
 
