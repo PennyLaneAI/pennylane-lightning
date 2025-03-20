@@ -111,6 +111,7 @@ jobs:
       - name: Get required Python packages
         run: |
           python -m pip install -r requirements-tests.txt
+          python -m pip install build
 
       - name: Create device wheel ${{ inputs.lightning-version }}
         run: |
