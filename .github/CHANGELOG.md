@@ -8,26 +8,27 @@
 
 ### Improvements
 
-* Add `PSWAP` gate implementation to Lightning-GPU.
-  [(#1090)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1090)
+* Add `PSWAP` gate implementation to PennyLane-Lightning. 
+  [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
 
-* Add `PSWAP` gate implementation to Lightning-Kokkos.
-  [(#1089)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1089)
+* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
+  execution pipeline when program capture is enabled.
+  [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
 
-* Add `PSWAP` gate implementation to Lightning-Qubit. 
-  [(#1082)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1082)
+* Hide anonymous namespaces in Lightning docs.
+  [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
 
 * Expand test structure to efficiently handle sparse data.
-  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
 * Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
 * Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Optimize the copy of a input state-vector into the LGPU #1071 
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
@@ -94,6 +95,9 @@
 ### Documentation
 
 ### Bug fixes
+
+* Fix the `test_preprocess` test skip condition for `lightning.tensor`.
+  [(#1092)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1092)
 
 * Fix measurements with empty wires and operators for statevectors with dynamically allocated wires.
   [(#1081)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1081)
@@ -314,6 +318,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
 Raul Torres,
