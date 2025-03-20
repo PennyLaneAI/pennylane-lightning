@@ -135,6 +135,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Saeed Bohloul,
 Astral Cai,
 Yushao Chen,
 Amintor Dusko,
@@ -312,7 +313,6 @@ Shuli Shu
 This release contains contributions from (in alphabetical order):
 
 Ali Asadi,
-Saeed Bohloul,
 Astral Cai,
 Amintor Dusko,
 Christina Lee,
