@@ -45,7 +45,8 @@ def validate_args_tangents(
 
     for tan in tangents:
         if jax.numpy.issubdtype(jax.numpy.asarray(tan).dtype, jax.numpy.integer):
-            raise ValueError("Tangents cannot be of integer type")
+            # will be able to support ad.Zero integer tangents when can track trainable parameters
+            raise ValueError("Tangents cannot be of integer type yet.")
 
     return tangents
 
