@@ -111,9 +111,8 @@ jobs:
           PL_BACKEND: lightning_qubit
         run: |
           source /etc/profile.d/modules.sh && module use /opt/modules/ && module load ${{ matrix.mpilib }}
-          python -m pip install -r requirements-dev.txt
-
-          python -m pip install custatevec-cu${{ matrix.cuda_version_maj }} mpi4py openfermionpyscf
+          python -m pip install -r requirements-tests.txt
+          python -m pip install mpi4py openfermionpyscf
           python scripts/configure_pyproject_toml.py || true
           python -m pip install . -vv
 
