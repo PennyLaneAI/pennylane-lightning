@@ -165,6 +165,13 @@ class NamedObsBase : public Observable<StateVectorT> {
         return obs_stream.str();
     }
 
+    [[nodiscard]] auto getObsNameBase() const -> std::string {
+        using Util::operator<<;
+        std::ostringstream obs_stream;
+        obs_stream << obs_name_;
+        return obs_stream.str();
+    }
+
     [[nodiscard]] auto getWires() const -> std::vector<std::size_t> override {
         return wires_;
     }

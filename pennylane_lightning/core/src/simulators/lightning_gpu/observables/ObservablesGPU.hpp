@@ -152,7 +152,6 @@ class TensorProdObs final : public TensorProdObsBase<StateVectorT> {
             ob->applyInPlace(sv);
         }
     }
-
 };
 
 /**
@@ -218,9 +217,11 @@ class TensorProdObs_test final : public TensorProdObsBase<StateVectorT> {
         // Apply the custom tensor product function using theta = pi
         // because the function applies the exponential of the tensor product
         // of the Pauli rotations
-        // exp(-i*theta*P1*P2*...*Pn)|psi> = cos(theta)|psi> + i*sin(theta)P1*P2*...*Pn|psi>
-        //                                 = cos(pi)|psi> + i*sin(pi)P1*P2*...*Pn|psi>
-        //                                 = iP1*P2*...*Pn|psi>
+        // exp(-i*theta*P1*P2*...*Pn)|psi> = cos(theta)|psi> +
+        // i*sin(theta)P1*P2*...*Pn|psi>
+        //                                 = cos(pi)|psi> +
+        //                                 i*sin(pi)P1*P2*...*Pn|psi> =
+        //                                 iP1*P2*...*Pn|psi>
         sv.applyOperation(obs_name_, target_wires, false, {M_PI});
     }
 };

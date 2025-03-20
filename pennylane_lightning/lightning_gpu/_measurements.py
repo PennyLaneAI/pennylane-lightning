@@ -17,6 +17,7 @@ Class implementation for state vector measurements.
 
 from __future__ import annotations
 
+import time
 from warnings import warn
 
 try:
@@ -172,6 +173,31 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
                 CSR_SparseHamiltonian.indices,
                 CSR_SparseHamiltonian.data,
             )
+
+        # use specialized function to compute expval(pauli_sentence)
+        if measurementprocess.obs.pauli_rep is not None:
+            coeffs, terms = QuantumScriptSerializer(
+                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
+            )._pauli_sentence(measurementprocess.obs.pauli_rep, direct_return=True)
+            wires = [None] * len(coeffs)
+            pauli_words = [None] * len(coeffs)
+            pauli_map = {
+                "PauliX": "X",
+                "PauliY": "Y",
+                "PauliZ": "Z",
+                "Identity": "I",
+            }
+            for i, term in enumerate(terms):
+                term_wires = term.get_wires()
+                wires[i] = term_wires
+
+                if len(term_wires) > 1:
+                    pauli_words[i] = "".join(
+                        pauli_map[p.get_base_ob_name()] for p in term.get_ops()
+                    )
+                else:
+                    pauli_words[i] = pauli_map[term.get_base_ob_name()]
+            return self._measurement_lightning.expval(pauli_words, wires, coeffs)
 
         # use specialized functors to compute expval(Hermitian)
         if isinstance(measurementprocess.obs, qml.Hermitian):

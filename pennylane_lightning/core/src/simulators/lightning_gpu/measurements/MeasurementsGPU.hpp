@@ -407,14 +407,15 @@ class Measurements final
         return static_cast<PrecisionT>(expect);
     }
 
-        /**
+    /**
      * @brief Calculate expectation value for a general Observable.
      *
      * @param ob Observable.
      * @return Expectation value with respect to the given observable.
      */
     auto expval_test(const Observable<StateVectorT> &ob) -> PrecisionT {
-        // Expectation value calculation using the tensrprod method with custatevecApplyPauliRotation function
+        // Expectation value calculation using the tensrprod method with
+        // custatevecApplyPauliRotation function
         StateVectorT ob_sv(this->_statevector);
         ob.applyInPlace(ob_sv);
 
@@ -432,7 +433,7 @@ class Measurements final
         // Multiply by -i to get the correct expectation value
         // Because applyInPlace applies the exponential of the Pauli rotation
         // exp(-i*theta*P)|psi> = cos(theta)|psi> + i*sin(theta)P|psi>
-        //                      with theta = pi/2, P = Pauli matrix 
+        //                      with theta = pi/2, P = Pauli matrix
         //                      = iP|psi>
         // Therefore, the expectation value is
         //                      = <psi|i P|psi>
@@ -440,11 +441,10 @@ class Measurements final
         // Multiply by -i to get the correct expectation value
         //                     = i <psi|P|psi> * -i
         //                     = <psi|P|psi>
-        ComplexT minus_i{0, -1}; 
+        ComplexT minus_i{0, -1};
         expect2 = expect2 * minus_i;
         return static_cast<PrecisionT>(expect2.real());
     }
-
 
     /**
      * @brief Expectation value for a Observable with shots
@@ -514,18 +514,16 @@ class Measurements final
         std::vector<int32_t *> basisBits_ptr;
         std::vector<uint32_t> n_basisBits;
 
-        for ( [[maybe_unused]] auto &p_word : pauli_words) {
-            for (auto &wires : target_wires) {
-                std::vector<int32_t> wiresInt(wires.size());
-                std::transform(wires.begin(), wires.end(), wiresInt.begin(),
-                            [&](std::size_t x) {
-                                return static_cast<int>(
-                                    this->_statevector.getNumQubits() - 1 - x);
-                            });
-                basisBits.push_back(wiresInt);
-                basisBits_ptr.push_back((*basisBits.rbegin()).data());
-                n_basisBits.push_back(wiresInt.size());
-            }
+        for (auto &wires : target_wires) {
+            std::vector<int32_t> wiresInt(wires.size());
+            std::transform(wires.begin(), wires.end(), wiresInt.begin(),
+                           [&](std::size_t x) {
+                               return static_cast<int>(
+                                   this->_statevector.getNumQubits() - 1 - x);
+                           });
+            basisBits.push_back(wiresInt);
+            basisBits_ptr.push_back((*basisBits.rbegin()).data());
+            n_basisBits.push_back(wiresInt.size());
         }
 
         // compute expectation

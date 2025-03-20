@@ -343,8 +343,8 @@ class StateVectorCudaManaged
                 pauli_words.push_back(pauli_str.substr(start, end - start));
             }
 
-            applyParametricPauliGate_test(pauli_words, ctrls, tgts, params.front(),
-                                      adjoint);
+            applyParametricPauliGate_test(pauli_words, ctrls, tgts,
+                                          params.front(), adjoint);
 
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
@@ -1962,8 +1962,10 @@ class StateVectorCudaManaged
         {"Identity", CUSTATEVEC_PAULI_I}, {"I", CUSTATEVEC_PAULI_I}};
 
     const std::unordered_map<std::string, custatevecPauli_t> native_gates_tmp_{
-        {"PauliX", CUSTATEVEC_PAULI_X}, {"PauliY", CUSTATEVEC_PAULI_Y},
-        {"PauliZ", CUSTATEVEC_PAULI_Z}, {"RX", CUSTATEVEC_PAULI_X},
+        {"PauliX", CUSTATEVEC_PAULI_X},
+        {"PauliY", CUSTATEVEC_PAULI_Y},
+        {"PauliZ", CUSTATEVEC_PAULI_Z},
+        {"RX", CUSTATEVEC_PAULI_X},
         {"I", CUSTATEVEC_PAULI_I}};
 
     // Holds the mapping from gate labels to associated generator functions.
@@ -2318,11 +2320,11 @@ class StateVectorCudaManaged
         PL_CUDA_IS_SUCCESS(cudaStreamSynchronize(
             BaseType::getDataBuffer().getDevTag().getStreamID()));
     }
-    void applyParametricPauliGate_test(const std::vector<std::string> &pauli_words,
-                                   std::vector<std::size_t> ctrls,
-                                   std::vector<std::size_t> tgts,
-                                   Precision param, bool use_adjoint = false)
-    {
+    void
+    applyParametricPauliGate_test(const std::vector<std::string> &pauli_words,
+                                  std::vector<std::size_t> ctrls,
+                                  std::vector<std::size_t> tgts,
+                                  Precision param, bool use_adjoint = false) {
         // Transform indices between PL & cuQuantum ordering
         auto ctrlsInt = NormalizeCastIndices<std::size_t, int>(
             ctrls, BaseType::getNumQubits());
@@ -2331,8 +2333,9 @@ class StateVectorCudaManaged
 
         const std::vector<int> ctrls_valuesInt(ctrls.size(), 1);
 
-        applyParametricPauliGeneralGate_test(pauli_words, ctrlsInt, ctrls_valuesInt,
-                                         tgtsInt, param, use_adjoint);
+        applyParametricPauliGeneralGate_test(pauli_words, ctrlsInt,
+                                             ctrls_valuesInt, tgtsInt, param,
+                                             use_adjoint);
     }
 
     /**
@@ -2349,25 +2352,20 @@ class StateVectorCudaManaged
         const std::vector<std::string> &pauli_words,
         const std::vector<int> &ctrlsInt,
         const std::vector<int> &ctrls_valuesInt, const std::vector<int> tgtsInt,
-        Precision param, bool use_adjoint = false)
-    {
+        Precision param, bool use_adjoint = false) {
         int nIndexBits = BaseType::getNumQubits();
 
         cudaDataType_t data_type;
 
         if constexpr (std::is_same_v<CFP_t, cuDoubleComplex> ||
-                      std::is_same_v<CFP_t, double2>)
-        {
+                      std::is_same_v<CFP_t, double2>) {
             data_type = CUDA_C_64F;
-        }
-        else
-        {
+        } else {
             data_type = CUDA_C_32F;
         }
         std::vector<custatevecPauli_t> pauli_enums;
         pauli_enums.reserve(pauli_words.size());
-        for (const auto &pauli_str : pauli_words)
-        {
+        for (const auto &pauli_str : pauli_words) {
             pauli_enums.push_back(native_gates_tmp_.at(pauli_str));
         }
 
