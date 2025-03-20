@@ -2431,7 +2431,6 @@ class StateVectorCudaManaged
                                  std::vector<int> &tgts,
                                  std::vector<int> &ctrls_values,
                                  bool use_adjoint = false) {
-
         void *extraWorkspace = nullptr;
         std::size_t extraWorkspaceSizeInBytes = 0;
         int nIndexBits = BaseType::getNumQubits();

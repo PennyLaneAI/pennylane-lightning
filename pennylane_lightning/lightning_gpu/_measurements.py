@@ -17,7 +17,6 @@ Class implementation for state vector measurements.
 
 from __future__ import annotations
 
-import time
 from warnings import warn
 
 try:
@@ -176,6 +175,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
 
         # use specialized function to compute expval(pauli_sentence)
         if measurementprocess.obs.pauli_rep is not None:
+            # pylint: disable=protected-access
             coeffs, terms = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._pauli_sentence(measurementprocess.obs.pauli_rep, direct_return=True)
