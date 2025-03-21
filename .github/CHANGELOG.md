@@ -8,7 +8,8 @@
 
 ### Improvements
 
-* Implemented the `jaxpr_jvp` method to compute the adjoint jvp of a jaxpr using `lightning.qubit`.
+* Implemented the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
+  This method currently only support the adjoint differentiation method.
   [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
 
 * Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 

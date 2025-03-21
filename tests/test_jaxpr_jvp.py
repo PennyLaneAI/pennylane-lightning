@@ -214,7 +214,7 @@ class TestCorrectResults:
         assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
 
     def test_diffentiable_op_math(self):
-        """Test that we can handle differentiable operations in the circuit."""
+        """Test that we can handle differentiable op math in the circuit."""
 
         def f(x):
             qml.adjoint(qml.RX(x, 0))
@@ -274,9 +274,9 @@ class TestCorrectResults:
         expected = -jax.numpy.sin(x) * jax.numpy.sin(y)
         assert qml.math.allclose(res, expected)
 
-        expected_dres = dx * -jax.numpy.cos(x) * jax.numpy.sin(y) + dy * -jax.numpy.sin(
-            x
-        ) * jax.numpy.cos(y)
+        expected_dres1 = dx * -jax.numpy.cos(x) * jax.numpy.sin(y)
+        expected_dres2 = dy * -jax.numpy.sin(x) * jax.numpy.cos(y)
+        expected_dres = expected_dres1 + expected_dres2
         assert qml.math.allclose(dres, expected_dres)
 
     def test_multiple_output(self):
@@ -388,9 +388,7 @@ class TestCorrectResults:
         dx = jax.numpy.array(2.0)
         dy = jax.numpy.array(3.0)
 
-        jaxpr = jax.make_jaxpr(f)(
-            x,
-        )
+        jaxpr = jax.make_jaxpr(f)(x)
 
         dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
@@ -403,8 +401,8 @@ class TestCorrectResults:
         ) * jax.numpy.cos(y)
         assert qml.math.allclose(dres, expected_dres)
 
-    def test_multiple_train_params(self):
-        """Test that we can differentiate multiple trainable parameters."""
+    def test_multi_param_op(self):
+        """Test that we can differentiate multiple trainable parameters in one gate."""
 
         def f(x, y, z):
             qml.Rot(x, y, z, 0)
@@ -425,8 +423,8 @@ class TestCorrectResults:
         expected_dres = x[1] * -jax.numpy.sin(x[1])
         assert qml.math.allclose(dres, expected_dres)
 
-    def test_multiple_train_params_array(self):
-        """Test that we can differentiate multiple trainable parameters provided as an array."""
+    def test_multi_param_op_array(self):
+        """Test that we can differentiate multiple trainable parameters in one gate, provided as an array."""
 
         def f(x):
             qml.Rot(x[0], x[1], x[2], 0)

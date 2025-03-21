@@ -25,14 +25,16 @@ from pennylane.typing import TensorLike
 def validate_args_tangents(
     args: Sequence[TensorLike], tangents: Sequence[TensorLike]
 ) -> Tuple[TensorLike]:
-    """Ensure args and tangents provided to the JAXPR are consistent.
+    """Ensure args and tangents provided to the JAXPR are consistent and creates concrete
+    arrays of zeros where the input tangent is an instance of `jax.interpreters.ad.Zero`.
 
     Args:
         args (Sequence[TensorLike]): the arguments to the JAXPR
         tangents (Sequence[TensorLike]): the tangents to the JAXPR
 
     Returns:
-        Tuple[TensorLike]: the validated tangents
+        Tuple[TensorLike]: the validated tangents. Entries that are an instance of  `jax.intepreters.ad.Zero`
+        are replaced by a concrete array of zeros.
     """
 
     if len(args) != len(tangents):
@@ -53,7 +55,7 @@ def validate_args_tangents(
 
 def get_output_shapes(jaxpr: "jax.core.Jaxpr", num_wires: int) -> Tuple:
     """
-    Compute the output shapes of the JAXPR and the Jacobian shapes of the JAXPR.
+    Compute the output shapes and Jacobian shapes of a JAXPR.
 
     Args:
         jaxpr (jax.core.Jaxpr): the JAXPR to analyze
@@ -105,7 +107,7 @@ def convert_jaxpr_to_tape(
         args (Sequence[TensorLike]): the arguments to the JAXPR
 
     Returns:
-        qml.tape.QuantumTape: the converted tape
+        qml.tape.QuantumTape: the tape created from the input JAXPR.
     """
 
     const_args = args[: len(jaxpr.constvars)]

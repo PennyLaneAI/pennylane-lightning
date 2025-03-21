@@ -565,7 +565,8 @@ class LightningBase(Device):
         Args:
             jaxpr (jax.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
                 and measurements
-            args (Sequence[TensorLike]): the ``consts`` followed by the normal arguments
+            args (Sequence[TensorLike]): the arguments to the ``jaxpr``. Should contain ``consts`` followed 
+                by non-constant arguments
             tangents (Sequence[TensorLike]): the tangents corresponding to ``args``.
                 May contain ``jax.interpreters.ad.Zero``.
 
@@ -573,7 +574,7 @@ class LightningBase(Device):
             execution_config (Optional[ExecutionConfig]): a data structure with additional information required for execution
 
         Returns:
-            Sequence[TensorLike], Sequence[TensorLike]: the results and jacobian vector products
+            Sequence[TensorLike], Sequence[TensorLike]: the results and Jacobian vector products
 
 
         .. note::
@@ -581,7 +582,7 @@ class LightningBase(Device):
             For LightningBase devices, the current implementation of this method is based on the conversion of the jaxpr to a PennyLane tape.
             This has strict limitations. The ``args`` should contain the concatenation of ``jaxpr.constvars`` and ``jaxpr.invars``,
             which are assumed to represent the trainable parameters of the circuit.
-            The method will raise an error if ``args`` do not match exactly the parameters of the jaxpr converted to quantum tape.
+            The method will raise an error if ``args`` do not match exactly the parameters of the tape created from the jaxpr.
 
         """
 

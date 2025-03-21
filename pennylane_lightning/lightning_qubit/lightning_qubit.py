@@ -213,14 +213,7 @@ class LightningQubit(LightningBase):
     # pylint: disable=too-many-instance-attributes
 
     # General device options
-    _device_options = (
-        "rng",
-        "c_dtype",
-        "batch_obs",
-        "mcmc",
-        "kernel_name",
-        "num_burnin",
-    )
+    _device_options = ("rng", "c_dtype", "batch_obs", "mcmc", "kernel_name", "num_burnin")
     # Device specific options
     _CPP_BINARY_AVAILABLE = LQ_CPP_BINARY_AVAILABLE
     _backend_info = backend_info if LQ_CPP_BINARY_AVAILABLE else None
@@ -325,10 +318,7 @@ class LightningQubit(LightningBase):
                 "adjoint",
             )
         if config.use_device_gradient is None:
-            updated_values["use_device_gradient"] = config.gradient_method in (
-                "best",
-                "adjoint",
-            )
+            updated_values["use_device_gradient"] = config.gradient_method in ("best", "adjoint")
         if (
             config.use_device_gradient
             or updated_values.get("use_device_gradient", False)
@@ -516,9 +506,7 @@ class LightningQubit(LightningBase):
                 state.reset_state()
                 mid_measurements = {}
                 final_state = state.get_final_state(
-                    aux_circ,
-                    mid_measurements=mid_measurements,
-                    postselect_mode=postselect_mode,
+                    aux_circ, mid_measurements=mid_measurements, postselect_mode=postselect_mode
                 )
                 results.append(
                     LightningMeasurements(final_state, **mcmc).measure_final_state(
