@@ -11,6 +11,7 @@
 * Implemented the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
   This method currently only support the adjoint differentiation method.
   [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
+  [(#1106)](https://github.com/PennyLaneAI/pennylane/pull/1106)
 
 * Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
