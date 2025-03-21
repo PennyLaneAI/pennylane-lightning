@@ -38,7 +38,6 @@ using namespace Pennylane::Util;
 
 #ifndef CUDA_UNSAFE
 
-/// @cond DEV
 /**
  * @brief Macro that throws Exception from cuStateVec failure error codes.
  *
@@ -53,7 +52,6 @@ using namespace Pennylane::Util;
 #define PL_CUSTATEVEC_IS_SUCCESS(err)                                          \
     { static_cast<void>(err); }
 #endif
-/// @endcond
 namespace Pennylane::LightningGPU::Util {
 static const std::string
 GetCuStateVecErrorString(const custatevecStatus_t &err) {

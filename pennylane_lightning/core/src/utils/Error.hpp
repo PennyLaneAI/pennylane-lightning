@@ -14,7 +14,6 @@
 #include <sstream>
 #include <string>
 
-/// @cond DEV
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)
 /**
  * @brief Macro that throws `%LightningException` with given message.
@@ -55,7 +54,6 @@
 #define PL_ASSERT(expression)                                                  \
     PL_ABORT_IF_NOT(expression, "Assertion failed: " #expression)
 
-/// @endcond
 // NOLINTEND(cppcoreguidelines-macro-usage)
 
 namespace Pennylane::Util {

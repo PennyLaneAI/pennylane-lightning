@@ -36,7 +36,6 @@ using namespace Pennylane::Util;
 } // namespace
 /// @endcond
 
-/// @cond DEV
 #ifndef CUDA_UNSAFE
 
 /**
@@ -61,7 +60,7 @@ using namespace Pennylane::Util;
 #define PL_CUSPARSE_IS_SUCCESS(err)                                            \
     { static_cast<void>(err); }
 #endif
-/// @endcond
+
 namespace Pennylane::LightningGPU::Util {
 static const std::string GetCuBlasErrorString(const cublasStatus_t &err) {
     std::string result;
