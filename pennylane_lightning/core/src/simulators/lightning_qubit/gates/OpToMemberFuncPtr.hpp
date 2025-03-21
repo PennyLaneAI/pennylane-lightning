@@ -699,6 +699,7 @@ struct ControlledGeneratorOpToMemberFuncPtr<
     constexpr static auto value =
         &GateImplementation::template applyNCGeneratorGlobalPhase<PrecisionT>;
 };
+
 /**
  * @brief Matrix operation to member function pointer
  */
@@ -753,6 +754,7 @@ struct ControlledMatrixOpToMemberFuncPtr<
         &GateImplementation::template applyNCMultiQubitOp<PrecisionT>;
 };
 
+/// @cond DEV
 namespace Internal {
 /**
  * @brief Gate operation pointer type for a statevector. See all specialized
@@ -896,6 +898,7 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
 };
 
 } // namespace Internal
+/// @endcond
 
 /**
  * @brief Convenient type alias for GateFuncPtr.

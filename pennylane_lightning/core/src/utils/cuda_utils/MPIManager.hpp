@@ -53,7 +53,6 @@ inline void errhandler(int errcode, const char *str) {
 }
 // LCOV_EXCL_STOP
 
-/// @cond DEV
 #define PL_MPI_IS_SUCCESS(fn)                                                  \
     {                                                                          \
         int errcode;                                                           \
@@ -61,7 +60,6 @@ inline void errhandler(int errcode, const char *str) {
         if (errcode != MPI_SUCCESS)                                            \
             errhandler(errcode, #fn);                                          \
     }
-/// @endcond
 
 template <typename T> auto cppTypeToString() -> const std::string {
     const std::string typestr = std::type_index(typeid(T)).name();
