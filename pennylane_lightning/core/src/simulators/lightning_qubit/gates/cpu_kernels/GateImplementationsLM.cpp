@@ -254,6 +254,12 @@ template void GateImplementationsLM::applyGlobalPhase<float, float>(
 template void GateImplementationsLM::applyGlobalPhase<double, double>(
     std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
     double);
+template void GateImplementationsLM::applyPSWAP<float, float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool,
+    float);
+template void GateImplementationsLM::applyPSWAP<double, double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
+    double);
 
 /* QChem functions */
 
@@ -485,6 +491,14 @@ template auto GateImplementationsLM::applyGeneratorControlledPhaseShift(
 template auto GateImplementationsLM::applyGeneratorControlledPhaseShift(
     std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool)
     -> float;
+template auto
+GateImplementationsLM::applyGeneratorPSWAP(std::complex<double> *, std::size_t,
+                                           const std::vector<std::size_t> &,
+                                           bool) -> double;
+template auto
+GateImplementationsLM::applyGeneratorPSWAP(std::complex<float> *, std::size_t,
+                                           const std::vector<std::size_t> &,
+                                           bool) -> float;
 template auto GateImplementationsLM::applyGeneratorMultiRZ(
     std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool)
     -> double;
@@ -561,6 +575,13 @@ template auto GateImplementationsLM::applyNCGeneratorRZ<float>(
     std::complex<float> *, std::size_t, const std::vector<std::size_t> &,
     const std::vector<bool> &, const std::vector<std::size_t> &, bool) -> float;
 template auto GateImplementationsLM::applyNCGeneratorRZ<double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
+    const std::vector<bool> &, const std::vector<std::size_t> &, bool)
+    -> double;
+template auto GateImplementationsLM::applyNCGeneratorPSWAP<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &,
+    const std::vector<bool> &, const std::vector<std::size_t> &, bool) -> float;
+template auto GateImplementationsLM::applyNCGeneratorPSWAP<double>(
     std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
     const std::vector<bool> &, const std::vector<std::size_t> &, bool)
     -> double;

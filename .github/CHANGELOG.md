@@ -8,6 +8,9 @@
 
 ### Improvements
 
+* Add `PSWAP` gate implementation to PennyLane-Lightning. 
+  [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
+
 * Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
   [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
@@ -15,7 +18,7 @@
 * Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
   execution pipeline when program capture is enabled.
   [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
-  
+
 * Hide anonymous namespaces in Lightning docs.
   [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
 
@@ -144,7 +147,8 @@ Joseph Lee,
 Luis Alfredo Nuñez Meneses,
 Andrija Paurevic,
 Alex Preciado,
-Shuli Shu
+Shuli Shu,
+Jake Zaia
 
 ---
 
