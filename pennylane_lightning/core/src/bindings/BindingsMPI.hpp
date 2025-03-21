@@ -104,8 +104,6 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
                 return NamedObsMPI<StateVectorT>(name, wires);
             }))
         .def("__repr__", &NamedObsMPI<StateVectorT>::getObsName)
-        .def("get_base_ob_name", &NamedObsMPI<StateVectorT>::getObsNameBase,
-             "Get base name of observable")
         .def("get_wires", &NamedObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
         .def(
@@ -158,8 +156,6 @@ template <class StateVectorT> void registerObservablesMPI(py::module_ &m) {
         .def("__repr__", &TensorProdObsMPI<StateVectorT>::getObsName)
         .def("get_wires", &TensorProdObsMPI<StateVectorT>::getWires,
              "Get wires of observables")
-        .def("get_ops", &TensorProdObsMPI<StateVectorT>::getObs,
-             "Get operations list")
         .def(
             "__eq__",
             [](const TensorProdObsMPI<StateVectorT> &self,

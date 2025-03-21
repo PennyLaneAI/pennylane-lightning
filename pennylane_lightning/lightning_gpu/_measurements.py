@@ -175,29 +175,9 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
 
         # use specialized function to compute expval(pauli_sentence)
         if measurementprocess.obs.pauli_rep is not None:
-            # pylint: disable=protected-access
-            coeffs, pauli_sentence = QuantumScriptSerializer(
-                self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
-            )._pauli_sentence(measurementprocess.obs.pauli_rep, direct_return=True)
-
-            wires = [[] for _ in range(len(coeffs))]
-            pauli_words = [None] * len(coeffs)
-            pauli_map = {
-                "PauliX": "X",
-                "PauliY": "Y",
-                "PauliZ": "Z",
-                "Identity": "I",
-            }
-
-            for i, pauli_word in enumerate(pauli_sentence):
-                ops = pauli_word.get_ops() if len(pauli_word.get_wires()) > 1 else [pauli_word]
-                pauli_word_wires = []
-                pauli_chars = []
-                for op in ops:
-                    pauli_word_wires.extend(op.get_wires())
-                    pauli_chars.append(pauli_map[op.get_base_ob_name()])
-                wires[i] = pauli_word_wires
-                pauli_words[i] = "".join(pauli_chars)
+            pwords, coeffs = zip(*measurementprocess.obs.pauli_rep.items())
+            pauli_words = [qml.pauli.pauli_word_to_string(p) for p in pwords]
+            wires = [p.wires.tolist() for p in pwords]
             return self._measurement_lightning.expval(pauli_words, wires, coeffs)
 
         # use specialized functors to compute expval(Hermitian)
