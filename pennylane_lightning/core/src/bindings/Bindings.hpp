@@ -353,7 +353,7 @@ void registerBackendAgnosticObservables(py::module_ &m) {
             }))
         .def("__repr__", &NamedObsT::getObsName)
         .def("get_base_ob_name", &NamedObsT::getObsNameBase,
-             "Get base name of observables")
+             "Get base name of observable")
         .def("get_wires", &NamedObsT::getWires, "Get wires of observables")
         .def(
             "__eq__",

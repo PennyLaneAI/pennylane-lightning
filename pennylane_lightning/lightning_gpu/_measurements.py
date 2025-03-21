@@ -176,10 +176,10 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
         # use specialized function to compute expval(pauli_sentence)
         if measurementprocess.obs.pauli_rep is not None:
             # pylint: disable=protected-access
-            coeffs, terms = QuantumScriptSerializer(
+            coeffs, pauli_sentence = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._pauli_sentence(measurementprocess.obs.pauli_rep, direct_return=True)
-            wires = [None] * len(coeffs)
+            wires = [[] for _ in range(len(coeffs))]
             pauli_words = [None] * len(coeffs)
             pauli_map = {
                 "PauliX": "X",
@@ -187,16 +187,17 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
                 "PauliZ": "Z",
                 "Identity": "I",
             }
-            for i, term in enumerate(terms):
-                term_wires = term.get_wires()
-                wires[i] = term_wires
-
-                if len(term_wires) > 1:
-                    pauli_words[i] = "".join(
-                        pauli_map[p.get_base_ob_name()] for p in term.get_ops()
-                    )
-                else:
-                    pauli_words[i] = pauli_map[term.get_base_ob_name()]
+            print(coeffs, pauli_sentence)
+            for i, pauli_word in enumerate(pauli_sentence):
+                print(pauli_word, pauli_word.get_wires())
+                ops = pauli_word.get_ops() if len(pauli_word.get_wires()) > 1 else [pauli_word]
+                pauli_word_wires = []
+                pauli_chars = []
+                for op in ops:
+                    pauli_word_wires.extend(op.get_wires())
+                    pauli_chars.append(pauli_map[op.get_base_ob_name()])
+                wires[i] = pauli_word_wires
+                pauli_words[i] = "".join(pauli_chars)
             return self._measurement_lightning.expval(pauli_words, wires, coeffs)
 
         # use specialized functors to compute expval(Hermitian)
