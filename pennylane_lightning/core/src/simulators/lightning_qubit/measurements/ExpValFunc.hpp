@@ -30,6 +30,7 @@ namespace PUtil = Pennylane::Util;
 } // namespace
 /// @endcond
 
+/// @cond DEV
 namespace Pennylane::LightningQubit::Measures {
 /**
  * @brief Compute the parities and shifts for multi-qubit operations.
@@ -320,3 +321,4 @@ auto applyExpValMatMultiQubit(const std::complex<ParamT> *arr,
     return expected_value;
 };
 } // namespace Pennylane::LightningQubit::Measures
+/// @endcond
