@@ -21,10 +21,10 @@
 #include <utility>
 
 namespace Pennylane::Gates {
+/// @cond DEV
 /**
  * @brief Enum class for all gate operations
  */
-/// @cond DEV
 enum class GateOperation : uint32_t {
     BEGIN = 0,
     /* Single-qubit gates */

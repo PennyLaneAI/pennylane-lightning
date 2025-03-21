@@ -59,10 +59,10 @@ using namespace Pennylane::Util;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Util {
+/// @cond DEV
 /**
  * @brief Transpose enum class
  */
-/// @cond DEV
 enum class Trans : int {
     NoTranspose = CblasNoTrans,
     Transpose = CblasTrans,
