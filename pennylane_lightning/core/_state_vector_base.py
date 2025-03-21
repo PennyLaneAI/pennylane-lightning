@@ -102,6 +102,17 @@ class LightningBaseStateVector(ABC):
         self._qubit_state.resetStateVector()
 
     @abstractmethod
+    def _operation_is_sparse(self, operation):
+        """Check if an operation is sparse.
+
+        Args:
+            operation (~pennylane.operation.Operation): operation to check
+
+        Returns:
+            bool: True if the operation is sparse, False otherwise
+        """
+
+    @abstractmethod
     def _apply_state_vector(self, state, device_wires: Wires, sync: Optional[bool] = None):
         """Initialize the internal state vector in a specified state.
         Args:

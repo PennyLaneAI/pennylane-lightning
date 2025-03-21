@@ -26,7 +26,8 @@
 #include "KernelMap.hpp"
 #include "KernelType.hpp"
 #include "OpToMemberFuncPtr.hpp"
-#include "TestHelpers.hpp" // PrecisionToName
+#include "TestHelpers.hpp"       // PrecisionToName
+#include "TestHelpersSparse.hpp" // SparseMatrixCSR
 #include "TestHelpersWires.hpp"
 #include "TestKernels.hpp"
 #include "Util.hpp" // for_each_enum
@@ -76,6 +77,39 @@ auto kernelsImplementingMatrix(MatrixOperation mat_op)
             return dispatcher.registeredMatricesForKernel(kernel).contains(
                 mat_op);
         });
+    return res;
+}
+
+template <typename PrecisionT>
+auto kernelsImplementingSparseMatrix(SparseMatrixOperation mat_op)
+    -> std::vector<KernelType> {
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+    auto kernels = dispatcher.registeredKernels();
+
+    std::vector<KernelType> res;
+
+    std::copy_if(kernels.begin(), kernels.end(), std::back_inserter(res),
+                 [&dispatcher, mat_op](KernelType kernel) {
+                     return dispatcher.registeredSparseMatricesForKernel(kernel)
+                         .contains(mat_op);
+                 });
+    return res;
+}
+
+template <typename PrecisionT>
+auto kernelsImplementingControlledSparseMatrix(
+    ControlledSparseMatrixOperation mat_op) -> std::vector<KernelType> {
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+    auto kernels = dispatcher.registeredKernels();
+
+    std::vector<KernelType> res;
+
+    std::copy_if(kernels.begin(), kernels.end(), std::back_inserter(res),
+                 [&dispatcher, mat_op](KernelType kernel) {
+                     return dispatcher
+                         .registeredControlledSparseMatricesForKernel(kernel)
+                         .contains(mat_op);
+                 });
     return res;
 }
 
@@ -178,10 +212,11 @@ void testMatrixOp(RandomEngine &re, std::size_t num_qubits,
         ss << dispatcher.getKernelName(kernel) << ", ";
     }
     ss << "inverse: " << inverse;
+    ss << ", num_wires: " << num_wires;
     ss << ", num_qubits: " << num_qubits;
 
     const auto ini_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
-    const auto matrix = randomUnitary<PrecisionT>(re, num_qubits);
+    const auto matrix = randomUnitary<PrecisionT>(re, num_wires);
 
     DYNAMIC_SECTION(ss.str()) {
         const auto all_wires =
@@ -189,7 +224,7 @@ void testMatrixOp(RandomEngine &re, std::size_t num_qubits,
         for (const auto &wires : all_wires) {
             std::vector<TestVector<std::complex<PrecisionT>>> res;
 
-            // Record result from each kerenl
+            // Record result from each kernel
             for (KernelType kernel : implementing_kernels) {
                 auto st = ini_st;
                 dispatcher.applyMatrix(kernel, st.data(), num_qubits,
@@ -217,4 +252,210 @@ TEMPLATE_TEST_CASE("Test all kernels give the same results for matrices",
             testMatrixOp<TestType>(re, num_qubits, num_wires, inverse);
         }
     }
+}
+
+/**
+ * @brief Apply the given sparse matrix using all implementing kernels and
+ * compare results with dense methods.
+ * @tparam PrecisionT Precision of the complex data type.
+ * @param num_qubits Number of qubits.
+ * @param unit_num_wires Number of wires the matrix applies to.
+ * @param sparsity Sparsity of the matrix.
+ * @param inverse If inverse is required.
+ */
+template <typename PrecisionT>
+void testSparseMatrixOp(std::size_t num_qubits, std::size_t unit_num_wires,
+                        PrecisionT sparsity, bool inverse = false) {
+    PL_ASSERT(unit_num_wires > 0);
+
+    using ComplexT = std::complex<PrecisionT>;
+    std::mt19937 re{1337};
+
+    using Pennylane::Gates::Constant::matrix_names;
+    const auto mat_op = [unit_num_wires]() -> MatrixOperation {
+        switch (unit_num_wires) {
+        case 1:
+            return MatrixOperation::SingleQubitOp;
+        case 2:
+            return MatrixOperation::TwoQubitOp;
+        default:
+            return MatrixOperation::MultiQubitOp;
+        }
+    }();
+    const auto op_name = lookup(matrix_names, mat_op);
+
+    using Pennylane::Gates::Constant::sparse_matrix_names;
+    const auto sparse_mat_op = [unit_num_wires]() -> SparseMatrixOperation {
+        // for future expansion:
+        [[maybe_unused]] auto unused_unit_num_wires = unit_num_wires;
+        return SparseMatrixOperation::SparseMultiQubitOp;
+    }();
+    const auto sparse_op_name = lookup(sparse_matrix_names, sparse_mat_op);
+
+    const auto implementing_sparse_kernels =
+        kernelsImplementingSparseMatrix<PrecisionT>(sparse_mat_op);
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
+    std::ostringstream ss;
+    ss << "Test " << sparse_op_name << " vs " << op_name << " with kernels: ";
+    for (KernelType kernel : implementing_sparse_kernels) {
+        ss << dispatcher.getKernelName(kernel) << ", ";
+    }
+    ss << "num_qubits: " << num_qubits;
+    ss << ", unit_num_wires: " << unit_num_wires;
+    ss << ", sparsity: " << sparsity;
+    ss << ", inverse: " << inverse;
+
+    const auto ini_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+    SparseMatrixCSR<ComplexT> sparse_unitary;
+    sparse_unitary.makeSparseUnitary(re, 1U << unit_num_wires, sparsity);
+
+    const auto matrix = sparse_unitary.toDenseMatrix();
+
+    DYNAMIC_SECTION(ss.str()) {
+        const auto all_wires =
+            CombinationGenerator(num_qubits, unit_num_wires).all_perms();
+        for (const auto &wires : all_wires) {
+            std::vector<TestVector<std::complex<PrecisionT>>> res;
+
+            // Calculate with dense and sparse kernels and compare results.
+            for (KernelType kernel : implementing_sparse_kernels) {
+                auto st_dense = ini_st;
+                dispatcher.applyMatrix(kernel, st_dense.data(), num_qubits,
+                                       matrix.data(), wires, inverse);
+
+                auto st_sparse = ini_st;
+                dispatcher.applySparseMatrix(
+                    kernel, st_sparse.data(), num_qubits,
+                    sparse_unitary.row_map.data(),
+                    sparse_unitary.col_idx.data(), sparse_unitary.values.data(),
+                    wires, inverse);
+
+                REQUIRE(st_dense == approx(st_sparse).margin(1e-7));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Compare sparse and dense apply matrix kernels",
+                   "[Test_GateImplementations_CompareKernels]", float, double) {
+    using PrecisionT = TestType;
+
+    const std::size_t num_qubits = GENERATE(4, 8, 10);
+    const std::size_t unit_num_wires = GENERATE(1, 2, 3);
+    const PrecisionT sparsity = GENERATE(0.1, 0.5, 0.9);
+
+    testSparseMatrixOp<TestType>(num_qubits, unit_num_wires, sparsity, false);
+}
+
+/**
+ * @brief Apply the given controlled sparse matrix using all implementing
+ * kernels and compare results with dense methods.
+ * @tparam PrecisionT Precision of the complex data type.
+ * @param num_qubits Number of qubits.
+ * @param unit_num_wires Number of wires the matrix applies to.
+ * @param inverse If inverse is required.
+ */
+template <typename PrecisionT>
+void testControlledSparseMatrixOp(std::size_t num_qubits,
+                                  std::size_t unit_num_wires,
+                                  std::size_t control_wires,
+                                  PrecisionT sparsity, bool inverse = false) {
+    PL_ASSERT(unit_num_wires > 0);
+
+    using ComplexT = std::complex<PrecisionT>;
+    std::mt19937 re{1337};
+
+    using Pennylane::Gates::Constant::controlled_matrix_names;
+    const auto mat_op = [unit_num_wires]() -> ControlledMatrixOperation {
+        switch (unit_num_wires) {
+        case 1:
+            return ControlledMatrixOperation::NCSingleQubitOp;
+        case 2:
+            return ControlledMatrixOperation::NCTwoQubitOp;
+        default:
+            return ControlledMatrixOperation::NCMultiQubitOp;
+        }
+    }();
+    const auto op_name = lookup(controlled_matrix_names, mat_op);
+
+    using Pennylane::Gates::Constant::controlled_sparse_matrix_names;
+    const auto sparse_mat_op =
+        [unit_num_wires]() -> ControlledSparseMatrixOperation {
+        // for future expansion:
+        [[maybe_unused]] auto unused_unit_num_wires = unit_num_wires;
+        return ControlledSparseMatrixOperation::NCSparseMultiQubitOp;
+    }();
+    const auto sparse_op_name =
+        lookup(controlled_sparse_matrix_names, sparse_mat_op);
+
+    const auto implementing_sparse_kernels =
+        kernelsImplementingControlledSparseMatrix<PrecisionT>(sparse_mat_op);
+    const auto &dispatcher = DynamicDispatcher<PrecisionT>::getInstance();
+
+    std::ostringstream ss;
+    ss << "Test Controlled " << sparse_op_name << " vs " << op_name
+       << " with kernels: ";
+    for (KernelType kernel : implementing_sparse_kernels) {
+        ss << dispatcher.getKernelName(kernel) << ", ";
+    }
+    ss << ", num_qubits: " << num_qubits;
+    ss << ", unit_num_wires: " << unit_num_wires;
+    ss << ", control_wires: " << control_wires;
+    ss << ", sparsity: " << sparsity;
+    ss << ", inverse: " << inverse;
+
+    const auto ini_st = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+
+    SparseMatrixCSR<ComplexT> sparse_unitary;
+    sparse_unitary.makeSparseUnitary(re, 1U << unit_num_wires, sparsity);
+
+    const auto matrix = sparse_unitary.toDenseMatrix();
+
+    DYNAMIC_SECTION(ss.str()) {
+        const auto all_wires =
+            CombinationGenerator(num_qubits, unit_num_wires + control_wires)
+                .all_perms();
+        for (const auto &wires : all_wires) {
+            std::vector<std::size_t> unitary_wires(
+                wires.begin(), wires.begin() + unit_num_wires);
+            std::vector<std::size_t> control_wires(
+                wires.begin() + unit_num_wires, wires.end());
+
+            std::vector<bool> control_values(control_wires.size());
+            std::generate(control_values.begin(), control_values.end(),
+                          [&re]() -> bool { return re() % 2; });
+
+            // Calculate with dense and sparse kernels and compare results.
+            for (KernelType kernel : implementing_sparse_kernels) {
+                auto st_dense = ini_st;
+                dispatcher.applyControlledMatrix(
+                    kernel, st_dense.data(), num_qubits, matrix.data(),
+                    control_wires, control_values, unitary_wires, inverse);
+
+                auto st_sparse = ini_st;
+                dispatcher.applyControlledSparseMatrix(
+                    kernel, st_sparse.data(), num_qubits,
+                    sparse_unitary.row_map.data(),
+                    sparse_unitary.col_idx.data(), sparse_unitary.values.data(),
+                    control_wires, control_values, unitary_wires, inverse);
+
+                REQUIRE(st_dense == approx(st_sparse).margin(1e-7));
+            }
+        }
+    }
+}
+
+TEMPLATE_TEST_CASE("Compare sparse and dense apply controlled matrix kernels",
+                   "[Test_GateImplementations_CompareKernels]", float, double) {
+    using PrecisionT = TestType;
+
+    const std::size_t num_qubits = GENERATE(6, 8, 10);
+    const std::size_t unit_num_wires = GENERATE(1, 2, 3);
+    const std::size_t control_wires = GENERATE(1, 2, 3);
+    const PrecisionT sparsity = GENERATE(0.1, 0.9);
+
+    testControlledSparseMatrixOp<TestType>(num_qubits, unit_num_wires,
+                                           control_wires, sparsity, false);
 }

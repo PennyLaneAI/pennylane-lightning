@@ -33,6 +33,10 @@ int assignKernelsForMatrixOp() {
     assignKernelsForMatrixOp_Default();
     return 1;
 }
+int assignKernelsForSparseMatrixOp() {
+    assignKernelsForSparseMatrixOp_Default();
+    return 1;
+}
 int assignKernelsForControlledGateOp() {
     assignKernelsForControlledGateOp_Default();
     return 1;
@@ -43,6 +47,10 @@ int assignKernelsForControlledGeneratorOp() {
 }
 int assignKernelsForControlledMatrixOp() {
     assignKernelsForControlledMatrixOp_Default();
+    return 1;
+}
+int assignKernelsForControlledSparseMatrixOp() {
+    assignKernelsForControlledSparseMatrixOp_Default();
     return 1;
 }
 } // namespace Pennylane::LightningQubit::KernelMap::Internal
