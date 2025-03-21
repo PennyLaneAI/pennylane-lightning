@@ -19,6 +19,7 @@
 #include "StateVectorCudaMPI.hpp"
 #include "StateVectorCudaManaged.hpp"
 #include "TestHelpers.hpp"
+
 /// @cond DEV
 namespace {
 using namespace Pennylane::LightningGPU::Observables;

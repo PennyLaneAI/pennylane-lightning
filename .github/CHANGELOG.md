@@ -8,17 +8,28 @@
 
 ### Improvements
 
+* Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
+  [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
+  [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
+
+* Device (`"lightning.qubit"`, `"lightning.gpu"`, `"lightning.kokkos"`) pre-processing is now included in the 
+  execution pipeline when program capture is enabled.
+  [(#1084)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1084)
+  
+* Hide anonymous namespaces in Lightning docs.
+  [(#1097)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1097)
+
 * Expand test structure to efficiently handle sparse data.
-  [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
+  [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
   
 * Removed redundant `reset_state` calls for circuit execution when state vector is freshly initialized.
   [(#1076)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1076)
 
 * Added support for sparse `qml.QubitUnitary` gates for `lightning.qubit`, `lightning.gpu`, and `lightning.kokkos` backends.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Introduce a generalized sparse gate selection system via the `_observable_is_sparse` method in the base measurement class, enabling future expansion for any number of sparse observables.
-  [#1068](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
+  [(#1068)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1068).
 
 * Optimize the copy of a input state-vector into the LGPU #1071 
   [(#1071)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1071)
@@ -124,6 +135,7 @@
 
 This release contains contributions from (in alphabetical order):
 
+Saeed Bohloul,
 Astral Cai,
 Yushao Chen,
 Amintor Dusko,
@@ -307,6 +319,7 @@ Christina Lee,
 Joseph Lee,
 Anton Naim Ibrahim,
 Luis Alfredo Nuñez Meneses,
+Mudit Pandey,
 Andrija Paurevic,
 Shuli Shu,
 Raul Torres,

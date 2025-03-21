@@ -18,6 +18,7 @@
 #pragma once
 #include <bitset>
 
+/// @cond DEV
 namespace {
 struct OffsetIndices {
     static constexpr int AVX = 28;
@@ -28,6 +29,7 @@ struct OffsetIndices {
 constexpr int BitWidth = 32;
 
 } // namespace
+/// @endcond
 
 namespace Pennylane::Util {
 /**
