@@ -179,6 +179,7 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
             coeffs, pauli_sentence = QuantumScriptSerializer(
                 self._qubit_state.device_name, self.dtype == np.complex64, self._use_mpi
             )._pauli_sentence(measurementprocess.obs.pauli_rep, direct_return=True)
+            
             wires = [[] for _ in range(len(coeffs))]
             pauli_words = [None] * len(coeffs)
             pauli_map = {
@@ -187,9 +188,8 @@ class LightningGPUMeasurements(LightningBaseMeasurements):  # pylint: disable=to
                 "PauliZ": "Z",
                 "Identity": "I",
             }
-            print(coeffs, pauli_sentence)
+            
             for i, pauli_word in enumerate(pauli_sentence):
-                print(pauli_word, pauli_word.get_wires())
                 ops = pauli_word.get_ops() if len(pauli_word.get_wires()) > 1 else [pauli_word]
                 pauli_word_wires = []
                 pauli_chars = []
