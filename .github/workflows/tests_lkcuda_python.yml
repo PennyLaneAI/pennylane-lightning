@@ -209,7 +209,8 @@ jobs:
       - name: Get required Python packages
         run: |
           cd main
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements-tests.txt
+          python -m pip install jax[cpu]==0.4.28
           python -m pip install openfermionpyscf
 
       - name: Checkout PennyLane for release or latest build
