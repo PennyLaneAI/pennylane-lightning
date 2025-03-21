@@ -606,6 +606,13 @@ class LightningBase(Device):
                 f"LightningQubit does not support gradient_method={gradient_method} for jaxpr_jvp."
             )
 
+        print(f"self.shots.total_shots: {self.shots.total_shots}")
+
+        if self.shots.total_shots is not None:
+            raise NotImplementedError(
+                "LightningBase does not support finite shots for ``jaxpr_jvp``. Please use shots=None."
+            )
+
         tangents = validate_args_tangents(args, tangents)
 
         self._statevector = self.LightningStateVector(

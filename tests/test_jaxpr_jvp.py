@@ -173,7 +173,6 @@ class TestErrors:
     def test_no_int_tangent(self):
         """Test that the jaxpr_jvp method raises an error if the tangents contain integers."""
 
-        @qml.qnode(device=qml.device(device_name, wires=1))
         def circuit(x):
             qml.RX(x, 0)
             return qml.expval(qml.Z(0))
@@ -184,6 +183,22 @@ class TestErrors:
 
         with pytest.raises(ValueError, match="Tangents cannot be of integer type"):
             qml.device(device_name, wires=1).jaxpr_jvp(jaxpr.jaxpr, args, tangents)
+
+    def test_no_shots(self):
+        """Test that the jaxpr_jvp method raises an error if the circuit contains shots."""
+
+        def circuit(x):
+            qml.RX(x, 0)
+            return qml.sample(qml.Z(0))
+
+        args = (0.5,)
+        jaxpr = jax.make_jaxpr(circuit)(*args)
+
+        with pytest.raises(
+            NotImplementedError,
+            match="LightningBase does not support finite shots for ``jaxpr_jvp``",
+        ):
+            qml.device(device_name, wires=1, shots=100).jaxpr_jvp(jaxpr.jaxpr, args, (0.5,))
 
 
 class TestCorrectResults:
