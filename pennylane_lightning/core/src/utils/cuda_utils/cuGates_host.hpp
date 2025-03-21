@@ -1485,6 +1485,31 @@ static auto getPSWAP(const std::vector<U> &params) -> std::vector<CFP_t> {
     return getPSWAP<CFP_t>(params.front());
 }
 
+/**
+ * @brief Create a matrix representation of the PSWAP generator
+ * data in row-major format.
+ *
+ * @tparam CFP_t Required precision of gate (`float` or `double`).
+ * @tparam U Required precision of parameter (`float` or `double`).
+ * @return constexpr std::array<CFP_t>
+ */
+template <class CFP_t, class U = double>
+static constexpr auto getGeneratorPSWAP() -> std::vector<CFP_t> {
+    return {
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ONE<CFP_t>(),  cuUtil::ZERO<CFP_t>(),
+
+        cuUtil::ZERO<CFP_t>(), cuUtil::ONE<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+        cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
+    };
+}
+
 template <class CFP_t> static constexpr auto getP11_CU() -> std::vector<CFP_t> {
     return {cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(), cuUtil::ZERO<CFP_t>(),
             cuUtil::ONE<CFP_t>()};
