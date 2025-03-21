@@ -23,6 +23,7 @@ from pennylane.devices import DefaultExecutionConfig
 
 jax = pytest.importorskip("jax")
 jaxlib = pytest.importorskip("jaxlib")
+jnp = pytest.importorskip("jax.numpy")
 
 if device_name == "lightning.tensor":
     pytest.skip("Skipping tests for the LightningTensor class.", allow_module_level=True)
@@ -157,8 +158,8 @@ class TestErrors:
             qml.RX(y[1], 1)
             return qml.expval(qml.Z(0) @ qml.Z(1))
 
-        x = jax.numpy.array([1.5, 2.5])
-        dx = jax.numpy.array([2.0, 3.0])
+        x = jnp.array([1.5, 2.5])
+        dx = jnp.array([2.0, 3.0])
         jaxpr = jax.make_jaxpr(f)(x)
 
         with pytest.raises(jax.lib.xla_extension.XlaRuntimeError) as exc_info:
@@ -209,9 +210,9 @@ class TestCorrectResults:
         results, dresults = executor(args, tangents)
 
         assert len(results) == 1
-        assert qml.math.allclose(results, jax.numpy.cos(args[0]))
+        assert qml.math.allclose(results, jnp.cos(args[0]))
         assert len(dresults) == 1
-        assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
+        assert qml.math.allclose(dresults[0], tangents[0] * -jnp.sin(args[0]))
 
     def test_diffentiable_op_math(self):
         """Test that we can handle differentiable op math in the circuit."""
@@ -229,9 +230,9 @@ class TestCorrectResults:
         results, dresults = dev_jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
         assert len(results) == 1
-        assert qml.math.allclose(results, jax.numpy.cos(args[0]))
+        assert qml.math.allclose(results, jnp.cos(args[0]))
         assert len(dresults) == 1
-        assert qml.math.allclose(dresults[0], tangents[0] * -jax.numpy.sin(args[0]))
+        assert qml.math.allclose(dresults[0], tangents[0] * -jnp.sin(args[0]))
 
     def test_abstract_zero_tangent(self):
         """Test we get the derivatives will be zero if the tangent is abstract zero."""
@@ -249,7 +250,7 @@ class TestCorrectResults:
             jaxpr.jaxpr, args, tangents
         )
 
-        assert qml.math.allclose(results, jax.numpy.cos(0.5))
+        assert qml.math.allclose(results, jnp.cos(0.5))
         assert qml.math.allclose(dresults, 0)
 
     def test_multiple_in(self):
@@ -261,21 +262,21 @@ class TestCorrectResults:
             qml.CNOT((0, 1))
             return qml.expval(qml.Y(0))
 
-        x = jax.numpy.array(0.5)
-        y = jax.numpy.array(1.2)
-        dx = jax.numpy.array(2.0)
-        dy = jax.numpy.array(3.0)
+        x = jnp.array(0.5)
+        y = jnp.array(1.2)
+        dx = jnp.array(2.0)
+        dy = jnp.array(3.0)
 
         jaxpr = jax.make_jaxpr(f)(x, y)
 
         dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x, y), (dx, dy))
-        expected = -jax.numpy.sin(x) * jax.numpy.sin(y)
+        expected = -jnp.sin(x) * jnp.sin(y)
         assert qml.math.allclose(res, expected)
 
-        expected_dres1 = dx * -jax.numpy.cos(x) * jax.numpy.sin(y)
-        expected_dres2 = dy * -jax.numpy.sin(x) * jax.numpy.cos(y)
+        expected_dres1 = dx * -jnp.cos(x) * jnp.sin(y)
+        expected_dres2 = dy * -jnp.sin(x) * jnp.cos(y)
         expected_dres = expected_dres1 + expected_dres2
         assert qml.math.allclose(dres, expected_dres)
 
@@ -294,12 +295,12 @@ class TestCorrectResults:
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (2.0,))
 
         assert qml.math.allclose(res[0], 0)
-        assert qml.math.allclose(res[1], -jax.numpy.sin(x))
-        assert qml.math.allclose(res[2], jax.numpy.cos(x))
+        assert qml.math.allclose(res[1], -jnp.sin(x))
+        assert qml.math.allclose(res[2], jnp.cos(x))
 
         assert qml.math.allclose(dres[0], 0)
-        assert qml.math.allclose(dres[1], 2.0 * -jax.numpy.cos(x))
-        assert qml.math.allclose(dres[2], 2.0 * -jax.numpy.sin(x))
+        assert qml.math.allclose(dres[1], 2.0 * -jnp.cos(x))
+        assert qml.math.allclose(dres[2], 2.0 * -jnp.sin(x))
 
     def test_multiple_in_and_out(self):
         """Test that we can differentiate multiple inputs and outputs."""
@@ -309,10 +310,10 @@ class TestCorrectResults:
             qml.RY(y, 1)
             return qml.expval(qml.Y(0)), qml.expval(qml.X(1))
 
-        x = jax.numpy.array(0.5)
-        y = jax.numpy.array(1.2)
-        dx = jax.numpy.array(2.0)
-        dy = jax.numpy.array(3.0)
+        x = jnp.array(0.5)
+        y = jnp.array(1.2)
+        dx = jnp.array(2.0)
+        dy = jnp.array(3.0)
 
         jaxpr = jax.make_jaxpr(f)(x, y)
 
@@ -323,10 +324,10 @@ class TestCorrectResults:
 
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, args, tangents)
 
-        expected = -jax.numpy.sin(x), jax.numpy.sin(y)
+        expected = -jnp.sin(x), jnp.sin(y)
         assert qml.math.allclose(res, expected)
 
-        expected_dres = dx * -jax.numpy.cos(x), dy * jax.numpy.cos(y)
+        expected_dres = dx * -jnp.cos(x), dy * jnp.cos(y)
         assert qml.math.allclose(dres, expected_dres)
 
     def test_input_array(self):
@@ -337,27 +338,24 @@ class TestCorrectResults:
             qml.RX(x[1], 1)
             return qml.expval(qml.Z(0) @ qml.Z(1))
 
-        x = jax.numpy.array([1.5, 2.5])
-        dx = jax.numpy.array([2.0, 3.0])
+        x = jnp.array([1.5, 2.5])
+        dx = jnp.array([2.0, 3.0])
         jaxpr = jax.make_jaxpr(f)(x)
 
         dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
-        expected = jax.numpy.cos(x[0]) * jax.numpy.cos(x[1])
+        expected = jnp.cos(x[0]) * jnp.cos(x[1])
         assert qml.math.allclose(res, expected)
-        dexpected = (
-            -jax.numpy.sin(x[0]) * dx[0] * jax.numpy.cos(x[1])
-            + jax.numpy.cos(x[0]) * -jax.numpy.sin(x[1]) * dx[1]
-        )
+        dexpected = -jnp.sin(x[0]) * dx[0] * jnp.cos(x[1]) + jnp.cos(x[0]) * -jnp.sin(x[1]) * dx[1]
         assert qml.math.allclose(dres, dexpected)
 
     def test_jaxpr_consts(self):
         """Test that we can execute jaxpr with consts."""
 
         def f():
-            x = jax.numpy.array([1.0])
+            x = jnp.array([1.0])
             qml.RX(x[0], 0)
             return qml.expval(qml.Z(0))
 
@@ -365,17 +363,17 @@ class TestCorrectResults:
 
         dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
-        const = jax.numpy.array([1.2])
-        dconst = jax.numpy.array([0.25])
+        const = jnp.array([1.2])
+        dconst = jnp.array([0.25])
         [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (const,), (dconst,))
 
-        assert qml.math.allclose(res, jax.numpy.cos(1.2))
-        assert qml.math.allclose(dres, dconst[0] * -jax.numpy.sin(1.2))
+        assert qml.math.allclose(res, jnp.cos(1.2))
+        assert qml.math.allclose(dres, dconst[0] * -jnp.sin(1.2))
 
     def test_jaxpr_consts_and_traced_args(self):
         """Test that we can execute jaxpr with consts and traced arguments together."""
 
-        const = jax.numpy.array(0.5)
+        const = jnp.array(0.5)
 
         def f(x):
             qml.RX(const, 0)
@@ -383,22 +381,20 @@ class TestCorrectResults:
             qml.CNOT((0, 1))
             return qml.expval(qml.Y(0))
 
-        x = jax.numpy.array(0.5)
-        y = jax.numpy.array(1.2)
-        dx = jax.numpy.array(2.0)
-        dy = jax.numpy.array(3.0)
+        x = jnp.array(0.5)
+        y = jnp.array(1.2)
+        dx = jnp.array(2.0)
+        dy = jnp.array(3.0)
 
         jaxpr = jax.make_jaxpr(f)(x)
 
         dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
         [res], [dres] = dev_jaxpr_jvp(jaxpr.jaxpr, (x, y), (dx, dy))
-        expected = -jax.numpy.sin(x) * jax.numpy.sin(y)
+        expected = -jnp.sin(x) * jnp.sin(y)
         assert qml.math.allclose(res, expected)
 
-        expected_dres = dx * -jax.numpy.cos(x) * jax.numpy.sin(y) + dy * -jax.numpy.sin(
-            x
-        ) * jax.numpy.cos(y)
+        expected_dres = dx * -jnp.cos(x) * jnp.sin(y) + dy * -jnp.sin(x) * jnp.cos(y)
         assert qml.math.allclose(dres, expected_dres)
 
     def test_multi_param_op(self):
@@ -417,10 +413,10 @@ class TestCorrectResults:
 
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, x, dx)
 
-        expected = jax.numpy.cos(x[1])
+        expected = jnp.cos(x[1])
         assert qml.math.allclose(res, expected)
 
-        expected_dres = x[1] * -jax.numpy.sin(x[1])
+        expected_dres = x[1] * -jnp.sin(x[1])
         assert qml.math.allclose(dres, expected_dres)
 
     def test_multi_param_op_array(self):
@@ -432,15 +428,15 @@ class TestCorrectResults:
 
         dev_jaxpr_jvp = qml.device(device_name, wires=2).jaxpr_jvp
 
-        x = jax.numpy.array([0.5, 0.6, 0.7])
-        dx = jax.numpy.array([0.5, 0.6, 0.7])
+        x = jnp.array([0.5, 0.6, 0.7])
+        dx = jnp.array([0.5, 0.6, 0.7])
 
         jaxpr = jax.make_jaxpr(f)(x)
 
         res, dres = dev_jaxpr_jvp(jaxpr.jaxpr, (x,), (dx,))
 
-        expected = jax.numpy.cos(x[1])
+        expected = jnp.cos(x[1])
         assert qml.math.allclose(res, expected)
 
-        expected_dres = x[1] * -jax.numpy.sin(x[1])
+        expected_dres = x[1] * -jnp.sin(x[1])
         assert qml.math.allclose(dres, expected_dres)

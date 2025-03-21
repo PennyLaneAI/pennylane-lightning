@@ -565,7 +565,7 @@ class LightningBase(Device):
         Args:
             jaxpr (jax.core.Jaxpr): Pennylane variant jaxpr containing quantum operations
                 and measurements
-            args (Sequence[TensorLike]): the arguments to the ``jaxpr``. Should contain ``consts`` followed 
+            args (Sequence[TensorLike]): the arguments to the ``jaxpr``. Should contain ``consts`` followed
                 by non-constant arguments
             tangents (Sequence[TensorLike]): the tangents corresponding to ``args``.
                 May contain ``jax.interpreters.ad.Zero``.
@@ -583,13 +583,14 @@ class LightningBase(Device):
             This has strict limitations. The ``args`` should contain the concatenation of ``jaxpr.constvars`` and ``jaxpr.invars``,
             which are assumed to represent the trainable parameters of the circuit.
             The method will raise an error if ``args`` do not match exactly the parameters of the tape created from the jaxpr.
+            Finally, only the adjoint method is supported for gradient calculation on LightningBase devices.
 
         """
 
         # pylint: disable=import-outside-toplevel
         import jax
 
-        from pennylane_lightning.core.jaxpr_adjoint import (
+        from pennylane_lightning.core.jaxpr_jvp import (
             convert_jaxpr_to_tape,
             get_output_shapes,
             validate_args_tangents,

@@ -74,6 +74,7 @@ def get_output_shapes(jaxpr: "jax.core.Jaxpr", num_wires: int) -> Tuple:
 
     def _get_shape(var):
         if isinstance(var.aval, AbstractMeasurement):
+            # Shots-based measurements are not supported at this time
             s, dtype = var.aval.abstract_eval(num_device_wires=num_wires, shots=0)
             return jax.core.ShapedArray(s, dtype_map[dtype])
         raise NotImplementedError("The circuit should return a measurement")
@@ -85,6 +86,7 @@ def get_output_shapes(jaxpr: "jax.core.Jaxpr", num_wires: int) -> Tuple:
         return [jax.core.ShapedArray((), aval.dtype) for _ in range(num_elements)]
 
     def _get_jacobian_shape(shape_res):
+        # We assume that all arguments to the JAXPR are trainable parameters
         train_args = jaxpr.invars + jaxpr.constvars
         flattened = [scalar for var in train_args for scalar in _flatten_shaped_array(var.aval)]
         if len(jaxpr.outvars) == 1:
