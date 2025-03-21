@@ -24,7 +24,6 @@
 namespace {
 using namespace Pennylane::LightningKokkos;
 } // namespace
-/// @endcond
 
 namespace Pennylane::LightningKokkos::Util {
 template <class StateVector> struct StateVectorToName;
@@ -40,3 +39,4 @@ using TestStateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
 } // namespace Pennylane::LightningKokkos::Util
+/// @endcond

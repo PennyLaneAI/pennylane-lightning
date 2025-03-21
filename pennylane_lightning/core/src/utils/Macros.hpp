@@ -19,6 +19,7 @@
 #include <array>
 #include <string>
 
+/// @cond DEV
 #if defined(PL_USE_OMP) && !(__has_include(<omp.h>) && defined(_OPENMP))
 #undef PL_USE_OMP
 #endif
@@ -83,6 +84,7 @@
 #define PL_FORCE_INLINE
 #endif
 #endif
+/// @endcond
 
 namespace Pennylane::Util {
 /* Create constexpr values */
@@ -92,9 +94,9 @@ namespace Pennylane::Util {
 #else
 [[maybe_unused]] static constexpr bool use_openmp = false;
 #endif
-/// @endcond
 
 enum class CPUArch { X86_64, PPC64, ARM, Unknown };
+/// @endcond
 
 constexpr auto getCPUArchClangGCC() {
 #if defined(__x86_64__)
@@ -128,7 +130,6 @@ constexpr auto getCPUArchMSVC() {
 #else
 [[maybe_unused]] constexpr static auto cpu_arch = CPUArch::Unknown;
 #endif
-/// @endcond
 
 enum class OperatingSystem { Linux, Windows, MacOS, Unknown };
 
@@ -147,6 +148,7 @@ enum class OperatingSystem { Linux, Windows, MacOS, Unknown };
 #endif
 
 enum class Compiler { GCC, Clang, MSVC, NVCC, NVHPC, Unknown };
+/// @endcond
 
 /**
  * @brief When none of the specialized functions is called.
@@ -233,7 +235,6 @@ constexpr auto getCompilerVersion<Compiler::NVHPC>() -> std::string_view {
 #else
 [[maybe_unused]] constexpr static auto compiler = Compiler::Unknown;
 #endif
-/// @endcond
 [[maybe_unused]] constexpr std::array compiler_names = {
     std::pair{Compiler::NVCC, std::string_view{"NVCC"}},
     std::pair{Compiler::NVHPC, std::string_view{"NVHPC"}},
@@ -242,4 +243,5 @@ constexpr auto getCompilerVersion<Compiler::NVHPC>() -> std::string_view {
     std::pair{Compiler::MSVC, std::string_view{"MSVC"}},
     std::pair{Compiler::Unknown, std::string_view{"Unknown"}},
 };
+/// @endcond
 } // namespace Pennylane::Util

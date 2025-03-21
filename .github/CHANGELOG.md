@@ -8,6 +8,9 @@
 
 ### Improvements
 
+* Hide internal C++ APIs in Lightning docs.
+  [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
+
 * Implemented the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
   This method currently only support the adjoint differentiation method.
   [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)

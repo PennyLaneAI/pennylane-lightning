@@ -333,9 +333,11 @@ struct HandleDeleter {
     }
 };
 
+/// @cond DEV
 using SharedCublasCaller = std::shared_ptr<CublasCaller>;
 using SharedCusparseHandle =
     std::shared_ptr<std::remove_pointer<cusparseHandle_t>::type>;
+/// @endcond
 
 /**
  * @brief Creates a SharedCublasCaller (a shared pointer to a CublasCaller)

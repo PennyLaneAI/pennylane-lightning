@@ -33,6 +33,7 @@
 #include "TypeTraits.hpp"
 #include "Util.hpp" // INVSQRT2
 
+/// @cond DEV
 namespace Pennylane::Util {
 template <class T, class Alloc = std::allocator<T>> struct PLApprox {
     const std::vector<T, Alloc> &comp_;
@@ -643,3 +644,4 @@ inline auto samples_to_decimal(const std::vector<std::size_t> &samples,
     CHECK_THROWS_WITH(expr, Catch::Matchers::Contains(message_match));
 
 } // namespace Pennylane::Util
+/// @endcond
