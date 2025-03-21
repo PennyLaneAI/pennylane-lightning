@@ -44,9 +44,12 @@ using Pennylane::Util::exp2;
 namespace py = pybind11;
 
 namespace Pennylane::LightningKokkos {
+/// @cond DEV
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorKokkos<float>,
                               StateVectorKokkos<double>, void>;
+/// @endcond
+
 /**
  * @brief Register controlled matrix kernel.
  */

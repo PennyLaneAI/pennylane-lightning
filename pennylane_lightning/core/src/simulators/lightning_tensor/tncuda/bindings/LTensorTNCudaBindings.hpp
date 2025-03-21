@@ -47,9 +47,11 @@ using namespace Pennylane::LightningTensor::TNCuda::Util;
 namespace py = pybind11;
 
 namespace Pennylane::LightningTensor::TNCuda {
+/// @cond DEV
 using TensorNetworkBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>,
                               ExactTNCuda<float>, ExactTNCuda<double>, void>;
+/// @endcond
 
 /**
  * @brief Register controlled matrix kernel.
