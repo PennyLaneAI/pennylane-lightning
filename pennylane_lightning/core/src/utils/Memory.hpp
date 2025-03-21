@@ -207,7 +207,7 @@ struct External {};
 struct Undefined {};
 } // namespace MemoryStorageLocation
 
-///@cond DEV
+/// @cond DEV
 template <class PrecisionT, class TypeList> struct commonAlignmentHelper {
     constexpr static std::size_t value = std::max(
         TypeList::Type::template required_alignment<PrecisionT>,

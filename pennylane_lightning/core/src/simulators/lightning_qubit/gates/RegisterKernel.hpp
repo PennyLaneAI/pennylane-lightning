@@ -222,7 +222,6 @@ constexpr auto constructControlledMatrixOpsFunctorTupleIter() {
                 PrecisionT, GateImplementation, mat_idx + 1>());
     }
 }
-/// @endcond
 
 /**
  * @brief Tuple of gate operation and function pointer pairs.

@@ -25,7 +25,6 @@
 namespace {
 using namespace Pennylane::LightningQubit;
 } // namespace
-/// @endcond
 
 namespace Pennylane::LightningQubit::Util {
 template <class StateVector> struct StateVectorToName;
@@ -47,3 +46,4 @@ using TestStateVectorBackends = Pennylane::Util::TypeList<
     StateVectorLQubitManaged<float>, StateVectorLQubitManaged<double>,
     StateVectorLQubitRaw<float>, StateVectorLQubitRaw<double>, void>;
 } // namespace Pennylane::LightningQubit::Util
+/// @endcond
