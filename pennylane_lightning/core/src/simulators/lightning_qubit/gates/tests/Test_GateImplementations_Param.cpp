@@ -2929,7 +2929,7 @@ TEMPLATE_TEST_CASE(
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
-    
+
     DYNAMIC_SECTION("N-controlled PCPhase - "
                     << "controls = {" << control << ", " << wire0 << ", "
                     << wire1 << "} "
@@ -2938,7 +2938,6 @@ TEMPLATE_TEST_CASE(
         bool inverse = GENERATE(false, true);
         PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
         PrecisionT dimension = 3.0;
-
 
         std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
         std::sort(wires.begin(), wires.end());
@@ -2957,15 +2956,15 @@ TEMPLATE_TEST_CASE(
             sv0.applyControlledMatrix(matrix.data(), {control, wire0, wire1},
                                       std::vector<bool>{true, false, true},
                                       {wire2, wire3}, inverse);
-            sv1.applyOperation(
-                "PCPhase", std::vector<std::size_t>{control, wire0, wire1},
-                std::vector<bool>{true, false, true},
-                std::vector<std::size_t>{wire2, wire3}, inverse, {param, dimension});
+            sv1.applyOperation("PCPhase",
+                               std::vector<std::size_t>{control, wire0, wire1},
+                               std::vector<bool>{true, false, true},
+                               std::vector<std::size_t>{wire2, wire3}, inverse,
+                               {param, dimension});
             REQUIRE(sv0.getDataVector() ==
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
-
 }
 
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyGlobalPhase",
