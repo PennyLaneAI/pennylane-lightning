@@ -35,7 +35,7 @@ namespace {
 namespace cuUtil = Pennylane::LightningGPU::Util;
 using namespace Pennylane::LightningTensor::TNCuda::Util;
 } // namespace
-///@endcond
+/// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda {
 /**

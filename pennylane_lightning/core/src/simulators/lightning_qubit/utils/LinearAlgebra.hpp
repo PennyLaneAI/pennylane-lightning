@@ -59,6 +59,7 @@ using namespace Pennylane::Util;
 /// @endcond
 
 namespace Pennylane::LightningQubit::Util {
+/// @cond DEV
 /**
  * @brief Transpose enum class
  */
@@ -67,6 +68,8 @@ enum class Trans : int {
     Transpose = CblasTrans,
     Adjoint = CblasConjTrans
 };
+/// @endcond
+
 /**
  * @brief Calculates the inner-product using OpenMP.
  *

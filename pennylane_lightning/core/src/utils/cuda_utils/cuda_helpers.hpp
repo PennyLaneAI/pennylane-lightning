@@ -286,6 +286,7 @@ template <class CFP_t> inline static constexpr auto INVSQRT2IMAG() -> CFP_t {
     }
 }
 
+/// @cond DEV
 /**
  * If T is a supported data type for gates, this expression will
  * evaluate to `true`. Otherwise, it will evaluate to `false`.
@@ -298,6 +299,7 @@ template <class T>
 constexpr bool is_supported_data_type =
     std::is_same_v<T, cuComplex> || std::is_same_v<T, float2> ||
     std::is_same_v<T, cuDoubleComplex> || std::is_same_v<T, double2>;
+/// @endcond
 
 /**
  * @brief Simple overloaded method to define CUDA data type.
