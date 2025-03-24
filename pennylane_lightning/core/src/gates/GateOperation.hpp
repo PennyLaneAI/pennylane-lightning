@@ -72,8 +72,7 @@ enum class GateOperation : uint32_t {
     END
 };
 
-enum class ControlledGateOperation : uint32_t
-{
+enum class ControlledGateOperation : uint32_t {
     BEGIN = 0,
     /* Single-qubit gates */
     PauliX = 0,

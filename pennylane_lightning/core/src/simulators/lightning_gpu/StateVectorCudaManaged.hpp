@@ -333,24 +333,23 @@ class StateVectorCudaManaged
 
             const PrecisionT phase = adjoint ? -params[0] : params[0];
 
-            CFP_t upper_complex{std::cos(phase), std::sin(phase)};
-            CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
+            const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
+            const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
             std::vector<CFP_t> diagonal(
-                Pennylane::Util::exp2(tgts.size() + ctrls.size()) * 2 , lower_complex);
+                Pennylane::Util::exp2(tgts.size() + ctrls.size()) * 2,
+                lower_complex);
 
-            for (std::size_t i = 0; i < dimension; i++) {
-                diagonal[i] = upper_complex;
-            }
+            std::fill(diagonal.begin(), diagonal.begin() + dimension,
+                      upper_complex);
 
             std::vector<std::size_t> combined_tgts(tgts.size() + ctrls.size());
-            std::copy(ctrls.begin(), ctrls.end(),
-                      combined_tgts.begin());
+            std::copy(ctrls.begin(), ctrls.end(), combined_tgts.begin());
             std::copy(tgts.begin(), tgts.end(),
                       combined_tgts.begin() + ctrls.size());
 
-            applyDevicePermutationGate_({}, diagonal.data(), {},
-                                        combined_tgts, {}, false);
+            applyDevicePermutationGate_({}, diagonal.data(), {}, combined_tgts,
+                                        {}, adjoint);
 
         } else if (native_gates_.find(opName) != native_gates_.end()) {
             applyParametricPauliGate_({opName}, ctrls, tgts, params.front(),
@@ -449,19 +448,17 @@ class StateVectorCudaManaged
         } else if (opName == "PCPhase") {
 
             const std::size_t dimension = static_cast<std::size_t>(params[1]);
-            
-            PrecisionT first = adjoint ? params[0] : -params[0];
-            PrecisionT second = adjoint ? -params[0] : params[0];
 
-            CFP_t first_complex{std::cos(first), -std::sin(first)};
-            CFP_t second_complex{std::cos(second), -std::sin(second)}; 
+            const PrecisionT phase = adjoint ? -params[0] : params[0];
+
+            const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
+            const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
             std::vector<CFP_t> diagonal(
-                Pennylane::Util::exp2(tgt_wires.size()) * 2 , second_complex);
+                Pennylane::Util::exp2(tgt_wires.size()) * 2, lower_complex);
 
-            for (std::size_t i = 0; i < dimension; i++) {
-                diagonal[i] = first_complex;
-            }
+            std::fill(diagonal.begin(), diagonal.begin() + dimension,
+                      upper_complex);
 
             applyDevicePermutationGate_({}, diagonal.data(), controlled_wires,
                                         tgt_wires, controlled_values, adjoint);

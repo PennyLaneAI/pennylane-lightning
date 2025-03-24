@@ -253,21 +253,21 @@ class LightningGPUStateVector(LightningBaseStateVector):
             base_operation = operation.base
 
         method = getattr(state, f"{base_operation.name}", None)
+
         control_wires = list(operation.control_wires)
         control_values = operation.control_values
         target_wires = list(operation.target_wires)
+
         if method:  # apply n-controlled specialized gate
             param = operation.parameters
-            if(isinstance(base_operation, qml.PCPhase)):
-                print("FDX: Ctrl PCPhase")
+            if isinstance(base_operation, qml.PCPhase):
+                # PCPhase has hyperparameters for dimension
                 hyper = [float(i) for i in base_operation.hyperparameters["dimension"]]
                 param = np.array(operation.parameters + hyper)
-                # [print(np.round(p, 4)) for p in param]
                 method(control_wires, control_values, target_wires, adjoint, param)
             else:
                 method(control_wires, control_values, target_wires, adjoint, param)
 
-            
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
@@ -349,14 +349,11 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 )
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
-                
-                if(isinstance(op_adjoint_base, qml.PCPhase)):
-                    # print("FDX: PCPhase")
-                    # print("Hyper",operation.hyperparameters["dimension"])
-                    print("FDX: PCPhase")
+
+                if isinstance(op_adjoint_base, qml.PCPhase):
+                    # PCPhase has hyperparameters for dimension
                     hyper = [float(i) for i in op_adjoint_base.hyperparameters["dimension"]]
                     param = np.array(op_adjoint_base.parameters + hyper)
-                    # [print(np.round(p, 4)) for p in param]
                     method(wires, invert_param, param)
                 else:
                     method(wires, invert_param, param)

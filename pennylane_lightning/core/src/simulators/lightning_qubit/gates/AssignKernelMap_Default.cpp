@@ -319,9 +319,9 @@ void assignKernelsForControlledGateOp_Default() {
     instance.assignKernelForOp(ControlledGateOperation::GlobalPhase,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
-    instance.assignKernelForOp(ControlledGateOperation::PCPhase,
-                               all_threading, all_memory_model,
-                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::PCPhase, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 }
 void assignKernelsForControlledGeneratorOp_Default() {
     auto &instance =

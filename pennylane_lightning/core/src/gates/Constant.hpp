@@ -86,8 +86,7 @@ using GateView = typename std::pair<GateOperation, std::string_view>;
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
     GateView{GateOperation::MultiRZ, "MultiRZ"},
     GateView{GateOperation::GlobalPhase, "GlobalPhase"},
-    GateView{GateOperation::PCPhase, "PCPhase"}
-};
+    GateView{GateOperation::PCPhase, "PCPhase"}};
 
 using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {

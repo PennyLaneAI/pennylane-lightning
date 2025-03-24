@@ -1392,90 +1392,82 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
 
 TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
                    double) {
+
+    /*
+        The circuit for this test is as follows:
+
+        ``` python
+        import pennylane as qml
+        import numpy as np
+
+        tgts = [1, 2]
+        def circuit(use_controls=False, use_adj=False):
+            [qml.Hadamard(i) for i in range(n_wires)]
+
+            if use_controls:
+                qml.ctrl(qml.PCPhase(0.27, dim = 3, wires=tgts), control=[0],
+       control_values=[1]) elif use_adj: qml.adjoint(qml.PCPhase(0.27, dim = 3,
+       wires=tgts)) else: qml.PCPhase(0.27, dim = 3, wires=tgts)
+
+            return qml.state()
+
+        n_wires = 3
+        dev = qml.device('lightning.gpu', wires=n_wires)
+        qnode_gpu = qml.QNode(circuit, dev)
+        res = qnode_gpu(use_controls=False, use_adj=False)
+        print(np.round(res, 12))
+
+        ```
+    */
     using cp_t = std::complex<TestType>;
     const std::size_t num_qubits = 3;
 
     StateVectorCudaManaged<TestType> sv{num_qubits};
     sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
-                              {{0}, {1}, {2}}, {false, false, false});
+                       {{0}, {1}, {2}}, {false, false, false});
 
     const TestType phase = 0.27;
     const TestType dimension = 3;
 
     std::vector<TestType> params{phase, dimension};
 
-
-    
     const auto init_state = sv.getDataVector();
+    const bool inverse = GENERATE(false, true);
 
-    SECTION("Apply using dispatcher adjoint=false") {
-        std::vector<cp_t> expected_results(1 << num_qubits, {0.34074447, 0.0943038});
-        SECTION("PCPhase 0.27 1,2")
-        {
+    SECTION("Apply using dispatcher") {
+        std::vector<cp_t> expected_results(1 << num_qubits,
+                                           {0.34074447, 0.0943038});
+
+
+        DYNAMIC_SECTION("PCPhase 0.27 1,2"
+                        << " inverse = " << inverse) {
+
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
+
+            sv_direct.applyOperation("PCPhase", {1, 2}, inverse, params);
+
             expected_results[3] = std::conj(expected_results[3]);
             expected_results[7] = std::conj(expected_results[7]);
 
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
-                                                       init_state.size()};
-
-            sv_direct.applyOperation("PCPhase", {1, 2}, false,
-                                       params);
-
-
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
+        DYNAMIC_SECTION("PCPhase 0.27 0,2"
+                        << " inverse = " << inverse) {
 
-        SECTION("PCPhase 0.27 0,2") {
             StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
                                                        init_state.size()};
 
-            sv_direct.applyOperation("PCPhase", {0,2}, false,
-                                       params);
+            sv_direct.applyOperation("PCPhase", {0, 2}, inverse, params);
 
-            expected_results[5] = std::conj(expected_results[3]);
+            expected_results[5] = std::conj(expected_results[5]);
             expected_results[7] = std::conj(expected_results[7]);
 
             CHECK(sv_direct.getDataVector() ==
                   Pennylane::Util::approx(expected_results));
         }
-
-
     }
-
-    SECTION("Apply using dispatcher adjoint=true") {
-        std::vector<cp_t> expected_results(1 << num_qubits, {0.34074447, -0.0943038});
-        SECTION("PCPhase 0.27 1,2")
-        {
-            expected_results[3] = std::conj(expected_results[3]);
-            expected_results[7] = std::conj(expected_results[7]);
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
-                                                       init_state.size()};
-
-            sv_direct.applyOperation("PCPhase", {1, 2}, true,
-                                       params);
-
-            CHECK(sv_direct.getDataVector() ==
-                  Pennylane::Util::approx(expected_results));
-        }
-
-        SECTION("PCPhase 0.27 0,2") {
-            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
-                                                       init_state.size()};
-
-            sv_direct.applyOperation("PCPhase", {0,2}, true,
-                                       params);
-
-            expected_results[5] = std::conj(expected_results[3]);
-            expected_results[7] = std::conj(expected_results[7]);
-
-            CHECK(sv_direct.getDataVector() ==
-                  Pennylane::Util::approx(expected_results));
-        }
-
-
-    }
-
 }
 
 // NOLINTNEXTLINE: Avoid complexity errors
@@ -2076,5 +2068,70 @@ TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledGlobalPhase",
         tmp *= ComplexT(sv_data[j]);
         CHECK((real(result_sv[j])) == Approx(real(tmp)));
         CHECK((imag(result_sv[j])) == Approx(imag(tmp)));
+    }
+}
+
+TEMPLATE_TEST_CASE("StateVectorCudaManaged::applyControlledPCPhase",
+                   "[StateVectorCudaManaged_Param]", float, double) {
+    using ComplexT = StateVectorCudaManaged<TestType>::ComplexT;
+    const std::size_t num_qubits = 3;
+    const bool inverse = GENERATE(false, true);
+
+    StateVectorCudaManaged<TestType> sv{num_qubits};
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                       {{0}, {1}, {2}}, {false, false, false});
+
+    const TestType phase = 0.27;
+    const TestType dimension = 3;
+
+    std::vector<TestType> params{phase, dimension};
+
+    std::vector<bool> ctrl_vals = {1};
+
+    const auto init_state = sv.getDataVector();
+
+    SECTION("Apply using controls and dispatcher") {
+        std::vector<ComplexT> expected_results(1 << num_qubits,
+                                               {0.34074447, 0.0943038});
+        DYNAMIC_SECTION("PCPhase 0.27 1,2"
+                        << " inverse = " << inverse) {
+
+            for (std::size_t j = 0; j < 4; j++) {
+                expected_results[j] = ComplexT{0.35355339, 0.0};
+            }
+
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
+            std::vector<std::size_t> ctrls = {0};
+
+            sv_direct.applyOperation("PCPhase", ctrls, ctrl_vals, {1, 2},
+                                     inverse, params);
+
+            expected_results[3] = std::conj(expected_results[3]);
+            expected_results[7] = std::conj(expected_results[7]);
+
+            CHECK(sv_direct.getDataVector() ==
+                  Pennylane::Util::approx(expected_results));
+        }
+
+        DYNAMIC_SECTION("PCPhase 0.27 0,2"
+                        << " inverse = " << inverse) {
+
+            for (auto index : {0, 1, 4, 5}) {
+                expected_results[index] = ComplexT{0.35355339, 0.0};
+            }
+
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
+            std::vector<std::size_t> ctrls = {1};
+
+            sv_direct.applyOperation("PCPhase", ctrls, ctrl_vals, {0, 2},
+                                     inverse, params);
+
+            expected_results[7] = std::conj(expected_results[7]);
+
+            CHECK(sv_direct.getDataVector() ==
+                  Pennylane::Util::approx(expected_results));
+        }
     }
 }

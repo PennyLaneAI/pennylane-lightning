@@ -1964,14 +1964,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
 
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
-        
+
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
-        
+
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-        
+
         std::size_t wires_parity = 0U;
         for (std::size_t wire : wires) {
             wires_parity |=
@@ -1989,7 +1989,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
     }
-    
+
     template <class PrecisionT, class ParamT>
     static void
     applyGlobalPhase(std::complex<PrecisionT> *arr, std::size_t num_qubits,
@@ -2036,20 +2036,21 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT>
-    static void applyPCPhase(
-        [[maybe_unused]] std::complex<PrecisionT> *arr, 
-        [[maybe_unused]] std::size_t num_qubits,
-                     [[maybe_unused]] const std::vector<std::size_t> &wires,
-                     [[maybe_unused]] bool inverse,
-                     [[maybe_unused]] ParamT angle,
-                     [[maybe_unused]] ParamT dim){
+    static void
+    applyPCPhase([[maybe_unused]] std::complex<PrecisionT> *arr,
+                 [[maybe_unused]] std::size_t num_qubits,
+                 [[maybe_unused]] const std::vector<std::size_t> &wires,
+                 [[maybe_unused]] bool inverse, [[maybe_unused]] ParamT angle,
+                 [[maybe_unused]] ParamT dim) {
 
         PL_ABORT("applyPCPhase is not implemented yet.");
         // const std::complex<PrecisionT> first =
-        //     std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        //     std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle /
+        //     2)};
 
         // const std::complex<PrecisionT> second =
-        //     std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+        //     std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle /
+        //     2)};
 
         // const std::array<std::complex<PrecisionT>, 2> shifts = {
         //     (inverse) ? std::conj(first) : first,
@@ -2076,13 +2077,12 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         [[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
         [[maybe_unused]] const std::vector<bool> &controlled_values,
         [[maybe_unused]] const std::vector<std::size_t> &wires,
-        [[maybe_unused]] bool inverse,
-        [[maybe_unused]] ParamT angle,
-        [[maybe_unused]] ParamT dim)
-    {
+        [[maybe_unused]] bool inverse, [[maybe_unused]] ParamT angle,
+        [[maybe_unused]] ParamT dim) {
         PL_ABORT("applyNCPCPhase is not implemented yet.");
         // const std::complex<PrecisionT> phase =
-        //     std::exp(std::complex<PrecisionT>(0, inverse ? angle * dim : -angle));
+        //     std::exp(std::complex<PrecisionT>(0, inverse ? angle * dim :
+        //     -angle));
         // auto core_function = [&phase](std::complex<PrecisionT> *arr,
         //                               const std::size_t i0,
         //                               const std::size_t i1)
@@ -2095,7 +2095,8 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         // {
         //     for (std::size_t i = 0; i < num_qubits; i++)
         //     {
-        //         if (std::find(controlled_wires.begin(), controlled_wires.end(),
+        //         if (std::find(controlled_wires.begin(),
+        //         controlled_wires.end(),
         //                       i) == controlled_wires.end())
         //         {
         //             target = i;

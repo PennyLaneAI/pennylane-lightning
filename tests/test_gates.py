@@ -138,6 +138,11 @@ def op(op_name):
             [[[0.2, 0, 0.2], [-0.2, 0.2, 0]]],
             {"wires": [0, 1, 2]},
         ],
+        "PCPhase": [
+            qml.PCPhase,
+            [0.123],
+            {"dim": 3, "wires": [0, 1]},
+        ],
     }
     return ops_list.get(op_name)
 
@@ -151,6 +156,9 @@ def test_gate_unitary_correct(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
+        
+    if device_name != "lightning.gpu" and op == qml.PCPhase:
+        pytest.skip("PCPhase only supported on lightning.gpu.")
 
     wires = len(op[2]["wires"])
 
@@ -217,6 +225,9 @@ def test_gate_unitary_correct_lt(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
+
+    if device_name != "lightning.gpu" and op == qml.PCPhase:
+        pytest.skip("PCPhase only supported on lightning.gpu.")
 
     wires = len(op[2]["wires"])
 
@@ -504,6 +515,7 @@ def test_controlled_qubit_unitary(n_qubits, control_value, tol):
         qml.DoubleExcitationPlus,
         qml.MultiRZ,
         qml.GlobalPhase,
+        qml.PCPhase,
     ],
 )
 @pytest.mark.parametrize("adjoint", [False, True])
@@ -517,6 +529,9 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
     num_wires = max(operation.num_wires, 1)
     operation = qml.adjoint(operation) if adjoint else operation
 
+    if device_name != "lightning.gpu" and operation == qml.PCPhase:
+        pytest.skip("PCPhase only supported on lightning.gpu.")
+
     for n_wires in range(num_wires + 1, num_wires + 4):
         wire_lists = list(itertools.permutations(range(0, n_qubits), n_wires))
         n_perms = len(wire_lists) * n_wires
@@ -527,6 +542,14 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
             control_wires = all_wires[num_wires:]
             init_state = np.random.rand(2**n_qubits) + 1.0j * np.random.rand(2**n_qubits)
             init_state /= np.linalg.norm(init_state)
+
+            if operation.num_params == 0:
+                operation_params = []
+            else:
+                operation_params = tuple([0.1234] * operation.num_params) + (target_wires,)
+                if operation == qml.PCPhase or (adjoint and operation.__name__ == "PCPhase"):
+                    # Hyperparameter for PCPhase is the dimension of the control space
+                    operation_params = (0.1234, 2) + (target_wires,)
 
             def circuit():
                 qml.StatePrep(init_state, wires=range(n_qubits))
@@ -542,7 +565,7 @@ def test_controlled_qubit_gates(operation, n_qubits, control_value, adjoint, tol
                     )
                 else:
                     qml.ctrl(
-                        operation(*tuple([0.1234] * operation.num_params), target_wires),
+                        operation(*operation_params),
                         control_wires,
                         control_values=(
                             [control_value or bool(i % 2) for i, _ in enumerate(control_wires)]
