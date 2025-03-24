@@ -272,6 +272,14 @@ struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
         &GateImplementation::template applyGlobalPhase<PrecisionT, ParamT>;
 };
 
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                             GateOperation::PCPhase>
+{
+    constexpr static auto value =
+        &GateImplementation::template applyPCPhase<PrecisionT, ParamT>;
+};
+
 template <class PrecisionT, class ParamT, class GateImplementation,
           ControlledGateOperation gate_op>
 struct ControlledGateOpToMemberFuncPtr {
@@ -439,6 +447,13 @@ struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                                        ControlledGateOperation::GlobalPhase> {
     constexpr static auto value =
         &GateImplementation::template applyNCGlobalPhase<PrecisionT, ParamT>;
+};
+template <class PrecisionT, class ParamT, class GateImplementation>
+struct ControlledGateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
+                                       ControlledGateOperation::PCPhase>
+{
+    constexpr static auto value =
+        &GateImplementation::template applyNCPCPhase<PrecisionT, ParamT>;
 };
 
 /**
@@ -761,7 +776,7 @@ namespace Internal {
  */
 template <class SVType, class ParamT, std::size_t num_params>
 struct GateMemFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
+    static_assert(num_params < 4,
                   "The given num_params is not supported.");
 };
 /**
@@ -776,6 +791,13 @@ template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 0> {
 template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 1> {
     using Type = void (SVType::*)(const std::vector<std::size_t> &, bool,
                                   ParamT);
+};
+/**
+ * @brief Function pointer type for a gate operation with a single parameter.
+ */
+template <class SVType, class ParamT> struct GateMemFuncPtr<SVType, ParamT, 2> {
+    using Type = void (SVType::*)(const std::vector<std::size_t> &, bool,
+                                  ParamT, ParamT);
 };
 /**
  * @brief Function pointer type for a gate operation with three parameters.
@@ -797,7 +819,7 @@ using GateMemFuncPtrT =
  */
 template <class PrecisionT, class ParamT, std::size_t num_params>
 struct GateFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
+    static_assert(num_params < 4,
                   "The given num_params is not supported.");
 };
 
@@ -818,6 +840,15 @@ struct GateFuncPtr<PrecisionT, ParamT, 1> {
                           const std::vector<std::size_t> &, bool, ParamT);
 };
 /**
+ * @brief Pointer type for a gate operation with a single parameter
+ */
+template <class PrecisionT, class ParamT>
+struct GateFuncPtr<PrecisionT, ParamT, 2> {
+    using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
+                          const std::vector<std::size_t> &, bool, ParamT,ParamT);
+};
+
+/**
  * @brief Pointer type for a gate operation with three parameters
  */
 template <class PrecisionT, class ParamT>
@@ -832,7 +863,7 @@ struct GateFuncPtr<PrecisionT, ParamT, 3> {
  */
 template <class PrecisionT, class ParamT, std::size_t num_params>
 struct ControlledGateFuncPtr {
-    static_assert(num_params < 2 || num_params == 3,
+    static_assert(num_params < 4,
                   "The given num_params is not supported.");
 };
 template <class PrecisionT, class ParamT>
@@ -849,6 +880,14 @@ struct ControlledGateFuncPtr<PrecisionT, ParamT, 1> {
                           const std::vector<bool> &,
                           const std::vector<std::size_t> &, bool, ParamT);
 };
+template <class PrecisionT, class ParamT>
+struct ControlledGateFuncPtr<PrecisionT, ParamT, 2> {
+    using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
+                          const std::vector<std::size_t> &,
+                          const std::vector<bool> &,
+                          const std::vector<std::size_t> &, bool, ParamT, ParamT);
+};
+
 template <class PrecisionT, class ParamT>
 struct ControlledGateFuncPtr<PrecisionT, ParamT, 3> {
     using Type = void (*)(std::complex<PrecisionT> *, std::size_t,
@@ -905,6 +944,7 @@ template <class PrecisionT> struct ControlledMatrixFuncPtr {
 template <class PrecisionT, class ParamT, std::size_t num_params>
 using GateFuncPtrT =
     typename Internal::GateFuncPtr<PrecisionT, ParamT, num_params>::Type;
+
 
 /**
  * @brief Convenient type alias for ControlledGateFuncPtrT.
@@ -978,6 +1018,19 @@ inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 1> func,
 }
 
 /**
+ * @brief Overload for a gate operation for a single parameter
+ */
+template <class PrecisionT, class ParamT>
+inline void callGateOps(GateFuncPtrT<PrecisionT, ParamT, 2> func,
+                        std::complex<PrecisionT> *data, std::size_t num_qubits,
+                        const std::vector<std::size_t> &wires, bool inverse,
+                        const std::vector<ParamT> &params) {
+    PL_ASSERT(params.size() == 2);
+    func(data, num_qubits, wires, inverse, params[0], params[1]);
+}
+
+
+/**
  * @brief Overload for a gate operation for three parameters
  */
 template <class PrecisionT, class ParamT>
@@ -1016,6 +1069,20 @@ callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 1> func,
     PL_ASSERT(params.size() == 1);
     func(data, num_qubits, controlled_wires, controlled_values, wires, inverse,
          params[0]);
+}
+
+template <class PrecisionT, class ParamT>
+inline void
+callControlledGateOps(ControlledGateFuncPtrT<PrecisionT, ParamT, 2> func,
+                      std::complex<PrecisionT> *data, std::size_t num_qubits,
+                      const std::vector<std::size_t> &controlled_wires,
+                      const std::vector<bool> &controlled_values,
+                      const std::vector<std::size_t> &wires, bool inverse,
+                      const std::vector<ParamT> &params)
+{
+    PL_ASSERT(params.size() == 2);
+    func(data, num_qubits, controlled_wires, controlled_values, wires, inverse,
+         params[0], params[1]);
 }
 
 template <class PrecisionT, class ParamT>

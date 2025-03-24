@@ -156,6 +156,9 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::GlobalPhase, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GateOperation::PCPhase, all_threading,
+                               all_memory_model, all_qubit_numbers,
+                               KernelType::LM);
 }
 
 void assignKernelsForGeneratorOp_Default() {
@@ -314,6 +317,9 @@ void assignKernelsForControlledGateOp_Default() {
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
     instance.assignKernelForOp(ControlledGateOperation::GlobalPhase,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
+    instance.assignKernelForOp(ControlledGateOperation::PCPhase,
                                all_threading, all_memory_model,
                                all_qubit_numbers, KernelType::LM);
 }

@@ -1390,6 +1390,94 @@ TEMPLATE_TEST_CASE("LightningGPU::applyMultiRZ", "[LightningGPU_Param]", float,
     }
 }
 
+TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
+                   double) {
+    using cp_t = std::complex<TestType>;
+    const std::size_t num_qubits = 3;
+
+    StateVectorCudaManaged<TestType> sv{num_qubits};
+    sv.applyOperations({{"Hadamard"}, {"Hadamard"}, {"Hadamard"}},
+                              {{0}, {1}, {2}}, {false, false, false});
+
+    const TestType phase = 0.27;
+    const TestType dimension = 3;
+
+    std::vector<TestType> params{phase, dimension};
+
+
+    
+    const auto init_state = sv.getDataVector();
+
+    SECTION("Apply using dispatcher adjoint=false") {
+        std::vector<cp_t> expected_results(1 << num_qubits, {0.34074447, 0.0943038});
+        SECTION("PCPhase 0.27 1,2")
+        {
+            expected_results[3] = std::conj(expected_results[3]);
+            expected_results[7] = std::conj(expected_results[7]);
+
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
+
+            sv_direct.applyOperation("PCPhase", {1, 2}, false,
+                                       params);
+
+
+            CHECK(sv_direct.getDataVector() ==
+                  Pennylane::Util::approx(expected_results));
+        }
+
+        SECTION("PCPhase 0.27 0,2") {
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
+
+            sv_direct.applyOperation("PCPhase", {0,2}, false,
+                                       params);
+
+            expected_results[5] = std::conj(expected_results[3]);
+            expected_results[7] = std::conj(expected_results[7]);
+
+            CHECK(sv_direct.getDataVector() ==
+                  Pennylane::Util::approx(expected_results));
+        }
+
+
+    }
+
+    SECTION("Apply using dispatcher adjoint=true") {
+        std::vector<cp_t> expected_results(1 << num_qubits, {0.34074447, -0.0943038});
+        SECTION("PCPhase 0.27 1,2")
+        {
+            expected_results[3] = std::conj(expected_results[3]);
+            expected_results[7] = std::conj(expected_results[7]);
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
+
+            sv_direct.applyOperation("PCPhase", {1, 2}, true,
+                                       params);
+
+            CHECK(sv_direct.getDataVector() ==
+                  Pennylane::Util::approx(expected_results));
+        }
+
+        SECTION("PCPhase 0.27 0,2") {
+            StateVectorCudaManaged<TestType> sv_direct{init_state.data(),
+                                                       init_state.size()};
+
+            sv_direct.applyOperation("PCPhase", {0,2}, true,
+                                       params);
+
+            expected_results[5] = std::conj(expected_results[3]);
+            expected_results[7] = std::conj(expected_results[7]);
+
+            CHECK(sv_direct.getDataVector() ==
+                  Pennylane::Util::approx(expected_results));
+        }
+
+
+    }
+
+}
+
 // NOLINTNEXTLINE: Avoid complexity errors
 TEMPLATE_TEST_CASE("LightningGPU::applyOperation 1 wire",
                    "[LightningGPU_Param]", float, double) {

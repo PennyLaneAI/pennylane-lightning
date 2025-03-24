@@ -154,6 +154,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ,
         GateOperation::GlobalPhase,
+        GateOperation::PCPhase,
     };
 
     constexpr static std::array implemented_controlled_gates = {
@@ -182,6 +183,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         ControlledGateOperation::DoubleExcitationPlus,
         ControlledGateOperation::MultiRZ,
         ControlledGateOperation::GlobalPhase,
+        ControlledGateOperation::PCPhase,
     };
 
     constexpr static std::array implemented_generators = {
@@ -1929,10 +1931,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                              std::size_t num_qubits,
                              const std::vector<std::size_t> &wires,
                              bool inverse, ParamT angle) {
+
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
@@ -1942,6 +1947,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             wires_parity |=
                 (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
         }
+
         PL_LOOP_PARALLEL(1)
         for (std::size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
@@ -1955,13 +1961,17 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
                                bool inverse, ParamT angle) {
+
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+        
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+        
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
+        
         std::size_t wires_parity = 0U;
         for (std::size_t wire : wires) {
             wires_parity |=
@@ -1979,6 +1989,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         applyNCN(arr, num_qubits, controlled_wires, controlled_values, wires,
                  core_function);
     }
+    
     template <class PrecisionT, class ParamT>
     static void
     applyGlobalPhase(std::complex<PrecisionT> *arr, std::size_t num_qubits,
@@ -2022,6 +2033,76 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                 arr, num_qubits, controlled_wires, controlled_values, {target},
                 core_function);
         }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyPCPhase(
+        [[maybe_unused]] std::complex<PrecisionT> *arr, 
+        [[maybe_unused]] std::size_t num_qubits,
+                     [[maybe_unused]] const std::vector<std::size_t> &wires,
+                     [[maybe_unused]] bool inverse,
+                     [[maybe_unused]] ParamT angle,
+                     [[maybe_unused]] ParamT dim){
+
+        PL_ABORT("applyPCPhase is not implemented yet.");
+        // const std::complex<PrecisionT> first =
+        //     std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
+
+        // const std::complex<PrecisionT> second =
+        //     std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
+
+        // const std::array<std::complex<PrecisionT>, 2> shifts = {
+        //     (inverse) ? std::conj(first) : first,
+        //     (inverse) ? std::conj(second) : second};
+
+        // std::size_t wires_parity = 0U;
+        // for (std::size_t wire : wires)
+        // {
+        //     wires_parity |=
+        //         (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
+        // }
+
+        // PL_LOOP_PARALLEL(1)
+        // for (std::size_t k = 0; k < exp2(num_qubits); k++)
+        // {
+        //     arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
+        // }
+    }
+
+    template <class PrecisionT, class ParamT>
+    static void applyNCPCPhase(
+        [[maybe_unused]] std::complex<PrecisionT> *arr,
+        [[maybe_unused]] std::size_t num_qubits,
+        [[maybe_unused]] const std::vector<std::size_t> &controlled_wires,
+        [[maybe_unused]] const std::vector<bool> &controlled_values,
+        [[maybe_unused]] const std::vector<std::size_t> &wires,
+        [[maybe_unused]] bool inverse,
+        [[maybe_unused]] ParamT angle,
+        [[maybe_unused]] ParamT dim)
+    {
+        PL_ABORT("applyNCPCPhase is not implemented yet.");
+        // const std::complex<PrecisionT> phase =
+        //     std::exp(std::complex<PrecisionT>(0, inverse ? angle * dim : -angle));
+        // auto core_function = [&phase](std::complex<PrecisionT> *arr,
+        //                               const std::size_t i0,
+        //                               const std::size_t i1)
+        // {
+        //     arr[i0] *= phase;
+        //     arr[i1] *= phase;
+        // };
+        // std::size_t target{0U};
+        // if (!controlled_wires.empty())
+        // {
+        //     for (std::size_t i = 0; i < num_qubits; i++)
+        //     {
+        //         if (std::find(controlled_wires.begin(), controlled_wires.end(),
+        //                       i) == controlled_wires.end())
+        //         {
+        //             target = i;
+        //             break;
+        //         }
+        //     }
+        // }
     }
 
     /* Generators */

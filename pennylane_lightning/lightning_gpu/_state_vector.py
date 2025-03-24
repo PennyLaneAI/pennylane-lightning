@@ -258,7 +258,16 @@ class LightningGPUStateVector(LightningBaseStateVector):
         target_wires = list(operation.target_wires)
         if method:  # apply n-controlled specialized gate
             param = operation.parameters
-            method(control_wires, control_values, target_wires, adjoint, param)
+            if(isinstance(base_operation, qml.PCPhase)):
+                print("FDX: Ctrl PCPhase")
+                hyper = [float(i) for i in base_operation.hyperparameters["dimension"]]
+                param = np.array(operation.parameters + hyper)
+                # [print(np.round(p, 4)) for p in param]
+                method(control_wires, control_values, target_wires, adjoint, param)
+            else:
+                method(control_wires, control_values, target_wires, adjoint, param)
+
+            
         else:  # apply gate as an n-controlled matrix
             method = getattr(state, "applyControlledMatrix")
             method(
@@ -340,7 +349,17 @@ class LightningGPUStateVector(LightningBaseStateVector):
                 )
             elif method is not None:  # apply specialized gate
                 param = operation.parameters
-                method(wires, invert_param, param)
+                
+                if(isinstance(op_adjoint_base, qml.PCPhase)):
+                    # print("FDX: PCPhase")
+                    # print("Hyper",operation.hyperparameters["dimension"])
+                    print("FDX: PCPhase")
+                    hyper = [float(i) for i in op_adjoint_base.hyperparameters["dimension"]]
+                    param = np.array(op_adjoint_base.parameters + hyper)
+                    # [print(np.round(p, 4)) for p in param]
+                    method(wires, invert_param, param)
+                else:
+                    method(wires, invert_param, param)
             elif (
                 isinstance(op_adjoint_base, qml.ops.Controlled) and not self._mpi_handler.use_mpi
             ):  # MPI backend does not have native controlled gates support
