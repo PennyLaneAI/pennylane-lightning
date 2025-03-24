@@ -23,8 +23,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include <iostream>
-
 #include <cuComplex.h> // cuDoubleComplex
 #include <cuda.h>
 #include <custatevec.h> // custatevecApplyMatrix
@@ -331,13 +329,14 @@ class StateVectorCudaManaged
 
             const std::size_t dimension = static_cast<std::size_t>(params[1]);
 
-            const PrecisionT phase = adjoint ? -params[0] : params[0];
+            // const PrecisionT phase = adjoint ? -params[0] : params[0];
+            const PrecisionT phase = params[0];
 
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
             const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
             std::vector<CFP_t> diagonal(
-                Pennylane::Util::exp2(tgts.size() + ctrls.size()) * 2,
+                Pennylane::Util::exp2(tgts.size() + ctrls.size()),
                 lower_complex);
 
             std::fill(diagonal.begin(), diagonal.begin() + dimension,
@@ -449,13 +448,14 @@ class StateVectorCudaManaged
 
             const std::size_t dimension = static_cast<std::size_t>(params[1]);
 
-            const PrecisionT phase = adjoint ? -params[0] : params[0];
+            // const PrecisionT phase = adjoint ? -params[0] : params[0];
+            const PrecisionT phase = params[0];
 
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
             const CFP_t lower_complex{std::cos(phase), -std::sin(phase)};
 
-            std::vector<CFP_t> diagonal(
-                Pennylane::Util::exp2(tgt_wires.size()) * 2, lower_complex);
+            std::vector<CFP_t> diagonal(Pennylane::Util::exp2(tgt_wires.size()),
+                                        lower_complex);
 
             std::fill(diagonal.begin(), diagonal.begin() + dimension,
                       upper_complex);

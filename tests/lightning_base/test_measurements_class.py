@@ -831,7 +831,8 @@ class TestControlledOps:
         num_wires = max(operation.num_wires, 1)
         np.random.seed(0)
 
-        if device_name != "lightning.gpu" and operation == qml.PCPhase:
+        if device_name not in ["lightning.qubit", "lightning.gpu"] and operation == qml.PCPhase:
+
             pytest.skip("PCPhase only supported on lightning.gpu.")
 
         for n_wires in range(num_wires + 1, num_wires + 4):
