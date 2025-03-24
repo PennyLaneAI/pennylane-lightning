@@ -147,7 +147,11 @@ template void GateImplementationsLM::applyRot<float, float>(
 template void GateImplementationsLM::applyRot<double, double>(
     std::complex<double> *, std::size_t, const std::vector<std::size_t> &, bool,
     double, double, double);
-
+template void GateImplementationsLM::applyMyGateImplementation<float>(
+    std::complex<float> *, std::size_t, const std::vector<std::size_t> &, bool);
+template void GateImplementationsLM::applyMyGateImplementation<double>(
+    std::complex<double> *, std::size_t, const std::vector<std::size_t> &,
+    bool);
 /* Two-qubit gates */
 
 template void

@@ -80,6 +80,9 @@ void assignKernelsForGateOp_Default() {
     instance.assignKernelForOp(GateOperation::Rot, all_threading,
                                all_memory_model, all_qubit_numbers,
                                KernelType::LM);
+    instance.assignKernelForOp(GateOperation::MyGateImplementation,
+                               all_threading, all_memory_model,
+                               all_qubit_numbers, KernelType::LM);
     /* Two-qubit gates */
     instance.assignKernelForOp(GateOperation::CNOT, all_threading,
                                all_memory_model, all_qubit_numbers,

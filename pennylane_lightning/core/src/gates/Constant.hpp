@@ -86,7 +86,8 @@ using GateView = typename std::pair<GateOperation, std::string_view>;
     GateView{GateOperation::DoubleExcitationMinus, "DoubleExcitationMinus"},
     GateView{GateOperation::DoubleExcitationPlus, "DoubleExcitationPlus"},
     GateView{GateOperation::MultiRZ, "MultiRZ"},
-    GateView{GateOperation::GlobalPhase, "GlobalPhase"}};
+    GateView{GateOperation::GlobalPhase, "GlobalPhase"},
+    GateView{GateOperation::MyGateImplementation, "MyGateImplementation"}};
 
 using CGateView = typename std::pair<ControlledGateOperation, std::string_view>;
 [[maybe_unused]] constexpr std::array controlled_gate_names = {
@@ -239,6 +240,7 @@ using GateNWires = typename std::pair<GateOperation, std::size_t>;
     GateNWires{GateOperation::DoubleExcitationMinus, 4},
     GateNWires{GateOperation::DoubleExcitationPlus, 4},
     GateNWires{GateOperation::GlobalPhase, 1},
+    GateNWires{GateOperation::MyGateImplementation, 1},
 };
 
 using CGateNWires = typename std::pair<ControlledGateOperation, std::size_t>;
@@ -356,6 +358,7 @@ using GateNParams = typename std::pair<GateOperation, std::size_t>;
     GateNParams{GateOperation::CSWAP, 0},
     GateNParams{GateOperation::MultiRZ, 1},
     GateNParams{GateOperation::GlobalPhase, 1},
+    GateNParams{GateOperation::MyGateImplementation, 0},
 };
 
 /**

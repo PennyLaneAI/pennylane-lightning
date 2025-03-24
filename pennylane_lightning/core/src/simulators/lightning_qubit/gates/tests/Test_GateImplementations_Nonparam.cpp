@@ -31,7 +31,7 @@
  * @file Test_GateImplementations_Nonparam.cpp
  *
  * This file contains tests for non-parameterized gates. List of such gates are
- * [PauliX, PauliY, PauliZ, Hadamard, S, SX, T, CNOT, SWAP, CZ, Toffoli, CSWAP].
+ * [PauliX, PauliY, PauliZ, Hadamard, S, SX, T, CNOT, SWAP, CZ, Toffoli, CSWAP, MyGateImplementation].
  */
 
 /// @cond DEV
@@ -130,6 +130,26 @@ void testApplyPauliX() {
     }
 }
 PENNYLANE_RUN_TEST(PauliX);
+
+template <typename PrecisionT, class GateImplementation>
+void testApplyMyGateImplementation() {
+    using ComplexT = std::complex<PrecisionT>;
+    const std::size_t num_qubits = 3;
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", MyGateImplementation - " << PrecisionToName<PrecisionT>::value) {
+        for (std::size_t index = 0; index < num_qubits; index++) {
+            auto st = createZeroState<ComplexT>(num_qubits);
+
+            GateImplementation::applyMyGateImplementation(st.data(), num_qubits, {index},
+                                            false);
+
+            std::string expected_str("000");
+            expected_str[index] = '1';
+            REQUIRE(st == approx(createProductState<PrecisionT>(expected_str)));
+        }
+    }
+}
+PENNYLANE_RUN_TEST(MyGateImplementation);
 
 template <typename PrecisionT, class GateImplementation>
 void testApplyPauliY() {

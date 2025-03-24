@@ -26,13 +26,13 @@ using namespace Pennylane::Gates;
 namespace Pennylane::Gates {
 
 /**
- * @brief Create a matrix representation of the PauliX gate data in row-major
+ * @brief Create a matrix representation of the Identity gate data in row-major
  * format.
  *
  * @tparam ComplexT Complex class.
  * @tparam T Required precision of gate (`float` or `double`).
  * @return constexpr std::vector<ComplexT<T>> Return constant expression
- * of PauliX data.
+ * of Identity data.
  */
 template <template <typename...> class ComplexT, typename T>
 static constexpr auto getIdentity() -> std::vector<ComplexT<T>> {
@@ -1217,6 +1217,20 @@ static constexpr auto getGeneratorIsingZZ() -> std::vector<ComplexT<T>> {
     };
 }
 
+/**
+ * @brief Create a matrix representation of the MyGateImplementation gate data
+ * in row-major format.
+ *
+ * @tparam ComplexT Complex class.
+ * @tparam T Required precision of gate (`float` or `double`).
+ * @return constexpr std::vector<ComplexT<T>> Return constant expression
+ * of MyGateImplementation data.
+ */
+template <template <typename...> class ComplexT, typename T>
+static constexpr auto getMyGateImplementation() -> std::vector<ComplexT<T>> {
+    return {ZERO<ComplexT, T>(), ONE<ComplexT, T>(), ONE<ComplexT, T>(),
+            ZERO<ComplexT, T>()};
+}
 template <template <typename...> class ComplexT, typename T>
 std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
                                    const std::vector<T> &params,
@@ -1301,6 +1315,8 @@ std::vector<ComplexT<T>> getMatrix(const GateOperation gate_op,
         return getCSWAP<ComplexT, T>();
     case GateOperation::Toffoli:
         return getToffoli<ComplexT, T>();
+    case GateOperation::MyGateImplementation:
+        return getMyGateImplementation<ComplexT, T>();
     default:
         PL_ABORT("This GateOperation does not have a corresponding matrix.");
     }

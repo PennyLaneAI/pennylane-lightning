@@ -154,6 +154,7 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
         GateOperation::DoubleExcitationPlus,
         GateOperation::MultiRZ,
         GateOperation::GlobalPhase,
+        GateOperation::MyGateImplementation,
     };
 
     constexpr static std::array implemented_controlled_gates = {
@@ -704,6 +705,14 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     static void
     applyPauliX(std::complex<PrecisionT> *arr, const std::size_t num_qubits,
                 const std::vector<std::size_t> &wires, const bool inverse) {
+        applyNCPauliX(arr, num_qubits, {}, {}, wires, inverse);
+    }
+
+    template <class PrecisionT>
+    static void applyMyGateImplementation(std::complex<PrecisionT> *arr,
+                                          const std::size_t num_qubits,
+                                          const std::vector<std::size_t> &wires,
+                                          const bool inverse) {
         applyNCPauliX(arr, num_qubits, {}, {}, wires, inverse);
     }
 
