@@ -1931,13 +1931,10 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                              std::size_t num_qubits,
                              const std::vector<std::size_t> &wires,
                              bool inverse, ParamT angle) {
-
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
-
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
-
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
@@ -1947,7 +1944,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             wires_parity |=
                 (static_cast<std::size_t>(1U) << (num_qubits - wire - 1));
         }
-
         PL_LOOP_PARALLEL(1)
         for (std::size_t k = 0; k < exp2(num_qubits); k++) {
             arr[k] *= shifts[std::popcount(k & wires_parity) % 2];
@@ -1961,17 +1957,13 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                const std::vector<bool> &controlled_values,
                                const std::vector<std::size_t> &wires,
                                bool inverse, ParamT angle) {
-
         const std::complex<PrecisionT> first =
             std::complex<PrecisionT>{std::cos(angle / 2), -std::sin(angle / 2)};
-
         const std::complex<PrecisionT> second =
             std::complex<PrecisionT>{std::cos(angle / 2), std::sin(angle / 2)};
-
         const std::array<std::complex<PrecisionT>, 2> shifts = {
             (inverse) ? std::conj(first) : first,
             (inverse) ? std::conj(second) : second};
-
         std::size_t wires_parity = 0U;
         for (std::size_t wire : wires) {
             wires_parity |=
