@@ -24,7 +24,6 @@
 namespace {
 using namespace Pennylane::LightningGPU;
 } // namespace
-/// @endcond
 
 namespace Pennylane::LightningGPU::Util {
 template <class StateVector> struct StateVectorMPIToName;
@@ -40,3 +39,4 @@ using TestStateVectorMPIBackends =
     Pennylane::Util::TypeList<StateVectorCudaMPI<float>,
                               StateVectorCudaMPI<double>, void>;
 } // namespace Pennylane::LightningGPU::Util
+/// @endcond

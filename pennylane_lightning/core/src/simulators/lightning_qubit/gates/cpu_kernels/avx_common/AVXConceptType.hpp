@@ -28,6 +28,7 @@
 #endif
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon {
+/// @cond DEV
 template <class PrecisionT, std::size_t packed_size> struct AVXConcept;
 
 #ifdef PL_USE_AVX2
@@ -50,5 +51,5 @@ template <> struct AVXConcept<double, 8> {
 
 template <class PrecisionT, std::size_t packed_size>
 using AVXConceptType = typename AVXConcept<PrecisionT, packed_size>::Type;
-
+/// @endcond
 } // namespace Pennylane::LightningQubit::Gates::AVXCommon

@@ -22,6 +22,7 @@
 #include "GateOperation.hpp"
 #include "TypeList.hpp"
 
+/// @cond DEV
 namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
@@ -395,3 +396,4 @@ using CGateNParams = typename std::pair<ControlledGateOperation, std::size_t>;
     CGateNParams{ControlledGateOperation::PCPhase, 2},
 };
 } // namespace Pennylane::Gates::Constant
+/// @endcond

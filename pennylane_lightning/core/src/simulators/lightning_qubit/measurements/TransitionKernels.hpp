@@ -33,7 +33,9 @@
 #include "Util.hpp" // exp2
 
 namespace Pennylane::LightningQubit::Measures {
+/// @cond DEV
 enum class TransitionKernelType { Local, NonZeroRandom };
+/// @endcond
 
 /**
  * @brief Parent class to define interface for Transition Kernel

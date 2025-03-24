@@ -18,10 +18,11 @@
 #include <vector>
 
 namespace Pennylane::LightningGPU::MPI {
-
+/// @cond DEV
 enum WireStatus { Default, Target, Control };
 
 enum WiresSwapStatus : std::size_t { Local, Swappable, UnSwappable };
+/// @endcond
 
 /**
  * @brief Create wire pairs for bit index swap and transform all control and
