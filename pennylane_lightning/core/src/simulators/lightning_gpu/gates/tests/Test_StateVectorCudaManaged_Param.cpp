@@ -1438,7 +1438,6 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
         std::vector<cp_t> expected_results(1 << num_qubits,
                                            {0.34074447, 0.0943038});
 
-
         DYNAMIC_SECTION("PCPhase 0.27 1,2"
                         << " inverse = " << inverse) {
 

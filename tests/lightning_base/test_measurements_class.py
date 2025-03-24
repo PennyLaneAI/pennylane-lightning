@@ -849,10 +849,9 @@ class TestControlledOps:
                     operation_params = []
                 else:
                     operation_params = tuple([0.1234] * operation.num_params) + (target_wires,)
-                    if operation == qml.PCPhase :
+                    if operation == qml.PCPhase:
                         # Hyperparameter for PCPhase is the dimension of the control space
                         operation_params = (0.1234, 2) + (target_wires,)
-
 
                 ops = [
                     qml.StatePrep(init_state, wires=range(n_qubits)),

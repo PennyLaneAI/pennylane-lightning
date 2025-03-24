@@ -156,7 +156,7 @@ def test_gate_unitary_correct(op, op_name):
         pytest.skip("Skipping operation because it is a state preparation")
     if op == None:
         pytest.skip("Skipping operation.")
-        
+
     if device_name != "lightning.gpu" and op == qml.PCPhase:
         pytest.skip("PCPhase only supported on lightning.gpu.")
 
