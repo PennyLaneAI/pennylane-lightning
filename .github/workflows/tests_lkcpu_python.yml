@@ -199,7 +199,7 @@ jobs:
           WHEEL_NAME=$(cat ${{ github.workspace }}/${{ matrix.pl_backend }}-${{ matrix.exec_model }}_name.txt)
           mv ${{ github.workspace }}/wheel_${{ matrix.pl_backend }}-${{ matrix.exec_model }}.whl ${{ github.workspace }}/$WHEEL_NAME
           python -m pip install -r requirements-tests.txt
-          python -m pip install jax[cpu]==0.4.28
+          python -m pip install "jax[cpu]==0.4.28; python_version<='3.12'"
           python -m pip install openfermionpyscf
           if [ '${{ inputs.lightning-version }}' != 'stable' ]; then
             python scripts/configure_pyproject_toml.py
