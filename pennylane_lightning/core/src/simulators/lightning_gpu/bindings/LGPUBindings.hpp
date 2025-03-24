@@ -46,9 +46,11 @@ using Pennylane::LightningGPU::StateVectorCudaManaged;
 namespace py = pybind11;
 
 namespace Pennylane::LightningGPU {
+/// @cond DEV
 using StateVectorBackends =
     Pennylane::Util::TypeList<StateVectorCudaManaged<float>,
                               StateVectorCudaManaged<double>, void>;
+/// @endcond
 
 /**
  * @brief Register controlled matrix kernel.

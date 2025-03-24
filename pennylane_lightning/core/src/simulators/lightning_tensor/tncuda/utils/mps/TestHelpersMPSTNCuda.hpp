@@ -23,7 +23,6 @@
 namespace {
 using namespace Pennylane::LightningTensor::TNCuda;
 } // namespace
-/// @endcond
 
 namespace Pennylane::LightningTensor::TNCuda::Util {
 template <class MPS> struct MPSToName;
@@ -38,3 +37,4 @@ template <> struct MPSToName<MPSTNCuda<double>> {
 using TestMPSBackends =
     Pennylane::Util::TypeList<MPSTNCuda<float>, MPSTNCuda<double>, void>;
 } // namespace Pennylane::LightningTensor::TNCuda::Util
+/// @endcond

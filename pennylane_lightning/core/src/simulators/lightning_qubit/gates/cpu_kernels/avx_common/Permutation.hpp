@@ -31,6 +31,7 @@
 #endif
 
 namespace Pennylane::LightningQubit::Gates::AVXCommon::Permutation {
+/// @cond DEV
 /**
  * @brief Maintain permutation related data in a compile time.
  */
@@ -143,7 +144,6 @@ constexpr bool isWithinLane(const std::array<uint8_t, size> &permutation) {
     return true;
 }
 
-///@cond DEV
 template <std::size_t size>
 constexpr uint8_t
 getPermutation2x(const std::array<uint8_t, size> &permutation) {
@@ -161,7 +161,6 @@ getPermutation4x(const std::array<uint8_t, size> &permutation) {
     }
     return res;
 }
-//@endcond
 
 #ifdef PL_USE_AVX2
 constexpr __m256i
@@ -387,4 +386,5 @@ PL_FORCE_INLINE __m512d maskPermute(const __m512d &src, const __m512d &a) {
         return _mm512_mask_permutexvar_pd(src, k, perm.permute512_, a);
     }
 }
+//@endcond
 } // namespace Pennylane::LightningQubit::Gates::AVXCommon::Permutation

@@ -25,6 +25,7 @@
 
 namespace Pennylane::LightningTensor::TNCuda::Util {
 
+/// @cond DEV
 enum class MPSStatus : uint32_t {
     BEGIN = 0,
     MPSInitNotSet = 0,
@@ -33,6 +34,7 @@ enum class MPSStatus : uint32_t {
     MPSFinalizedSet,
     END
 };
+/// @endcond
 
 /**
  * Utility function object to tell std::shared_ptr how to
@@ -44,8 +46,10 @@ struct TNCudaHandleDeleter {
     }
 };
 
+/// @cond DEV
 using SharedTNCudaHandle =
     std::shared_ptr<std::remove_pointer<cutensornetHandle_t>::type>;
+/// @endcond
 
 /**
  * @brief Creates a SharedTNCudaHandle (a shared pointer to a cutensornetHandle)

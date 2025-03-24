@@ -11,6 +11,14 @@
 * Add `PSWAP` gate implementation to PennyLane-Lightning. 
   [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
 
+* Hide internal C++ APIs in Lightning docs.
+  [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
+
+* Implemented the `jaxpr_jvp` method to compute the jvp of a jaxpr using `lightning.qubit`.
+  This method currently only support the adjoint differentiation method.
+  [(#1087)](https://github.com/PennyLaneAI/pennylane/pull/1087)
+  [(#1106)](https://github.com/PennyLaneAI/pennylane/pull/1106)
+
 * Modify expval of named operators in Lightning-Qubit for in-place computation of expectation value, to avoid creating an intermediate statevector
   [(#1079)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/1079)
   [(#565)] (https://github.com/PennyLaneAI/pennylane-lightning/pull/565)
@@ -142,6 +150,7 @@ Saeed Bohloul,
 Astral Cai,
 Yushao Chen,
 Amintor Dusko,
+Pietropaolo Frisoni,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
