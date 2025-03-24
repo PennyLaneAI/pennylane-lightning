@@ -329,7 +329,6 @@ class StateVectorCudaManaged
 
             const std::size_t dimension = static_cast<std::size_t>(params[1]);
 
-            // const PrecisionT phase = adjoint ? -params[0] : params[0];
             const PrecisionT phase = params[0];
 
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};
@@ -448,7 +447,6 @@ class StateVectorCudaManaged
 
             const std::size_t dimension = static_cast<std::size_t>(params[1]);
 
-            // const PrecisionT phase = adjoint ? -params[0] : params[0];
             const PrecisionT phase = params[0];
 
             const CFP_t upper_complex{std::cos(phase), std::sin(phase)};

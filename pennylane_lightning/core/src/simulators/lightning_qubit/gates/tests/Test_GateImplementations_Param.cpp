@@ -2418,6 +2418,61 @@ void testApplyMultiRZ() {
 }
 PENNYLANE_RUN_TEST(MultiRZ);
 
+template <typename PrecisionT, typename ParamT, class GateImplementation>
+void testApplyPCPhase() {
+    using ComplexT = std::complex<PrecisionT>;
+
+    bool inverse = GENERATE(false, true);
+    const std::size_t num_qubits = 3;
+    const ParamT angle = 0.27;
+    const ParamT dimension = 3;
+
+    std::vector<ComplexT> expected_results(1 << num_qubits,
+                                           {0.34074447, 0.0943038});
+
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", PCPhase (1,2) |+++> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        auto st = createPlusState<PrecisionT>(num_qubits);
+
+        if (inverse) {
+            for (auto &val : expected_results) {
+                val = std::conj(val);
+            }
+        }
+
+        GateImplementation::applyPCPhase(st.data(), num_qubits, {1, 2}, inverse,
+                                         angle, dimension);
+
+        expected_results[3] = std::conj(expected_results[3]);
+        expected_results[7] = std::conj(expected_results[7]);
+
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+    DYNAMIC_SECTION(GateImplementation::name
+                    << ", PCPhase (0,2) |+++> - "
+                    << PrecisionToName<PrecisionT>::value) {
+        auto st = createPlusState<PrecisionT>(num_qubits);
+        std::vector<ComplexT> expected_results(1 << num_qubits,
+                                               {0.34074447, 0.0943038});
+
+        if (inverse) {
+            for (auto &val : expected_results) {
+                val = std::conj(val);
+            }
+        }
+
+        GateImplementation::applyPCPhase(st.data(), num_qubits, {0, 2}, inverse,
+                                         angle, dimension);
+
+        expected_results[5] = std::conj(expected_results[5]);
+        expected_results[7] = std::conj(expected_results[7]);
+
+        REQUIRE(st == approx(expected_results).margin(1e-7));
+    }
+}
+PENNYLANE_RUN_TEST(PCPhase);
+
 TEMPLATE_TEST_CASE(
     "StateVectorLQubitManaged::applyOperation param one-qubit with controls",
     "[StateVectorLQubitManaged]", float, double) {
@@ -2874,6 +2929,43 @@ TEMPLATE_TEST_CASE(
                     approx(sv1.getDataVector()).margin(margin));
         }
     }
+    
+    DYNAMIC_SECTION("N-controlled PCPhase - "
+                    << "controls = {" << control << ", " << wire0 << ", "
+                    << wire1 << "} "
+                    << ", wires = {" << wire2 << ", " << wire3 << "} - "
+                    << PrecisionToName<PrecisionT>::value) {
+        bool inverse = GENERATE(false, true);
+        PrecisionT param = GENERATE(-1.5, -0.5, 0, 0.5, 1.5);
+        PrecisionT dimension = 3.0;
+
+
+        std::vector<std::size_t> wires = {control, wire0, wire1, wire2, wire3};
+        std::sort(wires.begin(), wires.end());
+
+        const ComplexT e = {std::cos(param), std::sin(param)};
+        std::vector<ComplexT> matrix(16, 0.0);
+        matrix[0] = e;
+        matrix[5] = e;
+        matrix[10] = e;
+        matrix[15] = std::conj(e);
+
+        if (std::adjacent_find(wires.begin(), wires.end()) == wires.end()) {
+            auto st0 = createRandomStateVectorData<PrecisionT>(re, num_qubits);
+            sv0.updateData(st0);
+            sv1.updateData(st0);
+            sv0.applyControlledMatrix(matrix.data(), {control, wire0, wire1},
+                                      std::vector<bool>{true, false, true},
+                                      {wire2, wire3}, inverse);
+            sv1.applyOperation(
+                "PCPhase", std::vector<std::size_t>{control, wire0, wire1},
+                std::vector<bool>{true, false, true},
+                std::vector<std::size_t>{wire2, wire3}, inverse, {param, dimension});
+            REQUIRE(sv0.getDataVector() ==
+                    approx(sv1.getDataVector()).margin(margin));
+        }
+    }
+
 }
 
 TEMPLATE_TEST_CASE("StateVectorLQubitManaged::applyGlobalPhase",

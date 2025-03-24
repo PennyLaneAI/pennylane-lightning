@@ -2091,14 +2091,6 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
             matrixPCPhase[i * matrix_dim + i] = lower_complex;
         }
 
-        // print matrix
-        for (std::size_t i = 0; i < matrix_dim; i++) {
-            for (std::size_t j = 0; j < matrix_dim; j++) {
-                std::cout << matrixPCPhase[i * matrix_dim + j] << " ";
-            }
-            std::cout << std::endl;
-        }
-
         applyNCMultiQubitOp<PrecisionT>(arr, num_qubits, matrixPCPhase.data(),
                                         controlled_wires, controlled_values,
                                         wires, false);
