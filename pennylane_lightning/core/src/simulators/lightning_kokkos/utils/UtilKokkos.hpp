@@ -29,8 +29,9 @@ using KokkosIntVector = Kokkos::View<std::size_t *>;
 /// @endcond
 
 namespace Pennylane::LightningKokkos::Util {
-
+/// @cond DEV
 constexpr std::size_t one{1};
+/// @endcond
 
 /**
  * @brief Copy the content of a Kokkos view to an `std::vector`.

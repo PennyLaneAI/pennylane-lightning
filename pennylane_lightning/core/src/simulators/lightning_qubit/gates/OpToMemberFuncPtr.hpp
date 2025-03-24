@@ -50,6 +50,7 @@ struct GateOpToMemberFuncPtr {
     constexpr static auto value = nullptr;
 };
 
+/// @cond DEV
 template <class PrecisionT, class ParamT, class GateImplementation>
 struct GateOpToMemberFuncPtr<PrecisionT, ParamT, GateImplementation,
                              GateOperation::Identity> {
@@ -990,6 +991,7 @@ using MatrixFuncPtrT = typename Internal::MatrixFuncPtr<PrecisionT>::Type;
 template <class PrecisionT>
 using ControlledMatrixFuncPtrT =
     typename Internal::ControlledMatrixFuncPtr<PrecisionT>::Type;
+/// @endcond
 
 /**
  * @brief Convenient type alias for SparseMatrixfuncPtr.

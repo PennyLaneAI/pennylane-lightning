@@ -29,22 +29,6 @@ using Pennylane::LightningKokkos::Util::wires2Parity;
 
 namespace Pennylane::LightningKokkos::Functors {
 
-template <class PrecisionT> struct getExpectationValueIdentityFunctor {
-    Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
-
-    getExpectationValueIdentityFunctor(
-        Kokkos::View<Kokkos::complex<PrecisionT> *> arr_,
-        [[maybe_unused]] std::size_t num_qubits,
-        [[maybe_unused]] const std::vector<std::size_t> &wires) {
-        arr = arr_;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const std::size_t k, PrecisionT &expval) const {
-        expval += real(conj(arr[k]) * arr[k]);
-    }
-};
-
 template <class PrecisionT> struct getExpectationValuePauliXFunctor {
     Kokkos::View<Kokkos::complex<PrecisionT> *> arr;
 
@@ -312,12 +296,14 @@ template <class PrecisionT> struct getExpVal1QubitOpFunctor {
     }
 };
 
+/// @cond DEV
 #define EXPVALENTRY2(xx, yy) xx << 2 | yy
 #define EXPVALTERM2(xx, yy, iyy) matrix(EXPVALENTRY2(xx, yy)) * arr(iyy)
 #define EXPVAL2(ixx, xx)                                                       \
     conj(arr(ixx)) *                                                           \
         (EXPVALTERM2(xx, 0B00, i00) + EXPVALTERM2(xx, 0B01, i01) +             \
          EXPVALTERM2(xx, 0B10, i10) + EXPVALTERM2(xx, 0B11, i11))
+/// @endcond
 
 template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -375,6 +361,7 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
     }
 };
 
+/// @cond DEV
 #define EXPVALENTRY3(xx, yy) xx << 3 | yy
 #define EXPVALTERM3(xx, yy, iyy) matrix(EXPVALENTRY3(xx, yy)) * arr(iyy)
 #define EXPVAL3(ixx, xx)                                                       \
@@ -383,6 +370,7 @@ template <class PrecisionT> struct getExpVal2QubitOpFunctor {
          EXPVALTERM3(xx, 0B010, i010) + EXPVALTERM3(xx, 0B011, i011) +         \
          EXPVALTERM3(xx, 0B100, i100) + EXPVALTERM3(xx, 0B101, i101) +         \
          EXPVALTERM3(xx, 0B110, i110) + EXPVALTERM3(xx, 0B111, i111))
+/// @endcond
 
 template <class PrecisionT> struct getExpVal3QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -437,6 +425,7 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
     }
 };
 
+/// @cond DEV
 #define EXPVALENTRY4(xx, yy) xx << 4 | yy
 #define EXPVALTERM4(xx, yy, iyy) matrix(EXPVALENTRY4(xx, yy)) * arr(iyy)
 #define EXPVAL4(ixx, xx)                                                       \
@@ -449,6 +438,7 @@ template <class PrecisionT> struct getExpVal3QubitOpFunctor {
          EXPVALTERM4(xx, 0B1010, i1010) + EXPVALTERM4(xx, 0B1011, i1011) +     \
          EXPVALTERM4(xx, 0B1100, i1100) + EXPVALTERM4(xx, 0B1101, i1101) +     \
          EXPVALTERM4(xx, 0B1110, i1110) + EXPVALTERM4(xx, 0B1111, i1111))
+/// @endcond
 
 template <class PrecisionT> struct getExpVal4QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;
@@ -524,6 +514,7 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
     }
 };
 
+/// @cond DEV
 #define EXPVALENTRY5(xx, yy) xx << 5 | yy
 #define EXPVALTERM5(xx, yy, iyy) matrix(EXPVALENTRY5(xx, yy)) * arr(iyy)
 #define EXPVAL5(ixx, xx)                                                       \
@@ -544,6 +535,7 @@ template <class PrecisionT> struct getExpVal4QubitOpFunctor {
          EXPVALTERM5(xx, 0B11010, i11010) + EXPVALTERM5(xx, 0B11011, i11011) + \
          EXPVALTERM5(xx, 0B11100, i11100) + EXPVALTERM5(xx, 0B11101, i11101) + \
          EXPVALTERM5(xx, 0B11110, i11110) + EXPVALTERM5(xx, 0B11111, i11111))
+/// @endcond
 
 template <class PrecisionT> struct getExpVal5QubitOpFunctor {
     using ComplexT = Kokkos::complex<PrecisionT>;

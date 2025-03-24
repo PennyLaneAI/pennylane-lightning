@@ -24,7 +24,6 @@
 namespace {
 using namespace Pennylane::LightningGPU;
 } // namespace
-/// @endcond
 
 namespace Pennylane::LightningGPU::Util {
 template <class StateVector> struct StateVectorToName;
@@ -40,3 +39,4 @@ using TestStateVectorBackends =
     Pennylane::Util::TypeList<StateVectorCudaManaged<float>,
                               StateVectorCudaManaged<double>, void>;
 } // namespace Pennylane::LightningGPU::Util
+/// @endcond
