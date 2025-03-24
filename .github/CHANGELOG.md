@@ -11,6 +11,9 @@
 
 ### Improvements
 
+* Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
+  [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
+
 * Hide internal C++ APIs in Lightning docs.
   [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
 
