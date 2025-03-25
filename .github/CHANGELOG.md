@@ -5,10 +5,7 @@
 * Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
   [(#1085)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
 
-* Incorporate sparse kernels to the Lightning-Qubit dynamic dispatcher.
-  [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
-
-* Incorporate sparse kernels to the Lightning-Qubit python layers and expand testing.
+* Integrate sparse kernels into the Lightning-Qubit dynamic dispatcher, enhance the Python layers, and expand the testing process for dense and sparse operations.
   [(#1094)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1094)
 
 * Add support for Python 3.13.
