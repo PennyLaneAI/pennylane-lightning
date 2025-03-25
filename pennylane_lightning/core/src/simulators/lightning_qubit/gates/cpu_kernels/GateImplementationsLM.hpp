@@ -2028,24 +2028,20 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
     }
 
     template <class PrecisionT, class ParamT>
-    static void
-    applyPCPhase( std::complex<PrecisionT> *arr,
-                  std::size_t num_qubits,
-                  const std::vector<std::size_t> &wires,
-                  bool inverse, ParamT angle,
-                  ParamT dim) {
+    static void applyPCPhase(std::complex<PrecisionT> *arr,
+                             std::size_t num_qubits,
+                             const std::vector<std::size_t> &wires,
+                             bool inverse, ParamT angle, ParamT dim) {
         applyNCPCPhase(arr, num_qubits, {}, {}, wires, inverse, angle, dim);
     }
 
     template <class PrecisionT, class ParamT>
-    static void applyNCPCPhase(
-        std::complex<PrecisionT> *arr,
-        std::size_t num_qubits,
-        const std::vector<std::size_t> &controlled_wires,
-        const std::vector<bool> &controlled_values,
-        const std::vector<std::size_t> &wires,
-        bool inverse, ParamT angle,
-        ParamT dim) {
+    static void applyNCPCPhase(std::complex<PrecisionT> *arr,
+                               std::size_t num_qubits,
+                               const std::vector<std::size_t> &controlled_wires,
+                               const std::vector<bool> &controlled_values,
+                               const std::vector<std::size_t> &wires,
+                               bool inverse, ParamT angle, ParamT dim) {
 
         const PrecisionT phase = inverse ? -angle : angle;
         const std::complex<PrecisionT> upper_complex = {std::cos(phase),
@@ -2072,9 +2068,9 @@ class GateImplementationsLM : public PauliGenerator<GateImplementationsLM> {
                                           wires, false);
 
         } else {
-            applyNCMultiQubitOp<PrecisionT>(arr, num_qubits,
-                                           matrixPCPhase.data(), controlled_wires,
-                                           controlled_values, wires, false);
+            applyNCMultiQubitOp<PrecisionT>(
+                arr, num_qubits, matrixPCPhase.data(), controlled_wires,
+                controlled_values, wires, false);
         }
     }
 

@@ -27,14 +27,10 @@ namespace Pennylane::Gates::Constant {
 /**
  * @brief List of multi-qubit gates
  */
-[[maybe_unused]] constexpr std::array multi_qubit_gates{
-    GateOperation::MultiRZ,
-    GateOperation::PCPhase
-};
+[[maybe_unused]] constexpr std::array multi_qubit_gates{GateOperation::MultiRZ,
+                                                        GateOperation::PCPhase};
 [[maybe_unused]] constexpr std::array controlled_multi_qubit_gates{
-    ControlledGateOperation::MultiRZ,
-    ControlledGateOperation::PCPhase
-};
+    ControlledGateOperation::MultiRZ, ControlledGateOperation::PCPhase};
 /**
  * @brief List of multi-qubit generators
  */

@@ -118,14 +118,11 @@ TEST_CASE("Test several limiting cases of default kernels", "[KernelMap]") {
                 INFO(lookup(Pennylane::Gates::Constant::gate_names, gate_op));
                 if (gate_op == Pennylane::Gates::GateOperation::GlobalPhase ||
                     gate_op == Pennylane::Gates::GateOperation::MultiRZ ||
-                    gate_op == Pennylane::Gates::GateOperation::PCPhase)
-                {
+                    gate_op == Pennylane::Gates::GateOperation::PCPhase) {
                     REQUIRE(gate_map[gate_op] ==
                             Pennylane::Gates::KernelType::LM);
-                }
-                else if (lookup(Pennylane::Gates::Constant::gate_wires,
-                                gate_op) <= 2)
-                {
+                } else if (lookup(Pennylane::Gates::Constant::gate_wires,
+                                  gate_op) <= 2) {
                     REQUIRE(gate_map[gate_op] ==
                             Pennylane::Gates::KernelType::LM);
                 }

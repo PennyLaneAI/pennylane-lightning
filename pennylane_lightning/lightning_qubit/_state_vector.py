@@ -134,7 +134,7 @@ class LightningStateVector(LightningBaseStateVector):  # pylint: disable=too-few
 
         if method is not None:  # apply n-controlled specialized gate
             param = base_operation.parameters
-            
+
             if isinstance(base_operation, qml.PCPhase):
                 hyper = [float(i) for i in base_operation.hyperparameters["dimension"]]
                 param = np.array(base_operation.parameters + hyper[:1])

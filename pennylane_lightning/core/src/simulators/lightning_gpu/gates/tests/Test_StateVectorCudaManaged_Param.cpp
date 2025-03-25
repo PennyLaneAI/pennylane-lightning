@@ -1409,13 +1409,13 @@ TEMPLATE_TEST_CASE("LightningGPU::applyPCPhase", "[LightningGPU_Param]", float,
 
             if use_controls:
                 qml.ctrl(
-                    qml.PCPhase(0.27, dim = 3, wires=tgts), 
+                    qml.PCPhase(0.27, dim = 3, wires=tgts),
                     control=[0],
                     control_values=[1]
-               ) 
-            elif use_adj: 
-                qml.adjoint(qml.PCPhase(0.27, dim = 3, wires=tgts)) 
-            else: 
+               )
+            elif use_adj:
+                qml.adjoint(qml.PCPhase(0.27, dim = 3, wires=tgts))
+            else:
                 qml.PCPhase(0.27, dim = 3, wires=tgts)
 
             return qml.state()
