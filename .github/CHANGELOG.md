@@ -4,12 +4,18 @@
 * Implement new C++ kernels for efficient in-place multiplication of sparse matrices to state vectors, supporting both controlled and non-controlled gates, and add comprehensive tests for this new functionality.
   [#1085](https://github.com/PennyLaneAI/pennylane-lightning/pull/1085)
 
+* Add support for Python 3.13.
+  [(#1001)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1001)
+
 ### Breaking changes
 
 ### Improvements
 
 * Add `PSWAP` gate implementation to PennyLane-Lightning. 
   [(#1088)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1088)
+
+* Use cuquantum API for calculating expectation value of Pauli sentences in Lightning-GPU.
+  [(#1104)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1104)
 
 * Hide internal C++ APIs in Lightning docs.
   [(#1096)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1096)
@@ -108,6 +114,9 @@
 
 ### Bug fixes
 
+* Fix the development wheel upload step for Python 3.13 by following the same syntax as for the other Python wheels.
+  [(#1111)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1111)
+
 * Fix the `test_preprocess` test skip condition for `lightning.tensor`.
   [(#1092)](https://github.com/PennyLaneAI/pennylane-lightning/pull/1092)
 
@@ -154,6 +163,7 @@ Pietropaolo Frisoni,
 Christina Lee,
 Joseph Lee,
 Luis Alfredo Nuñez Meneses,
+Lee J. O'Riordan,
 Andrija Paurevic,
 Alex Preciado,
 Shuli Shu,
